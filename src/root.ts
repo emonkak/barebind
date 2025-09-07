@@ -87,8 +87,9 @@ export class Root<T> {
       scope,
       pendingLanes: Lanes.DefaultLane,
       resume: (session) => {
-        this._slot.reconcile(value, session);
-        session.frame.mutationEffects.push(this._slot);
+        if (this._slot.reconcile(value, session)) {
+          session.frame.mutationEffects.push(this._slot);
+        }
       },
     };
     return this._context.scheduleUpdate(coroutine, {
