@@ -279,25 +279,6 @@ export class RepeatBinding<TSource, TKey, TValue>
   }
 }
 
-/**
- * @internal
- */
-export function moveChildNodes(
-  childNodes: ChildNode[],
-  referenceNode: Node,
-): void {
-  const { parentNode } = referenceNode;
-
-  if (parentNode !== null) {
-    const insertOrMoveBefore =
-      Element.prototype.moveBefore ?? Element.prototype.insertBefore;
-
-    for (let i = 0, l = childNodes.length; i < l; i++) {
-      insertOrMoveBefore.call(parentNode, childNodes[i]!, referenceNode);
-    }
-  }
-}
-
 function defaultKeySelector(_element: unknown, index: number): any {
   return index;
 }
@@ -351,6 +332,20 @@ function matchesKey<TKey, TValue>(
   source: SourceItem<TKey, TValue>,
 ) {
   return Object.is(target.key, source.key);
+}
+
+function moveChildNodes(childNodes: ChildNode[], referenceNode: Node): void {
+  const { parentNode } = referenceNode;
+
+  if (parentNode !== null) {
+    const insertOrMoveBefore =
+      /* v8 ignore next */
+      Element.prototype.moveBefore ?? Element.prototype.insertBefore;
+
+    for (let i = 0, l = childNodes.length; i < l; i++) {
+      insertOrMoveBefore.call(parentNode, childNodes[i]!, referenceNode);
+    }
+  }
 }
 
 function moveItem<TKey, TValue>(
