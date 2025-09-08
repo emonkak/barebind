@@ -243,6 +243,10 @@ export class Atom<T> extends Signal<T> {
       subscriber();
     }
   }
+
+  write(value: T): void {
+    this._value = value;
+  }
 }
 
 export class Computed<

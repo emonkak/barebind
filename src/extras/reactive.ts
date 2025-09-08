@@ -238,7 +238,7 @@ function getSnapshot<T>(container: ReactiveContainer<T>): T {
 
       // Update the source without notification (a source of the container with
       // dirty flags is always Atom).
-      (source as Atom<T>)['_value'] = newSource;
+      (source as Atom<T>).write(newSource);
     }
 
     container.flags &= ~FLAG_DIRTY;
