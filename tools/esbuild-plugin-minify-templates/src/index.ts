@@ -58,11 +58,13 @@ export function minifyTemplates(
 }
 
 function getLoader(extension: string): esbuild.Loader {
-  return extension === '.ts'
-    ? 'ts'
-    : extension === '.tsx'
-      ? 'tsx'
-      : extension === '.jsx'
-        ? 'jsx'
-        : 'js';
+  switch (extension) {
+    case '.js':
+    case '.jsx':
+    case '.ts':
+    case '.tsx':
+      return extension.slice(1) as esbuild.Loader;
+    default:
+      return 'js';
+  }
 }
