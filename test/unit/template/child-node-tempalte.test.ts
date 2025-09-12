@@ -53,8 +53,8 @@ describe('ChildNodeTemplate', () => {
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
       ]);
     });
@@ -107,8 +107,8 @@ describe('ChildNodeTemplate', () => {
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
       ]);
     });

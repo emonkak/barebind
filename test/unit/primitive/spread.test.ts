@@ -145,8 +145,8 @@ describe('SpreadBinding', () => {
         );
         expect(slots).toStrictEqual({
           id: expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
+            dirty: false,
+            committed: true,
             part: {
               type: PartType.Attribute,
               name: 'id',
@@ -155,8 +155,8 @@ describe('SpreadBinding', () => {
             value: props1.id,
           }),
           class: expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
+            dirty: false,
+            committed: true,
             part: {
               type: PartType.Attribute,
               name: 'class',
@@ -165,8 +165,8 @@ describe('SpreadBinding', () => {
             value: props1.class,
           }),
           $open: expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
+            dirty: false,
+            committed: true,
             part: {
               type: PartType.Live,
               name: 'open',
@@ -191,12 +191,12 @@ describe('SpreadBinding', () => {
 
         expect(oldSlots).toStrictEqual({
           id: expect.objectContaining({
-            isConnected: false,
-            isCommitted: false,
+            dirty: false,
+            committed: false,
           }),
           class: expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
+            dirty: false,
+            committed: true,
             part: {
               type: PartType.Attribute,
               name: 'class',
@@ -205,8 +205,8 @@ describe('SpreadBinding', () => {
             value: props1.class,
           }),
           $open: expect.objectContaining({
-            isConnected: false,
-            isCommitted: false,
+            dirty: false,
+            committed: false,
           }),
         });
         expect(newSlots).toStrictEqual(
@@ -218,8 +218,8 @@ describe('SpreadBinding', () => {
         );
         expect(newSlots).toStrictEqual({
           class: expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
+            dirty: false,
+            committed: true,
             part: {
               type: PartType.Attribute,
               name: 'class',
@@ -228,8 +228,8 @@ describe('SpreadBinding', () => {
             value: props1.class,
           }),
           '.innerHTML': expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
+            dirty: false,
+            committed: true,
             part: {
               type: PartType.Property,
               name: 'innerHTML',
@@ -239,8 +239,8 @@ describe('SpreadBinding', () => {
             value: props2['.innerHTML'],
           }),
           '@click': expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
+            dirty: false,
+            committed: true,
             part: {
               type: PartType.Event,
               name: 'click',
@@ -303,8 +303,8 @@ describe('SpreadBinding', () => {
         );
         expect(slots).toStrictEqual({
           id: expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
+            dirty: false,
+            committed: true,
             part: {
               type: PartType.Attribute,
               name: 'id',
@@ -313,8 +313,8 @@ describe('SpreadBinding', () => {
             value: props.id,
           }),
           class: expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
+            dirty: false,
+            committed: true,
             part: {
               type: PartType.Attribute,
               name: 'class',
@@ -323,8 +323,8 @@ describe('SpreadBinding', () => {
             value: props.class,
           }),
           $open: expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
+            dirty: false,
+            committed: true,
             part: {
               type: PartType.Live,
               name: 'open',
@@ -334,8 +334,8 @@ describe('SpreadBinding', () => {
             value: props.$open,
           }),
           '.innerHTML': expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
+            dirty: false,
+            committed: true,
             part: {
               type: PartType.Property,
               name: 'innerHTML',
@@ -345,8 +345,8 @@ describe('SpreadBinding', () => {
             value: props['.innerHTML'],
           }),
           '@click': expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
+            dirty: false,
+            committed: true,
             part: {
               type: PartType.Event,
               name: 'click',
@@ -367,24 +367,24 @@ describe('SpreadBinding', () => {
 
         expect(slots).toStrictEqual({
           id: expect.objectContaining({
-            isConnected: false,
-            isCommitted: false,
+            dirty: false,
+            committed: false,
           }),
           class: expect.objectContaining({
-            isConnected: false,
-            isCommitted: false,
+            dirty: false,
+            committed: false,
           }),
           $open: expect.objectContaining({
-            isConnected: false,
-            isCommitted: false,
+            dirty: false,
+            committed: false,
           }),
           '.innerHTML': expect.objectContaining({
-            isConnected: false,
-            isCommitted: false,
+            dirty: false,
+            committed: false,
           }),
           '@click': expect.objectContaining({
-            isConnected: false,
-            isCommitted: false,
+            dirty: false,
+            committed: false,
           }),
         });
         expect(binding['_memoizedSlots']).toBe(null);

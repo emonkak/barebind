@@ -182,18 +182,18 @@ describe('TemplateBinding', () => {
           slots: [
             expect.objectContaining({
               value: binds1[0],
-              isConnected: true,
-              isCommitted: true,
+              dirty: false,
+              committed: true,
             }),
             expect.objectContaining({
               value: binds1[1],
-              isConnected: true,
-              isCommitted: true,
+              dirty: false,
+              committed: true,
             }),
             expect.objectContaining({
               value: binds1[2],
-              isConnected: true,
-              isCommitted: true,
+              dirty: false,
+              committed: true,
             }),
           ],
         });
@@ -217,18 +217,18 @@ describe('TemplateBinding', () => {
           slots: [
             expect.objectContaining({
               value: binds2[0],
-              isConnected: true,
-              isCommitted: true,
+              dirty: false,
+              committed: true,
             }),
             expect.objectContaining({
               value: binds2[1],
-              isConnected: true,
-              isCommitted: true,
+              dirty: false,
+              committed: true,
             }),
             expect.objectContaining({
               value: binds2[2],
-              isConnected: true,
-              isCommitted: true,
+              dirty: false,
+              committed: true,
             }),
           ],
         });
@@ -249,18 +249,18 @@ describe('TemplateBinding', () => {
           slots: [
             expect.objectContaining({
               value: binds2[0],
-              isConnected: false,
-              isCommitted: true,
+              dirty: true,
+              committed: true,
             }),
             expect.objectContaining({
               value: binds2[1],
-              isConnected: false,
-              isCommitted: true,
+              dirty: true,
+              committed: true,
             }),
             expect.objectContaining({
               value: binds2[2],
-              isConnected: false,
-              isCommitted: true,
+              dirty: true,
+              committed: true,
             }),
           ],
         });
@@ -346,18 +346,18 @@ describe('TemplateBinding', () => {
           slots: [
             expect.objectContaining({
               value: binds1[0],
-              isConnected: true,
-              isCommitted: true,
+              dirty: false,
+              committed: true,
             }),
             expect.objectContaining({
               value: binds1[1],
-              isConnected: true,
-              isCommitted: true,
+              dirty: false,
+              committed: true,
             }),
             expect.objectContaining({
               value: binds1[2],
-              isConnected: true,
-              isCommitted: true,
+              dirty: false,
+              committed: true,
             }),
           ],
         });
@@ -381,18 +381,18 @@ describe('TemplateBinding', () => {
           slots: [
             expect.objectContaining({
               value: binds2[0],
-              isConnected: true,
-              isCommitted: true,
+              dirty: false,
+              committed: true,
             }),
             expect.objectContaining({
               value: binds2[1],
-              isConnected: true,
-              isCommitted: true,
+              dirty: false,
+              committed: true,
             }),
             expect.objectContaining({
               value: binds2[2],
-              isConnected: true,
-              isCommitted: true,
+              dirty: false,
+              committed: true,
             }),
           ],
         });
@@ -413,18 +413,18 @@ describe('TemplateBinding', () => {
           slots: [
             expect.objectContaining({
               value: binds2[0],
-              isConnected: false,
-              isCommitted: false,
+              dirty: false,
+              committed: false,
             }),
             expect.objectContaining({
               value: binds2[1],
-              isConnected: false,
-              isCommitted: false,
+              dirty: false,
+              committed: false,
             }),
             expect.objectContaining({
               value: binds2[2],
-              isConnected: false,
-              isCommitted: true,
+              dirty: true,
+              committed: true,
             }),
           ],
         });

@@ -53,8 +53,8 @@ describe('TextTemplate', () => {
             precedingText: '(',
             followingText: ')',
           },
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
       ]);
     });
@@ -106,8 +106,8 @@ describe('TextTemplate', () => {
             precedingText: '(',
             followingText: ')',
           },
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
       ]);
     });

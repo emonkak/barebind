@@ -102,9 +102,9 @@ export class MockBinding<T> implements Binding<T> {
 
   memoizedValue: T | null = null;
 
-  isConnected: boolean = false;
+  dirty: boolean = false;
 
-  isCommitted: boolean = false;
+  committed: boolean = false;
 
   constructor(type: DirectiveType<T>, value: T, part: Part) {
     this.type = type;
@@ -117,11 +117,11 @@ export class MockBinding<T> implements Binding<T> {
   }
 
   connect(_session: UpdateSession): void {
-    this.isConnected = true;
+    this.dirty = true;
   }
 
   disconnect(_session: UpdateSession): void {
-    this.isConnected = false;
+    this.dirty = true;
   }
 
   commit(): void {
@@ -165,7 +165,8 @@ export class MockBinding<T> implements Binding<T> {
     }
 
     this.memoizedValue = this.value;
-    this.isCommitted = true;
+    this.dirty = false;
+    this.committed = true;
   }
 
   rollback(): void {
@@ -199,7 +200,8 @@ export class MockBinding<T> implements Binding<T> {
     }
 
     this.memoizedValue = null;
-    this.isCommitted = false;
+    this.dirty = false;
+    this.committed = false;
   }
 }
 
@@ -273,9 +275,9 @@ export class MockObserver implements RuntimeObserver {
 export class MockSlot<T> implements Slot<T> {
   readonly binding: Binding<UnwrapBindable<T>>;
 
-  isConnected = false;
+  dirty = false;
 
-  isCommitted = false;
+  committed = false;
 
   constructor(binding: Binding<UnwrapBindable<T>>) {
     this.binding = binding;
@@ -295,7 +297,7 @@ export class MockSlot<T> implements Slot<T> {
 
   connect(session: UpdateSession): void {
     this.binding.connect(session);
-    this.isConnected = true;
+    this.dirty = true;
   }
 
   reconcile(value: T, session: UpdateSession): boolean {
@@ -313,7 +315,7 @@ export class MockSlot<T> implements Slot<T> {
     if (dirty) {
       this.binding.value = directive.value;
       this.binding.connect(session);
-      this.isConnected = true;
+      this.dirty = true;
     }
 
     return dirty;
@@ -321,17 +323,19 @@ export class MockSlot<T> implements Slot<T> {
 
   disconnect(session: UpdateSession): void {
     this.binding.disconnect(session);
-    this.isConnected = false;
+    this.dirty = true;
   }
 
   commit(): void {
     this.binding.commit();
-    this.isCommitted = true;
+    this.dirty = false;
+    this.committed = true;
   }
 
   rollback(): void {
     this.binding.rollback();
-    this.isCommitted = false;
+    this.dirty = false;
+    this.committed = false;
   }
 }
 

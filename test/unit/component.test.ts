@@ -209,8 +209,8 @@ describe('ComponentBinding', () => {
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
           expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
+            dirty: false,
+            committed: true,
           }),
         );
         expect(binding['_slot']?.part).toBe(part);
@@ -227,8 +227,8 @@ describe('ComponentBinding', () => {
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
           expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
+            dirty: false,
+            committed: true,
           }),
         );
         expect(binding['_slot']?.part).toBe(part);
@@ -261,8 +261,8 @@ describe('ComponentBinding', () => {
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
           expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
+            dirty: false,
+            committed: true,
           }),
         );
         expect(binding['_slot']?.part).toBe(part);
@@ -278,8 +278,8 @@ describe('ComponentBinding', () => {
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
           expect.objectContaining({
-            isConnected: false,
-            isCommitted: false,
+            dirty: false,
+            committed: false,
           }),
         );
         expect(binding['_slot']?.part).toBe(part);

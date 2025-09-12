@@ -148,8 +148,8 @@ describe('FlexibleSlot', () => {
         expect(slot['_pendingBinding']).toBe(binding);
         expect(slot['_pendingBinding']).toStrictEqual(
           expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
+            dirty: false,
+            committed: true,
           }),
         );
         expect(part.node.data).toBe('/MockPrimitive("foo")');

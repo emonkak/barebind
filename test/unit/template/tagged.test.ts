@@ -514,8 +514,8 @@ describe('TaggedTemplate', () => {
             name: 'class',
           },
           value: binds[0],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -525,8 +525,8 @@ describe('TaggedTemplate', () => {
             namespaceURI: HTML_NAMESPACE_URI,
           },
           value: binds[1],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -534,8 +534,8 @@ describe('TaggedTemplate', () => {
             node: expect.exact(container.querySelector('label')),
           },
           value: binds[2],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -545,8 +545,8 @@ describe('TaggedTemplate', () => {
             precedingText: '',
           },
           value: binds[3],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -556,8 +556,8 @@ describe('TaggedTemplate', () => {
             defaultValue: '',
           },
           value: binds[4],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -567,8 +567,8 @@ describe('TaggedTemplate', () => {
             defaultValue: false,
           },
           value: binds[5],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -577,8 +577,8 @@ describe('TaggedTemplate', () => {
             name: 'onchange',
           },
           value: binds[6],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -586,8 +586,8 @@ describe('TaggedTemplate', () => {
             node: expect.exact(container.querySelector('input')),
           },
           value: binds[7],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -597,8 +597,8 @@ describe('TaggedTemplate', () => {
             namespaceURI: HTML_NAMESPACE_URI,
           },
           value: binds[8],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
       ]);
     });
@@ -671,8 +671,8 @@ describe('TaggedTemplate', () => {
             followingText: '',
           },
           value: binds[0],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -682,8 +682,8 @@ describe('TaggedTemplate', () => {
             followingText: '',
           },
           value: binds[1],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -693,8 +693,8 @@ describe('TaggedTemplate', () => {
             followingText: ')',
           },
           value: binds[2],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -704,8 +704,8 @@ describe('TaggedTemplate', () => {
             followingText: '',
           },
           value: binds[3],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -715,8 +715,8 @@ describe('TaggedTemplate', () => {
             followingText: ']',
           },
           value: binds[4],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
       ]);
     });
@@ -839,8 +839,8 @@ describe('TaggedTemplate', () => {
             name: 'class',
           },
           value: binds[0],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -850,8 +850,8 @@ describe('TaggedTemplate', () => {
             namespaceURI: HTML_NAMESPACE_URI,
           },
           value: binds[1],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -859,8 +859,8 @@ describe('TaggedTemplate', () => {
             node: expect.any(HTMLLabelElement),
           },
           value: binds[2],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -870,8 +870,8 @@ describe('TaggedTemplate', () => {
             precedingText: '',
           },
           value: binds[3],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -881,8 +881,8 @@ describe('TaggedTemplate', () => {
             defaultValue: '',
           },
           value: binds[4],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -892,8 +892,8 @@ describe('TaggedTemplate', () => {
             defaultValue: false,
           },
           value: binds[5],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -902,8 +902,8 @@ describe('TaggedTemplate', () => {
             name: 'onchange',
           },
           value: binds[6],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -911,8 +911,8 @@ describe('TaggedTemplate', () => {
             node: expect.any(HTMLInputElement),
           },
           value: binds[7],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -922,8 +922,8 @@ describe('TaggedTemplate', () => {
             namespaceURI: HTML_NAMESPACE_URI,
           },
           value: binds[8],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
       ]);
     });
@@ -983,8 +983,8 @@ describe('TaggedTemplate', () => {
             followingText: '',
           },
           value: binds[0],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -994,8 +994,8 @@ describe('TaggedTemplate', () => {
             followingText: '',
           },
           value: binds[1],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -1005,8 +1005,8 @@ describe('TaggedTemplate', () => {
             followingText: ')',
           },
           value: binds[2],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -1016,8 +1016,8 @@ describe('TaggedTemplate', () => {
             followingText: '',
           },
           value: binds[3],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -1027,8 +1027,8 @@ describe('TaggedTemplate', () => {
             followingText: ']',
           },
           value: binds[4],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
       ]);
     });
@@ -1063,8 +1063,8 @@ describe('TaggedTemplate', () => {
             namespaceURI: HTML_NAMESPACE_URI,
           },
           value: binds[0],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -1074,8 +1074,8 @@ describe('TaggedTemplate', () => {
             namespaceURI: MATH_NAMESPACE_URI,
           },
           value: binds[1],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           part: {
@@ -1085,8 +1085,8 @@ describe('TaggedTemplate', () => {
             namespaceURI: SVG_NAMESPACE_URI,
           },
           value: binds[2],
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
       ]);
     });

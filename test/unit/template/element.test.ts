@@ -70,8 +70,8 @@ describe('ElementTemplate', () => {
             type: PartType.Element,
             node: expect.exact(container.firstChild),
           },
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           value: binds[1],
@@ -81,8 +81,8 @@ describe('ElementTemplate', () => {
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
       ]);
     });
@@ -114,8 +114,8 @@ describe('ElementTemplate', () => {
             type: PartType.Element,
             node: expect.any(window.Element),
           },
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           value: binds[1],
@@ -125,8 +125,8 @@ describe('ElementTemplate', () => {
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
       ]);
       expect((slots[0]!.part.node as Element).namespaceURI).toBe(
@@ -159,8 +159,8 @@ describe('ElementTemplate', () => {
             type: PartType.Element,
             node: expect.any(window.Element),
           },
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
         expect.objectContaining({
           value: binds[1],
@@ -170,8 +170,8 @@ describe('ElementTemplate', () => {
             anchorNode: null,
             namespaceURI: SVG_NAMESPACE_URI,
           },
-          isConnected: true,
-          isCommitted: false,
+          dirty: true,
+          committed: false,
         }),
       ]);
       expect((slots[0]!.part.node as Element).namespaceURI).toBe(

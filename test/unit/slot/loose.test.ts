@@ -145,8 +145,8 @@ describe('LooseSlot', () => {
         expect(slot['_pendingBinding']).toBeInstanceOf(MockBinding);
         expect(slot['_pendingBinding']).toStrictEqual(
           expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
+            dirty: false,
+            committed: true,
           }),
         );
         expect(part.node.data).toBe('/MockDirective("bar")');
