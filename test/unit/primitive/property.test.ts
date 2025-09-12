@@ -72,7 +72,7 @@ describe('PropertyBinding', () => {
 
       SESSION: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -97,7 +97,7 @@ describe('PropertyBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -107,7 +107,7 @@ describe('PropertyBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = value2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -130,7 +130,7 @@ describe('PropertyBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -139,7 +139,7 @@ describe('PropertyBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -162,7 +162,7 @@ describe('PropertyBinding', () => {
 
       SESSION: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 

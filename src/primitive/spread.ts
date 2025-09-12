@@ -74,14 +74,14 @@ export class SpreadBinding implements Binding<SpreadProps> {
     return this._memoizedSlots === null || props !== this._props;
   }
 
-  connect(session: UpdateSession): void {
+  attach(session: UpdateSession): void {
     const { context } = session;
     const oldSlots = this._pendingSlots;
     const newSlots = new Map();
 
     for (const [key, slot] of oldSlots.entries()) {
       if (!Object.hasOwn(this._props, key) || this._props[key] === undefined) {
-        slot.disconnect(session);
+        slot.detach(session);
       }
     }
 
@@ -96,7 +96,7 @@ export class SpreadBinding implements Binding<SpreadProps> {
       } else {
         const part = resolveNamedPart(key, this._part.node);
         slot = context.resolveSlot(prop, part);
-        slot.connect(session);
+        slot.attach(session);
       }
       newSlots.set(key, slot);
     }
@@ -104,10 +104,10 @@ export class SpreadBinding implements Binding<SpreadProps> {
     this._pendingSlots = newSlots;
   }
 
-  disconnect(session: UpdateSession): void {
+  detach(session: UpdateSession): void {
     if (this._memoizedSlots !== null) {
       for (const slot of this._memoizedSlots.values()) {
-        slot.disconnect(session);
+        slot.detach(session);
       }
     }
   }

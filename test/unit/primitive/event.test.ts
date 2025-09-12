@@ -104,7 +104,7 @@ describe('EventBinding', () => {
 
       SESSION: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -132,7 +132,7 @@ describe('EventBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -150,7 +150,7 @@ describe('EventBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = handler2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -183,7 +183,7 @@ describe('EventBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -205,7 +205,7 @@ describe('EventBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = handler2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -250,7 +250,7 @@ describe('EventBinding', () => {
 
         SESSION1: {
           updater.startUpdate((session) => {
-            binding.connect(session);
+            binding.attach(session);
             binding.commit();
           });
 
@@ -266,7 +266,7 @@ describe('EventBinding', () => {
         SESSION2: {
           updater.startUpdate((session) => {
             binding.value = handler2;
-            binding.connect(session);
+            binding.attach(session);
             binding.commit();
           });
 
@@ -298,7 +298,7 @@ describe('EventBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -322,7 +322,7 @@ describe('EventBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -333,7 +333,7 @@ describe('EventBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 

@@ -120,7 +120,7 @@ export class ComponentBinding<TProps, TResult>
       dirty = this._slot.reconcile(result, subSession);
     } else {
       this._slot = context.resolveSlot(result, this._part);
-      this._slot.connect(subSession);
+      this._slot.attach(subSession);
       dirty = true;
     }
 
@@ -138,12 +138,12 @@ export class ComponentBinding<TProps, TResult>
     );
   }
 
-  connect(session: UpdateSession): void {
+  attach(session: UpdateSession): void {
     session.frame.pendingCoroutines.push(this);
     this._scope = session.scope;
   }
 
-  disconnect(session: UpdateSession): void {
+  detach(session: UpdateSession): void {
     const { frame } = session;
 
     // Hooks must be cleaned in reverse order.
@@ -162,7 +162,7 @@ export class ComponentBinding<TProps, TResult>
       }
     }
 
-    this._slot?.disconnect(session);
+    this._slot?.detach(session);
 
     this._scope = Scope.DETACHED;
     this._pendingLanes = Lanes.NoLanes;

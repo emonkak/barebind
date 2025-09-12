@@ -105,7 +105,7 @@ describe('RefBinding', () => {
 
       SESSION: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -129,7 +129,7 @@ describe('RefBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -140,7 +140,7 @@ describe('RefBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = ref2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -164,7 +164,7 @@ describe('RefBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -177,7 +177,7 @@ describe('RefBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -190,7 +190,7 @@ describe('RefBinding', () => {
       SESSION3: {
         updater.startUpdate((session) => {
           binding.value = ref2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -216,7 +216,7 @@ describe('RefBinding', () => {
 
       SESSION: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -236,7 +236,7 @@ describe('RefBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -245,7 +245,7 @@ describe('RefBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -266,7 +266,7 @@ describe('RefBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -277,7 +277,7 @@ describe('RefBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 

@@ -33,7 +33,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
     };
     const childNodeSlot = context.resolveSlot(binds[0], childNodePart);
 
-    childNodeSlot.connect(session);
+    childNodeSlot.attach(session);
 
     mountMarkerNode(targetTree, childNodePart.node);
 
@@ -55,7 +55,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
     };
     const childNodeSlot = context.resolveSlot(binds[0], childNodePart);
 
-    childNodeSlot.connect(session);
+    childNodeSlot.attach(session);
 
     return { childNodes: [childNodePart.node], slots: [childNodeSlot] };
   }

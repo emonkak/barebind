@@ -49,13 +49,13 @@ export class FlexibleSlot<T> implements Slot<T> {
     if (areDirectiveTypesEqual(this._pendingBinding.type, directive.type)) {
       if (this._dirty || this._pendingBinding.shouldUpdate(directive.value)) {
         this._pendingBinding.value = directive.value;
-        this._pendingBinding.connect(session);
+        this._pendingBinding.attach(session);
         this._dirty = true;
       }
     } else {
       const reservedBinding = this._reservedBinding;
 
-      this._pendingBinding.disconnect(session);
+      this._pendingBinding.detach(session);
       this._reservedBinding = this._pendingBinding;
 
       if (
@@ -63,7 +63,7 @@ export class FlexibleSlot<T> implements Slot<T> {
         areDirectiveTypesEqual(reservedBinding.type, directive.type)
       ) {
         reservedBinding.value = directive.value;
-        reservedBinding.connect(session);
+        reservedBinding.attach(session);
         this._pendingBinding = reservedBinding;
       } else {
         this._pendingBinding = directive.type.resolveBinding(
@@ -71,7 +71,7 @@ export class FlexibleSlot<T> implements Slot<T> {
           this._pendingBinding.part,
           context,
         );
-        this._pendingBinding.connect(session);
+        this._pendingBinding.attach(session);
       }
 
       this._dirty = true;
@@ -80,13 +80,13 @@ export class FlexibleSlot<T> implements Slot<T> {
     return this._dirty;
   }
 
-  connect(session: UpdateSession): void {
-    this._pendingBinding.connect(session);
+  attach(session: UpdateSession): void {
+    this._pendingBinding.attach(session);
     this._dirty = true;
   }
 
-  disconnect(session: UpdateSession): void {
-    this._pendingBinding.disconnect(session);
+  detach(session: UpdateSession): void {
+    this._pendingBinding.detach(session);
     this._dirty = true;
   }
 

@@ -15,8 +15,8 @@ export interface Binding<T> extends ReversibleEffect {
   value: T;
   readonly part: Part;
   shouldUpdate(value: T): boolean;
-  connect(session: UpdateSession): void;
-  disconnect(session: UpdateSession): void;
+  attach(session: UpdateSession): void;
+  detach(session: UpdateSession): void;
 }
 
 export type Boundary =
@@ -376,8 +376,8 @@ export interface Slot<T> extends ReversibleEffect {
   readonly value: UnwrapBindable<T>;
   readonly part: Part;
   reconcile(value: T, session: UpdateSession): boolean;
-  connect(session: UpdateSession): void;
-  disconnect(session: UpdateSession): void;
+  attach(session: UpdateSession): void;
+  detach(session: UpdateSession): void;
 }
 
 export interface SlotType {

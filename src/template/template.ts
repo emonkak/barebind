@@ -101,7 +101,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     return this._memoizedResult === null || binds !== this._binds;
   }
 
-  connect(session: UpdateSession): void {
+  attach(session: UpdateSession): void {
     if (this._pendingResult !== null) {
       const { slots } = this._pendingResult;
 
@@ -130,12 +130,12 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     }
   }
 
-  disconnect(session: UpdateSession): void {
+  detach(session: UpdateSession): void {
     if (this._pendingResult !== null) {
       const { slots } = this._pendingResult;
 
       for (let i = slots.length - 1; i >= 0; i--) {
-        slots[i]!.disconnect(session);
+        slots[i]!.detach(session);
       }
     }
   }

@@ -77,7 +77,7 @@ describe('SiganlBinding', () => {
       );
 
       updater.startUpdate((session) => {
-        binding.connect(session);
+        binding.attach(session);
         binding.commit();
       });
 
@@ -86,7 +86,7 @@ describe('SiganlBinding', () => {
     });
   });
 
-  describe('connect()', () => {
+  describe('attach()', () => {
     it('schedule an update when the signal value has been changed', async () => {
       const signal = new Atom('foo');
       const part = {
@@ -104,7 +104,7 @@ describe('SiganlBinding', () => {
 
       SESSION: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -142,7 +142,7 @@ describe('SiganlBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -152,7 +152,7 @@ describe('SiganlBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = signal2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -169,7 +169,7 @@ describe('SiganlBinding', () => {
     });
   });
 
-  describe('disconnect()', () => {
+  describe('detach()', () => {
     it('unsubscribes the signal', async () => {
       const signal = new Atom('foo');
       const part = {
@@ -187,7 +187,7 @@ describe('SiganlBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -196,7 +196,7 @@ describe('SiganlBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 

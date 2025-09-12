@@ -110,7 +110,7 @@ describe('StyleBinding', () => {
 
       SESSION: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -143,7 +143,7 @@ describe('StyleBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -155,7 +155,7 @@ describe('StyleBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = style2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -177,7 +177,7 @@ describe('StyleBinding', () => {
 
       SESSION: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -202,7 +202,7 @@ describe('StyleBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -212,7 +212,7 @@ describe('StyleBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = style2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -239,7 +239,7 @@ describe('StyleBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -250,7 +250,7 @@ describe('StyleBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 

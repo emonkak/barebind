@@ -105,7 +105,7 @@ describe('RepeatBinding', () => {
 
       SESSION: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -116,7 +116,7 @@ describe('RepeatBinding', () => {
     });
   });
 
-  describe('connect()', () => {
+  describe('attach()', () => {
     it('updates items according to keys', () => {
       const source: KeyValuePair[] = [
         { key: 'one', value: 'foo' },
@@ -149,7 +149,7 @@ describe('RepeatBinding', () => {
 
           SESSION1: {
             updater.startUpdate((session) => {
-              binding.connect(session);
+              binding.attach(session);
               binding.commit();
             });
 
@@ -163,7 +163,7 @@ describe('RepeatBinding', () => {
           SESSION2: {
             updater.startUpdate((session) => {
               binding.value = props2;
-              binding.connect(session);
+              binding.attach(session);
               binding.commit();
             });
 
@@ -215,7 +215,7 @@ describe('RepeatBinding', () => {
 
           SESSION1: {
             updater.startUpdate((session) => {
-              binding.connect(session);
+              binding.attach(session);
               binding.commit();
             });
 
@@ -229,7 +229,7 @@ describe('RepeatBinding', () => {
           SESSION2: {
             updater.startUpdate((session) => {
               binding.value = props2;
-              binding.connect(session);
+              binding.attach(session);
               binding.commit();
             });
 
@@ -243,7 +243,7 @@ describe('RepeatBinding', () => {
           SESSION3: {
             updater.startUpdate((session) => {
               binding.value = props1;
-              binding.connect(session);
+              binding.attach(session);
               binding.commit();
             });
 
@@ -289,7 +289,7 @@ describe('RepeatBinding', () => {
 
       updater.startUpdate(
         (session) => {
-          binding.connect(session);
+          binding.attach(session);
         },
         { scope },
       );
@@ -345,7 +345,7 @@ describe('RepeatBinding', () => {
 
           SESSION1: {
             updater.startUpdate((session) => {
-              binding.connect(session);
+              binding.attach(session);
               binding.commit();
             });
 
@@ -359,7 +359,7 @@ describe('RepeatBinding', () => {
           SESSION2: {
             updater.startUpdate((session) => {
               binding.value = props2;
-              binding.connect(session);
+              binding.attach(session);
               binding.commit();
             });
 
@@ -373,7 +373,7 @@ describe('RepeatBinding', () => {
           SESSION3: {
             updater.startUpdate((session) => {
               binding.value = props1;
-              binding.connect(session);
+              binding.attach(session);
               binding.commit();
             });
 
@@ -416,7 +416,7 @@ describe('RepeatBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -429,7 +429,7 @@ describe('RepeatBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -442,7 +442,7 @@ describe('RepeatBinding', () => {
       SESSION3: {
         updater.startUpdate((session) => {
           binding.value = props1;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -454,8 +454,8 @@ describe('RepeatBinding', () => {
     });
   });
 
-  describe('disconnect()', () => {
-    it('should restore disconnected items', () => {
+  describe('detach()', () => {
+    it('should restore rollbacked items', () => {
       const source = ['foo', 'bar', 'baz'];
       const props: RepeatProps<string> = {
         source,
@@ -472,7 +472,7 @@ describe('RepeatBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -483,7 +483,7 @@ describe('RepeatBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -492,7 +492,7 @@ describe('RepeatBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 

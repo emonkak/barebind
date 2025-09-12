@@ -231,7 +231,7 @@ export class TaggedTemplate<
         }
 
         const slot = context.resolveSlot(binds[holeIndex]!, currentPart!);
-        slot.connect(session);
+        slot.attach(session);
 
         if (currentPart!.type === PartType.ChildNode) {
           mountMarkerNode(targetTree, currentPart!.node);
@@ -335,7 +335,7 @@ export class TaggedTemplate<
         }
 
         const slot = context.resolveSlot(binds[i]!, currentPart);
-        slot.connect(session);
+        slot.attach(session);
 
         slots[i] = slot;
       }

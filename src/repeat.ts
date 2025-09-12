@@ -142,7 +142,7 @@ export class RepeatBinding<TSource, TKey, TValue>
     );
   }
 
-  connect(session: UpdateSession): void {
+  attach(session: UpdateSession): void {
     const { context, rootScope } = session;
     const document = this._part.node.ownerDocument;
     const targetTree = rootScope.getHydrationTarget();
@@ -162,7 +162,7 @@ export class RepeatBinding<TSource, TKey, TValue>
           key,
           slot,
         };
-        slot.connect(session);
+        slot.attach(session);
         if (targetTree !== null) {
           mountMarkerNode(targetTree, part.node);
         } else {
@@ -200,7 +200,7 @@ export class RepeatBinding<TSource, TKey, TValue>
         return target;
       },
       remove: (target) => {
-        target.slot.disconnect(session);
+        target.slot.detach(session);
         this._pendingOperations.push({
           type: OPERATION_REMOVE,
           target,
@@ -216,10 +216,10 @@ export class RepeatBinding<TSource, TKey, TValue>
     }
   }
 
-  disconnect(session: UpdateSession): void {
+  detach(session: UpdateSession): void {
     for (let i = this._pendingItems.length - 1; i >= 0; i--) {
       const { slot } = this._pendingItems[i]!;
-      slot.disconnect(session);
+      slot.detach(session);
     }
   }
 

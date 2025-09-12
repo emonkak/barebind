@@ -233,7 +233,7 @@ describe('ElementBinding', () => {
 
       SESSION: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -255,7 +255,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -264,7 +264,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -284,7 +284,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -296,7 +296,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -305,7 +305,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -325,7 +325,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -335,7 +335,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -344,7 +344,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -364,7 +364,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
         expect(part.node.outerHTML).toBe('<div class="foo"></div>');
@@ -373,7 +373,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -382,7 +382,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -402,7 +402,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -412,7 +412,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -421,7 +421,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -441,7 +441,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -453,7 +453,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -462,7 +462,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -482,7 +482,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -493,7 +493,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -503,7 +503,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -526,7 +526,7 @@ describe('ElementBinding', () => {
 
         SESSION1: {
           updater.startUpdate((session) => {
-            binding.connect(session);
+            binding.attach(session);
             binding.commit();
           });
 
@@ -537,7 +537,7 @@ describe('ElementBinding', () => {
         SESSION2: {
           updater.startUpdate((session) => {
             binding.value = props2;
-            binding.connect(session);
+            binding.attach(session);
             binding.commit();
           });
 
@@ -547,7 +547,7 @@ describe('ElementBinding', () => {
 
         SESSION3: {
           updater.startUpdate((session) => {
-            binding.disconnect(session);
+            binding.detach(session);
             binding.rollback();
           });
 
@@ -573,7 +573,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -583,7 +583,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -592,7 +592,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -612,7 +612,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -622,7 +622,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -631,7 +631,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -653,7 +653,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -665,7 +665,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -678,7 +678,7 @@ describe('ElementBinding', () => {
       SESSION3: {
         updater.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -690,7 +690,7 @@ describe('ElementBinding', () => {
 
       SESSION4: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -713,7 +713,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -724,7 +724,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -734,7 +734,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -756,7 +756,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -768,7 +768,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -780,7 +780,7 @@ describe('ElementBinding', () => {
       SESSION3: {
         updater.startUpdate((session) => {
           binding.value = props3;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -789,7 +789,7 @@ describe('ElementBinding', () => {
 
       SESSION4: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -808,7 +808,7 @@ describe('ElementBinding', () => {
 
       expect(() => {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
       }).toThrow('The "style" property expects a object, not a string.');
@@ -831,7 +831,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -843,7 +843,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -859,7 +859,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -891,7 +891,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -908,7 +908,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -936,7 +936,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -979,7 +979,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -991,7 +991,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -1000,7 +1000,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 

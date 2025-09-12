@@ -122,7 +122,7 @@ describe('ComponentBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           session.frame.pendingCoroutines.push(binding);
         });
 
@@ -181,7 +181,7 @@ describe('ComponentBinding', () => {
     });
   });
 
-  describe('connect()', () => {
+  describe('attach()', () => {
     it('renders the component', () => {
       const props1 = {
         name: 'foo',
@@ -202,7 +202,7 @@ describe('ComponentBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           session.frame.pendingCoroutines.push(binding);
         });
 
@@ -220,7 +220,7 @@ describe('ComponentBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(session);
+          binding.attach(session);
           session.frame.mutationEffects.push(binding);
         });
 
@@ -237,7 +237,7 @@ describe('ComponentBinding', () => {
     });
   });
 
-  describe('disconnect()', () => {
+  describe('detach()', () => {
     it('cleans effect hooks', () => {
       const props = {
         callback: vi.fn(),
@@ -254,7 +254,7 @@ describe('ComponentBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           session.frame.mutationEffects.push(binding);
         });
 
@@ -271,7 +271,7 @@ describe('ComponentBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 

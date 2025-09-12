@@ -51,7 +51,7 @@ export class Root<T> {
       resume: (session) => {
         const targetTree = createTreeWalker(this._container);
         scope.setHydrationTarget(targetTree);
-        this._slot.connect(session);
+        this._slot.attach(session);
         session.frame.mutationEffects.push(
           new HydrateSlot(this._slot, targetTree),
         );
@@ -69,7 +69,7 @@ export class Root<T> {
       scope,
       pendingLanes: Lanes.DefaultLane,
       resume: (session) => {
-        this._slot.connect(session);
+        this._slot.attach(session);
         session.frame.mutationEffects.push(
           new MountSlot(this._slot, this._container),
         );
@@ -104,7 +104,7 @@ export class Root<T> {
       scope,
       pendingLanes: Lanes.DefaultLane,
       resume: (session) => {
-        this._slot.disconnect(session);
+        this._slot.detach(session);
         session.frame.mutationEffects.push(
           new UnmountSlot(this._slot, this._container),
         );

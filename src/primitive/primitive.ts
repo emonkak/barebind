@@ -12,6 +12,8 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
     this._part = part;
   }
 
+  abstract get type(): Primitive<TValue>;
+
   get value(): TValue {
     return this._value;
   }
@@ -24,13 +26,11 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
     return this._part;
   }
 
-  abstract get type(): Primitive<TValue>;
-
   abstract shouldUpdate(value: TValue): boolean;
 
-  connect(_session: UpdateSession): void {}
+  attach(_session: UpdateSession): void {}
 
-  disconnect(_session: UpdateSession): void {}
+  detach(_session: UpdateSession): void {}
 
   abstract commit(): void;
 

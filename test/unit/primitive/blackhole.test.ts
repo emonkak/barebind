@@ -56,7 +56,7 @@ describe('BlackholeBinding', () => {
 
       SESSION: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
       }
@@ -75,7 +75,7 @@ describe('BlackholeBinding', () => {
 
       SESSION: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
       }

@@ -66,8 +66,8 @@ export class ElementTemplate<
     const elementSlot = context.resolveSlot(binds[0], elementPart);
     const childrenSlot = context.resolveSlot(binds[1], childrenPart);
 
-    elementSlot.connect(session);
-    childrenSlot.connect(session);
+    elementSlot.attach(session);
+    childrenSlot.attach(session);
 
     mountMarkerNode(targetTree, childrenPart.node);
 
@@ -101,8 +101,8 @@ export class ElementTemplate<
 
     elementPart.node.appendChild(childrenPart.node);
 
-    elementSlot.connect(session);
-    childrenSlot.connect(session);
+    elementSlot.attach(session);
+    childrenSlot.attach(session);
 
     return {
       childNodes: [elementPart.node],

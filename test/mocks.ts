@@ -116,11 +116,11 @@ export class MockBinding<T> implements Binding<T> {
     return !Object.is(value, this.memoizedValue);
   }
 
-  connect(_session: UpdateSession): void {
+  attach(_session: UpdateSession): void {
     this.dirty = true;
   }
 
-  disconnect(_session: UpdateSession): void {
+  detach(_session: UpdateSession): void {
     this.dirty = true;
   }
 
@@ -295,8 +295,8 @@ export class MockSlot<T> implements Slot<T> {
     return this.binding.part;
   }
 
-  connect(session: UpdateSession): void {
-    this.binding.connect(session);
+  attach(session: UpdateSession): void {
+    this.binding.attach(session);
     this.dirty = true;
   }
 
@@ -314,15 +314,15 @@ export class MockSlot<T> implements Slot<T> {
 
     if (dirty) {
       this.binding.value = directive.value;
-      this.binding.connect(session);
+      this.binding.attach(session);
       this.dirty = true;
     }
 
     return dirty;
   }
 
-  disconnect(session: UpdateSession): void {
-    this.binding.disconnect(session);
+  detach(session: UpdateSession): void {
+    this.binding.detach(session);
     this.dirty = true;
   }
 

@@ -47,30 +47,30 @@ export class LooseSlot<T> implements Slot<T> {
     if (areDirectiveTypesEqual(this._pendingBinding.type, directive.type)) {
       if (this._dirty || this._pendingBinding.shouldUpdate(directive.value)) {
         this._pendingBinding.value = directive.value;
-        this._pendingBinding.connect(session);
+        this._pendingBinding.attach(session);
         this._dirty = true;
       }
     } else {
-      this._pendingBinding.disconnect(session);
+      this._pendingBinding.detach(session);
       this._pendingBinding = directive.type.resolveBinding(
         directive.value,
         this._pendingBinding.part,
         context,
       );
-      this._pendingBinding.connect(session);
+      this._pendingBinding.attach(session);
       this._dirty = true;
     }
 
     return this._dirty;
   }
 
-  connect(session: UpdateSession): void {
-    this._pendingBinding.connect(session);
+  attach(session: UpdateSession): void {
+    this._pendingBinding.attach(session);
     this._dirty = true;
   }
 
-  disconnect(session: UpdateSession): void {
-    this._pendingBinding.disconnect(session);
+  detach(session: UpdateSession): void {
+    this._pendingBinding.detach(session);
     this._dirty = true;
   }
 

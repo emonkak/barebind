@@ -73,7 +73,7 @@ describe('CommentBinding', () => {
 
       SESSION: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -98,7 +98,7 @@ describe('CommentBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -108,7 +108,7 @@ describe('CommentBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = value2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -130,7 +130,7 @@ describe('CommentBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -140,7 +140,7 @@ describe('CommentBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = value2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -163,7 +163,7 @@ describe('CommentBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -172,7 +172,7 @@ describe('CommentBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -195,7 +195,7 @@ describe('CommentBinding', () => {
 
       SESSION: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 

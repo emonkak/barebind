@@ -94,7 +94,7 @@ describe('TemplateBinding', () => {
 
       SESSION: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -104,7 +104,7 @@ describe('TemplateBinding', () => {
     });
   });
 
-  describe('connect()', () => {
+  describe('attach()', () => {
     it('renders a template with the element as root', () => {
       const template = new MockTemplate();
       const binds1 = ['foo', 'bar', 'baz'];
@@ -156,14 +156,14 @@ describe('TemplateBinding', () => {
             ),
           ];
           for (const slot of slots) {
-            slot.connect(session);
+            slot.attach(session);
           }
           return { childNodes: [fragment], slots };
         });
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -203,7 +203,7 @@ describe('TemplateBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = binds2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -237,7 +237,7 @@ describe('TemplateBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -317,7 +317,7 @@ describe('TemplateBinding', () => {
             ),
           ];
           for (const slot of slots) {
-            slot.connect(session);
+            slot.attach(session);
           }
           return {
             childNodes: fragment,
@@ -327,7 +327,7 @@ describe('TemplateBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -367,7 +367,7 @@ describe('TemplateBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.value = binds2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -401,7 +401,7 @@ describe('TemplateBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -456,7 +456,7 @@ describe('TemplateBinding', () => {
 
       updater.startUpdate(
         (session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         },
         { scope },

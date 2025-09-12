@@ -103,7 +103,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     return this._subscription === null || signal !== this._signal;
   }
 
-  connect(session: UpdateSession): void {
+  attach(session: UpdateSession): void {
     const { scope, context } = session;
     const { version } = this._signal;
 
@@ -113,16 +113,16 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
       this._slot.reconcile(this._signal.value, session);
       this._version = version;
     } else {
-      this._slot.connect(session);
+      this._slot.attach(session);
     }
 
     this._scope = scope;
     this._subscription = this._subscribeSignal(context);
   }
 
-  disconnect(session: UpdateSession): void {
+  detach(session: UpdateSession): void {
     this._subscription?.();
-    this._slot.disconnect(session);
+    this._slot.detach(session);
 
     this._scope = Scope.DETACHED;
     this._subscription = null;

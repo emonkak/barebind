@@ -259,9 +259,9 @@ export class ElementBinding implements Binding<ElementProps> {
     );
   }
 
-  connect(_session: UpdateSession): void {}
+  attach(_session: UpdateSession): void {}
 
-  disconnect(_session: UpdateSession): void {}
+  detach(_session: UpdateSession): void {}
 
   commit(): void {
     const newProps = this._props;

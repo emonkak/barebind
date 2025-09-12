@@ -45,7 +45,7 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
     };
     const textSlot = context.resolveSlot(binds[0], textPart);
 
-    textSlot.connect(session);
+    textSlot.attach(session);
 
     return { childNodes: [textPart.node], slots: [textSlot] };
   }
@@ -65,7 +65,7 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
     };
     const textSlot = context.resolveSlot(binds[0], textPart);
 
-    textSlot.connect(session);
+    textSlot.attach(session);
 
     return { childNodes: [textPart.node], slots: [textSlot] };
   }

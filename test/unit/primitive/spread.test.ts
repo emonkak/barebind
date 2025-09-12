@@ -98,7 +98,7 @@ describe('SpreadBinding', () => {
       const updater = new TestUpdater();
 
       updater.startUpdate((session) => {
-        binding.connect(session);
+        binding.attach(session);
         binding.commit();
       });
 
@@ -107,8 +107,8 @@ describe('SpreadBinding', () => {
     });
   });
 
-  describe('connect()', () => {
-    it('connects the corresponding slots for each properties', () => {
+  describe('attach()', () => {
+    it('request commits the corresponding slots for each properties', () => {
       const props1 = {
         id: 'foo',
         class: 'bar',
@@ -130,7 +130,7 @@ describe('SpreadBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -183,7 +183,7 @@ describe('SpreadBinding', () => {
 
         updater.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -253,7 +253,7 @@ describe('SpreadBinding', () => {
     });
   });
 
-  describe('disconnect()', () => {
+  describe('detach()', () => {
     it('should do nothing if the committed properties does not exist', () => {
       const props = {};
       const part = {
@@ -265,7 +265,7 @@ describe('SpreadBinding', () => {
 
       SESSION: {
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
@@ -290,7 +290,7 @@ describe('SpreadBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.connect(session);
+          binding.attach(session);
           binding.commit();
         });
 
@@ -361,7 +361,7 @@ describe('SpreadBinding', () => {
         const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
         updater.startUpdate((session) => {
-          binding.disconnect(session);
+          binding.detach(session);
           binding.rollback();
         });
 
