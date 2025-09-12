@@ -78,7 +78,7 @@ describe('EventPrimitive', () => {
 });
 
 describe('EventBinding', () => {
-  describe('shouldBind()', () => {
+  describe('shouldUpdate()', () => {
     it('returns true if the committed value does not exist', () => {
       const handler = () => {};
       const part = {
@@ -88,7 +88,7 @@ describe('EventBinding', () => {
       };
       const binding = new EventBinding(handler, part);
 
-      expect(binding.shouldBind(handler)).toBe(true);
+      expect(binding.shouldUpdate(handler)).toBe(true);
     });
 
     it('returns true if the committed value is different from the new one', () => {
@@ -108,8 +108,8 @@ describe('EventBinding', () => {
           binding.commit();
         });
 
-        expect(binding.shouldBind(handler1)).toBe(false);
-        expect(binding.shouldBind(handler2)).toBe(true);
+        expect(binding.shouldUpdate(handler1)).toBe(false);
+        expect(binding.shouldUpdate(handler2)).toBe(true);
       }
     });
   });

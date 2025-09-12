@@ -58,7 +58,7 @@ export class EventBinding extends PrimitiveBinding<
     return EventPrimitive;
   }
 
-  shouldBind(handler: EventHandler): boolean {
+  shouldUpdate(handler: EventHandler): boolean {
     return handler !== this._memoizedValue;
   }
 

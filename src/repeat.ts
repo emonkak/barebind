@@ -133,7 +133,7 @@ export class RepeatBinding<TSource, TKey, TValue>
     return this._part;
   }
 
-  shouldBind(props: RepeatProps<TSource, TKey, TValue>): boolean {
+  shouldUpdate(props: RepeatProps<TSource, TKey, TValue>): boolean {
     return (
       this._memoizedItems === null ||
       props.source !== this._props.source ||

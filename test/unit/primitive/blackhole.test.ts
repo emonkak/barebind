@@ -29,7 +29,7 @@ describe('BlackholePrimitive', () => {
 });
 
 describe('BlackholeBinding', () => {
-  describe('shouldBind()', () => {
+  describe('shouldUpdate()', () => {
     it('always returns false', () => {
       const value1 = 'foo';
       const value2 = 'bar';
@@ -39,8 +39,8 @@ describe('BlackholeBinding', () => {
       };
       const binding = new BlackholeBinding(value1, part);
 
-      expect(binding.shouldBind(value1)).toBe(false);
-      expect(binding.shouldBind(value2)).toBe(false);
+      expect(binding.shouldUpdate(value1)).toBe(false);
+      expect(binding.shouldUpdate(value2)).toBe(false);
     });
   });
 

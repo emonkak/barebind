@@ -56,7 +56,7 @@ export class RefBinding extends PrimitiveBinding<
     return RefPrimitive;
   }
 
-  shouldBind(ref: ElementRef): boolean {
+  shouldUpdate(ref: ElementRef): boolean {
     return ref !== this._memoizedValue;
   }
 

@@ -84,7 +84,7 @@ describe('StylePrimitive', () => {
 });
 
 describe('StyleBinding', () => {
-  describe('shouldBind', () => {
+  describe('shouldUpdate', () => {
     it('returns true if the committed value does not exist', () => {
       const style = { color: 'red' };
       const part = {
@@ -94,7 +94,7 @@ describe('StyleBinding', () => {
       };
       const binding = new StyleBinding(style, part);
 
-      expect(binding.shouldBind(style)).toBe(true);
+      expect(binding.shouldUpdate(style)).toBe(true);
     });
 
     it('returns true if the style has changed from the committed one', () => {
@@ -114,8 +114,8 @@ describe('StyleBinding', () => {
           binding.commit();
         });
 
-        expect(binding.shouldBind({ ...style1 })).toBe(false);
-        expect(binding.shouldBind(style2)).toBe(true);
+        expect(binding.shouldUpdate({ ...style1 })).toBe(false);
+        expect(binding.shouldUpdate(style2)).toBe(true);
       }
     });
   });

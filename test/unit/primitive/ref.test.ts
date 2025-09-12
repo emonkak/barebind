@@ -79,7 +79,7 @@ describe('RefPrimitive', () => {
 });
 
 describe('RefBinding', () => {
-  describe('shouldBind()', () => {
+  describe('shouldUpdate()', () => {
     it('returns true if the committed value does not exist', () => {
       const ref = { current: null };
       const part = {
@@ -89,7 +89,7 @@ describe('RefBinding', () => {
       };
       const binding = new RefBinding(ref, part);
 
-      expect(binding.shouldBind(ref)).toBe(true);
+      expect(binding.shouldUpdate(ref)).toBe(true);
     });
 
     it('return true if the ref is different from the committed one', () => {
@@ -109,8 +109,8 @@ describe('RefBinding', () => {
           binding.commit();
         });
 
-        expect(binding.shouldBind(ref1)).toBe(false);
-        expect(binding.shouldBind(ref2)).toBe(true);
+        expect(binding.shouldUpdate(ref1)).toBe(false);
+        expect(binding.shouldUpdate(ref2)).toBe(true);
       }
     });
   });

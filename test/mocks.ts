@@ -112,7 +112,7 @@ export class MockBinding<T> implements Binding<T> {
     this.part = part;
   }
 
-  shouldBind(value: T): boolean {
+  shouldUpdate(value: T): boolean {
     return !Object.is(value, this.memoizedValue);
   }
 
@@ -310,7 +310,7 @@ export class MockSlot<T> implements Slot<T> {
       );
     }
 
-    const dirty = this.binding.shouldBind(directive.value);
+    const dirty = this.binding.shouldUpdate(directive.value);
 
     if (dirty) {
       this.binding.value = directive.value;

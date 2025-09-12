@@ -131,7 +131,7 @@ export class ComponentBinding<TProps, TResult>
     this._pendingLanes &= ~frame.lanes;
   }
 
-  shouldBind(props: TProps): boolean {
+  shouldUpdate(props: TProps): boolean {
     return (
       this._hooks.length === 0 ||
       !this._component.shouldSkipUpdate(props, this._props)

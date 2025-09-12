@@ -33,7 +33,7 @@ export class CommentBinding<T> extends PrimitiveBinding<T, Part.ChildNodePart> {
     return CommentPrimitive;
   }
 
-  shouldBind(value: T): boolean {
+  shouldUpdate(value: T): boolean {
     return !Object.is(value, this._memoizedValue);
   }
 

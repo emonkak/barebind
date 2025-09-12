@@ -26,7 +26,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
 
   abstract get type(): Primitive<TValue>;
 
-  abstract shouldBind(value: TValue): boolean;
+  abstract shouldUpdate(value: TValue): boolean;
 
   connect(_session: UpdateSession): void {}
 

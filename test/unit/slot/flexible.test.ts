@@ -50,7 +50,7 @@ describe('FlexibleSlot', () => {
       const slot = new FlexibleSlot(binding);
       const updater = new TestUpdater();
 
-      const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
+      const shouldUpdateSpy = vi.spyOn(binding, 'shouldUpdate');
       const connectSpy = vi.spyOn(binding, 'connect');
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
       const commitSpy = vi.spyOn(binding, 'commit');
@@ -62,7 +62,7 @@ describe('FlexibleSlot', () => {
           slot.commit();
         });
 
-        expect(shouldBindSpy).toHaveBeenCalledTimes(0);
+        expect(shouldUpdateSpy).toHaveBeenCalledTimes(0);
         expect(connectSpy).toHaveBeenCalledTimes(1);
         expect(disconnectSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(1);
@@ -78,7 +78,7 @@ describe('FlexibleSlot', () => {
           return dirty;
         });
 
-        expect(shouldBindSpy).toHaveBeenCalledTimes(1);
+        expect(shouldUpdateSpy).toHaveBeenCalledTimes(1);
         expect(connectSpy).toHaveBeenCalledTimes(2);
         expect(disconnectSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(2);
@@ -94,7 +94,7 @@ describe('FlexibleSlot', () => {
           slot.rollback(); // ignore the second rollback
         });
 
-        expect(shouldBindSpy).toHaveBeenCalledTimes(1);
+        expect(shouldUpdateSpy).toHaveBeenCalledTimes(1);
         expect(connectSpy).toHaveBeenCalledTimes(2);
         expect(disconnectSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(2);
@@ -168,7 +168,7 @@ describe('FlexibleSlot', () => {
       const slot = new FlexibleSlot(binding);
       const updater = new TestUpdater();
 
-      const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
+      const shouldUpdateSpy = vi.spyOn(binding, 'shouldUpdate');
       const connectSpy = vi.spyOn(binding, 'connect');
       const commitSpy = vi.spyOn(binding, 'commit');
 
@@ -178,7 +178,7 @@ describe('FlexibleSlot', () => {
           slot.commit();
         });
 
-        expect(shouldBindSpy).toHaveBeenCalledTimes(0);
+        expect(shouldUpdateSpy).toHaveBeenCalledTimes(0);
         expect(connectSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(part.node.data).toBe('/MockPrimitive("foo")');
@@ -189,7 +189,7 @@ describe('FlexibleSlot', () => {
           slot.reconcile(value, session) && slot.commit();
         });
 
-        expect(shouldBindSpy).toHaveBeenCalledTimes(1);
+        expect(shouldUpdateSpy).toHaveBeenCalledTimes(1);
         expect(connectSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(part.node.data).toBe('/MockPrimitive("foo")');

@@ -43,7 +43,7 @@ describe('AttributePrimitive', () => {
 });
 
 describe('AttributeBinding', () => {
-  describe('shouldBind', () => {
+  describe('shouldUpdate', () => {
     it('returns true if the committed value does not exist', () => {
       const value = 'foo';
       const part = {
@@ -53,7 +53,7 @@ describe('AttributeBinding', () => {
       };
       const binding = new AttributeBinding(value, part);
 
-      expect(binding.shouldBind(value)).toBe(true);
+      expect(binding.shouldUpdate(value)).toBe(true);
     });
 
     it('returns true if the committed value is different from the new one', () => {
@@ -73,8 +73,8 @@ describe('AttributeBinding', () => {
           binding.commit();
         });
 
-        expect(binding.shouldBind(value1)).toBe(false);
-        expect(binding.shouldBind(value2)).toBe(true);
+        expect(binding.shouldUpdate(value1)).toBe(false);
+        expect(binding.shouldUpdate(value2)).toBe(true);
       }
     });
   });

@@ -44,7 +44,7 @@ describe('PropertyPrimitive', () => {
 });
 
 describe('PropertyBinding', () => {
-  describe('shouldBind()', () => {
+  describe('shouldUpdate()', () => {
     it('returns true if the committed value does not exist', () => {
       const value = '<div>foo</div>';
       const part = {
@@ -55,7 +55,7 @@ describe('PropertyBinding', () => {
       };
       const binding = new PropertyBinding(value, part);
 
-      expect(binding.shouldBind(value)).toBe(true);
+      expect(binding.shouldUpdate(value)).toBe(true);
     });
 
     it('returns true if the committed value is different from the new one', () => {
@@ -76,8 +76,8 @@ describe('PropertyBinding', () => {
           binding.commit();
         });
 
-        expect(binding.shouldBind(value1)).toBe(false);
-        expect(binding.shouldBind(value2)).toBe(true);
+        expect(binding.shouldUpdate(value1)).toBe(false);
+        expect(binding.shouldUpdate(value2)).toBe(true);
       }
     });
   });

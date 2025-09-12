@@ -45,7 +45,7 @@ describe('SignalDirective', () => {
 });
 
 describe('SiganlBinding', () => {
-  describe('shouldBind()', () => {
+  describe('shouldUpdate()', () => {
     it('returns true if the subscribed value does not exist', () => {
       const signal = new Atom('foo');
       const part = {
@@ -57,7 +57,7 @@ describe('SiganlBinding', () => {
       const runtime = createRuntime();
       const binding = SignalDirective.resolveBinding(signal, part, runtime);
 
-      expect(binding.shouldBind(signal)).toBe(true);
+      expect(binding.shouldUpdate(signal)).toBe(true);
     });
 
     it('returns true if the signal is different from the new one', () => {
@@ -81,8 +81,8 @@ describe('SiganlBinding', () => {
         binding.commit();
       });
 
-      expect(binding.shouldBind(signal1)).toBe(false);
-      expect(binding.shouldBind(signal2)).toBe(true);
+      expect(binding.shouldUpdate(signal1)).toBe(false);
+      expect(binding.shouldUpdate(signal2)).toBe(true);
     });
   });
 

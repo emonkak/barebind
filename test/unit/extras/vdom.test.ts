@@ -209,7 +209,7 @@ describe('ElementDirective', () => {
 });
 
 describe('ElementBinding', () => {
-  describe('shouldBind()', () => {
+  describe('shouldUpdate()', () => {
     it('returns true if the committed value does not exist', () => {
       const props = { className: 'foo' };
       const part = {
@@ -218,7 +218,7 @@ describe('ElementBinding', () => {
       };
       const binding = new ElementBinding(props, part);
 
-      expect(binding.shouldBind(props)).toBe(true);
+      expect(binding.shouldUpdate(props)).toBe(true);
     });
 
     it('returns true if the committed value is different from the new one', () => {
@@ -237,8 +237,8 @@ describe('ElementBinding', () => {
           binding.commit();
         });
 
-        expect(binding.shouldBind(props1)).toBe(false);
-        expect(binding.shouldBind(props2)).toBe(true);
+        expect(binding.shouldUpdate(props1)).toBe(false);
+        expect(binding.shouldUpdate(props2)).toBe(true);
       }
     });
   });

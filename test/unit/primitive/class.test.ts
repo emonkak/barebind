@@ -87,7 +87,7 @@ describe('ClassPrimitive', () => {
 });
 
 describe('ClassBinding', () => {
-  describe('shouldBind()', () => {
+  describe('shouldUpdate()', () => {
     it('returns true if the committed classes does not exist', () => {
       const classes = { foo: true, bar: true, baz: false };
       const part = {
@@ -97,7 +97,7 @@ describe('ClassBinding', () => {
       };
       const binding = new ClassBinding(classes, part);
 
-      expect(binding.shouldBind(classes)).toBe(true);
+      expect(binding.shouldUpdate(classes)).toBe(true);
     });
 
     it('returns true if any classes are not the same in the class list', () => {
@@ -116,15 +116,15 @@ describe('ClassBinding', () => {
           binding.commit();
         });
 
-        expect(binding.shouldBind(classes)).toBe(false);
-        expect(binding.shouldBind(structuredClone(classes))).toBe(false);
-        expect(binding.shouldBind({ foo: true, bar: true })).toBe(true);
-        expect(binding.shouldBind({ foo: true, bar: true, baz: false })).toBe(
+        expect(binding.shouldUpdate(classes)).toBe(false);
+        expect(binding.shouldUpdate(structuredClone(classes))).toBe(false);
+        expect(binding.shouldUpdate({ foo: true, bar: true })).toBe(true);
+        expect(binding.shouldUpdate({ foo: true, bar: true, baz: false })).toBe(
           true,
         );
-        expect(binding.shouldBind(['foo bar'])).toBe(true);
-        expect(binding.shouldBind(['foo', 'bar'])).toBe(true);
-        expect(binding.shouldBind(['bar', 'foo'])).toBe(true);
+        expect(binding.shouldUpdate(['foo bar'])).toBe(true);
+        expect(binding.shouldUpdate(['foo', 'bar'])).toBe(true);
+        expect(binding.shouldUpdate(['bar', 'foo'])).toBe(true);
       }
     });
 
@@ -144,15 +144,15 @@ describe('ClassBinding', () => {
           binding.commit();
         });
 
-        expect(binding.shouldBind(classes)).toBe(false);
-        expect(binding.shouldBind(structuredClone(classes))).toBe(false);
-        expect(binding.shouldBind({ foo: true, bar: true })).toBe(true);
-        expect(binding.shouldBind({ foo: true, bar: true, baz: true })).toBe(
+        expect(binding.shouldUpdate(classes)).toBe(false);
+        expect(binding.shouldUpdate(structuredClone(classes))).toBe(false);
+        expect(binding.shouldUpdate({ foo: true, bar: true })).toBe(true);
+        expect(binding.shouldUpdate({ foo: true, bar: true, baz: true })).toBe(
           true,
         );
-        expect(binding.shouldBind(['foo bar'])).toBe(true);
-        expect(binding.shouldBind(['foo', 'bar'])).toBe(true);
-        expect(binding.shouldBind(['bar', 'foo'])).toBe(true);
+        expect(binding.shouldUpdate(['foo bar'])).toBe(true);
+        expect(binding.shouldUpdate(['foo', 'bar'])).toBe(true);
+        expect(binding.shouldUpdate(['bar', 'foo'])).toBe(true);
       }
     });
   });

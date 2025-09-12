@@ -31,7 +31,7 @@ export class LiveBinding<T> extends PrimitiveBinding<T, Part.LivePart> {
     return LivePrimitive;
   }
 
-  shouldBind(_value: T): boolean {
+  shouldUpdate(_value: T): boolean {
     return true;
   }
 

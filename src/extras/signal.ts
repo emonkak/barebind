@@ -99,7 +99,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._pendingLanes = Lanes.NoLanes;
   }
 
-  shouldBind(signal: Signal<T>): boolean {
+  shouldUpdate(signal: Signal<T>): boolean {
     return this._subscription === null || signal !== this._signal;
   }
 

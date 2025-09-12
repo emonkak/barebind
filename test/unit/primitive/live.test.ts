@@ -44,7 +44,7 @@ describe('LivePrimitive', () => {
 });
 
 describe('LiveBinding', () => {
-  describe('shouldBind()', () => {
+  describe('shouldUpdate()', () => {
     it('returns always true', () => {
       const value = 'foo';
       const part = {
@@ -55,7 +55,7 @@ describe('LiveBinding', () => {
       };
       const binding = new LiveBinding(value, part);
 
-      expect(binding.shouldBind(value)).toBe(true);
+      expect(binding.shouldUpdate(value)).toBe(true);
     });
   });
 

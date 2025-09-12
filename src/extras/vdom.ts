@@ -253,7 +253,7 @@ export class ElementBinding implements Binding<ElementProps> {
     return this._part;
   }
 
-  shouldBind(value: ElementProps): boolean {
+  shouldUpdate(value: ElementProps): boolean {
     return (
       this._memoizedValue === null || !shallowEqual(this._memoizedValue, value)
     );

@@ -17,7 +17,7 @@ export class BlackholeBinding<T> extends PrimitiveBinding<T, Part> {
     return BlackholePrimitive;
   }
 
-  shouldBind(_value: T): boolean {
+  shouldUpdate(_value: T): boolean {
     return false;
   }
 

@@ -64,7 +64,7 @@ describe('AbstractTemplate', () => {
 });
 
 describe('TemplateBinding', () => {
-  describe('shouldBind()', () => {
+  describe('shouldUpdate()', () => {
     it('returns true if the committed result does not exist', () => {
       const template = new MockTemplate();
       const binds = [] as const;
@@ -76,7 +76,7 @@ describe('TemplateBinding', () => {
       };
       const binding = new TemplateBinding(template, binds, part);
 
-      expect(binding.shouldBind(binds)).toBe(true);
+      expect(binding.shouldUpdate(binds)).toBe(true);
     });
 
     it('returns true if the committed binds is different from the new one', () => {
@@ -98,8 +98,8 @@ describe('TemplateBinding', () => {
           binding.commit();
         });
 
-        expect(binding.shouldBind(binds1)).toBe(false);
-        expect(binding.shouldBind(binds2)).toBe(true);
+        expect(binding.shouldUpdate(binds1)).toBe(false);
+        expect(binding.shouldUpdate(binds2)).toBe(true);
       }
     });
   });

@@ -75,7 +75,7 @@ describe('SpreadPrimitive', () => {
 });
 
 describe('SpreadBinding', () => {
-  describe('shouldBind', () => {
+  describe('shouldUpdate', () => {
     it('returns true if the committed value does not exist', () => {
       const props = { class: 'foo' };
       const part = {
@@ -84,7 +84,7 @@ describe('SpreadBinding', () => {
       };
       const binding = new SpreadBinding(props, part);
 
-      expect(binding.shouldBind(props)).toBe(true);
+      expect(binding.shouldUpdate(props)).toBe(true);
     });
 
     it('returns true if the style has changed from the committed one', () => {
@@ -102,8 +102,8 @@ describe('SpreadBinding', () => {
         binding.commit();
       });
 
-      expect(binding.shouldBind(props1)).toBe(false);
-      expect(binding.shouldBind(props2)).toBe(true);
+      expect(binding.shouldUpdate(props1)).toBe(false);
+      expect(binding.shouldUpdate(props2)).toBe(true);
     });
   });
 

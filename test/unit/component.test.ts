@@ -94,7 +94,7 @@ describe('createComponent()', () => {
 });
 
 describe('ComponentBinding', () => {
-  describe('shouldBind()', () => {
+  describe('shouldUpdate()', () => {
     it('returns true if the committed value does not exist', () => {
       const props = { greet: 'Hello', name: 'foo' };
       const part = {
@@ -105,7 +105,7 @@ describe('ComponentBinding', () => {
       };
       const binding = new ComponentBinding(Greet, props, part);
 
-      expect(binding.shouldBind(props)).toBe(true);
+      expect(binding.shouldUpdate(props)).toBe(true);
     });
 
     it('returns true if the committed value is different from the new one', () => {
@@ -126,8 +126,8 @@ describe('ComponentBinding', () => {
           session.frame.pendingCoroutines.push(binding);
         });
 
-        expect(binding.shouldBind(props1)).toBe(false);
-        expect(binding.shouldBind(props2)).toBe(true);
+        expect(binding.shouldUpdate(props1)).toBe(false);
+        expect(binding.shouldUpdate(props2)).toBe(true);
       }
     });
   });

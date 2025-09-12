@@ -67,7 +67,7 @@ export class StyleBinding extends PrimitiveBinding<
     return StylePrimitive;
   }
 
-  shouldBind(props: StyleProps): boolean {
+  shouldUpdate(props: StyleProps): boolean {
     return !shallowEqual(props, this._memoizedValue);
   }
 

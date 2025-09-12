@@ -97,7 +97,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     return this._part;
   }
 
-  shouldBind(binds: TBinds): boolean {
+  shouldUpdate(binds: TBinds): boolean {
     return this._memoizedResult === null || binds !== this._binds;
   }
 

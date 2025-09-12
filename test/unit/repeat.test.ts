@@ -77,7 +77,7 @@ describe('RepeatDirective', () => {
 });
 
 describe('RepeatBinding', () => {
-  describe('shouldBind()', () => {
+  describe('shouldUpdate()', () => {
     it('returns true if committed items does not exist', () => {
       const props: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
       const part = {
@@ -88,7 +88,7 @@ describe('RepeatBinding', () => {
       };
       const binding = new RepeatBinding(props, part);
 
-      expect(binding.shouldBind(props)).toBe(true);
+      expect(binding.shouldUpdate(props)).toBe(true);
     });
 
     it('returns true if the props is different from the new one', () => {
@@ -109,9 +109,9 @@ describe('RepeatBinding', () => {
           binding.commit();
         });
 
-        expect(binding.shouldBind(props1)).toBe(false);
-        expect(binding.shouldBind({ ...props1 })).toBe(false);
-        expect(binding.shouldBind(props2)).toBe(true);
+        expect(binding.shouldUpdate(props1)).toBe(false);
+        expect(binding.shouldUpdate({ ...props1 })).toBe(false);
+        expect(binding.shouldUpdate(props2)).toBe(true);
       }
     });
   });

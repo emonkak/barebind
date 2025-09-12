@@ -70,7 +70,7 @@ export class SpreadBinding implements Binding<SpreadProps> {
     return this._part;
   }
 
-  shouldBind(props: SpreadProps): boolean {
+  shouldUpdate(props: SpreadProps): boolean {
     return this._memoizedSlots === null || props !== this._props;
   }
 

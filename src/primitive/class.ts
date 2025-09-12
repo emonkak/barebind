@@ -62,7 +62,7 @@ export class ClassBinding extends PrimitiveBinding<
     return ClassPrimitive;
   }
 
-  shouldBind(classes: ClassSpecifier): boolean {
+  shouldUpdate(classes: ClassSpecifier): boolean {
     return !shallowEqual(classes, this._memoizedValue);
   }
 
