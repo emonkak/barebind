@@ -10,19 +10,19 @@ const NO_FLAGS = 0;
 const FLAG_NEW = 0b1;
 const FLAG_DIRTY = 0b10;
 
+export interface Difference {
+  path: PropertyKey[];
+  value: unknown;
+}
+
 export interface ReactiveOptions {
   shallow?: boolean;
 }
 
-interface ReactiveContainer<T> {
+interface Container<T> {
   readonly source: Signal<T>;
-  properties: Map<PropertyKey, ReactiveContainer<unknown>> | null;
+  properties: Map<PropertyKey, Container<unknown>> | null;
   flags: number;
-}
-
-interface Difference {
-  path: PropertyKey[];
-  value: unknown;
 }
 
 type ReactiveKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
@@ -75,7 +75,7 @@ type StrictEqual<TLhs, TRhs> = (<T>() => T extends TLhs ? 1 : 2) extends <
   : false;
 
 export class Reactive<T> extends Signal<T> {
-  private readonly _container: ReactiveContainer<T>;
+  private readonly _container: Container<T>;
 
   private readonly _shallow: boolean;
 
@@ -83,10 +83,7 @@ export class Reactive<T> extends Signal<T> {
     return new Reactive(toContainer(source, 0), options);
   }
 
-  private constructor(
-    container: ReactiveContainer<T>,
-    options: ReactiveOptions = {},
-  ) {
+  private constructor(container: Container<T>, options: ReactiveOptions = {}) {
     super();
     this._container = container;
     this._shallow = options.shallow ?? false;
@@ -174,7 +171,7 @@ export class Reactive<T> extends Signal<T> {
 }
 
 function collectDefferences<T>(
-  container: ReactiveContainer<T>,
+  container: Container<T>,
   differences: Difference[],
 ): void {
   const { properties, flags, source } = container;
@@ -197,9 +194,9 @@ function collectDefferences<T>(
 }
 
 function getPropertyContainer<T extends object>(
-  parent: ReactiveContainer<T>,
+  parent: Container<T>,
   key: PropertyKey,
-): ReactiveContainer<unknown> {
+): Container<unknown> {
   let property = parent.properties?.get(key);
   if (property !== undefined) {
     return property;
@@ -220,7 +217,7 @@ function getPropertyContainer<T extends object>(
   return property;
 }
 
-function getSnapshot<T>(container: ReactiveContainer<T>): T {
+function getSnapshot<T>(container: Container<T>): T {
   const { properties, flags, source } = container;
 
   if (flags & FLAG_DIRTY) {
@@ -252,14 +249,14 @@ function isObject<T>(value: T): value is T & object {
 }
 
 function isObjectContainer<T>(
-  container: ReactiveContainer<T>,
-): container is ReactiveContainer<T & object> {
+  container: Container<T>,
+): container is Container<T & object> {
   return isObject(container.source.value);
 }
 
 function proxyObject<T extends object>(
-  parent: ReactiveContainer<T>,
-  getContainerValue: <T>(container: ReactiveContainer<T>) => T = getSnapshot,
+  parent: Container<T>,
+  getContainerValue: <T>(container: Container<T>) => T = getSnapshot,
 ): T {
   return new Proxy(parent.source.value, {
     get(_target, key, _receiver) {
@@ -280,9 +277,9 @@ function proxyObject<T extends object>(
 }
 
 function resolvePropertyContainer<T extends object>(
-  parent: ReactiveContainer<T>,
+  parent: Container<T>,
   key: PropertyKey,
-): ReactiveContainer<unknown> {
+): Container<unknown> {
   const root = parent.source.value;
   let prototype = root;
 
@@ -345,10 +342,7 @@ function shallowClone<T extends object>(object: T): T {
   }
 }
 
-function toContainer<T>(
-  value: T,
-  version: number,
-): ReactiveContainer<T> {
+function toContainer<T>(value: T, version: number): Container<T> {
   return {
     source: new Atom(value, version),
     properties: null,
