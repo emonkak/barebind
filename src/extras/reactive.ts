@@ -10,6 +10,11 @@ const NO_FLAGS = 0;
 const FLAG_NEW = 0b1;
 const FLAG_DIRTY = 0b10;
 
+export interface Difference {
+  path: PropertyKey[];
+  value: unknown;
+}
+
 export interface ReactiveOptions {
   shallow?: boolean;
 }
@@ -18,11 +23,6 @@ interface ReactiveContainer<T> {
   readonly source: Signal<T>;
   properties: Map<PropertyKey, ReactiveContainer<unknown>> | null;
   flags: number;
-}
-
-interface Difference {
-  path: PropertyKey[];
-  value: unknown;
 }
 
 type ReactiveKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
@@ -80,7 +80,7 @@ export class Reactive<T> extends Signal<T> {
   private readonly _shallow: boolean;
 
   static from<T>(source: T, options?: ReactiveOptions): Reactive<T> {
-    return new Reactive(toReactiveContainer(source, 0), options);
+    return new Reactive(toContainer(source, 0), options);
   }
 
   private constructor(
@@ -324,14 +324,14 @@ function resolvePropertyContainer<T extends object>(
           flags: NO_FLAGS,
         };
       } else {
-        return toReactiveContainer(value, parent.source.version);
+        return toContainer(value, parent.source.version);
       }
     }
 
     prototype = Object.getPrototypeOf(prototype);
   } while (prototype !== null && prototype !== Object.prototype);
 
-  return toReactiveContainer(undefined, parent.source.version);
+  return toContainer(undefined, parent.source.version);
 }
 
 function shallowClone<T extends object>(object: T): T {
@@ -345,10 +345,7 @@ function shallowClone<T extends object>(object: T): T {
   }
 }
 
-function toReactiveContainer<T>(
-  value: T,
-  version: number,
-): ReactiveContainer<T> {
+function toContainer<T>(value: T, version: number): ReactiveContainer<T> {
   return {
     source: new Atom(value, version),
     properties: null,
