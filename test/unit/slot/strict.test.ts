@@ -166,7 +166,7 @@ describe('StrictSlot', () => {
           slot.reconcile(value2, session);
         });
       }).toThrow(
-        'The directive must be MockPrimitive in this slot, but got MockDirective.',
+        'The directive type must be MockPrimitive in this slot, but got MockDirective.',
       );
     });
   });
