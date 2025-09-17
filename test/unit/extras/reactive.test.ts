@@ -30,7 +30,7 @@ class TodoState {
 
   addTodo(title: string) {
     this.todos = this.todos.concat({
-      id: this.todos.length,
+      id: this.todos.length + 1,
       title,
       completed: false,
     });
@@ -65,16 +65,16 @@ describe('Reactive', () => {
     it('returns a snapshot with the update applied', () => {
       const initialState = new TodoState([
         { id: 1, title: 'foo', completed: true },
-        { id: 1, title: 'bar', completed: false },
+        { id: 2, title: 'bar', completed: false },
       ]);
       const state$ = Reactive.from(initialState);
       const todos$ = state$.get('todos');
       const filter$ = state$.get('filter');
 
       todos$.value = todos$.value.concat([
-        { id: 2, title: 'baz', completed: false },
+        { id: 3, title: 'baz', completed: false },
       ]);
-      todos$.get(1)!.value = { id: 1, title: 'bar', completed: true };
+      todos$.get(1)!.value = { id: 2, title: 'bar', completed: true };
       filter$.value = 'active';
 
       const snapshot = state$.value;
@@ -82,8 +82,8 @@ describe('Reactive', () => {
       expect(snapshot).toBeInstanceOf(TodoState);
       expect(snapshot.todos).toStrictEqual([
         { id: 1, title: 'foo', completed: true },
-        { id: 1, title: 'bar', completed: true },
-        { id: 2, title: 'baz', completed: false },
+        { id: 2, title: 'bar', completed: true },
+        { id: 3, title: 'baz', completed: false },
       ]);
       expect(snapshot.filter).toStrictEqual('active');
       expect(state$.version).toBe(3);
@@ -146,7 +146,7 @@ describe('Reactive', () => {
     it('returns a list of changed properties', () => {
       const initialState = new TodoState([
         { id: 1, title: 'foo', completed: true },
-        { id: 1, title: 'bar', completed: false },
+        { id: 2, title: 'bar', completed: false },
       ]);
       const state$ = Reactive.from(initialState);
       const todos$ = state$.get('todos');
@@ -177,6 +177,23 @@ describe('Reactive', () => {
           value: 'completed',
         },
       ]);
+
+      const newState$ = Reactive.from(initialState);
+
+      for (const difference of state$.diff()) {
+        newState$.applyDifference(difference);
+      }
+
+      expect(newState$.diff()).toStrictEqual(state$.diff());
+      expect(newState$.value).toStrictEqual(
+        new TodoState(
+          [
+            { id: 1, title: 'foo', completed: true },
+            { id: 2, title: 'bar', completed: true },
+          ],
+          'completed',
+        ),
+      );
     });
   });
 
@@ -184,7 +201,7 @@ describe('Reactive', () => {
     it('returns a computed reactive is calculated from dependent values', () => {
       const initialState = new TodoState([
         { id: 1, title: 'foo', completed: true },
-        { id: 1, title: 'bar', completed: false },
+        { id: 2, title: 'bar', completed: false },
       ]);
       const state$ = Reactive.from(initialState);
       const todos$ = state$.get('todos');
@@ -193,21 +210,21 @@ describe('Reactive', () => {
       const visibleTodos$ = state$.get('visibleTodos');
 
       expect(activeTodos$.value).toStrictEqual([
-        { id: 1, title: 'bar', completed: false },
+        { id: 2, title: 'bar', completed: false },
       ]);
       expect(visibleTodos$.value).toStrictEqual([
         { id: 1, title: 'foo', completed: true },
-        { id: 1, title: 'bar', completed: false },
+        { id: 2, title: 'bar', completed: false },
       ]);
 
       todos$.value = todos$.value.concat([
-        { id: 2, title: 'baz', completed: false },
+        { id: 3, title: 'baz', completed: false },
       ]);
       filter$.value = 'completed';
 
       expect(activeTodos$.value).toStrictEqual([
-        { id: 1, title: 'bar', completed: false },
-        { id: 2, title: 'baz', completed: false },
+        { id: 2, title: 'bar', completed: false },
+        { id: 3, title: 'baz', completed: false },
       ]);
       expect(visibleTodos$.value).toStrictEqual([
         { id: 1, title: 'foo', completed: true },
@@ -230,7 +247,7 @@ describe('Reactive', () => {
     it('mutates the state by mutation methods', () => {
       const initialState = new TodoState([
         { id: 1, title: 'foo', completed: true },
-        { id: 1, title: 'bar', completed: false },
+        { id: 2, title: 'bar', completed: false },
       ]);
       const state$ = Reactive.from(initialState);
 
@@ -244,8 +261,8 @@ describe('Reactive', () => {
       expect(snapshot).toBeInstanceOf(TodoState);
       expect(snapshot.todos).toStrictEqual([
         { id: 1, title: 'foo', completed: true },
-        { id: 1, title: 'bar', completed: false },
-        { id: 2, title: 'baz', completed: false },
+        { id: 2, title: 'bar', completed: false },
+        { id: 3, title: 'baz', completed: false },
       ]);
       expect(snapshot.filter).toBe('completed');
       expect(state$.version).toBe(2);
@@ -314,7 +331,7 @@ describe('Reactive', () => {
     it('subscribes for deep updates', () => {
       const initialState = new TodoState([
         { id: 1, title: 'foo', completed: true },
-        { id: 1, title: 'bar', completed: false },
+        { id: 2, title: 'bar', completed: false },
       ]);
       const state$ = Reactive.from(initialState);
       const subscriber = vi.fn();
@@ -336,7 +353,7 @@ describe('Reactive', () => {
     it('subscribes only for shallow updates', () => {
       const initialState = new TodoState([
         { id: 1, title: 'foo', completed: true },
-        { id: 1, title: 'bar', completed: false },
+        { id: 2, title: 'bar', completed: false },
       ]);
       const state$ = Reactive.from(initialState, { shallow: true });
       const subscriber = vi.fn();
@@ -358,7 +375,7 @@ describe('Reactive', () => {
     it('do not notify subscribers of updates when the subscription is unsubscribed', () => {
       const initialState = new TodoState([
         { id: 1, title: 'foo', completed: true },
-        { id: 1, title: 'bar', completed: false },
+        { id: 2, title: 'bar', completed: false },
       ]);
       const state$ = Reactive.from(initialState);
       const subscriber = vi.fn();

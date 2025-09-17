@@ -113,6 +113,15 @@ export class Reactive<T> extends Signal<T> {
     return this._container.source.version;
   }
 
+  applyDifference(difference: Difference): void {
+    const { path, value } = difference;
+    let source = this as Reactive<any>;
+    for (let i = 0, l = path.length; i < l; i++) {
+      source = source.get(path[i]!)!;
+    }
+    source.value = value;
+  }
+
   diff(): Difference[] {
     const differences: Difference[] = [];
     collectDefferences(this._container, differences);
@@ -236,8 +245,8 @@ function getSnapshot<T>(container: ReactiveContainer<T>): T {
         }
       }
 
-      // Update the source without notification (a source of the container with
-      // dirty flags is always Atom).
+      // Update the source without notification (a container with dirty flags
+      // is always Atom).
       (source as Atom<T>).write(newSource);
     }
 
