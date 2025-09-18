@@ -5,6 +5,9 @@
     ".": {
       "import": "./src/index.ts"
     },
+    "./collections/*": {
+      "import": "./src/collections/*.ts"
+    },
     "./extras/*": {
       "import": "./src/extras/*.ts"
     },
@@ -17,6 +20,10 @@
       ".": {
         "import": "./lib/index.js",
         "types": "./lib/index.d.ts"
+      },
+      "./collections/*": {
+        "import": "./lib/collections/*.js",
+        "types": "./lib/collections/*.d.ts"
       },
       "./extras/*": {
         "import": "./lib/extras/*.js",
