@@ -9,6 +9,7 @@ import {
 const NO_FLAGS = 0;
 const FLAG_NEW = 0b1;
 const FLAG_DIRTY = 0b10;
+const FLAG_SEEN = 0b100;
 
 export interface Difference {
   path: PropertyKey[];
@@ -105,7 +106,7 @@ export class Reactive<T> extends Signal<T> {
     this._container.flags |= FLAG_NEW;
     // We must clear the dirty flag for shallow subscription before set the new
     // source.
-    this._container.flags &= ~FLAG_DIRTY;
+    this._container.flags &= ~(FLAG_DIRTY | FLAG_SEEN);
     this._container.source.value = value;
   }
 
@@ -120,16 +121,6 @@ export class Reactive<T> extends Signal<T> {
       source = source.get(path[i]!)!;
     }
     source.value = value;
-  }
-
-  diff(): Difference[] {
-    const differences: Difference[] = [];
-    collectDefferences(this._container, differences);
-    for (let i = 0, l = differences.length; i < l; i++) {
-      // The path is constructed in reverse order from child to parent.
-      differences[i]!.path.reverse();
-    }
-    return differences;
   }
 
   get<K extends ReactiveKeys<T>>(
@@ -180,6 +171,16 @@ export class Reactive<T> extends Signal<T> {
       return container.source.subscribe(subscriber);
     }
   }
+
+  takeDifferences(): Difference[] {
+    const differences: Difference[] = [];
+    collectDefferences(this._container, differences);
+    for (let i = 0, l = differences.length; i < l; i++) {
+      // The path is constructed in reverse order from child to parent.
+      differences[i]!.path.reverse();
+    }
+    return differences;
+  }
 }
 
 function collectDefferences<T>(
@@ -188,7 +189,8 @@ function collectDefferences<T>(
 ): void {
   const { properties, flags, source } = container;
 
-  if (flags & FLAG_NEW) {
+  if (flags & FLAG_NEW && !(flags & FLAG_SEEN)) {
+    container.flags |= FLAG_SEEN;
     differences.push({ path: [], value: source.value });
   }
 

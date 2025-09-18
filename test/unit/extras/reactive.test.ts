@@ -142,61 +142,6 @@ describe('Reactive', () => {
     });
   });
 
-  describe('diff()', () => {
-    it('returns a list of changed properties', () => {
-      const initialState = new TodoState([
-        { id: 1, title: 'foo', completed: true },
-        { id: 2, title: 'bar', completed: false },
-      ]);
-      const state$ = Reactive.from(initialState);
-      const todos$ = state$.get('todos');
-      const filter$ = state$.get('filter');
-
-      todos$.get(1).get('completed')!.value = true;
-      filter$.value = 'completed';
-
-      expect(state$.diff()).toStrictEqual([
-        {
-          path: ['todos', 1, 'completed'],
-          value: true,
-        },
-        {
-          path: ['filter'],
-          value: 'completed',
-        },
-      ]);
-      expect(todos$.diff()).toStrictEqual([
-        {
-          path: [1, 'completed'],
-          value: true,
-        },
-      ]);
-      expect(filter$.diff()).toStrictEqual([
-        {
-          path: [],
-          value: 'completed',
-        },
-      ]);
-
-      const newState$ = Reactive.from(initialState);
-
-      for (const difference of state$.diff()) {
-        newState$.applyDifference(difference);
-      }
-
-      expect(newState$.diff()).toStrictEqual(state$.diff());
-      expect(newState$.value).toStrictEqual(
-        new TodoState(
-          [
-            { id: 1, title: 'foo', completed: true },
-            { id: 2, title: 'bar', completed: true },
-          ],
-          'completed',
-        ),
-      );
-    });
-  });
-
   describe('get()', () => {
     it('returns a computed reactive is calculated from dependent values', () => {
       const initialState = new TodoState([
@@ -386,6 +331,43 @@ describe('Reactive', () => {
       state$.value = new TodoState();
 
       expect(subscriber).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('takeDifferences()', () => {
+    it('returns a list of changed properties', () => {
+      const initialState = new TodoState([
+        { id: 1, title: 'foo', completed: true },
+        { id: 2, title: 'bar', completed: false },
+      ]);
+      const state$ = Reactive.from(initialState);
+      const todos$ = state$.get('todos');
+      const filter$ = state$.get('filter');
+
+      todos$.get(1).get('completed')!.value = true;
+      filter$.value = 'completed';
+
+      const differences = state$.takeDifferences();
+
+      expect(differences).toStrictEqual([
+        {
+          path: ['todos', 1, 'completed'],
+          value: true,
+        },
+        {
+          path: ['filter'],
+          value: 'completed',
+        },
+      ]);
+      expect(todos$.takeDifferences()).toStrictEqual([]);
+
+      const newState$ = differences.reduce((state$, difference) => {
+        state$.applyDifference(difference);
+        return state$;
+      }, Reactive.from(initialState));
+
+      expect(newState$.takeDifferences()).toStrictEqual(differences);
+      expect(newState$.value).toStrictEqual(state$.value);
     });
   });
 });
