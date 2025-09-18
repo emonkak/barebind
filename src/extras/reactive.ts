@@ -116,9 +116,12 @@ export class Reactive<T> extends Signal<T> {
 
   applyDifference(difference: Difference): void {
     const { path, value } = difference;
-    let source = this as Reactive<any>;
+    let source: Reactive<any> | null = this;
     for (let i = 0, l = path.length; i < l; i++) {
-      source = source.get(path[i]!)!;
+      source = source.get(path[i]!);
+      if (source === null) {
+        return;
+      }
     }
     source.value = value;
   }

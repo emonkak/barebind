@@ -142,6 +142,19 @@ describe('Reactive', () => {
     });
   });
 
+  describe('applyDifference()', () => {
+    it('ignores a difference with invalid path', () => {
+      const state$ = Reactive.from(null);
+
+      state$.applyDifference({
+        path: ['foo'],
+        value: 'foo',
+      });
+
+      expect(state$.value).toBe(null);
+    });
+  });
+
   describe('get()', () => {
     it('returns a computed reactive is calculated from dependent values', () => {
       const initialState = new TodoState([
