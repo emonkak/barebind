@@ -176,15 +176,15 @@ describe('Reactive', () => {
       ]);
     });
 
-    it('returns an undefined reactive if the property does not exist', () => {
+    it('returns a value of undefined if the property does not exist', () => {
       expect(Reactive.from([0]).get(0).value).toBe(0);
       expect(Reactive.from([0]).get(1).value).toBe(undefined);
     });
 
-    it('returns undefined if the value is an primitive', () => {
-      expect(Reactive.from('foo').get(0)).toBe(undefined);
-      expect(Reactive.from(123).get('toString')).toBe(undefined);
-      expect(Reactive.from(true).get('toString')).toBe(undefined);
+    it('returns null if the value is an primitive', () => {
+      expect(Reactive.from('foo').get(0)).toBe(null);
+      expect(Reactive.from(123).get('toString')).toBe(null);
+      expect(Reactive.from(true).get('toString')).toBe(null);
     });
   });
 

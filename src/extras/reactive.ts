@@ -32,7 +32,7 @@ type ReactiveProperty<T, K extends keyof T> = T extends object
   ? Or<IsWritable<T, K>, IsArray<T>> extends true
     ? Reactive<Get<T, K>>
     : Readonly<Reactive<Get<T, K>>>
-  : undefined;
+  : null;
 
 type AllKeys<T> = T extends any ? keyof T : never;
 
@@ -130,13 +130,10 @@ export class Reactive<T> extends Signal<T> {
   get(
     key: PropertyKey,
     options?: ReactiveOptions,
-  ): T extends object ? Reactive<unknown> : undefined;
-  get(
-    key: PropertyKey,
-    options?: ReactiveOptions,
-  ): Reactive<unknown> | undefined {
+  ): T extends object ? Reactive<unknown> : null;
+  get(key: PropertyKey, options?: ReactiveOptions): Reactive<unknown> | null {
     if (!isObjectContainer(this._container)) {
-      return undefined;
+      return null;
     }
 
     const property = getPropertyContainer(this._container, key);
