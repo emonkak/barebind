@@ -94,7 +94,7 @@ export class Reactive<T> extends Signal<T> {
   }
 
   get value(): T {
-    return getSnapshot(this._container);
+    return takeSnapshot(this._container);
   }
 
   set value(value: T) {
@@ -231,33 +231,6 @@ function getPropertyContainer<T extends object>(
   return property;
 }
 
-function getSnapshot<T>(container: ReactiveContainer<T>): T {
-  const { properties, flags, source } = container;
-
-  if (flags & FLAG_DIRTY) {
-    const oldSource = source.value;
-
-    if (isObject(oldSource)) {
-      const newSource = shallowClone(oldSource);
-
-      for (const [key, property] of properties!.entries()) {
-        if (property !== null && property.flags & (FLAG_NEW | FLAG_DIRTY)) {
-          (newSource as any)[key] = getSnapshot(property);
-          property.flags &= ~FLAG_NEW;
-        }
-      }
-
-      // Update the source without notification (a container with dirty flags
-      // is always Atom).
-      (source as Atom<T>).write(newSource);
-    }
-
-    container.flags &= ~FLAG_DIRTY;
-  }
-
-  return source.value;
-}
-
 function isObject<T>(value: T): value is T & object {
   return typeof value === 'object' && value !== null;
 }
@@ -270,7 +243,7 @@ function isObjectContainer<T>(
 
 function proxyObject<T extends object>(
   parent: ReactiveContainer<T>,
-  getContainerValue: <T>(container: ReactiveContainer<T>) => T = getSnapshot,
+  getContainerValue: <T>(container: ReactiveContainer<T>) => T = takeSnapshot,
 ): T {
   return new Proxy(parent.source.value, {
     get(_target, key, _receiver) {
@@ -316,7 +289,7 @@ function resolvePropertyContainer<T extends object>(
         const dependencies: Signal<unknown>[] = [];
         const proxy = proxyObject(parent, (container) => {
           dependencies.push(container.source);
-          return getSnapshot(container);
+          return takeSnapshot(container);
         });
         const initialResult = get.call(proxy);
         const initialVersion = dependencies.reduce(
@@ -354,6 +327,33 @@ function shallowClone<T extends object>(object: T): T {
       Object.getOwnPropertyDescriptors(object),
     );
   }
+}
+
+function takeSnapshot<T>(container: ReactiveContainer<T>): T {
+  const { properties, flags, source } = container;
+
+  if (flags & FLAG_DIRTY) {
+    const oldSource = source.value;
+
+    if (isObject(oldSource)) {
+      const newSource = shallowClone(oldSource);
+
+      for (const [key, property] of properties!.entries()) {
+        if (property !== null && property.flags & (FLAG_NEW | FLAG_DIRTY)) {
+          (newSource as any)[key] = takeSnapshot(property);
+          property.flags &= ~FLAG_NEW;
+        }
+      }
+
+      // Update the source without notification (a container with dirty flags
+      // is always Atom).
+      (source as Atom<T>).write(newSource);
+    }
+
+    container.flags &= ~FLAG_DIRTY;
+  }
+
+  return source.value;
 }
 
 function toContainer<T>(value: T, version: number): ReactiveContainer<T> {
