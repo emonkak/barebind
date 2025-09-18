@@ -17,7 +17,7 @@ describe('Reactive', () => {
     });
 
     it('returns undefined if the key is invalid', () => {
-      expectTypeOf(Reactive.from(null).get('foo')).toEqualTypeOf<undefined>();
+      expectTypeOf(Reactive.from(null).get('foo')).toEqualTypeOf<null>();
     });
 
     it('returns an unknown reactive if the key is not defined', () => {
