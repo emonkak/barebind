@@ -347,8 +347,8 @@ describe('Reactive', () => {
     });
   });
 
-  describe('takeDifferences()', () => {
-    it('returns a list of changed properties', () => {
+  describe('collectDifferences()', () => {
+    it('returns differences of changed properties', () => {
       const initialState = new TodoState([
         { id: 1, title: 'foo', completed: true },
         { id: 2, title: 'bar', completed: false },
@@ -360,8 +360,17 @@ describe('Reactive', () => {
       todos$.get(1).get('completed')!.value = true;
       filter$.value = 'completed';
 
-      const differences = state$.takeDifferences();
+      const differences = state$.collectDifferences();
 
+      expect(state$.value).toStrictEqual(
+        new TodoState(
+          [
+            { id: 1, title: 'foo', completed: true },
+            { id: 2, title: 'bar', completed: true },
+          ],
+          'completed',
+        ),
+      );
       expect(differences).toStrictEqual([
         {
           path: ['todos', 1, 'completed'],
@@ -372,14 +381,14 @@ describe('Reactive', () => {
           value: 'completed',
         },
       ]);
-      expect(todos$.takeDifferences()).toStrictEqual([]);
+      expect(todos$.collectDifferences()).toStrictEqual([]);
 
       const newState$ = differences.reduce((state$, difference) => {
         state$.applyDifference(difference);
         return state$;
       }, Reactive.from(initialState));
 
-      expect(newState$.takeDifferences()).toStrictEqual(differences);
+      expect(newState$.collectDifferences()).toStrictEqual(differences);
       expect(newState$.value).toStrictEqual(state$.value);
     });
   });
