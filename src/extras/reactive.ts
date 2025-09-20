@@ -7,9 +7,10 @@ import {
 } from './signal.js';
 
 const NO_FLAGS = 0;
-const FLAG_NEW = 0b1;
-const FLAG_DIRTY = 0b10;
-const FLAG_SEEN = 0b100;
+const FLAG_PENGING_VALUE = 0b1;
+const FLAG_PENDING_DIFFERENCE = 0b10;
+const FLAG_NEEDS_SNAPSHOT = 0b100;
+const FLAG_NEEDS_COLLECTION = 0b1000;
 
 export interface Difference {
   path: PropertyKey[];
@@ -19,20 +20,6 @@ export interface Difference {
 export interface ReactiveOptions {
   shallow?: boolean;
 }
-
-interface ReactiveContainer<T> {
-  readonly source: Signal<T>;
-  properties: Map<PropertyKey, ReactiveContainer<unknown>> | null;
-  flags: number;
-}
-
-type ReactiveKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
-
-type ReactiveProperty<T, K extends keyof T> = T extends object
-  ? Or<IsWritable<T, K>, IsArray<T>> extends true
-    ? Reactive<Get<T, K>>
-    : Readonly<Reactive<Get<T, K>>>
-  : null;
 
 type AllKeys<T> = T extends any ? keyof T : never;
 
@@ -69,6 +56,20 @@ type Or<TLhs extends boolean, TRhs extends boolean> = TLhs extends true
     ? true
     : false;
 
+interface ReactiveContainer<T> {
+  readonly source: Signal<T>;
+  children: Map<PropertyKey, ReactiveContainer<unknown>> | null;
+  flags: number;
+}
+
+type ReactiveKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
+
+type ReactiveProperty<T, K extends keyof T> = T extends object
+  ? Or<IsWritable<T, K>, IsArray<T>> extends true
+    ? Reactive<Get<T, K>>
+    : Readonly<Reactive<Get<T, K>>>
+  : null;
+
 type StrictEqual<TLhs, TRhs> = (<T>() => T extends TLhs ? 1 : 2) extends <
   T,
 >() => T extends TRhs ? 1 : 2
@@ -81,7 +82,7 @@ export class Reactive<T> extends Signal<T> {
   private readonly _shallow: boolean;
 
   static from<T>(source: T, options?: ReactiveOptions): Reactive<T> {
-    return new Reactive(toContainer(source, 0), options);
+    return new Reactive(createContainer(source, 0), options);
   }
 
   private constructor(
@@ -102,11 +103,11 @@ export class Reactive<T> extends Signal<T> {
       throw new TypeError('Cannot set value on a read-only value.');
     }
 
-    this._container.properties = null;
-    this._container.flags |= FLAG_NEW;
-    // We must clear the dirty flag for shallow subscription before set the new
-    // source.
-    this._container.flags &= ~(FLAG_DIRTY | FLAG_SEEN);
+    // To ensure shallow subscription work properly, flags must be changed
+    // before setting a new value.
+    this._container.children = null;
+    this._container.flags |= FLAG_PENGING_VALUE | FLAG_PENDING_DIFFERENCE;
+    this._container.flags &= ~(FLAG_NEEDS_SNAPSHOT | FLAG_NEEDS_COLLECTION);
     this._container.source.value = value;
   }
 
@@ -126,6 +127,16 @@ export class Reactive<T> extends Signal<T> {
     source.value = value;
   }
 
+  collectDifferences(): Difference[] {
+    const differences: Difference[] = [];
+    collectDefferences(this._container, differences);
+    for (let i = 0, l = differences.length; i < l; i++) {
+      // The path is constructed in reverse order from child to parent.
+      differences[i]!.path.reverse();
+    }
+    return differences;
+  }
+
   get<K extends ReactiveKeys<T>>(
     key: K,
     options?: ReactiveOptions,
@@ -139,9 +150,9 @@ export class Reactive<T> extends Signal<T> {
       return null;
     }
 
-    const property = getPropertyContainer(this._container, key);
+    const child = getChild(this._container, key);
 
-    return new Reactive(property, options);
+    return new Reactive(child, options);
   }
 
   mutate<TResult>(callback: (source: T) => TResult): TResult {
@@ -163,7 +174,7 @@ export class Reactive<T> extends Signal<T> {
 
     if (this._shallow) {
       return container.source.subscribe(() => {
-        if (!(container.flags & FLAG_DIRTY)) {
+        if (!(container.flags & FLAG_NEEDS_SNAPSHOT)) {
           subscriber();
         }
       });
@@ -171,64 +182,64 @@ export class Reactive<T> extends Signal<T> {
       return container.source.subscribe(subscriber);
     }
   }
-
-  takeDifferences(): Difference[] {
-    const differences: Difference[] = [];
-    collectDefferences(this._container, differences);
-    for (let i = 0, l = differences.length; i < l; i++) {
-      // The path is constructed in reverse order from child to parent.
-      differences[i]!.path.reverse();
-    }
-    return differences;
-  }
 }
 
 function collectDefferences<T>(
   container: ReactiveContainer<T>,
   differences: Difference[],
 ): void {
-  const { properties, flags, source } = container;
+  const { source, children, flags } = container;
 
-  if (flags & FLAG_NEW && !(flags & FLAG_SEEN)) {
-    container.flags |= FLAG_SEEN;
+  if (flags & FLAG_PENDING_DIFFERENCE) {
     differences.push({ path: [], value: source.value });
+    container.flags &= ~FLAG_PENDING_DIFFERENCE;
   }
 
-  if (flags & FLAG_DIRTY) {
-    for (const [key, property] of properties!.entries()) {
-      if (property !== null) {
+  if (flags & FLAG_NEEDS_COLLECTION) {
+    for (const [key, child] of children!.entries()) {
+      if (child !== null) {
         const startIndex = differences.length;
-        collectDefferences(property, differences);
+        collectDefferences(child, differences);
         for (let i = startIndex, l = differences.length; i < l; i++) {
           differences[i]!.path.push(key);
         }
       }
     }
+
+    container.flags &= ~FLAG_NEEDS_COLLECTION;
   }
 }
 
-function getPropertyContainer<T extends object>(
+function createContainer<T>(value: T, version: number): ReactiveContainer<T> {
+  return {
+    source: new Atom(value, version),
+    children: null,
+    flags: NO_FLAGS,
+  };
+}
+
+function getChild<T extends object>(
   parent: ReactiveContainer<T>,
   key: PropertyKey,
 ): ReactiveContainer<unknown> {
-  let property = parent.properties?.get(key);
-  if (property !== undefined) {
-    return property;
+  let child = parent.children?.get(key);
+  if (child !== undefined) {
+    return child;
   }
 
-  property = resolvePropertyContainer(parent, key);
+  child = resolveChild(parent, key);
 
-  if (parent.source instanceof Atom && property.source instanceof Atom) {
-    property.source.subscribe(() => {
-      parent.flags |= FLAG_DIRTY;
+  if (parent.source instanceof Atom && child.source instanceof Atom) {
+    child.source.subscribe(() => {
+      parent.flags |= FLAG_NEEDS_SNAPSHOT | FLAG_NEEDS_COLLECTION;
       (parent.source as Atom<T>).touch();
     });
   }
 
-  parent.properties ??= new Map();
-  parent.properties.set(key, property);
+  parent.children ??= new Map();
+  parent.children.set(key, child);
 
-  return property;
+  return child;
 }
 
 function isObject<T>(value: T): value is T & object {
@@ -247,14 +258,14 @@ function proxyObject<T extends object>(
 ): T {
   return new Proxy(parent.source.value, {
     get(_target, key, _receiver) {
-      const property = getPropertyContainer(parent, key);
-      return getContainerValue(property);
+      const child = getChild(parent, key);
+      return getContainerValue(child);
     },
     set(target, key, value, receiver) {
-      const property = getPropertyContainer(parent, key);
-      if (property.source instanceof Atom) {
-        property.flags |= FLAG_NEW;
-        property.source.value = value;
+      const child = getChild(parent, key);
+      if (child.source instanceof Atom) {
+        child.flags |= FLAG_PENGING_VALUE | FLAG_PENDING_DIFFERENCE;
+        child.source.value = value;
         return true;
       } else {
         return Reflect.set(target, key, value, receiver);
@@ -263,7 +274,7 @@ function proxyObject<T extends object>(
   });
 }
 
-function resolvePropertyContainer<T extends object>(
+function resolveChild<T extends object>(
   parent: ReactiveContainer<T>,
   key: PropertyKey,
 ): ReactiveContainer<unknown> {
@@ -282,7 +293,7 @@ function resolvePropertyContainer<T extends object>(
             get.call(proxyObject(parent)),
             parent.source.version,
           ),
-          properties: null,
+          children: null,
           flags: NO_FLAGS,
         };
       } else if (get !== undefined) {
@@ -304,18 +315,18 @@ function resolvePropertyContainer<T extends object>(
         );
         return {
           source: signal,
-          properties: null,
+          children: null,
           flags: NO_FLAGS,
         };
       } else {
-        return toContainer(value, parent.source.version);
+        return createContainer(value, parent.source.version);
       }
     }
 
     prototype = Object.getPrototypeOf(prototype);
   } while (prototype !== null && prototype !== Object.prototype);
 
-  return toContainer(undefined, parent.source.version);
+  return createContainer(undefined, parent.source.version);
 }
 
 function shallowClone<T extends object>(object: T): T {
@@ -330,18 +341,21 @@ function shallowClone<T extends object>(object: T): T {
 }
 
 function takeSnapshot<T>(container: ReactiveContainer<T>): T {
-  const { properties, flags, source } = container;
+  const { children, flags, source } = container;
 
-  if (flags & FLAG_DIRTY) {
+  if (flags & FLAG_NEEDS_SNAPSHOT) {
     const oldSource = source.value;
 
     if (isObject(oldSource)) {
       const newSource = shallowClone(oldSource);
 
-      for (const [key, property] of properties!.entries()) {
-        if (property !== null && property.flags & (FLAG_NEW | FLAG_DIRTY)) {
-          (newSource as any)[key] = takeSnapshot(property);
-          property.flags &= ~FLAG_NEW;
+      for (const [key, child] of children!.entries()) {
+        if (
+          child !== null &&
+          child.flags & (FLAG_PENGING_VALUE | FLAG_NEEDS_SNAPSHOT)
+        ) {
+          (newSource as any)[key] = takeSnapshot(child);
+          child.flags &= ~FLAG_PENGING_VALUE;
         }
       }
 
@@ -350,16 +364,8 @@ function takeSnapshot<T>(container: ReactiveContainer<T>): T {
       (source as Atom<T>).write(newSource);
     }
 
-    container.flags &= ~FLAG_DIRTY;
+    container.flags &= ~FLAG_NEEDS_SNAPSHOT;
   }
 
   return source.value;
-}
-
-function toContainer<T>(value: T, version: number): ReactiveContainer<T> {
-  return {
-    source: new Atom(value, version),
-    properties: null,
-    flags: NO_FLAGS,
-  };
 }
