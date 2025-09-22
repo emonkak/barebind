@@ -2,7 +2,7 @@ import type { RelativeURL } from './relative-url.js';
 
 export interface Route<
   TResult,
-  TContext = unknown,
+  TContext,
   TPatterns extends Pattern[] = Pattern[],
   TInheritArgs extends unknown[] = [],
 > {
@@ -24,7 +24,7 @@ export type Pattern = string | Matcher<unknown>;
 
 export type Matcher<T> = (component: string, url: RelativeURL) => T | null;
 
-export type Handler<TArgs extends unknown[], TResult, TContext = unknown> = (
+export type Handler<TArgs extends unknown[], TResult, TContext> = (
   args: TArgs,
   url: RelativeURL,
   context: TContext,
@@ -42,7 +42,7 @@ type Match<TPattern> = TPattern extends string
     ? [T]
     : [];
 
-export class Router<TResult, TContext = unknown> {
+export class Router<TResult, TContext> {
   private readonly _routes: Route<TResult, TContext>[] = [];
 
   constructor(routes: Route<TResult, TContext>[]) {
