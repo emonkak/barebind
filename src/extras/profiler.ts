@@ -194,13 +194,13 @@ export class ConsoleReporter implements PerformanceReporter {
     const titleLablel = viewTransition ? 'Transition' : 'Update';
     const priorityLabel = priority !== null ? `with ${priority}` : 'without';
 
-    this._logger.group(
+    this._logger.groupCollapsed(
       `${titleLablel} #${profile.id} ${priorityLabel} priority in %c${updateMeasurement.duration}ms`,
       DURATION_STYLE,
     );
 
     if (renderMeasurement !== null) {
-      this._logger.groupCollapsed(
+      this._logger.log(
         `%cRENDER PHASE:%c ${componentMeasurements.length} component(s) rendered in %c${renderMeasurement.duration}ms`,
         RENDER_PHASE_STYLE,
         DEFAULT_STYLE,
@@ -209,7 +209,6 @@ export class ConsoleReporter implements PerformanceReporter {
       if (componentMeasurements.length > 0) {
         this._logger.table(componentMeasurements, ['name', 'duration']);
       }
-      this._logger.groupEnd();
     }
 
     if (mutationMeasurement !== null) {

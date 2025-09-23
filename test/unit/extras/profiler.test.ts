@@ -173,7 +173,10 @@ describe('ConsoleReporter', () => {
           layoutMeasurement: null,
           passiveMeasurement: null,
         },
-        [['group', 'Transition #1 without priority in %c10ms'], ['groupEnd']],
+        [
+          ['groupCollapsed', 'Transition #1 without priority in %c10ms'],
+          ['groupEnd'],
+        ],
       ],
       [
         {
@@ -211,11 +214,8 @@ describe('ConsoleReporter', () => {
           },
         },
         [
-          ['group', 'Update #1 with user-blocking priority in %c10ms'],
-          [
-            'groupCollapsed',
-            '%cRENDER PHASE:%c 1 component(s) rendered in %c4ms',
-          ],
+          ['groupCollapsed', 'Update #1 with user-blocking priority in %c10ms'],
+          ['log', '%cRENDER PHASE:%c 1 component(s) rendered in %c4ms'],
           [
             'table',
             [
@@ -226,7 +226,6 @@ describe('ConsoleReporter', () => {
               },
             ],
           ],
-          ['groupEnd'],
           ['log', '%cMUTATION PHASE:%c 3 effect(s) committed in %c3ms'],
           ['log', '%cLAYOUT PHASE:%c 2 effect(s) committed in %c2ms'],
           ['log', '%cPASSIVE PHASE:%c 1 effect(s) committed in %c1ms'],
