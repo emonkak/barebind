@@ -62,7 +62,7 @@ export class ComponentBinding<TProps, TResult>
 
   private _slot: Slot<TResult> | null = null;
 
-  private _hooks: Hook[] = [];
+  private readonly _hooks: Hook[] = [];
 
   constructor(
     component: Component<TProps, TResult>,
@@ -133,7 +133,7 @@ export class ComponentBinding<TProps, TResult>
 
   shouldUpdate(props: TProps): boolean {
     return (
-      this._hooks.length === 0 ||
+      this._scope === Scope.DETACHED ||
       !this._component.shouldSkipUpdate(props, this._props)
     );
   }
@@ -166,7 +166,6 @@ export class ComponentBinding<TProps, TResult>
 
     this._scope = Scope.DETACHED;
     this._pendingLanes = Lanes.NoLanes;
-    this._hooks = [];
   }
 
   commit(): void {
