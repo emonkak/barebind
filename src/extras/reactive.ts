@@ -305,7 +305,7 @@ function resolveChild<T extends object>(
         const initialResult = get.call(proxy);
         const initialVersion = dependencies.reduce(
           (version, dependency) => version + dependency.version,
-          parent.source.version,
+          0,
         );
         const signal = new Computed<unknown>(
           () => get.call(proxyObject(parent)),
