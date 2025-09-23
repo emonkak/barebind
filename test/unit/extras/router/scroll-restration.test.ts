@@ -35,7 +35,7 @@ describe('ScrollRestration()', () => {
       const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
       helper.startRender((session) => {
-        session.setSharedContext(CurrentHistory, [location, navigator]);
+        session.setSharedContext(CurrentHistory, { location, navigator });
         session.use(ScrollRestration());
       });
 
@@ -57,7 +57,7 @@ describe('ScrollRestration()', () => {
       const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
       helper.startRender((session) => {
-        session.setSharedContext(CurrentHistory, [location, navigator]);
+        session.setSharedContext(CurrentHistory, { location, navigator });
         session.use(ScrollRestration());
       });
 
@@ -81,7 +81,7 @@ describe('ScrollRestration()', () => {
     document.body.appendChild(element);
 
     helper.startRender((session) => {
-      session.setSharedContext(CurrentHistory, [location, navigator]);
+      session.setSharedContext(CurrentHistory, { location, navigator });
       session.use(ScrollRestration());
     });
 
@@ -101,7 +101,7 @@ describe('ScrollRestration()', () => {
     const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
     helper.startRender((session) => {
-      session.setSharedContext(CurrentHistory, [location, navigator]);
+      session.setSharedContext(CurrentHistory, { location, navigator });
       session.use(ScrollRestration());
     });
 
@@ -126,7 +126,7 @@ describe('ScrollRestration()', () => {
       );
 
       helper.startRender((session) => {
-        session.setSharedContext(CurrentHistory, [location, navigator]);
+        session.setSharedContext(CurrentHistory, { location, navigator });
         session.use(ScrollRestration());
       });
 
@@ -164,7 +164,7 @@ describe('ScrollRestration()', () => {
       });
 
       helper.startRender((session) => {
-        session.setSharedContext(CurrentHistory, [location, navigator]);
+        session.setSharedContext(CurrentHistory, { location, navigator });
         session.use(ScrollRestration());
       });
 
@@ -200,7 +200,7 @@ describe('ScrollRestration()', () => {
       });
 
       helper.startRender((session) => {
-        session.setSharedContext(CurrentHistory, [location, navigator]);
+        session.setSharedContext(CurrentHistory, { location, navigator });
         session.use(ScrollRestration());
       });
 
@@ -226,7 +226,7 @@ describe('ScrollRestration()', () => {
     vi.stubGlobal('navigation', undefined);
 
     helper.startRender((session) => {
-      session.setSharedContext(CurrentHistory, [location, navigator]);
+      session.setSharedContext(CurrentHistory, { location, navigator });
       session.use(ScrollRestration());
     });
 

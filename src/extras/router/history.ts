@@ -1,6 +1,11 @@
 import type { RenderContext } from '../../internal.js';
 import type { RelativeURL } from './relative-url.js';
 
+export interface HistoryHandle {
+  location: HistoryLocation;
+  navigator: HistoryNavigator;
+}
+
 export interface HistoryLocation {
   readonly url: RelativeURL;
   readonly state: unknown;
@@ -24,18 +29,16 @@ export interface NavigateOptions {
   state?: unknown;
 }
 
-export function CurrentHistory(
-  context: RenderContext,
-): readonly [HistoryLocation, HistoryNavigator] {
+export function CurrentHistory(context: RenderContext): HistoryHandle {
   const value = context.getSharedContext(CurrentHistory);
 
   if (value === undefined) {
     throw new Error(
-      'A context value for the current location does not exist, please ensure it is registered by context.use() with browserLocation or hashLocation.',
+      'A context value for the hisotry handle does not exist, please ensure it is registered by context.use() with BrowserLocation or HashLocation.',
     );
   }
 
-  return value as [HistoryLocation, HistoryNavigator];
+  return value as HistoryHandle;
 }
 
 export function anyModifiersArePressed(event: MouseEvent): boolean {

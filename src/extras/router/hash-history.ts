@@ -4,6 +4,7 @@ import type { CustomHookFunction, UpdateOptions } from '../../internal.js';
 import {
   anyModifiersArePressed,
   CurrentHistory,
+  type HistoryHandle,
   type HistoryLocation,
   type HistoryNavigator,
   isInternalLink,
@@ -13,7 +14,7 @@ import { RelativeURL } from './relative-url.js';
 
 export function HashHistory(
   options?: UpdateOptions,
-): CustomHookFunction<readonly [HistoryLocation, HistoryNavigator]> {
+): CustomHookFunction<HistoryHandle> {
   return (context) => {
     const [location, setLocation] = context.useState<HistoryLocation>(() => ({
       url: RelativeURL.fromString(truncateHashMark(window.location.hash)),
@@ -104,11 +105,11 @@ export function HashHistory(
       }
     }, []);
 
-    const currentHistory = [location, navigator] as const;
+    const handle = { location, navigator };
 
-    context.setSharedContext(CurrentHistory, currentHistory);
+    context.setSharedContext(CurrentHistory, handle);
 
-    return currentHistory;
+    return handle;
   };
 }
 

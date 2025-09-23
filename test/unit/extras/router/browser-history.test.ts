@@ -37,7 +37,7 @@ describe('BrowserHistory()', () => {
       history.replaceState(state, '', '/foo/bar');
 
       SESSION: {
-        const [location, navigator] = helper.startRender((session) => {
+        const { location, navigator } = helper.startRender((session) => {
           return session.use(BrowserHistory());
         });
 
@@ -63,7 +63,7 @@ describe('BrowserHistory()', () => {
       let stableNavigator: HistoryNavigator;
 
       SESSION1: {
-        const [location, navigator] = helper.startRender(callback);
+        const { location, navigator } = helper.startRender(callback);
 
         expect(location.url.toString()).toBe(
           RelativeURL.fromString(originalURL).toString(),
@@ -85,7 +85,7 @@ describe('BrowserHistory()', () => {
       );
 
       SESSION2: {
-        const [location, navigator] = helper.startRender(callback);
+        const { location, navigator } = helper.startRender(callback);
 
         expect(pushStateSpy).toHaveBeenCalledOnce();
         expect(replaceStateSpy).not.toHaveBeenCalled();
@@ -112,7 +112,7 @@ describe('BrowserHistory()', () => {
       let stableNavigator: HistoryNavigator;
 
       SESSION1: {
-        const [location, navigator] = helper.startRender(callback);
+        const { location, navigator } = helper.startRender(callback);
 
         expect(location.url.toString()).toBe(
           RelativeURL.fromString(originalURL).toString(),
@@ -137,7 +137,7 @@ describe('BrowserHistory()', () => {
       );
 
       SESSION2: {
-        const [location, navigator] = helper.startRender(callback);
+        const { location, navigator } = helper.startRender(callback);
 
         expect(pushStateSpy).not.toHaveBeenCalled();
         expect(replaceStateSpy).toHaveBeenCalledOnce();
@@ -151,7 +151,7 @@ describe('BrowserHistory()', () => {
     });
 
     it('waits for navigation transition', async () => {
-      const [_location, navigator] = helper.startRender((session) => {
+      const { navigator } = helper.startRender((session) => {
         return session.use(BrowserHistory());
       });
 
@@ -168,13 +168,13 @@ describe('BrowserHistory()', () => {
   });
 
   it('registers the current history', () => {
-    const { browserHistory, currentHistory } = helper.startRender((session) => {
-      const browserHistory = session.use(BrowserHistory());
-      const currentHistory = session.use(CurrentHistory);
-      return { browserHistory, currentHistory };
+    const { browserHandle, currentHandle } = helper.startRender((session) => {
+      const browserHandle = session.use(BrowserHistory());
+      const currentHandle = session.use(CurrentHistory);
+      return { browserHandle, currentHandle };
     });
 
-    expect(currentHistory).toBe(browserHistory);
+    expect(currentHandle).toBe(browserHandle);
   });
 
   it('registers event listeners for "click", "submit" and "popstate"', () => {
@@ -295,7 +295,7 @@ describe('BrowserHistory()', () => {
     );
 
     SESSION2: {
-      const [location] = helper.startRender(callback);
+      const { location } = helper.startRender(callback);
 
       expect(location.url.toString()).toBe('/foo/bar');
       expect(location.state).toBe(null);
@@ -337,7 +337,7 @@ describe('BrowserHistory()', () => {
     );
 
     SESSION2: {
-      const [location] = helper.startRender(callback);
+      const { location } = helper.startRender(callback);
 
       expect(location.url.toString()).toBe('/foo/bar');
       expect(location.state).toBe(null);
@@ -382,7 +382,7 @@ describe('BrowserHistory()', () => {
       );
 
       SESSION2: {
-        const [location] = helper.startRender(callback);
+        const { location } = helper.startRender(callback);
 
         expect(location.url.toString()).toBe('/foo/bar');
         expect(location.state).toBe(state);
@@ -423,7 +423,7 @@ describe('BrowserHistory()', () => {
     );
 
     SESSION2: {
-      const [location] = helper.startRender(callback);
+      const { location } = helper.startRender(callback);
 
       expect(location.url.toString()).toBe('/foo/bar');
       expect(location.state).toBe(state);

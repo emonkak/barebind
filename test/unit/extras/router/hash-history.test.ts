@@ -35,7 +35,7 @@ describe('HashHistory()', () => {
 
       history.replaceState(state, '', '#/articles/foo%2Fbar');
 
-      const [location, navigator] = helper.startRender((session) => {
+      const { location, navigator } = helper.startRender((session) => {
         return session.use(HashHistory());
       });
 
@@ -59,7 +59,7 @@ describe('HashHistory()', () => {
       let stableNavigator: HistoryNavigator;
 
       SESSION1: {
-        const [location, navigator] = helper.startRender(callback);
+        const { location, navigator } = helper.startRender(callback);
 
         expect(location.url.toString()).toBe('/');
         expect(location.state).toBe(originalState);
@@ -79,7 +79,7 @@ describe('HashHistory()', () => {
       );
 
       SESSION2: {
-        const [location, navigator] = helper.startRender(callback);
+        const { location, navigator } = helper.startRender(callback);
 
         expect(pushStateSpy).toHaveBeenCalledOnce();
         expect(replaceStateSpy).not.toHaveBeenCalled();
@@ -105,7 +105,7 @@ describe('HashHistory()', () => {
       let stableNavigator: HistoryNavigator;
 
       SESSION1: {
-        const [location, navigator] = helper.startRender(callback);
+        const { location, navigator } = helper.startRender(callback);
 
         expect(location.url.toString()).toBe('/');
         expect(location.state).toBe(originalState);
@@ -128,7 +128,7 @@ describe('HashHistory()', () => {
       );
 
       SESSION2: {
-        const [location, navigator] = helper.startRender(callback);
+        const { location, navigator } = helper.startRender(callback);
 
         expect(pushStateSpy).not.toHaveBeenCalled();
         expect(replaceStateSpy).toHaveBeenCalledOnce();
@@ -142,7 +142,7 @@ describe('HashHistory()', () => {
     });
 
     it('waits for navigation transition', async () => {
-      const [_location, navigator] = helper.startRender((session) => {
+      const { navigator } = helper.startRender((session) => {
         return session.use(HashHistory());
       });
 
@@ -159,13 +159,13 @@ describe('HashHistory()', () => {
   });
 
   it('registers the current history state', () => {
-    const { hashHistory, currentHistory } = helper.startRender((session) => {
-      const hashHistory = session.use(HashHistory());
-      const currentHistory = session.use(CurrentHistory);
-      return { hashHistory, currentHistory };
+    const { hashHandle, currentHandle } = helper.startRender((session) => {
+      const hashHandle = session.use(HashHistory());
+      const currentHandle = session.use(CurrentHistory);
+      return { hashHandle, currentHandle };
     });
 
-    expect(currentHistory).toBe(hashHistory);
+    expect(currentHandle).toBe(hashHandle);
   });
 
   it('registers event listeners for "click", and "hashchange"', () => {
@@ -272,7 +272,7 @@ describe('HashHistory()', () => {
     );
 
     SESSION2: {
-      const [location] = helper.startRender((session) => {
+      const { location } = helper.startRender((session) => {
         return session.use(HashHistory({ viewTransition: true }));
       });
       expect(location.url.toString()).toBe('/articles/foo%2Fbar');
@@ -318,7 +318,7 @@ describe('HashHistory()', () => {
       );
 
       SESSION2: {
-        const [location] = helper.startRender((session) => {
+        const { location } = helper.startRender((session) => {
           return session.use(HashHistory({ viewTransition: true }));
         });
 
@@ -360,7 +360,7 @@ describe('HashHistory()', () => {
     );
 
     SESSION2: {
-      const [location] = helper.startRender(callback);
+      const { location } = helper.startRender(callback);
 
       expect(location.url.toString()).toBe('/articles/foo%2Fbar');
       expect(location.state).toBe(null);

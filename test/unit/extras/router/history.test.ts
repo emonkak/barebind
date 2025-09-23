@@ -11,6 +11,6 @@ describe('CurrentHistory', () => {
       renderer.startRender((session) => {
         session.use(CurrentHistory);
       });
-    }).toThrow('A context value for the current location does not exist,');
+    }).toThrow('A context value for the hisotry handle does not exist,');
   });
 });

@@ -5,7 +5,7 @@ import { CurrentHistory, truncateHashMark } from './history.js';
 
 export function ScrollRestration(): CustomHookFunction<void> {
   return (context: RenderContext) => {
-    const [location, navigator] = context.use(CurrentHistory);
+    const { location, navigator } = context.use(CurrentHistory);
 
     context.useLayoutEffect(() => {
       const originalScrollRestoration = history.scrollRestoration;
