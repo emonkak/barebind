@@ -214,6 +214,13 @@ describe('Reactive', () => {
         state.changeFilter('completed');
       });
 
+      expect(state$.get('todos').value).toStrictEqual([
+        { id: 1, title: 'foo', completed: true },
+        { id: 2, title: 'bar', completed: false },
+        { id: 3, title: 'baz', completed: false },
+      ]);
+      expect(state$.get('filter').value).toBe('completed');
+
       const snapshot = state$.value;
 
       expect(snapshot).toBeInstanceOf(TodoState);

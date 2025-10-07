@@ -7,10 +7,11 @@ import {
 } from './signal.js';
 
 const NO_FLAGS = 0;
-const FLAG_PENGING_VALUE = 0b1;
-const FLAG_PENDING_DIFFERENCE = 0b10;
-const FLAG_NEEDS_SNAPSHOT = 0b100;
-const FLAG_NEEDS_COLLECTION = 0b1000;
+const FLAG_NEEDS_SNAPSHOT = 0b1;
+const FLAG_NEEDS_COLLECTION = 0b10;
+const FLAG_PENGING_VALUE = 0b100;
+const FLAG_PENDING_DIFFERENCE = 0b1000;
+const FLAG_DIRTY = 0b0111;
 
 export interface Difference {
   path: PropertyKey[];
@@ -190,11 +191,6 @@ function collectDefferences<T>(
 ): void {
   const { source, children, flags } = container;
 
-  if (flags & FLAG_PENDING_DIFFERENCE) {
-    differences.push({ path: [], value: source.value });
-    container.flags &= ~FLAG_PENDING_DIFFERENCE;
-  }
-
   if (flags & FLAG_NEEDS_COLLECTION) {
     for (const [key, child] of children!.entries()) {
       if (child !== null) {
@@ -207,6 +203,11 @@ function collectDefferences<T>(
     }
 
     container.flags &= ~FLAG_NEEDS_COLLECTION;
+  }
+
+  if (flags & FLAG_PENDING_DIFFERENCE) {
+    differences.push({ path: [], value: source.value });
+    container.flags &= ~FLAG_PENDING_DIFFERENCE;
   }
 }
 
@@ -231,7 +232,7 @@ function getChild<T extends object>(
 
   if (parent.source instanceof Atom && child.source instanceof Atom) {
     child.source.subscribe(() => {
-      parent.flags |= FLAG_NEEDS_SNAPSHOT | FLAG_NEEDS_COLLECTION;
+      parent.flags |= FLAG_DIRTY;
       (parent.source as Atom<T>).touch();
     });
   }
@@ -254,12 +255,12 @@ function isObjectContainer<T>(
 
 function proxyObject<T extends object>(
   parent: ReactiveContainer<T>,
-  getContainerValue: <T>(container: ReactiveContainer<T>) => T = takeSnapshot,
+  getValue: <T>(container: ReactiveContainer<T>) => T = takeSnapshot,
 ): T {
   return new Proxy(parent.source.value, {
     get(_target, key, _receiver) {
       const child = getChild(parent, key);
-      return getContainerValue(child);
+      return getValue(child);
     },
     set(target, key, value, receiver) {
       const child = getChild(parent, key);
