@@ -351,10 +351,7 @@ function takeSnapshot<T>(container: ReactiveContainer<T>): T {
       const newSource = shallowClone(oldSource);
 
       for (const [key, child] of children!.entries()) {
-        if (
-          child !== null &&
-          child.flags & (FLAG_PENGING_VALUE | FLAG_NEEDS_SNAPSHOT)
-        ) {
+        if (child !== null && child.flags & FLAG_PENGING_VALUE) {
           (newSource as any)[key] = takeSnapshot(child);
           child.flags &= ~FLAG_PENGING_VALUE;
         }
