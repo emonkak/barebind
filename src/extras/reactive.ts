@@ -265,7 +265,9 @@ function proxyObject<T extends object>(
     set(target, key, value, receiver) {
       const child = getChild(parent, key);
       if (child.source instanceof Atom) {
+        child.children = null;
         child.flags |= FLAG_PENGING_VALUE | FLAG_PENDING_DIFFERENCE;
+        child.flags &= ~(FLAG_NEEDS_SNAPSHOT | FLAG_NEEDS_COLLECTION);
         child.source.value = value;
         return true;
       } else {
