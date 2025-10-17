@@ -514,8 +514,8 @@ describe('Runtime', () => {
     it('generates a new identifier', () => {
       const runtime = createRuntime();
 
-      expect(runtime.nextIdentifier()).toMatch(/[0-9a-z]+:1/);
-      expect(runtime.nextIdentifier()).toMatch(/[0-9a-z]+:2/);
+      expect(runtime.nextIdentifier()).toMatch(/_[0-9a-z]+_1/);
+      expect(runtime.nextIdentifier()).toMatch(/_[0-9a-z]+_2/);
     });
   });
 

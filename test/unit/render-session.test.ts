@@ -495,8 +495,7 @@ describe('RenderSession', () => {
           return [session.useId(), session.useId()];
         });
 
-        expect(stableId1).toMatch(/[0-9a-z]+:1/);
-        expect(stableId2).toMatch(/[0-9a-z]+:2/);
+        expect(stableId1).not.toBe(stableId2);
       }
 
       SESSION2: {

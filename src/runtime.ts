@@ -340,9 +340,10 @@ export class Runtime implements SessionContext {
   }
 
   nextIdentifier(): string {
+    // The identifier is valid as view-transition-name.
     const prefix = this._templatePlaceholder;
     const id = (this._identifierCount = incrementCount(this._identifierCount));
-    return prefix + ':' + id;
+    return '_' + prefix + '_' + id;
   }
 
   renderComponent<TProps, TResult>(
