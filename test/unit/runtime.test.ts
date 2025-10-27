@@ -511,11 +511,11 @@ describe('Runtime', () => {
   });
 
   describe('nextIdentifier()', () => {
-    it('generates a new identifier', () => {
+    it('generates unique identifiers', () => {
       const runtime = createRuntime();
 
-      expect(runtime.nextIdentifier()).toMatch(/_[0-9a-z]+_1/);
-      expect(runtime.nextIdentifier()).toMatch(/_[0-9a-z]+_2/);
+      expect(runtime.nextIdentifier()).toMatch(/^id-[0-9a-z]+-0$/);
+      expect(runtime.nextIdentifier()).toMatch(/^id-[0-9a-z]+-1$/);
     });
   });
 
