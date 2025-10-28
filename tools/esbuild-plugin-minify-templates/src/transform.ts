@@ -49,8 +49,6 @@ function getIdentifierName(expression: acorn.Expression): string {
         ? property.name
         : getIdentifierName(property);
     }
-    case 'ParenthesizedExpression':
-      return getIdentifierName(expression.expression);
   }
   return '';
 }

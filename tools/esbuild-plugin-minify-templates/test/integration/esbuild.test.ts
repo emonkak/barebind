@@ -24,6 +24,7 @@ export const temporaryDirectoryTest = test.extend<TemporaryDirectoryFixture>({
 
 temporaryDirectoryTest.for([
   'function-call.js',
+  'ignored-template.js',
   'method-call.js',
   'nested-templates.js',
 ])('minify template literals in %s', async (filename, { outdir }) => {
