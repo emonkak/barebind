@@ -21,13 +21,13 @@
     "clean": "rm -fr lib"
   },
   "dependencies": {
-    "@types/node": "^24.8.1",
+    "@types/node": "^24.9.1",
     "acorn": "^8.15.0",
     "acorn-walk": "^8.3.4",
     "astring": "^1.9.0",
     "esbuild": "^0.25.11"
   },
   "devDependencies": {
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.4"
   }
 }
