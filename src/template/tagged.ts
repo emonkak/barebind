@@ -100,16 +100,17 @@ export class TaggedTemplate<
     const marker = createMarker(placeholder);
 
     if (mode === 'html') {
-      template.innerHTML = stripWhitespaces(strings.join(marker));
+      template.setHTMLUnsafe(stripWhitespaces(strings.join(marker)));
     } else {
-      template.innerHTML =
+      template.setHTMLUnsafe(
         '<' +
-        mode +
-        '>' +
-        stripWhitespaces(strings.join(marker)) +
-        '</' +
-        mode +
-        '>';
+          mode +
+          '>' +
+          stripWhitespaces(strings.join(marker)) +
+          '</' +
+          mode +
+          '>',
+      );
       template.content.replaceChildren(
         ...template.content.firstChild!.childNodes,
       );
