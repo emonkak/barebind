@@ -49,27 +49,27 @@ describe('createComponent()', () => {
     });
   });
 
-  describe('shouldSkipUpdate()', () => {
-    it('returns whether the props is the same with `===` equality', () => {
+  describe('arePropsEqual()', () => {
+    it('returns whether the props is the same with Object.is equality', () => {
       const props1 = { greet: 'Hello', name: 'foo' };
       const props2 = { greet: 'Chao', name: 'bar' };
 
-      expect(Greet.shouldSkipUpdate(props1, props1)).toBe(true);
-      expect(Greet.shouldSkipUpdate(props1, props2)).toBe(false);
-      expect(Greet.shouldSkipUpdate(props2, props1)).toBe(false);
-      expect(Greet.shouldSkipUpdate(props2, props2)).toBe(true);
+      expect(Greet.arePropsEqual(props1, props1)).toBe(true);
+      expect(Greet.arePropsEqual(props1, props2)).toBe(false);
+      expect(Greet.arePropsEqual(props2, props1)).toBe(false);
+      expect(Greet.arePropsEqual(props2, props2)).toBe(true);
     });
 
     it.each([
       [{ key: 'foo', value: 1 }, { key: 'foo', value: 1 }, true],
       [{ key: 'foo', value: 1 }, { key: 'bar', value: 2 }, false],
     ])(
-      'returns whether the props is the same with custom equality',
+      'returns whether the props is the same with a custom equality',
       (props1, props2, expandedResult) => {
-        expect(Memo.shouldSkipUpdate(props1, props1)).toBe(true);
-        expect(Memo.shouldSkipUpdate(props1, props2)).toBe(expandedResult);
-        expect(Memo.shouldSkipUpdate(props2, props1)).toBe(expandedResult);
-        expect(Memo.shouldSkipUpdate(props2, props2)).toBe(true);
+        expect(Memo.arePropsEqual(props1, props1)).toBe(true);
+        expect(Memo.arePropsEqual(props1, props2)).toBe(expandedResult);
+        expect(Memo.arePropsEqual(props2, props1)).toBe(expandedResult);
+        expect(Memo.arePropsEqual(props2, props2)).toBe(true);
       },
     );
   });
@@ -319,7 +319,7 @@ const Memo = createComponent(
     return value;
   },
   {
-    shouldSkipUpdate: (nextProps, prevProps) => nextProps.key === prevProps.key,
+    arePropsEqual: (nextProps, prevProps) => nextProps.key === prevProps.key,
   },
 );
 

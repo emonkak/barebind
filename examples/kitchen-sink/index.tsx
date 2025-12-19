@@ -213,7 +213,7 @@ const List = createComponent(
       </div>
     `;
   },
-  { shouldSkipUpdate: shallowEqual },
+  { arePropsEqual: shallowEqual },
 );
 
 interface ItemProps {
@@ -250,7 +250,7 @@ const Item = createComponent(
       </li>
     `;
   },
-  { shouldSkipUpdate: shallowEqual },
+  { arePropsEqual: shallowEqual },
 );
 
 const TemplateCounter = createComponent(function TemplateCounter(

@@ -82,5 +82,5 @@ export const TodoItem = createComponent(
       </li>
     `;
   },
-  { shouldSkipUpdate: shallowEqual },
+  { arePropsEqual: shallowEqual },
 );

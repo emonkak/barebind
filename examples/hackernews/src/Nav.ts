@@ -27,5 +27,5 @@ export const Nav = createComponent(
     </nav>
   `;
   },
-  { shouldSkipUpdate: shallowEqual },
+  { arePropsEqual: shallowEqual },
 );

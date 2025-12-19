@@ -65,7 +65,7 @@ export interface Component<TProps, TResult = unknown>
   extends DirectiveType<TProps> {
   (props: TProps): Bindable<TProps>;
   render(props: TProps, context: RenderContext): TResult;
-  shouldSkipUpdate(nextProps: TProps, prevProps: TProps): boolean;
+  arePropsEqual(nextProps: TProps, prevProps: TProps): boolean;
 }
 
 export interface Coroutine {

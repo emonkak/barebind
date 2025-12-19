@@ -18,7 +18,7 @@ import {
 } from './internal.js';
 
 export interface ComponentOptions<TProps> {
-  shouldSkipUpdate?: (nextProps: TProps, prevProps: TProps) => boolean;
+  arePropsEqual?: (nextProps: TProps, prevProps: TProps) => boolean;
 }
 
 export function createComponent<TProps, TResult = unknown>(
@@ -41,8 +41,7 @@ export function createComponent<TProps, TResult = unknown>(
 
   Component.render = componentFn;
   Component.resolveBinding = resolveBinding;
-  Component.shouldSkipUpdate =
-    options.shouldSkipUpdate ?? defaultShouldSkipUpdate;
+  Component.arePropsEqual = options.arePropsEqual ?? Object.is;
 
   return Component;
 }
@@ -134,7 +133,7 @@ export class ComponentBinding<TProps, TResult>
   shouldUpdate(props: TProps): boolean {
     return (
       this._scope === Scope.DETACHED ||
-      !this._component.shouldSkipUpdate(props, this._props)
+      !this._component.arePropsEqual(props, this._props)
     );
   }
 
@@ -188,13 +187,6 @@ class FinalizeEffectHook implements Effect {
     this._hook.cleanup?.();
     this._hook.cleanup = undefined;
   }
-}
-
-function defaultShouldSkipUpdate<TProps>(
-  nextProps: TProps,
-  prevProps: TProps,
-): boolean {
-  return nextProps === prevProps;
 }
 
 function resolveBinding<TProps, TResult>(
