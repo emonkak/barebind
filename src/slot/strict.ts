@@ -39,7 +39,7 @@ export class StrictSlot<T> implements Slot<T> {
     const { context } = session;
     const directive = context.resolveDirective(value, this._binding.part);
 
-    if (!areDirectiveTypesEqual(this._binding.type, directive.type)) {
+    if (!areDirectiveTypesEqual(directive.type, this._binding.type)) {
       throw new DirectiveError(
         directive.type,
         directive.value,

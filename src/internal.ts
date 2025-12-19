@@ -545,10 +545,10 @@ export class Scope {
  * @internal
  */
 export function areDirectiveTypesEqual(
-  x: DirectiveType<unknown>,
-  y: DirectiveType<unknown>,
+  nextType: DirectiveType<unknown>,
+  prevType: DirectiveType<unknown>,
 ): boolean {
-  return x.equals?.(y) ?? x === y;
+  return nextType.equals?.(prevType) ?? nextType === prevType;
 }
 
 /**

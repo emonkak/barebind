@@ -44,7 +44,7 @@ export class LooseSlot<T> implements Slot<T> {
       this._pendingBinding.part,
     );
 
-    if (areDirectiveTypesEqual(this._pendingBinding.type, directive.type)) {
+    if (areDirectiveTypesEqual(directive.type, this._pendingBinding.type)) {
       if (this._dirty || this._pendingBinding.shouldUpdate(directive.value)) {
         this._pendingBinding.value = directive.value;
         this._pendingBinding.attach(session);

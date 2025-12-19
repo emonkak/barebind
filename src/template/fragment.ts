@@ -26,7 +26,7 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
   equals(other: unknown): boolean {
     return (
       other instanceof FragmentTemplate &&
-      sequentialEqual(this._templates, other._templates, areDirectiveTypesEqual)
+      sequentialEqual(other._templates, this._templates, areDirectiveTypesEqual)
     );
   }
 
