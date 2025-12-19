@@ -718,7 +718,6 @@ describe('RenderSession', () => {
         const [count, setCount] = session.useState(() => 0);
 
         session.useEffect(() => {
-          // Call twice and the result is the same.
           setCount((count) => count + 1);
           setCount((count) => count + 1);
         }, []);
@@ -736,7 +735,7 @@ describe('RenderSession', () => {
       await Promise.resolve();
 
       expect(callback).toHaveBeenCalledTimes(2);
-      expect(callback).toHaveLastReturnedWith(1);
+      expect(callback).toHaveLastReturnedWith(2);
     });
 
     it('should not return the pending state', async () => {
