@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-
+import { shallowEqual } from '@/compare.js';
 import {
   $customHook,
   CommitPhase,
@@ -670,7 +670,7 @@ describe('RenderSession', () => {
 
         session.useEffect(() => {
           setCount(1);
-        }, []);
+        });
 
         return count;
       });
@@ -686,6 +686,30 @@ describe('RenderSession', () => {
 
       expect(callback).toHaveBeenCalledTimes(2);
       expect(callback).toHaveLastReturnedWith(1);
+    });
+
+    it('compares each state with a custom equality', async () => {
+      const renderer = new TestRenderer();
+      const callback = vi.fn((session: RenderContext) => {
+        const [range, setRange] = session.useState({ start: 0, end: 1 });
+
+        session.useEffect(() => {
+          setRange({ start: 0, end: 1 }, { areStatesEqual: shallowEqual });
+        });
+
+        return range;
+      });
+
+      SESSION1: {
+        renderer.startRender(callback);
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(callback).toHaveLastReturnedWith({ start: 0, end: 1 });
+      }
+
+      await Promise.resolve();
+
+      expect(callback).toHaveBeenCalledTimes(1);
     });
 
     it('calculates a new state from the previous state', async () => {

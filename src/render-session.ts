@@ -4,6 +4,7 @@ import {
   $customHook,
   type Cleanup,
   type Coroutine,
+  type DispatchOptions,
   type Effect,
   type ErrorHandler,
   type Hook,
@@ -241,7 +242,7 @@ export class RenderSession implements RenderContext {
     initialState: InitialState<TState>,
   ): [
     state: TState,
-    dispatch: (action: TAction, options?: UpdateOptions) => void,
+    dispatch: (action: TAction, options?: DispatchOptions<TState>) => void,
     isPending: boolean,
   ] {
     let currentHook = this._hooks[this._hookIndex];
@@ -265,11 +266,12 @@ export class RenderSession implements RenderContext {
       const hook: Hook.ReducerHook<TState, TAction> = {
         type: HookType.Reducer,
         reducer,
-        dispatch: (action: TAction, options?: UpdateOptions) => {
+        dispatch: (action: TAction, options?: DispatchOptions<TState>) => {
+          const areStatesEqual = options?.areStatesEqual ?? Object.is;
           const prevState = hook.memoizedState;
           const nextState = hook.reducer(prevState, action);
 
-          if (!Object.is(nextState, prevState)) {
+          if (!areStatesEqual(nextState, prevState)) {
             const { lanes } = this.forceUpdate(options);
             hook.pendingLanes = lanes;
             hook.pendingState = nextState;
@@ -300,7 +302,10 @@ export class RenderSession implements RenderContext {
     initialState: InitialState<TState>,
   ): [
     state: TState,
-    setState: (newState: NewState<TState>, options?: UpdateOptions) => void,
+    setState: (
+      newState: NewState<TState>,
+      options?: DispatchOptions<TState>,
+    ) => void,
     isPending: boolean,
   ] {
     return this.useReducer(

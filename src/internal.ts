@@ -97,6 +97,10 @@ export interface DirectiveType<T> {
   resolveBinding(value: T, part: Part, context: DirectiveContext): Binding<T>;
 }
 
+export interface DispatchOptions<T> extends UpdateOptions {
+  areStatesEqual?: (x: T, y: T) => boolean;
+}
+
 export interface Effect {
   commit(): void;
 }
@@ -317,7 +321,7 @@ export interface RenderContext {
     initialState: InitialState<TState>,
   ): [
     state: TState,
-    dispatch: (action: TAction, options?: UpdateOptions) => void,
+    dispatch: (action: TAction, options?: DispatchOptions<TState>) => void,
     isPending: boolean,
   ];
   useRef<T>(initialValue: T): RefObject<T>;
@@ -325,7 +329,10 @@ export interface RenderContext {
     initialState: InitialState<TState>,
   ): [
     state: TState,
-    setState: (newState: NewState<TState>, options?: UpdateOptions) => void,
+    setState: (
+      newState: NewState<TState>,
+      options?: DispatchOptions<TState>,
+    ) => void,
     isPending: boolean,
   ];
   waitForUpdate(): Promise<number>;
