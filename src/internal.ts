@@ -428,13 +428,6 @@ export interface UpdateOptions {
   viewTransition?: boolean;
 }
 
-export interface UpdateSession {
-  frame: RenderFrame;
-  rootScope: Scope;
-  scope: Scope;
-  context: SessionContext;
-}
-
 export interface UpdateTask {
   coroutine: Coroutine;
   lanes: Lanes;
@@ -540,6 +533,31 @@ export class Scope {
   }
 }
 
+export class UpdateSession {
+  readonly frame: RenderFrame;
+
+  readonly rootScope: Scope;
+
+  readonly scope: Scope;
+
+  readonly context: SessionContext;
+
+  constructor(
+    frame: RenderFrame,
+    rootScope: Scope,
+    scope: Scope,
+    context: SessionContext,
+  ) {
+    this.frame = frame;
+    this.rootScope = rootScope;
+    this.scope = scope;
+    this.context = context;
+    DEBUG: {
+      Object.freeze(this);
+    }
+  }
+}
+
 /**
  * @internal
  */
@@ -548,18 +566,6 @@ export function areDirectiveTypesEqual(
   prevType: DirectiveType<unknown>,
 ): boolean {
   return nextType.equals?.(prevType) ?? nextType === prevType;
-}
-
-/**
- * @internal
- */
-export function createUpdateSession(
-  frame: RenderFrame,
-  rootScope: Scope,
-  scope: Scope,
-  context: SessionContext,
-): UpdateSession {
-  return { frame, rootScope, scope, context };
 }
 
 /**

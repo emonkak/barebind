@@ -4,7 +4,6 @@ import {
   CommitPhase,
   type Component,
   type Coroutine,
-  createUpdateSession,
   type Directive,
   type Effect,
   getLanesFromOptions,
@@ -25,6 +24,7 @@ import {
   type UnwrapBindable,
   type UpdateHandle,
   type UpdateOptions,
+  UpdateSession,
   type UpdateTask,
 } from './internal.js';
 import { RenderSession } from './render-session.js';
@@ -144,7 +144,7 @@ export class Runtime implements SessionContext {
       const id = (this._updateCount = incrementCount(this._updateCount));
       const frame = createRenderFrame(id, lanes, coroutine);
       const rootScope = coroutine.scope;
-      const session = createUpdateSession(frame, rootScope, rootScope, this);
+      const session = new UpdateSession(frame, rootScope, rootScope, this);
 
       try {
         if (!this._observers.isEmpty()) {
@@ -259,7 +259,7 @@ export class Runtime implements SessionContext {
       const id = (this._updateCount = incrementCount(this._updateCount));
       const frame = createRenderFrame(id, lanes, coroutine);
       const rootScope = coroutine.scope;
-      const session = createUpdateSession(frame, rootScope, rootScope, this);
+      const session = new UpdateSession(frame, rootScope, rootScope, this);
 
       try {
         if (!this._observers.isEmpty()) {
