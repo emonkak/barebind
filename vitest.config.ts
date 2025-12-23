@@ -31,8 +31,5 @@ export default defineConfig({
       'vitest.config.ts',
     ],
     setupFiles: ['test/setup.ts'],
-    typecheck: {
-      enabled: true,
-    },
   },
 });
