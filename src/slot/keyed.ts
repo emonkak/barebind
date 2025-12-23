@@ -1,5 +1,5 @@
 import { debugPart, undebugPart } from '../debug/part.js';
-import { LayoutSpecifier } from '../directive.js';
+import { DirectiveError, LayoutSpecifier } from '../directive.js';
 import {
   areDirectiveTypesEqual,
   type Binding,
@@ -11,33 +11,54 @@ import {
   type UpdateSession,
 } from '../internal.js';
 
-export function Loose<T>(value: T): LayoutSpecifier<T> {
-  return new LayoutSpecifier(LooseLayout, value);
+export function Keyed<TKey, TValue>(
+  key: TKey,
+  value: TValue,
+): LayoutSpecifier<TValue> {
+  return new LayoutSpecifier(new KeyedLayout(key), value);
 }
 
-export const LooseLayout: Layout = {
-  name: 'LooseLayout',
-  resolveSlot<T>(binding: Binding<UnwrapBindable<T>>): LooseSlot<T> {
-    return new LooseSlot(binding);
-  },
-};
+export class KeyedLayout<TKey> implements Layout {
+  private readonly _key: TKey;
 
-export class LooseSlot<T> implements Slot<T> {
-  private _pendingBinding: Binding<UnwrapBindable<T>>;
+  get name(): string {
+    return this.constructor.name;
+  }
 
-  private _memoizedBinding: Binding<UnwrapBindable<T>> | null = null;
+  get key(): TKey {
+    return this._key;
+  }
+
+  constructor(key: TKey) {
+    this._key = key;
+  }
+
+  resolveSlot<TValue>(
+    binding: Binding<UnwrapBindable<TValue>>,
+  ): KeyedSlot<TKey, TValue> {
+    return new KeyedSlot(this._key, binding);
+  }
+}
+
+export class KeyedSlot<TKey, TValue> implements Slot<TValue> {
+  private _key: TKey;
+
+  private _pendingBinding: Binding<UnwrapBindable<TValue>>;
+
+  private _memoizedBinding: Binding<UnwrapBindable<TValue>> | null = null;
 
   private _dirty = false;
 
-  constructor(binding: Binding<UnwrapBindable<T>>) {
+  constructor(key: TKey, binding: Binding<UnwrapBindable<TValue>>) {
+    this._key = key;
     this._pendingBinding = binding;
   }
 
-  get type(): DirectiveType<UnwrapBindable<T>> {
+  get type(): DirectiveType<UnwrapBindable<TValue>> {
     return this._pendingBinding.type;
   }
 
-  get value(): UnwrapBindable<T> {
+  get value(): UnwrapBindable<TValue> {
     return this._pendingBinding.value;
   }
 
@@ -45,14 +66,26 @@ export class LooseSlot<T> implements Slot<T> {
     return this._pendingBinding.part;
   }
 
-  reconcile(value: T, session: UpdateSession): boolean {
+  reconcile(value: TValue, session: UpdateSession): boolean {
     const { context } = session;
     const directive = context.resolveDirective(
       value,
       this._pendingBinding.part,
     );
+    const key = (
+      directive.layout instanceof KeyedLayout ? directive.layout.key : undefined
+    ) as TKey;
 
-    if (areDirectiveTypesEqual(directive.type, this._pendingBinding.type)) {
+    if (Object.is(key, this._key)) {
+      if (!areDirectiveTypesEqual(directive.type, this._pendingBinding.type)) {
+        throw new DirectiveError(
+          directive.type,
+          directive.value,
+          this._pendingBinding.part,
+          `The directive type must be ${this._pendingBinding.type.name} in this slot, but got ${directive.type.name}.`,
+        );
+      }
+
       if (this._dirty || this._pendingBinding.shouldUpdate(directive.value)) {
         this._pendingBinding.value = directive.value;
         this._pendingBinding.attach(session);
@@ -68,6 +101,8 @@ export class LooseSlot<T> implements Slot<T> {
       this._pendingBinding.attach(session);
       this._dirty = true;
     }
+
+    this._key = key;
 
     return this._dirty;
   }

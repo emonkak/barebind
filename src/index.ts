@@ -31,6 +31,7 @@ export {
   type RuntimeObserver,
 } from './runtime.js';
 export { Flexible } from './slot/flexible.js';
+export { Keyed } from './slot/keyed.js';
 export { Loose } from './slot/loose.js';
 export { Strict } from './slot/strict.js';
 export { Element } from './template/element.js';

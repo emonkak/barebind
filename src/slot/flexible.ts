@@ -16,7 +16,7 @@ export function Flexible<T>(value: T): LayoutSpecifier<T> {
 }
 
 export const FlexibleLayout: Layout = {
-  name: 'FlexibleSlot',
+  name: 'FlexibleLayout',
   resolveSlot<T>(binding: Binding<UnwrapBindable<T>>): FlexibleSlot<T> {
     return new FlexibleSlot(binding);
   },
@@ -106,7 +106,7 @@ export class FlexibleSlot<T> implements Slot<T> {
     const newBinding = this._pendingBinding;
     const oldBinding = this._memoizedBinding;
 
-    if (oldBinding !== newBinding) {
+    if (newBinding !== oldBinding) {
       if (oldBinding !== null) {
         oldBinding.rollback();
 

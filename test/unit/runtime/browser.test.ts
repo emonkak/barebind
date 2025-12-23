@@ -472,10 +472,10 @@ describe('BrowserBackend', () => {
       ],
     ] as const)(
       'resolves the Layout from an arbitrary part',
-      (value, part, expectedSlotType) => {
+      (value, part, expectedLayout) => {
         const backend = new BrowserBackend();
 
-        expect(backend.resolveLayout(value, part)).toBe(expectedSlotType);
+        expect(backend.resolveLayout(value, part)).toBe(expectedLayout);
       },
     );
   });

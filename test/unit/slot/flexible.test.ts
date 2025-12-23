@@ -39,7 +39,7 @@ describe('FlexibleLayout', () => {
 
 describe('FlexibleSlot', () => {
   describe('reconcile()', () => {
-    it('updates the binding with a same directive value', () => {
+    it('updates the binding with the same directive type', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const part = {
@@ -53,8 +53,8 @@ describe('FlexibleSlot', () => {
       const updater = new TestUpdater();
 
       const shouldUpdateSpy = vi.spyOn(binding, 'shouldUpdate');
-      const requestCommitSpy = vi.spyOn(binding, 'attach');
-      const requestRollbackSpy = vi.spyOn(binding, 'detach');
+      const attachSpy = vi.spyOn(binding, 'attach');
+      const detachSpy = vi.spyOn(binding, 'detach');
       const commitSpy = vi.spyOn(binding, 'commit');
       const rollbackSpy = vi.spyOn(binding, 'rollback');
 
@@ -65,8 +65,8 @@ describe('FlexibleSlot', () => {
         });
 
         expect(shouldUpdateSpy).toHaveBeenCalledTimes(0);
-        expect(requestCommitSpy).toHaveBeenCalledTimes(1);
-        expect(requestRollbackSpy).toHaveBeenCalledTimes(0);
+        expect(attachSpy).toHaveBeenCalledTimes(1);
+        expect(detachSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(rollbackSpy).toHaveBeenCalledTimes(0);
         expect(part.node.data).toBe('/MockPrimitive("foo")');
@@ -81,8 +81,8 @@ describe('FlexibleSlot', () => {
         });
 
         expect(shouldUpdateSpy).toHaveBeenCalledTimes(1);
-        expect(requestCommitSpy).toHaveBeenCalledTimes(2);
-        expect(requestRollbackSpy).toHaveBeenCalledTimes(0);
+        expect(attachSpy).toHaveBeenCalledTimes(2);
+        expect(detachSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(rollbackSpy).toHaveBeenCalledTimes(0);
         expect(part.node.data).toBe('/MockPrimitive("bar")');
@@ -97,15 +97,15 @@ describe('FlexibleSlot', () => {
         });
 
         expect(shouldUpdateSpy).toHaveBeenCalledTimes(1);
-        expect(requestCommitSpy).toHaveBeenCalledTimes(2);
-        expect(requestRollbackSpy).toHaveBeenCalledTimes(1);
+        expect(attachSpy).toHaveBeenCalledTimes(2);
+        expect(detachSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(rollbackSpy).toHaveBeenCalledTimes(1);
         expect(part.node.data).toBe('');
       }
     });
 
-    it('updates the binding with a different directive value', () => {
+    it('updates the binding with a different directive type', () => {
       const value1 = 'foo';
       const value2 = new DirectiveSpecifier(new MockDirective(), 'bar');
       const part = {
@@ -118,8 +118,8 @@ describe('FlexibleSlot', () => {
       const slot = new FlexibleSlot(binding);
       const updater = new TestUpdater();
 
-      const requestCommitSpy = vi.spyOn(binding, 'attach');
-      const requestRollbackSpy = vi.spyOn(binding, 'detach');
+      const attachSpy = vi.spyOn(binding, 'attach');
+      const detachSpy = vi.spyOn(binding, 'detach');
       const commitSpy = vi.spyOn(binding, 'commit');
       const rollbackSpy = vi.spyOn(binding, 'rollback');
 
@@ -143,8 +143,8 @@ describe('FlexibleSlot', () => {
           slot.commit();
         });
 
-        expect(requestCommitSpy).toHaveBeenCalledTimes(2);
-        expect(requestRollbackSpy).toHaveBeenCalledOnce();
+        expect(attachSpy).toHaveBeenCalledTimes(2);
+        expect(detachSpy).toHaveBeenCalledOnce();
         expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(rollbackSpy).toHaveBeenCalledOnce();
         expect(slot['_pendingBinding']).toBe(binding);
@@ -171,7 +171,7 @@ describe('FlexibleSlot', () => {
       const updater = new TestUpdater();
 
       const shouldUpdateSpy = vi.spyOn(binding, 'shouldUpdate');
-      const requestCommitSpy = vi.spyOn(binding, 'attach');
+      const attachSpy = vi.spyOn(binding, 'attach');
       const commitSpy = vi.spyOn(binding, 'commit');
 
       SESSION1: {
@@ -181,7 +181,7 @@ describe('FlexibleSlot', () => {
         });
 
         expect(shouldUpdateSpy).toHaveBeenCalledTimes(0);
-        expect(requestCommitSpy).toHaveBeenCalledTimes(1);
+        expect(attachSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(part.node.data).toBe('/MockPrimitive("foo")');
       }
@@ -192,7 +192,7 @@ describe('FlexibleSlot', () => {
         });
 
         expect(shouldUpdateSpy).toHaveBeenCalledTimes(1);
-        expect(requestCommitSpy).toHaveBeenCalledTimes(1);
+        expect(attachSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(part.node.data).toBe('/MockPrimitive("foo")');
       }
