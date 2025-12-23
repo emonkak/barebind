@@ -8,7 +8,7 @@ import {
 } from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export type ClassList = ClassArray | ClassObject;
+export type ClassSpecifier = ClassArray | ClassObject;
 
 type ClassArray = readonly ClassAtom[];
 
@@ -20,10 +20,10 @@ type ClassAtom = boolean | string | null | undefined;
 
 const CLASS_SEPARATOR_PATTERN = /\s+/;
 
-export class ClassPrimitive implements Primitive<ClassList> {
+export class ClassPrimitive implements Primitive<ClassSpecifier> {
   static readonly instance: ClassPrimitive = new ClassPrimitive();
 
-  ensureValue(value: unknown, part: Part): asserts value is ClassList {
+  ensureValue(value: unknown, part: Part): asserts value is ClassSpecifier {
     if (!isObject(value)) {
       throw new DirectiveError(
         this,
@@ -35,7 +35,7 @@ export class ClassPrimitive implements Primitive<ClassList> {
   }
 
   resolveBinding(
-    clesses: ClassList,
+    clesses: ClassSpecifier,
     part: Part,
     _context: DirectiveContext,
   ): ClassBinding {
@@ -55,16 +55,16 @@ export class ClassPrimitive implements Primitive<ClassList> {
 }
 
 export class ClassBinding extends PrimitiveBinding<
-  ClassList,
+  ClassSpecifier,
   Part.AttributePart
 > {
-  private _memoizedValue: ClassList = {};
+  private _memoizedValue: ClassSpecifier = {};
 
-  get type(): Primitive<ClassList> {
+  get type(): Primitive<ClassSpecifier> {
     return ClassPrimitive.instance;
   }
 
-  shouldUpdate(classes: ClassList): boolean {
+  shouldUpdate(classes: ClassSpecifier): boolean {
     return !shallowEqual(classes, this._memoizedValue);
   }
 
