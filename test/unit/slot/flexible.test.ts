@@ -2,24 +2,24 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { DirectiveSpecifier } from '@/directive.js';
 import { PartType } from '@/internal.js';
-import { Flexible, FlexibleSlot } from '@/slot/flexible.js';
+import { Flexible, FlexibleLayout, FlexibleSlot } from '@/slot/flexible.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
 import { TestUpdater } from '../../test-helpers.js';
 
 describe('Flexible()', () => {
-  it('creates a SlotElement with FlexibleSlot', () => {
+  it('creates a LayoutSpecifier with FlexibleSlot', () => {
     const value = 'foo';
     const bindable = Flexible(value);
 
     expect(bindable.value).toBe(value);
-    expect(bindable.type).toBe(FlexibleSlot);
+    expect(bindable.layout).toBe(FlexibleLayout);
   });
 });
 
-describe('FlexibleSlot', () => {
-  describe('constructor()', () => {
-    it('constructs a new FlexibleSlot from the binding', () => {
+describe('FlexibleLayout', () => {
+  describe('resolveSlot', () => {
+    it('constructs a new FlexibleSlot', () => {
       const value = 'foo';
       const part = {
         type: PartType.ChildNode,
@@ -28,14 +28,16 @@ describe('FlexibleSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new FlexibleSlot(binding);
+      const slot = FlexibleLayout.resolveSlot(binding);
 
       expect(slot.type).toBe(MockPrimitive);
       expect(slot.value).toBe(value);
       expect(slot.part).toBe(part);
     });
   });
+});
 
+describe('FlexibleSlot', () => {
   describe('reconcile()', () => {
     it('updates the binding with a same directive value', () => {
       const value1 = 'foo';

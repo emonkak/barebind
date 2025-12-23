@@ -3,11 +3,11 @@
 import {
   type CommitPhase,
   type Effect,
+  type Layout,
   type Part,
   PartType,
   type Primitive,
   type RequestCallbackOptions,
-  type SlotType,
   type Template,
   type TemplateMode,
 } from '../internal.js';
@@ -23,8 +23,8 @@ import { SpreadPrimitive } from '../primitive/spread.js';
 import { StylePrimitive } from '../primitive/style.js';
 import { TextPrimitive } from '../primitive/text.js';
 import type { Runtime, RuntimeBackend } from '../runtime.js';
-import { LooseSlot } from '../slot/loose.js';
-import { StrictSlot } from '../slot/strict.js';
+import { LooseLayout } from '../slot/loose.js';
+import { StrictLayout } from '../slot/strict.js';
 import { TaggedTemplate } from '../template/tagged.js';
 
 export class BrowserBackend implements RuntimeBackend {
@@ -88,6 +88,15 @@ export class BrowserBackend implements RuntimeBackend {
     }
   }
 
+  resolveLayout(_value: unknown, part: Part): Layout {
+    switch (part.type) {
+      case PartType.ChildNode:
+        return LooseLayout;
+      default:
+        return StrictLayout;
+    }
+  }
+
   resolvePrimitive(value: unknown, part: Part): Primitive<unknown> {
     switch (part.type) {
       case PartType.Attribute:
@@ -116,15 +125,6 @@ export class BrowserBackend implements RuntimeBackend {
         return PropertyPrimitive;
       case PartType.Text:
         return TextPrimitive;
-    }
-  }
-
-  resolveSlotType(_value: unknown, part: Part): SlotType {
-    switch (part.type) {
-      case PartType.ChildNode:
-        return LooseSlot;
-      default:
-        return StrictSlot;
     }
   }
 

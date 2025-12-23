@@ -12,8 +12,8 @@ import { StylePrimitive } from '@/primitive/style.js';
 import { TextPrimitive } from '@/primitive/text.js';
 import { ServerBackend } from '@/runtime/server.js';
 import { Runtime } from '@/runtime.js';
-import { LooseSlot } from '@/slot/loose.js';
-import { StrictSlot } from '@/slot/strict.js';
+import { LooseLayout } from '@/slot/loose.js';
+import { StrictLayout } from '@/slot/strict.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { templateLiteral } from '../../test-helpers.js';
@@ -287,7 +287,7 @@ describe('ServerBackend', () => {
     );
   });
 
-  describe('resolveSlotType()', () => {
+  describe('resolveLayout()', () => {
     it.each([
       [
         'foo',
@@ -296,7 +296,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: 'class',
         },
-        StrictSlot,
+        StrictLayout,
       ],
       [
         'foo',
@@ -306,7 +306,7 @@ describe('ServerBackend', () => {
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
-        LooseSlot,
+        LooseLayout,
       ],
       [
         'foo',
@@ -314,7 +314,7 @@ describe('ServerBackend', () => {
           type: PartType.Element,
           node: document.createElement('div'),
         },
-        StrictSlot,
+        StrictLayout,
       ],
       [
         'foo',
@@ -323,7 +323,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: 'click',
         },
-        StrictSlot,
+        StrictLayout,
       ],
       [
         'foo',
@@ -333,7 +333,7 @@ describe('ServerBackend', () => {
           name: 'value',
           defaultValue: '',
         },
-        StrictSlot,
+        StrictLayout,
       ],
       [
         'foo',
@@ -343,7 +343,7 @@ describe('ServerBackend', () => {
           name: 'value',
           defaultValue: '',
         },
-        StrictSlot,
+        StrictLayout,
       ],
       [
         'foo',
@@ -353,14 +353,14 @@ describe('ServerBackend', () => {
           precedingText: '',
           followingText: '',
         },
-        StrictSlot,
+        StrictLayout,
       ],
     ] as const)(
-      'resolves the SlotType from an arbitrary part',
-      (value, part, expectedSlotType) => {
+      'resolves the Layout from an arbitrary part',
+      (value, part, expectedLayout) => {
         const backend = new ServerBackend(document);
 
-        expect(backend.resolveSlotType(value, part)).toBe(expectedSlotType);
+        expect(backend.resolveLayout(value, part)).toBe(expectedLayout);
       },
     );
   });

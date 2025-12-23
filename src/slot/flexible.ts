@@ -1,18 +1,26 @@
 import { debugPart, undebugPart } from '../debug/part.js';
-import { SlotSpecifier } from '../directive.js';
+import { LayoutSpecifier } from '../directive.js';
 import {
   areDirectiveTypesEqual,
   type Binding,
   type DirectiveType,
+  type Layout,
   type Part,
   type Slot,
   type UnwrapBindable,
   type UpdateSession,
 } from '../internal.js';
 
-export function Flexible<T>(value: T): SlotSpecifier<T> {
-  return new SlotSpecifier(FlexibleSlot, value);
+export function Flexible<T>(value: T): LayoutSpecifier<T> {
+  return new LayoutSpecifier(FlexibleLayout, value);
 }
+
+export const FlexibleLayout: Layout = {
+  name: 'FlexibleSlot',
+  resolveSlot<T>(binding: Binding<UnwrapBindable<T>>): FlexibleSlot<T> {
+    return new FlexibleSlot(binding);
+  },
+};
 
 export class FlexibleSlot<T> implements Slot<T> {
   private _pendingBinding: Binding<UnwrapBindable<T>>;

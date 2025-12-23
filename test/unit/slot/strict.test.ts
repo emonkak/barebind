@@ -2,24 +2,24 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { DirectiveSpecifier } from '@/directive.js';
 import { PartType } from '@/internal.js';
-import { Strict, StrictSlot } from '@/slot/strict.js';
+import { Strict, StrictLayout, StrictSlot } from '@/slot/strict.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
 import { TestUpdater } from '../../test-helpers.js';
 
 describe('Strcit()', () => {
-  it('creates a SlotElement with StrictSlot', () => {
+  it('creates a LayoutSpecifier with StrictSlot', () => {
     const value = 'foo';
     const bindable = Strict(value);
 
     expect(bindable.value).toBe(value);
-    expect(bindable.type).toBe(StrictSlot);
+    expect(bindable.layout).toBe(StrictLayout);
   });
 });
 
-describe('StrictSlot', () => {
-  describe('constructor()', () => {
-    it('constructs a new StrictSlot from the binding', () => {
+describe('StrictLayout', () => {
+  describe('resolveSlot', () => {
+    it('constructs a new LooseSlot', () => {
       const value = 'foo';
       const part = {
         type: PartType.ChildNode,
@@ -28,14 +28,16 @@ describe('StrictSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new StrictSlot(binding);
+      const slot = StrictLayout.resolveSlot(binding);
 
       expect(slot.type).toBe(MockPrimitive);
       expect(slot.value).toBe(value);
       expect(slot.part).toBe(part);
     });
   });
+});
 
+describe('StrictSlot', () => {
   describe('reconcile()', () => {
     it('updates the binding with a new value', () => {
       const value1 = 'foo';

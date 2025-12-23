@@ -587,7 +587,7 @@ describe('Runtime', () => {
       expect(resolvePrimitiveSpy).toHaveBeenCalledWith(value, part);
       expect(directive.type).toBe(MockPrimitive);
       expect(directive.value).toBe(value);
-      expect(directive.slotType).toBe(undefined);
+      expect(directive.layout).toBe(undefined);
     });
 
     it('resolves the directive from the bindable value', () => {
@@ -611,7 +611,7 @@ describe('Runtime', () => {
       expect($toDirectiveSpy).toHaveBeenCalledWith(part, runtime);
       expect(directive.type).toBe(value.directive.type);
       expect(directive.value).toBe(value.directive.value);
-      expect(directive.slotType).toBe(undefined);
+      expect(directive.layout).toBe(undefined);
     });
   });
 
@@ -629,12 +629,12 @@ describe('Runtime', () => {
       };
       const runtime = createRuntime();
 
-      const resolveSlotSpy = vi.spyOn(runtime['_backend'], 'resolveSlotType');
+      const resolveLayoutSpy = vi.spyOn(runtime['_backend'], 'resolveLayout');
 
       const slot = runtime.resolveSlot(value, part);
 
-      expect(resolveSlotSpy).toHaveBeenCalledOnce();
-      expect(resolveSlotSpy).toHaveBeenCalledWith(value, part);
+      expect(resolveLayoutSpy).toHaveBeenCalledOnce();
+      expect(resolveLayoutSpy).toHaveBeenCalledWith(value, part);
       expect(slot).toBeInstanceOf(MockSlot);
       expect(slot.type).toBe(directive.type);
       expect(slot.value).toBe(directive.value);

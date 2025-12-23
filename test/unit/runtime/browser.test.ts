@@ -14,8 +14,8 @@ import { StylePrimitive } from '@/primitive/style.js';
 import { TextPrimitive } from '@/primitive/text.js';
 import { BrowserBackend } from '@/runtime/browser.js';
 import { Runtime } from '@/runtime.js';
-import { LooseSlot } from '@/slot/loose.js';
-import { StrictSlot } from '@/slot/strict.js';
+import { LooseLayout } from '@/slot/loose.js';
+import { StrictLayout } from '@/slot/strict.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { templateLiteral } from '../../test-helpers.js';
@@ -402,7 +402,7 @@ describe('BrowserBackend', () => {
     );
   });
 
-  describe('resolveSlotType()', () => {
+  describe('resolveLayout()', () => {
     it.each([
       [
         'foo',
@@ -411,7 +411,7 @@ describe('BrowserBackend', () => {
           node: document.createElement('div'),
           name: 'class',
         },
-        StrictSlot,
+        StrictLayout,
       ],
       [
         'foo',
@@ -421,7 +421,7 @@ describe('BrowserBackend', () => {
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
-        LooseSlot,
+        LooseLayout,
       ],
       [
         'foo',
@@ -429,7 +429,7 @@ describe('BrowserBackend', () => {
           type: PartType.Element,
           node: document.createElement('div'),
         },
-        StrictSlot,
+        StrictLayout,
       ],
       [
         'foo',
@@ -438,7 +438,7 @@ describe('BrowserBackend', () => {
           node: document.createElement('div'),
           name: 'click',
         },
-        StrictSlot,
+        StrictLayout,
       ],
       [
         'foo',
@@ -448,7 +448,7 @@ describe('BrowserBackend', () => {
           name: 'value',
           defaultValue: '',
         },
-        StrictSlot,
+        StrictLayout,
       ],
       [
         'foo',
@@ -458,7 +458,7 @@ describe('BrowserBackend', () => {
           name: 'value',
           defaultValue: '',
         },
-        StrictSlot,
+        StrictLayout,
       ],
       [
         'foo',
@@ -468,14 +468,14 @@ describe('BrowserBackend', () => {
           precedingText: '',
           followingText: '',
         },
-        StrictSlot,
+        StrictLayout,
       ],
     ] as const)(
-      'resolves the SlotType from an arbitrary part',
+      'resolves the Layout from an arbitrary part',
       (value, part, expectedSlotType) => {
         const backend = new BrowserBackend();
 
-        expect(backend.resolveSlotType(value, part)).toBe(expectedSlotType);
+        expect(backend.resolveLayout(value, part)).toBe(expectedSlotType);
       },
     );
   });

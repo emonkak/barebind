@@ -12,13 +12,13 @@ import {
   type DirectiveType,
   type Effect,
   Lanes,
+  type Layout,
   type Part,
   PartType,
   type Primitive,
   type RequestCallbackOptions,
   Scope,
   type Slot,
-  type SlotType,
   type Template,
   type TemplateMode,
   type TemplateResult,
@@ -64,12 +64,12 @@ export class MockBackend implements RuntimeBackend {
     return Promise.resolve().then(callback);
   }
 
-  resolvePrimitive(_value: unknown, _part: Part): Primitive<unknown> {
-    return MockPrimitive;
+  resolveLayout(_value: unknown, _part: Part): Layout {
+    return MockLayout;
   }
 
-  resolveSlotType(_value: unknown, _part: Part): SlotType {
-    return MockSlot;
+  resolvePrimitive(_value: unknown, _part: Part): Primitive<unknown> {
+    return MockPrimitive;
   }
 
   startViewTransition(callback: () => void | Promise<void>): Promise<void> {
@@ -257,6 +257,13 @@ export const MockPrimitive = {
 export class MockEffect implements Effect {
   commit(): void {}
 }
+
+export const MockLayout: Layout = {
+  name: 'MockLayout',
+  resolveSlot<T>(binding: Binding<UnwrapBindable<T>>) {
+    return new MockSlot(binding);
+  },
+};
 
 export class MockObserver implements RuntimeObserver {
   events: RuntimeEvent[] = [];

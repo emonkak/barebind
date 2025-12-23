@@ -265,7 +265,7 @@ describe('Signal', () => {
 
       expect(directive.type).toBe(SignalDirective);
       expect(directive.value).toBe(signal);
-      expect(directive.slotType).toBe(undefined);
+      expect(directive.layout).toBe(undefined);
     });
   });
 

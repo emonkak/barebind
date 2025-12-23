@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { DirectiveSpecifier } from '@/directive.js';
 import { PartType } from '@/internal.js';
-import { Loose, LooseSlot } from '@/slot/loose.js';
+import { Loose, LooseLayout, LooseSlot } from '@/slot/loose.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
 import { TestUpdater } from '../../test-helpers.js';
@@ -13,13 +13,13 @@ describe('Loose()', () => {
     const bindable = Loose(value);
 
     expect(bindable.value).toBe(value);
-    expect(bindable.type).toBe(LooseSlot);
+    expect(bindable.layout).toBe(LooseLayout);
   });
 });
 
-describe('LooseSlot', () => {
-  describe('constructor()', () => {
-    it('constructs a new LooseSlot from the binding', () => {
+describe('LooseLayout', () => {
+  describe('resolveSlot', () => {
+    it('constructs a new LooseSlot', () => {
       const value = 'foo';
       const part = {
         type: PartType.ChildNode,
@@ -28,14 +28,16 @@ describe('LooseSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new LooseSlot(binding);
+      const slot = LooseLayout.resolveSlot(binding);
 
       expect(slot.type).toBe(MockPrimitive);
       expect(slot.value).toBe(value);
       expect(slot.part).toBe(part);
     });
   });
+});
 
+describe('LooseSlot', () => {
   describe('reconcile()', () => {
     it('updates the binding with a same directive value', () => {
       const value1 = 'foo';

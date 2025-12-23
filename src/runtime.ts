@@ -11,6 +11,7 @@ import {
   type Hook,
   isBindable,
   Lanes,
+  type Layout,
   type Part,
   type Primitive,
   type RenderContext,
@@ -19,7 +20,6 @@ import {
   type Scope,
   type SessionContext,
   type Slot,
-  type SlotType,
   type Template,
   type TemplateMode,
   type UnwrapBindable,
@@ -48,8 +48,8 @@ export interface RuntimeBackend {
     callback: () => Promise<void> | void,
     options?: RequestCallbackOptions,
   ): Promise<void>;
+  resolveLayout(value: unknown, part: Part): Layout;
   resolvePrimitive(value: unknown, part: Part): Primitive<unknown>;
-  resolveSlotType(value: unknown, part: Part): SlotType;
   startViewTransition(callback: () => Promise<void> | void): Promise<void>;
   yieldToMain(): Promise<void>;
 }
@@ -401,9 +401,8 @@ export class Runtime implements SessionContext {
   resolveSlot<T>(value: T, part: Part): Slot<T> {
     const directive = this.resolveDirective(value, part);
     const binding = directive.type.resolveBinding(directive.value, part, this);
-    const slotType =
-      directive.slotType ?? this._backend.resolveSlotType(value, part);
-    return new slotType(binding);
+    const layout = directive.layout ?? this._backend.resolveLayout(value, part);
+    return layout.resolveSlot(binding);
   }
 
   resolveTemplate(

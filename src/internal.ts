@@ -83,7 +83,7 @@ export interface CustomHookObject<T> {
 export interface Directive<T> {
   type: DirectiveType<T>;
   value: T;
-  slotType?: SlotType;
+  layout?: Layout;
 }
 
 export interface DirectiveContext {
@@ -179,6 +179,11 @@ export const Lanes = {
 } as const;
 
 export type Lanes = number;
+
+export interface Layout {
+  name: string;
+  resolveSlot<T>(binding: Binding<UnwrapBindable<T>>): Slot<T>;
+}
 
 export type NewState<T> = [T] extends [Function]
   ? (prevState: T) => T
@@ -385,10 +390,6 @@ export interface Slot<T> extends ReversibleEffect {
   reconcile(value: T, session: UpdateSession): boolean;
   attach(session: UpdateSession): void;
   detach(session: UpdateSession): void;
-}
-
-export interface SlotType {
-  new <T>(binding: Binding<UnwrapBindable<T>>): Slot<T>;
 }
 
 export interface Template<TBinds extends readonly unknown[]>

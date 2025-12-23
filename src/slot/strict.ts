@@ -1,18 +1,26 @@
 import { debugPart, undebugPart } from '../debug/part.js';
-import { DirectiveError, SlotSpecifier } from '../directive.js';
+import { DirectiveError, LayoutSpecifier } from '../directive.js';
 import {
   areDirectiveTypesEqual,
   type Binding,
   type DirectiveType,
+  type Layout,
   type Part,
   type Slot,
   type UnwrapBindable,
   type UpdateSession,
 } from '../internal.js';
 
-export function Strict<T>(value: T): SlotSpecifier<T> {
-  return new SlotSpecifier(StrictSlot, value);
+export function Strict<T>(value: T): LayoutSpecifier<T> {
+  return new LayoutSpecifier(StrictLayout, value);
 }
+
+export const StrictLayout: Layout = {
+  name: 'StrictLayout',
+  resolveSlot<T>(binding: Binding<UnwrapBindable<T>>): StrictSlot<T> {
+    return new StrictSlot(binding);
+  },
+};
 
 export class StrictSlot<T> implements Slot<T> {
   private readonly _binding: Binding<UnwrapBindable<T>>;
