@@ -75,9 +75,9 @@ export class ServerBackend implements RuntimeBackend {
   resolveLayout(_value: unknown, part: Part): Layout {
     switch (part.type) {
       case PartType.ChildNode:
-        return LooseLayout;
+        return LooseLayout.instance;
       default:
-        return StrictLayout;
+        return StrictLayout.instance;
     }
   }
 
@@ -87,26 +87,28 @@ export class ServerBackend implements RuntimeBackend {
         if (part.name[0] === ':') {
           switch (part.name.slice(1).toLowerCase()) {
             case 'class':
-              return ClassPrimitive;
+              return ClassPrimitive.instance;
             case 'style':
-              return StylePrimitive;
+              return StylePrimitive.instance;
             default:
-              return BlackholePrimitive;
+              return BlackholePrimitive.instance;
           }
         }
-        return AttributePrimitive;
+        return AttributePrimitive.instance;
       case PartType.ChildNode:
-        return value != null ? CommentPrimitive : BlackholePrimitive;
+        return value != null
+          ? CommentPrimitive.instance
+          : BlackholePrimitive.instance;
       case PartType.Element:
-        return SpreadPrimitive;
+        return SpreadPrimitive.instance;
       case PartType.Event:
-        return BlackholePrimitive;
+        return BlackholePrimitive.instance;
       case PartType.Live:
-        return LivePrimitive;
+        return LivePrimitive.instance;
       case PartType.Property:
-        return PropertyPrimitive;
+        return PropertyPrimitive.instance;
       case PartType.Text:
-        return TextPrimitive;
+        return TextPrimitive.instance;
     }
   }
 

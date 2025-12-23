@@ -146,7 +146,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: 'class',
         },
-        AttributePrimitive,
+        AttributePrimitive.instance,
       ],
       [
         'foo',
@@ -156,7 +156,7 @@ describe('ServerBackend', () => {
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
-        CommentPrimitive,
+        CommentPrimitive.instance,
       ],
       [
         null,
@@ -166,7 +166,7 @@ describe('ServerBackend', () => {
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
-        BlackholePrimitive,
+        BlackholePrimitive.instance,
       ],
       [
         undefined,
@@ -176,7 +176,7 @@ describe('ServerBackend', () => {
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
-        BlackholePrimitive,
+        BlackholePrimitive.instance,
       ],
       [
         {},
@@ -184,7 +184,7 @@ describe('ServerBackend', () => {
           type: PartType.Element,
           node: document.createElement('div'),
         },
-        SpreadPrimitive,
+        SpreadPrimitive.instance,
       ],
       [
         () => {},
@@ -193,7 +193,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: 'click',
         },
-        BlackholePrimitive,
+        BlackholePrimitive.instance,
       ],
       [
         'foo',
@@ -203,7 +203,7 @@ describe('ServerBackend', () => {
           name: 'value',
           defaultValue: '',
         },
-        LivePrimitive,
+        LivePrimitive.instance,
       ],
       [
         'foo',
@@ -213,7 +213,7 @@ describe('ServerBackend', () => {
           name: 'value',
           defaultValue: '',
         },
-        PropertyPrimitive,
+        PropertyPrimitive.instance,
       ],
       [
         'foo',
@@ -223,7 +223,7 @@ describe('ServerBackend', () => {
           precedingText: '',
           followingText: '',
         },
-        TextPrimitive,
+        TextPrimitive.instance,
       ],
     ] as const)(
       'resolves the Primitive from an arbitrary part',
@@ -242,7 +242,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: ':class',
         },
-        ClassPrimitive,
+        ClassPrimitive.instance,
       ],
       [
         'foo',
@@ -251,7 +251,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: ':ref',
         },
-        BlackholePrimitive,
+        BlackholePrimitive.instance,
       ],
       [
         {},
@@ -260,7 +260,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: ':style',
         },
-        StylePrimitive,
+        StylePrimitive.instance,
       ],
       [
         null,
@@ -269,7 +269,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: ':',
         },
-        BlackholePrimitive,
+        BlackholePrimitive.instance,
       ],
     ] as const)(
       'resolves the Primitive from special attribute parts',
@@ -296,7 +296,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: 'class',
         },
-        StrictLayout,
+        StrictLayout.instance,
       ],
       [
         'foo',
@@ -306,7 +306,7 @@ describe('ServerBackend', () => {
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
-        LooseLayout,
+        LooseLayout.instance,
       ],
       [
         'foo',
@@ -314,7 +314,7 @@ describe('ServerBackend', () => {
           type: PartType.Element,
           node: document.createElement('div'),
         },
-        StrictLayout,
+        StrictLayout.instance,
       ],
       [
         'foo',
@@ -323,7 +323,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: 'click',
         },
-        StrictLayout,
+        StrictLayout.instance,
       ],
       [
         'foo',
@@ -333,7 +333,7 @@ describe('ServerBackend', () => {
           name: 'value',
           defaultValue: '',
         },
-        StrictLayout,
+        StrictLayout.instance,
       ],
       [
         'foo',
@@ -343,7 +343,7 @@ describe('ServerBackend', () => {
           name: 'value',
           defaultValue: '',
         },
-        StrictLayout,
+        StrictLayout.instance,
       ],
       [
         'foo',
@@ -353,7 +353,7 @@ describe('ServerBackend', () => {
           precedingText: '',
           followingText: '',
         },
-        StrictLayout,
+        StrictLayout.instance,
       ],
     ] as const)(
       'resolves the Layout from an arbitrary part',

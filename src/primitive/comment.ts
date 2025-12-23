@@ -7,30 +7,31 @@ import {
 } from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export const CommentPrimitive: Primitive<any> = {
-  name: 'CommentPrimitive',
-  resolveBinding<T>(
+export class CommentPrimitive<T> implements Primitive<T> {
+  static readonly instance: CommentPrimitive<any> = new CommentPrimitive();
+
+  resolveBinding(
     value: T,
     part: Part,
     _context: DirectiveContext,
   ): CommentBinding<T> {
     if (part.type !== PartType.ChildNode) {
       throw new DirectiveError(
-        CommentPrimitive,
+        this,
         value,
         part,
         'CommentPrimitive must be used in a child node.',
       );
     }
     return new CommentBinding(value, part);
-  },
-};
+  }
+}
 
 export class CommentBinding<T> extends PrimitiveBinding<T, Part.ChildNodePart> {
   private _memoizedValue: T | null = null;
 
   get type(): Primitive<T> {
-    return CommentPrimitive;
+    return CommentPrimitive.instance;
   }
 
   shouldUpdate(value: T): boolean {

@@ -12,18 +12,20 @@ import { PrimitiveBinding } from './primitive.js';
 
 export type ElementRef = RefCallback<Element> | RefObject<Element | null>;
 
-export const RefPrimitive: Primitive<ElementRef> = {
-  name: 'RefPrimitive',
+export class RefPrimitive implements Primitive<ElementRef> {
+  static readonly instance: RefPrimitive = new RefPrimitive();
+
   ensureValue(value: unknown, part: Part): asserts value is ElementRef {
     if (!isElementRef(value)) {
       throw new DirectiveError(
-        RefPrimitive,
+        this,
         value,
         part,
         'The value of RefPrimitive must be a function, object, null or undefined.',
       );
     }
-  },
+  }
+
   resolveBinding(
     ref: ElementRef,
     part: Part,
@@ -34,15 +36,15 @@ export const RefPrimitive: Primitive<ElementRef> = {
       part.name.toLowerCase() !== ':ref'
     ) {
       throw new DirectiveError(
-        RefPrimitive,
+        this,
         ref,
         part,
         'RefPrimitive must be used in ":ref" attribute part.',
       );
     }
     return new RefBinding(ref, part);
-  },
-};
+  }
+}
 
 export class RefBinding extends PrimitiveBinding<
   ElementRef,
@@ -53,7 +55,7 @@ export class RefBinding extends PrimitiveBinding<
   private _memoizedCleanup: Cleanup | void = undefined;
 
   get type(): Primitive<ElementRef> {
-    return RefPrimitive;
+    return RefPrimitive.instance;
   }
 
   shouldUpdate(ref: ElementRef): boolean {

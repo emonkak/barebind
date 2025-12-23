@@ -21,9 +21,13 @@ describe('PropertyPrimitive', () => {
         defaultValue: '',
       };
       const runtime = createRuntime();
-      const binding = PropertyPrimitive.resolveBinding(value, part, runtime);
+      const binding = PropertyPrimitive.instance.resolveBinding(
+        value,
+        part,
+        runtime,
+      );
 
-      expect(binding.type).toBe(PropertyPrimitive);
+      expect(binding.type).toBe(PropertyPrimitive.instance);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });
@@ -37,7 +41,7 @@ describe('PropertyPrimitive', () => {
       const runtime = createRuntime();
 
       expect(() =>
-        PropertyPrimitive.resolveBinding(value, part, runtime),
+        PropertyPrimitive.instance.resolveBinding(value, part, runtime),
       ).toThrow('PropertyPrimitive must be used in a property part.');
     });
   });

@@ -92,7 +92,6 @@ export interface DirectiveContext {
 }
 
 export interface DirectiveType<T> {
-  readonly name: string;
   equals?(other: DirectiveType<unknown>): boolean;
   resolveBinding(value: T, part: Part, context: DirectiveContext): Binding<T>;
 }
@@ -181,7 +180,6 @@ export const Lanes = {
 export type Lanes = number;
 
 export interface Layout {
-  name: string;
   resolveSlot<T>(binding: Binding<UnwrapBindable<T>>): Slot<T>;
 }
 

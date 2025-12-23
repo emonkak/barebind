@@ -5,23 +5,15 @@ import { MockSlot } from '../../mocks.js';
 import { createRuntime, TestUpdater } from '../../test-helpers.js';
 
 describe('SpreadPrimitive', () => {
-  describe('name', () => {
-    it('is a string that represents the primitive itself', () => {
-      expect(SpreadPrimitive.name, 'SpreadPrimitive');
-    });
-  });
-
   describe('ensureValue()', () => {
     it('asserts the value is a object', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const ensureValue: NonNullable<typeof SpreadPrimitive.ensureValue> =
-        SpreadPrimitive.ensureValue!;
 
       expect(() => {
-        ensureValue.call(SpreadPrimitive, { class: 'foo' }, part);
+        SpreadPrimitive.instance.ensureValue({ class: 'foo' }, part);
       }).not.toThrow();
     });
 
@@ -32,11 +24,9 @@ describe('SpreadPrimitive', () => {
           type: PartType.Element,
           node: document.createElement('div'),
         };
-        const ensureValue: NonNullable<typeof SpreadPrimitive.ensureValue> =
-          SpreadPrimitive.ensureValue!;
 
         expect(() => {
-          ensureValue.call(SpreadPrimitive, value, part);
+          SpreadPrimitive.instance.ensureValue(value, part);
         }).toThrow('The value of SpreadPrimitive must be an object.');
       },
     );
@@ -50,9 +40,13 @@ describe('SpreadPrimitive', () => {
         node: document.createElement('div'),
       };
       const runtime = createRuntime();
-      const binding = SpreadPrimitive.resolveBinding(props, part, runtime);
+      const binding = SpreadPrimitive.instance.resolveBinding(
+        props,
+        part,
+        runtime,
+      );
 
-      expect(binding.type).toBe(SpreadPrimitive);
+      expect(binding.type).toBe(SpreadPrimitive.instance);
       expect(binding.value).toBe(props);
       expect(binding.part).toBe(part);
     });
@@ -68,7 +62,7 @@ describe('SpreadPrimitive', () => {
       const runtime = createRuntime();
 
       expect(() =>
-        SpreadPrimitive.resolveBinding(props, part, runtime),
+        SpreadPrimitive.instance.resolveBinding(props, part, runtime),
       ).toThrow('SpreadPrimitive must be used in an element part.');
     });
   });

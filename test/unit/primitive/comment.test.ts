@@ -6,12 +6,6 @@ import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { createRuntime, TestUpdater } from '../../test-helpers.js';
 
 describe('CommentPrimitive', () => {
-  describe('name', () => {
-    it('is a string that represents the primitive itself', () => {
-      expect(CommentPrimitive.name, 'CommentPrimitive');
-    });
-  });
-
   describe('resolveBinding()', () => {
     it('constructs a new CommentBinding', () => {
       const value = 'foo';
@@ -22,9 +16,13 @@ describe('CommentPrimitive', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = createRuntime();
-      const binding = CommentPrimitive.resolveBinding(value, part, runtime);
+      const binding = CommentPrimitive.instance.resolveBinding(
+        value,
+        part,
+        runtime,
+      );
 
-      expect(binding.type).toBe(CommentPrimitive);
+      expect(binding.type).toBe(CommentPrimitive.instance);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });
@@ -38,7 +36,7 @@ describe('CommentPrimitive', () => {
       const runtime = createRuntime();
 
       expect(() =>
-        CommentPrimitive.resolveBinding(value, part, runtime),
+        CommentPrimitive.instance.resolveBinding(value, part, runtime),
       ).toThrow('CommentPrimitive must be used in a child node.');
     });
   });

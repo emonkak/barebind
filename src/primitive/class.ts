@@ -8,32 +8,34 @@ import {
 } from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export type ClassSpecifier = ClassList | ClassMap;
+export type ClassList = ClassArray | ClassObject;
 
-type ClassList = readonly ClassValue[];
+type ClassArray = readonly ClassAtom[];
 
-interface ClassMap {
-  readonly [key: string]: ClassValue;
-}
+type ClassObject = {
+  readonly [key: string]: ClassAtom;
+};
 
-type ClassValue = boolean | string | null | undefined;
+type ClassAtom = boolean | string | null | undefined;
 
 const CLASS_SEPARATOR_PATTERN = /\s+/;
 
-export const ClassPrimitive: Primitive<ClassSpecifier> = {
-  name: 'ClassPrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is ClassSpecifier {
+export class ClassPrimitive implements Primitive<ClassList> {
+  static readonly instance: ClassPrimitive = new ClassPrimitive();
+
+  ensureValue(value: unknown, part: Part): asserts value is ClassList {
     if (!isObject(value)) {
       throw new DirectiveError(
-        ClassPrimitive,
+        this,
         value,
         part,
         'The value of ClassPrimitive must be an object.',
       );
     }
-  },
+  }
+
   resolveBinding(
-    clesses: ClassSpecifier,
+    clesses: ClassList,
     part: Part,
     _context: DirectiveContext,
   ): ClassBinding {
@@ -42,27 +44,27 @@ export const ClassPrimitive: Primitive<ClassSpecifier> = {
       part.name.toLowerCase() !== ':class'
     ) {
       throw new DirectiveError(
-        ClassPrimitive,
+        this,
         clesses,
         part,
         'ClassPrimitive must be used in a ":class" attribute part.',
       );
     }
     return new ClassBinding(clesses, part);
-  },
-};
+  }
+}
 
 export class ClassBinding extends PrimitiveBinding<
-  ClassSpecifier,
+  ClassList,
   Part.AttributePart
 > {
-  private _memoizedValue: ClassSpecifier = {};
+  private _memoizedValue: ClassList = {};
 
-  get type(): Primitive<ClassSpecifier> {
-    return ClassPrimitive;
+  get type(): Primitive<ClassList> {
+    return ClassPrimitive.instance;
   }
 
-  shouldUpdate(classes: ClassSpecifier): boolean {
+  shouldUpdate(classes: ClassList): boolean {
     return !shallowEqual(classes, this._memoizedValue);
   }
 
@@ -71,17 +73,17 @@ export class ClassBinding extends PrimitiveBinding<
 
     updateClasses(
       classList,
-      this.value as ClassMap,
-      this._memoizedValue as ClassMap,
+      this._value as ClassObject,
+      this._memoizedValue as ClassObject,
     );
 
-    this._memoizedValue = this.value;
+    this._memoizedValue = this._value;
   }
 
   rollback(): void {
     const { classList } = this.part.node;
 
-    updateClasses(classList, {}, this._memoizedValue as ClassMap);
+    updateClasses(classList, {}, this._memoizedValue as ClassObject);
 
     this._memoizedValue = {};
   }
@@ -94,32 +96,32 @@ function isObject(value: unknown): value is object {
 function toggleClass(
   classList: DOMTokenList,
   key: string,
-  value: ClassValue,
+  value: ClassAtom,
   enabled: boolean,
 ): void {
-  let classDeclaration: string;
+  let declaration: string;
 
   if (typeof value === 'string') {
-    classDeclaration = value.trim();
+    declaration = value.trim();
   } else if (value) {
-    classDeclaration = key.trim();
+    declaration = key.trim();
   } else {
     return;
   }
 
-  if (classDeclaration !== '') {
-    const classNames = classDeclaration.split(CLASS_SEPARATOR_PATTERN);
+  if (declaration !== '') {
+    const components = declaration.split(CLASS_SEPARATOR_PATTERN);
 
-    for (let i = 0, l = classNames.length; i < l; i++) {
-      classList.toggle(classNames[i]!, enabled);
+    for (let i = 0, l = components.length; i < l; i++) {
+      classList.toggle(components[i]!, enabled);
     }
   }
 }
 
 function updateClasses(
   classList: DOMTokenList,
-  newClasses: ClassMap,
-  oldClasses: ClassMap,
+  newClasses: ClassObject,
+  oldClasses: ClassObject,
 ): void {
   for (const key of Object.keys(oldClasses)) {
     const value = oldClasses[key];

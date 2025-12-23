@@ -20,7 +20,7 @@ export class DirectiveError<T> extends Error {
 
   constructor(type: DirectiveType<T>, value: T, part: Part, message: string) {
     DEBUG: {
-      const marker = `[[${type.name}(${formatValue(value)}) IS USED IN HERE!]]`;
+      const marker = `[[${type.constructor.name}(${formatValue(value)}) IS USED IN HERE!]]`;
       message += '\n' + formatPart(part, marker);
     }
 
@@ -48,7 +48,7 @@ export class DirectiveSpecifier<T>
   }
 
   [$debug](format: (value: unknown) => string): string {
-    return this.type.name + '(' + format(this.value) + ')';
+    return this.type.constructor.name + '(' + format(this.value) + ')';
   }
 
   [$toDirective](): Directive<T> {
@@ -72,7 +72,7 @@ export class LayoutSpecifier<T>
   }
 
   [$debug](format: (value: unknown) => string): string {
-    return this.layout.name + '(' + format(this.value) + ')';
+    return this.layout.constructor.name + '(' + format(this.value) + ')';
   }
 
   [$toDirective](

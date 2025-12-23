@@ -5,12 +5,6 @@ import { EventBinding, EventPrimitive } from '@/primitive/event.js';
 import { createRuntime, TestUpdater } from '../../test-helpers.js';
 
 describe('EventPrimitive', () => {
-  describe('name', () => {
-    it('is a string that represents the primitive itself', () => {
-      expect(EventPrimitive.name, 'EventPrimitive');
-    });
-  });
-
   describe('ensureValue()', () => {
     it('asserts the value is an event listener, null or undefined', () => {
       const part = {
@@ -18,14 +12,12 @@ describe('EventPrimitive', () => {
         node: document.createElement('div'),
         name: 'click',
       };
-      const ensureValue: NonNullable<typeof EventPrimitive.ensureValue> =
-        EventPrimitive.ensureValue!;
 
       expect(() => {
-        ensureValue.call(EventPrimitive, null, part);
-        ensureValue.call(EventPrimitive, undefined, part);
-        ensureValue.call(EventPrimitive, () => {}, part);
-        ensureValue.call(EventPrimitive, { handleEvent: () => {} }, part);
+        EventPrimitive.instance.ensureValue(null, part);
+        EventPrimitive.instance.ensureValue(undefined, part);
+        EventPrimitive.instance.ensureValue(() => {}, part);
+        EventPrimitive.instance.ensureValue({ handleEvent: () => {} }, part);
       }).not.toThrow();
     });
 
@@ -35,11 +27,9 @@ describe('EventPrimitive', () => {
         node: document.createElement('div'),
         name: 'click',
       };
-      const ensureValue: NonNullable<typeof EventPrimitive.ensureValue> =
-        EventPrimitive.ensureValue!;
 
       expect(() => {
-        ensureValue.call(EventPrimitive, {}, part);
+        EventPrimitive.instance.ensureValue({}, part);
       }).toThrow(
         'The value of EventPrimitive must be an EventListener, EventListenerObject, null or undefined.',
       );
@@ -55,9 +45,13 @@ describe('EventPrimitive', () => {
         name: 'click',
       };
       const runtime = createRuntime();
-      const binding = EventPrimitive.resolveBinding(handler, part, runtime);
+      const binding = EventPrimitive.instance.resolveBinding(
+        handler,
+        part,
+        runtime,
+      );
 
-      expect(binding.type).toBe(EventPrimitive);
+      expect(binding.type).toBe(EventPrimitive.instance);
       expect(binding.value).toBe(handler);
       expect(binding.part).toBe(part);
     });
@@ -71,7 +65,7 @@ describe('EventPrimitive', () => {
       const runtime = createRuntime();
 
       expect(() =>
-        EventPrimitive.resolveBinding(handler, part, runtime),
+        EventPrimitive.instance.resolveBinding(handler, part, runtime),
       ).toThrow('EventPrimitive must be used in an event part.');
     });
   });

@@ -13,7 +13,7 @@ describe('Loose()', () => {
     const bindable = Loose(value);
 
     expect(bindable.value).toBe(value);
-    expect(bindable.layout).toBe(LooseLayout);
+    expect(bindable.layout).toBe(LooseLayout.instance);
   });
 });
 
@@ -27,10 +27,10 @@ describe('LooseLayout', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = LooseLayout.resolveSlot(binding);
+      const binding = new MockBinding(MockPrimitive.instance, value, part);
+      const slot = LooseLayout.instance.resolveSlot(binding);
 
-      expect(slot.type).toBe(MockPrimitive);
+      expect(slot.type).toBe(MockPrimitive.instance);
       expect(slot.value).toBe(value);
       expect(slot.part).toBe(part);
     });
@@ -48,7 +48,7 @@ describe('LooseSlot', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value1, part);
+      const binding = new MockBinding(MockPrimitive.instance, value1, part);
       const slot = new LooseSlot(binding);
       const updater = new TestUpdater();
 
@@ -114,7 +114,7 @@ describe('LooseSlot', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value1, part);
+      const binding = new MockBinding(MockPrimitive.instance, value1, part);
       const slot = new LooseSlot(binding);
       const updater = new TestUpdater();
 
@@ -164,7 +164,7 @@ describe('LooseSlot', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value, part);
+      const binding = new MockBinding(MockPrimitive.instance, value, part);
       const slot = new LooseSlot(binding);
       const updater = new TestUpdater();
 

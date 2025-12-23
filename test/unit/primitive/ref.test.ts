@@ -5,12 +5,6 @@ import { RefBinding, RefPrimitive } from '@/primitive/ref.js';
 import { createRuntime, TestUpdater } from '../../test-helpers.js';
 
 describe('RefPrimitive', () => {
-  describe('name', () => {
-    it('is a string that represents the primitive itself', () => {
-      expect(RefPrimitive.name, 'RefPrimitive');
-    });
-  });
-
   describe('ensureValue()', () => {
     it('asserts the value is a ref, null or undefined', () => {
       const part = {
@@ -18,12 +12,10 @@ describe('RefPrimitive', () => {
         node: document.createElement('div'),
         name: ':ref',
       };
-      const ensureValue: NonNullable<typeof RefPrimitive.ensureValue> =
-        RefPrimitive.ensureValue!;
 
       expect(() => {
-        ensureValue.call(RefPrimitive, () => {}, part);
-        ensureValue.call(RefPrimitive, { current: null }, part);
+        RefPrimitive.instance.ensureValue(() => {}, part);
+        RefPrimitive.instance.ensureValue({ current: null }, part);
       }).not.toThrow();
     });
 
@@ -33,11 +25,9 @@ describe('RefPrimitive', () => {
         node: document.createElement('div'),
         name: ':ref',
       };
-      const ensureValue: NonNullable<typeof RefPrimitive.ensureValue> =
-        RefPrimitive.ensureValue!;
 
       expect(() => {
-        ensureValue({}, part);
+        RefPrimitive.instance.ensureValue({}, part);
       }).toThrow(
         'The value of RefPrimitive must be a function, object, null or undefined.',
       );
@@ -55,9 +45,13 @@ describe('RefPrimitive', () => {
           name: attributeName,
         };
         const runtime = createRuntime();
-        const binding = RefPrimitive.resolveBinding(ref, part, runtime);
+        const binding = RefPrimitive.instance.resolveBinding(
+          ref,
+          part,
+          runtime,
+        );
 
-        expect(binding.type).toBe(RefPrimitive);
+        expect(binding.type).toBe(RefPrimitive.instance);
         expect(binding.value).toBe(ref);
         expect(binding.part).toBe(part);
       },
@@ -71,9 +65,9 @@ describe('RefPrimitive', () => {
       };
       const runtime = createRuntime();
 
-      expect(() => RefPrimitive.resolveBinding(ref, part, runtime)).toThrow(
-        'RefPrimitive must be used in ":ref" attribute part.',
-      );
+      expect(() =>
+        RefPrimitive.instance.resolveBinding(ref, part, runtime),
+      ).toThrow('RefPrimitive must be used in ":ref" attribute part.');
     });
   });
 });

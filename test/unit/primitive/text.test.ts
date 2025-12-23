@@ -5,12 +5,6 @@ import { TextBinding, TextPrimitive } from '@/primitive/text.js';
 import { createRuntime, TestUpdater } from '../../test-helpers.js';
 
 describe('TextPrimitive', () => {
-  describe('name', () => {
-    it('is a string that represents the primitive itself', () => {
-      expect(TextPrimitive.name, 'TextPrimitive');
-    });
-  });
-
   describe('resolveBinding()', () => {
     it('constructs a new TextBinding', () => {
       const value = 'foo';
@@ -21,9 +15,13 @@ describe('TextPrimitive', () => {
         followingText: '',
       };
       const runtime = createRuntime();
-      const binding = TextPrimitive.resolveBinding(value, part, runtime);
+      const binding = TextPrimitive.instance.resolveBinding(
+        value,
+        part,
+        runtime,
+      );
 
-      expect(binding.type).toBe(TextPrimitive);
+      expect(binding.type).toBe(TextPrimitive.instance);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });
@@ -36,9 +34,9 @@ describe('TextPrimitive', () => {
       };
       const runtime = createRuntime();
 
-      expect(() => TextPrimitive.resolveBinding(value, part, runtime)).toThrow(
-        'TextPrimitive must be used in a text part.',
-      );
+      expect(() =>
+        TextPrimitive.instance.resolveBinding(value, part, runtime),
+      ).toThrow('TextPrimitive must be used in a text part.');
     });
   });
 });

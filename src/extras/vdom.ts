@@ -72,8 +72,9 @@ interface TemplateDirective<TBinds extends readonly unknown[]>
 /**
  * @internal
  */
-export const ElementDirective: DirectiveType<ElementProps> = {
-  name: 'ElementDirective',
+export class ElementDirective implements DirectiveType<ElementProps> {
+  static readonly instance: ElementDirective = new ElementDirective();
+
   resolveBinding(
     props: ElementProps,
     part: Part,
@@ -88,8 +89,8 @@ export const ElementDirective: DirectiveType<ElementProps> = {
       );
     }
     return new ElementBinding(props, part);
-  },
-};
+  }
+}
 
 export function createElement<TProps extends {}>(
   type: string,
@@ -162,7 +163,7 @@ export class VFragment implements Bindable<RepeatProps<VNode>> {
 
   [$toDirective](): Directive<RepeatProps<VNode>> {
     return {
-      type: RepeatDirective,
+      type: RepeatDirective.instance,
       value: {
         source: this.children,
         keySelector: resolveKey,
@@ -246,7 +247,7 @@ export class ElementBinding implements Binding<ElementProps> {
   }
 
   get type(): DirectiveType<ElementProps> {
-    return ElementDirective as DirectiveType<ElementProps>;
+    return ElementDirective.instance;
   }
 
   get part(): Part.ElementPart {
@@ -569,7 +570,7 @@ function resolveChild(child: VNode): Bindable<unknown> {
   } else if (Array.isArray(child)) {
     return new VFragment(child);
   } else if (child == null || typeof child === 'boolean') {
-    return new DirectiveSpecifier(BlackholePrimitive, child);
+    return new DirectiveSpecifier(BlackholePrimitive.instance, child);
   } else {
     return new DirectiveSpecifier(TEXT_TEMPLATE, [child]);
   }
@@ -580,7 +581,7 @@ function resolveElement(
   props: { children?: unknown },
   hasStaticChildren: boolean,
 ): TemplateDirective<readonly [unknown, unknown]> {
-  const element = new DirectiveSpecifier(ElementDirective, props);
+  const element = new DirectiveSpecifier(ElementDirective.instance, props);
   const children = Array.isArray(props.children)
     ? hasStaticChildren
       ? new VStaticFragment(props.children)

@@ -4,6 +4,7 @@ import { createComponent } from '@/component.js';
 import {
   $toDirective,
   CommitPhase,
+  type Directive,
   type Hook,
   Lanes,
   PartType,
@@ -585,7 +586,7 @@ describe('Runtime', () => {
 
       expect(resolvePrimitiveSpy).toHaveBeenCalledOnce();
       expect(resolvePrimitiveSpy).toHaveBeenCalledWith(value, part);
-      expect(directive.type).toBe(MockPrimitive);
+      expect(directive.type).toBe(MockPrimitive.instance);
       expect(directive.value).toBe(value);
       expect(directive.layout).toBe(undefined);
     });
@@ -617,7 +618,10 @@ describe('Runtime', () => {
 
   describe('resolveSlot()', () => {
     it('resolves the slot from the bindable value', () => {
-      const directive = { type: MockPrimitive, value: 'foo' };
+      const directive: Directive<string> = {
+        type: MockPrimitive.instance,
+        value: 'foo',
+      };
       const value = {
         [$toDirective]: vi.fn(() => directive),
       };
@@ -661,7 +665,7 @@ describe('Runtime', () => {
       expect(resolvePrimitiveSpy).toHaveBeenCalledOnce();
       expect(resolvePrimitiveSpy).toHaveBeenCalledWith(value, part);
       expect(slot).toBeInstanceOf(MockSlot);
-      expect(slot.type).toBe(MockPrimitive);
+      expect(slot.type).toBe(MockPrimitive.instance);
       expect(slot.value).toBe(value);
       expect(slot.part).toBe(part);
     });

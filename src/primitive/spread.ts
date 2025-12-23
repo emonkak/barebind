@@ -11,18 +11,20 @@ import {
 
 export type SpreadProps = { [key: string]: unknown };
 
-export const SpreadPrimitive: Primitive<SpreadProps> = {
-  name: 'SpreadPrimitive',
+export class SpreadPrimitive implements Primitive<SpreadProps> {
+  static readonly instance: SpreadPrimitive = new SpreadPrimitive();
+
   ensureValue(value: unknown, part: Part): asserts value is SpreadProps {
     if (!isSpreadProps(value)) {
       throw new DirectiveError(
-        SpreadPrimitive,
+        this,
         value,
         part,
         'The value of SpreadPrimitive must be an object.',
       );
     }
-  },
+  }
+
   resolveBinding(
     props: SpreadProps,
     part: Part,
@@ -30,15 +32,15 @@ export const SpreadPrimitive: Primitive<SpreadProps> = {
   ): SpreadBinding {
     if (part.type !== PartType.Element) {
       throw new DirectiveError(
-        SpreadPrimitive,
+        this,
         props,
         part,
         'SpreadPrimitive must be used in an element part.',
       );
     }
     return new SpreadBinding(props, part);
-  },
-};
+  }
+}
 
 export class SpreadBinding implements Binding<SpreadProps> {
   private _props: SpreadProps;
@@ -55,7 +57,7 @@ export class SpreadBinding implements Binding<SpreadProps> {
   }
 
   get type(): Primitive<SpreadProps> {
-    return SpreadPrimitive;
+    return SpreadPrimitive.instance;
   }
 
   get value(): SpreadProps {

@@ -13,7 +13,7 @@ export {
   type RenderContext,
   type UpdateOptions,
 } from './internal.js';
-export type { ClassSpecifier } from './primitive/class.js';
+export type { ClassList } from './primitive/class.js';
 export type { EventHandler } from './primitive/event.js';
 export type { ElementRef } from './primitive/ref.js';
 export type { StyleProps } from './primitive/style.js';

@@ -5,12 +5,6 @@ import { BlackholeBinding, BlackholePrimitive } from '@/primitive/blackhole.js';
 import { createRuntime, TestUpdater } from '../../test-helpers.js';
 
 describe('BlackholePrimitive', () => {
-  describe('name', () => {
-    it('is a string that represents the primitive itself', () => {
-      expect(BlackholePrimitive.name, 'BlackholePrimitive');
-    });
-  });
-
   describe('resolveBinding()', () => {
     it('constructs a new BlackholeBinding', () => {
       const value = 'foo';
@@ -19,9 +13,13 @@ describe('BlackholePrimitive', () => {
         node: document.createElement('div'),
       };
       const runtime = createRuntime();
-      const binding = BlackholePrimitive.resolveBinding(value, part, runtime);
+      const binding = BlackholePrimitive.instance.resolveBinding(
+        value,
+        part,
+        runtime,
+      );
 
-      expect(binding.type).toBe(BlackholePrimitive);
+      expect(binding.type).toBe(BlackholePrimitive.instance);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });

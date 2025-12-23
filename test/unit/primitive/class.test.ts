@@ -9,12 +9,6 @@ import {
 } from '../../test-helpers.js';
 
 describe('ClassPrimitive', () => {
-  describe('name', () => {
-    it('is a string that represents the primitive itself', () => {
-      expect(ClassPrimitive.name, 'ClassPrimitive');
-    });
-  });
-
   describe('ensureValue()', () => {
     it.for([{ foo: true }, ['foo'], {}, []])(
       'asserts the value is a class specifier',
@@ -24,11 +18,9 @@ describe('ClassPrimitive', () => {
           node: document.createElement('div'),
           name: ':class',
         };
-        const ensureValue: NonNullable<typeof ClassPrimitive.ensureValue> =
-          ClassPrimitive.ensureValue!;
 
         expect(() => {
-          ensureValue.call(ClassPrimitive, value, part);
+          ClassPrimitive.instance.ensureValue(value, part);
         }).not.toThrow();
       },
     );
@@ -41,11 +33,9 @@ describe('ClassPrimitive', () => {
           node: document.createElement('div'),
           name: ':class',
         };
-        const ensureValue: NonNullable<typeof ClassPrimitive.ensureValue> =
-          ClassPrimitive.ensureValue!;
 
         expect(() => {
-          ensureValue.call(ClassPrimitive, value, part);
+          ClassPrimitive.instance.ensureValue(value, part);
         }).toThrow('The value of ClassPrimitive must be an object.');
       },
     );
@@ -62,9 +52,13 @@ describe('ClassPrimitive', () => {
           name: attributeName,
         };
         const runtime = createRuntime();
-        const binding = ClassPrimitive.resolveBinding(classes, part, runtime);
+        const binding = ClassPrimitive.instance.resolveBinding(
+          classes,
+          part,
+          runtime,
+        );
 
-        expect(binding.type).toBe(ClassPrimitive);
+        expect(binding.type).toBe(ClassPrimitive.instance);
         expect(binding.value).toBe(classes);
         expect(binding.part).toBe(part);
       },
@@ -80,7 +74,7 @@ describe('ClassPrimitive', () => {
       const runtime = createRuntime();
 
       expect(() =>
-        ClassPrimitive.resolveBinding(classes, part, runtime),
+        ClassPrimitive.instance.resolveBinding(classes, part, runtime),
       ).toThrow('ClassPrimitive must be used in a ":class" attribute part.');
     });
   });

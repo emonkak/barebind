@@ -29,17 +29,18 @@ export type UnwrapSignals<T> = {
 /**
  * @internal
  */
-export const SignalDirective: DirectiveType<Signal<any>> = {
-  name: 'SignalDirective',
-  resolveBinding<T>(
+export class SignalDirective<T> implements DirectiveType<Signal<T>> {
+  static readonly instance: SignalDirective<any> = new SignalDirective();
+
+  resolveBinding(
     signal: Signal<T>,
     part: Part,
     context: DirectiveContext,
   ): SignalBinding<T> {
     const slot = context.resolveSlot(signal.value, part);
     return new SignalBinding(signal, slot);
-  },
-};
+  }
+}
 
 /**
  * @internal
@@ -73,7 +74,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   }
 
   get type(): DirectiveType<Signal<T>> {
-    return SignalDirective;
+    return SignalDirective.instance;
   }
 
   get part(): Part {
@@ -180,7 +181,7 @@ export abstract class Signal<T>
   }
 
   [$toDirective](): Directive<Signal<T>> {
-    return { type: SignalDirective, value: this };
+    return { type: SignalDirective.instance, value: this };
   }
 
   abstract subscribe(subscriber: Subscriber): Subscription;

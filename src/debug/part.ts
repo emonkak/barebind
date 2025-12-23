@@ -9,9 +9,10 @@ export function debugPart(
 ): void {
   if (
     part.type === PartType.ChildNode &&
-    (part.node.data === '' || part.node.data.startsWith('/' + type.name + '('))
+    (part.node.data === '' ||
+      part.node.data.startsWith('/' + type.constructor.name + '('))
   ) {
-    part.node.data = `/${type.name}(${formatValue(value)})`;
+    part.node.data = `/${type.constructor.name}(${formatValue(value)})`;
   }
 }
 
@@ -36,7 +37,7 @@ export function formatPart(part: Part, marker: string): string {
 export function undebugPart(part: Part, type: DirectiveType<unknown>): void {
   if (
     part.type === PartType.ChildNode &&
-    part.node.data.startsWith('/' + type.name + '(')
+    part.node.data.startsWith('/' + type.constructor.name + '(')
   ) {
     part.node.data = '';
   }

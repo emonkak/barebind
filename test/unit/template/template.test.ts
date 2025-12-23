@@ -21,14 +21,6 @@ import {
 } from '../../test-helpers.js';
 
 describe('AbstractTemplate', () => {
-  describe('name', () => {
-    it('return the constructor name', () => {
-      const template = new MockTemplate();
-
-      expect(template.name, 'MockTemplate');
-    });
-  });
-
   describe('resolveBinding()', () => {
     it('constructs a new TemplateBinding', () => {
       const template = new MockTemplate();
@@ -132,14 +124,14 @@ describe('TemplateBinding', () => {
         .mockImplementation((binds, _part, session) => {
           const slots = [
             new MockSlot(
-              new MockBinding(MockPrimitive, binds[0], {
+              new MockBinding(MockPrimitive.instance, binds[0], {
                 type: PartType.Attribute,
                 node: fragment.firstChild as Element,
                 name: 'class',
               }),
             ),
             new MockSlot(
-              new MockBinding(MockPrimitive, binds[1], {
+              new MockBinding(MockPrimitive.instance, binds[1], {
                 type: PartType.Text,
                 node: fragment.firstChild!.nextSibling as Text,
                 precedingText: '',
@@ -147,7 +139,7 @@ describe('TemplateBinding', () => {
               }),
             ),
             new MockSlot(
-              new MockBinding(MockPrimitive, binds[2], {
+              new MockBinding(MockPrimitive.instance, binds[2], {
                 type: PartType.ChildNode,
                 node: fragment.firstChild!.nextSibling!.nextSibling as Comment,
                 anchorNode: null,
@@ -293,7 +285,7 @@ describe('TemplateBinding', () => {
         .mockImplementation((binds, _part, session) => {
           const slots = [
             new MockSlot(
-              new MockBinding(MockPrimitive, binds[0], {
+              new MockBinding(MockPrimitive.instance, binds[0], {
                 type: PartType.ChildNode,
                 node: fragment[0],
                 anchorNode: null,
@@ -301,7 +293,7 @@ describe('TemplateBinding', () => {
               }),
             ),
             new MockSlot(
-              new MockBinding(MockPrimitive, binds[1], {
+              new MockBinding(MockPrimitive.instance, binds[1], {
                 type: PartType.Text,
                 node: fragment[1],
                 precedingText: '',
@@ -309,7 +301,7 @@ describe('TemplateBinding', () => {
               }),
             ),
             new MockSlot(
-              new MockBinding(MockPrimitive, binds[2], {
+              new MockBinding(MockPrimitive.instance, binds[2], {
                 type: PartType.Attribute,
                 node: fragment[2],
                 name: 'class',

@@ -5,12 +5,6 @@ import { LiveBinding, LivePrimitive } from '@/primitive/live.js';
 import { createRuntime, TestUpdater } from '../../test-helpers.js';
 
 describe('LivePrimitive', () => {
-  describe('name', () => {
-    it('is a string that represents the primitive itself', () => {
-      expect(LivePrimitive.name, 'LivePrimitive');
-    });
-  });
-
   describe('resolveBinding()', () => {
     it('constructs a new LiveBinding', () => {
       const value = 'foo';
@@ -21,9 +15,13 @@ describe('LivePrimitive', () => {
         defaultValue: '',
       };
       const runtime = createRuntime();
-      const binding = LivePrimitive.resolveBinding(value, part, runtime);
+      const binding = LivePrimitive.instance.resolveBinding(
+        value,
+        part,
+        runtime,
+      );
 
-      expect(binding.type).toBe(LivePrimitive);
+      expect(binding.type).toBe(LivePrimitive.instance);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });
@@ -36,9 +34,9 @@ describe('LivePrimitive', () => {
       };
       const runtime = createRuntime();
 
-      expect(() => LivePrimitive.resolveBinding(value, part, runtime)).toThrow(
-        'LivePrimitive must be used in a live part.',
-      );
+      expect(() =>
+        LivePrimitive.instance.resolveBinding(value, part, runtime),
+      ).toThrow('LivePrimitive must be used in a live part.');
     });
   });
 });

@@ -65,11 +65,11 @@ export class MockBackend implements RuntimeBackend {
   }
 
   resolveLayout(_value: unknown, _part: Part): Layout {
-    return MockLayout;
+    return MockLayout.instance;
   }
 
   resolvePrimitive(_value: unknown, _part: Part): Primitive<unknown> {
-    return MockPrimitive;
+    return MockPrimitive.instance;
   }
 
   startViewTransition(callback: () => void | Promise<void>): Promise<void> {
@@ -227,14 +227,14 @@ export class MockCoroutine implements Coroutine {
 }
 
 export class MockDirective<T> implements DirectiveType<T> {
-  readonly name: string;
+  readonly id: string;
 
-  constructor(name: string = this.constructor.name) {
-    this.name = name;
+  constructor(id: string = '') {
+    this.id = id;
   }
 
   equals(other: unknown) {
-    return other instanceof MockDirective && other.name === this.name;
+    return other instanceof MockDirective && other.id === this.id;
   }
 
   resolveBinding(value: T, part: Part, _context: DirectiveContext): Binding<T> {
@@ -242,28 +242,27 @@ export class MockDirective<T> implements DirectiveType<T> {
   }
 }
 
-export const MockPrimitive = {
-  name: 'MockPrimitive',
-  ensureValue(_value: unknown): asserts _value is unknown {},
-  resolveBinding(
-    value: unknown,
-    part: Part,
-    _context: DirectiveContext,
-  ): Binding<unknown> {
+export class MockPrimitive<T> implements Primitive<T> {
+  static readonly instance: MockPrimitive<any> = new MockPrimitive();
+
+  ensureValue(_value: unknown): asserts _value is unknown {}
+
+  resolveBinding(value: T, part: Part, _context: DirectiveContext): Binding<T> {
     return new MockBinding(this, value, part);
-  },
-};
+  }
+}
 
 export class MockEffect implements Effect {
   commit(): void {}
 }
 
-export const MockLayout: Layout = {
-  name: 'MockLayout',
+export class MockLayout implements Layout {
+  static readonly instance: MockLayout = new MockLayout();
+
   resolveSlot<T>(binding: Binding<UnwrapBindable<T>>) {
     return new MockSlot(binding);
-  },
-};
+  }
+}
 
 export class MockObserver implements RuntimeObserver {
   events: RuntimeEvent[] = [];
@@ -313,7 +312,7 @@ export class MockSlot<T> implements Slot<T> {
 
     if (!areDirectiveTypesEqual(this.binding.type, directive.type)) {
       throw new Error(
-        `The directive must be ${this.binding.type.name} in this slot, but got ${directive.type.name}.`,
+        `The directive must be ${this.binding.type.constructor.name} in this slot, but got ${directive.type.constructor.name}.`,
       );
     }
 

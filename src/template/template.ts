@@ -23,10 +23,6 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
 {
   abstract get arity(): TBinds['length'];
 
-  get name(): string {
-    return this.constructor.name;
-  }
-
   abstract render(
     binds: TBinds,
     part: Part.ChildNodePart,

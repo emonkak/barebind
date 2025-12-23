@@ -12,15 +12,16 @@ import {
 } from '../internal.js';
 
 export function Flexible<T>(value: T): LayoutSpecifier<T> {
-  return new LayoutSpecifier(FlexibleLayout, value);
+  return new LayoutSpecifier(FlexibleLayout.instance, value);
 }
 
-export const FlexibleLayout: Layout = {
-  name: 'FlexibleLayout',
+export class FlexibleLayout implements Layout {
+  static readonly instance: FlexibleLayout = new FlexibleLayout();
+
   resolveSlot<T>(binding: Binding<UnwrapBindable<T>>): FlexibleSlot<T> {
     return new FlexibleSlot(binding);
-  },
-};
+  }
+}
 
 export class FlexibleSlot<T> implements Slot<T> {
   private _pendingBinding: Binding<UnwrapBindable<T>>;

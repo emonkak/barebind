@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { debugPart, formatPart, undebugPart } from '@/debug/part.js';
 import { PartType } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockDirective } from '../../mocks.js';
+import { MockDirective, MockPrimitive } from '../../mocks.js';
 import { createElement } from '../../test-helpers.js';
 
 const MAKRER = '[[PART IS IN HERE!]]';
@@ -17,20 +17,20 @@ describe('debugPart()', () => {
       namespaceURI: HTML_NAMESPACE_URI,
     };
 
-    debugPart(part, new MockDirective('FirstDirective'), 'foo');
-    expect(part.node.data).toBe('/FirstDirective("foo")');
+    debugPart(part, new MockDirective(), 'foo');
+    expect(part.node.data).toBe('/MockDirective("foo")');
 
-    debugPart(part, new MockDirective('FirstDirective'), 'bar');
-    expect(part.node.data).toBe('/FirstDirective("bar")');
+    debugPart(part, new MockDirective(), 'bar');
+    expect(part.node.data).toBe('/MockDirective("bar")');
 
-    debugPart(part, new MockDirective('SecondDirective'), 'baz');
-    expect(part.node.data).toBe('/FirstDirective("bar")');
+    debugPart(part, new MockDirective(), 'baz');
+    expect(part.node.data).toBe('/MockDirective("baz")');
 
-    undebugPart(part, new MockDirective('FirstDirective'));
+    undebugPart(part, MockPrimitive.instance);
+    expect(part.node.data).toBe('/MockDirective("baz")');
+
+    undebugPart(part, new MockDirective());
     expect(part.node.data).toBe('');
-
-    debugPart(part, new MockDirective('SecondDirective'), 'baz');
-    expect(part.node.data).toBe('/SecondDirective("baz")');
   });
 
   it('should do nothing if the part is not a child node part', () => {

@@ -9,12 +9,6 @@ import {
 } from '../../test-helpers.js';
 
 describe('StylePrimitive', () => {
-  describe('name', () => {
-    it('is a string that represents the primitive itself', () => {
-      expect(StylePrimitive.name, 'StylePrimitive');
-    });
-  });
-
   describe('ensureValue()', () => {
     it('asserts the value is a object', () => {
       const part = {
@@ -22,11 +16,9 @@ describe('StylePrimitive', () => {
         node: document.createElement('div'),
         name: ':style',
       };
-      const ensureValue: NonNullable<typeof StylePrimitive.ensureValue> =
-        StylePrimitive.ensureValue!;
 
       expect(() => {
-        ensureValue.call(StylePrimitive, { color: 'red' }, part);
+        StylePrimitive.instance.ensureValue({ color: 'red' }, part);
       }).not.toThrow();
     });
 
@@ -38,11 +30,9 @@ describe('StylePrimitive', () => {
           node: document.createElement('div'),
           name: ':style',
         };
-        const ensureValue: NonNullable<typeof StylePrimitive.ensureValue> =
-          StylePrimitive.ensureValue!;
 
         expect(() => {
-          ensureValue.call(StylePrimitive, value, part);
+          StylePrimitive.instance.ensureValue(value, part);
         }).toThrow('The value of StylePrimitive must be an object.');
       },
     );
@@ -59,9 +49,13 @@ describe('StylePrimitive', () => {
           name: attributeName,
         };
         const runtime = createRuntime();
-        const binding = StylePrimitive.resolveBinding(style, part, runtime);
+        const binding = StylePrimitive.instance.resolveBinding(
+          style,
+          part,
+          runtime,
+        );
 
-        expect(binding.type).toBe(StylePrimitive);
+        expect(binding.type).toBe(StylePrimitive.instance);
         expect(binding.value).toBe(style);
         expect(binding.part).toBe(part);
       },
@@ -76,9 +70,9 @@ describe('StylePrimitive', () => {
       };
       const runtime = createRuntime();
 
-      expect(() => StylePrimitive.resolveBinding(style, part, runtime)).toThrow(
-        'StylePrimitive must be used in a ":style" attribute part.',
-      );
+      expect(() =>
+        StylePrimitive.instance.resolveBinding(style, part, runtime),
+      ).toThrow('StylePrimitive must be used in a ":style" attribute part.');
     });
   });
 });

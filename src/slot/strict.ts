@@ -12,15 +12,16 @@ import {
 } from '../internal.js';
 
 export function Strict<T>(value: T): LayoutSpecifier<T> {
-  return new LayoutSpecifier(StrictLayout, value);
+  return new LayoutSpecifier(StrictLayout.instance, value);
 }
 
-export const StrictLayout: Layout = {
-  name: 'StrictLayout',
+export class StrictLayout implements Layout {
+  static readonly instance: StrictLayout = new StrictLayout();
+
   resolveSlot<T>(binding: Binding<UnwrapBindable<T>>): StrictSlot<T> {
     return new StrictSlot(binding);
-  },
-};
+  }
+}
 
 export class StrictSlot<T> implements Slot<T> {
   private readonly _binding: Binding<UnwrapBindable<T>>;
@@ -52,7 +53,7 @@ export class StrictSlot<T> implements Slot<T> {
         directive.type,
         directive.value,
         this._binding.part,
-        `The directive type must be ${this._binding.type.name} in this slot, but got ${directive.type.name}.`,
+        `The directive type must be ${this._binding.type.constructor.name} in this slot, but got ${directive.type.constructor.name}.`,
       );
     }
 

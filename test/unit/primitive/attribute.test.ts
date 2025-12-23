@@ -5,12 +5,6 @@ import { AttributeBinding, AttributePrimitive } from '@/primitive/attribute.js';
 import { createRuntime, TestUpdater } from '../../test-helpers.js';
 
 describe('AttributePrimitive', () => {
-  describe('name', () => {
-    it('is a string that represents the primitive itself', () => {
-      expect(AttributePrimitive.name, 'AttributePrimitive');
-    });
-  });
-
   describe('resolveBinding()', () => {
     it('constructs a new AttributeBinding', () => {
       const value = 'foo';
@@ -20,9 +14,13 @@ describe('AttributePrimitive', () => {
         name: 'class',
       };
       const runtime = createRuntime();
-      const binding = AttributePrimitive.resolveBinding(value, part, runtime);
+      const binding = AttributePrimitive.instance.resolveBinding(
+        value,
+        part,
+        runtime,
+      );
 
-      expect(binding.type).toBe(AttributePrimitive);
+      expect(binding.type).toBe(AttributePrimitive.instance);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });
@@ -36,7 +34,7 @@ describe('AttributePrimitive', () => {
       const runtime = createRuntime();
 
       expect(() =>
-        AttributePrimitive.resolveBinding(value, part, runtime),
+        AttributePrimitive.instance.resolveBinding(value, part, runtime),
       ).toThrow('AttributePrimitive must be used in an attribute part.');
     });
   });

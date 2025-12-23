@@ -7,30 +7,31 @@ import {
 } from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export const TextPrimitive: Primitive<any> = {
-  name: 'TextPrimitive',
-  resolveBinding<T>(
+export class TextPrimitive<T> implements Primitive<T> {
+  static readonly instance: TextPrimitive<any> = new TextPrimitive();
+
+  resolveBinding(
     value: T,
     part: Part,
     _context: DirectiveContext,
   ): TextBinding<T> {
     if (part.type !== PartType.Text) {
       throw new DirectiveError(
-        TextPrimitive,
+        this,
         value,
         part,
         'TextPrimitive must be used in a text part.',
       );
     }
     return new TextBinding(value, part);
-  },
-};
+  }
+}
 
 export class TextBinding<T> extends PrimitiveBinding<T, Part.TextPart> {
   private _memoizedValue: T | null = null;
 
   get type(): Primitive<T> {
-    return TextPrimitive;
+    return TextPrimitive.instance;
   }
 
   shouldUpdate(value: T): boolean {

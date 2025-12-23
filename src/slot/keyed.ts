@@ -21,10 +21,6 @@ export function Keyed<TKey, TValue>(
 export class KeyedLayout<TKey> implements Layout {
   private readonly _key: TKey;
 
-  get name(): string {
-    return this.constructor.name;
-  }
-
   get key(): TKey {
     return this._key;
   }
@@ -82,7 +78,7 @@ export class KeyedSlot<TKey, TValue> implements Slot<TValue> {
           directive.type,
           directive.value,
           this._pendingBinding.part,
-          `The directive type must be ${this._pendingBinding.type.name} in this slot, but got ${directive.type.name}.`,
+          `The directive type must be ${this._pendingBinding.type.constructor.name} in this slot, but got ${directive.type.constructor.name}.`,
         );
       }
 
