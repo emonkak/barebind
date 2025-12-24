@@ -16,7 +16,7 @@ export function formatValue(
   value: unknown,
   context: DebugValueContext = {
     maxDepth: 2,
-    maxStringLength: 16,
+    maxStringLength: 128,
     seenObjects: [],
   },
 ): string {

@@ -41,7 +41,7 @@ describe('formatValue()', () => {
     [{ foo: { bar: [] } }, '{ foo: { bar: [] } }'],
     [{ foo: { bar: { baz: 123 } } }, '{ foo: { bar: {...} } }'],
     [{ foo: { bar: [123] } }, '{ foo: { bar: [...] } }'],
-    ['abracadabra'.repeat(10), 'String'],
+    ['abracadabra'.repeat(16), 'String'],
     [circlerValue, '{ x: [Circular] }'],
   ])(
     'returns the string representation of the value',
