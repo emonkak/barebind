@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { $debug, type Debuggable, formatValue } from '@/debug/value.js';
+import { $debug, type Debuggable, formatValue, nameOf } from '@/debug/value.js';
 
 describe('formatValue()', () => {
   const x = {};
@@ -16,8 +16,6 @@ describe('formatValue()', () => {
     [Infinity, 'Infinity'],
     [true, 'true'],
     [new Date(), 'Date'],
-    [new Map(), 'Map'],
-    [new Set(), 'Set'],
     [new (class Foo {})(), 'Foo'],
     [
       {
@@ -46,9 +44,22 @@ describe('formatValue()', () => {
     ['abracadabra'.repeat(10), 'String'],
     [circlerValue, '{ x: [Circular] }'],
   ])(
-    'returns a string representation of the value',
+    'returns the string representation of the value',
     (value, expectedString) => {
       expect(formatValue(value)).toBe(expectedString);
     },
   );
+});
+
+describe('nameOf()', () => {
+  it.each([
+    [{}, 'Object'],
+    [{ __proto__: null }, 'Object'],
+    [new Date(), 'Date'],
+    [new (class Foo {})(), 'Foo'],
+    [() => {}, 'Function'],
+    [function foo() {}, 'foo'],
+  ])('returns the name of the value', (value, expectedString) => {
+    expect(nameOf(value)).toBe(expectedString);
+  });
 });

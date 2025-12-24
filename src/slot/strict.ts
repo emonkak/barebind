@@ -1,4 +1,5 @@
 import { debugPart, undebugPart } from '../debug/part.js';
+import { nameOf } from '../debug/value.js';
 import { DirectiveError, LayoutSpecifier } from '../directive.js';
 import {
   areDirectiveTypesEqual,
@@ -53,7 +54,7 @@ export class StrictSlot<T> implements Slot<T> {
         directive.type,
         directive.value,
         this._binding.part,
-        `The directive type must be ${this._binding.type.constructor.name} in this slot, but got ${directive.type.constructor.name}.`,
+        `The directive type must be ${nameOf(this._binding.type)} in this slot, but got ${nameOf(directive.type)}.`,
       );
     }
 

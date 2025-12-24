@@ -96,6 +96,14 @@ export function formatValue(
   }
 }
 
+export function nameOf(value: object): string {
+  return typeof value === 'function'
+    ? value.name !== ''
+      ? value.name
+      : value.constructor.name
+    : (value.constructor?.name ?? 'Object');
+}
+
 function isDebuggable(value: {}): value is Debuggable {
   return $debug in value;
 }

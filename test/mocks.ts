@@ -1,5 +1,6 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
+import { nameOf } from '@/debug/value.js';
 import {
   $toDirective,
   areDirectiveTypesEqual,
@@ -312,7 +313,7 @@ export class MockSlot<T> implements Slot<T> {
 
     if (!areDirectiveTypesEqual(this.binding.type, directive.type)) {
       throw new Error(
-        `The directive must be ${this.binding.type.constructor.name} in this slot, but got ${directive.type.constructor.name}.`,
+        `The directive must be ${nameOf(this.binding.type)} in this slot, but got ${nameOf(directive.type)}.`,
       );
     }
 
