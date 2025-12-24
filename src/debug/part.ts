@@ -12,7 +12,7 @@ export function debugPart(
     (part.node.data === '' ||
       part.node.data.startsWith('/' + nameOf(type) + '('))
   ) {
-    part.node.data = `/${type.constructor.name}(${formatValue(value)})`;
+    part.node.data = `/${nameOf(type)}(${formatValue(value)})`;
   }
 }
 
