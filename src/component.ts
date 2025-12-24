@@ -54,13 +54,13 @@ export class ComponentBinding<TProps, TResult>
 
   private readonly _part: Part;
 
+  private _slot: Slot<TResult> | null = null;
+
   private _scope: Scope = Scope.DETACHED;
 
   private _pendingLanes: Lanes = Lanes.NoLanes;
 
-  private _slot: Slot<TResult> | null = null;
-
-  private readonly _hooks: Hook[] = [];
+  private _hooks: Hook[] = [];
 
   constructor(
     component: Component<TProps, TResult>,
@@ -164,6 +164,7 @@ export class ComponentBinding<TProps, TResult>
 
     this._scope = Scope.DETACHED;
     this._pendingLanes = Lanes.NoLanes;
+    this._hooks = [];
   }
 
   commit(): void {
