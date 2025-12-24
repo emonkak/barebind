@@ -24,7 +24,7 @@ describe('createComponent()', () => {
   });
 
   describe('name', () => {
-    it('returns the render function name', () => {
+    it('returns the component function name', () => {
       function MyComponent() {
         return null;
       }
