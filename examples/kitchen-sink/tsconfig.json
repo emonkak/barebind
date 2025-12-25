@@ -5,6 +5,5 @@
     "jsxImportSource": "barebind/addons",
     "outDir": "lib",
     "rootDir": "."
-  },
-  "files": ["index.tsx"]
+  }
 }

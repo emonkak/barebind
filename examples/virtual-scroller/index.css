@@ -1,24 +1,43 @@
-body {
-  margin: 0;
-  font-family: Helvetica, sans-serif;
+html {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.VirtualScroller {
-  overflow-anchor: none;
+body {
+  background-color: Canvas;
+  color: CanvasText;
+  margin: 0;
+}
+
+.container {
+  margin-inline: auto;
+  max-inline-size: 40rem;
+  padding-inline: 1rlh;
 }
 
 .VirtualScroller-list {
   list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
+}
+
+.VirtualScroller-spacer {
+  background-color: ButtonFace;
+  color: ButtonText;
 }
 
 .VirtualScroller-item {
-  background-color: oklch(0.9 0 0);
-  overflow-anchor: auto;
+  background-color: Field;
+  color: FieldText;
+  outline-offset: -1px;
+  outline: 2px solid Highlight;
   text-align: center;
-}
 
-.VirtualScroller-item:nth-child(even) {
-  background-color: oklch(0.8 0 0);
+  &[aria-posinset$="0"],
+  &[aria-posinset$="2"],
+  &[aria-posinset$="4"],
+  &[aria-posinset$="6"],
+  &[aria-posinset$="8"] {
+    background-color: SelectedItem;
+    color: SelectedItemText;
+  }
 }
