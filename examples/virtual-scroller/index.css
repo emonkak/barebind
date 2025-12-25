@@ -1,0 +1,24 @@
+body {
+  margin: 0;
+  font-family: Helvetica, sans-serif;
+}
+
+.VirtualScroller {
+  overflow-anchor: none;
+}
+
+.VirtualScroller-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.VirtualScroller-item {
+  background-color: oklch(0.9 0 0);
+  overflow-anchor: auto;
+  text-align: center;
+}
+
+.VirtualScroller-item:nth-child(even) {
+  background-color: oklch(0.8 0 0);
+}
