@@ -1,12 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-
-import { createComponent } from '@/component.js';
 import {
   type ConsoleLogger,
   ConsoleReporter,
   type PerformanceProfile,
   PerformanceProfiler,
-} from '@/extras/profiler.js';
+} from '@/addons/profiler.js';
+import { createComponent } from '@/component.js';
 import {
   CommitPhase,
   type Effect,

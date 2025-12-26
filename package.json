@@ -8,8 +8,8 @@
     "./collections/*": {
       "import": "./src/collections/*.ts"
     },
-    "./extras/*": {
-      "import": "./src/extras/*.ts"
+    "./addons/*": {
+      "import": "./src/addons/*.ts"
     },
     "./internal": {
       "import": "./src/internal.js"
@@ -25,9 +25,9 @@
         "import": "./lib/collections/*.js",
         "types": "./lib/collections/*.d.ts"
       },
-      "./extras/*": {
-        "import": "./lib/extras/*.js",
-        "types": "./lib/extras/*.d.ts"
+      "./addons/*": {
+        "import": "./lib/addons/*.js",
+        "types": "./lib/addons/*.d.ts"
       },
       "./internal": {
         "import": "./lib/internal.js",

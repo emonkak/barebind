@@ -19,8 +19,8 @@ export default defineConfig({
     coverage: {
       include: ['src/**'],
       exclude: [
-        'src/extras/jsx-dev-runtime.ts',
-        'src/extras/router.ts',
+        'src/addons/jsx-dev-runtime.ts',
+        'src/addons/router.ts',
         'src/index.ts',
       ],
     },

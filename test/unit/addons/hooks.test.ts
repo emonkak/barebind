@@ -1,14 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
-
-import { LinkedList } from '@/collections/linked-list.js';
 import {
   DeferredValue,
   EventCallback,
   LocalAtom,
   LocalComputed,
   SyncEnternalStore,
-} from '@/extras/hooks.js';
-import { Atom, type Signal } from '@/extras/signal.js';
+} from '@/addons/hooks.js';
+import { Atom, type Signal } from '@/addons/signal.js';
+import { LinkedList } from '@/collections/linked-list.js';
 import type { RenderSession } from '@/render-session.js';
 import { TestRenderer } from '../../test-helpers.js';
 

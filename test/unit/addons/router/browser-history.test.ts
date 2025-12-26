@@ -4,12 +4,12 @@ import {
   BrowserHistory,
   createFormSubmitHandler,
   createLinkClickHandler,
-} from '@/extras/router/browser-history.js';
+} from '@/addons/router/browser-history.js';
 import {
   CurrentHistory,
   type HistoryNavigator,
-} from '@/extras/router/history.js';
-import { RelativeURL } from '@/extras/router/relative-url.js';
+} from '@/addons/router/history.js';
+import { RelativeURL } from '@/addons/router/relative-url.js';
 import type { RenderSession } from '@/render-session.js';
 import { MockCoroutine } from '../../../mocks.js';
 import { createElement, TestRenderer } from '../../../test-helpers.js';

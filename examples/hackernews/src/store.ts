@@ -3,7 +3,7 @@ import {
   type CustomHookObject,
   type RenderContext,
 } from 'barebind';
-import { Reactive } from 'barebind/extras/reactive';
+import { Reactive } from 'barebind/addons/reactive';
 
 const STORY_API_ORIGIN = 'https://node-hnapi.herokuapp.com';
 const USER_API_ORIGIN = 'https://hacker-news.firebaseio.com';

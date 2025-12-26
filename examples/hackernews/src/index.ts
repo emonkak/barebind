@@ -1,5 +1,5 @@
 import { BrowserBackend, Root, Runtime } from 'barebind';
-import { ConsoleReporter, PerformanceProfiler } from 'barebind/extras/profiler';
+import { ConsoleReporter, PerformanceProfiler } from 'barebind/addons/profiler';
 
 import { App } from './App.js';
 import { AppStore } from './store.js';

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CurrentHistory } from '@/extras/router/history.js';
+import { CurrentHistory } from '@/addons/router/history.js';
 import { TestRenderer } from '../../../test-helpers.js';
 
 describe('CurrentHistory', () => {

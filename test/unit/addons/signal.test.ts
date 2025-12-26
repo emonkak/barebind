@@ -5,7 +5,7 @@ import {
   Computed,
   type SignalBinding,
   SignalDirective,
-} from '@/extras/signal.js';
+} from '@/addons/signal.js';
 import {
   $toDirective,
   Lanes,

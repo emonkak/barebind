@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "react-jsx",
-    "jsxImportSource": "barebind/extras",
+    "jsxImportSource": "barebind/addons",
     "outDir": "lib",
     "rootDir": "."
   },

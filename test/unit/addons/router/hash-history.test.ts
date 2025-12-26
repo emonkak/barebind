@@ -3,12 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createHashClickHandler,
   HashHistory,
-} from '@/extras/router/hash-history.js';
+} from '@/addons/router/hash-history.js';
 import {
   CurrentHistory,
   type HistoryNavigator,
-} from '@/extras/router/history.js';
-import { RelativeURL } from '@/extras/router/relative-url.js';
+} from '@/addons/router/history.js';
+import { RelativeURL } from '@/addons/router/relative-url.js';
 import type { RenderSession } from '@/render-session.js';
 import { MockCoroutine } from '../../../mocks.js';
 import { createElement, TestRenderer } from '../../../test-helpers.js';

@@ -1,6 +1,6 @@
 import { describe, expectTypeOf, it } from 'vitest';
 
-import { Reactive } from '@/extras/reactive.js';
+import { Reactive } from '@/addons/reactive.js';
 
 describe('Reactive', () => {
   describe('get()', () => {

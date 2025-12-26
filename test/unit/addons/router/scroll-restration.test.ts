@@ -4,9 +4,9 @@ import {
   CurrentHistory,
   type HistoryLocation,
   type HistoryNavigator,
-} from '@/extras/router/history.js';
-import { RelativeURL } from '@/extras/router/relative-url.js';
-import { ScrollRestration } from '@/extras/router/scroll-restration.js';
+} from '@/addons/router/history.js';
+import { RelativeURL } from '@/addons/router/relative-url.js';
+import { ScrollRestration } from '@/addons/router/scroll-restration.js';
 import { createElement, TestRenderer } from '../../../test-helpers.js';
 
 describe('ScrollRestration()', () => {
