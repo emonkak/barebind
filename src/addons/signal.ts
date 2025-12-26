@@ -5,6 +5,7 @@ import {
   type Bindable,
   type Binding,
   type Coroutine,
+  type CustomHookFunction,
   type CustomHookObject,
   type Directive,
   type DirectiveContext,
@@ -327,4 +328,25 @@ export class Computed<
       }
     };
   }
+}
+
+export function LocalAtom<T>(initialValue: T): CustomHookFunction<Atom<T>> {
+  return (context) => {
+    return context.useMemo(() => new Atom(initialValue), []);
+  };
+}
+
+export function LocalComputed<
+  TResult,
+  const TDependencies extends readonly Signal<any>[],
+>(
+  computation: (...values: UnwrapSignals<TDependencies>) => TResult,
+  dependencies: TDependencies,
+): CustomHookFunction<Computed<TResult, TDependencies>> {
+  return (context) => {
+    return context.useMemo(
+      () => new Computed(computation, dependencies),
+      dependencies,
+    );
+  };
 }

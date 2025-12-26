@@ -3,6 +3,9 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   Atom,
   Computed,
+  LocalAtom,
+  LocalComputed,
+  type Signal,
   type SignalBinding,
   SignalDirective,
 } from '@/addons/signal.js';
@@ -12,6 +15,7 @@ import {
   PartType,
   type RenderContext,
 } from '@/internal.js';
+import type { RenderSession } from '@/render-session.js';
 import {
   createRuntime,
   TestRenderer,
@@ -474,5 +478,70 @@ describe('Computed', () => {
 
       expect(subscriber).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('LocalAtom()', () => {
+  it('returns a custom hook that creates an atom signal with no subscription', async () => {
+    const callback = (session: RenderSession) => {
+      const signal = session.use(LocalAtom(100));
+
+      session.useEffect(() => {
+        signal.value++;
+      });
+
+      return signal;
+    };
+    const renderer = new TestRenderer();
+
+    let stableSignal: Signal<number>;
+
+    SESSION1: {
+      stableSignal = renderer.startRender(callback);
+
+      expect(stableSignal.value).toBe(101);
+    }
+
+    SESSION2: {
+      const signal = renderer.startRender(callback);
+
+      expect(signal).toBe(stableSignal);
+      expect(signal.value).toBe(102);
+    }
+  });
+});
+
+describe('LocalComputed()', () => {
+  it('returns a custom hook that creates a computed signal with no subscription', async () => {
+    const foo = new Atom(1);
+    const bar = new Atom(2);
+    const baz = new Atom(3);
+    const callback = (session: RenderSession) => {
+      const signal = session.use(
+        LocalComputed((foo, bar, baz) => foo + bar + baz, [foo, bar, baz]),
+      );
+
+      session.useEffect(() => {
+        foo.value++;
+      });
+
+      return signal;
+    };
+    const renderer = new TestRenderer();
+
+    let stableSignal: Signal<number>;
+
+    SESSION1: {
+      stableSignal = renderer.startRender(callback);
+
+      expect(stableSignal.value).toBe(7);
+    }
+
+    SESSION2: {
+      const signal = renderer.startRender(callback);
+
+      expect(signal).toBe(stableSignal);
+      expect(signal.value).toBe(8);
+    }
   });
 });
