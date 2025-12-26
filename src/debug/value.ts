@@ -2,11 +2,16 @@ export const $debug: unique symbol = Symbol('$debug');
 
 const UNQUOTED_PROPERTY_PATTERN = /^[A-Za-z$_][0-9A-Za-z$_]*$/;
 
+const MAX_ARRAY_LENGTH = 16;
+const MAX_OBJECT_DEPTH = 2;
+const MAX_STRING_LENGTH = 128;
+
 export interface Debuggable {
   [$debug](format: (value: unknown) => string): string;
 }
 
 export interface DebugValueContext {
+  maxArrayLength: number;
   maxDepth: number;
   maxStringLength: number;
   seenObjects: object[];
@@ -14,15 +19,11 @@ export interface DebugValueContext {
 
 export function formatValue(
   value: unknown,
-  context: DebugValueContext = {
-    maxDepth: 2,
-    maxStringLength: 128,
-    seenObjects: [],
-  },
+  seenObjects: object[] = [],
 ): string {
   switch (typeof value) {
     case 'string':
-      return value.length <= context.maxStringLength
+      return value.length <= MAX_STRING_LENGTH
         ? JSON.stringify(value)
         : 'String';
     case 'number':
@@ -37,18 +38,18 @@ export function formatValue(
       if (value === null) {
         return 'null';
       }
-      if (context.seenObjects.includes(value)) {
+      if (seenObjects.includes(value)) {
         return '[Circular]';
       }
-      context.seenObjects.push(value);
+      seenObjects.push(value);
       try {
         if (isDebuggable(value)) {
-          return value[$debug]((v) => formatValue(v, context));
+          return value[$debug]((v) => formatValue(v, seenObjects));
         }
         switch (value.constructor) {
           case Array:
             if (
-              context.maxDepth < context.seenObjects.length &&
+              MAX_OBJECT_DEPTH < seenObjects.length &&
               (value as unknown[]).length > 0
             ) {
               return '[...]';
@@ -56,15 +57,17 @@ export function formatValue(
             return (
               '[' +
               (value as unknown[])
-                .map((v) => formatValue(v, context))
+                .map((v) => formatValue(v, seenObjects))
+                .slice(0, MAX_ARRAY_LENGTH)
                 .join(', ') +
+              ((value as unknown[]).length > MAX_ARRAY_LENGTH ? ', ...' : '') +
               ']'
             );
           case Object:
           case null:
           case undefined: {
             if (
-              context.maxDepth < context.seenObjects.length &&
+              MAX_OBJECT_DEPTH < seenObjects.length &&
               Object.keys(value).length > 0
             ) {
               return '{...}';
@@ -79,7 +82,7 @@ export function formatValue(
                           ? k
                           : JSON.stringify(k)) +
                         ': ' +
-                        formatValue(v, context),
+                        formatValue(v, seenObjects),
                     )
                     .join(', ') +
                   ' }'
@@ -89,7 +92,7 @@ export function formatValue(
             return value.constructor.name;
         }
       } finally {
-        context.seenObjects.pop();
+        seenObjects.pop();
       }
     default:
       return value!.toString();
