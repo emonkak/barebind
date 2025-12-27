@@ -76,7 +76,7 @@ describe('RepeatDirective', () => {
 
 describe('RepeatBinding', () => {
   describe('shouldUpdate()', () => {
-    it('returns true if committed items does not exist', () => {
+    it('returns true if committed slots does not exist', () => {
       const props: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
       const part = {
         type: PartType.ChildNode,
@@ -115,7 +115,7 @@ describe('RepeatBinding', () => {
   });
 
   describe('attach()', () => {
-    it('updates items according to keys', () => {
+    it('updates slots according to keys', () => {
       const source: KeyValuePair[] = [
         { key: 'one', value: 'foo' },
         { key: 'two', value: 'bar' },
@@ -175,7 +175,7 @@ describe('RepeatBinding', () => {
       }
     });
 
-    it('updates items containing duplicate keys', () => {
+    it('updates slots containing duplicate keys', () => {
       const source1: KeyValuePair[] = [
         { key: 'one', value: 'foo' },
         { key: 'two', value: 'bar' },
@@ -255,7 +255,7 @@ describe('RepeatBinding', () => {
       }
     });
 
-    it('hydrates the tree by items', () => {
+    it('hydrates the tree by slots', () => {
       const source = ['foo', 'bar', 'baz'];
       const props: RepeatProps<string> = {
         source,
@@ -307,7 +307,7 @@ describe('RepeatBinding', () => {
       );
     });
 
-    it('swaps items according to keys', () => {
+    it('swaps slots according to keys', () => {
       const source1: KeyValuePair[] = [
         { key: 'one', value: 'foo' },
         { key: 'two', value: 'bar' },
@@ -395,65 +395,68 @@ describe('RepeatBinding', () => {
         ['bar', 'foo'],
       ],
       [['foo', 'bar', 'baz'], []],
-    ])('updates items according to indexes', (source1, source2) => {
-      const props1: RepeatProps<string> = {
-        source: source1,
-      };
-      const props2: RepeatProps<string> = {
-        source: source2,
-      };
-      const part: Part.ChildNodePart = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const container = createElement('div', {}, part.node);
-      const binding = new RepeatBinding(props1, part);
-      const updater = new TestUpdater();
+    ])(
+      'updates slots with a iterator according to indexes',
+      (source1, source2) => {
+        const props1: RepeatProps<string> = {
+          source: { [Symbol.iterator]: () => Iterator.from(source1) },
+        };
+        const props2: RepeatProps<string> = {
+          source: { [Symbol.iterator]: () => Iterator.from(source2) },
+        };
+        const part: Part.ChildNodePart = {
+          type: PartType.ChildNode,
+          node: document.createComment(''),
+          anchorNode: null,
+          namespaceURI: HTML_NAMESPACE_URI,
+        };
+        const container = createElement('div', {}, part.node);
+        const binding = new RepeatBinding(props1, part);
+        const updater = new TestUpdater();
 
-      SESSION1: {
-        updater.startUpdate((session) => {
-          binding.attach(session);
-          binding.commit();
-        });
+        SESSION1: {
+          updater.startUpdate((session) => {
+            binding.attach(session);
+            binding.commit();
+          });
 
-        expect(container.innerHTML).toBe(
-          source1.map(toCommentString).join('') + EMPTY_COMMENT,
-        );
-        expect(part.anchorNode?.nodeValue).toBe(source1[0]);
-      }
+          expect(container.innerHTML).toBe(
+            source1.map(toCommentString).join('') + EMPTY_COMMENT,
+          );
+          expect(part.anchorNode?.nodeValue).toBe(source1[0]);
+        }
 
-      SESSION2: {
-        updater.startUpdate((session) => {
-          binding.value = props2;
-          binding.attach(session);
-          binding.commit();
-        });
+        SESSION2: {
+          updater.startUpdate((session) => {
+            binding.value = props2;
+            binding.attach(session);
+            binding.commit();
+          });
 
-        expect(container.innerHTML).toBe(
-          source2.map(toCommentString).join('') + EMPTY_COMMENT,
-        );
-        expect(part.anchorNode?.nodeValue).toBe(source2[0]);
-      }
+          expect(container.innerHTML).toBe(
+            source2.map(toCommentString).join('') + EMPTY_COMMENT,
+          );
+          expect(part.anchorNode?.nodeValue).toBe(source2[0]);
+        }
 
-      SESSION3: {
-        updater.startUpdate((session) => {
-          binding.value = props1;
-          binding.attach(session);
-          binding.commit();
-        });
+        SESSION3: {
+          updater.startUpdate((session) => {
+            binding.value = props1;
+            binding.attach(session);
+            binding.commit();
+          });
 
-        expect(container.innerHTML).toBe(
-          source1.map(toCommentString).join('') + EMPTY_COMMENT,
-        );
-        expect(part.anchorNode?.nodeValue).toBe(source1[0]);
-      }
-    });
+          expect(container.innerHTML).toBe(
+            source1.map(toCommentString).join('') + EMPTY_COMMENT,
+          );
+          expect(part.anchorNode?.nodeValue).toBe(source1[0]);
+        }
+      },
+    );
   });
 
   describe('detach()', () => {
-    it('should restore rollbacked items', () => {
+    it('should restore rollbacked slots', () => {
       const source = ['foo', 'bar', 'baz'];
       const props: RepeatProps<string> = {
         source,
