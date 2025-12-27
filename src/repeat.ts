@@ -375,15 +375,21 @@ function reconcileSlots<TKey, TValue>(
 ): Slot<TValue>[] {
   const newSlots: Slot<TValue>[] = new Array(newKeys.length);
 
-  let oldHead = 0;
-  let oldTail = oldKeys.length - 1;
   let newHead = 0;
   let newTail = newKeys.length - 1;
+  let oldHead = 0;
+  let oldTail = oldKeys.length - 1;
+
+  let newKeyToIndexMap: Map<TKey, number> | undefined;
+  let oldKeyToIndexMap: Map<TKey, number> | undefined;
 
   while (true) {
     if (newHead > newTail) {
       while (oldHead <= oldTail) {
-        handler.remove(oldSlots[oldTail]!);
+        const oldSlot = oldSlots[oldTail];
+        if (oldSlot !== undefined) {
+          handler.remove(oldSlot);
+        }
         oldTail--;
       }
       break;
@@ -396,6 +402,10 @@ function reconcileSlots<TKey, TValue>(
         newHead++;
       }
       break;
+    } else if (oldSlots[oldHead] === undefined) {
+      oldHead++;
+    } else if (oldSlots[oldTail] === undefined) {
+      oldTail--;
     } else if (Object.is(oldKeys[oldHead]!, newKeys[newHead]!)) {
       newSlots[newHead] = handler.update(
         oldSlots[oldHead]!,
@@ -427,9 +437,17 @@ function reconcileSlots<TKey, TValue>(
       newHead++;
       oldTail--;
     } else {
-      const oldKeyToIndexMap = buildKeyToIndexMap(oldKeys, oldHead, oldTail);
+      newKeyToIndexMap ??= buildKeyToIndexMap(newKeys, newHead, newTail);
 
-      do {
+      if (!newKeyToIndexMap.has(oldKeys[oldHead]!)) {
+        handler.remove(oldSlots[oldHead]!);
+        oldHead++;
+      } else if (!newKeyToIndexMap.has(oldKeys[oldTail]!)) {
+        handler.remove(oldSlots[oldTail]!);
+        oldTail--;
+      } else {
+        oldKeyToIndexMap ??= buildKeyToIndexMap(oldKeys, oldHead, oldTail);
+
         const newKey = newKeys[newTail]!;
         const newValue = newValues[newTail]!;
         const oldIndex = oldKeyToIndexMap.get(newKey);
@@ -444,18 +462,9 @@ function reconcileSlots<TKey, TValue>(
         } else {
           newSlots[newTail] = handler.insert(newValue, newSlots[newTail + 1]);
         }
+
         newTail--;
-      } while (newHead <= newTail);
-
-      do {
-        const oldSlot = oldSlots[oldTail];
-        if (oldSlot !== undefined) {
-          handler.remove(oldSlot);
-        }
-        oldTail--;
-      } while (oldHead <= oldTail);
-
-      break;
+      }
     }
   }
 
