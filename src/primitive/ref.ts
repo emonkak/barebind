@@ -5,17 +5,15 @@ import {
   type Part,
   PartType,
   type Primitive,
-  type RefCallback,
+  type Ref,
   type RefObject,
 } from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export type ElementRef = RefCallback<Element> | RefObject<Element | null>;
-
-export class RefPrimitive implements Primitive<ElementRef> {
+export class RefPrimitive implements Primitive<Ref<Element>> {
   static readonly instance: RefPrimitive = new RefPrimitive();
 
-  ensureValue(value: unknown, part: Part): asserts value is ElementRef {
+  ensureValue(value: unknown, part: Part): asserts value is Ref<Element> {
     if (!isElementRef(value)) {
       throw new DirectiveError(
         this,
@@ -27,7 +25,7 @@ export class RefPrimitive implements Primitive<ElementRef> {
   }
 
   resolveBinding(
-    ref: ElementRef,
+    ref: Ref<Element>,
     part: Part,
     _context: DirectiveContext,
   ): RefBinding {
@@ -47,18 +45,18 @@ export class RefPrimitive implements Primitive<ElementRef> {
 }
 
 export class RefBinding extends PrimitiveBinding<
-  ElementRef,
+  Ref<Element>,
   Part.AttributePart
 > {
-  private _memoizedValue: ElementRef | null = null;
+  private _memoizedValue: Ref<Element> | null = null;
 
   private _memoizedCleanup: Cleanup | void = undefined;
 
-  get type(): Primitive<ElementRef> {
+  get type(): Primitive<Ref<Element>> {
     return RefPrimitive.instance;
   }
 
-  shouldUpdate(ref: ElementRef): boolean {
+  shouldUpdate(ref: Ref<Element>): boolean {
     return ref !== this._memoizedValue;
   }
 
@@ -102,7 +100,7 @@ export class RefBinding extends PrimitiveBinding<
   }
 }
 
-function isElementRef(value: unknown): value is ElementRef {
+function isElementRef(value: unknown): value is Ref<Element> {
   return (
     typeof value === 'function' ||
     (typeof value === 'object' &&

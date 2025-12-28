@@ -8,6 +8,7 @@ export {
   type Component,
   type CustomHookFunction,
   type CustomHookObject,
+  type Ref,
   type RefCallback,
   type RefObject,
   type RenderContext,
@@ -16,7 +17,6 @@ export {
 export { LinkedList } from './linked-list.js';
 export type { ClassSpecifier } from './primitive/class.js';
 export type { EventHandler } from './primitive/event.js';
-export type { ElementRef } from './primitive/ref.js';
 export type { StyleProps } from './primitive/style.js';
 export {
   Repeat,

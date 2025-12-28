@@ -259,6 +259,8 @@ export interface Primitive<T> extends DirectiveType<T> {
   ensureValue?(value: unknown, part: Part): asserts value is T;
 }
 
+export type Ref<T> = RefCallback<T> | RefObject<T | null>;
+
 export type RefCallback<T> = (value: T) => Cleanup | void;
 
 export interface RefObject<T> {
