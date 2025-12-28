@@ -6,7 +6,7 @@ import {
   type RenderContext,
   Repeat,
 } from 'barebind';
-import { EventCallback } from 'barebind/addons/hooks';
+import { EventCallback, ImperativeHandle } from 'barebind/addons/hooks';
 
 export interface VirtualScroller extends Component<VirtualScrollerProps<any>> {
   <T>(props: VirtualScrollerProps<T>): unknown;
@@ -14,18 +14,29 @@ export interface VirtualScroller extends Component<VirtualScrollerProps<any>> {
 
 export interface VirtualScrollerProps<T> {
   assumedItemHeight: number;
-  getItemKey: (item: T, index: number) => unknown;
+  getItemKey?: (item: T, index: number) => unknown;
+  initialItemIndex?: number;
   offscreenRatio?: number;
+  ref?: Ref<VirtualScrollerHandle>;
   renderItem: (item: T, index: number, context: RenderContext) => unknown;
+  scrollMargin?: string;
   source: T[];
 }
 
-interface MeasuredItem {
+export interface VirtualScrollerHandle {
+  getMeasuredItems(): MeasuredItem[];
+  getVisibleElements(): Element[];
+  getVisibleRange(): Range;
+  scrollToIndex(index: number): void;
+}
+
+export interface MeasuredItem {
   key: unknown;
   height: number;
 }
 
-interface Range {
+// A (half-open) range bounded inclusively below and exclusively above.
+export interface Range {
   start: number;
   end: number;
 }
@@ -34,20 +45,27 @@ export const VirtualScroller: VirtualScroller = createComponent(
   function VirtualScroller<T>(
     {
       assumedItemHeight,
-      getItemKey,
+      getItemKey = (_item, index) => index,
+      scrollMargin,
+      initialItemIndex = 0,
       offscreenRatio = 1,
+      ref = null,
       renderItem,
       source,
     }: VirtualScrollerProps<T>,
     $: RenderContext,
   ): unknown {
-    const [range, setRange] = $.useState<Range>({
-      start: 0,
-      end: 0,
+    const [visibleRange, setVisibleRange] = $.useState<Range>({
+      start: initialItemIndex,
+      end: Math.min(initialItemIndex + 1, source.length),
     });
     const measuredItems = $.useMemo<MeasuredItem[]>(() => [], []);
+    const visibleElements = $.useMemo<Map<number, Element>>(
+      () => new Map(),
+      [],
+    );
 
-    const getItemHeight = (item: T, index: number) => {
+    const getItemHeight = (item: T, index: number): number => {
       const measuredItem = measuredItems[index];
       return measuredItem !== undefined &&
         Object.is(measuredItem.key, getItemKey(item, index))
@@ -55,7 +73,18 @@ export const VirtualScroller: VirtualScroller = createComponent(
         : assumedItemHeight;
     };
 
-    const recomputeRange = (top: number, bottom: number) => {
+    const computeRangeHeight = (
+      start: number,
+      end: number = source.length,
+    ): number => {
+      let height = 0;
+      for (let i = start; i < end; i++) {
+        height += getItemHeight(source[i]!, i);
+      }
+      return height;
+    };
+
+    const computeVisibleRange = (top: number, bottom: number): Range => {
       const size = source.length;
       let start = 0;
       let y = 0;
@@ -90,24 +119,28 @@ export const VirtualScroller: VirtualScroller = createComponent(
     const intersectionObserverCallback = $.use(
       EventCallback((entries: IntersectionObserverEntry[]) => {
         for (const entry of entries) {
-          if (!entry.isIntersecting) {
-            continue;
-          }
-
           switch (entry.target.className) {
             case 'VirtualScroller-spacer': {
+              if (!entry.isIntersecting && !entry.target.isConnected) {
+                continue;
+              }
+
               const top =
                 -entry.target.parentElement!.getBoundingClientRect().top +
                 entry.rootBounds!.top;
               const bottom = top + entry.rootBounds!.height;
-              const range = recomputeRange(top, bottom);
-              setRange(range, {
+              const visibleRange = computeVisibleRange(top, bottom);
+              setVisibleRange(visibleRange, {
                 areStatesEqual: areRangesEqual,
               });
               break;
             }
 
             case 'VirtualScroller-item': {
+              if (!entry.target.isConnected) {
+                continue;
+              }
+
               const index =
                 Number(entry.target.getAttribute('aria-posinset')!) - 1;
               const item = source[index];
@@ -133,12 +166,49 @@ export const VirtualScroller: VirtualScroller = createComponent(
       [],
     );
 
-    const ref = $.useCallback((element: Element) => {
+    const spacerRef = $.useCallback((element: Element) => {
       intersectionObserver.observe(element);
       return () => {
         intersectionObserver.unobserve(element);
       };
     }, []);
+    const itemRef = $.useCallback((element: Element) => {
+      const index = Number(element.getAttribute('aria-posinset')) - 1;
+      visibleElements.set(index, element);
+      intersectionObserver.observe(element);
+      return () => {
+        intersectionObserver.unobserve(element);
+        visibleElements.delete(index);
+      };
+    }, []);
+
+    $.use(
+      ImperativeHandle(ref, () => ({
+        getMeasuredItems(): MeasuredItem[] {
+          return measuredItems.slice();
+        },
+        getVisibleElements(): Element[] {
+          return visibleElements
+            .entries()
+            .toArray()
+            .sort((x, y) => x[0] - y[0])
+            .map((x) => x[1]);
+        },
+        getVisibleRange(): Range {
+          return structuredClone(visibleRange);
+        },
+        async scrollToIndex(
+          index: number,
+          options?: ScrollIntoViewOptions,
+        ): Promise<void> {
+          if (!withinRange(visibleRange, index)) {
+            intersectionObserver.disconnect();
+            await setVisibleRange({ start: index, end: index + 1 }).finished;
+          }
+          visibleElements.get(index)?.scrollIntoView(options);
+        },
+      })),
+    );
 
     $.useLayoutEffect(() => {
       for (let i = 0, l = source.length; i < l; i++) {
@@ -156,22 +226,16 @@ export const VirtualScroller: VirtualScroller = createComponent(
       measuredItems.length = source.length;
     }, [source]);
 
-    const aboveSpace = source
-      .slice(0, range.start)
-      .map((item, index) => getItemHeight(item, index))
-      .reduce((totalHeight, height) => totalHeight + height, 0);
-    const belowSpace = source
-      .slice(range.end)
-      .map((item, offset) => getItemHeight(item, range.end + offset))
-      .reduce((totalHeight, height) => totalHeight + height, 0);
+    const aboveSpace = computeRangeHeight(0, visibleRange.start);
+    const belowSpace = computeRangeHeight(visibleRange.end);
 
     const aboveSpacer =
       aboveSpace > 0
         ? $.html`
             <div
-              :ref=${ref}
-              :style=${{ height: aboveSpace + 'px' }}
               class="VirtualScroller-spacer"
+              :ref=${spacerRef}
+              :style=${{ height: aboveSpace + 'px' }}
             ></div>
           `
         : null;
@@ -179,9 +243,9 @@ export const VirtualScroller: VirtualScroller = createComponent(
       belowSpace > 0
         ? $.html`
             <div
-              :ref=${ref}
-              :style=${{ height: belowSpace + 'px' }}
               class="VirtualScroller-spacer"
+              :ref=${spacerRef}
+              :style=${{ height: belowSpace + 'px' }}
             ></div>
           `
         : null;
@@ -191,16 +255,18 @@ export const VirtualScroller: VirtualScroller = createComponent(
         <${Keyed(aboveSpace, aboveSpacer)}>
         <ul class="VirtualScroller-list">
           <${Repeat({
-            source: source.slice(range.start, range.end),
-            keySelector: getItemKey,
+            source: source.slice(visibleRange.start, visibleRange.end),
+            keySelector: (item, offset) =>
+              getItemKey(item, visibleRange.start + offset),
             valueSelector: (item, offset) => {
-              const index = range.start + offset;
+              const index = visibleRange.start + offset;
               return $.html`
                 <li
-                  :ref=${ref}
                   aria-posinset=${index + 1}
                   aria-setsize=${source.length}
                   class="VirtualScroller-item"
+                  :ref=${itemRef}
+                  :style=${{ scrollMargin }}
                 >
                   <${renderItem(item, index, $)}>
                 </li>
@@ -216,4 +282,8 @@ export const VirtualScroller: VirtualScroller = createComponent(
 
 function areRangesEqual(x: Range, y: Range) {
   return x.start === y.start && x.end === y.end;
+}
+
+function withinRange(range: Range, index: number): boolean {
+  return range.start <= index && index < range.end;
 }

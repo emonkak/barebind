@@ -8,16 +8,32 @@ body {
   margin: 0;
 }
 
-.container {
+.Header {
+  position: sticky;
+  left: 0;
+  top: 0;
+  width: 100%;
+}
+
+.Header-nav {
+  box-sizing: border-box;
+  display: flex;
+  gap: 0.5rlh;
+  margin-inline: auto;
+  max-inline-size: 40rem;
+  padding-block: 0.5rlh;
+  padding-inline: 1rlh;
+}
+
+.Container {
   margin-inline: auto;
   max-inline-size: 40rem;
   padding-inline: 1rlh;
 }
 
 .VirtualScroller-list {
+  display: contents;
   list-style: none;
-  margin: 0;
-  padding: 0;
 }
 
 .VirtualScroller-spacer {
