@@ -19,7 +19,7 @@ export class RefPrimitive implements Primitive<Ref<Element>> {
         this,
         value,
         part,
-        'The value of RefPrimitive must be a function, object, null or undefined.',
+        'The value of RefPrimitive must be a function, object or null.',
       );
     }
   }
@@ -48,7 +48,7 @@ export class RefBinding extends PrimitiveBinding<
   Ref<Element>,
   Part.AttributePart
 > {
-  private _memoizedValue: Ref<Element> | null = null;
+  private _memoizedValue: Ref<Element> = null;
 
   private _memoizedCleanup: Cleanup | void = undefined;
 
@@ -65,18 +65,16 @@ export class RefBinding extends PrimitiveBinding<
     const oldRef = this._memoizedValue;
 
     if (newRef !== oldRef) {
-      if (oldRef != null) {
-        if (typeof oldRef === 'function') {
-          this._memoizedCleanup?.();
-          this._memoizedCleanup = undefined;
-        } else {
-          oldRef.current = null;
-        }
+      if (typeof oldRef === 'function') {
+        this._memoizedCleanup?.();
+        this._memoizedCleanup = undefined;
+      } else if (oldRef !== null) {
+        oldRef.current = null;
       }
 
       if (typeof newRef === 'function') {
         this._memoizedCleanup = newRef(this.part.node);
-      } else {
+      } else if (newRef !== null) {
         newRef.current = this.part.node;
       }
     }
@@ -87,7 +85,7 @@ export class RefBinding extends PrimitiveBinding<
   rollback(): void {
     const ref = this._memoizedValue;
 
-    if (ref != null) {
+    if (ref !== null) {
       if (typeof ref === 'function') {
         this._memoizedCleanup?.();
         this._memoizedCleanup = undefined;
@@ -103,8 +101,7 @@ export class RefBinding extends PrimitiveBinding<
 function isElementRef(value: unknown): value is Ref<Element> {
   return (
     typeof value === 'function' ||
-    (typeof value === 'object' &&
-      value !== null &&
-      (value as RefObject<unknown>).current !== undefined)
+    (typeof value === 'object' && value === null) ||
+    (value as RefObject<unknown>).current !== undefined
   );
 }

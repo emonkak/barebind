@@ -16,6 +16,7 @@ describe('RefPrimitive', () => {
       expect(() => {
         RefPrimitive.instance.ensureValue(() => {}, part);
         RefPrimitive.instance.ensureValue({ current: null }, part);
+        RefPrimitive.instance.ensureValue(null, part);
       }).not.toThrow();
     });
 
@@ -29,7 +30,7 @@ describe('RefPrimitive', () => {
       expect(() => {
         RefPrimitive.instance.ensureValue({}, part);
       }).toThrow(
-        'The value of RefPrimitive must be a function, object, null or undefined.',
+        'The value of RefPrimitive must be a function, object or null.',
       );
     });
   });
