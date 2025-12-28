@@ -145,7 +145,7 @@ export namespace Hook {
   export interface ReducerHook<TState, TAction> {
     type: typeof HookType.Reducer;
     reducer: (state: TState, action: TAction) => TState;
-    dispatch: (action: TAction) => void;
+    dispatch: (action: TAction) => UpdateHandle;
     pendingLanes: Lanes;
     pendingState: TState;
     memoizedState: TState;
@@ -326,7 +326,10 @@ export interface RenderContext {
     initialState: InitialState<TState>,
   ): [
     state: TState,
-    dispatch: (action: TAction, options?: DispatchOptions<TState>) => void,
+    dispatch: (
+      action: TAction,
+      options?: DispatchOptions<TState>,
+    ) => UpdateHandle,
     isPending: boolean,
   ];
   useRef<T>(initialValue: T): RefObject<T>;
@@ -337,7 +340,7 @@ export interface RenderContext {
     setState: (
       newState: NewState<TState>,
       options?: DispatchOptions<TState>,
-    ) => void,
+    ) => UpdateHandle,
     isPending: boolean,
   ];
   waitForUpdate(): Promise<number>;

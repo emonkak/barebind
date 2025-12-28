@@ -242,7 +242,10 @@ export class RenderSession implements RenderContext {
     initialState: InitialState<TState>,
   ): [
     state: TState,
-    dispatch: (action: TAction, options?: DispatchOptions<TState>) => void,
+    dispatch: (
+      action: TAction,
+      options?: DispatchOptions<TState>,
+    ) => UpdateHandle,
     isPending: boolean,
   ] {
     let currentHook = this._hooks[this._hookIndex];
@@ -266,15 +269,25 @@ export class RenderSession implements RenderContext {
       const hook: Hook.ReducerHook<TState, TAction> = {
         type: HookType.Reducer,
         reducer,
-        dispatch: (action: TAction, options: DispatchOptions<TState> = {}) => {
+        dispatch: (
+          action: TAction,
+          options: DispatchOptions<TState> = {},
+        ): UpdateHandle => {
           const areStatesEqual = options.areStatesEqual ?? Object.is;
           const prevState = hook.pendingState;
           const nextState = hook.reducer(prevState, action);
 
-          if (!areStatesEqual(nextState, prevState)) {
-            const { lanes } = this.forceUpdate(options);
-            hook.pendingLanes = lanes;
+          if (areStatesEqual(nextState, prevState)) {
+            return {
+              lanes: Lanes.NoLanes,
+              scheduled: Promise.resolve(),
+              finished: Promise.resolve(),
+            };
+          } else {
+            const handle = this.forceUpdate(options);
+            hook.pendingLanes = handle.lanes;
             hook.pendingState = nextState;
+            return handle;
           }
         },
         pendingLanes: Lanes.NoLanes,
@@ -305,7 +318,7 @@ export class RenderSession implements RenderContext {
     setState: (
       newState: NewState<TState>,
       options?: DispatchOptions<TState>,
-    ) => void,
+    ) => UpdateHandle,
     isPending: boolean,
   ] {
     return this.useReducer(
