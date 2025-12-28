@@ -266,8 +266,8 @@ export class RenderSession implements RenderContext {
       const hook: Hook.ReducerHook<TState, TAction> = {
         type: HookType.Reducer,
         reducer,
-        dispatch: (action: TAction, options?: DispatchOptions<TState>) => {
-          const areStatesEqual = options?.areStatesEqual ?? Object.is;
+        dispatch: (action: TAction, options: DispatchOptions<TState> = {}) => {
+          const areStatesEqual = options.areStatesEqual ?? Object.is;
           const prevState = hook.pendingState;
           const nextState = hook.reducer(prevState, action);
 
