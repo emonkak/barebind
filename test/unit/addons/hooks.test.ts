@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   DeferredValue,
   EventCallback,
+  ImperativeHandle,
   SyncEnternalStore,
 } from '@/addons/hooks.js';
 import { LinkedList } from '@/linked-list.js';
@@ -72,7 +73,7 @@ describe('DeferredValue()', () => {
   });
 });
 
-describe('useEventCallback()', () => {
+describe('EventCallback()', () => {
   it('returns a stable callback', () => {
     const renderer = new TestRenderer();
 
@@ -83,11 +84,9 @@ describe('useEventCallback()', () => {
     SESSION1: {
       stableCallback = renderer.startRender((session) => {
         const callback = session.use(EventCallback(callback1));
-
         session.useEffect(() => {
           callback();
         });
-
         return callback;
       });
 
@@ -98,11 +97,9 @@ describe('useEventCallback()', () => {
     SESSION1: {
       const callback = renderer.startRender((session) => {
         const callback = session.use(EventCallback(callback2));
-
         session.useEffect(() => {
           callback();
         });
-
         return callback;
       });
 
@@ -113,7 +110,70 @@ describe('useEventCallback()', () => {
   });
 });
 
-describe('useSyncExternalStore()', () => {
+describe('ImperativeHandle()', () => {
+  it('create a ref handle and set it to the object ref', () => {
+    const renderer = new TestRenderer();
+
+    const handle1 = {};
+    const handle2 = {};
+
+    SESSION1: {
+      const ref = renderer.startRender((session) => {
+        const ref = session.useRef(null);
+        session.use(ImperativeHandle(ref, () => handle1, [handle1]));
+        return ref;
+      });
+
+      expect(ref.current).toBe(handle1);
+    }
+
+    SESSION2: {
+      const ref = renderer.startRender((session) => {
+        const ref = session.useRef(null);
+        session.use(ImperativeHandle(ref, () => handle2, [handle2]));
+        return ref;
+      });
+
+      expect(ref.current).toBe(handle2);
+    }
+  });
+
+  it('create a ref handle and call the function ref with it', () => {
+    const renderer = new TestRenderer();
+
+    const cleanup1 = vi.fn();
+    const cleanup2 = vi.fn();
+    const ref1 = vi.fn().mockReturnValue(cleanup1);
+    const ref2 = vi.fn().mockReturnValue(cleanup2);
+    const handle = {};
+
+    SESSION1: {
+      renderer.startRender((session) => {
+        session.use(ImperativeHandle(ref1, () => handle));
+      });
+
+      expect(ref1).toHaveBeenCalledOnce();
+      expect(ref1).toHaveBeenCalledWith(handle);
+      expect(ref2).not.toHaveBeenCalled();
+      expect(cleanup1).not.toHaveBeenCalled();
+      expect(cleanup2).not.toHaveBeenCalled();
+    }
+
+    SESSION2: {
+      renderer.startRender((session) => {
+        session.use(ImperativeHandle(ref2, () => handle));
+      });
+
+      expect(ref1).toHaveBeenCalledOnce();
+      expect(ref2).toHaveBeenCalledOnce();
+      expect(ref2).toHaveBeenCalledWith(handle);
+      expect(cleanup1).toHaveBeenCalledOnce();
+      expect(cleanup2).not.toHaveBeenCalled();
+    }
+  });
+});
+
+describe('SyncExternalStore()', () => {
   it('forces the update if the snapshot has been changed when updating the snapshot', async () => {
     const renderer = new TestRenderer();
     let count = 0;

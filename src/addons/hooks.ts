@@ -1,4 +1,9 @@
-import type { Cleanup, CustomHookFunction, InitialState } from '../internal.js';
+import type {
+  Cleanup,
+  CustomHookFunction,
+  InitialState,
+  Ref,
+} from '../internal.js';
 
 export function DeferredValue<T>(
   value: T,
@@ -36,6 +41,28 @@ export function EventCallback<TCallback extends (...args: any[]) => any>(
     return context.useCallback(function (this: ThisType<TCallback>, ...args) {
       return stableCallback.current.apply(this, args);
     }, []);
+  };
+}
+
+export function ImperativeHandle<T>(
+  ref: Ref<T>,
+  createHandle: () => T,
+  dependencies?: unknown[],
+): CustomHookFunction<void> {
+  return (context) => {
+    context.useLayoutEffect(
+      () => {
+        if (typeof ref === 'function') {
+          return ref(createHandle());
+        } else {
+          ref.current = createHandle();
+          return () => {
+            ref.current = null;
+          };
+        }
+      },
+      dependencies !== undefined ? dependencies.concat(ref) : undefined,
+    );
   };
 }
 
