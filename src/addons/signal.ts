@@ -1,4 +1,3 @@
-import { LinkedList } from '../collections/linked-list.js';
 import {
   $customHook,
   $toDirective,
@@ -18,6 +17,7 @@ import {
   type Slot,
   type UpdateSession,
 } from '../internal.js';
+import { LinkedList } from '../linked-list.js';
 
 export type Subscriber = () => void;
 

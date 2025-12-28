@@ -1,4 +1,3 @@
-import { LinkedList } from './collections/linked-list.js';
 import {
   $toDirective,
   CommitPhase,
@@ -27,6 +26,7 @@ import {
   UpdateSession,
   type UpdateTask,
 } from './internal.js';
+import { LinkedList } from './linked-list.js';
 import { RenderSession } from './render-session.js';
 import {
   type Literal,

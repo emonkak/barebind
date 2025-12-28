@@ -13,6 +13,7 @@ export {
   type RenderContext,
   type UpdateOptions,
 } from './internal.js';
+export { LinkedList } from './linked-list.js';
 export type { ClassSpecifier } from './primitive/class.js';
 export type { EventHandler } from './primitive/event.js';
 export type { ElementRef } from './primitive/ref.js';

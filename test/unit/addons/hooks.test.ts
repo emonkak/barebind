@@ -4,7 +4,7 @@ import {
   EventCallback,
   SyncEnternalStore,
 } from '@/addons/hooks.js';
-import { LinkedList } from '@/collections/linked-list.js';
+import { LinkedList } from '@/linked-list.js';
 import type { RenderSession } from '@/render-session.js';
 import { TestRenderer } from '../../test-helpers.js';
 
