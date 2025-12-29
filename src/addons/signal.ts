@@ -94,9 +94,9 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._pendingLanes = value;
   }
 
-  resume(context: UpdateSession): void {
-    if (this._slot.reconcile(this._signal.value, context)) {
-      context.frame.mutationEffects.push(this._slot);
+  resume(session: UpdateSession): void {
+    if (this._slot.reconcile(this._signal.value, session)) {
+      session.frame.mutationEffects.push(this._slot);
     }
     this._pendingLanes = Lanes.NoLanes;
   }
