@@ -96,7 +96,8 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   resume(session: UpdateSession): void {
     if (this._slot.reconcile(this._signal.value, session)) {
-      session.frame.mutationEffects.push(this._slot);
+      // The slot must be inserted at the beginning to commit before refs.
+      session.frame.mutationEffects.unshift(this._slot);
     }
     this._pendingLanes = Lanes.NoLanes;
   }

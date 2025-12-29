@@ -123,7 +123,8 @@ export class ComponentBinding<TProps, TResult>
     }
 
     if (dirty && this._pendingLanes !== Lanes.NoLanes) {
-      frame.mutationEffects.push(this._slot);
+      // The slot must be inserted at the beginning to commit before refs.
+      frame.mutationEffects.unshift(this._slot);
     }
 
     this._pendingLanes &= ~frame.lanes;

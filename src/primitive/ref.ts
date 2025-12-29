@@ -2,11 +2,13 @@ import { DirectiveError } from '../directive.js';
 import {
   type Cleanup,
   type DirectiveContext,
+  type Effect,
   type Part,
   PartType,
   type Primitive,
   type Ref,
   type RefObject,
+  type UpdateSession,
 } from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
@@ -60,7 +62,19 @@ export class RefBinding extends PrimitiveBinding<
     return ref !== this._memoizedValue;
   }
 
-  commit(): void {
+  override attach(session: UpdateSession): void {
+    session.frame.mutationEffects.push(new InvokeRef(this));
+  }
+
+  override detach(session: UpdateSession): void {
+    session.frame.mutationEffects.push(new CleanRef(this));
+  }
+
+  commit(): void {}
+
+  rollback(): void {}
+
+  invokeRef(): void {
     const newRef = this._value;
     const oldRef = this._memoizedValue;
 
@@ -82,7 +96,7 @@ export class RefBinding extends PrimitiveBinding<
     this._memoizedValue = this.value;
   }
 
-  rollback(): void {
+  cleanRef(): void {
     const ref = this._memoizedValue;
 
     if (ref !== null) {
@@ -104,4 +118,28 @@ function isElementRef(value: unknown): value is Ref<Element> {
     (typeof value === 'object' && value === null) ||
     (value as RefObject<unknown>).current !== undefined
   );
+}
+
+class CleanRef implements Effect {
+  readonly _binding: RefBinding;
+
+  constructor(binding: RefBinding) {
+    this._binding = binding;
+  }
+
+  commit(): void {
+    this._binding.cleanRef();
+  }
+}
+
+class InvokeRef implements Effect {
+  readonly _binding: RefBinding;
+
+  constructor(binding: RefBinding) {
+    this._binding = binding;
+  }
+
+  commit(): void {
+    this._binding.invokeRef();
+  }
 }
