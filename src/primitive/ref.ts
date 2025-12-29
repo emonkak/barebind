@@ -61,7 +61,7 @@ export class RefBinding extends PrimitiveBinding<
   }
 
   commit(): void {
-    const newRef = this.value;
+    const newRef = this._value;
     const oldRef = this._memoizedValue;
 
     if (newRef !== oldRef) {

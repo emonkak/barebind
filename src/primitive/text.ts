@@ -39,15 +39,15 @@ export class TextBinding<T> extends PrimitiveBinding<T, Part.TextPart> {
   }
 
   commit(): void {
-    const { node, precedingText, followingText } = this.part;
-    const value = this.value;
+    const { node, precedingText, followingText } = this._part;
+    const value = this._value;
     node.data = precedingText + (value?.toString() ?? '') + followingText;
-    this._memoizedValue = this.value;
+    this._memoizedValue = this._value;
   }
 
   rollback(): void {
     if (this._memoizedValue !== null) {
-      this.part.node.nodeValue = null;
+      this._part.node.nodeValue = null;
       this._memoizedValue = null;
     }
   }

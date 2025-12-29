@@ -65,7 +65,7 @@ export class EventBinding extends PrimitiveBinding<
   }
 
   commit(): void {
-    const newHandler = this.value;
+    const newHandler = this._value;
     const oldHandler = this._memoizedValue;
 
     if (
@@ -75,21 +75,21 @@ export class EventBinding extends PrimitiveBinding<
       oldHandler === undefined
     ) {
       if (oldHandler != null) {
-        detachEventListener(this.part, oldHandler, this);
+        detachEventListener(this._part, oldHandler, this);
       }
       if (newHandler != null) {
-        attachEventListener(this.part, newHandler, this);
+        attachEventListener(this._part, newHandler, this);
       }
     }
 
-    this._memoizedValue = this.value;
+    this._memoizedValue = this._value;
   }
 
   rollback(): void {
     const handler = this._memoizedValue;
 
     if (handler != null) {
-      detachEventListener(this.part, handler, this);
+      detachEventListener(this._part, handler, this);
     }
 
     this._memoizedValue = null;

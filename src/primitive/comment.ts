@@ -39,14 +39,14 @@ export class CommentBinding<T> extends PrimitiveBinding<T, Part.ChildNodePart> {
   }
 
   commit(): void {
-    const value = this.value;
-    this.part.node.data = value?.toString() ?? '';
-    this._memoizedValue = this.value;
+    const value = this._value;
+    this._part.node.data = value?.toString() ?? '';
+    this._memoizedValue = this._value;
   }
 
   rollback(): void {
     if (this._memoizedValue !== null) {
-      this.part.node.data = '';
+      this._part.node.data = '';
       this._memoizedValue = null;
     }
   }

@@ -74,21 +74,21 @@ export class StyleBinding extends PrimitiveBinding<
   }
 
   commit(): void {
-    const newProps = this.value;
+    const newProps = this._value;
     const oldProps = this._memoizedValue;
-    const { style } = this.part.node as
+    const { style } = this._part.node as
       | HTMLElement
       | MathMLElement
       | SVGElement;
 
     updateStyles(style, newProps, oldProps);
 
-    this._memoizedValue = this.value;
+    this._memoizedValue = this._value;
   }
 
   rollback(): void {
     const props = this._memoizedValue;
-    const { style } = this.part.node as
+    const { style } = this._part.node as
       | HTMLElement
       | MathMLElement
       | SVGElement;

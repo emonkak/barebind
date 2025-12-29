@@ -69,7 +69,7 @@ export class ClassBinding extends PrimitiveBinding<
   }
 
   commit(): void {
-    const { classList } = this.part.node;
+    const { classList } = this._part.node;
 
     updateClasses(
       classList,

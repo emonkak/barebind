@@ -41,14 +41,14 @@ export class PropertyBinding<T> extends PrimitiveBinding<T, Part.PropertyPart> {
   }
 
   commit(): void {
-    const { node, name } = this.part;
-    (node as any)[name] = this.value;
-    this._memoizedValue = this.value;
+    const { node, name } = this._part;
+    (node as any)[name] = this._value;
+    this._memoizedValue = this._value;
   }
 
   rollback(): void {
     if (this._memoizedValue !== noValue) {
-      const { node, name, defaultValue } = this.part;
+      const { node, name, defaultValue } = this._part;
       (node as any)[name] = defaultValue;
       this._memoizedValue = noValue;
     }
