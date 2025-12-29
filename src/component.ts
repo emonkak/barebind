@@ -122,7 +122,7 @@ export class ComponentBinding<TProps, TResult>
       dirty = true;
     }
 
-    if (dirty && frame.mutationEffects.length === 0) {
+    if (dirty && this._pendingLanes !== Lanes.NoLanes) {
       frame.mutationEffects.push(this._slot);
     }
 

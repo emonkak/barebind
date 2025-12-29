@@ -199,8 +199,8 @@ describe('ComponentBinding', () => {
 
       SESSION1: {
         updater.startUpdate((session) => {
-          binding.attach(session);
-          session.frame.pendingCoroutines.push(binding);
+          binding.pendingLanes = Lanes.AllLanes;
+          binding.resume(session);
         });
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
