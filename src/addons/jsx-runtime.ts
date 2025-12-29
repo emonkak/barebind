@@ -95,11 +95,10 @@ export namespace JSX {
     [K in keyof T]: T[K] extends Function ? K : never;
   }[keyof T];
 
-  type StrictEqual<X, Y> = (<T>() => T extends X ? 1 : 2) extends <
-    T,
-  >() => T extends Y ? 1 : 2
-    ? true
-    : false;
+  type StrictEqual<X, Y> =
+    (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2
+      ? true
+      : false;
 
   type Hyphenate<
     TStr extends string,

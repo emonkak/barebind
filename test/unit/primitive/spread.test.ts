@@ -17,19 +17,20 @@ describe('SpreadPrimitive', () => {
       }).not.toThrow();
     });
 
-    it.for([null, undefined, 'foo'])(
-      'throws an error if the value is not object',
-      (value) => {
-        const part = {
-          type: PartType.Element,
-          node: document.createElement('div'),
-        };
+    it.for([
+      null,
+      undefined,
+      'foo',
+    ])('throws an error if the value is not object', (value) => {
+      const part = {
+        type: PartType.Element,
+        node: document.createElement('div'),
+      };
 
-        expect(() => {
-          SpreadPrimitive.instance.ensureValue(value, part);
-        }).toThrow('The value of SpreadPrimitive must be an object.');
-      },
-    );
+      expect(() => {
+        SpreadPrimitive.instance.ensureValue(value, part);
+      }).toThrow('The value of SpreadPrimitive must be an object.');
+    });
   });
 
   describe('resolveBinding()', () => {

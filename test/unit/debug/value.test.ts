@@ -51,12 +51,9 @@ describe('formatValue()', () => {
     [{ foo: { bar: [123] } }, '{ foo: { bar: [...] } }'],
     ['abracadabra'.repeat(16), 'String'],
     [circlerValue, '{ x: [Circular] }'],
-  ])(
-    'returns the string representation of the value',
-    (value, expectedString) => {
-      expect(formatValue(value)).toBe(expectedString);
-    },
-  );
+  ])('returns the string representation of the value', (value, expectedString) => {
+    expect(formatValue(value)).toBe(expectedString);
+  });
 });
 
 describe('nameOf()', () => {

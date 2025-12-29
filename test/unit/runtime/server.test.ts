@@ -121,20 +121,21 @@ describe('ServerBackend', () => {
       expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function));
     });
 
-    it.for(['user-blocking', 'user-visible', 'background'] as const)(
-      'schedules a callback with "%s" priority using setTimeout()',
-      async (priority) => {
-        const backend = new ServerBackend(document);
-        const callback = vi.fn();
-        const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+    it.for([
+      'user-blocking',
+      'user-visible',
+      'background',
+    ] as const)('schedules a callback with "%s" priority using setTimeout()', async (priority) => {
+      const backend = new ServerBackend(document);
+      const callback = vi.fn();
+      const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
 
-        await backend.requestCallback(callback, { priority });
+      await backend.requestCallback(callback, { priority });
 
-        expect(callback).toHaveBeenCalledOnce();
-        expect(setTimeoutSpy).toHaveBeenCalledOnce();
-        expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function));
-      },
-    );
+      expect(callback).toHaveBeenCalledOnce();
+      expect(setTimeoutSpy).toHaveBeenCalledOnce();
+      expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function));
+    });
   });
 
   describe('resolvePrimitive()', () => {
@@ -225,14 +226,11 @@ describe('ServerBackend', () => {
         },
         TextPrimitive.instance,
       ],
-    ] as const)(
-      'resolves the Primitive from an arbitrary part',
-      (value, part, expectedPrimitive) => {
-        const backend = new ServerBackend(document);
+    ] as const)('resolves the Primitive from an arbitrary part', (value, part, expectedPrimitive) => {
+      const backend = new ServerBackend(document);
 
-        expect(backend.resolvePrimitive(value, part)).toBe(expectedPrimitive);
-      },
-    );
+      expect(backend.resolvePrimitive(value, part)).toBe(expectedPrimitive);
+    });
 
     it.each([
       [
@@ -271,20 +269,17 @@ describe('ServerBackend', () => {
         },
         BlackholePrimitive.instance,
       ],
-    ] as const)(
-      'resolves the Primitive from special attribute parts',
-      (value, part, expectedPrimitive) => {
-        const backend = new ServerBackend(document);
+    ] as const)('resolves the Primitive from special attribute parts', (value, part, expectedPrimitive) => {
+      const backend = new ServerBackend(document);
 
-        expect(backend.resolvePrimitive(value, part)).toBe(expectedPrimitive);
-        expect(
-          backend.resolvePrimitive(value, {
-            ...part,
-            name: part.name.toUpperCase(),
-          }),
-        ).toBe(expectedPrimitive);
-      },
-    );
+      expect(backend.resolvePrimitive(value, part)).toBe(expectedPrimitive);
+      expect(
+        backend.resolvePrimitive(value, {
+          ...part,
+          name: part.name.toUpperCase(),
+        }),
+      ).toBe(expectedPrimitive);
+    });
   });
 
   describe('resolveLayout()', () => {
@@ -355,14 +350,11 @@ describe('ServerBackend', () => {
         },
         StrictLayout.instance,
       ],
-    ] as const)(
-      'resolves the Layout from an arbitrary part',
-      (value, part, expectedLayout) => {
-        const backend = new ServerBackend(document);
+    ] as const)('resolves the Layout from an arbitrary part', (value, part, expectedLayout) => {
+      const backend = new ServerBackend(document);
 
-        expect(backend.resolveLayout(value, part)).toBe(expectedLayout);
-      },
-    );
+      expect(backend.resolveLayout(value, part)).toBe(expectedLayout);
+    });
   });
 
   describe('startViewTransition()', () => {

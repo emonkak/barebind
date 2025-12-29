@@ -224,56 +224,53 @@ describe('EventBinding', () => {
       expect(handler2.handleEvent).toHaveBeenCalledWith(event);
     });
 
-    it.for([null, undefined])(
-      'detaches the old event listener if the new event listener is null or undefined',
-      (handler2) => {
-        const handler1 = { handleEvent: () => {} };
-        const part = {
-          type: PartType.Event,
-          node: document.createElement('div'),
-          name: 'click',
-        };
-        const binding = new EventBinding(handler1, part);
-        const updater = new TestUpdater();
+    it.for([
+      null,
+      undefined,
+    ])('detaches the old event listener if the new event listener is null or undefined', (handler2) => {
+      const handler1 = { handleEvent: () => {} };
+      const part = {
+        type: PartType.Event,
+        node: document.createElement('div'),
+        name: 'click',
+      };
+      const binding = new EventBinding(handler1, part);
+      const updater = new TestUpdater();
 
-        const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
-        const removeEventListenerSpy = vi.spyOn(
-          part.node,
-          'removeEventListener',
+      const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
+      const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
+
+      SESSION1: {
+        updater.startUpdate((session) => {
+          binding.attach(session);
+          binding.commit();
+        });
+
+        expect(addEventListenerSpy).toHaveBeenCalledOnce();
+        expect(addEventListenerSpy).toHaveBeenCalledWith(
+          'click',
+          binding,
+          handler1,
         );
+        expect(removeEventListenerSpy).not.toHaveBeenCalled();
+      }
 
-        SESSION1: {
-          updater.startUpdate((session) => {
-            binding.attach(session);
-            binding.commit();
-          });
+      SESSION2: {
+        updater.startUpdate((session) => {
+          binding.value = handler2;
+          binding.attach(session);
+          binding.commit();
+        });
 
-          expect(addEventListenerSpy).toHaveBeenCalledOnce();
-          expect(addEventListenerSpy).toHaveBeenCalledWith(
-            'click',
-            binding,
-            handler1,
-          );
-          expect(removeEventListenerSpy).not.toHaveBeenCalled();
-        }
-
-        SESSION2: {
-          updater.startUpdate((session) => {
-            binding.value = handler2;
-            binding.attach(session);
-            binding.commit();
-          });
-
-          expect(addEventListenerSpy).toHaveBeenCalledOnce();
-          expect(removeEventListenerSpy).toHaveBeenCalledOnce();
-          expect(removeEventListenerSpy).toHaveBeenCalledWith(
-            'click',
-            binding,
-            handler1,
-          );
-        }
-      },
-    );
+        expect(addEventListenerSpy).toHaveBeenCalledOnce();
+        expect(removeEventListenerSpy).toHaveBeenCalledOnce();
+        expect(removeEventListenerSpy).toHaveBeenCalledWith(
+          'click',
+          binding,
+          handler1,
+        );
+      }
+    });
   });
 
   describe('rollback()', () => {

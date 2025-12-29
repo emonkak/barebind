@@ -48,18 +48,17 @@ describe('BrowserBackend', () => {
       vi.restoreAllMocks();
     });
 
-    it.for(CONTINUOUS_EVENT_TYPES)(
-      'returns "user-visible" if the current event is "%s"',
-      (eventType) => {
-        const backend = new BrowserBackend();
-        const getEventSpy = vi
-          .spyOn(window, 'event', 'get')
-          .mockReturnValue(new CustomEvent(eventType));
+    it.for(
+      CONTINUOUS_EVENT_TYPES,
+    )('returns "user-visible" if the current event is "%s"', (eventType) => {
+      const backend = new BrowserBackend();
+      const getEventSpy = vi
+        .spyOn(window, 'event', 'get')
+        .mockReturnValue(new CustomEvent(eventType));
 
-        expect(backend.getTaskPriority()).toBe('user-visible');
-        expect(getEventSpy).toHaveBeenCalled();
-      },
-    );
+      expect(backend.getTaskPriority()).toBe('user-visible');
+      expect(getEventSpy).toHaveBeenCalled();
+    });
 
     it('returns "user-blocking" if the current event is not continuous', () => {
       const backend = new BrowserBackend();
@@ -340,14 +339,11 @@ describe('BrowserBackend', () => {
         },
         TextPrimitive.instance,
       ],
-    ] as const)(
-      'resolves the Primitive from an arbitrary part',
-      (value, part, expectedPrimitive) => {
-        const backend = new BrowserBackend();
+    ] as const)('resolves the Primitive from an arbitrary part', (value, part, expectedPrimitive) => {
+      const backend = new BrowserBackend();
 
-        expect(backend.resolvePrimitive(value, part)).toBe(expectedPrimitive);
-      },
-    );
+      expect(backend.resolvePrimitive(value, part)).toBe(expectedPrimitive);
+    });
 
     it.each([
       [
@@ -386,20 +382,17 @@ describe('BrowserBackend', () => {
         },
         BlackholePrimitive.instance,
       ],
-    ] as const)(
-      'resolves the Primitive from special attribute parts',
-      (value, part, expectedPrimitive) => {
-        const backend = new BrowserBackend();
+    ] as const)('resolves the Primitive from special attribute parts', (value, part, expectedPrimitive) => {
+      const backend = new BrowserBackend();
 
-        expect(backend.resolvePrimitive(value, part)).toBe(expectedPrimitive);
-        expect(
-          backend.resolvePrimitive(value, {
-            ...part,
-            name: part.name.toUpperCase(),
-          }),
-        ).toBe(expectedPrimitive);
-      },
-    );
+      expect(backend.resolvePrimitive(value, part)).toBe(expectedPrimitive);
+      expect(
+        backend.resolvePrimitive(value, {
+          ...part,
+          name: part.name.toUpperCase(),
+        }),
+      ).toBe(expectedPrimitive);
+    });
   });
 
   describe('resolveLayout()', () => {
@@ -470,14 +463,11 @@ describe('BrowserBackend', () => {
         },
         StrictLayout.instance,
       ],
-    ] as const)(
-      'resolves the Layout from an arbitrary part',
-      (value, part, expectedLayout) => {
-        const backend = new BrowserBackend();
+    ] as const)('resolves the Layout from an arbitrary part', (value, part, expectedLayout) => {
+      const backend = new BrowserBackend();
 
-        expect(backend.resolveLayout(value, part)).toBe(expectedLayout);
-      },
-    );
+      expect(backend.resolveLayout(value, part)).toBe(expectedLayout);
+    });
   });
 
   describe('startViewTransition()', () => {

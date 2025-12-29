@@ -395,64 +395,61 @@ describe('RepeatBinding', () => {
         ['bar', 'foo'],
       ],
       [['foo', 'bar', 'baz'], []],
-    ])(
-      'updates slots with a iterator according to indexes',
-      (source1, source2) => {
-        const props1: RepeatProps<string> = {
-          source: { [Symbol.iterator]: () => Iterator.from(source1) },
-        };
-        const props2: RepeatProps<string> = {
-          source: { [Symbol.iterator]: () => Iterator.from(source2) },
-        };
-        const part: Part.ChildNodePart = {
-          type: PartType.ChildNode,
-          node: document.createComment(''),
-          anchorNode: null,
-          namespaceURI: HTML_NAMESPACE_URI,
-        };
-        const container = createElement('div', {}, part.node);
-        const binding = new RepeatBinding(props1, part);
-        const updater = new TestUpdater();
+    ])('updates slots with a iterator according to indexes', (source1, source2) => {
+      const props1: RepeatProps<string> = {
+        source: { [Symbol.iterator]: () => Iterator.from(source1) },
+      };
+      const props2: RepeatProps<string> = {
+        source: { [Symbol.iterator]: () => Iterator.from(source2) },
+      };
+      const part: Part.ChildNodePart = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        anchorNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
+      const container = createElement('div', {}, part.node);
+      const binding = new RepeatBinding(props1, part);
+      const updater = new TestUpdater();
 
-        SESSION1: {
-          updater.startUpdate((session) => {
-            binding.attach(session);
-            binding.commit();
-          });
+      SESSION1: {
+        updater.startUpdate((session) => {
+          binding.attach(session);
+          binding.commit();
+        });
 
-          expect(container.innerHTML).toBe(
-            source1.map(toCommentString).join('') + EMPTY_COMMENT,
-          );
-          expect(part.anchorNode?.nodeValue).toBe(source1[0]);
-        }
+        expect(container.innerHTML).toBe(
+          source1.map(toCommentString).join('') + EMPTY_COMMENT,
+        );
+        expect(part.anchorNode?.nodeValue).toBe(source1[0]);
+      }
 
-        SESSION2: {
-          updater.startUpdate((session) => {
-            binding.value = props2;
-            binding.attach(session);
-            binding.commit();
-          });
+      SESSION2: {
+        updater.startUpdate((session) => {
+          binding.value = props2;
+          binding.attach(session);
+          binding.commit();
+        });
 
-          expect(container.innerHTML).toBe(
-            source2.map(toCommentString).join('') + EMPTY_COMMENT,
-          );
-          expect(part.anchorNode?.nodeValue).toBe(source2[0]);
-        }
+        expect(container.innerHTML).toBe(
+          source2.map(toCommentString).join('') + EMPTY_COMMENT,
+        );
+        expect(part.anchorNode?.nodeValue).toBe(source2[0]);
+      }
 
-        SESSION3: {
-          updater.startUpdate((session) => {
-            binding.value = props1;
-            binding.attach(session);
-            binding.commit();
-          });
+      SESSION3: {
+        updater.startUpdate((session) => {
+          binding.value = props1;
+          binding.attach(session);
+          binding.commit();
+        });
 
-          expect(container.innerHTML).toBe(
-            source1.map(toCommentString).join('') + EMPTY_COMMENT,
-          );
-          expect(part.anchorNode?.nodeValue).toBe(source1[0]);
-        }
-      },
-    );
+        expect(container.innerHTML).toBe(
+          source1.map(toCommentString).join('') + EMPTY_COMMENT,
+        );
+        expect(part.anchorNode?.nodeValue).toBe(source1[0]);
+      }
+    });
   });
 
   describe('detach()', () => {

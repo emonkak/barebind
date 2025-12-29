@@ -584,26 +584,23 @@ describe('createLinkClickHandler()', () => {
     { metaKey: true, bubbles: true },
     { shiftKey: true, bubbles: true },
     { button: 1, bubbles: true },
-  ])(
-    'should ignore the event if any modifier keys or the button other than left button are pressed',
-    (eventInit) => {
-      const container = createElement('div');
-      const element = createElement('a');
-      const event = new MouseEvent('click', eventInit);
+  ])('should ignore the event if any modifier keys or the button other than left button are pressed', (eventInit) => {
+    const container = createElement('div');
+    const element = createElement('a');
+    const event = new MouseEvent('click', eventInit);
 
-      const navigate = vi.fn();
-      const clickHandler = vi.fn(createLinkClickHandler({ navigate }));
+    const navigate = vi.fn();
+    const clickHandler = vi.fn(createLinkClickHandler({ navigate }));
 
-      container.appendChild(element);
-      container.addEventListener('click', clickHandler);
-      element.dispatchEvent(event);
+    container.appendChild(element);
+    container.addEventListener('click', clickHandler);
+    element.dispatchEvent(event);
 
-      expect(navigate).not.toHaveBeenCalled();
-      expect(clickHandler).toHaveBeenCalledOnce();
-      expect(clickHandler).toHaveBeenCalledWith(event);
-      expect(event.defaultPrevented).toBe(false);
-    },
-  );
+    expect(navigate).not.toHaveBeenCalled();
+    expect(clickHandler).toHaveBeenCalledOnce();
+    expect(clickHandler).toHaveBeenCalledWith(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
 
   it('should ignore the event if its default action is prevented', () => {
     const container = createElement('div');
@@ -631,36 +628,33 @@ describe('createLinkClickHandler()', () => {
     ['a', { href: '/foo', target: '_blank' }],
     ['a', {}],
     ['button', {}],
-  ] as const)(
-    'should ignore the event if the target is not valid as a link',
-    (tagName, attribues) => {
-      const cancelWrapper = createElement('div');
-      const container = createElement('div');
-      const element = createElement(tagName, attribues);
-      const event = new MouseEvent('click', {
-        cancelable: true,
-        bubbles: true,
-      });
+  ] as const)('should ignore the event if the target is not valid as a link', (tagName, attribues) => {
+    const cancelWrapper = createElement('div');
+    const container = createElement('div');
+    const element = createElement(tagName, attribues);
+    const event = new MouseEvent('click', {
+      cancelable: true,
+      bubbles: true,
+    });
 
-      const navigate = vi.fn();
-      const clickHandler = vi.fn(createLinkClickHandler({ navigate }));
-      const cancelHandler = vi.fn((event: Event) => {
-        event.preventDefault();
-      });
+    const navigate = vi.fn();
+    const clickHandler = vi.fn(createLinkClickHandler({ navigate }));
+    const cancelHandler = vi.fn((event: Event) => {
+      event.preventDefault();
+    });
 
-      cancelWrapper.appendChild(container);
-      cancelWrapper.addEventListener('click', cancelHandler);
-      container.appendChild(element);
-      container.addEventListener('click', clickHandler);
-      element.dispatchEvent(event);
+    cancelWrapper.appendChild(container);
+    cancelWrapper.addEventListener('click', cancelHandler);
+    container.appendChild(element);
+    container.addEventListener('click', clickHandler);
+    element.dispatchEvent(event);
 
-      expect(navigate).not.toHaveBeenCalled();
-      expect(clickHandler).toHaveBeenCalledOnce();
-      expect(clickHandler).toHaveBeenCalledWith(event);
-      expect(cancelHandler).toHaveBeenCalledOnce();
-      expect(cancelHandler).toHaveBeenCalledWith(event);
-    },
-  );
+    expect(navigate).not.toHaveBeenCalled();
+    expect(clickHandler).toHaveBeenCalledOnce();
+    expect(clickHandler).toHaveBeenCalledWith(event);
+    expect(cancelHandler).toHaveBeenCalledOnce();
+    expect(cancelHandler).toHaveBeenCalledWith(event);
+  });
 });
 
 describe('createFormSubmitHandler()', () => {

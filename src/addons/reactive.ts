@@ -71,11 +71,10 @@ type ReactiveProperty<T, K extends keyof T> = T extends object
     : Readonly<Reactive<Get<T, K>>>
   : null;
 
-type StrictEqual<TLhs, TRhs> = (<T>() => T extends TLhs ? 1 : 2) extends <
-  T,
->() => T extends TRhs ? 1 : 2
-  ? true
-  : false;
+type StrictEqual<TLhs, TRhs> =
+  (<T>() => T extends TLhs ? 1 : 2) extends <T>() => T extends TRhs ? 1 : 2
+    ? true
+    : false;
 
 export class Reactive<T> extends Signal<T> {
   private readonly _container: ReactiveContainer<T>;

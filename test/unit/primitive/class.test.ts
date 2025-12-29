@@ -10,59 +10,62 @@ import {
 
 describe('ClassPrimitive', () => {
   describe('ensureValue()', () => {
-    it.for([{ foo: true }, ['foo'], {}, []])(
-      'asserts the value is a class specifier',
-      (value) => {
-        const part = {
-          type: PartType.Attribute,
-          node: document.createElement('div'),
-          name: ':class',
-        };
+    it.for([
+      { foo: true },
+      ['foo'],
+      {},
+      [],
+    ])('asserts the value is a class specifier', (value) => {
+      const part = {
+        type: PartType.Attribute,
+        node: document.createElement('div'),
+        name: ':class',
+      };
 
-        expect(() => {
-          ClassPrimitive.instance.ensureValue(value, part);
-        }).not.toThrow();
-      },
-    );
+      expect(() => {
+        ClassPrimitive.instance.ensureValue(value, part);
+      }).not.toThrow();
+    });
 
-    it.for(['foo', null, undefined])(
-      'throws an error if the value is not an object',
-      (value) => {
-        const part = {
-          type: PartType.Attribute,
-          node: document.createElement('div'),
-          name: ':class',
-        };
+    it.for([
+      'foo',
+      null,
+      undefined,
+    ])('throws an error if the value is not an object', (value) => {
+      const part = {
+        type: PartType.Attribute,
+        node: document.createElement('div'),
+        name: ':class',
+      };
 
-        expect(() => {
-          ClassPrimitive.instance.ensureValue(value, part);
-        }).toThrow('The value of ClassPrimitive must be an object.');
-      },
-    );
+      expect(() => {
+        ClassPrimitive.instance.ensureValue(value, part);
+      }).toThrow('The value of ClassPrimitive must be an object.');
+    });
   });
 
   describe('resolveBinding()', () => {
-    it.for([':CLASS', ':class'])(
-      'constructs a new AttributeBinding with "%s" attribute',
-      (attributeName) => {
-        const classes = { foo: true, bar: true, baz: false };
-        const part = {
-          type: PartType.Attribute,
-          node: document.createElement('div'),
-          name: attributeName,
-        };
-        const runtime = createRuntime();
-        const binding = ClassPrimitive.instance.resolveBinding(
-          classes,
-          part,
-          runtime,
-        );
+    it.for([
+      ':CLASS',
+      ':class',
+    ])('constructs a new AttributeBinding with "%s" attribute', (attributeName) => {
+      const classes = { foo: true, bar: true, baz: false };
+      const part = {
+        type: PartType.Attribute,
+        node: document.createElement('div'),
+        name: attributeName,
+      };
+      const runtime = createRuntime();
+      const binding = ClassPrimitive.instance.resolveBinding(
+        classes,
+        part,
+        runtime,
+      );
 
-        expect(binding.type).toBe(ClassPrimitive.instance);
-        expect(binding.value).toBe(classes);
-        expect(binding.part).toBe(part);
-      },
-    );
+      expect(binding.type).toBe(ClassPrimitive.instance);
+      expect(binding.value).toBe(classes);
+      expect(binding.part).toBe(part);
+    });
 
     it('throws an error if the part is not a ":class" attribute part', () => {
       const classes = { foo: true, bar: true, baz: false };

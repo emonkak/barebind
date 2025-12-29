@@ -22,48 +22,49 @@ describe('ScrollRestration()', () => {
     vi.unstubAllGlobals();
   });
 
-  it.for(['push', 'replace'] as NavigationType[])(
-    'scrolls to the top when the navigation type is "%s"',
-    (navigationType) => {
-      const location: HistoryLocation = {
-        url: new RelativeURL('/'),
-        state: null,
-        navigationType,
-      };
-      const navigator = createMockNavigator();
+  it.for([
+    'push',
+    'replace',
+  ] as NavigationType[])('scrolls to the top when the navigation type is "%s"', (navigationType) => {
+    const location: HistoryLocation = {
+      url: new RelativeURL('/'),
+      state: null,
+      navigationType,
+    };
+    const navigator = createMockNavigator();
 
-      const scrollToSpy = vi.spyOn(window, 'scrollTo');
+    const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
-      helper.startRender((session) => {
-        session.setSharedContext(CurrentHistory, { location, navigator });
-        session.use(ScrollRestration());
-      });
+    helper.startRender((session) => {
+      session.setSharedContext(CurrentHistory, { location, navigator });
+      session.use(ScrollRestration());
+    });
 
-      expect(scrollToSpy).toHaveBeenCalled();
-      expect(scrollToSpy).toHaveBeenCalledWith(0, 0);
-    },
-  );
+    expect(scrollToSpy).toHaveBeenCalled();
+    expect(scrollToSpy).toHaveBeenCalledWith(0, 0);
+  });
 
-  it.for(['reload', 'traverse', null] as (NavigationType | null)[])(
-    'should not reset scroll if the navigation type is "%s"',
-    (navigationType) => {
-      const location: HistoryLocation = {
-        url: new RelativeURL('/'),
-        state: null,
-        navigationType,
-      };
-      const navigator = createMockNavigator();
+  it.for([
+    'reload',
+    'traverse',
+    null,
+  ] as (NavigationType | null)[])('should not reset scroll if the navigation type is "%s"', (navigationType) => {
+    const location: HistoryLocation = {
+      url: new RelativeURL('/'),
+      state: null,
+      navigationType,
+    };
+    const navigator = createMockNavigator();
 
-      const scrollToSpy = vi.spyOn(window, 'scrollTo');
+    const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
-      helper.startRender((session) => {
-        session.setSharedContext(CurrentHistory, { location, navigator });
-        session.use(ScrollRestration());
-      });
+    helper.startRender((session) => {
+      session.setSharedContext(CurrentHistory, { location, navigator });
+      session.use(ScrollRestration());
+    });
 
-      expect(scrollToSpy).not.toHaveBeenCalled();
-    },
-  );
+    expect(scrollToSpy).not.toHaveBeenCalled();
+  });
 
   it('scrolls to the element indicating hash', () => {
     const location: HistoryLocation = {

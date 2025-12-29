@@ -783,25 +783,24 @@ describe('TaggedTemplate', () => {
       [html`foo`, createElement('div', {})],
       [html`foo`, createElement('div', {}, createElement('div'))],
       [html`foo`, createElement('div', {}, document.createComment('foo'))],
-    ])(
-      'should throw the error if there is a tree mismatch',
-      ({ template }, container) => {
-        const part = {
-          type: PartType.ChildNode,
-          node: document.createComment(''),
-          anchorNode: null,
-          namespaceURI: HTML_NAMESPACE_URI,
-        };
-        const targetTree = createTreeWalker(container);
-        const updater = new TestUpdater();
+    ])('should throw the error if there is a tree mismatch', ({
+      template,
+    }, container) => {
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        anchorNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
+      const targetTree = createTreeWalker(container);
+      const updater = new TestUpdater();
 
-        expect(() => {
-          updater.startUpdate((session) => {
-            return template.hydrate([], part, targetTree, session);
-          });
-        }).toThrow(HydrationError);
-      },
-    );
+      expect(() => {
+        updater.startUpdate((session) => {
+          return template.hydrate([], part, targetTree, session);
+        });
+      }).toThrow(HydrationError);
+    });
   });
 
   describe('render()', () => {

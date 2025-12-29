@@ -231,17 +231,17 @@ describe('ConsoleReporter', () => {
           ['groupEnd'],
         ],
       ],
-    ] as [PerformanceProfile, [keyof ConsoleLogger, ...unknown[]][]][])(
-      'logs the profile',
-      (profile, expectedLogs) => {
-        const logger = new MockLogger();
-        const reporter = new ConsoleReporter(logger);
+    ] as [
+      PerformanceProfile,
+      [keyof ConsoleLogger, ...unknown[]][],
+    ][])('logs the profile', (profile, expectedLogs) => {
+      const logger = new MockLogger();
+      const reporter = new ConsoleReporter(logger);
 
-        reporter.reportProfile(profile);
+      reporter.reportProfile(profile);
 
-        expect(logger.flush()).toStrictEqual(expectedLogs);
-      },
-    );
+      expect(logger.flush()).toStrictEqual(expectedLogs);
+    });
   });
 });
 

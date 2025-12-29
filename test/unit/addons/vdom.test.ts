@@ -509,50 +509,51 @@ describe('ElementBinding', () => {
       }
     });
 
-    it.for(['input', 'output', 'textarea'] as const)(
-      'updates "value" property of form control elements',
-      (name) => {
-        const props1 = { value: 'foo', defaultValue: 'bar' };
-        const props2 = { value: null, defaultValue: undefined };
-        const part = {
-          type: PartType.Element,
-          node: document.createElement(name),
-        };
-        const binding = new ElementBinding(props1, part);
-        const updater = new TestUpdater();
+    it.for([
+      'input',
+      'output',
+      'textarea',
+    ] as const)('updates "value" property of form control elements', (name) => {
+      const props1 = { value: 'foo', defaultValue: 'bar' };
+      const props2 = { value: null, defaultValue: undefined };
+      const part = {
+        type: PartType.Element,
+        node: document.createElement(name),
+      };
+      const binding = new ElementBinding(props1, part);
+      const updater = new TestUpdater();
 
-        SESSION1: {
-          updater.startUpdate((session) => {
-            binding.attach(session);
-            binding.commit();
-          });
+      SESSION1: {
+        updater.startUpdate((session) => {
+          binding.attach(session);
+          binding.commit();
+        });
 
-          expect(part.node.value).toBe(props1.value);
-          expect(part.node.defaultValue).toBe(props1.defaultValue);
-        }
+        expect(part.node.value).toBe(props1.value);
+        expect(part.node.defaultValue).toBe(props1.defaultValue);
+      }
 
-        SESSION2: {
-          updater.startUpdate((session) => {
-            binding.value = props2;
-            binding.attach(session);
-            binding.commit();
-          });
+      SESSION2: {
+        updater.startUpdate((session) => {
+          binding.value = props2;
+          binding.attach(session);
+          binding.commit();
+        });
 
-          expect(part.node.value).toBe('');
-          expect(part.node.defaultValue).toBe('');
-        }
+        expect(part.node.value).toBe('');
+        expect(part.node.defaultValue).toBe('');
+      }
 
-        SESSION3: {
-          updater.startUpdate((session) => {
-            binding.detach(session);
-            binding.rollback();
-          });
+      SESSION3: {
+        updater.startUpdate((session) => {
+          binding.detach(session);
+          binding.rollback();
+        });
 
-          expect(part.node.value).toBe('');
-          expect(part.node.defaultValue).toBe('');
-        }
-      },
-    );
+        expect(part.node.value).toBe('');
+        expect(part.node.defaultValue).toBe('');
+      }
+    });
 
     it('updates "value" property of select element', () => {
       const props1 = { value: 'foo' };

@@ -75,13 +75,13 @@ describe('getLanesFromOptions()', () => {
       { priority: 'background', viewTransition: true },
       Lanes.DefaultLane | Lanes.BackgroundLane | Lanes.ViewTransitionLane,
     ],
-  ] as [UpdateOptions, Lanes][])(
-    'returns lanes for schedule',
-    (options, lanes) => {
-      expect(getLanesFromOptions(options)).toBe(lanes);
-      expect(getPriorityFromLanes(lanes)).toBe(options.priority ?? null);
-    },
-  );
+  ] as [
+    UpdateOptions,
+    Lanes,
+  ][])('returns lanes for schedule', (options, lanes) => {
+    expect(getLanesFromOptions(options)).toBe(lanes);
+    expect(getPriorityFromLanes(lanes)).toBe(options.priority ?? null);
+  });
 });
 
 describe('getStartNode()', () => {

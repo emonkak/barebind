@@ -78,38 +78,38 @@ describe('AttributeBinding', () => {
   });
 
   describe('commit()', () => {
-    it.for([null, undefined])(
-      'removes the attribute when the value is null or undefined',
-      (value2) => {
-        const value = 'foo';
-        const part = {
-          type: PartType.Attribute,
-          node: document.createElement('div'),
-          name: 'class',
-        };
-        const binding = new AttributeBinding<unknown>(value, part);
-        const updater = new TestUpdater();
+    it.for([
+      null,
+      undefined,
+    ])('removes the attribute when the value is null or undefined', (value2) => {
+      const value = 'foo';
+      const part = {
+        type: PartType.Attribute,
+        node: document.createElement('div'),
+        name: 'class',
+      };
+      const binding = new AttributeBinding<unknown>(value, part);
+      const updater = new TestUpdater();
 
-        SESSION1: {
-          updater.startUpdate((session) => {
-            binding.attach(session);
-            binding.commit();
-          });
+      SESSION1: {
+        updater.startUpdate((session) => {
+          binding.attach(session);
+          binding.commit();
+        });
 
-          expect(part.node.getAttribute(part.name)).toBe(value);
-        }
+        expect(part.node.getAttribute(part.name)).toBe(value);
+      }
 
-        SESSION2: {
-          updater.startUpdate((session) => {
-            binding.value = value2;
-            binding.attach(session);
-            binding.commit();
-          });
+      SESSION2: {
+        updater.startUpdate((session) => {
+          binding.value = value2;
+          binding.attach(session);
+          binding.commit();
+        });
 
-          expect(part.node.getAttribute(part.name)).toBe(null);
-        }
-      },
-    );
+        expect(part.node.getAttribute(part.name)).toBe(null);
+      }
+    });
 
     it.each([
       ['foo', 'foo'],
@@ -122,52 +122,46 @@ describe('AttributeBinding', () => {
         },
         'foo',
       ],
-    ])(
-      'sets the attribute with the string representation of the value',
-      (value, expectedValue) => {
-        const part = {
-          type: PartType.Attribute,
-          node: document.createElement('div'),
-          name: 'class',
-        };
-        const binding = new AttributeBinding(value, part);
-        const updater = new TestUpdater();
+    ])('sets the attribute with the string representation of the value', (value, expectedValue) => {
+      const part = {
+        type: PartType.Attribute,
+        node: document.createElement('div'),
+        name: 'class',
+      };
+      const binding = new AttributeBinding(value, part);
+      const updater = new TestUpdater();
 
-        SESSION: {
-          updater.startUpdate((session) => {
-            binding.attach(session);
-            binding.commit();
-          });
+      SESSION: {
+        updater.startUpdate((session) => {
+          binding.attach(session);
+          binding.commit();
+        });
 
-          expect(part.node.getAttribute(part.name)).toBe(expectedValue);
-        }
-      },
-    );
+        expect(part.node.getAttribute(part.name)).toBe(expectedValue);
+      }
+    });
 
     it.each([
       [true, ''],
       [false, null],
-    ])(
-      'toggles the attribute according to the boolean value',
-      (value, expectedValue) => {
-        const part = {
-          type: PartType.Attribute,
-          node: document.createElement('div'),
-          name: 'class',
-        };
-        const binding = new AttributeBinding(value, part);
-        const updater = new TestUpdater();
+    ])('toggles the attribute according to the boolean value', (value, expectedValue) => {
+      const part = {
+        type: PartType.Attribute,
+        node: document.createElement('div'),
+        name: 'class',
+      };
+      const binding = new AttributeBinding(value, part);
+      const updater = new TestUpdater();
 
-        SESSION: {
-          updater.startUpdate((session) => {
-            binding.attach(session);
-            binding.commit();
-          });
+      SESSION: {
+        updater.startUpdate((session) => {
+          binding.attach(session);
+          binding.commit();
+        });
 
-          expect(part.node.getAttribute(part.name)).toBe(expectedValue);
-        }
-      },
-    );
+        expect(part.node.getAttribute(part.name)).toBe(expectedValue);
+      }
+    });
   });
 
   describe('rollback()', () => {

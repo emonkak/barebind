@@ -22,44 +22,45 @@ describe('StylePrimitive', () => {
       }).not.toThrow();
     });
 
-    it.for([null, undefined, 'foo'])(
-      'throws an error if the value is not object',
-      (value) => {
-        const part = {
-          type: PartType.Attribute,
-          node: document.createElement('div'),
-          name: ':style',
-        };
+    it.for([
+      null,
+      undefined,
+      'foo',
+    ])('throws an error if the value is not object', (value) => {
+      const part = {
+        type: PartType.Attribute,
+        node: document.createElement('div'),
+        name: ':style',
+      };
 
-        expect(() => {
-          StylePrimitive.instance.ensureValue(value, part);
-        }).toThrow('The value of StylePrimitive must be an object.');
-      },
-    );
+      expect(() => {
+        StylePrimitive.instance.ensureValue(value, part);
+      }).toThrow('The value of StylePrimitive must be an object.');
+    });
   });
 
   describe('resolveBinding()', () => {
-    it.for([':STYLE', ':style'])(
-      'constructs a new StyleBinding in "%s" attribute',
-      (attributeName) => {
-        const style = { color: 'red' };
-        const part = {
-          type: PartType.Attribute,
-          node: document.createElement('div'),
-          name: attributeName,
-        };
-        const runtime = createRuntime();
-        const binding = StylePrimitive.instance.resolveBinding(
-          style,
-          part,
-          runtime,
-        );
+    it.for([
+      ':STYLE',
+      ':style',
+    ])('constructs a new StyleBinding in "%s" attribute', (attributeName) => {
+      const style = { color: 'red' };
+      const part = {
+        type: PartType.Attribute,
+        node: document.createElement('div'),
+        name: attributeName,
+      };
+      const runtime = createRuntime();
+      const binding = StylePrimitive.instance.resolveBinding(
+        style,
+        part,
+        runtime,
+      );
 
-        expect(binding.type).toBe(StylePrimitive.instance);
-        expect(binding.value).toBe(style);
-        expect(binding.part).toBe(part);
-      },
-    );
+      expect(binding.type).toBe(StylePrimitive.instance);
+      expect(binding.value).toBe(style);
+      expect(binding.part).toBe(part);
+    });
 
     it('should throw the error if the part is not a ":style" attribute part', () => {
       const style = { color: 'red' };

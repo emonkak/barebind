@@ -63,15 +63,12 @@ describe('createComponent()', () => {
     it.each([
       [{ key: 'foo', value: 1 }, { key: 'foo', value: 1 }, true],
       [{ key: 'foo', value: 1 }, { key: 'bar', value: 2 }, false],
-    ])(
-      'returns whether the props is the same with a custom equality',
-      (props1, props2, expandedResult) => {
-        expect(Memo.arePropsEqual(props1, props1)).toBe(true);
-        expect(Memo.arePropsEqual(props1, props2)).toBe(expandedResult);
-        expect(Memo.arePropsEqual(props2, props1)).toBe(expandedResult);
-        expect(Memo.arePropsEqual(props2, props2)).toBe(true);
-      },
-    );
+    ])('returns whether the props is the same with a custom equality', (props1, props2, expandedResult) => {
+      expect(Memo.arePropsEqual(props1, props1)).toBe(true);
+      expect(Memo.arePropsEqual(props1, props2)).toBe(expandedResult);
+      expect(Memo.arePropsEqual(props2, props1)).toBe(expandedResult);
+      expect(Memo.arePropsEqual(props2, props2)).toBe(true);
+    });
   });
 
   describe('resolveBinding()', () => {
