@@ -1,6 +1,5 @@
 import { DirectiveError } from '../directive.js';
 import {
-  type Binding,
   type DirectiveContext,
   type Part,
   PartType,
@@ -8,6 +7,7 @@ import {
   type Slot,
   type UpdateSession,
 } from '../internal.js';
+import { PrimitiveBinding } from './primitive.js';
 
 export type SpreadProps = { [key: string]: unknown };
 
@@ -42,53 +42,35 @@ export class SpreadPrimitive implements Primitive<SpreadProps> {
   }
 }
 
-export class SpreadBinding implements Binding<SpreadProps> {
-  private _props: SpreadProps;
-
-  private readonly _part: Part.ElementPart;
-
+export class SpreadBinding extends PrimitiveBinding<
+  SpreadProps,
+  Part.ElementPart
+> {
   private _pendingSlots: Map<string, Slot<unknown>> = new Map();
 
   private _memoizedSlots: Map<string, Slot<unknown>> | null = null;
-
-  constructor(props: SpreadProps, part: Part.ElementPart) {
-    this._props = props;
-    this._part = part;
-  }
 
   get type(): Primitive<SpreadProps> {
     return SpreadPrimitive.instance;
   }
 
-  get value(): SpreadProps {
-    return this._props;
-  }
-
-  set value(props: SpreadProps) {
-    this._props = props;
-  }
-
-  get part(): Part.ElementPart {
-    return this._part;
-  }
-
   shouldUpdate(props: SpreadProps): boolean {
-    return this._memoizedSlots === null || props !== this._props;
+    return this._memoizedSlots === null || props !== this._value;
   }
 
-  attach(session: UpdateSession): void {
+  override attach(session: UpdateSession): void {
     const { context } = session;
     const oldSlots = this._pendingSlots;
     const newSlots = new Map();
 
     for (const [key, slot] of oldSlots.entries()) {
-      if (!Object.hasOwn(this._props, key) || this._props[key] === undefined) {
+      if (!Object.hasOwn(this._value, key) || this._value[key] === undefined) {
         slot.detach(session);
       }
     }
 
-    for (const key of Object.keys(this._props)) {
-      const prop = this._props[key];
+    for (const key of Object.keys(this._value)) {
+      const prop = this._value[key];
       if (prop === undefined) {
         continue;
       }
@@ -106,7 +88,7 @@ export class SpreadBinding implements Binding<SpreadProps> {
     this._pendingSlots = newSlots;
   }
 
-  detach(session: UpdateSession): void {
+  override detach(session: UpdateSession): void {
     if (this._memoizedSlots !== null) {
       for (const slot of this._memoizedSlots.values()) {
         slot.detach(session);
