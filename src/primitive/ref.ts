@@ -121,7 +121,7 @@ function isElementRef(value: unknown): value is Ref<Element> {
 }
 
 class CleanRef implements Effect {
-  readonly _binding: RefBinding;
+  private readonly _binding: RefBinding;
 
   constructor(binding: RefBinding) {
     this._binding = binding;
@@ -133,7 +133,7 @@ class CleanRef implements Effect {
 }
 
 class InvokeRef implements Effect {
-  readonly _binding: RefBinding;
+  private readonly _binding: RefBinding;
 
   constructor(binding: RefBinding) {
     this._binding = binding;
