@@ -46,21 +46,25 @@ export const VirtualScroller: VirtualScroller = createComponent(
   function VirtualScroller<T>(
     {
       assumedItemHeight,
-      getItemKey = (_item, index) => index,
       delay,
-      scrollMargin,
-      initialItemIndex = 0,
+      getItemKey = (_item, index) => index,
+      initialItemIndex = -1,
       offscreenRatio = 1,
       ref = null,
       renderItem,
+      scrollMargin,
       source,
     }: VirtualScrollerProps<T>,
     $: RenderContext,
   ): unknown {
-    const [visibleRange, setVisibleRange] = $.useState<Range>({
-      start: initialItemIndex,
-      end: Math.min(initialItemIndex + 1, source.length),
-    });
+    const [visibleRange, setVisibleRange] = $.useState<Range>(() =>
+      initialItemIndex >= 0
+        ? {
+            start: initialItemIndex,
+            end: Math.min(initialItemIndex + 1, source.length),
+          }
+        : { start: 0, end: 0 },
+    );
     const measuredItems = $.useMemo<MeasuredItem[]>(() => [], []);
     const visibleElements = $.useMemo<Map<number, Element>>(
       () => new Map(),
@@ -231,6 +235,15 @@ export const VirtualScroller: VirtualScroller = createComponent(
       measuredItems.length = source.length;
     }, [source]);
 
+    $.useLayoutEffect(() => {
+      if (initialItemIndex >= 0) {
+        const element = visibleElements.get(initialItemIndex);
+        if (element !== undefined && !isInViewport(element)) {
+          element.scrollIntoView();
+        }
+      }
+    }, [initialItemIndex]);
+
     const aboveSpace = computeRangeHeight(0, visibleRange.start);
     const belowSpace = computeRangeHeight(visibleRange.end);
 
@@ -286,6 +299,17 @@ export const VirtualScroller: VirtualScroller = createComponent(
 
 function areRangesEqual(x: Range, y: Range) {
   return x.start === y.start && x.end === y.end;
+}
+
+function isInViewport(el: Element): boolean {
+  const { bottom, right, top, left } = el.getBoundingClientRect();
+
+  return (
+    bottom > 0 &&
+    right > 0 &&
+    top < window.innerHeight &&
+    left < window.innerWidth
+  );
 }
 
 function withinRange(range: Range, index: number): boolean {
