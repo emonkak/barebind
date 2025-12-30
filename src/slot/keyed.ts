@@ -22,12 +22,12 @@ export function Keyed<TKey, TValue>(
 export class KeyedLayout<TKey> implements Layout {
   private readonly _key: TKey;
 
-  get key(): TKey {
-    return this._key;
-  }
-
   constructor(key: TKey) {
     this._key = key;
+  }
+
+  get key(): TKey {
+    return this._key;
   }
 
   resolveSlot<TValue>(
