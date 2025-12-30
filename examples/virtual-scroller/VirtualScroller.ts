@@ -253,7 +253,7 @@ export const VirtualScroller: VirtualScroller = createComponent(
     return $.html`
       <div class="VirtualScroller">
         <${Keyed(aboveSpace, aboveSpacer)}>
-        <ul class="VirtualScroller-list">
+        <ul class="VirtualScroller-list" :style=${{ scrollMargin }}>
           <${Repeat({
             source: source.slice(visibleRange.start, visibleRange.end),
             keySelector: (item, offset) =>
@@ -266,7 +266,6 @@ export const VirtualScroller: VirtualScroller = createComponent(
                   aria-setsize=${source.length}
                   class="VirtualScroller-item"
                   :ref=${itemRef}
-                  :style=${{ scrollMargin }}
                 >
                   <${renderItem(item, index, $)}>
                 </li>

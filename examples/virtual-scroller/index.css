@@ -46,6 +46,7 @@ body {
   color: FieldText;
   outline-offset: -1px;
   outline: 2px solid Highlight;
+  scroll-margin: inherit;
   text-align: center;
 
   &[aria-posinset$="0"],
