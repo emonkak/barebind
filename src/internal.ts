@@ -123,7 +123,7 @@ export namespace Hook {
 
   export interface EffectHook {
     type:
-      | typeof HookType.Effect
+      | typeof HookType.PassiveEffect
       | typeof HookType.LayoutEffect
       | typeof HookType.InsertionEffect;
     callback: () => Cleanup | void;
@@ -154,7 +154,7 @@ export namespace Hook {
 
 export const HookType = {
   Finalizer: 0,
-  Effect: 1,
+  PassiveEffect: 1,
   LayoutEffect: 2,
   InsertionEffect: 3,
   Id: 4,

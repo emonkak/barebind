@@ -149,7 +149,7 @@ export class ComponentBinding<TProps, TResult>
     for (let i = this._hooks.length - 1; i >= 0; i--) {
       const hook = this._hooks[i]!;
       switch (hook.type) {
-        case HookType.Effect:
+        case HookType.PassiveEffect:
           frame.passiveEffects.push(new FinalizeEffectHook(hook));
           break;
         case HookType.LayoutEffect:

@@ -29,7 +29,7 @@ export class TestRenderer {
     for (let i = this.hooks.length - 1; i >= 0; i--) {
       const hook = this.hooks[i]!;
       if (
-        hook.type === HookType.Effect ||
+        hook.type === HookType.PassiveEffect ||
         hook.type === HookType.LayoutEffect ||
         hook.type === HookType.InsertionEffect
       ) {

@@ -178,7 +178,7 @@ export class RenderSession implements RenderContext {
     callback: () => Cleanup | void,
     dependencies?: readonly unknown[],
   ): void {
-    this._useEffect(callback, dependencies ?? null, HookType.Effect);
+    this._useEffect(callback, dependencies ?? null, HookType.PassiveEffect);
   }
 
   useId(): string {
@@ -423,7 +423,7 @@ function areDependenciesChanged(
 function enqueueEffect(frame: RenderFrame, hook: Hook.EffectHook): void {
   const effect = new InvokeEffectHook(hook);
   switch (hook.type) {
-    case HookType.Effect:
+    case HookType.PassiveEffect:
       frame.passiveEffects.push(effect);
       break;
     case HookType.LayoutEffect:
