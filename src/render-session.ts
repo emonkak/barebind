@@ -375,16 +375,19 @@ export class RenderSession implements RenderContext {
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.EffectHook>(type, currentHook);
-      if (areDependenciesChanged(dependencies, currentHook.dependencies)) {
+      if (
+        areDependenciesChanged(dependencies, currentHook.pendingDependencies)
+      ) {
         enqueueEffect(this._frame, currentHook);
       }
       currentHook.callback = callback;
-      currentHook.dependencies = dependencies;
+      currentHook.pendingDependencies = dependencies;
     } else {
       const hook: Hook.EffectHook = {
         type,
         callback,
-        dependencies,
+        pendingDependencies: dependencies,
+        memoizedDependencies: null,
         cleanup: undefined,
       };
       this._hooks.push(hook);
@@ -403,9 +406,10 @@ class InvokeEffectHook implements Effect {
   }
 
   commit(): void {
-    const { cleanup, callback } = this._hook;
+    const { cleanup, callback, pendingDependencies } = this._hook;
     cleanup?.();
     this._hook.cleanup = callback();
+    this._hook.memoizedDependencies = pendingDependencies;
   }
 }
 

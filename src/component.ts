@@ -150,13 +150,13 @@ export class ComponentBinding<TProps, TResult>
       const hook = this._hooks[i]!;
       switch (hook.type) {
         case HookType.PassiveEffect:
-          frame.passiveEffects.push(new FinalizeEffectHook(hook));
+          frame.passiveEffects.push(new CleanEffectHook(hook));
           break;
         case HookType.LayoutEffect:
-          frame.layoutEffects.push(new FinalizeEffectHook(hook));
+          frame.layoutEffects.push(new CleanEffectHook(hook));
           break;
         case HookType.InsertionEffect:
-          frame.mutationEffects.push(new FinalizeEffectHook(hook));
+          frame.mutationEffects.push(new CleanEffectHook(hook));
           break;
       }
     }
@@ -177,7 +177,7 @@ export class ComponentBinding<TProps, TResult>
   }
 }
 
-class FinalizeEffectHook implements Effect {
+class CleanEffectHook implements Effect {
   private _hook: Hook.EffectHook;
 
   constructor(hook: Hook.EffectHook) {
