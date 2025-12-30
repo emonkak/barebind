@@ -310,16 +310,16 @@ export interface RenderContext {
   ): TCallback;
   useEffect(
     callback: () => Cleanup | void,
-    dependencies?: readonly unknown[],
+    dependencies?: readonly unknown[] | null,
   ): void;
   useId(): string;
   useInsertionEffect(
     callback: () => Cleanup | void,
-    dependencies?: readonly unknown[],
+    dependencies?: readonly unknown[] | null,
   ): void;
   useLayoutEffect(
     callback: () => Cleanup | void,
-    dependencies?: readonly unknown[],
+    dependencies?: readonly unknown[] | null,
   ): void;
   useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;
   useReducer<TState, TAction>(

@@ -176,9 +176,9 @@ export class RenderSession implements RenderContext {
 
   useEffect(
     callback: () => Cleanup | void,
-    dependencies?: readonly unknown[],
+    dependencies: readonly unknown[] | null = null,
   ): void {
-    this._useEffect(callback, dependencies ?? null, HookType.PassiveEffect);
+    this._useEffect(callback, dependencies, HookType.PassiveEffect);
   }
 
   useId(): string {
@@ -201,16 +201,16 @@ export class RenderSession implements RenderContext {
 
   useInsertionEffect(
     callback: () => Cleanup | void,
-    dependencies?: readonly unknown[],
+    dependencies: readonly unknown[] | null = null,
   ): void {
-    this._useEffect(callback, dependencies ?? null, HookType.InsertionEffect);
+    this._useEffect(callback, dependencies, HookType.InsertionEffect);
   }
 
   useLayoutEffect(
     callback: () => Cleanup | void,
-    dependencies?: readonly unknown[],
+    dependencies: readonly unknown[] | null = null,
   ): void {
-    this._useEffect(callback, dependencies ?? null, HookType.LayoutEffect);
+    this._useEffect(callback, dependencies, HookType.LayoutEffect);
   }
 
   useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T {
