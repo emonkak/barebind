@@ -123,8 +123,7 @@ export class ComponentBinding<TProps, TResult>
     }
 
     if (dirty && this._pendingLanes !== Lanes.NoLanes) {
-      // The slot must be inserted at the beginning to commit before refs.
-      frame.mutationEffects.unshift(this._slot);
+      frame.mutationEffects.push(this._slot);
     }
 
     this._pendingLanes &= ~frame.lanes;
@@ -145,18 +144,20 @@ export class ComponentBinding<TProps, TResult>
   detach(session: UpdateSession): void {
     const { frame } = session;
 
-    // Hooks must be cleaned in reverse order.
-    for (let i = this._hooks.length - 1; i >= 0; i--) {
-      const hook = this._hooks[i]!;
-      switch (hook.type) {
+    for (let i = 0, l = this._hooks.length; i < l; i++) {
+      const headHook = this._hooks[i]!;
+      const tailHook = this._hooks[l - i - 1]!;
+      switch (headHook.type) {
         case HookType.PassiveEffect:
-          frame.passiveEffects.push(new CleanEffectHook(hook));
+          frame.passiveEffects.push(new CleanEffectHook(headHook));
           break;
+      }
+      switch (tailHook.type) {
         case HookType.LayoutEffect:
-          frame.layoutEffects.push(new CleanEffectHook(hook));
+          frame.layoutEffects.push(new CleanEffectHook(tailHook));
           break;
         case HookType.InsertionEffect:
-          frame.mutationEffects.push(new CleanEffectHook(hook));
+          frame.mutationEffects.push(new CleanEffectHook(tailHook));
           break;
       }
     }

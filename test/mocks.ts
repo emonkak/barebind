@@ -6,7 +6,7 @@ import {
   areDirectiveTypesEqual,
   type Bindable,
   type Binding,
-  type CommitPhase,
+  CommitPhase,
   type Coroutine,
   type Directive,
   type DirectiveContext,
@@ -35,9 +35,19 @@ import type {
 import { AbstractTemplate } from '@/template/template.js';
 
 export class MockBackend implements RuntimeBackend {
-  commitEffects(effects: Effect[], _phase: CommitPhase): void {
-    for (let i = 0, l = effects.length; i < l; i++) {
-      effects[i]!.commit();
+  commitEffects(effects: Effect[], phase: CommitPhase): void {
+    switch (phase) {
+      case CommitPhase.Mutation:
+      case CommitPhase.Layout:
+        for (let i = effects.length - 1; i >= 0; i--) {
+          effects[i]!.commit();
+        }
+        break;
+      case CommitPhase.Passive:
+        for (let i = 0, l = effects.length; i < l; i++) {
+          effects[i]!.commit();
+        }
+        break;
     }
   }
 

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { PartType } from '@/internal.js';
+import { CommitPhase, type Effect, PartType } from '@/internal.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
 import { ClassPrimitive } from '@/primitive/class.js';
@@ -43,6 +43,55 @@ const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
 const TEMPLATE_PLACEHOLDER = '__test__';
 
 describe('BrowserBackend', () => {
+  describe('commitEffects()', () => {
+    it('commits only mutation effects', () => {
+      const executedEffects: Effect[] = [];
+      const commit = function (this: Effect) {
+        executedEffects.push(this);
+      };
+      const mutationEffects: Effect[] = [
+        {
+          commit,
+        },
+        {
+          commit,
+        },
+      ];
+      const layoutEffects: Effect[] = [
+        {
+          commit,
+        },
+        {
+          commit,
+        },
+      ];
+      const passiveEffects: Effect[] = [
+        {
+          commit,
+        },
+        {
+          commit,
+        },
+      ];
+      const backend = new BrowserBackend();
+
+      backend.commitEffects(mutationEffects, CommitPhase.Mutation);
+      backend.commitEffects(layoutEffects, CommitPhase.Layout);
+      backend.commitEffects(passiveEffects, CommitPhase.Passive);
+
+      expect(executedEffects).toStrictEqual(
+        [
+          mutationEffects[1],
+          mutationEffects[0],
+          layoutEffects[1],
+          layoutEffects[0],
+          passiveEffects[0],
+          passiveEffects[1],
+        ].map((effect) => expect.exact(effect)),
+      );
+    });
+  });
+
   describe('getTaskPriority()', () => {
     afterEach(() => {
       vi.restoreAllMocks();

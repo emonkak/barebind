@@ -23,19 +23,32 @@ const TEMPLATE_PLACEHOLDER = '__test__';
 describe('ServerBackend', () => {
   describe('commitEffects()', () => {
     it('commits only mutation effects', () => {
-      const mutationEffects: [Effect] = [
+      const executedEffects: Effect[] = [];
+      const commit = function (this: Effect) {
+        executedEffects.push(this);
+      };
+      const mutationEffects: Effect[] = [
         {
-          commit: vi.fn(),
+          commit,
+        },
+        {
+          commit,
         },
       ];
-      const layoutEffects: [Effect] = [
+      const layoutEffects: Effect[] = [
         {
-          commit: vi.fn(),
+          commit,
+        },
+        {
+          commit,
         },
       ];
-      const passiveEffects: [Effect] = [
+      const passiveEffects: Effect[] = [
         {
-          commit: vi.fn(),
+          commit,
+        },
+        {
+          commit,
         },
       ];
       const backend = new ServerBackend(document);
@@ -44,10 +57,11 @@ describe('ServerBackend', () => {
       backend.commitEffects(layoutEffects, CommitPhase.Layout);
       backend.commitEffects(passiveEffects, CommitPhase.Passive);
 
-      expect(mutationEffects[0].commit).toHaveBeenCalledOnce();
-      expect(layoutEffects[0].commit).not.toHaveBeenCalled();
-      expect(layoutEffects[0].commit).not.toHaveBeenCalled();
-      expect(passiveEffects[0].commit).not.toHaveBeenCalled();
+      expect(executedEffects).toStrictEqual(
+        [mutationEffects[1], mutationEffects[0]].map((effect) =>
+          expect.exact(effect),
+        ),
+      );
     });
   });
 

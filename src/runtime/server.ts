@@ -33,10 +33,12 @@ export class ServerBackend implements RuntimeBackend {
   }
 
   commitEffects(effects: Effect[], phase: CommitPhase): void {
-    if (phase === CommitPhase.Mutation) {
-      for (let i = 0, l = effects.length; i < l; i++) {
-        effects[i]!.commit();
-      }
+    switch (phase) {
+      case CommitPhase.Mutation:
+        for (let i = effects.length - 1; i >= 0; i--) {
+          effects[i]!.commit();
+        }
+        break;
     }
   }
 

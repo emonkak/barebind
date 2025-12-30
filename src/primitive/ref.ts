@@ -63,11 +63,11 @@ export class RefBinding extends PrimitiveBinding<
   }
 
   override attach(session: UpdateSession): void {
-    session.frame.mutationEffects.push(new InvokeRef(this));
+    session.frame.layoutEffects.push(new InvokeRef(this));
   }
 
   override detach(session: UpdateSession): void {
-    session.frame.mutationEffects.push(new CleanRef(this));
+    session.frame.layoutEffects.push(new CleanRef(this));
   }
 
   commit(): void {}

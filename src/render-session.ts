@@ -87,6 +87,45 @@ export class RenderSession implements RenderContext {
       Object.freeze(this._hooks);
     }
 
+    for (let i = 0, l = this._hooks.length; i < l; i++) {
+      const headHook = this._hooks[i]!;
+      const tailHook = this._hooks[l - i - 1]!;
+      switch (headHook.type) {
+        case HookType.PassiveEffect:
+          if (
+            areDependenciesChanged(
+              headHook.pendingDependencies,
+              headHook.memoizedDependencies,
+            )
+          ) {
+            this._frame.passiveEffects.push(new InvokeEffectHook(headHook));
+          }
+          break;
+      }
+      switch (tailHook.type) {
+        case HookType.LayoutEffect:
+          if (
+            areDependenciesChanged(
+              tailHook.pendingDependencies,
+              tailHook.memoizedDependencies,
+            )
+          ) {
+            this._frame.layoutEffects.push(new InvokeEffectHook(tailHook));
+          }
+          break;
+        case HookType.InsertionEffect:
+          if (
+            areDependenciesChanged(
+              tailHook.pendingDependencies,
+              tailHook.memoizedDependencies,
+            )
+          ) {
+            this._frame.mutationEffects.push(new InvokeEffectHook(tailHook));
+          }
+          break;
+      }
+    }
+
     this._scope = Scope.DETACHED;
     this._hookIndex++;
   }
@@ -178,7 +217,7 @@ export class RenderSession implements RenderContext {
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    this._useEffect(callback, dependencies, HookType.PassiveEffect);
+    this._createEffect(callback, dependencies, HookType.PassiveEffect);
   }
 
   useId(): string {
@@ -203,14 +242,14 @@ export class RenderSession implements RenderContext {
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    this._useEffect(callback, dependencies, HookType.InsertionEffect);
+    this._createEffect(callback, dependencies, HookType.InsertionEffect);
   }
 
   useLayoutEffect(
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    this._useEffect(callback, dependencies, HookType.LayoutEffect);
+    this._createEffect(callback, dependencies, HookType.LayoutEffect);
   }
 
   useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T {
@@ -342,6 +381,31 @@ export class RenderSession implements RenderContext {
     return (await Promise.allSettled(promises)).length;
   }
 
+  private _createEffect(
+    callback: () => Cleanup | void,
+    dependencies: readonly unknown[] | null,
+    type: Hook.EffectHook['type'],
+  ): void {
+    let currentHook = this._hooks[this._hookIndex];
+
+    if (currentHook !== undefined) {
+      ensureHookType<Hook.EffectHook>(type, currentHook);
+      currentHook.callback = callback;
+      currentHook.pendingDependencies = dependencies;
+    } else {
+      currentHook = {
+        type,
+        callback,
+        pendingDependencies: dependencies,
+        memoizedDependencies: null,
+        cleanup: undefined,
+      };
+      this._hooks.push(currentHook);
+    }
+
+    this._hookIndex++;
+  }
+
   private _dynamicTemplate(
     strings: TemplateStringsArray,
     binds: readonly unknown[],
@@ -364,37 +428,6 @@ export class RenderSession implements RenderContext {
   ): DirectiveSpecifier<readonly unknown[]> {
     const template = this._context.resolveTemplate(strings, binds, mode);
     return new DirectiveSpecifier(template, binds);
-  }
-
-  private _useEffect(
-    callback: () => Cleanup | void,
-    dependencies: readonly unknown[] | null,
-    type: Hook.EffectHook['type'],
-  ): void {
-    const currentHook = this._hooks[this._hookIndex];
-
-    if (currentHook !== undefined) {
-      ensureHookType<Hook.EffectHook>(type, currentHook);
-      if (
-        areDependenciesChanged(dependencies, currentHook.pendingDependencies)
-      ) {
-        enqueueEffect(this._frame, currentHook);
-      }
-      currentHook.callback = callback;
-      currentHook.pendingDependencies = dependencies;
-    } else {
-      const hook: Hook.EffectHook = {
-        type,
-        callback,
-        pendingDependencies: dependencies,
-        memoizedDependencies: null,
-        cleanup: undefined,
-      };
-      this._hooks.push(hook);
-      enqueueEffect(this._frame, hook);
-    }
-
-    this._hookIndex++;
   }
 }
 
@@ -422,21 +455,6 @@ function areDependenciesChanged(
     prevDependencies === null ||
     !sequentialEqual(nextDependencies, prevDependencies)
   );
-}
-
-function enqueueEffect(frame: RenderFrame, hook: Hook.EffectHook): void {
-  const effect = new InvokeEffectHook(hook);
-  switch (hook.type) {
-    case HookType.PassiveEffect:
-      frame.passiveEffects.push(effect);
-      break;
-    case HookType.LayoutEffect:
-      frame.layoutEffects.push(effect);
-      break;
-    case HookType.InsertionEffect:
-      frame.mutationEffects.push(effect);
-      break;
-  }
 }
 
 function ensureHookType<TExpectedHook extends Hook>(
