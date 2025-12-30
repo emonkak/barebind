@@ -121,40 +121,38 @@ export const VirtualScroller: VirtualScroller = createComponent(
     const intersectionObserverCallback = $.use(
       EventCallback((entries: IntersectionObserverEntry[]) => {
         for (const entry of entries) {
-          switch (entry.target.className) {
-            case 'VirtualScroller-spacer': {
-              if (!entry.isIntersecting && !entry.target.isConnected) {
-                continue;
-              }
+          if (!entry.isIntersecting && !entry.target.isConnected) {
+            continue;
+          }
 
-              const top =
-                -entry.target.parentElement!.getBoundingClientRect().top +
-                entry.rootBounds!.top;
-              const bottom = top + entry.rootBounds!.height;
-              const visibleRange = computeVisibleRange(top, bottom);
-              setVisibleRange(visibleRange, {
-                areStatesEqual: areRangesEqual,
-              });
-              break;
-            }
+          const top =
+            -entry.target.parentElement!.getBoundingClientRect().top +
+            entry.rootBounds!.top;
+          const bottom = top + entry.rootBounds!.height;
+          const visibleRange = computeVisibleRange(top, bottom);
 
-            case 'VirtualScroller-item': {
-              if (!entry.target.isConnected) {
-                continue;
-              }
+          setVisibleRange(visibleRange, {
+            areStatesEqual: areRangesEqual,
+          });
+        }
+      }),
+    );
+    const resizeObserverCallback = $.use(
+      EventCallback((entries: ResizeObserverEntry[]) => {
+        for (const entry of entries) {
+          if (!entry.target.isConnected) {
+            continue;
+          }
 
-              const index =
-                Number(entry.target.getAttribute('aria-posinset')!) - 1;
-              const item = source[index];
+          const index = Number(entry.target.getAttribute('aria-posinset')!) - 1;
+          const item = source[index];
 
-              if (item !== undefined) {
-                const key = getItemKey(item, index);
-                measuredItems[index] = {
-                  key,
-                  height: entry.boundingClientRect.height,
-                };
-              }
-            }
+          if (item !== undefined) {
+            const key = getItemKey(item, index);
+            measuredItems[index] = {
+              key,
+              height: entry.contentRect.height,
+            };
           }
         }
       }),
@@ -168,6 +166,10 @@ export const VirtualScroller: VirtualScroller = createComponent(
         } as IntersectionObserverInit & { delay?: number }),
       [],
     );
+    const resizeObserver = $.useMemo(
+      () => new ResizeObserver(resizeObserverCallback),
+      [],
+    );
 
     const spacerRef = $.useCallback((element: Element) => {
       intersectionObserver.observe(element);
@@ -178,10 +180,10 @@ export const VirtualScroller: VirtualScroller = createComponent(
     const itemRef = $.useCallback((element: Element) => {
       const index = Number(element.getAttribute('aria-posinset')) - 1;
       visibleElements.set(index, element);
-      intersectionObserver.observe(element);
+      resizeObserver.observe(element);
       return () => {
-        intersectionObserver.unobserve(element);
         visibleElements.delete(index);
+        resizeObserver.unobserve(element);
       };
     }, []);
 
