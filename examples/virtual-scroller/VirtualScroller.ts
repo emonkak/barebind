@@ -14,6 +14,7 @@ export interface VirtualScroller extends Component<VirtualScrollerProps<any>> {
 
 export interface VirtualScrollerProps<T> {
   assumedItemHeight: number;
+  delay?: number;
   getItemKey?: (item: T, index: number) => unknown;
   initialItemIndex?: number;
   offscreenRatio?: number;
@@ -46,6 +47,7 @@ export const VirtualScroller: VirtualScroller = createComponent(
     {
       assumedItemHeight,
       getItemKey = (_item, index) => index,
+      delay,
       scrollMargin,
       initialItemIndex = 0,
       offscreenRatio = 1,
@@ -162,7 +164,8 @@ export const VirtualScroller: VirtualScroller = createComponent(
       () =>
         new IntersectionObserver(intersectionObserverCallback, {
           rootMargin: offscreenRatio * 100 + '%',
-        }),
+          delay,
+        } as IntersectionObserverInit & { delay?: number }),
       [],
     );
 
