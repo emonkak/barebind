@@ -44,6 +44,9 @@ export class TestRenderer {
     callback: (session: RenderSession) => T,
     options: WithScopeOption<UpdateOptions> = {},
   ): T {
+    let returnValue: T;
+    let thrownError: unknown;
+
     const coroutine = new MockCoroutine(
       ({ frame, rootScope, scope, context }) => {
         const session = new RenderSession(
@@ -61,16 +64,12 @@ export class TestRenderer {
       },
       options.scope,
     );
-    let returnValue: T;
-    let thrownError: unknown;
 
-    this.runtime
-      .scheduleUpdate(coroutine, {
-        flush: false,
-        immediate: true,
-        ...options,
-      })
-      .finished.catch(() => {});
+    this.runtime.scheduleUpdate(coroutine, {
+      flush: false,
+      immediate: true,
+      ...options,
+    });
 
     this.runtime.flushSync();
 
@@ -93,18 +92,21 @@ export class TestUpdater {
     callback: (session: UpdateSession, coroutine: Coroutine) => T,
     options: WithScopeOption<UpdateOptions> = {},
   ): T {
+    let returnValue: T;
+    let thrownError: unknown;
+
     const coroutine = new MockCoroutine((session) => {
       session.rootScope.addErrorHandler((error) => {
         thrownError = error;
       });
       returnValue = callback(session, coroutine);
     }, options.scope);
-    let returnValue: T;
-    let thrownError: unknown;
 
-    this.runtime
-      .scheduleUpdate(coroutine, { flush: false, immediate: true, ...options })
-      .finished.catch(() => {});
+    this.runtime.scheduleUpdate(coroutine, {
+      flush: false,
+      immediate: true,
+      ...options,
+    });
 
     this.runtime.flushSync();
 
