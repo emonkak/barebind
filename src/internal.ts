@@ -423,8 +423,8 @@ export type UnwrapBindable<T> = T extends Bindable<infer Value> ? Value : T;
 
 export interface UpdateHandle {
   lanes: Lanes;
-  scheduled: Promise<void>;
-  finished: Promise<void>;
+  scheduled: Promise<UpdateResult>;
+  finished: Promise<UpdateResult>;
 }
 
 export interface UpdateOptions {
@@ -434,10 +434,15 @@ export interface UpdateOptions {
   viewTransition?: boolean;
 }
 
+export type UpdateResult =
+  | { status: 'done' }
+  | { status: 'canceled' }
+  | { status: 'detached' };
+
 export interface UpdateTask {
   coroutine: Coroutine;
   lanes: Lanes;
-  continuation: PromiseWithResolvers<void>;
+  continuation: PromiseWithResolvers<UpdateResult>;
 }
 
 export type Usable<T> = CustomHookFunction<T> | CustomHookObject<T>;

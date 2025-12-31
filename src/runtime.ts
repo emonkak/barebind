@@ -23,6 +23,7 @@ import {
   type UnwrapBindable,
   type UpdateHandle,
   type UpdateOptions,
+  type UpdateResult,
   UpdateSession,
   type UpdateTask,
 } from './internal.js';
@@ -137,7 +138,7 @@ export class Runtime implements SessionContext {
       const { coroutine, lanes, continuation } = pendingTask;
 
       if ((coroutine.pendingLanes & lanes) === Lanes.NoLanes) {
-        continuation.resolve();
+        continuation.resolve({ status: 'canceled' });
         continue;
       }
 
@@ -224,7 +225,7 @@ export class Runtime implements SessionContext {
           );
         }
 
-        continuation.resolve();
+        continuation.resolve({ status: 'done' });
       } catch (error) {
         continuation.reject(error);
       } finally {
@@ -250,7 +251,7 @@ export class Runtime implements SessionContext {
       const { coroutine, lanes, continuation } = pendingTask;
 
       if ((coroutine.pendingLanes & lanes) === Lanes.NoLanes) {
-        continuation.resolve();
+        continuation.resolve({ status: 'canceled' });
         continue;
       }
 
@@ -318,7 +319,7 @@ export class Runtime implements SessionContext {
           this._commitEffects(id, passiveEffects, CommitPhase.Passive);
         }
 
-        continuation.resolve();
+        continuation.resolve({ status: 'done' });
       } catch (error) {
         continuation.reject(error);
       } finally {
@@ -435,7 +436,7 @@ export class Runtime implements SessionContext {
     } satisfies Required<UpdateOptions>;
 
     const lanes = getLanesFromOptions(options);
-    const continuation = Promise.withResolvers<void>();
+    const continuation = Promise.withResolvers<UpdateResult>();
     const pendingTask: UpdateTask = {
       coroutine,
       lanes,
@@ -444,14 +445,14 @@ export class Runtime implements SessionContext {
 
     coroutine.pendingLanes |= lanes;
 
-    let scheduled: Promise<void>;
+    let scheduled: Promise<UpdateResult>;
 
     if (options.immediate) {
       const shouldFlush = options.flush && this._pendingTasks.isEmpty();
 
       this._pendingTasks.pushBack(pendingTask);
 
-      scheduled = Promise.resolve();
+      scheduled = Promise.resolve({ status: 'done' });
 
       if (shouldFlush) {
         queueMicrotask(() => {
@@ -467,6 +468,8 @@ export class Runtime implements SessionContext {
         if (shouldFlush) {
           this._backend.flushUpdate(this);
         }
+
+        return { status: 'done' };
       }, options);
     }
 

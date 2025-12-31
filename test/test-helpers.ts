@@ -12,9 +12,14 @@ import { RenderSession } from '@/render-session.js';
 import { Runtime, type RuntimeOptions } from '@/runtime.js';
 import { MockBackend, MockCoroutine } from './mocks.js';
 
-type WithScopeOption<T> = T & {
+interface TestRenderOptions extends UpdateOptions {
   scope?: Scope;
-};
+  coroutine?: Coroutine;
+}
+
+interface TestUpdateOptions extends UpdateOptions {
+  scope?: Scope;
+}
 
 export class TestRenderer {
   readonly runtime: Runtime;
@@ -42,7 +47,7 @@ export class TestRenderer {
 
   startRender<T>(
     callback: (session: RenderSession) => T,
-    options: WithScopeOption<UpdateOptions> = {},
+    options: TestRenderOptions = {},
   ): T {
     let returnValue: T;
     let thrownError: unknown;
@@ -51,7 +56,7 @@ export class TestRenderer {
       ({ frame, rootScope, scope, context }) => {
         const session = new RenderSession(
           this.hooks,
-          coroutine,
+          options.coroutine ?? coroutine,
           frame,
           scope,
           context,
@@ -89,8 +94,8 @@ export class TestUpdater {
   }
 
   startUpdate<T>(
-    callback: (session: UpdateSession, coroutine: Coroutine) => T,
-    options: WithScopeOption<UpdateOptions> = {},
+    callback: (session: UpdateSession) => T,
+    options: TestUpdateOptions = {},
   ): T {
     let returnValue: T;
     let thrownError: unknown;
@@ -99,7 +104,7 @@ export class TestUpdater {
       session.rootScope.addErrorHandler((error) => {
         thrownError = error;
       });
-      returnValue = callback(session, coroutine);
+      returnValue = callback(session);
     }, options.scope);
 
     this.runtime.scheduleUpdate(coroutine, {

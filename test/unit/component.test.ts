@@ -143,20 +143,16 @@ describe('ComponentBinding', () => {
       const binding = new ComponentBinding(Increment, props, part);
       const updater = new TestUpdater();
 
-      const commitSpy = vi.spyOn(binding, 'commit');
-
-      binding.pendingLanes = Lanes.NoLanes;
+      binding.pendingLanes = Lanes.DefaultLane;
 
       SESSION1: {
         updater.startUpdate(
           (session) => {
-            session.frame.pendingCoroutines.push(binding);
-            session.frame.mutationEffects.push(binding);
+            binding.attach(session);
           },
           { priority: 'user-blocking' },
         );
 
-        expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(binding.pendingLanes).toBe(
           Lanes.DefaultLane | Lanes.UserBlockingLane,
         );
@@ -167,11 +163,9 @@ describe('ComponentBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          session.frame.pendingCoroutines.push(binding);
-          session.frame.mutationEffects.push(binding);
+          binding.attach(session);
         });
 
-        expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(binding.pendingLanes).toBe(Lanes.NoLanes);
         expect(part.node.nodeValue).toBe('101');
       }

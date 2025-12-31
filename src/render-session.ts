@@ -20,6 +20,7 @@ import {
   type TemplateMode,
   type UpdateHandle,
   type UpdateOptions,
+  type UpdateResult,
   type Usable,
 } from './internal.js';
 
@@ -131,17 +132,26 @@ export class RenderSession implements RenderContext {
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
+    if (this._coroutine.scope === Scope.DETACHED) {
+      return {
+        lanes: Lanes.NoLanes,
+        scheduled: Promise.resolve({ status: 'detached' }),
+        finished: Promise.resolve({ status: 'detached' }),
+      };
+    }
+
     if (this._frame.lanes !== Lanes.NoLanes) {
       const runningTask = this._context.getPendingTasks().at(-1);
       if (runningTask !== undefined) {
         this._frame.pendingCoroutines.push(this._coroutine);
         return {
           lanes: runningTask.lanes,
-          scheduled: Promise.resolve(),
+          scheduled: Promise.resolve({ status: 'done' }),
           finished: runningTask.continuation.promise,
         };
       }
     }
+
     return this._context.scheduleUpdate(this._coroutine, options);
   }
 
@@ -319,8 +329,8 @@ export class RenderSession implements RenderContext {
           if (areStatesEqual(nextState, prevState)) {
             return {
               lanes: Lanes.NoLanes,
-              scheduled: Promise.resolve(),
-              finished: Promise.resolve(),
+              scheduled: Promise.resolve({ status: 'canceled' }),
+              finished: Promise.resolve({ status: 'canceled' }),
             };
           } else {
             const handle = this.forceUpdate(options);
@@ -369,7 +379,7 @@ export class RenderSession implements RenderContext {
 
   async waitForUpdate(): Promise<number> {
     const pendingTasks = this._context.getPendingTasks();
-    const promises: Promise<void>[] = [];
+    const promises: Promise<UpdateResult>[] = [];
 
     for (let i = 0, l = pendingTasks.length; i < l; i++) {
       const pendingTask = pendingTasks[i]!;

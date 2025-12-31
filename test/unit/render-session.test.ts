@@ -3,44 +3,31 @@ import { shallowEqual } from '@/compare.js';
 import {
   $customHook,
   CommitPhase,
-  type Hook,
   type RefObject,
   type RenderContext,
+  Scope,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { Literal } from '@/template-literal.js';
 import { MockCoroutine, MockTemplate } from '../mocks.js';
-import { TestRenderer, TestUpdater } from '../test-helpers.js';
+import { TestRenderer } from '../test-helpers.js';
 
 describe('RenderSession', () => {
   describe('catchError()', () => {
     it('adds an error handler', () => {
       const handler = vi.fn();
       const error = {};
-      const updater = new TestUpdater();
+      const renderer = new TestRenderer();
 
       SESSION: {
-        updater.startUpdate(({ frame, scope, context }, coroutine) => {
-          const hooks: Hook[] = [];
-          const session = new RenderSession(
-            hooks,
-            coroutine,
-            frame,
-            scope,
-            context,
-          );
-
+        renderer.startRender((session) => {
           session.catchError(handler);
 
           session.catchError((error, handle) => {
             handle(error);
           });
 
-          frame.pendingCoroutines.push(
-            new MockCoroutine(() => {
-              throw error;
-            }, scope),
-          );
+          throw error;
         });
 
         expect(handler).toHaveBeenCalledOnce();
@@ -244,6 +231,28 @@ describe('RenderSession', () => {
 
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
       expect(count).toBe(1);
+    });
+
+    it('should do nothing if the coroutine is detached', async () => {
+      const renderer = new TestRenderer();
+
+      const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
+
+      const count = renderer.startRender(
+        (session) => {
+          const [count, setCount] = session.useState(0);
+
+          session.useEffect(() => {
+            setCount(1);
+          }, []);
+
+          return count;
+        },
+        { coroutine: new MockCoroutine(undefined, Scope.DETACHED) },
+      );
+
+      expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
+      expect(count).toBe(0);
     });
   });
 
