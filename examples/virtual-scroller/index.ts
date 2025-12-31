@@ -66,7 +66,7 @@ const App = createComponent(function App(
         <input
           type="range"
           min=${0}
-          max=${source.length}
+          max=${source.length - 1}
           $value=${selectedIndex}
           @change=${handleSelectedIndexChange}
         >
