@@ -3,6 +3,7 @@ import { DirectiveSpecifier } from './directive.js';
 import {
   $customHook,
   type Cleanup,
+  type ComponentState,
   type Coroutine,
   type DispatchOptions,
   type Effect,
@@ -25,7 +26,7 @@ import {
 } from './internal.js';
 
 export class RenderSession implements RenderContext {
-  private readonly _hooks: Hook[];
+  private readonly _state: ComponentState;
 
   private readonly _coroutine: Coroutine;
 
@@ -38,13 +39,13 @@ export class RenderSession implements RenderContext {
   private _hookIndex = 0;
 
   constructor(
-    hooks: Hook[],
+    state: ComponentState,
     coroutine: Coroutine,
     frame: RenderFrame,
     scope: Scope,
     context: SessionContext,
   ) {
-    this._hooks = hooks;
+    this._state = state;
     this._coroutine = coroutine;
     this._frame = frame;
     this._scope = scope;
@@ -77,20 +78,21 @@ export class RenderSession implements RenderContext {
   }
 
   finalize(): void {
-    const currentHook = this._hooks[this._hookIndex];
+    const { hooks } = this._state;
+    const currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.FinalizerHook>(HookType.Finalizer, currentHook);
     } else {
-      this._hooks.push({ type: HookType.Finalizer });
+      hooks.push({ type: HookType.Finalizer });
 
       // Refuse to use new hooks after finalization.
-      Object.freeze(this._hooks);
+      Object.freeze(hooks);
     }
 
-    for (let i = 0, l = this._hooks.length; i < l; i++) {
-      const headHook = this._hooks[i]!;
-      const tailHook = this._hooks[l - i - 1]!;
+    for (let i = 0, l = hooks.length; i < l; i++) {
+      const headHook = hooks[i]!;
+      const tailHook = hooks[l - i - 1]!;
       switch (headHook.type) {
         case HookType.PassiveEffect:
           if (
@@ -152,7 +154,9 @@ export class RenderSession implements RenderContext {
       }
     }
 
-    return this._context.scheduleUpdate(this._coroutine, options);
+    const handle = this._context.scheduleUpdate(this._coroutine, options);
+    this._state.pendingLanes |= handle.lanes;
+    return handle;
   }
 
   getSessionContext(): SessionContext {
@@ -231,7 +235,8 @@ export class RenderSession implements RenderContext {
   }
 
   useId(): string {
-    let currentHook = this._hooks[this._hookIndex];
+    const { hooks } = this._state;
+    let currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.IdHook>(HookType.Id, currentHook);
@@ -240,7 +245,7 @@ export class RenderSession implements RenderContext {
         type: HookType.Id,
         id: this._context.nextIdentifier(),
       };
-      this._hooks.push(currentHook);
+      hooks.push(currentHook);
     }
 
     this._hookIndex++;
@@ -263,7 +268,8 @@ export class RenderSession implements RenderContext {
   }
 
   useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T {
-    let currentHook = this._hooks[this._hookIndex];
+    const { hooks } = this._state;
+    let currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.MemoHook<T>>(HookType.Memo, currentHook);
@@ -278,7 +284,7 @@ export class RenderSession implements RenderContext {
         value: factory(),
         dependencies,
       };
-      this._hooks.push(currentHook);
+      hooks.push(currentHook);
     }
 
     this._hookIndex++;
@@ -297,7 +303,8 @@ export class RenderSession implements RenderContext {
     ) => UpdateHandle,
     isPending: boolean,
   ] {
-    let currentHook = this._hooks[this._hookIndex];
+    const { hooks } = this._state;
+    let currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.ReducerHook<TState, TAction>>(
@@ -344,7 +351,7 @@ export class RenderSession implements RenderContext {
         memoizedState: state,
       };
       currentHook = hook;
-      this._hooks.push(hook);
+      hooks.push(hook);
     }
 
     this._hookIndex++;
@@ -396,7 +403,8 @@ export class RenderSession implements RenderContext {
     dependencies: readonly unknown[] | null,
     type: Hook.EffectHook['type'],
   ): void {
-    let currentHook = this._hooks[this._hookIndex];
+    const { hooks } = this._state;
+    let currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.EffectHook>(type, currentHook);
@@ -410,7 +418,7 @@ export class RenderSession implements RenderContext {
         memoizedDependencies: null,
         cleanup: undefined,
       };
-      this._hooks.push(currentHook);
+      hooks.push(currentHook);
     }
 
     this._hookIndex++;

@@ -68,9 +68,14 @@ export interface Component<TProps, TResult = unknown>
   arePropsEqual(nextProps: TProps, prevProps: TProps): boolean;
 }
 
+export interface ComponentState {
+  hooks: Hook[];
+  pendingLanes: Lanes;
+}
+
 export interface Coroutine {
   readonly scope: Scope;
-  pendingLanes: Lanes;
+  readonly pendingLanes: Lanes;
   resume(session: UpdateSession): void;
 }
 
@@ -374,7 +379,7 @@ export interface SessionContext extends DirectiveContext {
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,
     props: TProps,
-    hooks: Hook[],
+    state: ComponentState,
     coroutine: Coroutine,
     frame: RenderFrame,
     scope: Scope,

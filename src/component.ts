@@ -3,6 +3,7 @@ import {
   type Bindable,
   type Binding,
   type Component,
+  type ComponentState,
   type Coroutine,
   type DirectiveContext,
   type Effect,
@@ -58,9 +59,7 @@ export class ComponentBinding<TProps, TResult>
 
   private _scope: Scope = Scope.DETACHED;
 
-  private _pendingLanes: Lanes = Lanes.NoLanes;
-
-  private _hooks: Hook[] = [];
+  private _state: ComponentState = createComponentState();
 
   constructor(
     component: Component<TProps, TResult>,
@@ -93,11 +92,7 @@ export class ComponentBinding<TProps, TResult>
   }
 
   get pendingLanes(): Lanes {
-    return this._pendingLanes;
-  }
-
-  set pendingLanes(value: Lanes) {
-    this._pendingLanes = value;
+    return this._state.pendingLanes;
   }
 
   resume(session: UpdateSession): void {
@@ -107,7 +102,7 @@ export class ComponentBinding<TProps, TResult>
     const result = context.renderComponent(
       this._component,
       this._props,
-      this._hooks,
+      this._state,
       this,
       frame,
       subScope,
@@ -125,12 +120,12 @@ export class ComponentBinding<TProps, TResult>
     if (
       dirty &&
       this._scope === rootScope &&
-      this._pendingLanes !== Lanes.NoLanes
+      this._state.pendingLanes !== Lanes.NoLanes
     ) {
       frame.mutationEffects.push(this._slot);
     }
 
-    this._pendingLanes &= ~frame.lanes;
+    this._state.pendingLanes &= ~frame.lanes;
   }
 
   shouldUpdate(props: TProps): boolean {
@@ -146,13 +141,14 @@ export class ComponentBinding<TProps, TResult>
   }
 
   detach(session: UpdateSession): void {
+    const { hooks } = this._state;
     const { frame } = session;
 
     this._slot?.detach(session);
 
-    for (let i = 0, l = this._hooks.length; i < l; i++) {
-      const headHook = this._hooks[i]!;
-      const tailHook = this._hooks[l - i - 1]!;
+    for (let i = 0, l = hooks.length; i < l; i++) {
+      const headHook = hooks[i]!;
+      const tailHook = hooks[l - i - 1]!;
       switch (headHook.type) {
         case HookType.PassiveEffect:
           frame.passiveEffects.push(new CleanEffectHook(headHook));
@@ -169,8 +165,7 @@ export class ComponentBinding<TProps, TResult>
     }
 
     this._scope = Scope.DETACHED;
-    this._pendingLanes = Lanes.NoLanes;
-    this._hooks = [];
+    this._state = createComponentState();
   }
 
   commit(): void {
@@ -193,6 +188,13 @@ class CleanEffectHook implements Effect {
     this._hook.cleanup?.();
     this._hook.cleanup = undefined;
   }
+}
+
+function createComponentState(): ComponentState {
+  return {
+    hooks: [],
+    pendingLanes: Lanes.NoLanes,
+  };
 }
 
 function resolveBinding<TProps, TResult>(

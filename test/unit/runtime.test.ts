@@ -4,8 +4,8 @@ import { createComponent } from '@/component.js';
 import {
   $toDirective,
   CommitPhase,
+  type ComponentState,
   type Directive,
-  type Hook,
   Lanes,
   PartType,
   Scope,
@@ -524,7 +524,7 @@ describe('Runtime', () => {
     it('renders a component with the new render session', () => {
       const component = createComponent(() => null);
       const props = {};
-      const hooks: Hook[] = [];
+      const state: ComponentState = { hooks: [], pendingLanes: Lanes.NoLanes };
       const coroutine = new MockCoroutine();
       const frame = createRenderFrame(1, Lanes.AllLanes);
       const scope = new Scope();
@@ -538,7 +538,7 @@ describe('Runtime', () => {
       const result = runtime.renderComponent(
         component,
         props,
-        hooks,
+        state,
         coroutine,
         frame,
         scope,

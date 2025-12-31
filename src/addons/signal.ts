@@ -90,10 +90,6 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     return this._pendingLanes;
   }
 
-  set pendingLanes(value: Lanes) {
-    this._pendingLanes = value;
-  }
-
   resume(session: UpdateSession): void {
     if (this._slot.reconcile(this._signal.value, session)) {
       session.frame.mutationEffects.push(this._slot);
@@ -140,7 +136,8 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   private _subscribeSignal(context: SessionContext): Subscription {
     return this._signal.subscribe(() => {
-      context.scheduleUpdate(this);
+      const { lanes } = context.scheduleUpdate(this);
+      this._pendingLanes |= lanes;
     });
   }
 }

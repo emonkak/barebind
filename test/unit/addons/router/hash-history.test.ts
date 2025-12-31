@@ -10,7 +10,6 @@ import {
 } from '@/addons/router/history.js';
 import { RelativeURL } from '@/addons/router/relative-url.js';
 import type { RenderSession } from '@/render-session.js';
-import { MockCoroutine } from '../../../mocks.js';
 import { createElement, TestRenderer } from '../../../test-helpers.js';
 
 describe('HashHistory()', () => {
@@ -70,13 +69,10 @@ describe('HashHistory()', () => {
 
       stableNavigator.navigate('/articles/foo%2Fbar');
 
-      expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(
-        expect.any(MockCoroutine),
-        {
-          immediate: true,
-          viewTransition: true,
-        },
-      );
+      expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(expect.any(Object), {
+        immediate: true,
+        viewTransition: true,
+      });
 
       SESSION2: {
         const { location, navigator } = helper.startRender(callback);
@@ -119,13 +115,10 @@ describe('HashHistory()', () => {
         state,
       });
 
-      expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(
-        expect.any(MockCoroutine),
-        {
-          immediate: true,
-          viewTransition: true,
-        },
-      );
+      expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(expect.any(Object), {
+        immediate: true,
+        viewTransition: true,
+      });
 
       SESSION2: {
         const { location, navigator } = helper.startRender(callback);
@@ -263,13 +256,10 @@ describe('HashHistory()', () => {
     element.click();
     document.body.removeChild(element);
 
-    expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(
-      expect.any(MockCoroutine),
-      {
-        immediate: true,
-        viewTransition: true,
-      },
-    );
+    expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(expect.any(Object), {
+      immediate: true,
+      viewTransition: true,
+    });
 
     SESSION2: {
       const { location } = helper.startRender((session) => {
@@ -309,13 +299,10 @@ describe('HashHistory()', () => {
         } as NavigateEventInit),
       );
 
-      expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(
-        expect.any(MockCoroutine),
-        {
-          immediate: true,
-          viewTransition: true,
-        },
-      );
+      expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(expect.any(Object), {
+        immediate: true,
+        viewTransition: true,
+      });
 
       SESSION2: {
         const { location } = helper.startRender((session) => {
@@ -351,13 +338,10 @@ describe('HashHistory()', () => {
       }),
     );
 
-    expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(
-      expect.any(MockCoroutine),
-      {
-        immediate: true,
-        viewTransition: true,
-      },
-    );
+    expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(expect.any(Object), {
+      immediate: true,
+      viewTransition: true,
+    });
 
     SESSION2: {
       const { location } = helper.startRender(callback);

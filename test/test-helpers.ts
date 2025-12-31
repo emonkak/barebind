@@ -2,15 +2,15 @@ import {
   type Coroutine,
   type Hook,
   HookType,
-  type Lanes,
+  Lanes,
   type RenderFrame,
-  type Scope,
+  Scope,
   type UpdateOptions,
   type UpdateSession,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime, type RuntimeOptions } from '@/runtime.js';
-import { MockBackend, MockCoroutine } from './mocks.js';
+import { MockBackend } from './mocks.js';
 
 interface TestRenderOptions extends UpdateOptions {
   scope?: Scope;
@@ -52,10 +52,18 @@ export class TestRenderer {
     let returnValue: T;
     let thrownError: unknown;
 
-    const coroutine = new MockCoroutine(
-      ({ frame, rootScope, scope, context }) => {
+    const state = {
+      hooks: this.hooks,
+      pendingLanes: Lanes.AllLanes,
+    };
+    const coroutine = {
+      get pendingLanes(): Lanes {
+        return state.pendingLanes;
+      },
+      scope: options.scope ?? new Scope(),
+      resume({ frame, rootScope, scope, context }: UpdateSession): void {
         const session = new RenderSession(
-          this.hooks,
+          state,
           options.coroutine ?? coroutine,
           frame,
           scope,
@@ -66,9 +74,9 @@ export class TestRenderer {
         });
         returnValue = callback(session);
         session.finalize();
+        state.pendingLanes &= ~frame.lanes;
       },
-      options.scope,
-    );
+    };
 
     this.runtime.scheduleUpdate(coroutine, {
       flush: false,
@@ -100,12 +108,17 @@ export class TestUpdater {
     let returnValue: T;
     let thrownError: unknown;
 
-    const coroutine = new MockCoroutine((session) => {
-      session.rootScope.addErrorHandler((error) => {
-        thrownError = error;
-      });
-      returnValue = callback(session);
-    }, options.scope);
+    const coroutine = {
+      pendingLanes: Lanes.AllLanes,
+      scope: options.scope ?? new Scope(),
+      resume(session: UpdateSession): void {
+        session.rootScope.addErrorHandler((error) => {
+          thrownError = error;
+        });
+        returnValue = callback(session);
+        this.pendingLanes &= ~session.frame.lanes;
+      },
+    };
 
     this.runtime.scheduleUpdate(coroutine, {
       flush: false,

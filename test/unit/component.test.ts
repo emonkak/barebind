@@ -143,12 +143,11 @@ describe('ComponentBinding', () => {
       const binding = new ComponentBinding(Increment, props, part);
       const updater = new TestUpdater();
 
-      binding.pendingLanes = Lanes.DefaultLane;
-
       SESSION1: {
         updater.startUpdate(
           (session) => {
             binding.attach(session);
+            session.frame.mutationEffects.push(binding);
           },
           { priority: 'user-blocking' },
         );
@@ -164,6 +163,7 @@ describe('ComponentBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.attach(session);
+          session.frame.mutationEffects.push(binding);
         });
 
         expect(binding.pendingLanes).toBe(Lanes.NoLanes);

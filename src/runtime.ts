@@ -2,11 +2,11 @@ import {
   $toDirective,
   CommitPhase,
   type Component,
+  type ComponentState,
   type Coroutine,
   type Directive,
   type Effect,
   getLanesFromOptions,
-  type Hook,
   isBindable,
   Lanes,
   type Layout,
@@ -349,13 +349,13 @@ export class Runtime implements SessionContext {
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,
     props: TProps,
-    hooks: Hook[],
+    state: ComponentState,
     coroutine: Coroutine,
     frame: RenderFrame,
     scope: Scope,
   ): TResult {
     const { id } = frame;
-    const session = new RenderSession(hooks, coroutine, frame, scope, this);
+    const session = new RenderSession(state, coroutine, frame, scope, this);
 
     if (!this._observers.isEmpty()) {
       notifyObservers(this._observers, {
@@ -442,8 +442,6 @@ export class Runtime implements SessionContext {
       lanes,
       continuation,
     };
-
-    coroutine.pendingLanes |= lanes;
 
     let scheduled: Promise<UpdateResult>;
 

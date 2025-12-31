@@ -205,13 +205,9 @@ describe('RenderSession', () => {
       });
 
       expect(scheduleUpdateSpy).toHaveBeenCalledTimes(2);
-      expect(scheduleUpdateSpy).toHaveBeenNthCalledWith(
-        2,
-        expect.any(MockCoroutine),
-        {
-          priority: 'background',
-        },
-      );
+      expect(scheduleUpdateSpy).toHaveBeenNthCalledWith(2, expect.any(Object), {
+        priority: 'background',
+      });
     });
 
     it('renders the session again if rendering is running', async () => {
