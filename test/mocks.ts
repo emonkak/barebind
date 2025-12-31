@@ -68,10 +68,10 @@ export class MockBackend implements RuntimeBackend {
     return new MockTemplate(strings, binds, placeholder, mode);
   }
 
-  requestCallback(
-    callback: () => Promise<void> | void,
+  requestCallback<T>(
+    callback: () => T | PromiseLike<T>,
     _options?: RequestCallbackOptions,
-  ): Promise<void> {
+  ): Promise<T> {
     return Promise.resolve().then(callback);
   }
 

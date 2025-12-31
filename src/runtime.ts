@@ -44,10 +44,10 @@ export interface RuntimeBackend {
     placeholder: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]>;
-  requestCallback(
-    callback: () => Promise<void> | void,
+  requestCallback<T>(
+    callback: () => T | PromiseLike<T>,
     options?: RequestCallbackOptions,
-  ): Promise<void>;
+  ): Promise<T>;
   resolveLayout(value: unknown, part: Part): Layout;
   resolvePrimitive(value: unknown, part: Part): Primitive<unknown>;
   startViewTransition(callback: () => Promise<void> | void): Promise<void>;

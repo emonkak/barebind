@@ -68,10 +68,10 @@ export class BrowserBackend implements RuntimeBackend {
     return TaggedTemplate.parse(strings, binds, placeholder, mode, document);
   }
 
-  requestCallback(
-    callback: () => Promise<void> | void,
+  requestCallback<T>(
+    callback: () => T | PromiseLike<T>,
     options?: RequestCallbackOptions,
-  ): Promise<void> {
+  ): Promise<T> {
     if (typeof window.scheduler?.postTask === 'function') {
       return scheduler.postTask(callback, options);
     } else {

@@ -65,10 +65,10 @@ export class ServerBackend implements RuntimeBackend {
     );
   }
 
-  requestCallback(
-    callback: () => Promise<void> | void,
+  requestCallback<T>(
+    callback: () => T | PromiseLike<T>,
     _options?: RequestCallbackOptions,
-  ): Promise<void> {
+  ): Promise<T> {
     return new Promise((resolve) => {
       setTimeout(resolve);
     }).then(callback);
