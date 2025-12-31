@@ -60,21 +60,21 @@ export class RenderSession implements RenderContext {
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
   ): DirectiveSpecifier<readonly unknown[]> {
-    return this._dynamicTemplate(strings, binds, 'html');
+    return this._createDynamicTemplate(strings, binds, 'html');
   }
 
   dynamicMath(
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
   ): DirectiveSpecifier<readonly unknown[]> {
-    return this._dynamicTemplate(strings, binds, 'math');
+    return this._createDynamicTemplate(strings, binds, 'math');
   }
 
   dynamicSVG(
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
   ): DirectiveSpecifier<readonly unknown[]> {
-    return this._dynamicTemplate(strings, binds, 'svg');
+    return this._createDynamicTemplate(strings, binds, 'svg');
   }
 
   finalize(): void {
@@ -176,7 +176,7 @@ export class RenderSession implements RenderContext {
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
   ): DirectiveSpecifier<readonly unknown[]> {
-    return this._template(strings, binds, 'html');
+    return this._createTemplate(strings, binds, 'html');
   }
 
   isUpdatePending(): boolean {
@@ -196,7 +196,7 @@ export class RenderSession implements RenderContext {
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
   ): DirectiveSpecifier<readonly unknown[]> {
-    return this._template(strings, binds, 'math');
+    return this._createTemplate(strings, binds, 'math');
   }
 
   setSharedContext(key: unknown, value: unknown): void {
@@ -207,14 +207,14 @@ export class RenderSession implements RenderContext {
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
   ): DirectiveSpecifier<readonly unknown[]> {
-    return this._template(strings, binds, 'svg');
+    return this._createTemplate(strings, binds, 'svg');
   }
 
   text(
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
   ): DirectiveSpecifier<readonly unknown[]> {
-    return this._template(strings, binds, 'textarea');
+    return this._createTemplate(strings, binds, 'textarea');
   }
 
   use<T>(usable: Usable<T>): T {
@@ -403,6 +403,21 @@ export class RenderSession implements RenderContext {
     return (await Promise.allSettled(promises)).length;
   }
 
+  private _createDynamicTemplate(
+    strings: TemplateStringsArray,
+    binds: readonly unknown[],
+    mode: TemplateMode,
+  ): DirectiveSpecifier<readonly unknown[]> {
+    const { strings: expandedStrings, values: expandedBinds } =
+      this._context.expandLiterals(strings, binds);
+    const template = this._context.resolveTemplate(
+      expandedStrings,
+      expandedBinds as unknown[],
+      mode,
+    );
+    return new DirectiveSpecifier(template, expandedBinds);
+  }
+
   private _createEffect(
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null,
@@ -429,22 +444,7 @@ export class RenderSession implements RenderContext {
     this._hookIndex++;
   }
 
-  private _dynamicTemplate(
-    strings: TemplateStringsArray,
-    binds: readonly unknown[],
-    mode: TemplateMode,
-  ): DirectiveSpecifier<readonly unknown[]> {
-    const { strings: expandedStrings, values: expandedBinds } =
-      this._context.expandLiterals(strings, binds);
-    const template = this._context.resolveTemplate(
-      expandedStrings,
-      expandedBinds as unknown[],
-      mode,
-    );
-    return new DirectiveSpecifier(template, expandedBinds);
-  }
-
-  private _template(
+  private _createTemplate(
     strings: TemplateStringsArray,
     binds: readonly unknown[],
     mode: TemplateMode,
