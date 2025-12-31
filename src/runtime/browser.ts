@@ -25,6 +25,8 @@ import { TextPrimitive } from '../primitive/text.js';
 import type { Runtime, RuntimeBackend } from '../runtime.js';
 import { LooseLayout } from '../slot/loose.js';
 import { StrictLayout } from '../slot/strict.js';
+import { ChildNodeTemplate } from '../template/child-node.js';
+import { FragmentTemplate } from '../template/fragment.js';
 import { TaggedTemplate } from '../template/tagged.js';
 
 export class BrowserBackend implements RuntimeBackend {
@@ -124,9 +126,17 @@ export class BrowserBackend implements RuntimeBackend {
         }
         return AttributePrimitive.instance;
       case PartType.ChildNode:
-        return value != null
-          ? CommentPrimitive.instance
-          : BlackholePrimitive.instance;
+        if (value == null) {
+          return BlackholePrimitive.instance;
+        }
+        if (Array.isArray(value)) {
+          return new FragmentTemplate(
+            new Array<ChildNodeTemplate<any>>(value.length).fill(
+              ChildNodeTemplate.instance,
+            ),
+          );
+        }
+        return CommentPrimitive.instance;
       case PartType.Element:
         return SpreadPrimitive.instance;
       case PartType.Event:

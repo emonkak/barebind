@@ -14,6 +14,8 @@ import { ServerBackend } from '@/runtime/server.js';
 import { Runtime } from '@/runtime.js';
 import { LooseLayout } from '@/slot/loose.js';
 import { StrictLayout } from '@/slot/strict.js';
+import { ChildNodeTemplate } from '@/template/child-node.js';
+import { FragmentTemplate } from '@/template/fragment.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { templateLiteral } from '../../test-helpers.js';
@@ -164,16 +166,6 @@ describe('ServerBackend', () => {
         AttributePrimitive.instance,
       ],
       [
-        'foo',
-        {
-          type: PartType.ChildNode,
-          node: document.createComment(''),
-          anchorNode: null,
-          namespaceURI: HTML_NAMESPACE_URI,
-        },
-        CommentPrimitive.instance,
-      ],
-      [
         null,
         {
           type: PartType.ChildNode,
@@ -192,6 +184,30 @@ describe('ServerBackend', () => {
           namespaceURI: HTML_NAMESPACE_URI,
         },
         BlackholePrimitive.instance,
+      ],
+      [
+        ['foo', 'bar', 'baz'],
+        {
+          type: PartType.ChildNode,
+          node: document.createComment(''),
+          anchorNode: null,
+          namespaceURI: HTML_NAMESPACE_URI,
+        },
+        new FragmentTemplate([
+          ChildNodeTemplate.instance,
+          ChildNodeTemplate.instance,
+          ChildNodeTemplate.instance,
+        ]),
+      ],
+      [
+        'foo',
+        {
+          type: PartType.ChildNode,
+          node: document.createComment(''),
+          anchorNode: null,
+          namespaceURI: HTML_NAMESPACE_URI,
+        },
+        CommentPrimitive.instance,
       ],
       [
         {},
@@ -243,7 +259,9 @@ describe('ServerBackend', () => {
     ] as const)('resolves the Primitive from an arbitrary part', (value, part, expectedPrimitive) => {
       const backend = new ServerBackend(document);
 
-      expect(backend.resolvePrimitive(value, part)).toBe(expectedPrimitive);
+      expect(backend.resolvePrimitive(value, part)).toStrictEqual(
+        expectedPrimitive,
+      );
     });
 
     it.each([
