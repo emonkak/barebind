@@ -144,6 +144,8 @@ export class ComponentBinding<TProps, TResult>
   detach(session: UpdateSession): void {
     const { frame } = session;
 
+    this._slot?.detach(session);
+
     for (let i = 0, l = this._hooks.length; i < l; i++) {
       const headHook = this._hooks[i]!;
       const tailHook = this._hooks[l - i - 1]!;
@@ -161,8 +163,6 @@ export class ComponentBinding<TProps, TResult>
           break;
       }
     }
-
-    this._slot?.detach(session);
 
     this._scope = Scope.DETACHED;
     this._pendingLanes = Lanes.NoLanes;
