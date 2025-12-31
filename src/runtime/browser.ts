@@ -41,9 +41,9 @@ export class BrowserBackend implements RuntimeBackend {
   }
 
   getTaskPriority(): TaskPriority {
-    const currentEvent = window.event;
-    if (currentEvent !== undefined) {
-      return isContinuousEvent(currentEvent) ? 'user-visible' : 'user-blocking';
+    const { event } = window;
+    if (event !== undefined) {
+      return isContinuousEvent(event) ? 'user-visible' : 'user-blocking';
     } else {
       return document.readyState === 'complete'
         ? 'background'
