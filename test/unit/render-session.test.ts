@@ -6,6 +6,7 @@ import {
   type RefObject,
   type RenderContext,
   Scope,
+  type UpdateHandle,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { Literal } from '@/template-literal.js';
@@ -195,12 +196,13 @@ describe('RenderSession', () => {
   describe('forceUpdate()', () => {
     it('schedules an update with the current coroutine', async () => {
       const renderer = new TestRenderer();
-
       const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
+
+      let handle: UpdateHandle | undefined;
 
       renderer.startRender((session) => {
         session.useEffect(() => {
-          session.forceUpdate({ priority: 'background' });
+          handle = session.forceUpdate({ priority: 'background' });
         }, []);
       });
 
@@ -208,18 +210,28 @@ describe('RenderSession', () => {
       expect(scheduleUpdateSpy).toHaveBeenNthCalledWith(2, expect.any(Object), {
         priority: 'background',
       });
+
+      expect(await handle?.scheduled).toStrictEqual({
+        canceled: false,
+        done: true,
+      });
+      expect(await handle?.finished).toStrictEqual({
+        canceled: false,
+        done: true,
+      });
     });
 
     it('renders the session again if rendering is running', async () => {
       const renderer = new TestRenderer();
-
       const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
+
+      let handle: UpdateHandle | undefined;
 
       const count = renderer.startRender((session) => {
         const [count, setCount] = session.useState(0);
 
         if (count === 0) {
-          setCount(count + 1);
+          handle = setCount(count + 1);
         }
 
         return count;
@@ -227,19 +239,28 @@ describe('RenderSession', () => {
 
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
       expect(count).toBe(1);
+      expect(await handle?.scheduled).toStrictEqual({
+        canceled: true,
+        done: true,
+      });
+      expect(await handle?.finished).toStrictEqual({
+        canceled: false,
+        done: true,
+      });
     });
 
     it('should do nothing if the coroutine is detached', async () => {
       const renderer = new TestRenderer();
-
       const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
+
+      let handle: UpdateHandle | undefined;
 
       const count = renderer.startRender(
         (session) => {
           const [count, setCount] = session.useState(0);
 
           session.useEffect(() => {
-            setCount(1);
+            handle = setCount(1);
           }, []);
 
           return count;
@@ -249,6 +270,14 @@ describe('RenderSession', () => {
 
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
       expect(count).toBe(0);
+      expect(await handle?.scheduled).toStrictEqual({
+        canceled: true,
+        done: false,
+      });
+      expect(await handle?.finished).toStrictEqual({
+        canceled: true,
+        done: false,
+      });
     });
   });
 
@@ -620,7 +649,7 @@ describe('RenderSession', () => {
       expect(callback).toHaveBeenCalledTimes(1);
     });
 
-    it('returns an initial state by the function', async () => {
+    it('returns an initial state by the function', () => {
       const renderer = new TestRenderer();
       const reducer = (count: number, n: number) => count + n;
 

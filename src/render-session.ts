@@ -140,8 +140,8 @@ export class RenderSession implements RenderContext {
     if (this._coroutine.scope === Scope.DETACHED) {
       return {
         lanes: Lanes.NoLanes,
-        scheduled: Promise.resolve({ status: 'detached' }),
-        finished: Promise.resolve({ status: 'detached' }),
+        scheduled: Promise.resolve({ canceled: true, done: false }),
+        finished: Promise.resolve({ canceled: true, done: false }),
       };
     }
 
@@ -151,7 +151,7 @@ export class RenderSession implements RenderContext {
         this._frame.pendingCoroutines.push(this._coroutine);
         return {
           lanes: runningTask.lanes,
-          scheduled: Promise.resolve({ status: 'done' }),
+          scheduled: Promise.resolve({ canceled: true, done: true }),
           finished: runningTask.continuation.promise,
         };
       }
@@ -341,8 +341,8 @@ export class RenderSession implements RenderContext {
           if (areStatesEqual(nextState, prevState)) {
             return {
               lanes: Lanes.NoLanes,
-              scheduled: Promise.resolve({ status: 'canceled' }),
-              finished: Promise.resolve({ status: 'canceled' }),
+              scheduled: Promise.resolve({ canceled: true, done: true }),
+              finished: Promise.resolve({ canceled: true, done: true }),
             };
           } else {
             const handle = this.forceUpdate(options);

@@ -221,14 +221,16 @@ export class MockCoroutine implements Coroutine {
 
   scope: Scope;
 
-  pendingLanes: Lanes = Lanes.AllLanes;
+  pendingLanes: Lanes;
 
   constructor(
     callback: (this: Coroutine, session: UpdateSession) => void = () => {},
     scope: Scope = new Scope(),
+    pendingLanes: Lanes = Lanes.AllLanes,
   ) {
     this.callback = callback;
     this.scope = scope;
+    this.pendingLanes = pendingLanes;
   }
 
   resume(session: UpdateSession): void {

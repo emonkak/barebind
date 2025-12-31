@@ -76,17 +76,23 @@ describe('Runtime', () => {
           session.frame.layoutEffects.push(layoutEffect);
         });
 
-        const handle = runtime.scheduleUpdate(coroutine, {
+        const handle1 = runtime.scheduleUpdate(coroutine, {
+          flush: false,
+          priority: 'user-blocking',
+        });
+        const handle2 = runtime.scheduleUpdate(coroutine, {
           flush: false,
           priority: 'user-blocking',
         });
 
-        runtime.scheduleUpdate(coroutine, {
-          flush: false,
-          priority: 'user-blocking',
+        await expect(handle1.scheduled).resolves.toStrictEqual({
+          canceled: false,
+          done: true,
         });
-
-        await handle.scheduled;
+        await expect(handle2.scheduled).resolves.toStrictEqual({
+          canceled: false,
+          done: true,
+        });
 
         expect(runtime.getPendingTasks()).toStrictEqual([
           expect.objectContaining({
@@ -103,7 +109,14 @@ describe('Runtime', () => {
 
         expect(runtime.getPendingTasks()).toStrictEqual([]);
 
-        await handle.finished;
+        await expect(handle1.finished).resolves.toStrictEqual({
+          canceled: false,
+          done: true,
+        });
+        await expect(handle2.finished).resolves.toStrictEqual({
+          canceled: true,
+          done: true,
+        });
 
         expect(requestCallbackSpy).toHaveBeenCalledTimes(3);
         expect(startViewTransitionSpy).toHaveBeenCalledTimes(0);
@@ -171,7 +184,10 @@ describe('Runtime', () => {
           viewTransition: true,
         });
 
-        await handle.scheduled;
+        await expect(handle.scheduled).resolves.toStrictEqual({
+          canceled: false,
+          done: true,
+        });
 
         expect(runtime.getPendingTasks()).toStrictEqual([
           expect.objectContaining({
@@ -187,7 +203,10 @@ describe('Runtime', () => {
 
         expect(runtime.getPendingTasks()).toStrictEqual([]);
 
-        await handle.finished;
+        await expect(handle.finished).resolves.toStrictEqual({
+          canceled: false,
+          done: true,
+        });
 
         expect(requestCallbackSpy).toHaveBeenCalledTimes(5);
         expect(startViewTransitionSpy).toHaveBeenCalledTimes(1);
@@ -273,7 +292,10 @@ describe('Runtime', () => {
           flush: false,
         });
 
-        await handle.scheduled;
+        await expect(handle.scheduled).resolves.toStrictEqual({
+          canceled: false,
+          done: true,
+        });
 
         await runtime.flushAsync();
 
@@ -305,17 +327,23 @@ describe('Runtime', () => {
           session.frame.passiveEffects.push(passiveEffect);
         });
 
-        const handle = runtime.scheduleUpdate(coroutine, {
+        const handle1 = runtime.scheduleUpdate(coroutine, {
+          flush: false,
+          priority: 'user-blocking',
+        });
+        const handle2 = runtime.scheduleUpdate(coroutine, {
           flush: false,
           priority: 'user-blocking',
         });
 
-        runtime.scheduleUpdate(coroutine, {
-          flush: false,
-          priority: 'user-blocking',
+        await expect(handle1.scheduled).resolves.toStrictEqual({
+          canceled: false,
+          done: true,
         });
-
-        await handle.scheduled;
+        await expect(handle2.scheduled).resolves.toStrictEqual({
+          canceled: false,
+          done: true,
+        });
 
         expect(runtime.getPendingTasks()).toStrictEqual([
           expect.objectContaining({
@@ -332,7 +360,14 @@ describe('Runtime', () => {
 
         expect(runtime.getPendingTasks()).toStrictEqual([]);
 
-        await handle.finished;
+        await expect(handle1.finished).resolves.toStrictEqual({
+          canceled: false,
+          done: true,
+        });
+        await expect(handle2.finished).resolves.toStrictEqual({
+          canceled: true,
+          done: true,
+        });
 
         expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
         expect(layoutEffect.commit).toHaveBeenCalledTimes(1);
@@ -410,7 +445,10 @@ describe('Runtime', () => {
           viewTransition: true,
         });
 
-        await handle.scheduled;
+        await expect(handle.scheduled).resolves.toStrictEqual({
+          canceled: false,
+          done: true,
+        });
 
         expect(runtime.getPendingTasks()).toStrictEqual([
           expect.objectContaining({
@@ -426,7 +464,10 @@ describe('Runtime', () => {
 
         expect(runtime.getPendingTasks()).toStrictEqual([]);
 
-        await handle.finished;
+        await expect(handle.finished).resolves.toStrictEqual({
+          canceled: false,
+          done: true,
+        });
 
         expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
         expect(layoutEffect.commit).toHaveBeenCalledTimes(2);

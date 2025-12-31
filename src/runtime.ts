@@ -138,7 +138,7 @@ export class Runtime implements SessionContext {
       const { coroutine, lanes, continuation } = pendingTask;
 
       if ((coroutine.pendingLanes & lanes) === Lanes.NoLanes) {
-        continuation.resolve({ status: 'canceled' });
+        continuation.resolve({ canceled: true, done: true });
         continue;
       }
 
@@ -217,15 +217,18 @@ export class Runtime implements SessionContext {
         }
 
         if (passiveEffects.length > 0) {
-          this._backend.requestCallback(
-            () => {
-              this._commitEffects(id, passiveEffects, CommitPhase.Passive);
-            },
-            { priority: 'background' },
-          );
+          this._backend
+            .requestCallback(
+              () => {
+                this._commitEffects(id, passiveEffects, CommitPhase.Passive);
+                return { canceled: false, done: true };
+              },
+              { priority: 'background' },
+            )
+            .then(continuation.resolve, continuation.reject);
+        } else {
+          continuation.resolve({ canceled: false, done: true });
         }
-
-        continuation.resolve({ status: 'done' });
       } catch (error) {
         continuation.reject(error);
       } finally {
@@ -251,7 +254,7 @@ export class Runtime implements SessionContext {
       const { coroutine, lanes, continuation } = pendingTask;
 
       if ((coroutine.pendingLanes & lanes) === Lanes.NoLanes) {
-        continuation.resolve({ status: 'canceled' });
+        continuation.resolve({ canceled: true, done: true });
         continue;
       }
 
@@ -319,7 +322,7 @@ export class Runtime implements SessionContext {
           this._commitEffects(id, passiveEffects, CommitPhase.Passive);
         }
 
-        continuation.resolve({ status: 'done' });
+        continuation.resolve({ canceled: false, done: true });
       } catch (error) {
         continuation.reject(error);
       } finally {
@@ -450,7 +453,7 @@ export class Runtime implements SessionContext {
 
       this._pendingTasks.pushBack(pendingTask);
 
-      scheduled = Promise.resolve({ status: 'done' });
+      scheduled = Promise.resolve({ canceled: false, done: true });
 
       if (shouldFlush) {
         queueMicrotask(() => {
@@ -467,7 +470,7 @@ export class Runtime implements SessionContext {
           this._backend.flushUpdate(this);
         }
 
-        return { status: 'done' };
+        return { canceled: false, done: true };
       }, options);
     }
 

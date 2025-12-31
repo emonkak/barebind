@@ -439,10 +439,10 @@ export interface UpdateOptions {
   viewTransition?: boolean;
 }
 
-export type UpdateResult =
-  | { status: 'done' }
-  | { status: 'canceled' }
-  | { status: 'detached' };
+export interface UpdateResult {
+  canceled: boolean;
+  done: boolean;
+}
 
 export interface UpdateTask {
   coroutine: Coroutine;
