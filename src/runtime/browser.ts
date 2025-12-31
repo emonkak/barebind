@@ -1,7 +1,7 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
 import {
-  CommitPhase,
+  type CommitPhase,
   type Effect,
   type Layout,
   type Part,
@@ -30,19 +30,9 @@ import { FragmentTemplate } from '../template/fragment.js';
 import { TaggedTemplate } from '../template/tagged.js';
 
 export class BrowserBackend implements RuntimeBackend {
-  commitEffects(effects: Effect[], phase: CommitPhase): void {
-    switch (phase) {
-      case CommitPhase.Mutation:
-      case CommitPhase.Layout:
-        for (let i = effects.length - 1; i >= 0; i--) {
-          effects[i]!.commit();
-        }
-        break;
-      case CommitPhase.Passive:
-        for (let i = 0, l = effects.length; i < l; i++) {
-          effects[i]!.commit();
-        }
-        break;
+  commitEffects(effects: Effect[], _phase: CommitPhase): void {
+    for (let i = effects.length - 1; i >= 0; i--) {
+      effects[i]!.commit();
     }
   }
 

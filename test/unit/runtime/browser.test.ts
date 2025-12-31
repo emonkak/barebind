@@ -46,7 +46,7 @@ const TEMPLATE_PLACEHOLDER = '__test__';
 
 describe('BrowserBackend', () => {
   describe('commitEffects()', () => {
-    it('commits only mutation effects', () => {
+    it('commits all effects in reverse order', () => {
       const executedEffects: Effect[] = [];
       const commit = function (this: Effect) {
         executedEffects.push(this);
@@ -82,14 +82,11 @@ describe('BrowserBackend', () => {
       backend.commitEffects(passiveEffects, CommitPhase.Passive);
 
       expect(executedEffects).toStrictEqual(
-        [
-          mutationEffects[1],
-          mutationEffects[0],
-          layoutEffects[1],
-          layoutEffects[0],
-          passiveEffects[0],
-          passiveEffects[1],
-        ].map((effect) => expect.exact(effect)),
+        mutationEffects
+          .toReversed()
+          .concat(layoutEffects.toReversed())
+          .concat(passiveEffects.toReversed())
+          .map((effect) => expect.exact(effect)),
       );
     });
   });

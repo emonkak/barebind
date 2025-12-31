@@ -57,9 +57,9 @@ export class ComponentBinding<TProps, TResult>
 
   private _slot: Slot<TResult> | null = null;
 
-  private _scope: Scope = Scope.DETACHED;
-
   private _state: ComponentState = createComponentState();
+
+  private _scope: Scope = Scope.DETACHED;
 
   constructor(
     component: Component<TProps, TResult>,
@@ -107,6 +107,7 @@ export class ComponentBinding<TProps, TResult>
       frame,
       subScope,
     );
+
     let dirty: boolean;
 
     if (this._slot !== null) {
@@ -146,20 +147,20 @@ export class ComponentBinding<TProps, TResult>
 
     this._slot?.detach(session);
 
-    for (let i = 0, l = hooks.length; i < l; i++) {
-      const headHook = hooks[i]!;
-      const tailHook = hooks[l - i - 1]!;
-      switch (headHook.type) {
+    // Cleanup effects follow the same declaration order within a component,
+    // but must run from parent to child. Therefore, we collect cleanup effects
+    // after all children are detached and then register them.
+    for (let i = hooks.length - 2; i >= 0; i--) {
+      const hook = hooks[i]!;
+      switch (hook.type) {
         case HookType.PassiveEffect:
-          frame.passiveEffects.push(new CleanEffectHook(headHook));
+          frame.passiveEffects.push(new CleanEffectHook(hook));
           break;
-      }
-      switch (tailHook.type) {
         case HookType.LayoutEffect:
-          frame.layoutEffects.push(new CleanEffectHook(tailHook));
+          frame.layoutEffects.push(new CleanEffectHook(hook));
           break;
         case HookType.InsertionEffect:
-          frame.mutationEffects.push(new CleanEffectHook(tailHook));
+          frame.mutationEffects.push(new CleanEffectHook(hook));
           break;
       }
     }

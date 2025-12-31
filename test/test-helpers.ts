@@ -69,11 +69,15 @@ export class TestRenderer {
           scope,
           context,
         );
+
         rootScope.addErrorHandler((error) => {
           thrownError = error;
         });
+
         returnValue = callback(session);
+
         session.finalize();
+
         state.pendingLanes &= ~frame.lanes;
       },
     };

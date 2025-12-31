@@ -79,6 +79,7 @@ export class RenderSession implements RenderContext {
 
   finalize(): void {
     const { hooks } = this._state;
+    const { mutationEffects, layoutEffects, passiveEffects } = this._frame;
     const currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
@@ -90,40 +91,42 @@ export class RenderSession implements RenderContext {
       Object.freeze(hooks);
     }
 
-    for (let i = 0, l = hooks.length; i < l; i++) {
-      const headHook = hooks[i]!;
-      const tailHook = hooks[l - i - 1]!;
-      switch (headHook.type) {
-        case HookType.PassiveEffect:
-          if (
-            areDependenciesChanged(
-              headHook.pendingDependencies,
-              headHook.memoizedDependencies,
-            )
-          ) {
-            this._frame.passiveEffects.push(new InvokeEffectHook(headHook));
-          }
-          break;
-      }
-      switch (tailHook.type) {
-        case HookType.LayoutEffect:
-          if (
-            areDependenciesChanged(
-              tailHook.pendingDependencies,
-              tailHook.memoizedDependencies,
-            )
-          ) {
-            this._frame.layoutEffects.push(new InvokeEffectHook(tailHook));
-          }
-          break;
+    // Effects must run from child to parent, while preserving declaration
+    // order within each component. To achieve this, we defer effect collection
+    // until after rendering and then traverse hooks in reverse order.
+    for (let i = hooks.length - 2; i >= 0; i--) {
+      const hook = hooks[i]!;
+      switch (hook.type) {
         case HookType.InsertionEffect:
           if (
             areDependenciesChanged(
-              tailHook.pendingDependencies,
-              tailHook.memoizedDependencies,
+              hook.pendingDependencies,
+              hook.memoizedDependencies,
             )
           ) {
-            this._frame.mutationEffects.push(new InvokeEffectHook(tailHook));
+            mutationEffects.push(new InvokeEffectHook(hook));
+          }
+          break;
+
+        case HookType.LayoutEffect:
+          if (
+            areDependenciesChanged(
+              hook.pendingDependencies,
+              hook.memoizedDependencies,
+            )
+          ) {
+            layoutEffects.push(new InvokeEffectHook(hook));
+          }
+          break;
+
+        case HookType.PassiveEffect:
+          if (
+            areDependenciesChanged(
+              hook.pendingDependencies,
+              hook.memoizedDependencies,
+            )
+          ) {
+            passiveEffects.push(new InvokeEffectHook(hook));
           }
           break;
       }
@@ -155,7 +158,9 @@ export class RenderSession implements RenderContext {
     }
 
     const handle = this._context.scheduleUpdate(this._coroutine, options);
+
     this._state.pendingLanes |= handle.lanes;
+
     return handle;
   }
 

@@ -24,7 +24,7 @@ const TEMPLATE_PLACEHOLDER = '__test__';
 
 describe('ServerBackend', () => {
   describe('commitEffects()', () => {
-    it('commits only mutation effects', () => {
+    it('commits only mutation effects in reverse order', () => {
       const executedEffects: Effect[] = [];
       const commit = function (this: Effect) {
         executedEffects.push(this);
@@ -60,9 +60,7 @@ describe('ServerBackend', () => {
       backend.commitEffects(passiveEffects, CommitPhase.Passive);
 
       expect(executedEffects).toStrictEqual(
-        [mutationEffects[1], mutationEffects[0]].map((effect) =>
-          expect.exact(effect),
-        ),
+        mutationEffects.toReversed().map((effect) => expect.exact(effect)),
       );
     });
   });
