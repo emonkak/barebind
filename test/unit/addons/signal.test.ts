@@ -46,7 +46,7 @@ describe('SignalDirective', () => {
   });
 });
 
-describe('SiganlBinding', () => {
+describe('SignalBinding', () => {
   describe('shouldUpdate()', () => {
     it('returns true if the subscribed value does not exist', () => {
       const signal = new Atom('foo');
