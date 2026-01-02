@@ -1,7 +1,7 @@
 /// <reference path="../typings/moveBefore.d.ts" />
 
 import { DirectiveError, DirectiveSpecifier } from './directive.js';
-import { mountMarkerNode } from './hydration.js';
+import { replaceMarkerNode } from './hydration.js';
 import {
   type Binding,
   type DirectiveContext,
@@ -173,7 +173,7 @@ export class RepeatBinding<TSource, TKey, TValue>
         const slot = context.resolveSlot(newValue, part);
         slot.attach(session);
         if (targetTree !== null) {
-          mountMarkerNode(targetTree, part.node);
+          replaceMarkerNode(targetTree, part.node);
         } else {
           this._pendingOperations.push({
             type: OPERATION_INSERT,

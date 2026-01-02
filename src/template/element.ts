@@ -1,5 +1,5 @@
 import { DirectiveSpecifier } from '../directive.js';
-import { mountMarkerNode, treatNodeName } from '../hydration.js';
+import { replaceMarkerNode, treatNodeName } from '../hydration.js';
 import {
   type DirectiveType,
   type Part,
@@ -69,7 +69,7 @@ export class ElementTemplate<
     elementSlot.attach(session);
     childrenSlot.attach(session);
 
-    mountMarkerNode(targetTree, childrenPart.node);
+    replaceMarkerNode(targetTree, childrenPart.node);
 
     return {
       childNodes: [elementPart.node],

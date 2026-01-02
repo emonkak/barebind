@@ -1,4 +1,4 @@
-import { mountMarkerNode } from '../hydration.js';
+import { replaceMarkerNode } from '../hydration.js';
 import {
   type DirectiveType,
   type Part,
@@ -37,7 +37,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
 
     childNodeSlot.attach(session);
 
-    mountMarkerNode(targetTree, childNodePart.node);
+    replaceMarkerNode(targetTree, childNodePart.node);
 
     return { childNodes: [childNodePart.node], slots: [childNodeSlot] };
   }

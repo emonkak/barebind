@@ -30,7 +30,7 @@ export function createTreeWalker(
   );
 }
 
-export function mountMarkerNode(
+export function replaceMarkerNode(
   targetTree: TreeWalker,
   markerNode: Comment,
 ): void {

@@ -2,7 +2,7 @@ import { formatNode } from '../debug/node.js';
 import { formatPart } from '../debug/part.js';
 import {
   createTreeWalker,
-  mountMarkerNode,
+  replaceMarkerNode,
   splitText,
   treatNodeName,
   treatNodeType,
@@ -235,7 +235,7 @@ export class TaggedTemplate<
         slot.attach(session);
 
         if (currentPart!.type === PartType.ChildNode) {
-          mountMarkerNode(targetTree, currentPart!.node);
+          replaceMarkerNode(targetTree, currentPart!.node);
         }
 
         slots[holeIndex] = slot;

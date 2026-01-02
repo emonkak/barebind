@@ -1,4 +1,4 @@
-import { createTreeWalker, mountMarkerNode } from './hydration.js';
+import { createTreeWalker, replaceMarkerNode } from './hydration.js';
 import {
   type Coroutine,
   type Effect,
@@ -128,7 +128,7 @@ class HydrateSlot<T> implements Effect {
   }
 
   commit(): void {
-    mountMarkerNode(this._targetTree, this._slot.part.node as Comment);
+    replaceMarkerNode(this._targetTree, this._slot.part.node as Comment);
     this._targetTree.root.appendChild(this._slot.part.node);
     this._slot.commit();
   }
