@@ -49,7 +49,7 @@ export class TextTemplate<T> extends AbstractTemplate<readonly [T]> {
 
     textSlot.attach(session);
 
-    return { childNodes: [textPart.node], slots: [textSlot] };
+    return { children: [textPart.node], slots: [textSlot] };
   }
 
   render(
@@ -69,6 +69,6 @@ export class TextTemplate<T> extends AbstractTemplate<readonly [T]> {
 
     textSlot.attach(session);
 
-    return { childNodes: [textPart.node], slots: [textSlot] };
+    return { children: [textPart.node], slots: [textSlot] };
   }
 }

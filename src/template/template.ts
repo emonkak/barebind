@@ -138,10 +138,10 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
 
   commit(): void {
     if (this._pendingResult !== null) {
-      const { childNodes, slots } = this._pendingResult;
+      const { children, slots } = this._pendingResult;
 
       if (this._memoizedResult === null) {
-        this._part.node.before(...childNodes);
+        this._part.node.before(...children);
       }
 
       for (let i = 0, l = slots.length; i < l; i++) {
@@ -156,7 +156,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
 
   rollback(): void {
     if (this._memoizedResult !== null) {
-      const { childNodes, slots } = this._memoizedResult;
+      const { children, slots } = this._memoizedResult;
 
       for (let i = slots.length - 1; i >= 0; i--) {
         const slot = slots[i]!;
@@ -164,15 +164,15 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
         if (
           (slot.part.type === PartType.ChildNode ||
             slot.part.type === PartType.Text) &&
-          childNodes.includes(slot.part.node)
+          children.includes(slot.part.node)
         ) {
           // This binding is mounted as a child of the root, so we must rollback it.
           slot.rollback();
         }
       }
 
-      for (let i = childNodes.length - 1; i >= 0; i--) {
-        childNodes[i]!.remove();
+      for (let i = children.length - 1; i >= 0; i--) {
+        children[i]!.remove();
       }
     }
 
@@ -204,14 +204,11 @@ export function stripWhitespaces(text: string): string {
   return text;
 }
 
-function getAnchorNode({
-  childNodes,
-  slots,
-}: TemplateResult): ChildNode | null {
-  if (childNodes.length > 0) {
-    return childNodes[0]! === slots[0]?.part.node
-      ? getStartNode(slots[0].part)
-      : childNodes[0]!;
+function getAnchorNode({ children, slots }: TemplateResult): ChildNode | null {
+  if (children.length > 0) {
+    return children[0]! === slots[0]?.part.node
+      ? getStartNode(slots[0]!.part)
+      : children[0]!;
   } else {
     return null;
   }

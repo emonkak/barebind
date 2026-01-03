@@ -58,11 +58,11 @@ describe('ElementTemplate', () => {
       const treeWalker = createTreeWalker(container);
       const updater = new TestUpdater();
 
-      const { childNodes, slots } = updater.startUpdate((session) => {
+      const { children, slots } = updater.startUpdate((session) => {
         return template.hydrate(binds, part, treeWalker, session);
       });
 
-      expect(childNodes).toStrictEqual([container.firstChild]);
+      expect(children).toStrictEqual([container.firstChild]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
           value: binds[0],
@@ -100,13 +100,11 @@ describe('ElementTemplate', () => {
       };
       const updater = new TestUpdater();
 
-      const { childNodes, slots } = updater.startUpdate((session) => {
+      const { children, slots } = updater.startUpdate((session) => {
         return template.render(binds, part, session);
       });
 
-      expect(childNodes.map(serializeNode)).toStrictEqual([
-        '<div><!----></div>',
-      ]);
+      expect(children.map(serializeNode)).toStrictEqual(['<div><!----></div>']);
       expect(slots).toStrictEqual([
         expect.objectContaining({
           value: binds[0],
@@ -145,13 +143,11 @@ describe('ElementTemplate', () => {
       };
       const updater = new TestUpdater();
 
-      const { childNodes, slots } = updater.startUpdate((session) => {
+      const { children, slots } = updater.startUpdate((session) => {
         return template.render(binds, part, session);
       });
 
-      expect(childNodes.map(serializeNode)).toStrictEqual([
-        '<svg><!----></svg>',
-      ]);
+      expect(children.map(serializeNode)).toStrictEqual(['<svg><!----></svg>']);
       expect(slots).toStrictEqual([
         expect.objectContaining({
           value: binds[0],

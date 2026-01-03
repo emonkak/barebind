@@ -420,7 +420,7 @@ export interface Template<TBinds extends readonly unknown[]>
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
 export interface TemplateResult {
-  childNodes: readonly ChildNode[];
+  children: readonly ChildNode[];
   slots: Slot<unknown>[];
 }
 

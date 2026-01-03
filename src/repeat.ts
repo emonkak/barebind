@@ -314,16 +314,16 @@ function getAnchorNode<T>(slots: Slot<T>[]): ChildNode | null {
   return slots.length > 0 ? getStartNode(slots[0]!.part) : null;
 }
 
-function getChildNodes(startNode: ChildNode, endNode: ChildNode): ChildNode[] {
-  const childNodes = [startNode];
+function getSiblings(startNode: ChildNode, endNode: ChildNode): ChildNode[] {
+  const siblings = [startNode];
   let currentNode: ChildNode | null = startNode;
 
   while (currentNode !== endNode && currentNode.nextSibling !== null) {
     currentNode = currentNode.nextSibling;
-    childNodes.push(currentNode);
+    siblings.push(currentNode);
   }
 
-  return childNodes;
+  return siblings;
 }
 
 function insertSlot<T>(
@@ -336,10 +336,7 @@ function insertSlot<T>(
   referenceNode.before(slot.part.node);
 }
 
-function moveChildNodes(
-  childNodes: ChildNode[],
-  referenceNode: ChildNode,
-): void {
+function moveSiblings(siblings: ChildNode[], referenceNode: ChildNode): void {
   const { parentNode } = referenceNode;
 
   if (parentNode !== null) {
@@ -347,8 +344,8 @@ function moveChildNodes(
       /* v8 ignore next */
       Element.prototype.moveBefore ?? Element.prototype.insertBefore;
 
-    for (let i = 0, l = childNodes.length; i < l; i++) {
-      insertOrMoveBefore.call(parentNode, childNodes[i]!, referenceNode);
+    for (let i = 0, l = siblings.length; i < l; i++) {
+      insertOrMoveBefore.call(parentNode, siblings[i]!, referenceNode);
     }
   }
 }
@@ -360,10 +357,10 @@ function moveSlot<T>(
 ): void {
   const startNode = getStartNode(slot.part);
   const endNode = slot.part.node;
-  const childNodes = getChildNodes(startNode, endNode);
+  const siblings = getSiblings(startNode, endNode);
   const referenceNode =
     referenceSlot !== undefined ? getStartNode(referenceSlot.part) : part.node;
-  moveChildNodes(childNodes, referenceNode);
+  moveSiblings(siblings, referenceNode);
 }
 
 function reconcileSlots<TKey, TValue>(

@@ -39,7 +39,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
 
     replaceMarkerNode(treeWalker, childNodePart.node);
 
-    return { childNodes: [childNodePart.node], slots: [childNodeSlot] };
+    return { children: [childNodePart.node], slots: [childNodeSlot] };
   }
 
   render(
@@ -59,6 +59,6 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
 
     childNodeSlot.attach(session);
 
-    return { childNodes: [childNodePart.node], slots: [childNodeSlot] };
+    return { children: [childNodePart.node], slots: [childNodeSlot] };
   }
 }

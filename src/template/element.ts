@@ -72,7 +72,7 @@ export class ElementTemplate<
     replaceMarkerNode(treeWalker, childrenPart.node);
 
     return {
-      childNodes: [elementPart.node],
+      children: [elementPart.node],
       slots: [elementSlot, childrenSlot],
     };
   }
@@ -105,7 +105,7 @@ export class ElementTemplate<
     childrenSlot.attach(session);
 
     return {
-      childNodes: [elementPart.node],
+      children: [elementPart.node],
       slots: [elementSlot, childrenSlot],
     };
   }

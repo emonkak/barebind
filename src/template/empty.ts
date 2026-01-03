@@ -23,7 +23,7 @@ export class EmptyTemplate extends AbstractTemplate<readonly []> {
     _treeWalker: TreeWalker,
     _session: UpdateSession,
   ): TemplateResult {
-    return { childNodes: [], slots: [] };
+    return { children: [], slots: [] };
   }
 
   render(
@@ -31,6 +31,6 @@ export class EmptyTemplate extends AbstractTemplate<readonly []> {
     _part: Part.ChildNodePart,
     _session: UpdateSession,
   ): TemplateResult {
-    return { childNodes: [], slots: [] };
+    return { children: [], slots: [] };
   }
 }

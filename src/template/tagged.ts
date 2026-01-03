@@ -154,7 +154,7 @@ export class TaggedTemplate<
     const sourceTree = createTreeWalker(fragment);
     const holes = this._holes;
     const totalHoles = holes.length;
-    const childNodes: ChildNode[] = [];
+    const children: ChildNode[] = [];
     const slots: Slot<unknown>[] = new Array(totalHoles);
     let nodeIndex = 0;
     let holeIndex = 0;
@@ -252,7 +252,7 @@ export class TaggedTemplate<
             );
 
       if (sourceNode.parentNode === fragment) {
-        childNodes.push(targetNode as ChildNode);
+        children.push(targetNode as ChildNode);
       }
     }
 
@@ -262,7 +262,7 @@ export class TaggedTemplate<
       );
     }
 
-    return { childNodes, slots };
+    return { children, slots };
   }
 
   render(
@@ -342,9 +342,9 @@ export class TaggedTemplate<
       }
     }
 
-    const childNodes = Array.from(fragment.childNodes);
+    const children = Array.from(fragment.childNodes);
 
-    return { childNodes, slots };
+    return { children, slots };
   }
 }
 
