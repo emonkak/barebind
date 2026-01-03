@@ -1,7 +1,7 @@
 import { sequentialEqual } from './compare.js';
 import { DirectiveSpecifier } from './directive.js';
 import {
-  $customHook,
+  $hook,
   type Cleanup,
   type ComponentState,
   type Coroutine,
@@ -218,8 +218,8 @@ export class RenderSession implements RenderContext {
   }
 
   use<T>(usable: Usable<T>): T {
-    if ($customHook in usable) {
-      return usable[$customHook](this);
+    if ($hook in usable) {
+      return usable[$hook](this);
     } else {
       return usable(this);
     }

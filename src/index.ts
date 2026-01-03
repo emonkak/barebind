@@ -3,7 +3,7 @@ export { type ComponentOptions, createComponent } from './component.js';
 export { DirectiveError } from './directive.js';
 export { HydrationError } from './hydration.js';
 export {
-  $customHook,
+  $hook,
   type Bindable,
   type Component,
   type HookFunction,

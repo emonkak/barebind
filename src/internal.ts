@@ -2,7 +2,7 @@
 
 import type { Literal, TemplateLiteral } from './template-literal.js';
 
-export const $customHook: unique symbol = Symbol('$customHook');
+export const $hook: unique symbol = Symbol('$hook');
 
 export const $toDirective: unique symbol = Symbol('$toDirective');
 
@@ -155,7 +155,7 @@ export namespace Hook {
 export type HookFunction<T> = (context: RenderContext) => T;
 
 export interface HookObject<T> {
-  [$customHook](context: RenderContext): T;
+  [$hook](context: RenderContext): T;
 }
 
 export const HookType = {

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { shallowEqual } from '@/compare.js';
 import {
-  $customHook,
+  $hook,
   CommitPhase,
   type RefObject,
   type RenderContext,
@@ -372,14 +372,14 @@ describe('RenderSession', () => {
     it('performs a custom hook object', () => {
       const renderer = new TestRenderer();
       const hook = {
-        [$customHook]: vi.fn().mockReturnValue('foo'),
+        [$hook]: vi.fn().mockReturnValue('foo'),
       };
 
       const result = renderer.startRender((session) => session.use(hook));
 
       expect(result).toBe('foo');
-      expect(hook[$customHook]).toHaveBeenCalledOnce();
-      expect(hook[$customHook]).toHaveBeenCalledWith(expect.any(RenderSession));
+      expect(hook[$hook]).toHaveBeenCalledOnce();
+      expect(hook[$hook]).toHaveBeenCalledWith(expect.any(RenderSession));
     });
   });
 

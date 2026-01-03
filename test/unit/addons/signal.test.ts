@@ -220,7 +220,7 @@ describe('SignalBinding', () => {
 });
 
 describe('Signal', () => {
-  describe('[$customHook]()', async () => {
+  describe('[$hook]()', async () => {
     it('request an update if the signal value has been changed', async () => {
       const signal = new Atom('foo');
       const renderer = new TestRenderer();

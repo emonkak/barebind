@@ -1,5 +1,5 @@
 import {
-  $customHook,
+  $hook,
   $toDirective,
   type Bindable,
   type Binding,
@@ -147,7 +147,7 @@ export abstract class Signal<T> implements HookObject<T>, Bindable<Signal<T>> {
 
   abstract get version(): number;
 
-  [$customHook](context: RenderContext): T {
+  [$hook](context: RenderContext): T {
     const value = this.value;
     const snapshot = context.useRef(value);
 
