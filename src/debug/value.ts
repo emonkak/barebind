@@ -10,13 +10,6 @@ export interface Debuggable {
   [$debug](format: (value: unknown) => string): string;
 }
 
-export interface DebugValueContext {
-  maxArrayLength: number;
-  maxDepth: number;
-  maxStringLength: number;
-  seenObjects: object[];
-}
-
 export function formatValue(
   value: unknown,
   seenObjects: object[] = [],
