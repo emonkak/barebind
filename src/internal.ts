@@ -181,7 +181,7 @@ export const Lanes = {
   UserBlockingLane:   0b100,
   UserVisibleLane:    0b1000,
   BackgroundLane:     0b10000,
-} as const;
+} as const satisfies Record<string, Lanes>;
 
 export type Lanes = number;
 
