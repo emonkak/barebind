@@ -4,12 +4,13 @@ import {
   HookType,
   Lanes,
   type RenderFrame,
-  Scope,
+  type Scope,
   type UpdateOptions,
   type UpdateSession,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime, type RuntimeOptions } from '@/runtime.js';
+import { addErrorHandler, createScope } from '@/scope.js';
 import { MockBackend } from './mocks.js';
 
 interface TestRenderOptions extends UpdateOptions {
@@ -60,7 +61,7 @@ export class TestRenderer {
       get pendingLanes(): Lanes {
         return state.pendingLanes;
       },
-      scope: options.scope ?? new Scope(),
+      scope: options.scope ?? createScope(),
       resume({ frame, rootScope, scope, context }: UpdateSession): void {
         const session = new RenderSession(
           state,
@@ -70,7 +71,7 @@ export class TestRenderer {
           context,
         );
 
-        rootScope.addErrorHandler((error) => {
+        addErrorHandler(rootScope, (error) => {
           thrownError = error;
         });
 
@@ -114,9 +115,9 @@ export class TestUpdater {
 
     const coroutine = {
       pendingLanes: Lanes.AllLanes,
-      scope: options.scope ?? new Scope(),
+      scope: options.scope ?? createScope(),
       resume(session: UpdateSession): void {
-        session.rootScope.addErrorHandler((error) => {
+        addErrorHandler(session.rootScope, (error) => {
           thrownError = error;
         });
         returnValue = callback(session);

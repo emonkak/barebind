@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createTreeWalker } from '@/hydration.js';
-import { PartType, Scope } from '@/internal.js';
+import { PartType } from '@/internal.js';
+import { createScope, setHydrationTreeWalker } from '@/scope.js';
 import {
   getNamespaceURIByTagName,
   HTML_NAMESPACE_URI,
@@ -442,7 +443,7 @@ describe('TemplateBinding', () => {
       };
       const binding = new TemplateBinding(template, binds, part);
       const container = createElement('div', {}, 'foo', part.node);
-      const scope = new Scope();
+      const scope = createScope();
       const treeWalker = createTreeWalker(container);
       const updater = new TestUpdater();
 
@@ -451,7 +452,7 @@ describe('TemplateBinding', () => {
         slots: [],
       });
 
-      scope.setHydrationTreeWalker(treeWalker);
+      setHydrationTreeWalker(scope, treeWalker);
 
       updater.startUpdate(
         (session) => {

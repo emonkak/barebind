@@ -13,10 +13,11 @@ import {
   Lanes,
   type Part,
   type RenderContext,
-  Scope,
+  type Scope,
   type Slot,
   type UpdateSession,
 } from './internal.js';
+import { createScope, DETACHED_SCOPE } from './scope.js';
 
 export interface ComponentOptions<TProps> {
   arePropsEqual?: (nextProps: TProps, prevProps: TProps) => boolean;
@@ -54,7 +55,7 @@ export class ComponentBinding<TProps, TResult>
 
   private _state: ComponentState = createComponentState();
 
-  private _scope: Scope = Scope.DETACHED;
+  private _scope: Scope = DETACHED_SCOPE;
 
   constructor(
     component: Component<TProps, TResult>,
@@ -92,7 +93,7 @@ export class ComponentBinding<TProps, TResult>
 
   resume(session: UpdateSession): void {
     const { frame, rootScope, context } = session;
-    const subScope = new Scope(this._scope);
+    const subScope = createScope(this._scope);
     const subSession = createUpdateSession(frame, subScope, rootScope, context);
     const result = context.renderComponent(
       this._component,
@@ -126,7 +127,7 @@ export class ComponentBinding<TProps, TResult>
 
   shouldUpdate(props: TProps): boolean {
     return (
-      this._scope === Scope.DETACHED ||
+      this._scope === DETACHED_SCOPE ||
       !this._component.arePropsEqual(props, this._props)
     );
   }
@@ -160,7 +161,7 @@ export class ComponentBinding<TProps, TResult>
       }
     }
 
-    this._scope = Scope.DETACHED;
+    this._scope = DETACHED_SCOPE;
     this._state = createComponentState();
   }
 

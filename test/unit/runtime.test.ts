@@ -8,9 +8,9 @@ import {
   type Directive,
   Lanes,
   PartType,
-  Scope,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
+import { createScope } from '@/scope.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { Literal } from '@/template-literal.js';
 import {
@@ -571,7 +571,7 @@ describe('Runtime', () => {
       };
       const coroutine = new MockCoroutine();
       const frame = createRenderFrame(1, Lanes.AllLanes);
-      const scope = new Scope();
+      const scope = createScope();
       const observer = new MockObserver();
       const runtime = createRuntime();
 

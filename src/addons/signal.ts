@@ -12,12 +12,13 @@ import {
   Lanes,
   type Part,
   type RenderContext,
-  Scope,
+  type Scope,
   type SessionContext,
   type Slot,
   type UpdateSession,
 } from '../internal.js';
 import { LinkedList } from '../linked-list.js';
+import { DETACHED_SCOPE } from '../scope.js';
 
 export type Subscriber = () => void;
 
@@ -52,7 +53,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   private readonly _slot: Slot<T>;
 
-  private _scope: Scope = Scope.DETACHED;
+  private _scope: Scope = DETACHED_SCOPE;
 
   private _pendingLanes: Lanes = Lanes.NoLanes;
 
@@ -121,7 +122,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._subscription?.();
     this._slot.detach(session);
 
-    this._scope = Scope.DETACHED;
+    this._scope = DETACHED_SCOPE;
     this._subscription = null;
   }
 

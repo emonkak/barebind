@@ -2,13 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import { DirectiveSpecifier } from '@/directive.js';
 import { createTreeWalker } from '@/hydration.js';
-import { type Part, PartType, Scope } from '@/internal.js';
+import { type Part, PartType } from '@/internal.js';
 import {
   Repeat,
   RepeatBinding,
   RepeatDirective,
   type RepeatProps,
 } from '@/repeat.js';
+import { createScope, setHydrationTreeWalker } from '@/scope.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
 import {
@@ -275,11 +276,11 @@ describe('RepeatBinding', () => {
         document.createComment(''),
         document.createComment(''),
       );
-      const scope = new Scope();
+      const scope = createScope();
       const treeWalker = createTreeWalker(container);
       const updater = new TestUpdater();
 
-      scope.setHydrationTreeWalker(treeWalker);
+      setHydrationTreeWalker(scope, treeWalker);
 
       updater.startUpdate(
         (session) => {

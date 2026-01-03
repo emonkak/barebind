@@ -4,12 +4,12 @@ import {
   type Effect,
   Lanes,
   PartType,
-  Scope,
   type SessionContext,
   type Slot,
   type UpdateHandle,
   type UpdateOptions,
 } from './internal.js';
+import { createScope, setHydrationTreeWalker } from './scope.js';
 
 export class Root<T> {
   private readonly _slot: Slot<T>;
@@ -44,13 +44,13 @@ export class Root<T> {
   }
 
   hydrate(options?: UpdateOptions): UpdateHandle {
-    const scope = new Scope();
+    const scope = createScope();
     const coroutine: Coroutine = {
       scope,
       pendingLanes: Lanes.DefaultLane,
       resume: (session) => {
         const treeWalker = createTreeWalker(this._container);
-        scope.setHydrationTreeWalker(treeWalker);
+        setHydrationTreeWalker(scope, treeWalker);
         this._slot.attach(session);
         session.frame.mutationEffects.push(
           new HydrateSlot(this._slot, treeWalker),
@@ -64,7 +64,7 @@ export class Root<T> {
   }
 
   mount(options?: UpdateOptions): UpdateHandle {
-    const scope = new Scope();
+    const scope = createScope();
     const coroutine: Coroutine = {
       scope,
       pendingLanes: Lanes.DefaultLane,
@@ -82,7 +82,7 @@ export class Root<T> {
   }
 
   update(value: T, options?: UpdateOptions): UpdateHandle {
-    const scope = new Scope();
+    const scope = createScope();
     const coroutine: Coroutine = {
       scope,
       pendingLanes: Lanes.DefaultLane,
@@ -99,7 +99,7 @@ export class Root<T> {
   }
 
   unmount(options?: UpdateOptions): UpdateHandle {
-    const scope = new Scope();
+    const scope = createScope();
     const coroutine: Coroutine = {
       scope,
       pendingLanes: Lanes.DefaultLane,

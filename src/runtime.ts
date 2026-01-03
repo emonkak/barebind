@@ -29,6 +29,7 @@ import {
 } from './internal.js';
 import { LinkedList } from './linked-list.js';
 import { RenderSession } from './render-session.js';
+import { handleError } from './scope.js';
 import {
   type Literal,
   type TemplateLiteral,
@@ -174,7 +175,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                coroutine.scope.handleError(error);
+                handleError(coroutine.scope, error);
               }
             }
 
@@ -290,7 +291,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                coroutine.scope.handleError(error);
+                handleError(coroutine.scope, error);
               }
             }
 
