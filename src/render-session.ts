@@ -107,7 +107,6 @@ export class RenderSession implements RenderContext {
             mutationEffects.push(new InvokeEffectHook(hook));
           }
           break;
-
         case HookType.LayoutEffect:
           if (
             areDependenciesChanged(
@@ -118,7 +117,6 @@ export class RenderSession implements RenderContext {
             layoutEffects.push(new InvokeEffectHook(hook));
           }
           break;
-
         case HookType.PassiveEffect:
           if (
             areDependenciesChanged(
