@@ -436,7 +436,7 @@ describe('TemplateBinding', () => {
       const binding = new TemplateBinding(template, binds, part);
       const container = createElement('div', {}, 'foo', part.node);
       const scope = new Scope();
-      const targetTree = createTreeWalker(container);
+      const treeWalker = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
@@ -444,7 +444,7 @@ describe('TemplateBinding', () => {
         slots: [],
       });
 
-      scope.setHydrationTarget(targetTree);
+      scope.setHydrationTreeWalker(treeWalker);
 
       updater.startUpdate(
         (session) => {
@@ -458,7 +458,7 @@ describe('TemplateBinding', () => {
       expect(hydrateSpy).toHaveBeenCalledWith(
         binds,
         part,
-        targetTree,
+        treeWalker,
         expect.any(Object),
       );
       expect(part.anchorNode).toBe(container.firstChild);

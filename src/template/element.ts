@@ -42,7 +42,7 @@ export class ElementTemplate<
   hydrate(
     binds: readonly [TProps, TChildren],
     part: Part.ChildNodePart,
-    targetTree: TreeWalker,
+    treeWalker: TreeWalker,
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;
@@ -53,8 +53,8 @@ export class ElementTemplate<
       type: PartType.Element,
       node: treatNodeName(
         this._tagName.toUpperCase(),
-        targetTree.nextNode(),
-        targetTree,
+        treeWalker.nextNode(),
+        treeWalker,
       ) as Element,
     };
     const childrenPart = {
@@ -69,7 +69,7 @@ export class ElementTemplate<
     elementSlot.attach(session);
     childrenSlot.attach(session);
 
-    replaceMarkerNode(targetTree, childrenPart.node);
+    replaceMarkerNode(treeWalker, childrenPart.node);
 
     return {
       childNodes: [elementPart.node],

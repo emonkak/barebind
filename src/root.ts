@@ -49,11 +49,11 @@ export class Root<T> {
       scope,
       pendingLanes: Lanes.DefaultLane,
       resume: (session) => {
-        const targetTree = createTreeWalker(this._container);
-        scope.setHydrationTarget(targetTree);
+        const treeWalker = createTreeWalker(this._container);
+        scope.setHydrationTreeWalker(treeWalker);
         this._slot.attach(session);
         session.frame.mutationEffects.push(
-          new HydrateSlot(this._slot, targetTree),
+          new HydrateSlot(this._slot, treeWalker),
         );
       },
     };
@@ -120,16 +120,16 @@ export class Root<T> {
 class HydrateSlot<T> implements Effect {
   private readonly _slot: Slot<T>;
 
-  private readonly _targetTree: TreeWalker;
+  private readonly _treeWalker: TreeWalker;
 
-  constructor(slot: Slot<T>, targetTree: TreeWalker) {
+  constructor(slot: Slot<T>, treeWalker: TreeWalker) {
     this._slot = slot;
-    this._targetTree = targetTree;
+    this._treeWalker = treeWalker;
   }
 
   commit(): void {
-    replaceMarkerNode(this._targetTree, this._slot.part.node as Comment);
-    this._targetTree.root.appendChild(this._slot.part.node);
+    replaceMarkerNode(this._treeWalker, this._slot.part.node as Comment);
+    this._treeWalker.root.appendChild(this._slot.part.node);
     this._slot.commit();
   }
 }

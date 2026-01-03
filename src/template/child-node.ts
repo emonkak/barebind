@@ -22,7 +22,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
   hydrate(
     binds: readonly [unknown],
     part: Part.ChildNodePart,
-    targetTree: TreeWalker,
+    treeWalker: TreeWalker,
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;
@@ -37,7 +37,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
 
     childNodeSlot.attach(session);
 
-    replaceMarkerNode(targetTree, childNodePart.node);
+    replaceMarkerNode(treeWalker, childNodePart.node);
 
     return { childNodes: [childNodePart.node], slots: [childNodeSlot] };
   }

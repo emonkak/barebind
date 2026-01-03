@@ -8,8 +8,8 @@ describe('treatNodeName()', () => {
     ['#text', document.createTextNode('')],
     ['DIV', document.createElement('div')],
   ] as const)('asserts that the node is the expected name', (expectedName, node) => {
-    const targetTree = createTreeWalker(document.createElement('div'));
-    expect(treatNodeName(expectedName, node, targetTree)).toBe(node);
+    const treeWalker = createTreeWalker(document.createElement('div'));
+    expect(treatNodeName(expectedName, node, treeWalker)).toBe(node);
   });
 
   it.each([
@@ -20,9 +20,9 @@ describe('treatNodeName()', () => {
     ['DIV', document.createComment('')],
     ['DIV', document.createTextNode('')],
   ] as const)('throws an error if the node is not the expected name', (expectedName, node) => {
-    const targetTree = createTreeWalker(document.createElement('div'));
+    const treeWalker = createTreeWalker(document.createElement('div'));
     expect(() => {
-      treatNodeName(expectedName, node, targetTree);
+      treatNodeName(expectedName, node, treeWalker);
     }).toThrow('Hydration is failed because the node type is mismatched.');
   });
 });
@@ -33,8 +33,8 @@ describe('treatNodeType()', () => {
     [Node.ELEMENT_NODE, document.createElement('div')],
     [Node.TEXT_NODE, document.createTextNode('')],
   ] as const)('asserts that the node is the expected type', (expectedType, node) => {
-    const targetTree = createTreeWalker(document.createElement('div'));
-    expect(treatNodeType(expectedType, node, targetTree)).toBe(node);
+    const treeWalker = createTreeWalker(document.createElement('div'));
+    expect(treatNodeType(expectedType, node, treeWalker)).toBe(node);
   });
 
   it.each([
@@ -45,9 +45,9 @@ describe('treatNodeType()', () => {
     [Node.TEXT_NODE, document.createComment('')],
     [Node.TEXT_NODE, document.createElement('div')],
   ] as const)('throws an error if the node is not the expected type', (expectedType, node) => {
-    const targetTree = createTreeWalker(document.createElement('div'));
+    const treeWalker = createTreeWalker(document.createElement('div'));
     expect(() => {
-      treatNodeType(expectedType, node, targetTree);
+      treatNodeType(expectedType, node, treeWalker);
     }).toThrow('Hydration is failed because the node type is mismatched.');
   });
 });

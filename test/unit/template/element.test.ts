@@ -55,11 +55,11 @@ describe('ElementTemplate', () => {
         {},
         createElement('div', { class: 'foo' }, document.createComment('bar')),
       );
-      const targetTree = createTreeWalker(container);
+      const treeWalker = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(binds, part, targetTree, session);
+        return template.hydrate(binds, part, treeWalker, session);
       });
 
       expect(childNodes).toStrictEqual([container.firstChild]);

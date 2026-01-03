@@ -34,7 +34,7 @@ export namespace Boundary {
   export interface HydrationBoundary {
     type: typeof BoundaryType.Hydration;
     next: Boundary | null;
-    targetTree: TreeWalker;
+    treeWalker: TreeWalker;
   }
 
   export interface SharedContextBoundary {
@@ -412,7 +412,7 @@ export interface Template<TBinds extends readonly unknown[]>
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    targetTree: TreeWalker,
+    treeWalker: TreeWalker,
     session: UpdateSession,
   ): TemplateResult;
 }
@@ -471,14 +471,14 @@ export class Scope {
     };
   }
 
-  getHydrationTarget(): TreeWalker | null {
+  getHydrationTreeWalker(): TreeWalker | null {
     for (
       let boundary = this._boundary;
       boundary !== null;
       boundary = boundary.next
     ) {
       if (boundary.type === BoundaryType.Hydration) {
-        return boundary.targetTree;
+        return boundary.treeWalker;
       }
     }
     return null;
@@ -531,11 +531,11 @@ export class Scope {
     handle(error);
   }
 
-  setHydrationTarget(targetTree: TreeWalker): void {
+  setHydrationTreeWalker(treeWalker: TreeWalker): void {
     this._boundary = {
       type: BoundaryType.Hydration,
       next: this._boundary,
-      targetTree,
+      treeWalker,
     };
   }
 

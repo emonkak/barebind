@@ -34,11 +34,11 @@ describe('EmptyTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const targetTree = createTreeWalker(document.createElement('div'));
+      const treeWalker = createTreeWalker(document.createElement('div'));
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(binds, part, targetTree, session);
+        return template.hydrate(binds, part, treeWalker, session);
       });
 
       expect(childNodes).toStrictEqual([]);

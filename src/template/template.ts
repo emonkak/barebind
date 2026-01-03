@@ -32,7 +32,7 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
   abstract hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    targetTree: TreeWalker,
+    treeWalker: TreeWalker,
     session: UpdateSession,
   ): TemplateResult;
 
@@ -105,13 +105,13 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
         slots[i]!.reconcile(this._binds[i]!, session);
       }
     } else {
-      const targetTree = session.rootScope.getHydrationTarget();
+      const treeWalker = session.rootScope.getHydrationTreeWalker();
 
-      if (targetTree !== null) {
+      if (treeWalker !== null) {
         this._pendingResult = this._template.hydrate(
           this._binds,
           this._part,
-          targetTree,
+          treeWalker,
           session,
         );
         this._part.anchorNode = getAnchorNode(this._pendingResult);

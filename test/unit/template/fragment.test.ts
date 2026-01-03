@@ -69,7 +69,7 @@ describe('FragmentTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = document.createElement('div');
-      const targetTree = createTreeWalker(container);
+      const treeWalker = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const hydrationSpys = innerTemplates.map((template) =>
@@ -92,7 +92,7 @@ describe('FragmentTemplate', () => {
       );
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(binds, part, targetTree, session);
+        return template.hydrate(binds, part, treeWalker, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -115,21 +115,21 @@ describe('FragmentTemplate', () => {
       expect(hydrationSpys[0]).toHaveBeenCalledWith(
         ['foo'],
         part,
-        targetTree,
+        treeWalker,
         expect.any(Object),
       );
       expect(hydrationSpys[1]).toHaveBeenCalledOnce();
       expect(hydrationSpys[1]).toHaveBeenCalledWith(
         [],
         part,
-        targetTree,
+        treeWalker,
         expect.any(Object),
       );
       expect(hydrationSpys[2]).toHaveBeenCalledOnce();
       expect(hydrationSpys[2]).toHaveBeenCalledWith(
         ['bar', 'baz'],
         part,
-        targetTree,
+        treeWalker,
         expect.any(Object),
       );
     });

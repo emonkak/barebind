@@ -280,10 +280,10 @@ describe('RepeatBinding', () => {
         document.createComment(''),
       );
       const scope = new Scope();
-      const targetTree = createTreeWalker(container);
+      const treeWalker = createTreeWalker(container);
       const updater = new TestUpdater();
 
-      scope.setHydrationTarget(targetTree);
+      scope.setHydrationTreeWalker(treeWalker);
 
       updater.startUpdate(
         (session) => {

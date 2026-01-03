@@ -145,7 +145,7 @@ export class TaggedTemplate<
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    targetTree: TreeWalker,
+    treeWalker: TreeWalker,
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;
@@ -182,8 +182,8 @@ export class TaggedTemplate<
               type: hole.type,
               node: treatNodeType(
                 Node.ELEMENT_NODE,
-                continuous ? targetTree.currentNode : targetTree.nextNode(),
-                targetTree,
+                continuous ? treeWalker.currentNode : treeWalker.nextNode(),
+                treeWalker,
               ),
               name: hole.name,
             };
@@ -193,7 +193,7 @@ export class TaggedTemplate<
               type: hole.type,
               node: document.createComment(''),
               anchorNode: null,
-              namespaceURI: getNamespaceURI(targetTree.currentNode, this._mode),
+              namespaceURI: getNamespaceURI(treeWalker.currentNode, this._mode),
             };
             break;
           case PartType.Element:
@@ -201,8 +201,8 @@ export class TaggedTemplate<
               type: hole.type,
               node: treatNodeType(
                 Node.ELEMENT_NODE,
-                continuous ? targetTree.currentNode : targetTree.nextNode(),
-                targetTree,
+                continuous ? treeWalker.currentNode : treeWalker.nextNode(),
+                treeWalker,
               ),
             };
             break;
@@ -210,8 +210,8 @@ export class TaggedTemplate<
           case PartType.Property: {
             const node = treatNodeType(
               Node.ELEMENT_NODE,
-              continuous ? targetTree.currentNode : targetTree.nextNode(),
-              targetTree,
+              continuous ? treeWalker.currentNode : treeWalker.nextNode(),
+              treeWalker,
             );
             currentPart = {
               type: hole.type,
@@ -224,7 +224,7 @@ export class TaggedTemplate<
           case PartType.Text:
             currentPart = {
               type: hole.type,
-              node: splitText(targetTree),
+              node: splitText(treeWalker),
               precedingText: hole.precedingText,
               followingText: hole.followingText,
             };
@@ -235,7 +235,7 @@ export class TaggedTemplate<
         slot.attach(session);
 
         if (currentPart!.type === PartType.ChildNode) {
-          replaceMarkerNode(targetTree, currentPart!.node);
+          replaceMarkerNode(treeWalker, currentPart!.node);
         }
 
         slots[holeIndex] = slot;
@@ -244,11 +244,11 @@ export class TaggedTemplate<
 
       const targetNode =
         currentPart !== null
-          ? targetTree.currentNode
+          ? treeWalker.currentNode
           : treatNodeName(
               sourceNode.nodeName,
-              targetTree.nextNode(),
-              targetTree,
+              treeWalker.nextNode(),
+              treeWalker,
             );
 
       if (sourceNode.parentNode === fragment) {
