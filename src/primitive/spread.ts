@@ -11,9 +11,8 @@ import { PrimitiveBinding } from './primitive.js';
 
 export type SpreadProps = { [key: string]: unknown };
 
-export class SpreadPrimitive implements Primitive<SpreadProps> {
-  static readonly instance: SpreadPrimitive = new SpreadPrimitive();
-
+export const SpreadPrimitive: Primitive<SpreadProps> = {
+  displayName: 'SpreadPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is SpreadProps {
     if (!isSpreadProps(value)) {
       throw new DirectiveError(
@@ -23,8 +22,7 @@ export class SpreadPrimitive implements Primitive<SpreadProps> {
         'The value of SpreadPrimitive must be an object.',
       );
     }
-  }
-
+  },
   resolveBinding(
     props: SpreadProps,
     part: Part,
@@ -39,8 +37,8 @@ export class SpreadPrimitive implements Primitive<SpreadProps> {
       );
     }
     return new SpreadBinding(props, part);
-  }
-}
+  },
+};
 
 export class SpreadBinding extends PrimitiveBinding<
   SpreadProps,
@@ -51,7 +49,7 @@ export class SpreadBinding extends PrimitiveBinding<
   private _memoizedSlots: Map<string, Slot<unknown>> | null = null;
 
   get type(): Primitive<SpreadProps> {
-    return SpreadPrimitive.instance;
+    return SpreadPrimitive;
   }
 
   shouldUpdate(props: SpreadProps): boolean {

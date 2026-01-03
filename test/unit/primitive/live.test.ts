@@ -15,13 +15,9 @@ describe('LivePrimitive', () => {
         defaultValue: '',
       };
       const runtime = createRuntime();
-      const binding = LivePrimitive.instance.resolveBinding(
-        value,
-        part,
-        runtime,
-      );
+      const binding = LivePrimitive.resolveBinding(value, part, runtime);
 
-      expect(binding.type).toBe(LivePrimitive.instance);
+      expect(binding.type).toBe(LivePrimitive);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });
@@ -34,9 +30,9 @@ describe('LivePrimitive', () => {
       };
       const runtime = createRuntime();
 
-      expect(() =>
-        LivePrimitive.instance.resolveBinding(value, part, runtime),
-      ).toThrow('LivePrimitive must be used in a live part.');
+      expect(() => LivePrimitive.resolveBinding(value, part, runtime)).toThrow(
+        'LivePrimitive must be used in a live part.',
+      );
     });
   });
 });

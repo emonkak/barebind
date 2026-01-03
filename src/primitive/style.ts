@@ -25,9 +25,8 @@ type StringKeys<T> = {
 const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
 const UPPERCASE_LETTER_PATTERN = /[A-Z]/g;
 
-export class StylePrimitive implements Primitive<StyleProps> {
-  static readonly instance: StylePrimitive = new StylePrimitive();
-
+export const StylePrimitive: Primitive<StyleProps> = {
+  displayName: 'StylePrimitive',
   ensureValue(value: unknown, part: Part): asserts value is StyleProps {
     if (!(typeof value === 'object' && value !== null)) {
       throw new DirectiveError(
@@ -37,8 +36,7 @@ export class StylePrimitive implements Primitive<StyleProps> {
         'The value of StylePrimitive must be an object.',
       );
     }
-  }
-
+  },
   resolveBinding(
     props: StyleProps,
     part: Part,
@@ -56,8 +54,8 @@ export class StylePrimitive implements Primitive<StyleProps> {
       );
     }
     return new StyleBinding(props, part);
-  }
-}
+  },
+};
 
 export class StyleBinding extends PrimitiveBinding<
   StyleProps,
@@ -66,7 +64,7 @@ export class StyleBinding extends PrimitiveBinding<
   private _memoizedValue: StyleProps = {};
 
   get type(): Primitive<StyleProps> {
-    return StylePrimitive.instance;
+    return StylePrimitive;
   }
 
   shouldUpdate(props: StyleProps): boolean {

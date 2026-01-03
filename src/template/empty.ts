@@ -7,8 +7,6 @@ import type {
 import { AbstractTemplate } from './template.js';
 
 export class EmptyTemplate extends AbstractTemplate<readonly []> {
-  static readonly instance: EmptyTemplate = new EmptyTemplate();
-
   get arity(): 0 {
     return 0;
   }

@@ -33,13 +33,9 @@ describe('SignalDirective', () => {
         followingText: '',
       };
       const runtime = createRuntime();
-      const binding = SignalDirective.instance.resolveBinding(
-        signal,
-        part,
-        runtime,
-      );
+      const binding = SignalDirective.resolveBinding(signal, part, runtime);
 
-      expect(binding.type).toBe(SignalDirective.instance);
+      expect(binding.type).toBe(SignalDirective);
       expect(binding.value).toBe(signal);
       expect(binding.part).toBe(part);
     });
@@ -57,11 +53,7 @@ describe('SignalBinding', () => {
         followingText: '',
       };
       const runtime = createRuntime();
-      const binding = SignalDirective.instance.resolveBinding(
-        signal,
-        part,
-        runtime,
-      );
+      const binding = SignalDirective.resolveBinding(signal, part, runtime);
 
       expect(binding.shouldUpdate(signal)).toBe(true);
     });
@@ -76,7 +68,7 @@ describe('SignalBinding', () => {
         followingText: '',
       };
       const updater = new TestUpdater();
-      const binding = SignalDirective.instance.resolveBinding(
+      const binding = SignalDirective.resolveBinding(
         signal1,
         part,
         updater.runtime,
@@ -102,7 +94,7 @@ describe('SignalBinding', () => {
         followingText: '',
       };
       const updater = new TestUpdater();
-      const binding = SignalDirective.instance.resolveBinding(
+      const binding = SignalDirective.resolveBinding(
         signal,
         part,
         updater.runtime,
@@ -140,7 +132,7 @@ describe('SignalBinding', () => {
         followingText: '',
       };
       const updater = new TestUpdater();
-      const binding = SignalDirective.instance.resolveBinding(
+      const binding = SignalDirective.resolveBinding(
         signal1,
         part,
         updater.runtime,
@@ -185,7 +177,7 @@ describe('SignalBinding', () => {
         followingText: '',
       };
       const updater = new TestUpdater();
-      const binding = SignalDirective.instance.resolveBinding(
+      const binding = SignalDirective.resolveBinding(
         signal,
         part,
         updater.runtime,
@@ -269,7 +261,7 @@ describe('Signal', () => {
       const signal = new Atom('foo');
       const directive = signal[$toDirective]();
 
-      expect(directive.type).toBe(SignalDirective.instance);
+      expect(directive.type).toBe(SignalDirective);
       expect(directive.value).toBe(signal);
       expect(directive.layout).toBe(undefined);
     });

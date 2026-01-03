@@ -1,6 +1,6 @@
 import { type DirectiveType, type Part, PartType } from '../internal.js';
 import { formatNode } from './node.js';
-import { formatValue, nameOf } from './value.js';
+import { formatValue } from './value.js';
 
 export function debugPart(
   part: Part,
@@ -10,9 +10,9 @@ export function debugPart(
   if (
     part.type === PartType.ChildNode &&
     (part.node.data === '' ||
-      part.node.data.startsWith('/' + nameOf(type) + '('))
+      part.node.data.startsWith('/' + type.displayName + '('))
   ) {
-    part.node.data = `/${nameOf(type)}(${formatValue(value)})`;
+    part.node.data = `/${type.displayName}(${formatValue(value)})`;
   }
 }
 
@@ -37,7 +37,7 @@ export function formatPart(part: Part, marker: string): string {
 export function undebugPart(part: Part, type: DirectiveType<unknown>): void {
   if (
     part.type === PartType.ChildNode &&
-    part.node.data.startsWith('/' + nameOf(type) + '(')
+    part.node.data.startsWith('/' + type.displayName + '(')
   ) {
     part.node.data = '';
   }

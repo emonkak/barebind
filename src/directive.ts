@@ -1,5 +1,5 @@
 import { formatPart } from './debug/part.js';
-import { $debug, type Debuggable, formatValue, nameOf } from './debug/value.js';
+import { $debug, type Debuggable, formatValue } from './debug/value.js';
 import {
   $toDirective,
   type Bindable,
@@ -20,7 +20,7 @@ export class DirectiveError<T> extends Error {
 
   constructor(type: DirectiveType<T>, value: T, part: Part, message: string) {
     DEBUG: {
-      const marker = `[[${nameOf(type)}(${formatValue(value)}) IS USED IN HERE!]]`;
+      const marker = `[[${type.displayName}(${formatValue(value)}) IS USED IN HERE!]]`;
       message += '\n' + formatPart(part, marker);
     }
 
@@ -48,7 +48,7 @@ export class DirectiveSpecifier<T>
   }
 
   [$debug](format: (value: unknown) => string): string {
-    return nameOf(this.type) + '(' + format(this.value) + ')';
+    return this.type.displayName + '(' + format(this.value) + ')';
   }
 
   [$toDirective](): Directive<T> {
@@ -72,7 +72,7 @@ export class LayoutSpecifier<T>
   }
 
   [$debug](format: (value: unknown) => string): string {
-    return nameOf(this.layout) + '(' + format(this.value) + ')';
+    return this.layout.displayName + '(' + format(this.value) + ')';
   }
 
   [$toDirective](

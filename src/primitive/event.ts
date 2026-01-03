@@ -19,9 +19,8 @@ interface EventHandlerObject<T extends Event> extends AddEventListenerOptions {
   handleEvent(event: T): void;
 }
 
-export class EventPrimitive implements Primitive<EventHandler> {
-  static instance: EventPrimitive = new EventPrimitive();
-
+export const EventPrimitive: Primitive<EventHandler> = {
+  displayName: 'EventPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is EventHandler {
     if (!isEventHandler(value)) {
       throw new DirectiveError(
@@ -31,8 +30,7 @@ export class EventPrimitive implements Primitive<EventHandler> {
         'The value of EventPrimitive must be an EventListener, EventListenerObject, null or undefined.',
       );
     }
-  }
-
+  },
   resolveBinding(
     handler: EventHandler,
     part: Part,
@@ -47,8 +45,8 @@ export class EventPrimitive implements Primitive<EventHandler> {
       );
     }
     return new EventBinding(handler, part);
-  }
-}
+  },
+};
 
 export class EventBinding extends PrimitiveBinding<
   EventHandler,
@@ -57,7 +55,7 @@ export class EventBinding extends PrimitiveBinding<
   private _memoizedValue: EventHandler = null;
 
   get type(): Primitive<EventHandler> {
-    return EventPrimitive.instance;
+    return EventPrimitive;
   }
 
   shouldUpdate(handler: EventHandler): boolean {

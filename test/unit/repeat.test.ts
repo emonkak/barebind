@@ -32,7 +32,7 @@ describe('Repeat()', () => {
     };
     const bindable = Repeat(props);
 
-    expect(bindable.type).toBe(RepeatDirective.instance);
+    expect(bindable.type).toBe(RepeatDirective);
     expect(bindable.value).toBe(props);
   });
 });
@@ -48,13 +48,9 @@ describe('RepeatDirective', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = createRuntime();
-      const binding = RepeatDirective.instance.resolveBinding(
-        props,
-        part,
-        runtime,
-      );
+      const binding = RepeatDirective.resolveBinding(props, part, runtime);
 
-      expect(binding.type).toBe(RepeatDirective.instance);
+      expect(binding.type).toBe(RepeatDirective);
       expect(binding.value).toBe(props);
       expect(binding.part).toBe(part);
     });
@@ -68,7 +64,7 @@ describe('RepeatDirective', () => {
       const runtime = createRuntime();
 
       expect(() =>
-        RepeatDirective.instance.resolveBinding(props, part, runtime),
+        RepeatDirective.resolveBinding(props, part, runtime),
       ).toThrow('RepeatDirective must be used in a child part.');
     });
   });

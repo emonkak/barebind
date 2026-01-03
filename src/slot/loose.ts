@@ -12,16 +12,15 @@ import {
 } from '../internal.js';
 
 export function Loose<T>(value: T): LayoutSpecifier<T> {
-  return new LayoutSpecifier(LooseLayout.instance, value);
+  return new LayoutSpecifier(LooseLayout, value);
 }
 
-export class LooseLayout implements Layout {
-  static readonly instance: LooseLayout = new LooseLayout();
-
+export const LooseLayout: Layout = {
+  displayName: 'LooseLayout',
   resolveSlot<T>(binding: Binding<UnwrapBindable<T>>): LooseSlot<T> {
     return new LooseSlot(binding);
-  }
-}
+  },
+};
 
 export class LooseSlot<T> implements Slot<T> {
   private _pendingBinding: Binding<UnwrapBindable<T>>;

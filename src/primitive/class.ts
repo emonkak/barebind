@@ -20,9 +20,8 @@ type ClassAtom = boolean | string | null | undefined;
 
 const CLASS_SEPARATOR_PATTERN = /\s+/;
 
-export class ClassPrimitive implements Primitive<ClassSpecifier> {
-  static readonly instance: ClassPrimitive = new ClassPrimitive();
-
+export const ClassPrimitive: Primitive<ClassSpecifier> = {
+  displayName: 'ClassPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is ClassSpecifier {
     if (!isObject(value)) {
       throw new DirectiveError(
@@ -32,8 +31,7 @@ export class ClassPrimitive implements Primitive<ClassSpecifier> {
         'The value of ClassPrimitive must be an object.',
       );
     }
-  }
-
+  },
   resolveBinding(
     clesses: ClassSpecifier,
     part: Part,
@@ -51,8 +49,8 @@ export class ClassPrimitive implements Primitive<ClassSpecifier> {
       );
     }
     return new ClassBinding(clesses, part);
-  }
-}
+  },
+};
 
 export class ClassBinding extends PrimitiveBinding<
   ClassSpecifier,
@@ -61,7 +59,7 @@ export class ClassBinding extends PrimitiveBinding<
   private _memoizedValue: ClassSpecifier = {};
 
   get type(): Primitive<ClassSpecifier> {
-    return ClassPrimitive.instance;
+    return ClassPrimitive;
   }
 
   shouldUpdate(classes: ClassSpecifier): boolean {

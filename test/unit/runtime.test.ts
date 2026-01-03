@@ -630,7 +630,7 @@ describe('Runtime', () => {
 
       expect(resolvePrimitiveSpy).toHaveBeenCalledOnce();
       expect(resolvePrimitiveSpy).toHaveBeenCalledWith(value, part);
-      expect(directive.type).toBe(MockPrimitive.instance);
+      expect(directive.type).toBe(MockPrimitive);
       expect(directive.value).toBe(value);
       expect(directive.layout).toBe(undefined);
     });
@@ -663,7 +663,7 @@ describe('Runtime', () => {
   describe('resolveSlot()', () => {
     it('resolves the slot from the bindable value', () => {
       const directive: Directive<string> = {
-        type: MockPrimitive.instance,
+        type: MockPrimitive,
         value: 'foo',
       };
       const value = {
@@ -709,7 +709,7 @@ describe('Runtime', () => {
       expect(resolvePrimitiveSpy).toHaveBeenCalledOnce();
       expect(resolvePrimitiveSpy).toHaveBeenCalledWith(value, part);
       expect(slot).toBeInstanceOf(MockSlot);
-      expect(slot.type).toBe(MockPrimitive.instance);
+      expect(slot.type).toBe(MockPrimitive);
       expect(slot.value).toBe(value);
       expect(slot.part).toBe(part);
     });

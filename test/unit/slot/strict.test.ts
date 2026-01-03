@@ -13,7 +13,7 @@ describe('Strcit()', () => {
     const bindable = Strict(value);
 
     expect(bindable.value).toBe(value);
-    expect(bindable.layout).toBe(StrictLayout.instance);
+    expect(bindable.layout).toBe(StrictLayout);
   });
 });
 
@@ -27,10 +27,10 @@ describe('StrictLayout', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive.instance, value, part);
-      const slot = StrictLayout.instance.resolveSlot(binding);
+      const binding = new MockBinding(MockPrimitive, value, part);
+      const slot = StrictLayout.resolveSlot(binding);
 
-      expect(slot.type).toBe(MockPrimitive.instance);
+      expect(slot.type).toBe(MockPrimitive);
       expect(slot.value).toBe(value);
       expect(slot.part).toBe(part);
     });
@@ -48,7 +48,7 @@ describe('StrictSlot', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive.instance, value1, part);
+      const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new StrictSlot(binding);
       const updater = new TestUpdater();
 
@@ -113,7 +113,7 @@ describe('StrictSlot', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive.instance, value, part);
+      const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new StrictSlot(binding);
       const updater = new TestUpdater();
 
@@ -154,7 +154,7 @@ describe('StrictSlot', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive.instance, value1, part);
+      const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new StrictSlot(binding);
       const updater = new TestUpdater();
 

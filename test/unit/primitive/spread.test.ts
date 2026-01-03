@@ -13,7 +13,11 @@ describe('SpreadPrimitive', () => {
       };
 
       expect(() => {
-        SpreadPrimitive.instance.ensureValue({ class: 'foo' }, part);
+        SpreadPrimitive.ensureValue!.call(
+          SpreadPrimitive,
+          { class: 'foo' },
+          part,
+        );
       }).not.toThrow();
     });
 
@@ -28,7 +32,7 @@ describe('SpreadPrimitive', () => {
       };
 
       expect(() => {
-        SpreadPrimitive.instance.ensureValue(value, part);
+        SpreadPrimitive.ensureValue!.call(SpreadPrimitive, value, part);
       }).toThrow('The value of SpreadPrimitive must be an object.');
     });
   });
@@ -41,13 +45,9 @@ describe('SpreadPrimitive', () => {
         node: document.createElement('div'),
       };
       const runtime = createRuntime();
-      const binding = SpreadPrimitive.instance.resolveBinding(
-        props,
-        part,
-        runtime,
-      );
+      const binding = SpreadPrimitive.resolveBinding(props, part, runtime);
 
-      expect(binding.type).toBe(SpreadPrimitive.instance);
+      expect(binding.type).toBe(SpreadPrimitive);
       expect(binding.value).toBe(props);
       expect(binding.part).toBe(part);
     });
@@ -63,7 +63,7 @@ describe('SpreadPrimitive', () => {
       const runtime = createRuntime();
 
       expect(() =>
-        SpreadPrimitive.instance.resolveBinding(props, part, runtime),
+        SpreadPrimitive.resolveBinding(props, part, runtime),
       ).toThrow('SpreadPrimitive must be used in an element part.');
     });
   });

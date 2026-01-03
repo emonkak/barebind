@@ -1,5 +1,4 @@
 import { debugPart, undebugPart } from '../debug/part.js';
-import { nameOf } from '../debug/value.js';
 import { DirectiveError, LayoutSpecifier } from '../directive.js';
 import {
   areDirectiveTypesEqual,
@@ -13,16 +12,15 @@ import {
 } from '../internal.js';
 
 export function Strict<T>(value: T): LayoutSpecifier<T> {
-  return new LayoutSpecifier(StrictLayout.instance, value);
+  return new LayoutSpecifier(StrictLayout, value);
 }
 
-export class StrictLayout implements Layout {
-  static readonly instance: StrictLayout = new StrictLayout();
-
+export const StrictLayout: Layout = {
+  displayName: 'StrictLayout',
   resolveSlot<T>(binding: Binding<UnwrapBindable<T>>): StrictSlot<T> {
     return new StrictSlot(binding);
-  }
-}
+  },
+};
 
 export class StrictSlot<T> implements Slot<T> {
   private readonly _binding: Binding<UnwrapBindable<T>>;
@@ -54,7 +52,7 @@ export class StrictSlot<T> implements Slot<T> {
         directive.type,
         directive.value,
         this._binding.part,
-        `The directive type must be ${nameOf(this._binding.type)} in this slot, but got ${nameOf(directive.type)}.`,
+        `The directive type must be ${this._binding.type.displayName} in this slot, but got ${directive.type.displayName}.`,
       );
     }
 

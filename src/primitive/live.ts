@@ -7,14 +7,13 @@ import {
 } from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export class LivePrimitive<T> implements Primitive<T> {
-  static readonly instance: LivePrimitive<any> = new LivePrimitive();
-
+export const LivePrimitive: Primitive<any> = {
+  displayName: 'LivePrimitive',
   resolveBinding(
-    value: T,
+    value: unknown,
     part: Part,
     _context: DirectiveContext,
-  ): LiveBinding<T> {
+  ): LiveBinding<unknown> {
     if (part.type !== PartType.Live) {
       throw new DirectiveError(
         this,
@@ -24,12 +23,12 @@ export class LivePrimitive<T> implements Primitive<T> {
       );
     }
     return new LiveBinding(value, part);
-  }
-}
+  },
+};
 
 export class LiveBinding<T> extends PrimitiveBinding<T, Part.LivePart> {
   get type(): Primitive<T> {
-    return LivePrimitive.instance;
+    return LivePrimitive;
   }
 
   shouldUpdate(_value: T): boolean {

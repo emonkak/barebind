@@ -54,20 +54,16 @@ interface ReconciliationHandler<T> {
 export function Repeat<TSource, TKey, TValue>(
   props: RepeatProps<TSource, TKey, TValue>,
 ): DirectiveSpecifier<RepeatProps<TSource, TKey, TValue>> {
-  return new DirectiveSpecifier(RepeatDirective.instance, props);
+  return new DirectiveSpecifier(RepeatDirective, props);
 }
 
-export class RepeatDirective<TSource, TKey, TValue>
-  implements DirectiveType<RepeatProps<TSource, TKey, TValue>>
-{
-  static readonly instance: RepeatDirective<any, any, any> =
-    new RepeatDirective();
-
+export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
+  displayName: 'RepeatDirective',
   resolveBinding(
-    props: RepeatProps<TSource, TKey, TValue>,
+    props: RepeatProps<unknown, unknown, unknown>,
     part: Part,
     _context: DirectiveContext,
-  ): RepeatBinding<TSource, TKey, TValue> {
+  ): RepeatBinding<unknown, unknown, unknown> {
     if (part.type !== PartType.ChildNode) {
       throw new DirectiveError(
         this,
@@ -77,8 +73,8 @@ export class RepeatDirective<TSource, TKey, TValue>
       );
     }
     return new RepeatBinding(props, part);
-  }
-}
+  },
+};
 
 export class RepeatBinding<TSource, TKey, TValue>
   implements Binding<RepeatProps<TSource, TKey, TValue>>
@@ -104,7 +100,7 @@ export class RepeatBinding<TSource, TKey, TValue>
   }
 
   get type(): DirectiveType<RepeatProps<TSource, TKey, TValue>> {
-    return RepeatDirective.instance;
+    return RepeatDirective;
   }
 
   get value(): RepeatProps<TSource, TKey, TValue> {

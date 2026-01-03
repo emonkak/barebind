@@ -7,14 +7,13 @@ import {
 } from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export class TextPrimitive<T> implements Primitive<T> {
-  static readonly instance: TextPrimitive<any> = new TextPrimitive();
-
+export const TextPrimitive: Primitive<any> = {
+  displayName: 'TextPrimitive',
   resolveBinding(
-    value: T,
+    value: unknown,
     part: Part,
     _context: DirectiveContext,
-  ): TextBinding<T> {
+  ): TextBinding<unknown> {
     if (part.type !== PartType.Text) {
       throw new DirectiveError(
         this,
@@ -24,14 +23,14 @@ export class TextPrimitive<T> implements Primitive<T> {
       );
     }
     return new TextBinding(value, part);
-  }
-}
+  },
+};
 
 export class TextBinding<T> extends PrimitiveBinding<T, Part.TextPart> {
   private _memoizedValue: T | null = null;
 
   get type(): Primitive<T> {
-    return TextPrimitive.instance;
+    return TextPrimitive;
   }
 
   shouldUpdate(value: T): boolean {

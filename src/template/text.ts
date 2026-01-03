@@ -8,8 +8,6 @@ import {
 import { AbstractTemplate } from './template.js';
 
 export class TextTemplate<T> extends AbstractTemplate<readonly [T]> {
-  static readonly instance: TextTemplate<any> = new TextTemplate();
-
   private readonly _precedingText: string;
 
   private readonly _followingText: string;

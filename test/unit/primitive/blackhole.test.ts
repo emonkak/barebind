@@ -13,13 +13,9 @@ describe('BlackholePrimitive', () => {
         node: document.createElement('div'),
       };
       const runtime = createRuntime();
-      const binding = BlackholePrimitive.instance.resolveBinding(
-        value,
-        part,
-        runtime,
-      );
+      const binding = BlackholePrimitive.resolveBinding(value, part, runtime);
 
-      expect(binding.type).toBe(BlackholePrimitive.instance);
+      expect(binding.type).toBe(BlackholePrimitive);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });

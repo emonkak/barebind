@@ -73,7 +73,7 @@ describe('VElement', () => {
 
       expect(directive.type).toStrictEqual(new ElementTemplate(type));
       expect(directive.value).toStrictEqual([
-        new DirectiveSpecifier(ElementDirective.instance, props),
+        new DirectiveSpecifier(ElementDirective, props),
         new VFragment(props.children),
       ]);
     });
@@ -86,7 +86,7 @@ describe('VElement', () => {
 
       expect(directive.type).toStrictEqual(new ElementTemplate(type));
       expect(directive.value).toStrictEqual([
-        new DirectiveSpecifier(ElementDirective.instance, props),
+        new DirectiveSpecifier(ElementDirective, props),
         new VStaticFragment(props.children),
       ]);
     });
@@ -99,8 +99,8 @@ describe('VElement', () => {
 
       expect(directive.type).toStrictEqual(new ElementTemplate(type));
       expect(directive.value).toStrictEqual([
-        new DirectiveSpecifier(ElementDirective.instance, props),
-        new DirectiveSpecifier(BlackholePrimitive.instance, undefined),
+        new DirectiveSpecifier(ElementDirective, props),
+        new DirectiveSpecifier(BlackholePrimitive, undefined),
       ]);
     });
   });
@@ -113,7 +113,7 @@ describe('VFragment', () => {
       const element = new VFragment(children);
       const directive = element[$toDirective]();
 
-      expect(directive.type).toBe(RepeatDirective.instance);
+      expect(directive.type).toBe(RepeatDirective);
       expect(directive.value).toStrictEqual(
         expect.objectContaining({
           source: children,
@@ -131,7 +131,7 @@ describe('VStaticFragment', () => {
         new VElement(component, {}),
         new VElement('div', { children: 'foo' }),
         new VElement('div', { children: ['foo'] }),
-        new MockBindable({ type: MockPrimitive.instance, value: 'foo' }),
+        new MockBindable({ type: MockPrimitive, value: 'foo' }),
         ['foo', 'bar'],
         null,
         false,
@@ -154,11 +154,11 @@ describe('VStaticFragment', () => {
       );
       expect(directive.value).toStrictEqual([
         children[0],
-        new DirectiveSpecifier(ElementDirective.instance, children[1].props),
+        new DirectiveSpecifier(ElementDirective, children[1].props),
         new DirectiveSpecifier(new TextTemplate(), [
           children[1].props.children,
         ]),
-        new DirectiveSpecifier(ElementDirective.instance, children[2].props),
+        new DirectiveSpecifier(ElementDirective, children[2].props),
         new VFragment(children[2].props.children),
         children[3],
         new VFragment(children[4]),
@@ -177,13 +177,9 @@ describe('ElementDirective', () => {
         node: document.createElement('div'),
       };
       const runtime = createRuntime();
-      const binding = ElementDirective.instance.resolveBinding(
-        props,
-        part,
-        runtime,
-      );
+      const binding = ElementDirective.resolveBinding(props, part, runtime);
 
-      expect(binding.type).toBe(ElementDirective.instance);
+      expect(binding.type).toBe(ElementDirective);
       expect(binding.value).toBe(props);
       expect(binding.part).toBe(part);
     });
@@ -199,7 +195,7 @@ describe('ElementDirective', () => {
       const runtime = createRuntime();
 
       expect(() =>
-        ElementDirective.instance.resolveBinding(props, part, runtime),
+        ElementDirective.resolveBinding(props, part, runtime),
       ).toThrow('ElementDirective must be used in an element part.');
     });
   });

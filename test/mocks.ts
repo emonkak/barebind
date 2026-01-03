@@ -1,6 +1,5 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-import { nameOf } from '@/debug/value.js';
 import {
   $toDirective,
   areDirectiveTypesEqual,
@@ -76,11 +75,11 @@ export class MockBackend implements RuntimeBackend {
   }
 
   resolveLayout(_value: unknown, _part: Part): Layout {
-    return MockLayout.instance;
+    return MockLayout;
   }
 
   resolvePrimitive(_value: unknown, _part: Part): Primitive<unknown> {
-    return MockPrimitive.instance;
+    return MockPrimitive;
   }
 
   startViewTransition(callback: () => void | Promise<void>): Promise<void> {
@@ -246,6 +245,10 @@ export class MockDirective<T> implements DirectiveType<T> {
     this.id = id;
   }
 
+  get displayName(): string {
+    return MockDirective.name;
+  }
+
   equals(other: unknown) {
     return other instanceof MockDirective && other.id === this.id;
   }
@@ -255,27 +258,28 @@ export class MockDirective<T> implements DirectiveType<T> {
   }
 }
 
-export class MockPrimitive<T> implements Primitive<T> {
-  static readonly instance: MockPrimitive<any> = new MockPrimitive();
-
-  ensureValue(_value: unknown): asserts _value is unknown {}
-
-  resolveBinding(value: T, part: Part, _context: DirectiveContext): Binding<T> {
+export const MockPrimitive: Primitive<any> = {
+  displayName: 'MockPrimitive',
+  ensureValue(_value: unknown): asserts _value is unknown {},
+  resolveBinding(
+    value: unknown,
+    part: Part,
+    _context: DirectiveContext,
+  ): Binding<unknown> {
     return new MockBinding(this, value, part);
-  }
-}
+  },
+};
 
 export class MockEffect implements Effect {
   commit(): void {}
 }
 
-export class MockLayout implements Layout {
-  static readonly instance: MockLayout = new MockLayout();
-
+export const MockLayout: Layout = {
+  displayName: 'MockLayout',
   resolveSlot<T>(binding: Binding<UnwrapBindable<T>>) {
     return new MockSlot(binding);
-  }
-}
+  },
+};
 
 export class MockObserver implements RuntimeObserver {
   events: RuntimeEvent[] = [];
@@ -325,7 +329,7 @@ export class MockSlot<T> implements Slot<T> {
 
     if (!areDirectiveTypesEqual(this.binding.type, directive.type)) {
       throw new Error(
-        `The directive must be ${nameOf(this.binding.type)} in this slot, but got ${nameOf(directive.type)}.`,
+        `The directive must be ${this.binding.type.displayName} in this slot, but got ${directive.type.displayName}.`,
       );
     }
 

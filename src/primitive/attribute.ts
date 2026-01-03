@@ -7,14 +7,13 @@ import {
 } from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export class AttributePrimitive<T> implements Primitive<T> {
-  static readonly instance: AttributePrimitive<any> = new AttributePrimitive();
-
+export const AttributePrimitive: Primitive<any> = {
+  displayName: 'AttributePrimitive',
   resolveBinding(
-    value: T,
+    value: unknown,
     part: Part,
     _context: DirectiveContext,
-  ): AttributeBinding<T> {
+  ): AttributeBinding<unknown> {
     if (part.type !== PartType.Attribute) {
       throw new DirectiveError(
         this,
@@ -24,8 +23,8 @@ export class AttributePrimitive<T> implements Primitive<T> {
       );
     }
     return new AttributeBinding(value, part);
-  }
-}
+  },
+};
 
 export class AttributeBinding<T> extends PrimitiveBinding<
   T,
@@ -34,7 +33,7 @@ export class AttributeBinding<T> extends PrimitiveBinding<
   private _memoizedValue: T | null = null;
 
   get type(): Primitive<T> {
-    return AttributePrimitive.instance;
+    return AttributePrimitive;
   }
 
   shouldUpdate(value: T): boolean {

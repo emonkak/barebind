@@ -32,13 +32,7 @@ export function createComponent<TProps, TResult = unknown>(
     );
   }
 
-  DEBUG: {
-    Object.defineProperty(Component, 'name', {
-      value: componentFn.name,
-      configurable: true,
-    });
-  }
-
+  Component.displayName = componentFn.name;
   Component.render = componentFn;
   Component.resolveBinding = resolveBinding;
   Component.arePropsEqual = options.arePropsEqual ?? Object.is;

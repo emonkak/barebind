@@ -9,14 +9,13 @@ import { PrimitiveBinding } from './primitive.js';
 
 const noValue = Symbol('noValue');
 
-export class PropertyPrimitive<T> implements Primitive<T> {
-  static readonly instance: PropertyPrimitive<any> = new PropertyPrimitive();
-
+export const PropertyPrimitive: Primitive<any> = {
+  displayName: 'PropertyPrimitive',
   resolveBinding(
-    value: T,
+    value: unknown,
     part: Part,
     _context: DirectiveContext,
-  ): PropertyBinding<T> {
+  ): PropertyBinding<unknown> {
     if (part.type !== PartType.Property) {
       throw new DirectiveError(
         this,
@@ -26,14 +25,14 @@ export class PropertyPrimitive<T> implements Primitive<T> {
       );
     }
     return new PropertyBinding(value, part);
-  }
-}
+  },
+};
 
 export class PropertyBinding<T> extends PrimitiveBinding<T, Part.PropertyPart> {
   private _memoizedValue: T | typeof noValue = noValue;
 
   get type(): Primitive<T> {
-    return PropertyPrimitive.instance;
+    return PropertyPrimitive;
   }
 
   shouldUpdate(value: T): boolean {

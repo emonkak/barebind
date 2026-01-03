@@ -1,5 +1,4 @@
 import { debugPart, undebugPart } from '../debug/part.js';
-import { nameOf } from '../debug/value.js';
 import { DirectiveError, LayoutSpecifier } from '../directive.js';
 import {
   areDirectiveTypesEqual,
@@ -24,6 +23,10 @@ export class KeyedLayout<TKey> implements Layout {
 
   constructor(key: TKey) {
     this._key = key;
+  }
+
+  get displayName(): string {
+    return KeyedLayout.name;
   }
 
   get key(): TKey {
@@ -79,7 +82,7 @@ export class KeyedSlot<TKey, TValue> implements Slot<TValue> {
           directive.type,
           directive.value,
           this._pendingBinding.part,
-          `The directive type must be ${nameOf(this._pendingBinding.type)} in this slot, but got ${nameOf(directive.type)}.`,
+          `The directive type must be ${this._pendingBinding.type.displayName} in this slot, but got ${directive.type.displayName}.`,
         );
       }
 

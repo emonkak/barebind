@@ -26,7 +26,7 @@ describe('debugPart()', () => {
     debugPart(part, new MockDirective(), 'baz');
     expect(part.node.data).toBe('/MockDirective("baz")');
 
-    undebugPart(part, MockPrimitive.instance);
+    undebugPart(part, MockPrimitive);
     expect(part.node.data).toBe('/MockDirective("baz")');
 
     undebugPart(part, new MockDirective());

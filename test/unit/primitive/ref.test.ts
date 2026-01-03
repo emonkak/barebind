@@ -14,9 +14,9 @@ describe('RefPrimitive', () => {
       };
 
       expect(() => {
-        RefPrimitive.instance.ensureValue(() => {}, part);
-        RefPrimitive.instance.ensureValue({ current: null }, part);
-        RefPrimitive.instance.ensureValue(null, part);
+        RefPrimitive.ensureValue!.call(RefPrimitive, () => {}, part);
+        RefPrimitive.ensureValue!.call(RefPrimitive, { current: null }, part);
+        RefPrimitive.ensureValue!.call(RefPrimitive, null, part);
       }).not.toThrow();
     });
 
@@ -28,7 +28,7 @@ describe('RefPrimitive', () => {
       };
 
       expect(() => {
-        RefPrimitive.instance.ensureValue({}, part);
+        RefPrimitive.ensureValue!.call(RefPrimitive, {}, part);
       }).toThrow(
         'The value of RefPrimitive must be a function, object or null.',
       );
@@ -47,9 +47,9 @@ describe('RefPrimitive', () => {
         name: attributeName,
       };
       const runtime = createRuntime();
-      const binding = RefPrimitive.instance.resolveBinding(ref, part, runtime);
+      const binding = RefPrimitive.resolveBinding(ref, part, runtime);
 
-      expect(binding.type).toBe(RefPrimitive.instance);
+      expect(binding.type).toBe(RefPrimitive);
       expect(binding.value).toBe(ref);
       expect(binding.part).toBe(part);
     });
@@ -62,9 +62,9 @@ describe('RefPrimitive', () => {
       };
       const runtime = createRuntime();
 
-      expect(() =>
-        RefPrimitive.instance.resolveBinding(ref, part, runtime),
-      ).toThrow('RefPrimitive must be used in ":ref" attribute part.');
+      expect(() => RefPrimitive.resolveBinding(ref, part, runtime)).toThrow(
+        'RefPrimitive must be used in ":ref" attribute part.',
+      );
     });
   });
 });

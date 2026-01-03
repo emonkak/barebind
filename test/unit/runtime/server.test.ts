@@ -161,7 +161,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: 'class',
         },
-        AttributePrimitive.instance,
+        AttributePrimitive,
       ],
       [
         null,
@@ -171,7 +171,7 @@ describe('ServerBackend', () => {
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
-        BlackholePrimitive.instance,
+        BlackholePrimitive,
       ],
       [
         undefined,
@@ -181,7 +181,7 @@ describe('ServerBackend', () => {
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
-        BlackholePrimitive.instance,
+        BlackholePrimitive,
       ],
       [
         ['foo', 'bar', 'baz'],
@@ -192,9 +192,9 @@ describe('ServerBackend', () => {
           namespaceURI: HTML_NAMESPACE_URI,
         },
         new FragmentTemplate([
-          ChildNodeTemplate.instance,
-          ChildNodeTemplate.instance,
-          ChildNodeTemplate.instance,
+          new ChildNodeTemplate(),
+          new ChildNodeTemplate(),
+          new ChildNodeTemplate(),
         ]),
       ],
       [
@@ -205,7 +205,7 @@ describe('ServerBackend', () => {
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
-        CommentPrimitive.instance,
+        CommentPrimitive,
       ],
       [
         {},
@@ -213,7 +213,7 @@ describe('ServerBackend', () => {
           type: PartType.Element,
           node: document.createElement('div'),
         },
-        SpreadPrimitive.instance,
+        SpreadPrimitive,
       ],
       [
         () => {},
@@ -222,7 +222,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: 'click',
         },
-        BlackholePrimitive.instance,
+        BlackholePrimitive,
       ],
       [
         'foo',
@@ -232,7 +232,7 @@ describe('ServerBackend', () => {
           name: 'value',
           defaultValue: '',
         },
-        LivePrimitive.instance,
+        LivePrimitive,
       ],
       [
         'foo',
@@ -242,7 +242,7 @@ describe('ServerBackend', () => {
           name: 'value',
           defaultValue: '',
         },
-        PropertyPrimitive.instance,
+        PropertyPrimitive,
       ],
       [
         'foo',
@@ -252,7 +252,7 @@ describe('ServerBackend', () => {
           precedingText: '',
           followingText: '',
         },
-        TextPrimitive.instance,
+        TextPrimitive,
       ],
     ] as const)('resolves the Primitive from an arbitrary part', (value, part, expectedPrimitive) => {
       const backend = new ServerBackend(document);
@@ -270,7 +270,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: ':class',
         },
-        ClassPrimitive.instance,
+        ClassPrimitive,
       ],
       [
         'foo',
@@ -279,7 +279,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: ':ref',
         },
-        BlackholePrimitive.instance,
+        BlackholePrimitive,
       ],
       [
         {},
@@ -288,7 +288,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: ':style',
         },
-        StylePrimitive.instance,
+        StylePrimitive,
       ],
       [
         null,
@@ -297,7 +297,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: ':',
         },
-        BlackholePrimitive.instance,
+        BlackholePrimitive,
       ],
     ] as const)('resolves the Primitive from special attribute parts', (value, part, expectedPrimitive) => {
       const backend = new ServerBackend(document);
@@ -321,7 +321,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: 'class',
         },
-        StrictLayout.instance,
+        StrictLayout,
       ],
       [
         'foo',
@@ -331,7 +331,7 @@ describe('ServerBackend', () => {
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
-        LooseLayout.instance,
+        LooseLayout,
       ],
       [
         'foo',
@@ -339,7 +339,7 @@ describe('ServerBackend', () => {
           type: PartType.Element,
           node: document.createElement('div'),
         },
-        StrictLayout.instance,
+        StrictLayout,
       ],
       [
         'foo',
@@ -348,7 +348,7 @@ describe('ServerBackend', () => {
           node: document.createElement('div'),
           name: 'click',
         },
-        StrictLayout.instance,
+        StrictLayout,
       ],
       [
         'foo',
@@ -358,7 +358,7 @@ describe('ServerBackend', () => {
           name: 'value',
           defaultValue: '',
         },
-        StrictLayout.instance,
+        StrictLayout,
       ],
       [
         'foo',
@@ -368,7 +368,7 @@ describe('ServerBackend', () => {
           name: 'value',
           defaultValue: '',
         },
-        StrictLayout.instance,
+        StrictLayout,
       ],
       [
         'foo',
@@ -378,7 +378,7 @@ describe('ServerBackend', () => {
           precedingText: '',
           followingText: '',
         },
-        StrictLayout.instance,
+        StrictLayout,
       ],
     ] as const)('resolves the Layout from an arbitrary part', (value, part, expectedLayout) => {
       const backend = new ServerBackend(document);

@@ -5,12 +5,6 @@ import { PropertyBinding, PropertyPrimitive } from '@/primitive/property.js';
 import { createRuntime, TestUpdater } from '../../test-helpers.js';
 
 describe('PropertyPrimitive', () => {
-  describe('name', () => {
-    it('is a string that represents the primitive itself', () => {
-      expect(PropertyPrimitive.name, 'PropertyPrimitive');
-    });
-  });
-
   describe('resolveBinding()', () => {
     it('constructs a new PropertyBinding', () => {
       const value = '<div>foo</div>';
@@ -21,13 +15,9 @@ describe('PropertyPrimitive', () => {
         defaultValue: '',
       };
       const runtime = createRuntime();
-      const binding = PropertyPrimitive.instance.resolveBinding(
-        value,
-        part,
-        runtime,
-      );
+      const binding = PropertyPrimitive.resolveBinding(value, part, runtime);
 
-      expect(binding.type).toBe(PropertyPrimitive.instance);
+      expect(binding.type).toBe(PropertyPrimitive);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });
@@ -41,7 +31,7 @@ describe('PropertyPrimitive', () => {
       const runtime = createRuntime();
 
       expect(() =>
-        PropertyPrimitive.instance.resolveBinding(value, part, runtime),
+        PropertyPrimitive.resolveBinding(value, part, runtime),
       ).toThrow('PropertyPrimitive must be used in a property part.');
     });
   });

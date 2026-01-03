@@ -14,10 +14,14 @@ describe('EventPrimitive', () => {
       };
 
       expect(() => {
-        EventPrimitive.instance.ensureValue(null, part);
-        EventPrimitive.instance.ensureValue(undefined, part);
-        EventPrimitive.instance.ensureValue(() => {}, part);
-        EventPrimitive.instance.ensureValue({ handleEvent: () => {} }, part);
+        EventPrimitive.ensureValue!.call(EventPrimitive, null, part);
+        EventPrimitive.ensureValue!.call(EventPrimitive, undefined, part);
+        EventPrimitive.ensureValue!.call(EventPrimitive, () => {}, part);
+        EventPrimitive.ensureValue!.call(
+          EventPrimitive,
+          { handleEvent: () => {} },
+          part,
+        );
       }).not.toThrow();
     });
 
@@ -29,7 +33,7 @@ describe('EventPrimitive', () => {
       };
 
       expect(() => {
-        EventPrimitive.instance.ensureValue({}, part);
+        EventPrimitive.ensureValue!.call(EventPrimitive, {}, part);
       }).toThrow(
         'The value of EventPrimitive must be an EventListener, EventListenerObject, null or undefined.',
       );
@@ -45,13 +49,9 @@ describe('EventPrimitive', () => {
         name: 'click',
       };
       const runtime = createRuntime();
-      const binding = EventPrimitive.instance.resolveBinding(
-        handler,
-        part,
-        runtime,
-      );
+      const binding = EventPrimitive.resolveBinding(handler, part, runtime);
 
-      expect(binding.type).toBe(EventPrimitive.instance);
+      expect(binding.type).toBe(EventPrimitive);
       expect(binding.value).toBe(handler);
       expect(binding.part).toBe(part);
     });
@@ -65,7 +65,7 @@ describe('EventPrimitive', () => {
       const runtime = createRuntime();
 
       expect(() =>
-        EventPrimitive.instance.resolveBinding(handler, part, runtime),
+        EventPrimitive.resolveBinding(handler, part, runtime),
       ).toThrow('EventPrimitive must be used in an event part.');
     });
   });

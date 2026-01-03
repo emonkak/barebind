@@ -7,14 +7,13 @@ import {
 } from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export class CommentPrimitive<T> implements Primitive<T> {
-  static readonly instance: CommentPrimitive<any> = new CommentPrimitive();
-
+export const CommentPrimitive: Primitive<any> = {
+  displayName: 'CommentPrimitive',
   resolveBinding(
-    value: T,
+    value: unknown,
     part: Part,
     _context: DirectiveContext,
-  ): CommentBinding<T> {
+  ): CommentBinding<unknown> {
     if (part.type !== PartType.ChildNode) {
       throw new DirectiveError(
         this,
@@ -24,14 +23,14 @@ export class CommentPrimitive<T> implements Primitive<T> {
       );
     }
     return new CommentBinding(value, part);
-  }
-}
+  },
+};
 
 export class CommentBinding<T> extends PrimitiveBinding<T, Part.ChildNodePart> {
   private _memoizedValue: T | null = null;
 
   get type(): Primitive<T> {
-    return CommentPrimitive.instance;
+    return CommentPrimitive;
   }
 
   shouldUpdate(value: T): boolean {

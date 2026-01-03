@@ -12,9 +12,8 @@ import {
 } from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export class RefPrimitive implements Primitive<Ref<Element>> {
-  static readonly instance: RefPrimitive = new RefPrimitive();
-
+export const RefPrimitive: Primitive<Ref<Element>> = {
+  displayName: 'RefPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is Ref<Element> {
     if (!isElementRef(value)) {
       throw new DirectiveError(
@@ -24,8 +23,7 @@ export class RefPrimitive implements Primitive<Ref<Element>> {
         'The value of RefPrimitive must be a function, object or null.',
       );
     }
-  }
-
+  },
   resolveBinding(
     ref: Ref<Element>,
     part: Part,
@@ -43,8 +41,8 @@ export class RefPrimitive implements Primitive<Ref<Element>> {
       );
     }
     return new RefBinding(ref, part);
-  }
-}
+  },
+};
 
 export class RefBinding extends PrimitiveBinding<
   Ref<Element>,
@@ -55,7 +53,7 @@ export class RefBinding extends PrimitiveBinding<
   private _memoizedCleanup: Cleanup | void = undefined;
 
   get type(): Primitive<Ref<Element>> {
-    return RefPrimitive.instance;
+    return RefPrimitive;
   }
 
   shouldUpdate(ref: Ref<Element>): boolean {

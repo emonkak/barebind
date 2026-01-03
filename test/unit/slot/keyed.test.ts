@@ -20,6 +20,11 @@ describe('Keyed()', () => {
 });
 
 describe('KeyedLayout', () => {
+  it('returns the name of the class', () => {
+    const layout = new KeyedLayout('foo');
+    expect(layout.displayName).toBe(KeyedLayout.name);
+  });
+
   describe('resolveSlot', () => {
     it('constructs a new KeyedSlot', () => {
       const key = 'foo';
@@ -30,10 +35,10 @@ describe('KeyedLayout', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive.instance, value, part);
+      const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new KeyedLayout(key).resolveSlot(binding);
 
-      expect(slot.type).toBe(MockPrimitive.instance);
+      expect(slot.type).toBe(MockPrimitive);
       expect(slot.value).toBe(value);
       expect(slot.part).toBe(part);
     });
@@ -52,7 +57,7 @@ describe('KeyedSlot', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive.instance, value1, part);
+      const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new KeyedSlot(key, binding);
       const updater = new TestUpdater();
 
@@ -120,7 +125,7 @@ describe('KeyedSlot', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive.instance, value1, part);
+      const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new KeyedSlot(key1, binding);
       const updater = new TestUpdater();
 
@@ -172,7 +177,7 @@ describe('KeyedSlot', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive.instance, value1, part);
+      const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new KeyedSlot(key, binding);
       const updater = new TestUpdater();
 
@@ -217,7 +222,7 @@ describe('KeyedSlot', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive.instance, value1, part);
+      const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new KeyedSlot(key, binding);
       const updater = new TestUpdater();
 

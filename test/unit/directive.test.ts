@@ -34,7 +34,7 @@ describe('DirectiveSpecifier', () => {
 describe('LayoutSpecifier', () => {
   describe('[$toDirective]()', () => {
     it('returns a directive element with the primitive value', () => {
-      const layout = MockLayout.instance;
+      const layout = MockLayout;
       const value = 'foo';
       const part = {
         type: PartType.ChildNode,
@@ -46,13 +46,13 @@ describe('LayoutSpecifier', () => {
       const bindable = new LayoutSpecifier(layout, value);
       const directive = bindable[$toDirective](part, runtime);
 
-      expect(directive.type).toBe(MockPrimitive.instance);
+      expect(directive.type).toBe(MockPrimitive);
       expect(directive.value).toBe(value);
       expect(directive.layout).toBe(layout);
     });
 
     it('returns a directive element with the bindable value', () => {
-      const layout = MockLayout.instance;
+      const layout = MockLayout;
       const value = new DirectiveSpecifier(new MockDirective(), 'foo');
       const part = {
         type: PartType.ChildNode,
@@ -72,7 +72,7 @@ describe('LayoutSpecifier', () => {
 
   describe('[$debug]()', () => {
     it('returns a string representation of the value', () => {
-      const layout = MockLayout.instance;
+      const layout = MockLayout;
       const value = new DirectiveSpecifier(new MockDirective(), 'foo');
       const bindable = new LayoutSpecifier(layout, value);
 

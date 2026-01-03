@@ -23,7 +23,7 @@ describe('ClassPrimitive', () => {
       };
 
       expect(() => {
-        ClassPrimitive.instance.ensureValue(value, part);
+        ClassPrimitive.ensureValue!.call(ClassPrimitive, value, part);
       }).not.toThrow();
     });
 
@@ -39,7 +39,7 @@ describe('ClassPrimitive', () => {
       };
 
       expect(() => {
-        ClassPrimitive.instance.ensureValue(value, part);
+        ClassPrimitive.ensureValue!.call(ClassPrimitive, value, part);
       }).toThrow('The value of ClassPrimitive must be an object.');
     });
   });
@@ -56,13 +56,9 @@ describe('ClassPrimitive', () => {
         name: attributeName,
       };
       const runtime = createRuntime();
-      const binding = ClassPrimitive.instance.resolveBinding(
-        classes,
-        part,
-        runtime,
-      );
+      const binding = ClassPrimitive.resolveBinding(classes, part, runtime);
 
-      expect(binding.type).toBe(ClassPrimitive.instance);
+      expect(binding.type).toBe(ClassPrimitive);
       expect(binding.value).toBe(classes);
       expect(binding.part).toBe(part);
     });
@@ -77,7 +73,7 @@ describe('ClassPrimitive', () => {
       const runtime = createRuntime();
 
       expect(() =>
-        ClassPrimitive.instance.resolveBinding(classes, part, runtime),
+        ClassPrimitive.resolveBinding(classes, part, runtime),
       ).toThrow('ClassPrimitive must be used in a ":class" attribute part.');
     });
   });

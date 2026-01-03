@@ -16,13 +16,9 @@ describe('CommentPrimitive', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = createRuntime();
-      const binding = CommentPrimitive.instance.resolveBinding(
-        value,
-        part,
-        runtime,
-      );
+      const binding = CommentPrimitive.resolveBinding(value, part, runtime);
 
-      expect(binding.type).toBe(CommentPrimitive.instance);
+      expect(binding.type).toBe(CommentPrimitive);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });
@@ -36,7 +32,7 @@ describe('CommentPrimitive', () => {
       const runtime = createRuntime();
 
       expect(() =>
-        CommentPrimitive.instance.resolveBinding(value, part, runtime),
+        CommentPrimitive.resolveBinding(value, part, runtime),
       ).toThrow('CommentPrimitive must be used in a child node.');
     });
   });

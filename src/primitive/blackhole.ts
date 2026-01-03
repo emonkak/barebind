@@ -1,21 +1,20 @@
 import type { DirectiveContext, Part, Primitive } from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export class BlackholePrimitive<T> implements Primitive<T> {
-  static readonly instance: BlackholePrimitive<any> = new BlackholePrimitive();
-
+export const BlackholePrimitive: Primitive<any> = {
+  displayName: 'BlackholePrimitive',
   resolveBinding(
-    value: T,
+    value: unknown,
     part: Part,
     _context: DirectiveContext,
-  ): BlackholeBinding<T> {
+  ): BlackholeBinding<unknown> {
     return new BlackholeBinding(value, part);
-  }
-}
+  },
+};
 
 export class BlackholeBinding<T> extends PrimitiveBinding<T, Part> {
   get type(): Primitive<T> {
-    return BlackholePrimitive.instance;
+    return BlackholePrimitive;
   }
 
   shouldUpdate(_value: T): boolean {

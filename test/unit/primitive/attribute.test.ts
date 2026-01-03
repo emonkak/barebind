@@ -14,13 +14,9 @@ describe('AttributePrimitive', () => {
         name: 'class',
       };
       const runtime = createRuntime();
-      const binding = AttributePrimitive.instance.resolveBinding(
-        value,
-        part,
-        runtime,
-      );
+      const binding = AttributePrimitive.resolveBinding(value, part, runtime);
 
-      expect(binding.type).toBe(AttributePrimitive.instance);
+      expect(binding.type).toBe(AttributePrimitive);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });
@@ -34,7 +30,7 @@ describe('AttributePrimitive', () => {
       const runtime = createRuntime();
 
       expect(() =>
-        AttributePrimitive.instance.resolveBinding(value, part, runtime),
+        AttributePrimitive.resolveBinding(value, part, runtime),
       ).toThrow('AttributePrimitive must be used in an attribute part.');
     });
   });

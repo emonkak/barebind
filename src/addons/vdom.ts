@@ -23,6 +23,10 @@ import { EmptyTemplate } from '../template/empty.js';
 import { FragmentTemplate } from '../template/fragment.js';
 import { TextTemplate } from '../template/text.js';
 
+const CHILD_NODE_TEMPLATE = new ChildNodeTemplate();
+const EMPTY_TEMPLATE = new EmptyTemplate();
+const TEXT_TEMPLATE = new TextTemplate();
+
 const $cleanup = Symbol('$cleanup');
 
 export type VNode =
@@ -68,9 +72,8 @@ interface TemplateDirective<TBinds extends readonly unknown[]>
 /**
  * @internal
  */
-export class ElementDirective implements DirectiveType<ElementProps> {
-  static readonly instance: ElementDirective = new ElementDirective();
-
+export const ElementDirective: DirectiveType<ElementProps> = {
+  displayName: 'ElementDirective',
   resolveBinding(
     props: ElementProps,
     part: Part,
@@ -85,8 +88,8 @@ export class ElementDirective implements DirectiveType<ElementProps> {
       );
     }
     return new ElementBinding(props, part);
-  }
-}
+  },
+};
 
 export function createElement<TProps extends {}>(
   type: string,
@@ -159,7 +162,7 @@ export class VFragment implements Bindable<RepeatProps<VNode>> {
 
   [$toDirective](): Directive<RepeatProps<VNode>> {
     return {
-      type: RepeatDirective.instance,
+      type: RepeatDirective,
       value: {
         source: this.children,
         keySelector: resolveKey,
@@ -187,7 +190,7 @@ export class VStaticFragment implements Bindable<unknown> {
       const child = this.children[i]!;
       if (child instanceof VElement) {
         if (typeof child.type === 'function') {
-          templates.push(ChildNodeTemplate.instance);
+          templates.push(CHILD_NODE_TEMPLATE);
           binds.push(child);
         } else {
           const { type, value } = resolveElement(
@@ -199,15 +202,15 @@ export class VStaticFragment implements Bindable<unknown> {
           binds.push(value[0], value[1]);
         }
       } else if (isBindable(child)) {
-        templates.push(ChildNodeTemplate.instance);
+        templates.push(CHILD_NODE_TEMPLATE);
         binds.push(child);
       } else if (Array.isArray(child)) {
-        templates.push(ChildNodeTemplate.instance);
+        templates.push(CHILD_NODE_TEMPLATE);
         binds.push(new VFragment(child));
       } else if (child == null || typeof child === 'boolean') {
-        templates.push(EmptyTemplate.instance);
+        templates.push(EMPTY_TEMPLATE);
       } else {
-        templates.push(TextTemplate.instance);
+        templates.push(TEXT_TEMPLATE);
         binds.push(child);
       }
     }
@@ -235,7 +238,7 @@ export class ElementBinding implements Binding<ElementProps> {
   }
 
   get type(): DirectiveType<ElementProps> {
-    return ElementDirective.instance;
+    return ElementDirective;
   }
 
   get value(): ElementProps {
@@ -566,9 +569,9 @@ function resolveChild(child: VNode): Bindable<unknown> {
   } else if (Array.isArray(child)) {
     return new VFragment(child);
   } else if (child == null || typeof child === 'boolean') {
-    return new DirectiveSpecifier(BlackholePrimitive.instance, child);
+    return new DirectiveSpecifier(BlackholePrimitive, child);
   } else {
-    return new DirectiveSpecifier(TextTemplate.instance, [child]);
+    return new DirectiveSpecifier(TEXT_TEMPLATE, [child]);
   }
 }
 
@@ -577,7 +580,7 @@ function resolveElement(
   props: { children?: unknown },
   hasStaticChildren: boolean,
 ): TemplateDirective<readonly [unknown, unknown]> {
-  const element = new DirectiveSpecifier(ElementDirective.instance, props);
+  const element = new DirectiveSpecifier(ElementDirective, props);
   const children = Array.isArray(props.children)
     ? hasStaticChildren
       ? new VStaticFragment(props.children)

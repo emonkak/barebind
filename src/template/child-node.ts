@@ -9,8 +9,6 @@ import {
 import { AbstractTemplate } from './template.js';
 
 export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
-  static readonly instance: ChildNodeTemplate<any> = new ChildNodeTemplate();
-
   get arity(): 1 {
     return 1;
   }

@@ -18,7 +18,11 @@ describe('StylePrimitive', () => {
       };
 
       expect(() => {
-        StylePrimitive.instance.ensureValue({ color: 'red' }, part);
+        StylePrimitive.ensureValue!.call(
+          StylePrimitive,
+          { color: 'red' },
+          part,
+        );
       }).not.toThrow();
     });
 
@@ -34,7 +38,7 @@ describe('StylePrimitive', () => {
       };
 
       expect(() => {
-        StylePrimitive.instance.ensureValue(value, part);
+        StylePrimitive.ensureValue!.call(StylePrimitive, value, part);
       }).toThrow('The value of StylePrimitive must be an object.');
     });
   });
@@ -51,13 +55,9 @@ describe('StylePrimitive', () => {
         name: attributeName,
       };
       const runtime = createRuntime();
-      const binding = StylePrimitive.instance.resolveBinding(
-        style,
-        part,
-        runtime,
-      );
+      const binding = StylePrimitive.resolveBinding(style, part, runtime);
 
-      expect(binding.type).toBe(StylePrimitive.instance);
+      expect(binding.type).toBe(StylePrimitive);
       expect(binding.value).toBe(style);
       expect(binding.part).toBe(part);
     });
@@ -71,9 +71,9 @@ describe('StylePrimitive', () => {
       };
       const runtime = createRuntime();
 
-      expect(() =>
-        StylePrimitive.instance.resolveBinding(style, part, runtime),
-      ).toThrow('StylePrimitive must be used in a ":style" attribute part.');
+      expect(() => StylePrimitive.resolveBinding(style, part, runtime)).toThrow(
+        'StylePrimitive must be used in a ":style" attribute part.',
+      );
     });
   });
 });

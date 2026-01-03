@@ -93,9 +93,9 @@ export class BrowserBackend implements RuntimeBackend {
   resolveLayout(_value: unknown, part: Part): Layout {
     switch (part.type) {
       case PartType.ChildNode:
-        return LooseLayout.instance;
+        return LooseLayout;
       default:
-        return StrictLayout.instance;
+        return StrictLayout;
     }
   }
 
@@ -105,38 +105,38 @@ export class BrowserBackend implements RuntimeBackend {
         if (part.name[0] === ':') {
           switch (part.name.slice(1).toLowerCase()) {
             case 'class':
-              return ClassPrimitive.instance;
+              return ClassPrimitive;
             case 'ref':
-              return RefPrimitive.instance;
+              return RefPrimitive;
             case 'style':
-              return StylePrimitive.instance;
+              return StylePrimitive;
             default:
-              return BlackholePrimitive.instance;
+              return BlackholePrimitive;
           }
         }
-        return AttributePrimitive.instance;
+        return AttributePrimitive;
       case PartType.ChildNode:
         if (value == null) {
-          return BlackholePrimitive.instance;
+          return BlackholePrimitive;
         }
         if (Array.isArray(value)) {
           return new FragmentTemplate(
             new Array<ChildNodeTemplate<any>>(value.length).fill(
-              ChildNodeTemplate.instance,
+              new ChildNodeTemplate(),
             ),
           );
         }
-        return CommentPrimitive.instance;
+        return CommentPrimitive;
       case PartType.Element:
-        return SpreadPrimitive.instance;
+        return SpreadPrimitive;
       case PartType.Event:
-        return EventPrimitive.instance;
+        return EventPrimitive;
       case PartType.Live:
-        return LivePrimitive.instance;
+        return LivePrimitive;
       case PartType.Property:
-        return PropertyPrimitive.instance;
+        return PropertyPrimitive;
       case PartType.Text:
-        return TextPrimitive.instance;
+        return TextPrimitive;
     }
   }
 

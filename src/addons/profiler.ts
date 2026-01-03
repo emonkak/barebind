@@ -108,7 +108,7 @@ export class PerformanceProfiler implements RuntimeObserver {
       }
       case 'COMPONENT_RENDER_START': {
         profile.componentMeasurements.push({
-          name: event.component.name,
+          name: event.component.displayName,
           startTime: performance.now(),
           duration: 0,
         });
@@ -207,7 +207,7 @@ export class ConsoleReporter implements PerformanceReporter {
         DURATION_STYLE,
       );
       if (componentMeasurements.length > 0) {
-        this._logger.table(componentMeasurements, ['name', 'duration']);
+        this._logger.table(componentMeasurements, ['displayName', 'duration']);
       }
     }
 

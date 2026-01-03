@@ -47,7 +47,7 @@ describe('Scope', () => {
 describe('areDirectiveTypesEqual()', () => {
   it('returns the result from Directive.equals() if it is definied', () => {
     const type1 = new MockDirective();
-    const type2 = MockPrimitive.instance;
+    const type2 = MockPrimitive;
 
     expect(areDirectiveTypesEqual(type1, type1)).toBe(true);
     expect(areDirectiveTypesEqual(type1, type2)).toBe(false);
@@ -157,9 +157,7 @@ describe('getStartNode()', () => {
 describe('isBindable()', () => {
   it('returns true if the value is a bindable', () => {
     expect(
-      isBindable(
-        new MockBindable({ type: MockPrimitive.instance, value: 'foo' }),
-      ),
+      isBindable(new MockBindable({ type: MockPrimitive, value: 'foo' })),
     ).toBe(true);
     expect(isBindable('foo')).toBe(false);
   });
