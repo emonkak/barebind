@@ -102,16 +102,18 @@ export class Runtime implements SessionContext {
   private readonly _templateLiteralPreprocessor: TemplateLiteralPreprocessor =
     new TemplateLiteralPreprocessor();
 
-  private readonly _templatePlaceholder: string = generateRandomString(8);
+  private readonly _templatePlaceholder: string;
 
   private _identifierCount: number = 0;
 
   private _updateCount: number = 0;
 
-  constructor(backend: RuntimeBackend, options: RuntimeOptions = {}) {
+  constructor(
+    backend: RuntimeBackend,
+    { templatePlaceholder = generateRandomString(8) }: RuntimeOptions = {},
+  ) {
     this._backend = backend;
-    this._templatePlaceholder =
-      options.templatePlaceholder ?? generateRandomString(8);
+    this._templatePlaceholder = templatePlaceholder;
   }
 
   addObserver(observer: RuntimeObserver): () => void {
