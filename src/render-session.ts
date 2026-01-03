@@ -144,7 +144,7 @@ export class RenderSession implements RenderContext {
     }
 
     if (this._frame.lanes !== Lanes.NoLanes) {
-      const runningTask = this._context.getPendingTasks().at(-1);
+      const runningTask = this._context.getPendingTasks()[0];
       if (runningTask !== undefined) {
         this._frame.pendingCoroutines.push(this._coroutine);
         return {
