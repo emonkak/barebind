@@ -32,7 +32,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
 
   detach(_session: UpdateSession): void {}
 
-  abstract commit(): void;
+  commit(): void {}
 
-  abstract rollback(): void;
+  rollback(): void {}
 }

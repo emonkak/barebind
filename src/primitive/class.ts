@@ -66,7 +66,7 @@ export class ClassBinding extends PrimitiveBinding<
     return !shallowEqual(classes, this._memoizedValue);
   }
 
-  commit(): void {
+  override commit(): void {
     const { classList } = this._part.node;
 
     updateClasses(
@@ -78,7 +78,7 @@ export class ClassBinding extends PrimitiveBinding<
     this._memoizedValue = this._value;
   }
 
-  rollback(): void {
+  override rollback(): void {
     const { classList } = this.part.node;
 
     updateClasses(classList, {}, this._memoizedValue as ClassObject);

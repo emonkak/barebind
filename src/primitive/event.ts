@@ -62,7 +62,7 @@ export class EventBinding extends PrimitiveBinding<
     return handler !== this._memoizedValue;
   }
 
-  commit(): void {
+  override commit(): void {
     const newHandler = this._value;
     const oldHandler = this._memoizedValue;
 
@@ -83,7 +83,7 @@ export class EventBinding extends PrimitiveBinding<
     this._memoizedValue = this._value;
   }
 
-  rollback(): void {
+  override rollback(): void {
     const handler = this._memoizedValue;
 
     if (handler != null) {

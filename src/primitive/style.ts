@@ -71,7 +71,7 @@ export class StyleBinding extends PrimitiveBinding<
     return !shallowEqual(props, this._memoizedValue);
   }
 
-  commit(): void {
+  override commit(): void {
     const newProps = this._value;
     const oldProps = this._memoizedValue;
     const { style } = this._part.node as
@@ -84,7 +84,7 @@ export class StyleBinding extends PrimitiveBinding<
     this._memoizedValue = this._value;
   }
 
-  rollback(): void {
+  override rollback(): void {
     const props = this._memoizedValue;
     const { style } = this._part.node as
       | HTMLElement

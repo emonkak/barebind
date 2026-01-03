@@ -35,7 +35,7 @@ export class LiveBinding<T> extends PrimitiveBinding<T, Part.LivePart> {
     return true;
   }
 
-  commit(): void {
+  override commit(): void {
     const value = this._value;
     const { node, name } = this._part;
     const currentValue = node[name as keyof Element];
@@ -45,7 +45,7 @@ export class LiveBinding<T> extends PrimitiveBinding<T, Part.LivePart> {
     }
   }
 
-  rollback(): void {
+  override rollback(): void {
     const { node, name, defaultValue } = this._part;
     (node as any)[name] = defaultValue;
   }

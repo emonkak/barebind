@@ -94,7 +94,7 @@ export class SpreadBinding extends PrimitiveBinding<
     }
   }
 
-  commit(): void {
+  override commit(): void {
     if (this._memoizedSlots !== null) {
       for (const [name, slot] of this._memoizedSlots.entries()) {
         if (!this._pendingSlots.has(name)) {
@@ -110,7 +110,7 @@ export class SpreadBinding extends PrimitiveBinding<
     this._memoizedSlots = this._pendingSlots;
   }
 
-  rollback(): void {
+  override rollback(): void {
     if (this._memoizedSlots !== null) {
       for (const binding of this._memoizedSlots.values()) {
         binding.rollback();

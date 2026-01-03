@@ -40,7 +40,7 @@ export class AttributeBinding<T> extends PrimitiveBinding<
     return !Object.is(value, this._memoizedValue);
   }
 
-  commit(): void {
+  override commit(): void {
     const { node, name } = this._part;
     const value = this._value;
 
@@ -62,7 +62,7 @@ export class AttributeBinding<T> extends PrimitiveBinding<
     this._memoizedValue = this._value;
   }
 
-  rollback(): void {
+  override rollback(): void {
     if (this._memoizedValue !== null) {
       const { node, name } = this._part;
       node.removeAttribute(name);

@@ -68,10 +68,6 @@ export class RefBinding extends PrimitiveBinding<
     session.frame.layoutEffects.push(new CleanRef(this));
   }
 
-  commit(): void {}
-
-  rollback(): void {}
-
   invokeRef(): void {
     const newRef = this._value;
     const oldRef = this._memoizedValue;

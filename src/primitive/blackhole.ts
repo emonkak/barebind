@@ -20,8 +20,4 @@ export class BlackholeBinding<T> extends PrimitiveBinding<T, Part> {
   shouldUpdate(_value: T): boolean {
     return false;
   }
-
-  commit(): void {}
-
-  rollback(): void {}
 }
