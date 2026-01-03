@@ -5,6 +5,7 @@ import {
   type Component,
   type ComponentState,
   type Coroutine,
+  createUpdateSession,
   type DirectiveContext,
   type Effect,
   type Hook,
@@ -14,7 +15,7 @@ import {
   type RenderContext,
   Scope,
   type Slot,
-  UpdateSession,
+  type UpdateSession,
 } from './internal.js';
 
 export interface ComponentOptions<TProps> {
@@ -92,7 +93,7 @@ export class ComponentBinding<TProps, TResult>
   resume(session: UpdateSession): void {
     const { frame, rootScope, context } = session;
     const subScope = new Scope(this._scope);
-    const subSession = new UpdateSession(frame, rootScope, subScope, context);
+    const subSession = createUpdateSession(frame, subScope, rootScope, context);
     const result = context.renderComponent(
       this._component,
       this._props,

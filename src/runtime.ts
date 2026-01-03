@@ -4,6 +4,7 @@ import {
   type Component,
   type ComponentState,
   type Coroutine,
+  createUpdateSession,
   type Directive,
   type Effect,
   getLanesFromOptions,
@@ -24,7 +25,6 @@ import {
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
-  UpdateSession,
   type UpdateTask,
 } from './internal.js';
 import { LinkedList } from './linked-list.js';
@@ -147,7 +147,7 @@ export class Runtime implements SessionContext {
       const id = (this._updateCount = incrementCount(this._updateCount));
       const frame = createRenderFrame(id, lanes, coroutine);
       const rootScope = coroutine.scope;
-      const session = new UpdateSession(frame, rootScope, rootScope, this);
+      const session = createUpdateSession(frame, rootScope, rootScope, this);
 
       try {
         if (!this._observers.isEmpty()) {
@@ -263,7 +263,7 @@ export class Runtime implements SessionContext {
       const id = (this._updateCount = incrementCount(this._updateCount));
       const frame = createRenderFrame(id, lanes, coroutine);
       const rootScope = coroutine.scope;
-      const session = new UpdateSession(frame, rootScope, rootScope, this);
+      const session = createUpdateSession(frame, rootScope, rootScope, this);
 
       try {
         if (!this._observers.isEmpty()) {

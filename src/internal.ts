@@ -446,6 +446,13 @@ export interface UpdateResult {
   done: boolean;
 }
 
+export interface UpdateSession {
+  readonly frame: RenderFrame;
+  readonly scope: Scope;
+  readonly rootScope: Scope;
+  readonly context: SessionContext;
+}
+
 export interface UpdateTask {
   coroutine: Coroutine;
   lanes: Lanes;
@@ -551,29 +558,21 @@ export class Scope {
   }
 }
 
-export class UpdateSession {
-  readonly frame: RenderFrame;
-
-  readonly rootScope: Scope;
-
-  readonly scope: Scope;
-
-  readonly context: SessionContext;
-
-  constructor(
-    frame: RenderFrame,
-    rootScope: Scope,
-    scope: Scope,
-    context: SessionContext,
-  ) {
-    this.frame = frame;
-    this.rootScope = rootScope;
-    this.scope = scope;
-    this.context = context;
-    DEBUG: {
-      Object.freeze(this);
-    }
-  }
+/**
+ * @internal
+ */
+export function createUpdateSession(
+  frame: RenderFrame,
+  scope: Scope,
+  rootScope: Scope,
+  context: SessionContext,
+): UpdateSession {
+  return {
+    frame,
+    scope,
+    rootScope,
+    context,
+  };
 }
 
 /**
