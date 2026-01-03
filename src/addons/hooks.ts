@@ -1,14 +1,9 @@
-import type {
-  Cleanup,
-  CustomHookFunction,
-  InitialState,
-  Ref,
-} from '../internal.js';
+import type { Cleanup, HookFunction, InitialState, Ref } from '../internal.js';
 
 export function DeferredValue<T>(
   value: T,
   initialValue?: InitialState<T>,
-): CustomHookFunction<T> {
+): HookFunction<T> {
   return (context) => {
     const [deferredValue, setDeferredValue] = context.useState(
       initialValue ?? ((() => value) as InitialState<T>),
@@ -26,9 +21,7 @@ export function DeferredValue<T>(
 
 export function EventCallback<TCallback extends (...args: any[]) => any>(
   callback: TCallback,
-): CustomHookFunction<
-  (...args: Parameters<TCallback>) => ReturnType<TCallback>
-> {
+): HookFunction<(...args: Parameters<TCallback>) => ReturnType<TCallback>> {
   return (context) => {
     const stableCallback = context.useRef(callback);
 
@@ -48,7 +41,7 @@ export function ImperativeHandle<T>(
   ref: Ref<T>,
   createHandle: () => T,
   dependencies?: unknown[],
-): CustomHookFunction<void> {
+): HookFunction<void> {
   return (context) => {
     context.useLayoutEffect(
       () => {
@@ -69,7 +62,7 @@ export function ImperativeHandle<T>(
 export function SyncEnternalStore<TSnapshot>(
   subscribe: (subscriber: () => void) => Cleanup | void,
   getSnapshot: () => TSnapshot,
-): CustomHookFunction<void> {
+): HookFunction<void> {
   return (context) => {
     const snapshot = getSnapshot();
     const store = context.useMemo(() => ({ getSnapshot, snapshot }), []);

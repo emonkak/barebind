@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 
 import { createComponent } from '@/component.js';
-import type { CustomHookFunction, RenderContext } from '@/internal.js';
+import type { HookFunction, RenderContext } from '@/internal.js';
 import { Root } from '@/root.js';
 import { BrowserBackend } from '@/runtime/browser.js';
 import { Runtime } from '@/runtime.js';
@@ -141,7 +141,7 @@ const Node = createComponent(function Child(
   `;
 });
 
-function TestEffects(name: unknown, logs: string[]): CustomHookFunction<void> {
+function TestEffects(name: unknown, logs: string[]): HookFunction<void> {
   return ($) => {
     for (const n of [1, 2]) {
       $.useInsertionEffect(() => {

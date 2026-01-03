@@ -1,6 +1,6 @@
 /// <reference types="navigation-api-types" />
 
-import type { CustomHookFunction, UpdateOptions } from '../../internal.js';
+import type { HookFunction, UpdateOptions } from '../../internal.js';
 import {
   anyModifiersArePressed,
   CurrentHistory,
@@ -14,7 +14,7 @@ import { RelativeURL } from './relative-url.js';
 
 export function HashHistory(
   options?: UpdateOptions,
-): CustomHookFunction<HistoryHandle> {
+): HookFunction<HistoryHandle> {
   return (context) => {
     const [location, setLocation] = context.useState<HistoryLocation>(() => ({
       url: RelativeURL.fromString(truncateHashMark(window.location.hash)),

@@ -79,12 +79,6 @@ export interface Coroutine {
   resume(session: UpdateSession): void;
 }
 
-export type CustomHookFunction<T> = (context: RenderContext) => T;
-
-export interface CustomHookObject<T> {
-  [$customHook](context: RenderContext): T;
-}
-
 export interface Directive<T> {
   type: DirectiveType<T>;
   value: T;
@@ -156,6 +150,12 @@ export namespace Hook {
     pendingState: TState;
     memoizedState: TState;
   }
+}
+
+export type HookFunction<T> = (context: RenderContext) => T;
+
+export interface HookObject<T> {
+  [$customHook](context: RenderContext): T;
 }
 
 export const HookType = {
@@ -450,7 +450,7 @@ export interface UpdateTask {
   continuation: PromiseWithResolvers<UpdateResult>;
 }
 
-export type Usable<T> = CustomHookFunction<T> | CustomHookObject<T>;
+export type Usable<T> = HookFunction<T> | HookObject<T>;
 
 export class Scope {
   static readonly DETACHED: Scope = Object.freeze(new Scope()) as Scope;

@@ -4,11 +4,11 @@ import {
   type Bindable,
   type Binding,
   type Coroutine,
-  type CustomHookFunction,
-  type CustomHookObject,
   type Directive,
   type DirectiveContext,
   type DirectiveType,
+  type HookFunction,
+  type HookObject,
   Lanes,
   type Part,
   type RenderContext,
@@ -142,9 +142,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   }
 }
 
-export abstract class Signal<T>
-  implements CustomHookObject<T>, Bindable<Signal<T>>
-{
+export abstract class Signal<T> implements HookObject<T>, Bindable<Signal<T>> {
   abstract get value(): T;
 
   abstract get version(): number;
@@ -327,7 +325,7 @@ export class Computed<
   }
 }
 
-export function LocalAtom<T>(initialValue: T): CustomHookFunction<Atom<T>> {
+export function LocalAtom<T>(initialValue: T): HookFunction<Atom<T>> {
   return (context) => {
     return context.useMemo(() => new Atom(initialValue), []);
   };
@@ -339,7 +337,7 @@ export function LocalComputed<
 >(
   computation: (...values: UnwrapSignals<TDependencies>) => TResult,
   dependencies: TDependencies,
-): CustomHookFunction<Computed<TResult, TDependencies>> {
+): HookFunction<Computed<TResult, TDependencies>> {
   return (context) => {
     return context.useMemo(
       () => new Computed(computation, dependencies),
