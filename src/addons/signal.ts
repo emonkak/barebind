@@ -65,6 +65,10 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._slot = slot;
   }
 
+  get type(): DirectiveType<Signal<T>> {
+    return SignalDirective.instance;
+  }
+
   get value(): Signal<T> {
     return this._signal;
   }
@@ -72,10 +76,6 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   set value(signal: Signal<T>) {
     this._signal = signal;
     this._version = -1;
-  }
-
-  get type(): DirectiveType<Signal<T>> {
-    return SignalDirective.instance;
   }
 
   get part(): Part {

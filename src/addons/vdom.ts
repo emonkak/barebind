@@ -234,16 +234,16 @@ export class ElementBinding implements Binding<ElementProps> {
     this._part = part;
   }
 
+  get type(): DirectiveType<ElementProps> {
+    return ElementDirective.instance;
+  }
+
   get value(): ElementProps {
     return this._props;
   }
 
   set value(props: ElementProps) {
     this._props = props;
-  }
-
-  get type(): DirectiveType<ElementProps> {
-    return ElementDirective.instance;
   }
 
   get part(): Part.ElementPart {
