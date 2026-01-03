@@ -23,16 +23,16 @@ export function EventCallback<TCallback extends (...args: any[]) => any>(
   callback: TCallback,
 ): HookFunction<(...args: Parameters<TCallback>) => ReturnType<TCallback>> {
   return (context) => {
-    const stableCallback = context.useRef(callback);
+    const eventCallback = context.useRef(callback);
 
     context.useLayoutEffect(() => {
-      stableCallback.current = callback;
+      eventCallback.current = callback;
     }, [callback]);
 
     // React's useEffectEvent() returns an unstable callback, but our
     // implementation returns a stable callback.
     return context.useCallback(function (this: ThisType<TCallback>, ...args) {
-      return stableCallback.current.apply(this, args);
+      return eventCallback.current.apply(this, args);
     }, []);
   };
 }
