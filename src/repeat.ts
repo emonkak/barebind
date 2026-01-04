@@ -373,11 +373,11 @@ function reconcileSlots<TKey, TValue>(
   while (true) {
     if (newHead > newTail) {
       while (oldHead <= oldTail) {
-        const oldSlot = oldSlots[oldTail];
+        const oldSlot = oldSlots[oldHead];
         if (oldSlot !== undefined) {
           handler.remove(oldSlot);
         }
-        oldTail--;
+        oldHead++;
       }
       break;
     } else if (oldHead > oldTail) {
