@@ -1,7 +1,6 @@
 import {
   BrowserBackend,
   createComponent,
-  Literal,
   type RenderContext,
   Repeat,
   Root,
@@ -151,7 +150,7 @@ const Dashboard = createComponent(function Dashboard(
   const countElementRef = $.useRef<Element | null>(null);
   const count = $.use(count$);
 
-  const greetTag = new Literal(count$.value % 2 === 0 ? 'span' : 'em');
+  const greetTag = count$.value % 2 === 0 ? 'span' : 'em';
 
   return $.html`
     <div
@@ -163,11 +162,6 @@ const Dashboard = createComponent(function Dashboard(
       :ref=${countElementRef}
       data-count=${count}
     >
-      <h1>
-        <${$.dynamicHTML`
-          <${greetTag} :style=${{ color: 'blue' }}>Hello, World!</${greetTag}>
-        `}>
-      </h1>
       <h1 .innerHTML=${`<${greetTag} style="color: red">Hello, World!</${greetTag}>`}></h1>
       <ul>
         <li>Env: ${env}</li>

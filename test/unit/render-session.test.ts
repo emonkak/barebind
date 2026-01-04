@@ -9,7 +9,6 @@ import {
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { DETACHED_SCOPE } from '@/scope.js';
-import { Literal } from '@/template-literal.js';
 import { MockCoroutine, MockTemplate } from '../mocks.js';
 import { TestRenderer } from '../test-helpers.js';
 
@@ -43,66 +42,6 @@ describe('RenderSession', () => {
         const session = renderer.startRender((session) => session);
         session.catchError(() => {});
       }).toThrow(TypeError);
-    });
-  });
-
-  describe('dynamicHTML()', () => {
-    it('returns a bindable with the dynamic HTML template', () => {
-      const renderer = new TestRenderer();
-      const directive = renderer.startRender(
-        (session) =>
-          session.dynamicHTML`<${new Literal('div')}>Hello, ${'World'}!</${new Literal('div')}>`,
-      );
-
-      expect(directive.type).toBeInstanceOf(MockTemplate);
-      expect(directive.type).toStrictEqual(
-        expect.objectContaining({
-          strings: ['<div>Hello, ', '!</div>'],
-          binds: ['World'],
-          mode: 'html',
-        }),
-      );
-      expect(directive.value).toStrictEqual(['World']);
-    });
-  });
-
-  describe('dynamicMath()', () => {
-    it('returns a bindable with the dynamic MathML template', () => {
-      const renderer = new TestRenderer();
-      const directive = renderer.startRender(
-        (session) =>
-          session.dynamicMath`<${new Literal('mi')}>${'x'}</${new Literal('mi')}>`,
-      );
-
-      expect(directive.type).toBeInstanceOf(MockTemplate);
-      expect(directive.type).toStrictEqual(
-        expect.objectContaining({
-          strings: ['<mi>', '</mi>'],
-          binds: ['x'],
-          mode: 'math',
-        }),
-      );
-      expect(directive.value).toStrictEqual(['x']);
-    });
-  });
-
-  describe('dynamicSVG()', () => {
-    it('returns a bindable with the dynamic SVG template', () => {
-      const renderer = new TestRenderer();
-      const directive = renderer.startRender(
-        (session) =>
-          session.dynamicSVG`<${new Literal('text')}>Hello, ${'World'}!</${new Literal('text')}>`,
-      );
-
-      expect(directive.type).toBeInstanceOf(MockTemplate);
-      expect(directive.type).toStrictEqual(
-        expect.objectContaining({
-          strings: ['<text>Hello, ', '!</text>'],
-          binds: ['World'],
-          mode: 'svg',
-        }),
-      );
-      expect(directive.value).toStrictEqual(['World']);
     });
   });
 

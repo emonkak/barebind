@@ -30,11 +30,6 @@ import {
 import { LinkedList } from './linked-list.js';
 import { RenderSession } from './render-session.js';
 import { handleError } from './scope.js';
-import {
-  type Literal,
-  type TemplateLiteral,
-  TemplateLiteralPreprocessor,
-} from './template-literal.js';
 
 export interface RuntimeBackend {
   commitEffects(effects: Effect[], phase: CommitPhase): void;
@@ -100,9 +95,6 @@ export class Runtime implements SessionContext {
 
   private readonly _pendingTasks: LinkedList<UpdateTask> = new LinkedList();
 
-  private readonly _templateLiteralPreprocessor: TemplateLiteralPreprocessor =
-    new TemplateLiteralPreprocessor();
-
   private readonly _templatePlaceholder: string;
 
   private _identifierCount: number = 0;
@@ -123,13 +115,6 @@ export class Runtime implements SessionContext {
     return () => {
       observers.remove(node);
     };
-  }
-
-  expandLiterals<T>(
-    strings: TemplateStringsArray,
-    values: readonly (T | Literal)[],
-  ): TemplateLiteral<T> {
-    return this._templateLiteralPreprocessor.process(strings, values);
   }
 
   async flushAsync(): Promise<void> {

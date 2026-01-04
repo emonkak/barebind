@@ -1,7 +1,5 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-import type { Literal, TemplateLiteral } from './template-literal.js';
-
 export const $hook: unique symbol = Symbol('$hook');
 
 export const $toDirective: unique symbol = Symbol('$toDirective');
@@ -277,18 +275,6 @@ export interface RefObject<T> {
 
 export interface RenderContext {
   catchError(handler: ErrorHandler): void;
-  dynamicHTML(
-    strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
-  ): Bindable<readonly unknown[]>;
-  dynamicMath(
-    strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
-  ): Bindable<readonly unknown[]>;
-  dynamicSVG(
-    strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
-  ): Bindable<readonly unknown[]>;
   forceUpdate(options?: UpdateOptions): UpdateHandle;
   getSessionContext(): SessionContext;
   getSharedContext(key: unknown): unknown;
@@ -373,10 +359,6 @@ export interface ReversibleEffect extends Effect {
 
 export interface SessionContext extends DirectiveContext {
   getPendingTasks(): IteratorObject<UpdateTask>;
-  expandLiterals<T>(
-    strings: TemplateStringsArray,
-    values: readonly (T | Literal)[],
-  ): TemplateLiteral<T>;
   nextIdentifier(): string;
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,

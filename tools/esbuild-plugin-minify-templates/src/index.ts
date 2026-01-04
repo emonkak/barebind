@@ -13,16 +13,7 @@ const FILTER_PATTERN = /\.(jsx?|tsx?)$/;
 export function minifyTemplates(
   options: MinifyTemplateOptions = {},
 ): esbuild.Plugin {
-  const {
-    tagNames = [
-      'dynamicHTML',
-      'dynamicMath',
-      'dynamicSVG',
-      'html',
-      'math',
-      'svg',
-    ],
-  } = options;
+  const { tagNames = ['html', 'math', 'svg'] } = options;
 
   return {
     name: 'minify-templates',

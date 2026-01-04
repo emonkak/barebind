@@ -12,7 +12,6 @@ import {
 import { RenderSession } from '@/render-session.js';
 import { createScope } from '@/scope.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { Literal } from '@/template-literal.js';
 import {
   MockBindable,
   MockCoroutine,
@@ -22,29 +21,9 @@ import {
   MockSlot,
   MockTemplate,
 } from '../mocks.js';
-import {
-  createRenderFrame,
-  createRuntime,
-  templateLiteral,
-} from '../test-helpers.js';
+import { createRenderFrame, createRuntime } from '../test-helpers.js';
 
 describe('Runtime', () => {
-  describe('expandLiterals()', () => {
-    it('expands literals in template values', () => {
-      const { strings, values } =
-        templateLiteral`<${new Literal('div')}>${'foo'}</${new Literal('div')}>`;
-      const runtime = createRuntime();
-
-      const templateLiteral1 = runtime.expandLiterals(strings, values);
-      const templateLiteral2 = runtime.expandLiterals(strings, values);
-
-      expect(templateLiteral1.strings).toStrictEqual(['<div>', '</div>']);
-      expect(templateLiteral1.values).toStrictEqual(['foo']);
-      expect(templateLiteral2.strings).toBe(templateLiteral1.strings);
-      expect(templateLiteral2.values).toStrictEqual(templateLiteral1.values);
-    });
-  });
-
   describe('flushAsync()', () => {
     it('commits effects asynchronously', async () => {
       const mutationEffect = {

@@ -61,27 +61,6 @@ export class RenderSession implements RenderContext {
     addErrorHandler(this._scope, handler);
   }
 
-  dynamicHTML(
-    strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
-  ): DirectiveSpecifier<readonly unknown[]> {
-    return this._createDynamicTemplate(strings, binds, 'html');
-  }
-
-  dynamicMath(
-    strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
-  ): DirectiveSpecifier<readonly unknown[]> {
-    return this._createDynamicTemplate(strings, binds, 'math');
-  }
-
-  dynamicSVG(
-    strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
-  ): DirectiveSpecifier<readonly unknown[]> {
-    return this._createDynamicTemplate(strings, binds, 'svg');
-  }
-
   finalize(): void {
     const { hooks } = this._state;
     const { mutationEffects, layoutEffects, passiveEffects } = this._frame;
@@ -369,21 +348,6 @@ export class RenderSession implements RenderContext {
       .filter((pendingTask) => pendingTask.coroutine === this._coroutine)
       .map((pendingTask) => pendingTask.continuation.promise);
     return (await Promise.allSettled(promises)).length;
-  }
-
-  private _createDynamicTemplate(
-    strings: TemplateStringsArray,
-    binds: readonly unknown[],
-    mode: TemplateMode,
-  ): DirectiveSpecifier<readonly unknown[]> {
-    const { strings: expandedStrings, values: expandedBinds } =
-      this._context.expandLiterals(strings, binds);
-    const template = this._context.resolveTemplate(
-      expandedStrings,
-      expandedBinds as unknown[],
-      mode,
-    );
-    return new DirectiveSpecifier(template, expandedBinds);
   }
 
   private _createEffect(
