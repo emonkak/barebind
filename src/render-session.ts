@@ -21,7 +21,6 @@ import {
   type TemplateMode,
   type UpdateHandle,
   type UpdateOptions,
-  type UpdateResult,
   type Usable,
 } from './internal.js';
 import {
@@ -104,34 +103,13 @@ export class RenderSession implements RenderContext {
       const hook = hooks[i]!;
       switch (hook.type) {
         case HookType.InsertionEffect:
-          if (
-            areDependenciesChanged(
-              hook.pendingDependencies,
-              hook.memoizedDependencies,
-            )
-          ) {
-            mutationEffects.push(new InvokeEffectHook(hook));
-          }
+          enqueueEffect(hook, mutationEffects);
           break;
         case HookType.LayoutEffect:
-          if (
-            areDependenciesChanged(
-              hook.pendingDependencies,
-              hook.memoizedDependencies,
-            )
-          ) {
-            layoutEffects.push(new InvokeEffectHook(hook));
-          }
+          enqueueEffect(hook, layoutEffects);
           break;
         case HookType.PassiveEffect:
-          if (
-            areDependenciesChanged(
-              hook.pendingDependencies,
-              hook.memoizedDependencies,
-            )
-          ) {
-            passiveEffects.push(new InvokeEffectHook(hook));
-          }
+          enqueueEffect(hook, passiveEffects);
           break;
       }
     }
@@ -482,6 +460,14 @@ function areDependenciesChanged(
     prevDependencies === null ||
     !sequentialEqual(nextDependencies, prevDependencies)
   );
+}
+
+function enqueueEffect(hook: Hook.EffectHook, effects: Effect[]): void {
+  if (
+    areDependenciesChanged(hook.pendingDependencies, hook.memoizedDependencies)
+  ) {
+    effects.push(new InvokeEffectHook(hook));
+  }
 }
 
 function ensureHookType<TExpectedHook extends Hook>(
