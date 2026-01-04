@@ -54,7 +54,6 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
         `${this.constructor.name} must be used in a child node part.`,
       );
     }
-
     return new TemplateBinding(this, binds, part);
   }
 }

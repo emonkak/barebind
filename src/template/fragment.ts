@@ -38,19 +38,19 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
   ): TemplateResult {
     const children = [];
     const slots = [];
-    let bindIndex = 0;
+    let offset = 0;
 
     for (let i = 0, l = this._templates.length; i < l; i++) {
       const template = this._templates[i]!;
       const result = template.hydrate(
-        binds.slice(bindIndex, bindIndex + template.arity),
+        binds.slice(offset, offset + template.arity),
         part,
         treeWalker,
         session,
       );
       children.push(...result.children);
       slots.push(...result.slots);
-      bindIndex += template.arity;
+      offset += template.arity;
     }
 
     return { children, slots };
