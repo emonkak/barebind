@@ -5,6 +5,7 @@ import type { HookFunction, RenderContext } from '@/internal.js';
 import { Root } from '@/root.js';
 import { BrowserBackend } from '@/runtime/browser.js';
 import { Runtime } from '@/runtime.js';
+import { Fragment } from '@/template.js';
 import { stripComments } from '../test-helpers.js';
 
 test('invokes effects from child to parent', async () => {
@@ -103,7 +104,7 @@ const App = createComponent(function Parent({
   return Node({
     name: 'parent',
     logs,
-    children: [
+    children: Fragment([
       Node({
         name: 'child1',
         logs,
@@ -114,7 +115,7 @@ const App = createComponent(function Parent({
         logs,
         children: Node({ name: 'grandchild2', logs }),
       }),
-    ],
+    ]),
   });
 });
 

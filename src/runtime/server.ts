@@ -23,8 +23,6 @@ import { TextPrimitive } from '../primitive/text.js';
 import type { Runtime, RuntimeBackend } from '../runtime.js';
 import { LooseLayout } from '../slot/loose.js';
 import { StrictLayout } from '../slot/strict.js';
-import { ChildNodeTemplate } from '../template/child-node.js';
-import { FragmentTemplate } from '../template/fragment.js';
 import { TaggedTemplate } from '../template/tagged.js';
 
 export class ServerBackend implements RuntimeBackend {
@@ -95,17 +93,7 @@ export class ServerBackend implements RuntimeBackend {
         }
         return AttributePrimitive;
       case PartType.ChildNode:
-        if (value == null) {
-          return BlackholePrimitive;
-        }
-        if (Array.isArray(value)) {
-          return new FragmentTemplate(
-            new Array<ChildNodeTemplate<any>>(value.length).fill(
-              new ChildNodeTemplate(),
-            ),
-          );
-        }
-        return CommentPrimitive;
+        return value != null ? CommentPrimitive : BlackholePrimitive;
       case PartType.Element:
         return SpreadPrimitive;
       case PartType.Event:

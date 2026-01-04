@@ -1,25 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { createTreeWalker } from '@/hydration.js';
 import { PartType } from '@/internal.js';
-import { Element, ElementTemplate } from '@/template/element.js';
+import { ElementTemplate } from '@/template/element.js';
 import { HTML_NAMESPACE_URI, SVG_NAMESPACE_URI } from '@/template/template.js';
 import {
   createElement,
   serializeNode,
   TestUpdater,
 } from '../../test-helpers.js';
-
-describe('Element()', () => {
-  it('returns a new DirectiveSpecifier with the element', () => {
-    const props = { class: 'foo' };
-    const children = 'bar';
-    const bindable = Element('div', props, children);
-
-    expect(bindable.type).toBeInstanceOf(ElementTemplate);
-    expect((bindable.type as ElementTemplate)['_tagName']).toBe('div');
-    expect(bindable.value).toStrictEqual([props, children]);
-  });
-});
 
 describe('ElementTemplate', () => {
   describe('arity', () => {

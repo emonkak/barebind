@@ -16,8 +16,6 @@ import { BrowserBackend } from '@/runtime/browser.js';
 import { Runtime } from '@/runtime.js';
 import { LooseLayout } from '@/slot/loose.js';
 import { StrictLayout } from '@/slot/strict.js';
-import { ChildNodeTemplate } from '@/template/child-node.js';
-import { FragmentTemplate } from '@/template/fragment.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { templateLiteral } from '../../test-helpers.js';
@@ -329,20 +327,6 @@ describe('BrowserBackend', () => {
           namespaceURI: HTML_NAMESPACE_URI,
         },
         BlackholePrimitive,
-      ],
-      [
-        ['foo', 'bar', 'baz'],
-        {
-          type: PartType.ChildNode,
-          node: document.createComment(''),
-          anchorNode: null,
-          namespaceURI: HTML_NAMESPACE_URI,
-        },
-        new FragmentTemplate([
-          new ChildNodeTemplate(),
-          new ChildNodeTemplate(),
-          new ChildNodeTemplate(),
-        ]),
       ],
       [
         'foo',

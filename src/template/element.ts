@@ -1,4 +1,3 @@
-import { DirectiveSpecifier } from '../directive.js';
 import { replaceMarkerNode, treatNodeName } from '../hydration.js';
 import {
   type DirectiveType,
@@ -11,14 +10,6 @@ import {
   AbstractTemplate,
   getNamespaceURIByTagName,
 } from '../template/template.js';
-
-export function Element<TProps, TChildren>(
-  name: string,
-  props: TProps,
-  children: TChildren,
-): DirectiveSpecifier<readonly [TProps, TChildren]> {
-  return new DirectiveSpecifier(new ElementTemplate(name), [props, children]);
-}
 
 export class ElementTemplate<
   TProps = unknown,
