@@ -46,7 +46,7 @@ export class TextBinding<T> extends PrimitiveBinding<T, Part.TextPart> {
 
   override rollback(): void {
     if (this._memoizedValue !== null) {
-      this._part.node.nodeValue = null;
+      this._part.node.data = '';
       this._memoizedValue = null;
     }
   }
