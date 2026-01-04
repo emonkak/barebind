@@ -1,5 +1,4 @@
 import { debugPart, undebugPart } from '../debug/part.js';
-import { LayoutSpecifier } from '../directive.js';
 import {
   areDirectiveTypesEqual,
   type Binding,
@@ -10,6 +9,7 @@ import {
   type UnwrapBindable,
   type UpdateSession,
 } from '../internal.js';
+import { LayoutSpecifier } from './layout.js';
 
 export function Loose<T>(value: T): LayoutSpecifier<T> {
   return new LayoutSpecifier(LooseLayout, value);

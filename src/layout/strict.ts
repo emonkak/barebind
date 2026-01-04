@@ -1,5 +1,5 @@
 import { debugPart, undebugPart } from '../debug/part.js';
-import { DirectiveError, LayoutSpecifier } from '../directive.js';
+import { DirectiveError } from '../directive.js';
 import {
   areDirectiveTypesEqual,
   type Binding,
@@ -10,6 +10,7 @@ import {
   type UnwrapBindable,
   type UpdateSession,
 } from '../internal.js';
+import { LayoutSpecifier } from './layout.js';
 
 export function Strict<T>(value: T): LayoutSpecifier<T> {
   return new LayoutSpecifier(StrictLayout, value);

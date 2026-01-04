@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { DirectiveSpecifier, LayoutSpecifier } from '@/directive.js';
+import { DirectiveSpecifier } from '@/directive.js';
 import { PartType } from '@/internal.js';
 import { Keyed, KeyedLayout, KeyedSlot } from '@/layout/keyed.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -50,7 +50,7 @@ describe('KeyedSlot', () => {
     it('updates the binding with the same key and the same directive type', () => {
       const key = 'foo';
       const value1 = 'bar';
-      const value2 = new LayoutSpecifier(new KeyedLayout(key), 'baz');
+      const value2 = Keyed(key, 'baz');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -118,7 +118,7 @@ describe('KeyedSlot', () => {
       const key1 = 'foo';
       const key2 = 'bar';
       const value1 = 'baz';
-      const value2 = new LayoutSpecifier(new KeyedLayout(key2), 'qux');
+      const value2 = Keyed(key2, 'qux');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -170,7 +170,7 @@ describe('KeyedSlot', () => {
     it('updates the binding only if it is dirty', () => {
       const key = 'foo';
       const value1 = 'bar';
-      const value2 = new LayoutSpecifier(new KeyedLayout(key), 'bar');
+      const value2 = Keyed(key, 'bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -212,8 +212,8 @@ describe('KeyedSlot', () => {
     it('throws an error if the keys match but the directive types are missmatched', () => {
       const key = 'foo';
       const value1 = 'bar';
-      const value2 = new LayoutSpecifier(
-        new KeyedLayout(key),
+      const value2 = Keyed(
+        key,
         new DirectiveSpecifier(new MockDirective(), 'baz'),
       );
       const part = {
