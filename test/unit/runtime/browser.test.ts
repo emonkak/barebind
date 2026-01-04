@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { CommitPhase, type Effect, PartType } from '@/internal.js';
+import { LooseLayout } from '@/layout/loose.js';
+import { StrictLayout } from '@/layout/strict.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
 import { ClassPrimitive } from '@/primitive/class.js';
@@ -14,8 +16,6 @@ import { StylePrimitive } from '@/primitive/style.js';
 import { TextPrimitive } from '@/primitive/text.js';
 import { BrowserBackend } from '@/runtime/browser.js';
 import { Runtime } from '@/runtime.js';
-import { LooseLayout } from '@/slot/loose.js';
-import { StrictLayout } from '@/slot/strict.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { templateLiteral } from '../../test-helpers.js';

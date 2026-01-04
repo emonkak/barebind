@@ -14,6 +14,10 @@ export {
   type RenderContext,
   type UpdateOptions,
 } from './internal.js';
+export { Flexible } from './layout/flexible.js';
+export { Keyed } from './layout/keyed.js';
+export { Loose } from './layout/loose.js';
+export { Strict } from './layout/strict.js';
 export { LinkedList } from './linked-list.js';
 export type { ClassSpecifier } from './primitive/class.js';
 export type { EventHandler } from './primitive/event.js';
@@ -31,8 +35,4 @@ export {
   type RuntimeEvent,
   type RuntimeObserver,
 } from './runtime.js';
-export { Flexible } from './slot/flexible.js';
-export { Keyed } from './slot/keyed.js';
-export { Loose } from './slot/loose.js';
-export { Strict } from './slot/strict.js';
 export { Element, Fragment } from './template.js';

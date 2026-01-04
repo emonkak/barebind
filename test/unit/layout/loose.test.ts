@@ -2,24 +2,24 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { DirectiveSpecifier } from '@/directive.js';
 import { PartType } from '@/internal.js';
-import { Flexible, FlexibleLayout, FlexibleSlot } from '@/slot/flexible.js';
+import { Loose, LooseLayout, LooseSlot } from '@/layout/loose.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
 import { TestUpdater } from '../../test-helpers.js';
 
-describe('Flexible()', () => {
-  it('creates a LayoutSpecifier with FlexibleSlot', () => {
+describe('Loose()', () => {
+  it('creates a LayoutSpecifier with LooseLayout', () => {
     const value = 'foo';
-    const bindable = Flexible(value);
+    const bindable = Loose(value);
 
     expect(bindable.value).toBe(value);
-    expect(bindable.layout).toBe(FlexibleLayout);
+    expect(bindable.layout).toBe(LooseLayout);
   });
 });
 
-describe('FlexibleLayout', () => {
+describe('LooseLayout', () => {
   describe('resolveSlot', () => {
-    it('constructs a new FlexibleSlot', () => {
+    it('constructs a new LooseSlot', () => {
       const value = 'foo';
       const part = {
         type: PartType.ChildNode,
@@ -28,7 +28,7 @@ describe('FlexibleLayout', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = FlexibleLayout.resolveSlot(binding);
+      const slot = LooseLayout.resolveSlot(binding);
 
       expect(slot.type).toBe(MockPrimitive);
       expect(slot.value).toBe(value);
@@ -37,7 +37,7 @@ describe('FlexibleLayout', () => {
   });
 });
 
-describe('FlexibleSlot', () => {
+describe('LooseSlot', () => {
   describe('reconcile()', () => {
     it('updates the binding with the same directive type', () => {
       const value1 = 'foo';
@@ -49,7 +49,7 @@ describe('FlexibleSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
-      const slot = new FlexibleSlot(binding);
+      const slot = new LooseSlot(binding);
       const updater = new TestUpdater();
 
       const shouldUpdateSpy = vi.spyOn(binding, 'shouldUpdate');
@@ -115,9 +115,10 @@ describe('FlexibleSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
-      const slot = new FlexibleSlot(binding);
+      const slot = new LooseSlot(binding);
       const updater = new TestUpdater();
 
+      const shouldUpdateSpy = vi.spyOn(binding, 'shouldUpdate');
       const attachSpy = vi.spyOn(binding, 'attach');
       const detachSpy = vi.spyOn(binding, 'detach');
       const commitSpy = vi.spyOn(binding, 'commit');
@@ -131,30 +132,27 @@ describe('FlexibleSlot', () => {
       }
 
       SESSION2: {
-        updater.startUpdate((session) => {
-          slot.reconcile(value2, session);
+        const dirty = updater.startUpdate((session) => {
+          const dirty = slot.reconcile(value2, session);
           slot.commit();
-        });
-      }
-
-      SESSION3: {
-        updater.startUpdate((session) => {
-          slot.reconcile(value1, session);
-          slot.commit();
+          return dirty;
         });
 
-        expect(attachSpy).toHaveBeenCalledTimes(2);
+        expect(shouldUpdateSpy).not.toHaveBeenCalled();
+        expect(attachSpy).toHaveBeenCalledOnce();
         expect(detachSpy).toHaveBeenCalledOnce();
-        expect(commitSpy).toHaveBeenCalledTimes(2);
+        expect(commitSpy).toHaveBeenCalledOnce();
         expect(rollbackSpy).toHaveBeenCalledOnce();
-        expect(slot['_pendingBinding']).toBe(binding);
+        expect(slot['_pendingBinding']).not.toBe(binding);
+        expect(slot['_pendingBinding']).toBeInstanceOf(MockBinding);
         expect(slot['_pendingBinding']).toStrictEqual(
           expect.objectContaining({
             dirty: false,
             committed: true,
           }),
         );
-        expect(part.node.data).toBe('/MockPrimitive("foo")');
+        expect(part.node.data).toBe('/MockDirective("bar")');
+        expect(dirty).toBe(true);
       }
     });
 
@@ -167,7 +165,7 @@ describe('FlexibleSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new FlexibleSlot(binding);
+      const slot = new LooseSlot(binding);
       const updater = new TestUpdater();
 
       const shouldUpdateSpy = vi.spyOn(binding, 'shouldUpdate');

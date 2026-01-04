@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { DirectiveSpecifier, LayoutSpecifier } from '@/directive.js';
 import { PartType } from '@/internal.js';
-import { Keyed, KeyedLayout, KeyedSlot } from '@/slot/keyed.js';
+import { Keyed, KeyedLayout, KeyedSlot } from '@/layout/keyed.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
 import { TestUpdater } from '../../test-helpers.js';
