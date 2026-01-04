@@ -8,6 +8,7 @@ import {
   type Slot,
   type UpdateHandle,
   type UpdateOptions,
+  type UpdateSession,
 } from './internal.js';
 import { createScope, setHydrationTargetTree } from './scope.js';
 
@@ -44,71 +45,50 @@ export class Root<T> {
   }
 
   hydrate(options?: UpdateOptions): UpdateHandle {
-    const scope = createScope();
-    const coroutine: Coroutine = {
-      scope,
-      pendingLanes: Lanes.DefaultLane,
-      resume: (session) => {
-        const targetTree = createTreeWalker(this._container);
-        setHydrationTargetTree(scope, targetTree);
-        this._slot.attach(session);
-        session.frame.mutationEffects.push(
-          new HydrateSlot(this._slot, targetTree),
-        );
-      },
-    };
-    return this._context.scheduleUpdate(coroutine, {
-      immediate: true,
-      ...options,
-    });
+    return this._beginUpdate((session) => {
+      const targetTree = createTreeWalker(this._container);
+      setHydrationTargetTree(session.scope, targetTree);
+      this._slot.attach(session);
+      session.frame.mutationEffects.push(
+        new HydrateSlot(this._slot, targetTree),
+      );
+    }, options);
   }
 
   mount(options?: UpdateOptions): UpdateHandle {
-    const scope = createScope();
-    const coroutine: Coroutine = {
-      scope,
-      pendingLanes: Lanes.DefaultLane,
-      resume: (session) => {
-        this._slot.attach(session);
-        session.frame.mutationEffects.push(
-          new MountSlot(this._slot, this._container),
-        );
-      },
-    };
-    return this._context.scheduleUpdate(coroutine, {
-      immediate: true,
-      ...options,
-    });
+    return this._beginUpdate((session) => {
+      this._slot.attach(session);
+      session.frame.mutationEffects.push(
+        new MountSlot(this._slot, this._container),
+      );
+    }, options);
   }
 
   update(value: T, options?: UpdateOptions): UpdateHandle {
-    const scope = createScope();
-    const coroutine: Coroutine = {
-      scope,
-      pendingLanes: Lanes.DefaultLane,
-      resume: (session) => {
-        if (this._slot.reconcile(value, session)) {
-          session.frame.mutationEffects.push(this._slot);
-        }
-      },
-    };
-    return this._context.scheduleUpdate(coroutine, {
-      immediate: true,
-      ...options,
-    });
+    return this._beginUpdate((session) => {
+      if (this._slot.reconcile(value, session)) {
+        session.frame.mutationEffects.push(this._slot);
+      }
+    }, options);
   }
 
   unmount(options?: UpdateOptions): UpdateHandle {
-    const scope = createScope();
+    return this._beginUpdate((session) => {
+      this._slot.detach(session);
+      session.frame.mutationEffects.push(
+        new UnmountSlot(this._slot, this._container),
+      );
+    }, options);
+  }
+
+  private _beginUpdate(
+    resume: (session: UpdateSession) => void,
+    options?: UpdateOptions,
+  ): UpdateHandle {
     const coroutine: Coroutine = {
-      scope,
+      scope: createScope(),
       pendingLanes: Lanes.DefaultLane,
-      resume: (session) => {
-        this._slot.detach(session);
-        session.frame.mutationEffects.push(
-          new UnmountSlot(this._slot, this._container),
-        );
-      },
+      resume,
     };
     return this._context.scheduleUpdate(coroutine, {
       immediate: true,
