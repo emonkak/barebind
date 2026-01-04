@@ -279,21 +279,21 @@ export interface RenderContext {
   getSessionContext(): SessionContext;
   getSharedContext(key: unknown): unknown;
   html(
-    strings: TemplateStringsArray,
+    strings: readonly string[],
     ...binds: readonly unknown[]
   ): Bindable<readonly unknown[]>;
   isUpdatePending(): boolean;
   math(
-    strings: TemplateStringsArray,
+    strings: readonly string[],
     ...binds: readonly unknown[]
   ): Bindable<readonly unknown[]>;
   setSharedContext(key: unknown, value: unknown): void;
   svg(
-    strings: TemplateStringsArray,
+    strings: readonly string[],
     ...binds: readonly unknown[]
   ): Bindable<readonly unknown[]>;
   text(
-    strings: TemplateStringsArray,
+    strings: readonly string[],
     ...binds: readonly unknown[]
   ): Bindable<readonly unknown[]>;
   use<T>(usable: Usable<T>): T;

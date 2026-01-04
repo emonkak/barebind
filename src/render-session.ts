@@ -133,7 +133,7 @@ export class RenderSession implements RenderContext {
   }
 
   html(
-    strings: TemplateStringsArray,
+    strings: readonly string[],
     ...binds: readonly unknown[]
   ): DirectiveSpecifier<readonly unknown[]> {
     return this._createTemplate(strings, binds, 'html');
@@ -146,7 +146,7 @@ export class RenderSession implements RenderContext {
   }
 
   math(
-    strings: TemplateStringsArray,
+    strings: readonly string[],
     ...binds: readonly unknown[]
   ): DirectiveSpecifier<readonly unknown[]> {
     return this._createTemplate(strings, binds, 'math');
@@ -157,14 +157,14 @@ export class RenderSession implements RenderContext {
   }
 
   svg(
-    strings: TemplateStringsArray,
+    strings: readonly string[],
     ...binds: readonly unknown[]
   ): DirectiveSpecifier<readonly unknown[]> {
     return this._createTemplate(strings, binds, 'svg');
   }
 
   text(
-    strings: TemplateStringsArray,
+    strings: readonly string[],
     ...binds: readonly unknown[]
   ): DirectiveSpecifier<readonly unknown[]> {
     return this._createTemplate(strings, binds, 'textarea');
@@ -377,7 +377,7 @@ export class RenderSession implements RenderContext {
   }
 
   private _createTemplate(
-    strings: TemplateStringsArray,
+    strings: readonly string[],
     binds: readonly unknown[],
     mode: TemplateMode,
   ): DirectiveSpecifier<readonly unknown[]> {
