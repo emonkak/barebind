@@ -23,7 +23,7 @@ describe('treatNodeName()', () => {
     const targetTree = createTreeWalker(document.createElement('div'));
     expect(() => {
       treatNodeName(expectedName, node, targetTree);
-    }).toThrow('Hydration is failed because the node type is mismatched.');
+    }).toThrow('Hydration is failed because the node name is mismatched.');
   });
 });
 

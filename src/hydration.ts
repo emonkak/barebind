@@ -67,7 +67,7 @@ export function treatNodeName(
   if (node === null || node.nodeName !== expectedName) {
     throw new HydrationError(
       targetTree,
-      `Hydration is failed because the node type is mismatched. ${expectedName} is expected here, but got ${node?.nodeName}.`,
+      `Hydration is failed because the node name is mismatched. ${expectedName} is expected here, but got ${node?.nodeName}.`,
     );
   }
 
