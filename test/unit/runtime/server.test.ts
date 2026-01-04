@@ -74,7 +74,7 @@ describe('ServerBackend', () => {
 
   describe('parseTemplate()', () => {
     it('creates a TaggedTemplate', () => {
-      const { strings, values } =
+      const [strings, ...values] =
         templateLiteral`<div>${'Hello'}, ${'World'}!</div>`;
       const backend = new ServerBackend(document);
       const template = backend.parseTemplate(

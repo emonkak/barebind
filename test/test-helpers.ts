@@ -280,9 +280,9 @@ export function stripComments<T extends Node>(node: T): T {
   return iterator.root as T;
 }
 
-export function templateLiteral(
+export function templateLiteral<TValues extends readonly unknown[]>(
   strings: TemplateStringsArray,
-  ...values: readonly unknown[]
-): { strings: TemplateStringsArray; values: readonly unknown[] } {
-  return { strings, values };
+  ...values: TValues
+): [TemplateStringsArray, ...TValues] {
+  return [strings, ...values];
 }

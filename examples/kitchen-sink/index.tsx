@@ -7,6 +7,7 @@ import {
   Runtime,
   shallowEqual,
 } from 'barebind';
+import { DynamicTemplate } from 'barebind/addons/dynamic-template';
 import { ConsoleReporter, PerformanceProfiler } from 'barebind/addons/profiler';
 import { Atom, type Signal } from 'barebind/addons/signal';
 import type { VElement } from 'barebind/addons/vdom';
@@ -149,8 +150,9 @@ const Dashboard = createComponent(function Dashboard(
   const env = $.getSharedContext(ENV_CONTEXT);
   const countElementRef = $.useRef<Element | null>(null);
   const count = $.use(count$);
+  const { literal, html } = $.use(DynamicTemplate());
 
-  const greetTag = count$.value % 2 === 0 ? 'span' : 'em';
+  const greetTag = literal(count$.value % 2 === 0 ? 'span' : 'em');
 
   return $.html`
     <div
@@ -162,6 +164,11 @@ const Dashboard = createComponent(function Dashboard(
       :ref=${countElementRef}
       data-count=${count}
     >
+      <h1>
+        <${html`
+          <${greetTag} :style=${{ color: 'blue' }}>Hello, World!</${greetTag}>
+        `}>
+      </h1>
       <h1 .innerHTML=${`<${greetTag} style="color: red">Hello, World!</${greetTag}>`}></h1>
       <ul>
         <li>Env: ${env}</li>

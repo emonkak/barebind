@@ -151,7 +151,7 @@ describe('BrowserBackend', () => {
 
   describe('parseTemplate()', () => {
     it('creates a TaggedTemplate', () => {
-      const { strings, values } =
+      const [strings, ...values] =
         templateLiteral`<div>${'Hello'}, ${'World'}!</div>`;
       const backend = new BrowserBackend();
       const template = backend.parseTemplate(
