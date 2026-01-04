@@ -372,7 +372,7 @@ export interface ReversibleEffect extends Effect {
 }
 
 export interface SessionContext extends DirectiveContext {
-  getPendingTasks(): UpdateTask[];
+  getPendingTasks(): IteratorObject<UpdateTask>;
   expandLiterals<T>(
     strings: TemplateStringsArray,
     values: readonly (T | Literal)[],

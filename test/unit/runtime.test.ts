@@ -94,7 +94,7 @@ describe('Runtime', () => {
           done: true,
         });
 
-        expect(runtime.getPendingTasks()).toStrictEqual([
+        expect(runtime.getPendingTasks().toArray()).toStrictEqual([
           expect.objectContaining({
             coroutine,
             lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
@@ -107,7 +107,7 @@ describe('Runtime', () => {
 
         await runtime.flushAsync();
 
-        expect(runtime.getPendingTasks()).toStrictEqual([]);
+        expect(runtime.getPendingTasks().toArray()).toStrictEqual([]);
 
         await expect(handle1.finished).resolves.toStrictEqual({
           canceled: false,
@@ -189,7 +189,7 @@ describe('Runtime', () => {
           done: true,
         });
 
-        expect(runtime.getPendingTasks()).toStrictEqual([
+        expect(runtime.getPendingTasks().toArray()).toStrictEqual([
           expect.objectContaining({
             coroutine,
             lanes:
@@ -201,7 +201,7 @@ describe('Runtime', () => {
 
         await runtime.flushAsync();
 
-        expect(runtime.getPendingTasks()).toStrictEqual([]);
+        expect(runtime.getPendingTasks().toArray()).toStrictEqual([]);
 
         await expect(handle.finished).resolves.toStrictEqual({
           canceled: false,
@@ -345,7 +345,7 @@ describe('Runtime', () => {
           done: true,
         });
 
-        expect(runtime.getPendingTasks()).toStrictEqual([
+        expect(runtime.getPendingTasks().toArray()).toStrictEqual([
           expect.objectContaining({
             coroutine,
             lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
@@ -358,7 +358,7 @@ describe('Runtime', () => {
 
         runtime.flushSync();
 
-        expect(runtime.getPendingTasks()).toStrictEqual([]);
+        expect(runtime.getPendingTasks().toArray()).toStrictEqual([]);
 
         await expect(handle1.finished).resolves.toStrictEqual({
           canceled: false,
@@ -450,7 +450,7 @@ describe('Runtime', () => {
           done: true,
         });
 
-        expect(runtime.getPendingTasks()).toStrictEqual([
+        expect(runtime.getPendingTasks().toArray()).toStrictEqual([
           expect.objectContaining({
             coroutine,
             lanes:
@@ -462,7 +462,7 @@ describe('Runtime', () => {
 
         runtime.flushSync();
 
-        expect(runtime.getPendingTasks()).toStrictEqual([]);
+        expect(runtime.getPendingTasks().toArray()).toStrictEqual([]);
 
         await expect(handle.finished).resolves.toStrictEqual({
           canceled: false,

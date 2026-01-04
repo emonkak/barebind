@@ -340,8 +340,8 @@ export class Runtime implements SessionContext {
     }
   }
 
-  getPendingTasks(): UpdateTask[] {
-    return Array.from(this._pendingTasks);
+  getPendingTasks(): IteratorObject<UpdateTask> {
+    return Iterator.from(this._pendingTasks);
   }
 
   nextIdentifier(): string {
