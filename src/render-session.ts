@@ -162,16 +162,9 @@ export class RenderSession implements RenderContext {
   }
 
   isUpdatePending(): boolean {
-    const pendingTasks = this._context.getPendingTasks();
-
-    for (let i = 0, l = pendingTasks.length; i < l; i++) {
-      const pendingTask = pendingTasks[i]!;
-      if (pendingTask.coroutine === this._coroutine) {
-        return true;
-      }
-    }
-
-    return false;
+    return this._context
+      .getPendingTasks()
+      .some((pendingTask) => pendingTask.coroutine === this._coroutine);
   }
 
   math(
@@ -372,16 +365,10 @@ export class RenderSession implements RenderContext {
   }
 
   async waitForUpdate(): Promise<number> {
-    const pendingTasks = this._context.getPendingTasks();
-    const promises: Promise<UpdateResult>[] = [];
-
-    for (let i = 0, l = pendingTasks.length; i < l; i++) {
-      const pendingTask = pendingTasks[i]!;
-      if (pendingTask.coroutine === this._coroutine) {
-        promises.push(pendingTask.continuation.promise);
-      }
-    }
-
+    const promises = this._context
+      .getPendingTasks()
+      .filter((pendingTask) => pendingTask.coroutine === this._coroutine)
+      .map((pendingTask) => pendingTask.continuation.promise);
     return (await Promise.allSettled(promises)).length;
   }
 

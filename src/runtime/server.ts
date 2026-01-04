@@ -77,12 +77,7 @@ export class ServerBackend implements RuntimeBackend {
   }
 
   resolveLayout(_value: unknown, part: Part): Layout {
-    switch (part.type) {
-      case PartType.ChildNode:
-        return LooseLayout;
-      default:
-        return StrictLayout;
-    }
+    return part.type === PartType.ChildNode ? LooseLayout : StrictLayout;
   }
 
   resolvePrimitive(value: unknown, part: Part): Primitive<unknown> {
