@@ -63,7 +63,7 @@ describe('RefPrimitive', () => {
       const runtime = createRuntime();
 
       expect(() => RefPrimitive.resolveBinding(ref, part, runtime)).toThrow(
-        'RefPrimitive must be used in ":ref" attribute part.',
+        'RefPrimitive must be used in AttributePart.',
       );
     });
   });

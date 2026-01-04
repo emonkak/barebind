@@ -64,7 +64,7 @@ describe('SpreadPrimitive', () => {
 
       expect(() =>
         SpreadPrimitive.resolveBinding(props, part, runtime),
-      ).toThrow('SpreadPrimitive must be used in an element part.');
+      ).toThrow('SpreadPrimitive must be used in ElementPart.');
     });
   });
 });

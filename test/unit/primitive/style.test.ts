@@ -62,17 +62,16 @@ describe('StylePrimitive', () => {
       expect(binding.part).toBe(part);
     });
 
-    it('should throw the error if the part is not a ":style" attribute part', () => {
+    it('should throw the error if the part is not an attribute part', () => {
       const style = { color: 'red' };
       const part = {
-        type: PartType.Attribute,
+        type: PartType.Element,
         node: document.createElement('div'),
-        name: 'style',
       };
       const runtime = createRuntime();
 
       expect(() => StylePrimitive.resolveBinding(style, part, runtime)).toThrow(
-        'StylePrimitive must be used in a ":style" attribute part.',
+        'StylePrimitive must be used in AttributePart.',
       );
     });
   });

@@ -33,7 +33,7 @@ describe('CommentPrimitive', () => {
 
       expect(() =>
         CommentPrimitive.resolveBinding(value, part, runtime),
-      ).toThrow('CommentPrimitive must be used in a child node.');
+      ).toThrow('CommentPrimitive must be used in ChildNodePart.');
     });
   });
 });

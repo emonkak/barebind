@@ -32,7 +32,7 @@ describe('PropertyPrimitive', () => {
 
       expect(() =>
         PropertyPrimitive.resolveBinding(value, part, runtime),
-      ).toThrow('PropertyPrimitive must be used in a property part.');
+      ).toThrow('PropertyPrimitive must be used in PropertyPart.');
     });
   });
 });

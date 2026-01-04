@@ -1,4 +1,4 @@
-import { DirectiveError } from '../directive.js';
+import { DirectiveError, ensurePartType } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -32,19 +32,12 @@ export const EventPrimitive: Primitive<EventHandler> = {
     }
   },
   resolveBinding(
-    handler: EventHandler,
+    value: EventHandler,
     part: Part,
     _context: DirectiveContext,
   ): EventBinding {
-    if (part.type !== PartType.Event) {
-      throw new DirectiveError(
-        this,
-        handler,
-        part,
-        'EventPrimitive must be used in an event part.',
-      );
-    }
-    return new EventBinding(handler, part);
+    ensurePartType<Part.EventPart>(PartType.Event, this, value, part);
+    return new EventBinding(value, part);
   },
 };
 
@@ -58,8 +51,8 @@ export class EventBinding extends PrimitiveBinding<
     return EventPrimitive;
   }
 
-  shouldUpdate(handler: EventHandler): boolean {
-    return handler !== this._memoizedValue;
+  shouldUpdate(value: EventHandler): boolean {
+    return value !== this._memoizedValue;
   }
 
   override commit(): void {

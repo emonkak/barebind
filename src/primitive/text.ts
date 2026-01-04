@@ -1,4 +1,4 @@
-import { DirectiveError } from '../directive.js';
+import { ensurePartType } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -14,14 +14,7 @@ export const TextPrimitive: Primitive<any> = {
     part: Part,
     _context: DirectiveContext,
   ): TextBinding<unknown> {
-    if (part.type !== PartType.Text) {
-      throw new DirectiveError(
-        this,
-        value,
-        part,
-        'TextPrimitive must be used in a text part.',
-      );
-    }
+    ensurePartType<Part.TextPart>(PartType.Text, this, value, part);
     return new TextBinding(value, part);
   },
 };

@@ -1,4 +1,4 @@
-import { DirectiveError } from '../directive.js';
+import { DirectiveError, ensurePartType } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -24,19 +24,12 @@ export const SpreadPrimitive: Primitive<SpreadProps> = {
     }
   },
   resolveBinding(
-    props: SpreadProps,
+    value: SpreadProps,
     part: Part,
     _context: DirectiveContext,
   ): SpreadBinding {
-    if (part.type !== PartType.Element) {
-      throw new DirectiveError(
-        this,
-        props,
-        part,
-        'SpreadPrimitive must be used in an element part.',
-      );
-    }
-    return new SpreadBinding(props, part);
+    ensurePartType<Part.ElementPart>(PartType.Element, this, value, part);
+    return new SpreadBinding(value, part);
   },
 };
 
@@ -52,8 +45,8 @@ export class SpreadBinding extends PrimitiveBinding<
     return SpreadPrimitive;
   }
 
-  shouldUpdate(props: SpreadProps): boolean {
-    return this._memoizedSlots === null || props !== this._value;
+  shouldUpdate(value: SpreadProps): boolean {
+    return this._memoizedSlots === null || value !== this._value;
   }
 
   override attach(session: UpdateSession): void {

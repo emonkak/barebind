@@ -196,7 +196,7 @@ describe('ElementDirective', () => {
 
       expect(() =>
         ElementDirective.resolveBinding(props, part, runtime),
-      ).toThrow('ElementDirective must be used in an element part.');
+      ).toThrow('ElementDirective must be used in ElementPart.');
     });
   });
 });

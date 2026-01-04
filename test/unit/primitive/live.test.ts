@@ -31,7 +31,7 @@ describe('LivePrimitive', () => {
       const runtime = createRuntime();
 
       expect(() => LivePrimitive.resolveBinding(value, part, runtime)).toThrow(
-        'LivePrimitive must be used in a live part.',
+        'LivePrimitive must be used in LivePart.',
       );
     });
   });

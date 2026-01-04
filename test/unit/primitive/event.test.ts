@@ -66,7 +66,7 @@ describe('EventPrimitive', () => {
 
       expect(() =>
         EventPrimitive.resolveBinding(handler, part, runtime),
-      ).toThrow('EventPrimitive must be used in an event part.');
+      ).toThrow('EventPrimitive must be used in EventPart.');
     });
   });
 });

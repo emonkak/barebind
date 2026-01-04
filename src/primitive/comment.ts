@@ -1,4 +1,4 @@
-import { DirectiveError } from '../directive.js';
+import { ensurePartType } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -14,14 +14,7 @@ export const CommentPrimitive: Primitive<any> = {
     part: Part,
     _context: DirectiveContext,
   ): CommentBinding<unknown> {
-    if (part.type !== PartType.ChildNode) {
-      throw new DirectiveError(
-        this,
-        value,
-        part,
-        'CommentPrimitive must be used in a child node.',
-      );
-    }
+    ensurePartType<Part.ChildNodePart>(PartType.ChildNode, this, value, part);
     return new CommentBinding(value, part);
   },
 };

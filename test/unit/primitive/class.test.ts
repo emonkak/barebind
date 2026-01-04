@@ -63,18 +63,17 @@ describe('ClassPrimitive', () => {
       expect(binding.part).toBe(part);
     });
 
-    it('throws an error if the part is not a ":class" attribute part', () => {
+    it('throws an error if the part is not an attribute part', () => {
       const classes = { foo: true, bar: true, baz: false };
       const part = {
-        type: PartType.Attribute,
+        type: PartType.Element,
         node: document.createElement('div'),
-        name: 'class',
       };
       const runtime = createRuntime();
 
       expect(() =>
         ClassPrimitive.resolveBinding(classes, part, runtime),
-      ).toThrow('ClassPrimitive must be used in a ":class" attribute part.');
+      ).toThrow('ClassPrimitive must be used in AttributePart.');
     });
   });
 });

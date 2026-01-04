@@ -1,6 +1,6 @@
 /// <reference path="../typings/moveBefore.d.ts" />
 
-import { DirectiveError, DirectiveSpecifier } from './directive.js';
+import { DirectiveSpecifier, ensurePartType } from './directive.js';
 import { replaceMarkerNode } from './hydration.js';
 import {
   type Binding,
@@ -65,14 +65,7 @@ export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
     part: Part,
     _context: DirectiveContext,
   ): RepeatBinding<unknown, unknown, unknown> {
-    if (part.type !== PartType.ChildNode) {
-      throw new DirectiveError(
-        this,
-        props,
-        part,
-        'RepeatDirective must be used in a child part.',
-      );
-    }
+    ensurePartType<Part.ChildNodePart>(PartType.ChildNode, this, props, part);
     return new RepeatBinding(props, part);
   },
 };

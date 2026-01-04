@@ -1,4 +1,4 @@
-import { DirectiveError } from '../directive.js';
+import { ensurePartType } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -14,14 +14,7 @@ export const AttributePrimitive: Primitive<any> = {
     part: Part,
     _context: DirectiveContext,
   ): AttributeBinding<unknown> {
-    if (part.type !== PartType.Attribute) {
-      throw new DirectiveError(
-        this,
-        value,
-        part,
-        'AttributePrimitive must be used in an attribute part.',
-      );
-    }
+    ensurePartType<Part.AttributePart>(PartType.Attribute, this, value, part);
     return new AttributeBinding(value, part);
   },
 };

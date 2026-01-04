@@ -1,5 +1,5 @@
 import { shallowEqual } from '../compare.js';
-import { DirectiveError } from '../directive.js';
+import { DirectiveError, ensurePartType } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -38,22 +38,12 @@ export const StylePrimitive: Primitive<StyleProps> = {
     }
   },
   resolveBinding(
-    props: StyleProps,
+    value: StyleProps,
     part: Part,
     _context: DirectiveContext,
   ): StyleBinding {
-    if (
-      part.type !== PartType.Attribute ||
-      part.name.toLowerCase() !== ':style'
-    ) {
-      throw new DirectiveError(
-        this,
-        props,
-        part,
-        'StylePrimitive must be used in a ":style" attribute part.',
-      );
-    }
-    return new StyleBinding(props, part);
+    ensurePartType<Part.AttributePart>(PartType.Attribute, this, value, part);
+    return new StyleBinding(value, part);
   },
 };
 
@@ -67,8 +57,8 @@ export class StyleBinding extends PrimitiveBinding<
     return StylePrimitive;
   }
 
-  shouldUpdate(props: StyleProps): boolean {
-    return !shallowEqual(props, this._memoizedValue);
+  shouldUpdate(value: StyleProps): boolean {
+    return !shallowEqual(value, this._memoizedValue);
   }
 
   override commit(): void {

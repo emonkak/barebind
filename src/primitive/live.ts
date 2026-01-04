@@ -1,4 +1,4 @@
-import { DirectiveError } from '../directive.js';
+import { ensurePartType } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -14,14 +14,7 @@ export const LivePrimitive: Primitive<any> = {
     part: Part,
     _context: DirectiveContext,
   ): LiveBinding<unknown> {
-    if (part.type !== PartType.Live) {
-      throw new DirectiveError(
-        this,
-        value,
-        part,
-        'LivePrimitive must be used in a live part.',
-      );
-    }
+    ensurePartType<Part.LivePart>(PartType.Live, this, value, part);
     return new LiveBinding(value, part);
   },
 };

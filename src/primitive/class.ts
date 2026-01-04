@@ -1,5 +1,5 @@
 import { shallowEqual } from '../compare.js';
-import { DirectiveError } from '../directive.js';
+import { DirectiveError, ensurePartType } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -33,22 +33,12 @@ export const ClassPrimitive: Primitive<ClassSpecifier> = {
     }
   },
   resolveBinding(
-    clesses: ClassSpecifier,
+    value: ClassSpecifier,
     part: Part,
     _context: DirectiveContext,
   ): ClassBinding {
-    if (
-      part.type !== PartType.Attribute ||
-      part.name.toLowerCase() !== ':class'
-    ) {
-      throw new DirectiveError(
-        this,
-        clesses,
-        part,
-        'ClassPrimitive must be used in a ":class" attribute part.',
-      );
-    }
-    return new ClassBinding(clesses, part);
+    ensurePartType<Part.AttributePart>(PartType.Attribute, this, value, part);
+    return new ClassBinding(value, part);
   },
 };
 

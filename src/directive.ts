@@ -8,6 +8,7 @@ import {
   type DirectiveType,
   type Layout,
   type Part,
+  PartType,
   type UnwrapBindable,
 } from './internal.js';
 
@@ -82,5 +83,21 @@ export class LayoutSpecifier<T>
     const { layout, value } = this;
     const directive = context.resolveDirective(value, part);
     return { ...directive, layout };
+  }
+}
+
+export function ensurePartType<TExpectedPart extends Part>(
+  expectedPartType: TExpectedPart['type'],
+  type: DirectiveType<unknown>,
+  value: unknown,
+  part: Part,
+): asserts part is TExpectedPart {
+  if (part.type !== expectedPartType) {
+    throw new DirectiveError(
+      type,
+      value,
+      part,
+      `${type.displayName} must be used in ${Object.keys(PartType)[expectedPartType]}Part.`,
+    );
   }
 }

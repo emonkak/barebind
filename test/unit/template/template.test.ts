@@ -47,7 +47,7 @@ describe('AbstractTemplate', () => {
       expect(binding.part).toBe(part);
     });
 
-    it('should throw the error if the part is not child part', () => {
+    it('should throw the error if the part is not a child node part', () => {
       const template = new MockTemplate();
       const binds = ['foo'] as const;
       const part = {
@@ -57,7 +57,7 @@ describe('AbstractTemplate', () => {
       const runtime = createRuntime();
 
       expect(() => template.resolveBinding(binds, part, runtime)).toThrow(
-        'MockTemplate must be used in a child node part.',
+        'MockTemplate must be used in ChildNodePart.',
       );
     });
   });

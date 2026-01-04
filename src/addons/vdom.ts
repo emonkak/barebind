@@ -1,5 +1,5 @@
 import { shallowEqual } from '../compare.js';
-import { DirectiveError, DirectiveSpecifier } from '../directive.js';
+import { DirectiveSpecifier, ensurePartType } from '../directive.js';
 import {
   $toDirective,
   type Bindable,
@@ -79,14 +79,7 @@ export const ElementDirective: DirectiveType<ElementProps> = {
     part: Part,
     _context: DirectiveContext,
   ): ElementBinding {
-    if (part.type !== PartType.Element) {
-      throw new DirectiveError(
-        this,
-        props,
-        part,
-        'ElementDirective must be used in an element part.',
-      );
-    }
+    ensurePartType<Part.ElementPart>(PartType.Element, this, props, part);
     return new ElementBinding(props, part);
   },
 };

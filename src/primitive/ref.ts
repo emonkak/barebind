@@ -1,4 +1,4 @@
-import { DirectiveError } from '../directive.js';
+import { DirectiveError, ensurePartType } from '../directive.js';
 import {
   type Cleanup,
   type DirectiveContext,
@@ -25,22 +25,12 @@ export const RefPrimitive: Primitive<Ref<Element>> = {
     }
   },
   resolveBinding(
-    ref: Ref<Element>,
+    value: Ref<Element>,
     part: Part,
     _context: DirectiveContext,
   ): RefBinding {
-    if (
-      part.type !== PartType.Attribute ||
-      part.name.toLowerCase() !== ':ref'
-    ) {
-      throw new DirectiveError(
-        this,
-        ref,
-        part,
-        'RefPrimitive must be used in ":ref" attribute part.',
-      );
-    }
-    return new RefBinding(ref, part);
+    ensurePartType<Part.AttributePart>(PartType.Attribute, this, value, part);
+    return new RefBinding(value, part);
   },
 };
 
@@ -56,8 +46,8 @@ export class RefBinding extends PrimitiveBinding<
     return RefPrimitive;
   }
 
-  shouldUpdate(ref: Ref<Element>): boolean {
-    return ref !== this._memoizedValue;
+  shouldUpdate(value: Ref<Element>): boolean {
+    return value !== this._memoizedValue;
   }
 
   override attach(session: UpdateSession): void {

@@ -1,4 +1,4 @@
-import { DirectiveError } from '../directive.js';
+import { ensurePartType } from '../directive.js';
 import {
   type Binding,
   type DirectiveContext,
@@ -46,14 +46,7 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
     part: Part,
     _context: DirectiveContext,
   ): Binding<TBinds> {
-    if (part.type !== PartType.ChildNode) {
-      throw new DirectiveError(
-        this,
-        binds,
-        part,
-        `${this.constructor.name} must be used in a child node part.`,
-      );
-    }
+    ensurePartType<Part.ChildNodePart>(PartType.ChildNode, this, binds, part);
     return new TemplateBinding(this, binds, part);
   }
 }

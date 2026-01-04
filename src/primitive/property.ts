@@ -1,4 +1,4 @@
-import { DirectiveError } from '../directive.js';
+import { ensurePartType } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -16,14 +16,7 @@ export const PropertyPrimitive: Primitive<any> = {
     part: Part,
     _context: DirectiveContext,
   ): PropertyBinding<unknown> {
-    if (part.type !== PartType.Property) {
-      throw new DirectiveError(
-        this,
-        value,
-        part,
-        'PropertyPrimitive must be used in a property part.',
-      );
-    }
+    ensurePartType<Part.PropertyPart>(PartType.Property, this, value, part);
     return new PropertyBinding(value, part);
   },
 };

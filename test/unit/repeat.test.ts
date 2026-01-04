@@ -56,7 +56,7 @@ describe('RepeatDirective', () => {
       expect(binding.part).toBe(part);
     });
 
-    it('should throw the error if the part is not an attribute part', () => {
+    it('should throw the error if the part is not a child node part', () => {
       const props: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
       const part = {
         type: PartType.Element,
@@ -66,7 +66,7 @@ describe('RepeatDirective', () => {
 
       expect(() =>
         RepeatDirective.resolveBinding(props, part, runtime),
-      ).toThrow('RepeatDirective must be used in a child part.');
+      ).toThrow('RepeatDirective must be used in ChildNodePart.');
     });
   });
 });
