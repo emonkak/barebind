@@ -34,7 +34,7 @@ export namespace Boundary {
   export interface HydrationBoundary {
     type: typeof BoundaryType.Hydration;
     next: Boundary | null;
-    treeWalker: TreeWalker;
+    targetTree: TreeWalker;
   }
 
   export interface SharedContextBoundary {
@@ -419,7 +419,7 @@ export interface Template<TBinds extends readonly unknown[]>
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    treeWalker: TreeWalker,
+    targetTree: TreeWalker,
     session: UpdateSession,
   ): TemplateResult;
 }

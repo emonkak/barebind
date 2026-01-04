@@ -494,11 +494,11 @@ describe('TaggedTemplate', () => {
         ),
         document.createComment('corge'),
       );
-      const treeWalker = createTreeWalker(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.hydrate(binds, part, treeWalker, session);
+        return template.hydrate(binds, part, targetTree, session);
       });
 
       expect(children.map(serializeNode)).toStrictEqual([
@@ -616,11 +616,11 @@ describe('TaggedTemplate', () => {
         {},
         createElement('div', {}, 'foo'),
       );
-      const treeWalker = createTreeWalker(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.hydrate(binds, part, treeWalker, session);
+        return template.hydrate(binds, part, targetTree, session);
       });
 
       expect(children.map(serializeNode)).toStrictEqual(['<div>foo</div>']);
@@ -642,11 +642,11 @@ describe('TaggedTemplate', () => {
         '(foo, bar, baz)',
         createElement('div', {}, '[qux, quux]'),
       );
-      const treeWalker = createTreeWalker(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.hydrate(binds, part, treeWalker, session);
+        return template.hydrate(binds, part, targetTree, session);
       });
 
       expect(children.map(serializeNode)).toStrictEqual([
@@ -730,11 +730,11 @@ describe('TaggedTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {});
-      const treeWalker = createTreeWalker(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.hydrate(binds, part, treeWalker, session);
+        return template.hydrate(binds, part, targetTree, session);
       });
 
       expect(children.map(serializeNode)).toStrictEqual([]);
@@ -759,12 +759,12 @@ describe('TaggedTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, 'foo');
-      const treeWalker = createTreeWalker(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       expect(() => {
         updater.startUpdate((session) => {
-          return template.hydrate(['foo'], part, treeWalker, session);
+          return template.hydrate(['foo'], part, targetTree, session);
         });
       }).toThrow('There is no node that the hole indicates.');
     });
@@ -792,12 +792,12 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const treeWalker = createTreeWalker(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       expect(() => {
         updater.startUpdate((session) => {
-          return template.hydrate([], part, treeWalker, session);
+          return template.hydrate([], part, targetTree, session);
         });
       }).toThrow(HydrationError);
     });

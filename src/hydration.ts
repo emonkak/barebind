@@ -7,17 +7,17 @@ interface NodeTypeMap {
 }
 
 export class HydrationError extends Error {
-  readonly treeWalker: TreeWalker;
+  readonly targetTree: TreeWalker;
 
-  constructor(treeWalker: TreeWalker, message: string) {
+  constructor(targetTree: TreeWalker, message: string) {
     DEBUG: {
       message +=
-        '\n' + formatNode(treeWalker.currentNode, '[[ERROR IN HERE!]]');
+        '\n' + formatNode(targetTree.currentNode, '[[ERROR IN HERE!]]');
     }
 
     super(message);
 
-    this.treeWalker = treeWalker;
+    this.targetTree = targetTree;
   }
 }
 
@@ -31,20 +31,20 @@ export function createTreeWalker(
 }
 
 export function replaceMarkerNode(
-  treeWalker: TreeWalker,
+  targetTree: TreeWalker,
   markerNode: Comment,
 ): void {
   treatNodeType(
     Node.COMMENT_NODE,
-    treeWalker.nextNode(),
-    treeWalker,
+    targetTree.nextNode(),
+    targetTree,
   ).replaceWith(markerNode);
-  treeWalker.currentNode = markerNode;
+  targetTree.currentNode = markerNode;
 }
 
-export function splitText(treeWalker: TreeWalker): Text {
-  const previousNode = treeWalker.currentNode;
-  const currentNode = treeWalker.nextNode();
+export function splitText(targetTree: TreeWalker): Text {
+  const previousNode = targetTree.currentNode;
+  const currentNode = targetTree.nextNode();
 
   if (
     previousNode instanceof Text &&
@@ -52,21 +52,21 @@ export function splitText(treeWalker: TreeWalker): Text {
   ) {
     const splittedText = previousNode.ownerDocument.createTextNode('');
     previousNode.after(splittedText);
-    treeWalker.currentNode = splittedText;
+    targetTree.currentNode = splittedText;
     return splittedText;
   } else {
-    return treatNodeType(Node.TEXT_NODE, currentNode, treeWalker);
+    return treatNodeType(Node.TEXT_NODE, currentNode, targetTree);
   }
 }
 
 export function treatNodeName(
   expectedName: string,
   node: Node | null,
-  treeWalker: TreeWalker,
+  targetTree: TreeWalker,
 ): Node {
   if (node === null || node.nodeName !== expectedName) {
     throw new HydrationError(
-      treeWalker,
+      targetTree,
       `Hydration is failed because the node type is mismatched. ${expectedName} is expected here, but got ${node?.nodeName}.`,
     );
   }
@@ -77,11 +77,11 @@ export function treatNodeName(
 export function treatNodeType<TExpectedType extends keyof NodeTypeMap>(
   expectedType: TExpectedType,
   node: Node | null,
-  treeWalker: TreeWalker,
+  targetTree: TreeWalker,
 ): NodeTypeMap[TExpectedType] {
   if (node === null || node.nodeType !== expectedType) {
     throw new HydrationError(
-      treeWalker,
+      targetTree,
       `Hydration is failed because the node type is mismatched. ${expectedType} is expected here, but got ${node?.nodeType}.`,
     );
   }

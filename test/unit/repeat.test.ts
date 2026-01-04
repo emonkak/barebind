@@ -9,7 +9,7 @@ import {
   RepeatDirective,
   type RepeatProps,
 } from '@/repeat.js';
-import { createScope, setHydrationTreeWalker } from '@/scope.js';
+import { createScope, setHydrationTargetTree } from '@/scope.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
 import {
@@ -277,10 +277,10 @@ describe('RepeatBinding', () => {
         document.createComment(''),
       );
       const scope = createScope();
-      const treeWalker = createTreeWalker(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
-      setHydrationTreeWalker(scope, treeWalker);
+      setHydrationTargetTree(scope, targetTree);
 
       updater.startUpdate(
         (session) => {

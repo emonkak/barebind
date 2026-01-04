@@ -18,7 +18,7 @@ export class EmptyTemplate extends AbstractTemplate<readonly []> {
   hydrate(
     _binds: readonly [],
     _part: Part.ChildNodePart,
-    _treeWalker: TreeWalker,
+    _targetTree: TreeWalker,
     _session: UpdateSession,
   ): TemplateResult {
     return { children: [], slots: [] };

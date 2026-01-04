@@ -17,14 +17,14 @@ export function createScope(parent: Scope | null = null): Scope {
   };
 }
 
-export function getHydrationTreeWalker(scope: Scope): TreeWalker | null {
+export function getHydrationTargetTree(scope: Scope): TreeWalker | null {
   for (
     let boundary = scope.boundary;
     boundary !== null;
     boundary = boundary.next
   ) {
     if (boundary.type === BoundaryType.Hydration) {
-      return boundary.treeWalker;
+      return boundary.targetTree;
     }
   }
   return null;
@@ -77,14 +77,14 @@ export function handleError(scope: Scope, error: unknown): void {
   handle(error);
 }
 
-export function setHydrationTreeWalker(
+export function setHydrationTargetTree(
   scope: Scope,
-  treeWalker: TreeWalker,
+  targetTree: TreeWalker,
 ): void {
   scope.boundary = {
     type: BoundaryType.Hydration,
     next: scope.boundary,
-    treeWalker,
+    targetTree,
   };
 }
 

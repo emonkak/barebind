@@ -9,7 +9,7 @@ import {
   type UpdateHandle,
   type UpdateOptions,
 } from './internal.js';
-import { createScope, setHydrationTreeWalker } from './scope.js';
+import { createScope, setHydrationTargetTree } from './scope.js';
 
 export class Root<T> {
   private readonly _slot: Slot<T>;
@@ -49,11 +49,11 @@ export class Root<T> {
       scope,
       pendingLanes: Lanes.DefaultLane,
       resume: (session) => {
-        const treeWalker = createTreeWalker(this._container);
-        setHydrationTreeWalker(scope, treeWalker);
+        const targetTree = createTreeWalker(this._container);
+        setHydrationTargetTree(scope, targetTree);
         this._slot.attach(session);
         session.frame.mutationEffects.push(
-          new HydrateSlot(this._slot, treeWalker),
+          new HydrateSlot(this._slot, targetTree),
         );
       },
     };
@@ -120,16 +120,16 @@ export class Root<T> {
 class HydrateSlot<T> implements Effect {
   private readonly _slot: Slot<T>;
 
-  private readonly _treeWalker: TreeWalker;
+  private readonly _targetTree: TreeWalker;
 
-  constructor(slot: Slot<T>, treeWalker: TreeWalker) {
+  constructor(slot: Slot<T>, targetTree: TreeWalker) {
     this._slot = slot;
-    this._treeWalker = treeWalker;
+    this._targetTree = targetTree;
   }
 
   commit(): void {
-    replaceMarkerNode(this._treeWalker, this._slot.part.node as Comment);
-    this._treeWalker.root.appendChild(this._slot.part.node);
+    replaceMarkerNode(this._targetTree, this._slot.part.node as Comment);
+    this._targetTree.root.appendChild(this._slot.part.node);
     this._slot.commit();
   }
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createTreeWalker } from '@/hydration.js';
 import { PartType } from '@/internal.js';
-import { createScope, setHydrationTreeWalker } from '@/scope.js';
+import { createScope, setHydrationTargetTree } from '@/scope.js';
 import {
   getNamespaceURIByTagName,
   HTML_NAMESPACE_URI,
@@ -444,7 +444,7 @@ describe('TemplateBinding', () => {
       const binding = new TemplateBinding(template, binds, part);
       const container = createElement('div', {}, 'foo', part.node);
       const scope = createScope();
-      const treeWalker = createTreeWalker(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
@@ -452,7 +452,7 @@ describe('TemplateBinding', () => {
         slots: [],
       });
 
-      setHydrationTreeWalker(scope, treeWalker);
+      setHydrationTargetTree(scope, targetTree);
 
       updater.startUpdate(
         (session) => {
@@ -466,7 +466,7 @@ describe('TemplateBinding', () => {
       expect(hydrateSpy).toHaveBeenCalledWith(
         binds,
         part,
-        treeWalker,
+        targetTree,
         expect.any(Object),
       );
       expect(part.anchorNode).toBe(container.firstChild);

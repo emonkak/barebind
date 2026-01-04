@@ -10,7 +10,7 @@ import {
   type TemplateResult,
   type UpdateSession,
 } from '../internal.js';
-import { getHydrationTreeWalker } from '../scope.js';
+import { getHydrationTargetTree } from '../scope.js';
 
 export const HTML_NAMESPACE_URI = 'http://www.w3.org/1999/xhtml';
 export const MATH_NAMESPACE_URI = 'http://www.w3.org/1998/Math/MathML';
@@ -37,7 +37,7 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
   abstract hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    treeWalker: TreeWalker,
+    targetTree: TreeWalker,
     session: UpdateSession,
   ): TemplateResult;
 
@@ -102,13 +102,13 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
         slots[i]!.reconcile(this._binds[i]!, session);
       }
     } else {
-      const treeWalker = getHydrationTreeWalker(session.rootScope);
+      const targetTree = getHydrationTargetTree(session.rootScope);
 
-      if (treeWalker !== null) {
+      if (targetTree !== null) {
         this._pendingResult = this._template.hydrate(
           this._binds,
           this._part,
-          treeWalker,
+          targetTree,
           session,
         );
         this._part.anchorNode = getAnchorNode(this._pendingResult);

@@ -33,7 +33,7 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
   hydrate(
     binds: readonly unknown[],
     part: Part.ChildNodePart,
-    treeWalker: TreeWalker,
+    targetTree: TreeWalker,
     session: UpdateSession,
   ): TemplateResult {
     const children = [];
@@ -45,7 +45,7 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
       const result = template.hydrate(
         binds.slice(offset, offset + template.arity),
         part,
-        treeWalker,
+        targetTree,
         session,
       );
       children.push(...result.children);

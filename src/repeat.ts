@@ -12,7 +12,7 @@ import {
   type Slot,
   type UpdateSession,
 } from './internal.js';
-import { getHydrationTreeWalker } from './scope.js';
+import { getHydrationTargetTree } from './scope.js';
 
 const OPERATION_INSERT = 0;
 const OPERATION_MOVE = 1;
@@ -121,7 +121,7 @@ export class RepeatBinding<TSource, TKey, TValue>
   attach(session: UpdateSession): void {
     const { context, rootScope } = session;
     const document = this._part.node.ownerDocument;
-    const treeWalker = getHydrationTreeWalker(rootScope);
+    const targetTree = getHydrationTargetTree(rootScope);
 
     const {
       source,
@@ -162,8 +162,8 @@ export class RepeatBinding<TSource, TKey, TValue>
         };
         const slot = context.resolveSlot(newValue, part);
         slot.attach(session);
-        if (treeWalker !== null) {
-          replaceMarkerNode(treeWalker, part.node);
+        if (targetTree !== null) {
+          replaceMarkerNode(targetTree, part.node);
         } else {
           this._pendingOperations.push({
             type: OPERATION_INSERT,
@@ -210,7 +210,7 @@ export class RepeatBinding<TSource, TKey, TValue>
     this._latestKeys = newKeys;
     this._pendingSlots = newSlots;
 
-    if (treeWalker !== null) {
+    if (targetTree !== null) {
       this._part.anchorNode = getAnchorNode(newSlots);
       this._memoizedSlots = newSlots;
     }
