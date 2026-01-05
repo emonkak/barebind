@@ -22,53 +22,55 @@ import {
 } from './template.js';
 
 export type Hole =
-  | AttributeHole
-  | ChildNodeHole
-  | ElementHole
-  | EventHole
-  | LiveHole
-  | PropertyHole
-  | TextHole;
+  | Hole.AttributeHole
+  | Hole.ChildNodeHole
+  | Hole.ElementHole
+  | Hole.EventHole
+  | Hole.LiveHole
+  | Hole.PropertyHole
+  | Hole.TextHole;
 
-export interface AttributeHole {
-  type: typeof PartType.Attribute;
-  index: number;
-  name: string;
-}
+export namespace Hole {
+  export interface AttributeHole {
+    type: typeof PartType.Attribute;
+    index: number;
+    name: string;
+  }
 
-export interface ChildNodeHole {
-  type: typeof PartType.ChildNode;
-  index: number;
-}
+  export interface ChildNodeHole {
+    type: typeof PartType.ChildNode;
+    index: number;
+  }
 
-export interface ElementHole {
-  type: typeof PartType.Element;
-  index: number;
-}
+  export interface ElementHole {
+    type: typeof PartType.Element;
+    index: number;
+  }
 
-export interface EventHole {
-  type: typeof PartType.Event;
-  index: number;
-  name: string;
-}
+  export interface EventHole {
+    type: typeof PartType.Event;
+    index: number;
+    name: string;
+  }
 
-export interface LiveHole {
-  type: typeof PartType.Live;
-  index: number;
-  name: string;
-}
+  export interface LiveHole {
+    type: typeof PartType.Live;
+    index: number;
+    name: string;
+  }
 
-export interface PropertyHole {
-  type: typeof PartType.Property;
-  index: number;
-  name: string;
-}
+  export interface PropertyHole {
+    type: typeof PartType.Property;
+    index: number;
+    name: string;
+  }
 
-export interface TextHole {
-  type: typeof PartType.Text;
-  index: number;
-  precedingText: string;
-  followingText: string;
+  export interface TextHole {
+    type: typeof PartType.Text;
+    index: number;
+    precedingText: string;
+    followingText: string;
+  }
 }
 
 const PLACEHOLDER_PATTERN = /^[0-9a-z_-]+$/;
