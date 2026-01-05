@@ -15,9 +15,6 @@ export const HTML_NAMESPACE_URI = 'http://www.w3.org/1999/xhtml';
 export const MATH_NAMESPACE_URI = 'http://www.w3.org/1998/Math/MathML';
 export const SVG_NAMESPACE_URI = 'http://www.w3.org/2000/svg';
 
-const LEADING_NEWLINE_REGEXP = /^\s*\n/;
-const TAILING_NEWLINE_REGEXP = /\n\s*$/;
-
 export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
   implements Template<TBinds>
 {
@@ -188,16 +185,6 @@ export function getNamespaceURIByTagName(tagName: string): string | null {
     default:
       return null;
   }
-}
-
-export function stripWhitespaces(text: string): string {
-  if (LEADING_NEWLINE_REGEXP.test(text)) {
-    text = text.trimStart();
-  }
-  if (TAILING_NEWLINE_REGEXP.test(text)) {
-    text = text.trimEnd();
-  }
-  return text;
 }
 
 function getAnchorNode({ children, slots }: TemplateResult): ChildNode | null {

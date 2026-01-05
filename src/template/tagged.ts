@@ -15,11 +15,7 @@ import {
   type TemplateResult,
   type UpdateSession,
 } from '../internal.js';
-import {
-  AbstractTemplate,
-  getNamespaceURIByTagName,
-  stripWhitespaces,
-} from './template.js';
+import { AbstractTemplate, getNamespaceURIByTagName } from './template.js';
 
 export type Hole =
   | Hole.AttributeHole
@@ -87,6 +83,9 @@ const ATTRIBUTE_NAME_PATTERN = new RegExp(
 );
 
 const ERROR_MAKER = '[[ERROR IN HERE!]]';
+
+const LEADING_NEWLINE_PATTERN = /^\s*\n/;
+const TAILING_NEWLINE_PATTERN = /\n\s*$/;
 
 export class TaggedTemplate<
   TBinds extends readonly unknown[] = unknown[],
@@ -592,4 +591,14 @@ function parseChildren(
 
 function stripTrailingSlash(s: string): string {
   return s.at(-1) === '/' ? s.slice(0, -1) : s;
+}
+
+function stripWhitespaces(text: string): string {
+  if (LEADING_NEWLINE_PATTERN.test(text)) {
+    text = text.trimStart();
+  }
+  if (TAILING_NEWLINE_PATTERN.test(text)) {
+    text = text.trimEnd();
+  }
+  return text;
 }
