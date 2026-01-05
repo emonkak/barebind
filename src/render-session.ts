@@ -16,19 +16,13 @@ import {
   type RefObject,
   type RenderContext,
   type RenderFrame,
-  type Scope,
+  Scope,
   type SessionContext,
   type TemplateMode,
   type UpdateHandle,
   type UpdateOptions,
   type Usable,
 } from './internal.js';
-import {
-  addErrorHandler,
-  DETACHED_SCOPE,
-  getSharedContext,
-  setSharedContext,
-} from './scope.js';
 
 export class RenderSession implements RenderContext {
   private readonly _state: ComponentState;
@@ -58,7 +52,7 @@ export class RenderSession implements RenderContext {
   }
 
   catchError(handler: ErrorHandler): void {
-    addErrorHandler(this._scope, handler);
+    this._scope.addErrorHandler(handler);
   }
 
   finalize(): void {
@@ -93,12 +87,12 @@ export class RenderSession implements RenderContext {
       }
     }
 
-    this._scope = DETACHED_SCOPE;
+    this._scope = Scope.DETACHED;
     this._hookIndex++;
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    if (this._coroutine.scope === DETACHED_SCOPE) {
+    if (this._coroutine.scope === Scope.DETACHED) {
       return {
         lanes: Lanes.NoLanes,
         scheduled: Promise.resolve({ canceled: true, done: false }),
@@ -129,7 +123,7 @@ export class RenderSession implements RenderContext {
   }
 
   getSharedContext(key: unknown): unknown {
-    return getSharedContext(this._scope, key);
+    return this._scope.getSharedContext(key);
   }
 
   html(
@@ -153,7 +147,7 @@ export class RenderSession implements RenderContext {
   }
 
   setSharedContext(key: unknown, value: unknown): void {
-    setSharedContext(this._scope, key, value);
+    this._scope.setSharedContext(key, value);
   }
 
   svg(

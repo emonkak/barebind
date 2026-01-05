@@ -4,13 +4,13 @@ import {
   type Effect,
   Lanes,
   PartType,
+  Scope,
   type SessionContext,
   type Slot,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateSession,
 } from './internal.js';
-import { createScope, setHydrationTargetTree } from './scope.js';
 
 export class Root<T> {
   private readonly _slot: Slot<T>;
@@ -46,12 +46,11 @@ export class Root<T> {
 
   hydrate(options?: UpdateOptions): UpdateHandle {
     return this._beginUpdate((session) => {
+      const { frame, scope } = session;
       const targetTree = createTreeWalker(this._container);
-      setHydrationTargetTree(session.scope, targetTree);
+      scope.setHydrationTargetTree(targetTree);
       this._slot.attach(session);
-      session.frame.mutationEffects.push(
-        new HydrateSlot(this._slot, targetTree),
-      );
+      frame.mutationEffects.push(new HydrateSlot(this._slot, targetTree));
     }, options);
   }
 
@@ -86,7 +85,7 @@ export class Root<T> {
     options?: UpdateOptions,
   ): UpdateHandle {
     const coroutine: Coroutine = {
-      scope: createScope(),
+      scope: new Scope(),
       pendingLanes: Lanes.DefaultLane,
       resume,
     };

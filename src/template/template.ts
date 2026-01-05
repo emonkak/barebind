@@ -10,7 +10,6 @@ import {
   type TemplateResult,
   type UpdateSession,
 } from '../internal.js';
-import { getHydrationTargetTree } from '../scope.js';
 
 export const HTML_NAMESPACE_URI = 'http://www.w3.org/1999/xhtml';
 export const MATH_NAMESPACE_URI = 'http://www.w3.org/1998/Math/MathML';
@@ -102,7 +101,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
         slots[i]!.reconcile(this._binds[i]!, session);
       }
     } else {
-      const targetTree = getHydrationTargetTree(session.rootScope);
+      const targetTree = session.rootScope.getHydrationTargetTree();
 
       if (targetTree !== null) {
         this._pendingResult = this._template.hydrate(

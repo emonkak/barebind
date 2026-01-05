@@ -8,10 +8,41 @@ import {
   isBindable,
   Lanes,
   PartType,
+  Scope,
   type UpdateOptions,
 } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBindable, MockDirective, MockPrimitive } from '../mocks.js';
+
+describe('Scope', () => {
+  describe('getSharedContext()', () => {
+    it('returns the own entry value', () => {
+      const scope = new Scope();
+
+      scope.setSharedContext('foo', 1);
+
+      expect(scope.getSharedContext('foo')).toBe(1);
+      expect(scope.getSharedContext('bar')).toBe(undefined);
+    });
+
+    it('returns the inherited entry value', () => {
+      const parentScope = new Scope();
+      const childScope = new Scope(parentScope);
+
+      parentScope.setSharedContext('foo', 1);
+      parentScope.setSharedContext('bar', 2);
+      childScope.setSharedContext('foo', 3);
+
+      expect(parentScope.getSharedContext('foo')).toBe(1);
+      expect(parentScope.getSharedContext('bar')).toBe(2);
+      expect(parentScope.getSharedContext('baz')).toBe(undefined);
+
+      expect(childScope.getSharedContext('foo')).toBe(3);
+      expect(childScope.getSharedContext('bar')).toBe(2);
+      expect(childScope.getSharedContext('baz')).toBe(undefined);
+    });
+  });
+});
 
 describe('areDirectiveTypesEqual()', () => {
   it('returns the result from Directive.equals() if it is definied', () => {

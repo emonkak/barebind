@@ -29,7 +29,6 @@ import {
 } from './internal.js';
 import { LinkedList } from './linked-list.js';
 import { RenderSession } from './render-session.js';
-import { handleError } from './scope.js';
 
 export interface RuntimeBackend {
   commitEffects(effects: Effect[], phase: CommitPhase): void;
@@ -160,7 +159,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(coroutine.scope, error);
+                coroutine.scope.handleError(error);
               }
             }
 
@@ -276,7 +275,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(coroutine.scope, error);
+                coroutine.scope.handleError(error);
               }
             }
 

@@ -5,10 +5,10 @@ import {
   CommitPhase,
   type RefObject,
   type RenderContext,
+  Scope,
   type UpdateHandle,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
-import { DETACHED_SCOPE } from '@/scope.js';
 import { MockCoroutine, MockTemplate } from '../mocks.js';
 import { TestRenderer } from '../test-helpers.js';
 
@@ -204,7 +204,7 @@ describe('RenderSession', () => {
 
           return count;
         },
-        { coroutine: new MockCoroutine(undefined, DETACHED_SCOPE) },
+        { coroutine: new MockCoroutine(undefined, Scope.DETACHED) },
       );
 
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();

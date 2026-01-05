@@ -12,7 +12,6 @@ import {
   type Slot,
   type UpdateSession,
 } from './internal.js';
-import { getHydrationTargetTree } from './scope.js';
 
 const OPERATION_INSERT = 0;
 const OPERATION_MOVE = 1;
@@ -121,7 +120,7 @@ export class RepeatBinding<TSource, TKey, TValue>
   attach(session: UpdateSession): void {
     const { context, rootScope } = session;
     const document = this._part.node.ownerDocument;
-    const targetTree = getHydrationTargetTree(rootScope);
+    const targetTree = rootScope.getHydrationTargetTree();
 
     const {
       source,

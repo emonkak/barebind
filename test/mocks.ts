@@ -17,7 +17,7 @@ import {
   PartType,
   type Primitive,
   type RequestCallbackOptions,
-  type Scope,
+  Scope,
   type Slot,
   type Template,
   type TemplateMode,
@@ -31,7 +31,6 @@ import type {
   RuntimeEvent,
   RuntimeObserver,
 } from '@/runtime.js';
-import { createScope } from '@/scope.js';
 import { AbstractTemplate } from '@/template/template.js';
 
 export class MockBackend implements RuntimeBackend {
@@ -225,7 +224,7 @@ export class MockCoroutine implements Coroutine {
 
   constructor(
     callback: (this: Coroutine, session: UpdateSession) => void = () => {},
-    scope: Scope = createScope(),
+    scope: Scope = new Scope(),
     pendingLanes: Lanes = Lanes.AllLanes,
   ) {
     this.callback = callback;

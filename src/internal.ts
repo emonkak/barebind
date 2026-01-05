@@ -376,9 +376,101 @@ export interface SessionContext extends DirectiveContext {
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateHandle;
 }
 
-export interface Scope {
-  parent: Scope | null;
-  boundary: Boundary | null;
+export class Scope {
+  static DETACHED: Scope = Object.freeze(new Scope()) as Scope;
+
+  private readonly _parent: Scope | null;
+
+  private _boundary: Boundary | null = null;
+
+  constructor(parent: Scope | null = null) {
+    this._parent = parent;
+  }
+
+  addErrorHandler(handler: ErrorHandler): void {
+    this._boundary = {
+      type: BoundaryType.Error,
+      next: this._boundary,
+      handler,
+    };
+  }
+
+  getHydrationTargetTree(): TreeWalker | null {
+    for (
+      let boundary = this._boundary;
+      boundary !== null;
+      boundary = boundary.next
+    ) {
+      if (boundary.type === BoundaryType.Hydration) {
+        return boundary.targetTree;
+      }
+    }
+    return null;
+  }
+
+  getSharedContext(key: unknown): unknown {
+    let currentScope: Scope | null = this;
+    do {
+      for (
+        let boundary = currentScope._boundary;
+        boundary !== null;
+        boundary = boundary.next
+      ) {
+        if (
+          boundary.type === BoundaryType.SharedContext &&
+          Object.is(boundary.key, key)
+        ) {
+          return boundary.value;
+        }
+      }
+      currentScope = currentScope._parent;
+    } while (currentScope !== null);
+    return undefined;
+  }
+
+  handleError(error: unknown): void {
+    let currentScope: Scope = this;
+    let currentBoundary = this._boundary;
+
+    const handle = (error: unknown) => {
+      while (true) {
+        while (currentBoundary !== null) {
+          const boundary = currentBoundary;
+          currentBoundary = currentBoundary.next;
+          if (boundary.type === BoundaryType.Error) {
+            const { handler } = boundary;
+            handler(error, handle);
+            return;
+          }
+        }
+        const parentScope = currentScope._parent;
+        if (parentScope === null) {
+          throw error;
+        }
+        currentScope = parentScope;
+        currentBoundary = parentScope._boundary;
+      }
+    };
+
+    handle(error);
+  }
+
+  setHydrationTargetTree(targetTree: TreeWalker): void {
+    this._boundary = {
+      type: BoundaryType.Hydration,
+      next: this._boundary,
+      targetTree,
+    };
+  }
+
+  setSharedContext(key: unknown, value: unknown): void {
+    this._boundary = {
+      type: BoundaryType.SharedContext,
+      next: this._boundary,
+      key,
+      value,
+    };
+  }
 }
 
 export interface Slot<T> extends ReversibleEffect {
