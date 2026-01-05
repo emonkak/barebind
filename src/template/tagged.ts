@@ -99,19 +99,12 @@ export class TaggedTemplate<
   ): TaggedTemplate<TBinds> {
     const template = document.createElement('template');
     const marker = createMarker(placeholder);
+    const htmlString = stripWhitespaces(strings.join(marker));
 
     if (mode === 'html') {
-      template.setHTMLUnsafe(stripWhitespaces(strings.join(marker)));
+      template.setHTMLUnsafe(htmlString);
     } else {
-      template.setHTMLUnsafe(
-        '<' +
-          mode +
-          '>' +
-          stripWhitespaces(strings.join(marker)) +
-          '</' +
-          mode +
-          '>',
-      );
+      template.setHTMLUnsafe(`<${mode}>${htmlString}</${mode}>`);
       template.content.replaceChildren(
         ...template.content.firstChild!.childNodes,
       );
