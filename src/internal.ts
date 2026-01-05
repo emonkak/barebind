@@ -620,5 +620,5 @@ export function getStartNode(part: Part): ChildNode {
  * @internal
  */
 export function isBindable(value: unknown): value is Bindable {
-  return typeof (value as Bindable<unknown>)?.[$toDirective] === 'function';
+  return typeof (value as Bindable)?.[$toDirective] === 'function';
 }
