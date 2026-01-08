@@ -191,7 +191,7 @@ const List = createComponent(
     $: RenderContext,
   ): unknown {
     const itemsList = Repeat({
-      source: items,
+      items,
       keySelector: (item) => item,
       valueSelector: (item, index) =>
         Item({

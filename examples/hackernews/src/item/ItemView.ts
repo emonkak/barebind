@@ -28,7 +28,7 @@ export const ItemView = createComponent(function ItemView(
         </div>
         <ul class="comment-children">
           <${Repeat({
-            source: item.comments,
+            items: item.comments,
             keySelector: (comment) => comment.id,
             valueSelector: (comment) => CommentView({ comment }),
           })}>

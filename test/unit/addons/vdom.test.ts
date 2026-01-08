@@ -116,7 +116,7 @@ describe('VFragment', () => {
       expect(directive.type).toBe(RepeatDirective);
       expect(directive.value).toStrictEqual(
         expect.objectContaining({
-          source: children,
+          items: children,
         }),
       );
     });

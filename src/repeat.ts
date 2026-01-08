@@ -20,7 +20,7 @@ const OPERATION_REMOVE = 3;
 const OPERATION_UPDATE = 4;
 
 export type RepeatProps<TSource, TKey = unknown, TValue = unknown> = {
-  source: Iterable<TSource>;
+  items: Iterable<TSource>;
   keySelector?: (element: TSource, index: number) => TKey;
   valueSelector?: (element: TSource, index: number) => TValue;
 };
@@ -111,7 +111,7 @@ export class RepeatBinding<TSource, TKey, TValue>
   shouldUpdate(props: RepeatProps<TSource, TKey, TValue>): boolean {
     return (
       this._memoizedSlots === null ||
-      props.source !== this._props.source ||
+      props.items !== this._props.items ||
       props.keySelector !== this._props.keySelector ||
       props.valueSelector !== this._props.valueSelector
     );
@@ -123,32 +123,19 @@ export class RepeatBinding<TSource, TKey, TValue>
     const targetTree = rootScope.getHydrationTargetTree();
 
     const {
-      source,
       keySelector = defaultKeySelector,
       valueSelector = defaultValueSelector,
     } = this._props;
+    const items = Array.from(this._props.items);
+    const newKeys = new Array(items.length);
+    const newValues = new Array(items.length);
     const oldKeys = this._latestKeys;
     const oldSlots = this._pendingSlots;
-    let newKeys: TKey[];
-    let newValues: TValue[];
 
-    if (Array.isArray(source)) {
-      newKeys = new Array(source.length);
-      newValues = new Array(source.length);
-      for (let i = 0, l = source.length; i < l; i++) {
-        const item = source[i]!;
-        newKeys[i] = keySelector(item, i);
-        newValues[i] = valueSelector(item, i);
-      }
-    } else {
-      let i = 0;
-      newKeys = [];
-      newValues = [];
-      for (const item of source) {
-        newKeys.push(keySelector(item, i));
-        newValues.push(valueSelector(item, i));
-        i++;
-      }
+    for (let i = 0, l = items.length; i < l; i++) {
+      const item = items[i]!;
+      newKeys[i] = keySelector(item, i);
+      newValues[i] = valueSelector(item, i);
     }
 
     const newSlots = reconcileSlots(oldKeys, oldSlots, newKeys, newValues, {

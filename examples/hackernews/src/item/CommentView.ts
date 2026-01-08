@@ -50,7 +50,7 @@ export const CommentList = createComponent(function CommentList(
         ? $.html`
           <ul class="comment-children">
             <${Repeat({
-              source: comments,
+              items: comments,
               keySelector: (comment) => comment.id,
               valueSelector: (comment) => CommentView({ comment }),
             })}>

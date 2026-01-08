@@ -157,7 +157,7 @@ export class VFragment implements Bindable<RepeatProps<VNode>> {
     return {
       type: RepeatDirective,
       value: {
-        source: this.children,
+        items: this.children,
         keySelector: resolveKey,
         valueSelector: resolveChild,
       },

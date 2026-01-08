@@ -14,11 +14,11 @@ import {
 } from './VirtualScroller.js';
 
 interface AppProps {
-  source: { height: number; label: string }[];
+  items: { height: number; label: string }[];
 }
 
 const App = createComponent(function App(
-  { source }: AppProps,
+  { items }: AppProps,
   $: RenderContext,
 ): unknown {
   const [selectedIndex, setSelectedIndex] = $.useState(0);
@@ -42,9 +42,9 @@ const App = createComponent(function App(
             ${label} (${height}px)
           </div>
         `,
-        source,
+        items,
       }),
-    [source],
+    [items],
   );
 
   return $.html`
@@ -52,7 +52,7 @@ const App = createComponent(function App(
       <nav class="Header-nav">
         <select @change=${handleSelectedIndexChange}>
           <${Repeat({
-            source,
+            items,
             valueSelector: (item, index) => $.html`
               <option
                 value=${index}
@@ -66,7 +66,7 @@ const App = createComponent(function App(
         <input
           type="range"
           min=${0}
-          max=${source.length - 1}
+          max=${items.length - 1}
           $value=${selectedIndex}
           @change=${handleSelectedIndexChange}
         >
@@ -82,7 +82,7 @@ const App = createComponent(function App(
 const runtime = new Runtime(new BrowserBackend());
 const root = Root.create(
   App({
-    source: Array.from({ length: 1000 }, (_, index) => ({
+    items: Array.from({ length: 1000 }, (_, index) => ({
       label: (index + 1).toString(),
       height: 200 + ((index % 10) - 5) * 20,
     })),
