@@ -204,18 +204,16 @@ export class Runtime implements SessionContext {
         }
 
         if (passiveEffects.length > 0) {
-          this._backend
-            .requestCallback(
-              () => {
-                this._commitEffects(id, passiveEffects, CommitPhase.Passive);
-                return { canceled: false, done: true };
-              },
-              { priority: 'background' },
-            )
-            .then(continuation.resolve, continuation.reject);
-        } else {
-          continuation.resolve({ canceled: false, done: true });
+          this._backend.requestCallback(
+            () => {
+              this._commitEffects(id, passiveEffects, CommitPhase.Passive);
+              return { canceled: false, done: true };
+            },
+            { priority: 'background' },
+          );
         }
+
+        continuation.resolve({ canceled: false, done: true });
       } catch (error) {
         continuation.reject(error);
       } finally {

@@ -15,6 +15,7 @@ test('invokes effects from child to parent', async () => {
   const root = Root.create(value, container, new Runtime(new BrowserBackend()));
 
   await root.mount().finished;
+  await scheduler.postTask(() => {}, { priority: 'background' });
 
   expect(stripComments(container).innerHTML).toBe(
     '<div class="parent"><div class="child1"><div class="grandchild1"></div></div><div class="child2"><div class="grandchild2"></div></div></div>',
@@ -60,6 +61,7 @@ test('invokes effects from child to parent', async () => {
   logs.length = 0;
 
   await root.unmount().finished;
+  await scheduler.postTask(() => {}, { priority: 'background' });
 
   expect(container.innerHTML).toBe('');
   expect(logs).toStrictEqual([
