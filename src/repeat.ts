@@ -393,22 +393,6 @@ function reconcileSlots<TKey, TValue>(
       );
       newTail--;
       oldTail--;
-    } else if (Object.is(oldKeys[oldHead]!, newKeys[newTail]!)) {
-      newSlots[newTail] = handler.move(
-        oldSlots[oldHead]!,
-        newValues[newTail]!,
-        newSlots[newTail + 1],
-      );
-      newTail--;
-      oldHead++;
-    } else if (Object.is(oldKeys[oldTail]!, newKeys[newHead]!)) {
-      newSlots[newHead] = handler.move(
-        oldSlots[oldTail]!,
-        newValues[newHead]!,
-        oldSlots[oldHead],
-      );
-      newHead++;
-      oldTail--;
     } else {
       newKeyToIndexMap ??= buildKeyToIndexMap(newKeys, newHead, newTail);
 
@@ -422,18 +406,25 @@ function reconcileSlots<TKey, TValue>(
         oldKeyToIndexMap ??= buildKeyToIndexMap(oldKeys, oldHead, oldTail);
 
         const newKey = newKeys[newTail]!;
-        const newValue = newValues[newTail]!;
         const oldIndex = oldKeyToIndexMap.get(newKey);
 
-        if (oldIndex !== undefined && oldSlots[oldIndex] !== undefined) {
+        if (
+          oldIndex !== undefined &&
+          oldIndex >= oldHead &&
+          oldIndex <= oldTail &&
+          oldSlots[oldIndex] !== undefined
+        ) {
           newSlots[newTail] = handler.move(
             oldSlots[oldIndex],
-            newValue,
+            newValues[newTail]!,
             newSlots[newTail + 1],
           );
           oldSlots[oldIndex] = undefined;
         } else {
-          newSlots[newTail] = handler.insert(newValue, newSlots[newTail + 1]);
+          newSlots[newTail] = handler.insert(
+            newValues[newTail]!,
+            newSlots[newTail + 1],
+          );
         }
 
         newTail--;
