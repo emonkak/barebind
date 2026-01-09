@@ -11,6 +11,7 @@ import {
 import { createComponent } from '@/component.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import { $toDirective, PartType } from '@/internal.js';
+import { KeyedLayout } from '@/layout/keyed.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
 import { RepeatDirective } from '@/repeat.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
@@ -102,6 +103,21 @@ describe('VElement', () => {
         new DirectiveSpecifier(ElementDirective, props),
         new DirectiveSpecifier(BlackholePrimitive, undefined),
       ]);
+    });
+
+    it('returns a directive with the key', () => {
+      const type = 'div';
+      const props = {};
+      const key = 'key';
+      const element = new VElement(type, props, key);
+      const directive = element[$toDirective]();
+
+      expect(directive.type).toStrictEqual(new ElementTemplate(type));
+      expect(directive.value).toStrictEqual([
+        new DirectiveSpecifier(ElementDirective, props),
+        new DirectiveSpecifier(BlackholePrimitive, undefined),
+      ]);
+      expect(directive.layout).toStrictEqual(new KeyedLayout(key));
     });
   });
 });

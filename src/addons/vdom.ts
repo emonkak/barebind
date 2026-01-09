@@ -14,6 +14,7 @@ import {
   type Template,
   type UpdateSession,
 } from '../internal.js';
+import { KeyedLayout } from '../layout/keyed.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
 import { type StyleProps, updateStyles } from '../primitive/style.js';
 import { RepeatDirective, type RepeatProps } from '../repeat.js';
@@ -132,14 +133,16 @@ export class VElement<TProps extends {} = {}> implements Bindable<unknown> {
   }
 
   [$toDirective](): Directive<unknown> {
-    if (typeof this.type === 'function') {
-      return {
-        type: this.type,
-        value: this.props,
-      };
-    } else {
-      return resolveElement(this.type, this.props, this.hasStaticChildren);
-    }
+    const element =
+      typeof this.type === 'function'
+        ? {
+            type: this.type,
+            value: this.props,
+          }
+        : resolveElement(this.type, this.props, this.hasStaticChildren);
+    return this.key != null
+      ? { layout: new KeyedLayout(this.key), ...element }
+      : element;
   }
 }
 
