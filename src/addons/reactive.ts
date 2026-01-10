@@ -6,17 +6,10 @@ import {
   type Subscription,
 } from './signal.js';
 
-const NO_FLAGS = 0;
-const FLAG_NEEDS_SNAPSHOT = 0b1;
-const FLAG_NEEDS_COLLECTION = 0b10;
-const FLAG_PENGING_VALUE = 0b100;
-const FLAG_PENDING_DIFFERENCE = 0b1000;
-const FLAG_DIRTY = 0b0111;
-
-export interface Difference {
-  path: PropertyKey[];
-  value: unknown;
-}
+const NO_FLAGS = 0b00;
+const FLAG_NEEDS_SNAPSHOT = 0b01;
+const FLAG_PENGING_VALUE = 0b10;
+const FLAG_DIRTY = 0b11;
 
 export interface ReactiveOptions {
   shallow?: boolean;
@@ -59,6 +52,7 @@ type Or<TLhs extends boolean, TRhs extends boolean> = TLhs extends true
 
 interface ReactiveContainer<T> {
   readonly signal: Signal<T>;
+  readonly path: PropertyKey[];
   children: Map<PropertyKey, ReactiveContainer<unknown>> | null;
   flags: number;
 }
@@ -82,7 +76,7 @@ export class Reactive<T> extends Signal<T> {
   private readonly _shallow: boolean;
 
   static from<T>(value: T, options?: ReactiveOptions): Reactive<T> {
-    return new Reactive(createContainer(new Atom(value)), options);
+    return new Reactive(createContainer(new Atom(value), []), options);
   }
 
   private constructor(
@@ -92,6 +86,10 @@ export class Reactive<T> extends Signal<T> {
     super();
     this._container = container;
     this._shallow = options.shallow ?? false;
+  }
+
+  get path(): readonly PropertyKey[] {
+    return this._container.path;
   }
 
   get value(): T {
@@ -106,35 +104,14 @@ export class Reactive<T> extends Signal<T> {
     // To ensure shallow subscription work properly, flags must be changed
     // before setting a new value.
     this._container.children = null;
-    this._container.flags |= FLAG_PENGING_VALUE | FLAG_PENDING_DIFFERENCE;
-    this._container.flags &= ~(FLAG_NEEDS_SNAPSHOT | FLAG_NEEDS_COLLECTION);
-    this._container.signal.value = value;
+    this._container.flags |= FLAG_PENGING_VALUE;
+    this._container.flags &= ~FLAG_NEEDS_SNAPSHOT;
+    this._container.signal.poke(value);
+    this._container.signal.invalidate(this);
   }
 
   get version(): number {
     return this._container.signal.version;
-  }
-
-  applyDifference(difference: Difference): void {
-    const { path, value } = difference;
-    let reactive: Reactive<unknown> | null = this;
-    for (let i = 0, l = path.length; i < l; i++) {
-      reactive = reactive.get(path[i]!);
-      if (reactive === null) {
-        return;
-      }
-    }
-    reactive.value = value;
-  }
-
-  collectDifferences(): Difference[] {
-    const differences: Difference[] = [];
-    collectDefferences(this._container, differences);
-    for (let i = 0, l = differences.length; i < l; i++) {
-      // The path is constructed in reverse order from child to parent.
-      differences[i]!.path.reverse();
-    }
-    return differences;
   }
 
   get<K extends ReactiveKeys<T>>(
@@ -173,9 +150,9 @@ export class Reactive<T> extends Signal<T> {
     const container = this._container;
 
     if (this._shallow) {
-      return container.signal.subscribe(() => {
+      return container.signal.subscribe((source) => {
         if (!(container.flags & FLAG_NEEDS_SNAPSHOT)) {
-          subscriber();
+          subscriber(source);
         }
       });
     } else {
@@ -184,35 +161,13 @@ export class Reactive<T> extends Signal<T> {
   }
 }
 
-function collectDefferences<T>(
-  container: ReactiveContainer<T>,
-  differences: Difference[],
-): void {
-  const { signal, children, flags } = container;
-
-  if (flags & FLAG_NEEDS_COLLECTION) {
-    for (const [key, child] of children!.entries()) {
-      if (child !== null) {
-        const startIndex = differences.length;
-        collectDefferences(child, differences);
-        for (let i = startIndex, l = differences.length; i < l; i++) {
-          differences[i]!.path.push(key);
-        }
-      }
-    }
-
-    container.flags &= ~FLAG_NEEDS_COLLECTION;
-  }
-
-  if (flags & FLAG_PENDING_DIFFERENCE) {
-    differences.push({ path: [], value: signal.value });
-    container.flags &= ~FLAG_PENDING_DIFFERENCE;
-  }
-}
-
-function createContainer<T>(signal: Signal<T>): ReactiveContainer<T> {
+function createContainer<T>(
+  signal: Signal<T>,
+  path: PropertyKey[],
+): ReactiveContainer<T> {
   return {
     signal,
+    path,
     children: null,
     flags: NO_FLAGS,
   };
@@ -230,9 +185,9 @@ function getChild<T extends object>(
   child = resolveChild(parent, key);
 
   if (parent.signal instanceof Atom && child.signal instanceof Atom) {
-    child.signal.subscribe(() => {
+    child.signal.subscribe((source) => {
       parent.flags |= FLAG_DIRTY;
-      (parent.signal as Atom<T>).touch();
+      (parent.signal as Atom<T>).invalidate(source);
     });
   }
 
@@ -265,8 +220,8 @@ function proxyObject<T extends object>(
       const child = getChild(parent, key);
       if (child.signal instanceof Atom) {
         child.children = null;
-        child.flags |= FLAG_PENGING_VALUE | FLAG_PENDING_DIFFERENCE;
-        child.flags &= ~(FLAG_NEEDS_SNAPSHOT | FLAG_NEEDS_COLLECTION);
+        child.flags |= FLAG_PENGING_VALUE;
+        child.flags &= ~FLAG_NEEDS_SNAPSHOT;
         child.signal.value = value;
         return true;
       } else {
@@ -281,6 +236,7 @@ function resolveChild<T extends object>(
   key: PropertyKey,
 ): ReactiveContainer<unknown> {
   const root = parent.signal.value;
+  const path = parent.path.concat(key);
   let prototype = root;
 
   do {
@@ -290,7 +246,7 @@ function resolveChild<T extends object>(
       const { get, set, value } = propertyDescriptor;
 
       if (get !== undefined && set !== undefined) {
-        return createContainer(new Atom(get.call(proxyObject(parent))));
+        return createContainer(new Atom(get.call(proxyObject(parent))), path);
       } else if (get !== undefined) {
         const dependencies: Signal<unknown>[] = [];
         const proxy = proxyObject(parent, (container) => {
@@ -308,16 +264,16 @@ function resolveChild<T extends object>(
           initialResult,
           initialVersion,
         );
-        return createContainer(signal);
+        return createContainer(signal, path);
       } else {
-        return createContainer(new Atom(value, parent.signal.version));
+        return createContainer(new Atom(value, parent.signal.version), path);
       }
     }
 
     prototype = Object.getPrototypeOf(prototype);
   } while (prototype !== null && prototype !== Object.prototype);
 
-  return createContainer(new Atom(undefined, parent.signal.version));
+  return createContainer(new Atom(undefined, parent.signal.version), path);
 }
 
 function shallowClone<T extends object>(object: T): T {

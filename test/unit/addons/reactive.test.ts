@@ -142,19 +142,6 @@ describe('Reactive', () => {
     });
   });
 
-  describe('applyDifference()', () => {
-    it('ignores a difference with invalid path', () => {
-      const state$ = Reactive.from(null);
-
-      state$.applyDifference({
-        path: ['foo'],
-        value: 'foo',
-      });
-
-      expect(state$.value).toBe(null);
-    });
-  });
-
   describe('get()', () => {
     it('returns a computed reactive is calculated from dependent values', () => {
       const initialState = new TodoState([
@@ -305,14 +292,32 @@ describe('Reactive', () => {
       state$.get('todos').get(1).get('completed')!.value = true;
 
       expect(subscriber).toHaveBeenCalledTimes(1);
+      expect(subscriber).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          path: ['todos', 1, 'completed'],
+          value: true,
+        }),
+      );
 
       state$.get('todos').value = [];
 
       expect(subscriber).toHaveBeenCalledTimes(2);
+      expect(subscriber).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          path: ['todos'],
+          value: [],
+        }),
+      );
 
       state$.value = new TodoState();
 
       expect(subscriber).toHaveBeenCalledTimes(3);
+      expect(subscriber).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          path: [],
+          value: new TodoState(),
+        }),
+      );
     });
 
     it('subscribes only for shallow updates', () => {
@@ -335,6 +340,12 @@ describe('Reactive', () => {
       state$.value = new TodoState();
 
       expect(subscriber).toHaveBeenCalledTimes(1);
+      expect(subscriber).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          path: [],
+          value: new TodoState(),
+        }),
+      );
     });
 
     it('do not notify subscribers of updates when the subscription is unsubscribed', () => {
@@ -351,52 +362,6 @@ describe('Reactive', () => {
       state$.value = new TodoState();
 
       expect(subscriber).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('collectDifferences()', () => {
-    it('returns differences of changed properties', () => {
-      const initialState = new TodoState([
-        { id: 1, title: 'foo', completed: true },
-        { id: 2, title: 'bar', completed: false },
-      ]);
-      const state$ = Reactive.from(initialState);
-      const todos$ = state$.get('todos');
-      const filter$ = state$.get('filter');
-
-      todos$.get(1).get('completed')!.value = true;
-      filter$.value = 'completed';
-
-      const differences = state$.collectDifferences();
-
-      expect(state$.value).toStrictEqual(
-        new TodoState(
-          [
-            { id: 1, title: 'foo', completed: true },
-            { id: 2, title: 'bar', completed: true },
-          ],
-          'completed',
-        ),
-      );
-      expect(differences).toStrictEqual([
-        {
-          path: ['todos', 1, 'completed'],
-          value: true,
-        },
-        {
-          path: ['filter'],
-          value: 'completed',
-        },
-      ]);
-      expect(todos$.collectDifferences()).toStrictEqual([]);
-
-      const newState$ = differences.reduce((state$, difference) => {
-        state$.applyDifference(difference);
-        return state$;
-      }, Reactive.from(initialState));
-
-      expect(newState$.collectDifferences()).toStrictEqual(differences);
-      expect(newState$.value).toStrictEqual(state$.value);
     });
   });
 });
