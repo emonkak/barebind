@@ -52,10 +52,10 @@ export class BrowserBackend implements RuntimeBackend {
   parseTemplate(
     strings: readonly string[],
     binds: readonly unknown[],
-    placeholder: string,
+    markerToken: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]> {
-    return TaggedTemplate.parse(strings, binds, placeholder, mode, document);
+    return TaggedTemplate.parse(strings, binds, markerToken, mode, document);
   }
 
   requestCallback<T>(

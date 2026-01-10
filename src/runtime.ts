@@ -37,7 +37,7 @@ export interface RuntimeBackend {
   parseTemplate(
     strings: readonly string[],
     binds: readonly unknown[],
-    placeholder: string,
+    markerToken: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]>;
   requestCallback<T>(
@@ -79,7 +79,7 @@ export interface RuntimeObserver {
 }
 
 export interface RuntimeOptions {
-  templatePlaceholder?: string;
+  randomToken?: string;
 }
 
 export class Runtime implements SessionContext {
@@ -94,18 +94,18 @@ export class Runtime implements SessionContext {
 
   private readonly _pendingTasks: LinkedList<UpdateTask> = new LinkedList();
 
-  private readonly _templatePlaceholder: string;
-
   private _identifierCount: number = 0;
+
+  private readonly _randomToken: string;
 
   private _updateCount: number = 0;
 
   constructor(
     backend: RuntimeBackend,
-    { templatePlaceholder = generateRandomString(8) }: RuntimeOptions = {},
+    { randomToken = generateRandomString(8) }: RuntimeOptions = {},
   ) {
     this._backend = backend;
-    this._templatePlaceholder = templatePlaceholder;
+    this._randomToken = randomToken;
   }
 
   addObserver(observer: RuntimeObserver): () => void {
@@ -327,11 +327,10 @@ export class Runtime implements SessionContext {
   }
 
   nextIdentifier(): string {
-    const uniqueToken = this._templatePlaceholder;
-    const count = this._identifierCount;
+    const identifierCount = this._identifierCount;
     this._identifierCount = incrementCount(this._identifierCount);
     // The identifier is also valid as a view transition name.
-    return 'id-' + uniqueToken + '-' + count;
+    return 'id-' + this._randomToken + '-' + identifierCount;
   }
 
   renderComponent<TProps, TResult>(
@@ -403,7 +402,7 @@ export class Runtime implements SessionContext {
       template = this._backend.parseTemplate(
         strings,
         binds,
-        this._templatePlaceholder,
+        this._randomToken,
         mode,
       );
       this._cachedTemplates.set(strings, template);

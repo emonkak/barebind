@@ -348,10 +348,10 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should throw an error if passed a placeholder in an invalid format', () => {
+    it('should throw an error if passed a marker token in an invalid format', () => {
       expect(() => {
         TaggedTemplate.parse([], [], 'INVALID_MARKER', 'html', document);
-      }).toThrow('The placeholder is in an invalid format.');
+      }).toThrow('The marker token is in an invalid format.');
       expect(() => {
         TaggedTemplate.parse(
           [],
@@ -360,7 +360,7 @@ describe('TaggedTemplate', () => {
           'html',
           document,
         );
-      }).toThrow('The placeholder is in an invalid format.');
+      }).toThrow('The marker token is in an invalid format.');
     });
 
     it('should throw an error when there is a hole as an attribute name', () => {

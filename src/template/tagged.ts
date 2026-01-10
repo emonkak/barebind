@@ -69,7 +69,7 @@ export namespace Hole {
   }
 }
 
-const PLACEHOLDER_PATTERN = /^[0-9a-z_-]+$/;
+const MAKER_TOKEN_PATTERN = /^[0-9a-z_-]+$/;
 
 // https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
 const ATTRIBUTE_NAME_CHARS = String.raw`[^ "'>/=\p{Control}\p{Noncharacter_Code_Point}]`;
@@ -93,12 +93,12 @@ export class TaggedTemplate<
   static parse<TBinds extends readonly unknown[]>(
     strings: readonly string[],
     binds: TBinds,
-    placeholder: string,
+    markerToken: string,
     mode: TemplateMode,
     document: Document,
   ): TaggedTemplate<TBinds> {
     const template = document.createElement('template');
-    const marker = createMarker(placeholder);
+    const marker = createMarker(markerToken);
     const htmlString = stripWhitespaces(strings.join(marker));
 
     if (mode === 'html') {
@@ -342,18 +342,18 @@ export class TaggedTemplate<
   }
 }
 
-function createMarker(placeholder: string): string {
+function createMarker(markerToken: string): string {
   // Marker Requirements:
   // - A marker starts with "?" to detect when it is used as a tag name. In that
   //   case, the tag is treated as a comment.
   //   https://html.spec.whatwg.org/multipage/parsing.html#parse-error-unexpected-question-mark-instead-of-tag-name
   // - A marker is lowercase to match attribute names.
-  if (!PLACEHOLDER_PATTERN.test(placeholder)) {
+  if (!MAKER_TOKEN_PATTERN.test(markerToken)) {
     throw new Error(
-      `The placeholder is in an invalid format. It must match pattern ${PLACEHOLDER_PATTERN.toString()}, but got ${JSON.stringify(placeholder)}.`,
+      `The marker token is in an invalid format. It must match pattern ${MAKER_TOKEN_PATTERN.toString()}, but got ${JSON.stringify(markerToken)}.`,
     );
   }
-  return '??' + placeholder + '??';
+  return '??' + markerToken + '??';
 }
 
 function extractCaseSensitiveAttributeName(s: string): string {

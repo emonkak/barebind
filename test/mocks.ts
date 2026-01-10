@@ -51,10 +51,10 @@ export class MockBackend implements RuntimeBackend {
   parseTemplate(
     strings: readonly string[],
     binds: readonly unknown[],
-    placeholder: string,
+    markerToken: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]> {
-    return new MockTemplate(strings, binds, placeholder, mode);
+    return new MockTemplate(strings, binds, markerToken, mode);
   }
 
   requestCallback<T>(
@@ -357,20 +357,20 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
 
   readonly binds: readonly unknown[];
 
-  readonly placeholder: string;
+  readonly markerToken: string;
 
   readonly mode: TemplateMode;
 
   constructor(
     strings: readonly string[] = [],
     binds: readonly unknown[] = [],
-    placeholder = '',
+    markerToken = '',
     mode: TemplateMode = 'html',
   ) {
     super();
     this.strings = strings;
     this.binds = binds;
-    this.placeholder = placeholder;
+    this.markerToken = markerToken;
     this.mode = mode;
   }
 

@@ -53,13 +53,13 @@ export class ServerBackend implements RuntimeBackend {
   parseTemplate(
     strings: readonly string[],
     binds: readonly unknown[],
-    placeholder: string,
+    markerToken: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]> {
     return TaggedTemplate.parse(
       strings,
       binds,
-      placeholder,
+      markerToken,
       mode,
       this._document,
     );
