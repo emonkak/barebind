@@ -19,7 +19,7 @@ import {
 } from '../internal.js';
 import { LinkedList } from '../linked-list.js';
 
-export type Subscriber = () => void;
+export type Subscriber = (source: Signal<unknown>) => void;
 
 export type Subscription = () => void;
 
@@ -214,25 +214,14 @@ export class Atom<T> extends Signal<T> {
 
   set value(value: T) {
     this._value = value;
-    this.touch();
+    this.invalidate();
   }
 
   get version(): number {
     return this._version;
   }
 
-  subscribe(subscriber: Subscriber): Subscription {
-    const node = this._subscribers.pushBack(subscriber);
-    return () => {
-      this._subscribers.remove(node);
-    };
-  }
-
-  poke(value: T): void {
-    this._value = value;
-  }
-
-  touch(): void {
+  invalidate(source: Signal<unknown> = this): void {
     this._version += 1;
     for (
       let node = this._subscribers.front();
@@ -240,8 +229,19 @@ export class Atom<T> extends Signal<T> {
       node = node.next
     ) {
       const subscriber = node.value;
-      subscriber();
+      subscriber(source);
     }
+  }
+
+  poke(value: T): void {
+    this._value = value;
+  }
+
+  subscribe(subscriber: Subscriber): Subscription {
+    const node = this._subscribers.pushBack(subscriber);
+    return () => {
+      this._subscribers.remove(node);
+    };
   }
 }
 

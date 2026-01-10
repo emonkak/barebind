@@ -305,6 +305,21 @@ describe('Atom', () => {
     });
   });
 
+  describe('invalidate()', () => {
+    it('increments the version and notify subscribers', () => {
+      const signal = new Atom('foo');
+      const subscriber = vi.fn();
+
+      signal.subscribe(subscriber);
+      signal.invalidate();
+
+      expect(subscriber).toHaveBeenCalledOnce();
+      expect(subscriber).toHaveBeenCalledWith(signal);
+      expect(signal.value).toBe('foo');
+      expect(signal.version).toBe(1);
+    });
+  });
+
   describe('subscribe()', () => {
     it('invokes the subscriber on update', () => {
       const signal = new Atom('foo');
@@ -315,9 +330,11 @@ describe('Atom', () => {
 
       signal.value = 'bar';
       expect(subscriber).toHaveBeenCalledTimes(1);
+      expect(subscriber).toHaveBeenLastCalledWith(signal);
 
       signal.value = 'baz';
       expect(subscriber).toHaveBeenCalledTimes(2);
+      expect(subscriber).toHaveBeenLastCalledWith(signal);
     });
 
     it('does not invoke the invalidated subscriber', () => {
@@ -350,20 +367,6 @@ describe('Atom', () => {
       expect(subscriber).not.toHaveBeenCalled();
       expect(signal.value).toBe('bar');
       expect(signal.version).toBe(0);
-    });
-  });
-
-  describe('touch()', () => {
-    it('increments the version and notify subscribers', () => {
-      const signal = new Atom('foo');
-      const subscriber = vi.fn();
-
-      signal.subscribe(subscriber);
-      signal.touch();
-
-      expect(subscriber).toHaveBeenCalledOnce();
-      expect(signal.value).toBe('foo');
-      expect(signal.version).toBe(1);
     });
   });
 });
@@ -436,15 +439,19 @@ describe('Computed', () => {
 
       foo.value++;
       expect(subscriber).toHaveBeenCalledTimes(1);
+      expect(subscriber).toHaveBeenLastCalledWith(foo);
 
       bar.value++;
       expect(subscriber).toHaveBeenCalledTimes(2);
+      expect(subscriber).toHaveBeenLastCalledWith(bar);
 
       baz.value++;
       expect(subscriber).toHaveBeenCalledTimes(3);
+      expect(subscriber).toHaveBeenLastCalledWith(baz);
 
       foo.value = foo.value;
       expect(subscriber).toHaveBeenCalledTimes(4);
+      expect(subscriber).toHaveBeenLastCalledWith(foo);
     });
 
     it('does not invoke the invalidated subscriber', () => {
