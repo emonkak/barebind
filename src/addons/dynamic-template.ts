@@ -1,7 +1,10 @@
 import { sequentialEqual } from '../compare.js';
 import type { HookFunction, RenderContext } from '../internal.js';
 
-const preprocessedTemplateCache: PreprocessedTemplateCache = new WeakMap();
+const preprocessedTemplateCache = new WeakMap<
+  readonly string[],
+  PreprocessedTemplate[]
+>();
 
 export interface DynamicTemplateContext
   extends Pick<RenderContext, 'html' | 'math' | 'svg'> {
@@ -13,11 +16,6 @@ interface PreprocessedTemplate {
   literalValues: readonly string[];
   literalPositions: readonly number[];
 }
-
-type PreprocessedTemplateCache = WeakMap<
-  readonly string[],
-  PreprocessedTemplate[]
->;
 
 export function DynamicTemplate(): HookFunction<DynamicTemplateContext> {
   return (context) => {
