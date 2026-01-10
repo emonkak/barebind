@@ -228,6 +228,10 @@ export class Atom<T> extends Signal<T> {
     };
   }
 
+  poke(value: T): void {
+    this._value = value;
+  }
+
   touch(): void {
     this._version += 1;
     for (
@@ -238,10 +242,6 @@ export class Atom<T> extends Signal<T> {
       const subscriber = node.value;
       subscriber();
     }
-  }
-
-  write(value: T): void {
-    this._value = value;
   }
 }
 

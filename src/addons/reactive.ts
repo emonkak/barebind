@@ -360,7 +360,7 @@ function takeSnapshot<T>(container: ReactiveContainer<T>): T {
 
       // Update the source without notification (a container with dirty flags
       // is always Atom).
-      (source as Atom<T>).write(newSource);
+      (source as Atom<T>).poke(newValue);
     }
 
     container.flags &= ~FLAG_NEEDS_SNAPSHOT;

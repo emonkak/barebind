@@ -335,6 +335,24 @@ describe('Atom', () => {
     });
   });
 
+  describe('poke()', () => {
+    it('updates the value without notifications', () => {
+      const signal = new Atom('foo');
+      const subscriber = vi.fn();
+
+      signal.subscribe(subscriber);
+
+      expect(signal.value).toBe('foo');
+      expect(signal.version).toBe(0);
+
+      signal.poke('bar');
+
+      expect(subscriber).not.toHaveBeenCalled();
+      expect(signal.value).toBe('bar');
+      expect(signal.version).toBe(0);
+    });
+  });
+
   describe('touch()', () => {
     it('increments the version and notify subscribers', () => {
       const signal = new Atom('foo');
@@ -346,24 +364,6 @@ describe('Atom', () => {
       expect(subscriber).toHaveBeenCalledOnce();
       expect(signal.value).toBe('foo');
       expect(signal.version).toBe(1);
-    });
-  });
-
-  describe('write()', () => {
-    it('updates the value without notifications', () => {
-      const signal = new Atom('foo');
-      const subscriber = vi.fn();
-
-      signal.subscribe(subscriber);
-
-      expect(signal.value).toBe('foo');
-      expect(signal.version).toBe(0);
-
-      signal.write('bar');
-
-      expect(subscriber).not.toHaveBeenCalled();
-      expect(signal.value).toBe('bar');
-      expect(signal.version).toBe(0);
     });
   });
 });
