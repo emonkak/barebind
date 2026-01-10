@@ -82,7 +82,7 @@ export class Reactive<T> extends Signal<T> {
   private readonly _shallow: boolean;
 
   static from<T>(source: T, options?: ReactiveOptions): Reactive<T> {
-    return new Reactive(createContainer(source, 0), options);
+    return new Reactive(createContainer(new Atom(source)), options);
   }
 
   private constructor(
@@ -210,9 +210,9 @@ function collectDefferences<T>(
   }
 }
 
-function createContainer<T>(value: T, version: number): ReactiveContainer<T> {
+function createContainer<T>(source: Signal<T>): ReactiveContainer<T> {
   return {
-    source: new Atom(value, version),
+    source,
     children: null,
     flags: NO_FLAGS,
   };
@@ -290,14 +290,7 @@ function resolveChild<T extends object>(
       const { get, set, value } = propertyDescriptor;
 
       if (get !== undefined && set !== undefined) {
-        return {
-          source: new Atom(
-            get.call(proxyObject(parent)),
-            parent.source.version,
-          ),
-          children: null,
-          flags: NO_FLAGS,
-        };
+        return createContainer(new Atom(get.call(proxyObject(parent))));
       } else if (get !== undefined) {
         const dependencies: Signal<unknown>[] = [];
         const proxy = proxyObject(parent, (container) => {
@@ -315,20 +308,16 @@ function resolveChild<T extends object>(
           initialResult,
           initialVersion,
         );
-        return {
-          source: signal,
-          children: null,
-          flags: NO_FLAGS,
-        };
+        return createContainer(signal);
       } else {
-        return createContainer(value, parent.source.version);
+        return createContainer(new Atom(value, parent.source.version));
       }
     }
 
     prototype = Object.getPrototypeOf(prototype);
   } while (prototype !== null && prototype !== Object.prototype);
 
-  return createContainer(undefined, parent.source.version);
+  return createContainer(new Atom(undefined, parent.source.version));
 }
 
 function shallowClone<T extends object>(object: T): T {
