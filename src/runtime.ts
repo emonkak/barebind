@@ -133,6 +133,7 @@ export class Runtime implements SessionContext {
       const frame = createRenderFrame(id, lanes, coroutine);
       const rootScope = coroutine.scope;
       const session = createUpdateSession(frame, rootScope, rootScope, this);
+      let completed = continuation.promise;
 
       try {
         if (!this._observers.isEmpty()) {
@@ -204,7 +205,7 @@ export class Runtime implements SessionContext {
         }
 
         if (passiveEffects.length > 0) {
-          this._backend.requestCallback(
+          completed = this._backend.requestCallback(
             () => {
               this._commitEffects(id, passiveEffects, CommitPhase.Passive);
               return { canceled: false, done: true };
@@ -218,7 +219,7 @@ export class Runtime implements SessionContext {
         continuation.reject(error);
       } finally {
         if (!this._observers.isEmpty()) {
-          continuation.promise.finally(() => {
+          completed.finally(() => {
             notifyObservers(this._observers, {
               type: 'UPDATE_END',
               id,
