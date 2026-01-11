@@ -3,9 +3,9 @@ import { shallowEqual } from '@/compare.js';
 import {
   $hook,
   CommitPhase,
+  DETACHED_SCOPE,
   type RefObject,
   type RenderContext,
-  Scope,
   type UpdateHandle,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
@@ -204,7 +204,7 @@ describe('RenderSession', () => {
 
           return count;
         },
-        { coroutine: new MockCoroutine(undefined, Scope.DETACHED) },
+        { coroutine: new MockCoroutine(undefined, DETACHED_SCOPE) },
       );
 
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();

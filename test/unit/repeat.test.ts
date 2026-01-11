@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { DirectiveSpecifier } from '@/directive.js';
 import { createTreeWalker } from '@/hydration.js';
-import { type Part, PartType, Scope } from '@/internal.js';
+import { BoundaryType, createScope, type Part, PartType } from '@/internal.js';
 import {
   Repeat,
   RepeatBinding,
@@ -275,11 +275,15 @@ describe('RepeatBinding', () => {
         document.createComment(''),
         document.createComment(''),
       );
-      const scope = new Scope();
+      const scope = createScope();
       const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
-      scope.setHydrationTargetTree(targetTree);
+      scope.boundary = {
+        type: BoundaryType.Hydration,
+        next: scope.boundary,
+        targetTree,
+      };
 
       updater.startUpdate(
         (session) => {

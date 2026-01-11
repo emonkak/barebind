@@ -1,10 +1,11 @@
 import { createTreeWalker, replaceMarkerNode } from './hydration.js';
 import {
+  BoundaryType,
   type Coroutine,
+  createScope,
   type Effect,
   Lanes,
   PartType,
-  Scope,
   type SessionContext,
   type Slot,
   type UpdateHandle,
@@ -48,7 +49,11 @@ export class Root<T> {
     return this._beginUpdate((session) => {
       const { frame, scope } = session;
       const targetTree = createTreeWalker(this._container);
-      scope.setHydrationTargetTree(targetTree);
+      scope.boundary = {
+        type: BoundaryType.Hydration,
+        next: scope.boundary,
+        targetTree,
+      };
       this._slot.attach(session);
       frame.mutationEffects.push(new HydrateSlot(this._slot, targetTree));
     }, options);
@@ -85,7 +90,7 @@ export class Root<T> {
     options?: UpdateOptions,
   ): UpdateHandle {
     const coroutine: Coroutine = {
-      scope: new Scope(),
+      scope: createScope(),
       pendingLanes: Lanes.DefaultLane,
       resume,
     };

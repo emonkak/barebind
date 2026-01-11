@@ -1,10 +1,12 @@
 import {
+  BoundaryType,
   type Coroutine,
+  createScope,
   type Hook,
   HookType,
   Lanes,
   type RenderFrame,
-  Scope,
+  type Scope,
   type UpdateOptions,
   type UpdateSession,
 } from '@/internal.js';
@@ -60,8 +62,8 @@ export class TestRenderer {
       get pendingLanes(): Lanes {
         return state.pendingLanes;
       },
-      scope: options.scope ?? new Scope(),
-      resume({ frame, rootScope, scope, context }: UpdateSession): void {
+      scope: options.scope ?? createScope(),
+      resume({ frame, scope, context }: UpdateSession): void {
         const session = new RenderSession(
           state,
           options.coroutine ?? coroutine,
@@ -70,9 +72,13 @@ export class TestRenderer {
           context,
         );
 
-        rootScope.addErrorHandler((error) => {
-          thrownError = error;
-        });
+        this.scope.boundary = {
+          type: BoundaryType.Error,
+          next: this.scope.boundary,
+          handler: (error) => {
+            thrownError = error;
+          },
+        };
 
         returnValue = callback(session);
 
@@ -114,11 +120,15 @@ export class TestUpdater {
 
     const coroutine = {
       pendingLanes: Lanes.AllLanes,
-      scope: options.scope ?? new Scope(),
+      scope: options.scope ?? createScope(),
       resume(session: UpdateSession): void {
-        session.rootScope.addErrorHandler((error) => {
-          thrownError = error;
-        });
+        this.scope.boundary = {
+          type: BoundaryType.Error,
+          next: this.scope.boundary,
+          handler: (error) => {
+            thrownError = error;
+          },
+        };
         returnValue = callback(session);
         this.pendingLanes &= ~session.frame.lanes;
       },

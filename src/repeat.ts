@@ -6,6 +6,7 @@ import {
   type Binding,
   type DirectiveContext,
   type DirectiveType,
+  getHydrationTargetTree,
   getStartNode,
   type Part,
   PartType,
@@ -120,7 +121,7 @@ export class RepeatBinding<TSource, TKey, TValue>
   attach(session: UpdateSession): void {
     const { context, rootScope } = session;
     const document = this._part.node.ownerDocument;
-    const targetTree = rootScope.getHydrationTargetTree();
+    const targetTree = getHydrationTargetTree(rootScope);
 
     const {
       keySelector = defaultKeySelector,

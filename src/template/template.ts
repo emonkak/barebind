@@ -3,6 +3,7 @@ import {
   type Binding,
   type DirectiveContext,
   type Effect,
+  getHydrationTargetTree,
   getStartNode,
   type Part,
   PartType,
@@ -98,7 +99,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
         slots[i]!.reconcile(this._binds[i]!, session);
       }
     } else {
-      const targetTree = session.rootScope.getHydrationTargetTree();
+      const targetTree = getHydrationTargetTree(session.rootScope);
 
       if (targetTree !== null) {
         this._pendingResult = this._template.hydrate(

@@ -1,5 +1,6 @@
 import {
   $toDirective,
+  BoundaryType,
   CommitPhase,
   type Component,
   type ComponentState,
@@ -155,7 +156,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                coroutine.scope.handleError(error);
+                handleError(coroutine.scope, error);
               }
             }
 
@@ -271,7 +272,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                coroutine.scope.handleError(error);
+                handleError(coroutine.scope, error);
               }
             }
 
@@ -478,21 +479,6 @@ export class Runtime implements SessionContext {
   }
 }
 
-function createRenderFrame(
-  id: number,
-  lanes: Lanes,
-  coroutine: Coroutine,
-): RenderFrame {
-  return {
-    id,
-    lanes,
-    pendingCoroutines: [coroutine],
-    mutationEffects: [],
-    layoutEffects: [],
-    passiveEffects: [],
-  };
-}
-
 function consumeCoroutines(frame: RenderFrame): Coroutine[] {
   const { pendingCoroutines } = frame;
   frame.pendingCoroutines = [];
@@ -513,10 +499,53 @@ function consumeEffects(
   };
 }
 
+function createRenderFrame(
+  id: number,
+  lanes: Lanes,
+  coroutine: Coroutine,
+): RenderFrame {
+  return {
+    id,
+    lanes,
+    pendingCoroutines: [coroutine],
+    mutationEffects: [],
+    layoutEffects: [],
+    passiveEffects: [],
+  };
+}
+
 function generateRandomString(length: number): string {
   return Array.from(crypto.getRandomValues(new Uint8Array(length)), (byte) =>
     (byte % 36).toString(36),
   ).join('');
+}
+
+function handleError(scope: Scope, error: unknown): void {
+  let nextScope: Scope | null = scope.parent;
+  let nextBoundary = scope.boundary;
+
+  const handle = (error: unknown) => {
+    while (true) {
+      while (nextBoundary !== null) {
+        const boundary = nextBoundary;
+        nextBoundary = nextBoundary.next;
+        if (boundary.type === BoundaryType.Error) {
+          const { handler } = boundary;
+          handler(error, handle);
+          return;
+        }
+      }
+      if (nextScope !== null) {
+        const { parent, boundary } = nextScope;
+        nextScope = parent;
+        nextBoundary = boundary;
+      } else {
+        throw error;
+      }
+    }
+  };
+
+  handle(error);
 }
 
 function incrementCount(count: number): number {

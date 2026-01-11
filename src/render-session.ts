@@ -2,9 +2,11 @@ import { sequentialEqual } from './compare.js';
 import { DirectiveSpecifier } from './directive.js';
 import {
   $hook,
+  BoundaryType,
   type Cleanup,
   type ComponentState,
   type Coroutine,
+  DETACHED_SCOPE,
   type DispatchOptions,
   type Effect,
   type ErrorHandler,
@@ -16,7 +18,7 @@ import {
   type RefObject,
   type RenderContext,
   type RenderFrame,
-  Scope,
+  type Scope,
   type SessionContext,
   type TemplateMode,
   type UpdateHandle,
@@ -52,7 +54,11 @@ export class RenderSession implements RenderContext {
   }
 
   catchError(handler: ErrorHandler): void {
-    this._scope.addErrorHandler(handler);
+    this._scope.boundary = {
+      type: BoundaryType.Error,
+      next: this._scope.boundary,
+      handler,
+    };
   }
 
   finalize(): void {
@@ -87,12 +93,12 @@ export class RenderSession implements RenderContext {
       }
     }
 
-    this._scope = Scope.DETACHED;
+    this._scope = DETACHED_SCOPE;
     this._hookIndex++;
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    if (this._coroutine.scope === Scope.DETACHED) {
+    if (this._coroutine.scope === DETACHED_SCOPE) {
       return {
         lanes: Lanes.NoLanes,
         scheduled: Promise.resolve({ canceled: true, done: false }),
@@ -123,7 +129,23 @@ export class RenderSession implements RenderContext {
   }
 
   getSharedContext(key: unknown): unknown {
-    return this._scope.getSharedContext(key);
+    let currentScope: Scope | null = this._scope;
+    do {
+      for (
+        let boundary = currentScope.boundary;
+        boundary !== null;
+        boundary = boundary.next
+      ) {
+        if (
+          boundary.type === BoundaryType.SharedContext &&
+          Object.is(boundary.key, key)
+        ) {
+          return boundary.value;
+        }
+      }
+      currentScope = currentScope.parent;
+    } while (currentScope !== null);
+    return undefined;
   }
 
   html(
@@ -147,7 +169,12 @@ export class RenderSession implements RenderContext {
   }
 
   setSharedContext(key: unknown, value: unknown): void {
-    this._scope.setSharedContext(key, value);
+    this._scope.boundary = {
+      type: BoundaryType.SharedContext,
+      next: this._scope.boundary,
+      key,
+      value,
+    };
   }
 
   svg(

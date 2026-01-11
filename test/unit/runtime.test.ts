@@ -5,10 +5,10 @@ import {
   $toDirective,
   CommitPhase,
   type ComponentState,
+  createScope,
   type Directive,
   Lanes,
   PartType,
-  Scope,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -550,7 +550,7 @@ describe('Runtime', () => {
       };
       const coroutine = new MockCoroutine();
       const frame = createRenderFrame(1, Lanes.AllLanes);
-      const scope = new Scope();
+      const scope = createScope();
       const observer = new MockObserver();
       const runtime = createRuntime();
 

@@ -7,6 +7,7 @@ import {
   type Binding,
   type CommitPhase,
   type Coroutine,
+  createScope,
   type Directive,
   type DirectiveContext,
   type DirectiveType,
@@ -17,7 +18,7 @@ import {
   PartType,
   type Primitive,
   type RequestCallbackOptions,
-  Scope,
+  type Scope,
   type Slot,
   type Template,
   type TemplateMode,
@@ -214,7 +215,7 @@ export class MockCoroutine implements Coroutine {
 
   constructor(
     callback: (this: Coroutine, session: UpdateSession) => void = () => {},
-    scope: Scope = new Scope(),
+    scope: Scope = createScope(),
     pendingLanes: Lanes = Lanes.AllLanes,
   ) {
     this.callback = callback;
