@@ -20,10 +20,10 @@ import {
 import { LinkedList } from '../linked-list.js';
 
 export interface InvalidateEvent<T = unknown> {
-  source: Atom<T>;
-  reversePath: PropertyKey[];
-  newValue: T;
-  oldValue: T;
+  readonly source: Atom<T>;
+  readonly reversePath: readonly PropertyKey[];
+  readonly newValue: T;
+  readonly oldValue: T;
 }
 
 export type Subscriber<T = unknown> = (event: InvalidateEvent<T>) => void;
