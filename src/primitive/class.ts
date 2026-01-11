@@ -87,18 +87,18 @@ function toggleClass(
   value: ClassAtom,
   enabled: boolean,
 ): void {
-  let declaration: string;
+  let className: string;
 
   if (typeof value === 'string') {
-    declaration = value.trim();
+    className = value.trim();
   } else if (value) {
-    declaration = key.trim();
+    className = key.trim();
   } else {
     return;
   }
 
-  if (declaration !== '') {
-    const components = declaration.split(CLASS_SEPARATOR_PATTERN);
+  if (className !== '') {
+    const components = className.split(CLASS_SEPARATOR_PATTERN);
 
     for (let i = 0, l = components.length; i < l; i++) {
       classList.toggle(components[i]!, enabled);
