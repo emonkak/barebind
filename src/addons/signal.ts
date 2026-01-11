@@ -19,7 +19,14 @@ import {
 } from '../internal.js';
 import { LinkedList } from '../linked-list.js';
 
-export type Subscriber = (source: Signal<unknown>) => void;
+export interface InvalidateEvent<T = unknown> {
+  source: Atom<T>;
+  reversePath: PropertyKey[];
+  newValue: T;
+  oldValue: T;
+}
+
+export type Subscriber<T = unknown> = (event: InvalidateEvent<T>) => void;
 
 export type Subscription = () => void;
 
@@ -212,16 +219,22 @@ export class Atom<T> extends Signal<T> {
     return this._value;
   }
 
-  set value(value: T) {
-    this._value = value;
-    this.invalidate();
+  set value(newValue: T) {
+    const oldValue = this._value;
+    this._value = newValue;
+    this.invalidate({
+      source: this,
+      reversePath: [],
+      newValue,
+      oldValue,
+    });
   }
 
   get version(): number {
     return this._version;
   }
 
-  invalidate(source: Signal<unknown> = this): void {
+  invalidate(event: InvalidateEvent): void {
     this._version += 1;
     for (
       let node = this._subscribers.front();
@@ -229,7 +242,7 @@ export class Atom<T> extends Signal<T> {
       node = node.next
     ) {
       const subscriber = node.value;
-      subscriber(source);
+      subscriber(event);
     }
   }
 

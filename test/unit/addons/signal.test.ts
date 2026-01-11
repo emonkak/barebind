@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   Atom,
   Computed,
+  type InvalidateEvent,
   LocalAtom,
   LocalComputed,
   type Signal,
@@ -308,13 +309,19 @@ describe('Atom', () => {
   describe('invalidate()', () => {
     it('increments the version and notify subscribers', () => {
       const signal = new Atom('foo');
+      const event: InvalidateEvent<string> = {
+        source: signal,
+        reversePath: [],
+        newValue: 'foo',
+        oldValue: 'foo',
+      };
       const subscriber = vi.fn();
 
       signal.subscribe(subscriber);
-      signal.invalidate();
+      signal.invalidate(event);
 
       expect(subscriber).toHaveBeenCalledOnce();
-      expect(subscriber).toHaveBeenCalledWith(signal);
+      expect(subscriber).toHaveBeenCalledWith(event);
       expect(signal.value).toBe('foo');
       expect(signal.version).toBe(1);
     });
@@ -330,11 +337,21 @@ describe('Atom', () => {
 
       signal.value = 'bar';
       expect(subscriber).toHaveBeenCalledTimes(1);
-      expect(subscriber).toHaveBeenLastCalledWith(signal);
+      expect(subscriber).toHaveBeenLastCalledWith({
+        source: signal,
+        reversePath: [],
+        newValue: 'bar',
+        oldValue: 'foo',
+      });
 
       signal.value = 'baz';
       expect(subscriber).toHaveBeenCalledTimes(2);
-      expect(subscriber).toHaveBeenLastCalledWith(signal);
+      expect(subscriber).toHaveBeenLastCalledWith({
+        source: signal,
+        reversePath: [],
+        newValue: 'baz',
+        oldValue: 'bar',
+      });
     });
 
     it('does not invoke the invalidated subscriber', () => {
@@ -439,19 +456,39 @@ describe('Computed', () => {
 
       foo.value++;
       expect(subscriber).toHaveBeenCalledTimes(1);
-      expect(subscriber).toHaveBeenLastCalledWith(foo);
+      expect(subscriber).toHaveBeenLastCalledWith({
+        source: foo,
+        reversePath: [],
+        newValue: 2,
+        oldValue: 1,
+      });
 
       bar.value++;
       expect(subscriber).toHaveBeenCalledTimes(2);
-      expect(subscriber).toHaveBeenLastCalledWith(bar);
+      expect(subscriber).toHaveBeenLastCalledWith({
+        source: bar,
+        reversePath: [],
+        newValue: 3,
+        oldValue: 2,
+      });
 
       baz.value++;
       expect(subscriber).toHaveBeenCalledTimes(3);
-      expect(subscriber).toHaveBeenLastCalledWith(baz);
+      expect(subscriber).toHaveBeenLastCalledWith({
+        source: baz,
+        reversePath: [],
+        newValue: 4,
+        oldValue: 3,
+      });
 
       foo.value = foo.value;
       expect(subscriber).toHaveBeenCalledTimes(4);
-      expect(subscriber).toHaveBeenLastCalledWith(foo);
+      expect(subscriber).toHaveBeenLastCalledWith({
+        source: foo,
+        reversePath: [],
+        newValue: 2,
+        oldValue: 2,
+      });
     });
 
     it('does not invoke the invalidated subscriber', () => {

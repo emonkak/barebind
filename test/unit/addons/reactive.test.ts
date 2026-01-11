@@ -292,32 +292,32 @@ describe('Reactive', () => {
       state$.get('todos').get(1).get('completed')!.value = true;
 
       expect(subscriber).toHaveBeenCalledTimes(1);
-      expect(subscriber).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          path: ['todos', 1, 'completed'],
-          value: true,
-        }),
-      );
+      expect(subscriber).toHaveBeenLastCalledWith({
+        source: expect.objectContaining({ value: true }),
+        reversePath: ['todos', 1, 'completed'].toReversed(),
+        newValue: true,
+        oldValue: false,
+      });
 
       state$.get('todos').value = [];
 
       expect(subscriber).toHaveBeenCalledTimes(2);
-      expect(subscriber).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          path: ['todos'],
-          value: [],
-        }),
-      );
+      expect(subscriber).toHaveBeenLastCalledWith({
+        source: expect.objectContaining({ value: [] }),
+        reversePath: ['todos'],
+        newValue: [],
+        oldValue: initialState.todos,
+      });
 
       state$.value = new TodoState();
 
       expect(subscriber).toHaveBeenCalledTimes(3);
-      expect(subscriber).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          path: [],
-          value: new TodoState(),
-        }),
-      );
+      expect(subscriber).toHaveBeenLastCalledWith({
+        source: expect.objectContaining({ value: new TodoState() }),
+        reversePath: [],
+        newValue: new TodoState(),
+        oldValue: initialState,
+      });
     });
 
     it('subscribes only for shallow updates', () => {
@@ -340,12 +340,12 @@ describe('Reactive', () => {
       state$.value = new TodoState();
 
       expect(subscriber).toHaveBeenCalledTimes(1);
-      expect(subscriber).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          path: [],
-          value: new TodoState(),
-        }),
-      );
+      expect(subscriber).toHaveBeenLastCalledWith({
+        source: expect.objectContaining({ value: new TodoState() }),
+        reversePath: [],
+        newValue: new TodoState(),
+        oldValue: initialState,
+      });
     });
 
     it('do not notify subscribers of updates when the subscription is unsubscribed', () => {
