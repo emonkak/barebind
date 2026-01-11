@@ -133,24 +133,19 @@ export class Runtime implements SessionContext {
       const frame = createRenderFrame(id, lanes, coroutine);
       const rootScope = coroutine.scope;
       const session = createUpdateSession(frame, rootScope, rootScope, this);
-      let completed = continuation.promise;
 
       try {
-        if (!this._observers.isEmpty()) {
-          notifyObservers(this._observers, {
-            type: 'UPDATE_START',
-            id,
-            lanes,
-          });
-        }
+        notifyObservers(this._observers, {
+          type: 'UPDATE_START',
+          id,
+          lanes,
+        });
 
         try {
-          if (!this._observers.isEmpty()) {
-            notifyObservers(this._observers, {
-              type: 'RENDER_START',
-              id,
-            });
-          }
+          notifyObservers(this._observers, {
+            type: 'RENDER_START',
+            id,
+          });
 
           while (true) {
             const coroutines = consumeCoroutines(frame);
@@ -171,12 +166,10 @@ export class Runtime implements SessionContext {
             await this._backend.yieldToMain();
           }
 
-          if (!this._observers.isEmpty()) {
-            notifyObservers(this._observers, {
-              type: 'RENDER_END',
-              id,
-            });
-          }
+          notifyObservers(this._observers, {
+            type: 'RENDER_END',
+            id,
+          });
         } finally {
           frame.lanes = Lanes.NoLanes;
         }
@@ -205,28 +198,36 @@ export class Runtime implements SessionContext {
         }
 
         if (passiveEffects.length > 0) {
-          completed = this._backend.requestCallback(
-            () => {
-              this._commitEffects(id, passiveEffects, CommitPhase.Passive);
-              return { canceled: false, done: true };
-            },
-            { priority: 'background' },
-          );
+          this._backend
+            .requestCallback(
+              () => {
+                this._commitEffects(id, passiveEffects, CommitPhase.Passive);
+              },
+              { priority: 'background' },
+            )
+            .finally(() => {
+              notifyObservers(this._observers, {
+                type: 'UPDATE_END',
+                id,
+                lanes,
+              });
+            });
+        } else {
+          notifyObservers(this._observers, {
+            type: 'UPDATE_END',
+            id,
+            lanes,
+          });
         }
 
         continuation.resolve({ canceled: false, done: true });
       } catch (error) {
+        notifyObservers(this._observers, {
+          type: 'UPDATE_END',
+          id,
+          lanes,
+        });
         continuation.reject(error);
-      } finally {
-        if (!this._observers.isEmpty()) {
-          completed.finally(() => {
-            notifyObservers(this._observers, {
-              type: 'UPDATE_END',
-              id,
-              lanes,
-            });
-          });
-        }
       }
     }
   }
@@ -250,21 +251,17 @@ export class Runtime implements SessionContext {
       const session = createUpdateSession(frame, rootScope, rootScope, this);
 
       try {
-        if (!this._observers.isEmpty()) {
-          notifyObservers(this._observers, {
-            type: 'UPDATE_START',
-            id,
-            lanes,
-          });
-        }
+        notifyObservers(this._observers, {
+          type: 'UPDATE_START',
+          id,
+          lanes,
+        });
 
         try {
-          if (!this._observers.isEmpty()) {
-            notifyObservers(this._observers, {
-              type: 'RENDER_START',
-              id,
-            });
-          }
+          notifyObservers(this._observers, {
+            type: 'RENDER_START',
+            id,
+          });
 
           while (true) {
             const coroutines = consumeCoroutines(frame);
@@ -283,12 +280,10 @@ export class Runtime implements SessionContext {
             }
           }
 
-          if (!this._observers.isEmpty()) {
-            notifyObservers(this._observers, {
-              type: 'RENDER_END',
-              id,
-            });
-          }
+          notifyObservers(this._observers, {
+            type: 'RENDER_END',
+            id,
+          });
         } finally {
           frame.lanes = Lanes.NoLanes;
         }
@@ -312,13 +307,11 @@ export class Runtime implements SessionContext {
       } catch (error) {
         continuation.reject(error);
       } finally {
-        if (!this._observers.isEmpty()) {
-          notifyObservers(this._observers, {
-            type: 'UPDATE_END',
-            id,
-            lanes,
-          });
-        }
+        notifyObservers(this._observers, {
+          type: 'UPDATE_END',
+          id,
+          lanes,
+        });
       }
     }
   }
@@ -345,29 +338,25 @@ export class Runtime implements SessionContext {
     const { id } = frame;
     const session = new RenderSession(state, coroutine, frame, scope, this);
 
-    if (!this._observers.isEmpty()) {
-      notifyObservers(this._observers, {
-        type: 'COMPONENT_RENDER_START',
-        id,
-        component,
-        props,
-        context: session,
-      });
-    }
+    notifyObservers(this._observers, {
+      type: 'COMPONENT_RENDER_START',
+      id,
+      component,
+      props,
+      context: session,
+    });
 
     const result = component.render(props, session);
 
     session.finalize();
 
-    if (!this._observers.isEmpty()) {
-      notifyObservers(this._observers, {
-        type: 'COMPONENT_RENDER_END',
-        id,
-        component,
-        props,
-        context: session,
-      });
-    }
+    notifyObservers(this._observers, {
+      type: 'COMPONENT_RENDER_END',
+      id,
+      component,
+      props,
+      context: session,
+    });
 
     return result;
   }
@@ -471,25 +460,21 @@ export class Runtime implements SessionContext {
     effects: Effect[],
     phase: CommitPhase,
   ): void {
-    if (!this._observers.isEmpty()) {
-      notifyObservers(this._observers, {
-        type: 'COMMIT_START',
-        id,
-        effects,
-        phase,
-      });
-    }
+    notifyObservers(this._observers, {
+      type: 'COMMIT_START',
+      id,
+      effects,
+      phase,
+    });
 
     this._backend.commitEffects(effects, phase);
 
-    if (!this._observers.isEmpty()) {
-      notifyObservers(this._observers, {
-        type: 'COMMIT_END',
-        id,
-        effects,
-        phase,
-      });
-    }
+    notifyObservers(this._observers, {
+      type: 'COMMIT_END',
+      id,
+      effects,
+      phase,
+    });
   }
 }
 
