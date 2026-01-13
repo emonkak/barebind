@@ -521,8 +521,7 @@ function generateRandomString(length: number): string {
 }
 
 function handleError(scope: Scope, error: unknown): void {
-  let nextScope: Scope | null = scope.parent;
-  let nextBoundary = scope.boundary;
+  let { parent: nextScope, boundary: nextBoundary } = scope;
 
   const handle = (error: unknown) => {
     while (true) {
