@@ -43,7 +43,7 @@ const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
 const TEMPLATE_PLACEHOLDER = '__test__';
 
 describe('BrowserBackend', () => {
-  describe('commitEffects()', () => {
+  describe('flushEffects()', () => {
     it('commits all effects in reverse order', () => {
       const executedEffects: Effect[] = [];
       const commit = function (this: Effect) {
@@ -75,9 +75,9 @@ describe('BrowserBackend', () => {
       ];
       const backend = new BrowserBackend();
 
-      backend.commitEffects(mutationEffects, CommitPhase.Mutation);
-      backend.commitEffects(layoutEffects, CommitPhase.Layout);
-      backend.commitEffects(passiveEffects, CommitPhase.Passive);
+      backend.flushEffects(mutationEffects, CommitPhase.Mutation);
+      backend.flushEffects(layoutEffects, CommitPhase.Layout);
+      backend.flushEffects(passiveEffects, CommitPhase.Passive);
 
       expect(executedEffects).toStrictEqual(
         mutationEffects

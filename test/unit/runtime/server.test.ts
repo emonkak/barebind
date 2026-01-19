@@ -21,7 +21,7 @@ import { templateLiteral } from '../../test-helpers.js';
 const TEMPLATE_PLACEHOLDER = '__test__';
 
 describe('ServerBackend', () => {
-  describe('commitEffects()', () => {
+  describe('flushEffects()', () => {
     it('commits only mutation effects in reverse order', () => {
       const executedEffects: Effect[] = [];
       const commit = function (this: Effect) {
@@ -53,9 +53,9 @@ describe('ServerBackend', () => {
       ];
       const backend = new ServerBackend(document);
 
-      backend.commitEffects(mutationEffects, CommitPhase.Mutation);
-      backend.commitEffects(layoutEffects, CommitPhase.Layout);
-      backend.commitEffects(passiveEffects, CommitPhase.Passive);
+      backend.flushEffects(mutationEffects, CommitPhase.Mutation);
+      backend.flushEffects(layoutEffects, CommitPhase.Layout);
+      backend.flushEffects(passiveEffects, CommitPhase.Passive);
 
       expect(executedEffects).toStrictEqual(
         mutationEffects.toReversed().map((effect) => expect.exact(effect)),

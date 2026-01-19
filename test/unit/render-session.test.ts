@@ -364,9 +364,9 @@ describe('RenderSession', () => {
 
       const cleanup = vi.fn();
       const callback = vi.fn().mockReturnValue(cleanup);
-      const commitEffectsSpy = vi.spyOn(
+      const flushEffectsSpy = vi.spyOn(
         renderer.runtime['_backend'],
-        'commitEffects',
+        'flushEffects',
       );
 
       SESSION1: {
@@ -376,8 +376,8 @@ describe('RenderSession', () => {
 
         expect(callback).toHaveBeenCalledTimes(1);
         expect(cleanup).toHaveBeenCalledTimes(0);
-        expect(commitEffectsSpy).toHaveBeenCalledTimes(1);
-        expect(commitEffectsSpy).toHaveBeenCalledWith(
+        expect(flushEffectsSpy).toHaveBeenCalledTimes(1);
+        expect(flushEffectsSpy).toHaveBeenCalledWith(
           [expect.any(Object)],
           phase,
         );
@@ -390,8 +390,8 @@ describe('RenderSession', () => {
 
         expect(callback).toHaveBeenCalledTimes(2);
         expect(cleanup).toHaveBeenCalledTimes(1);
-        expect(commitEffectsSpy).toHaveBeenCalledTimes(2);
-        expect(commitEffectsSpy).toHaveBeenCalledWith(
+        expect(flushEffectsSpy).toHaveBeenCalledTimes(2);
+        expect(flushEffectsSpy).toHaveBeenCalledWith(
           [expect.any(Object)],
           phase,
         );
@@ -402,9 +402,9 @@ describe('RenderSession', () => {
       const renderer = new TestRenderer();
 
       const callback = vi.fn();
-      const commitEffectsSpy = vi.spyOn(
+      const flushEffectsSpy = vi.spyOn(
         renderer.runtime['_backend'],
-        'commitEffects',
+        'flushEffects',
       );
 
       SESSION1: {
@@ -413,8 +413,8 @@ describe('RenderSession', () => {
         });
 
         expect(callback).toHaveBeenCalledTimes(1);
-        expect(commitEffectsSpy).toHaveBeenCalledTimes(1);
-        expect(commitEffectsSpy).toHaveBeenCalledWith(
+        expect(flushEffectsSpy).toHaveBeenCalledTimes(1);
+        expect(flushEffectsSpy).toHaveBeenCalledWith(
           [expect.any(Object)],
           phase,
         );
@@ -426,7 +426,7 @@ describe('RenderSession', () => {
         });
 
         expect(callback).toHaveBeenCalledTimes(1);
-        expect(commitEffectsSpy).toHaveBeenCalledTimes(1);
+        expect(flushEffectsSpy).toHaveBeenCalledTimes(1);
       }
 
       SESSION3: {
@@ -435,8 +435,8 @@ describe('RenderSession', () => {
         });
 
         expect(callback).toHaveBeenCalledTimes(2);
-        expect(commitEffectsSpy).toHaveBeenCalledTimes(2);
-        expect(commitEffectsSpy).toHaveBeenCalledWith(
+        expect(flushEffectsSpy).toHaveBeenCalledTimes(2);
+        expect(flushEffectsSpy).toHaveBeenCalledWith(
           [expect.any(Object)],
           phase,
         );

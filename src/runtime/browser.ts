@@ -28,7 +28,7 @@ import type { Runtime, RuntimeBackend } from '../runtime.js';
 import { TaggedTemplate } from '../template/tagged.js';
 
 export class BrowserBackend implements RuntimeBackend {
-  commitEffects(effects: Effect[], _phase: CommitPhase): void {
+  flushEffects(effects: Effect[], _phase: CommitPhase): void {
     for (let i = effects.length - 1; i >= 0; i--) {
       effects[i]!.commit();
     }

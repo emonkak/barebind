@@ -35,7 +35,7 @@ import type {
 import { AbstractTemplate } from '@/template/template.js';
 
 export class MockBackend implements RuntimeBackend {
-  commitEffects(effects: Effect[], _phase: CommitPhase): void {
+  flushEffects(effects: Effect[], _phase: CommitPhase): void {
     for (let i = effects.length - 1; i >= 0; i--) {
       effects[i]!.commit();
     }

@@ -32,7 +32,7 @@ import { LinkedList } from './linked-list.js';
 import { RenderSession } from './render-session.js';
 
 export interface RuntimeBackend {
-  commitEffects(effects: Effect[], phase: CommitPhase): void;
+  flushEffects(effects: Effect[], phase: CommitPhase): void;
   flushUpdate(runtime: Runtime): void;
   getTaskPriority(): TaskPriority;
   parseTemplate(
@@ -181,11 +181,11 @@ export class Runtime implements SessionContext {
         if (mutationEffects.length > 0 || layoutEffects.length > 0) {
           const callback = () => {
             if (mutationEffects.length > 0) {
-              this._commitEffects(id, mutationEffects, CommitPhase.Mutation);
+              this._flushEffects(id, mutationEffects, CommitPhase.Mutation);
             }
 
             if (layoutEffects.length > 0) {
-              this._commitEffects(id, layoutEffects, CommitPhase.Layout);
+              this._flushEffects(id, layoutEffects, CommitPhase.Layout);
             }
           };
 
@@ -202,7 +202,7 @@ export class Runtime implements SessionContext {
           this._backend
             .requestCallback(
               () => {
-                this._commitEffects(id, passiveEffects, CommitPhase.Passive);
+                this._flushEffects(id, passiveEffects, CommitPhase.Passive);
               },
               { priority: 'background' },
             )
@@ -293,15 +293,15 @@ export class Runtime implements SessionContext {
           consumeEffects(frame);
 
         if (mutationEffects.length > 0) {
-          this._commitEffects(id, mutationEffects, CommitPhase.Mutation);
+          this._flushEffects(id, mutationEffects, CommitPhase.Mutation);
         }
 
         if (layoutEffects.length > 0) {
-          this._commitEffects(id, layoutEffects, CommitPhase.Layout);
+          this._flushEffects(id, layoutEffects, CommitPhase.Layout);
         }
 
         if (passiveEffects.length > 0) {
-          this._commitEffects(id, passiveEffects, CommitPhase.Passive);
+          this._flushEffects(id, passiveEffects, CommitPhase.Passive);
         }
 
         continuation.resolve({ canceled: false, done: true });
@@ -456,7 +456,7 @@ export class Runtime implements SessionContext {
     };
   }
 
-  private _commitEffects(
+  private _flushEffects(
     id: number,
     effects: Effect[],
     phase: CommitPhase,
@@ -468,7 +468,7 @@ export class Runtime implements SessionContext {
       phase,
     });
 
-    this._backend.commitEffects(effects, phase);
+    this._backend.flushEffects(effects, phase);
 
     notifyObservers(this._observers, {
       type: 'COMMIT_END',

@@ -32,7 +32,7 @@ export class ServerBackend implements RuntimeBackend {
     this._document = document;
   }
 
-  commitEffects(effects: Effect[], phase: CommitPhase): void {
+  flushEffects(effects: Effect[], phase: CommitPhase): void {
     switch (phase) {
       case CommitPhase.Mutation:
         for (let i = effects.length - 1; i >= 0; i--) {
