@@ -47,7 +47,7 @@ export function ImperativeHandle<T>(
       () => {
         if (typeof ref === 'function') {
           return ref(createHandle());
-        } else if (ref !== null) {
+        } else if (ref != null) {
           ref.current = createHandle();
           return () => {
             ref.current = null;

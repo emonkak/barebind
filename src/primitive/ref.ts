@@ -20,7 +20,7 @@ export const RefPrimitive: Primitive<Ref<Element>> = {
         this,
         value,
         part,
-        'The value of RefPrimitive must be a function, object or null.',
+        'The value of RefPrimitive must be a function, object, null or undefined.',
       );
     }
   },
@@ -38,7 +38,7 @@ export class RefBinding extends PrimitiveBinding<
   Ref<Element>,
   Part.AttributePart
 > {
-  private _memoizedValue: Ref<Element> = null;
+  private _memoizedValue: Ref<Element>;
 
   private _memoizedCleanup: Cleanup | void = undefined;
 
@@ -66,13 +66,13 @@ export class RefBinding extends PrimitiveBinding<
       if (typeof oldRef === 'function') {
         this._memoizedCleanup?.();
         this._memoizedCleanup = undefined;
-      } else if (oldRef !== null) {
+      } else if (oldRef != null) {
         oldRef.current = null;
       }
 
       if (typeof newRef === 'function') {
         this._memoizedCleanup = newRef(this.part.node);
-      } else if (newRef !== null) {
+      } else if (newRef != null) {
         newRef.current = this.part.node;
       }
     }
@@ -83,7 +83,7 @@ export class RefBinding extends PrimitiveBinding<
   cleanRef(): void {
     const ref = this._memoizedValue;
 
-    if (ref !== null) {
+    if (ref != null) {
       if (typeof ref === 'function') {
         this._memoizedCleanup?.();
         this._memoizedCleanup = undefined;
@@ -98,8 +98,8 @@ export class RefBinding extends PrimitiveBinding<
 
 function isElementRef(value: unknown): value is Ref<Element> {
   return (
+    value == null ||
     typeof value === 'function' ||
-    (typeof value === 'object' && value === null) ||
     (value as RefObject<unknown>).current !== undefined
   );
 }

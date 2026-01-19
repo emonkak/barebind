@@ -17,6 +17,7 @@ describe('RefPrimitive', () => {
         RefPrimitive.ensureValue!.call(RefPrimitive, () => {}, part);
         RefPrimitive.ensureValue!.call(RefPrimitive, { current: null }, part);
         RefPrimitive.ensureValue!.call(RefPrimitive, null, part);
+        RefPrimitive.ensureValue!.call(RefPrimitive, undefined, part);
       }).not.toThrow();
     });
 
@@ -30,7 +31,7 @@ describe('RefPrimitive', () => {
       expect(() => {
         RefPrimitive.ensureValue!.call(RefPrimitive, {}, part);
       }).toThrow(
-        'The value of RefPrimitive must be a function, object or null.',
+        'The value of RefPrimitive must be a function, object, null or undefined.',
       );
     });
   });
