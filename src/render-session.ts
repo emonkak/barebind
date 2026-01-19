@@ -82,13 +82,13 @@ export class RenderSession implements RenderContext {
       const hook = hooks[i]!;
       switch (hook.type) {
         case HookType.InsertionEffect:
-          enqueueEffect(hook, mutationEffects);
+          enqueueInvokeEffectHook(hook, mutationEffects);
           break;
         case HookType.LayoutEffect:
-          enqueueEffect(hook, layoutEffects);
+          enqueueInvokeEffectHook(hook, layoutEffects);
           break;
         case HookType.PassiveEffect:
-          enqueueEffect(hook, passiveEffects);
+          enqueueInvokeEffectHook(hook, passiveEffects);
           break;
       }
     }
@@ -433,7 +433,10 @@ function areDependenciesChanged(
   );
 }
 
-function enqueueEffect(hook: Hook.EffectHook, effects: Effect[]): void {
+function enqueueInvokeEffectHook(
+  hook: Hook.EffectHook,
+  effects: Effect[],
+): void {
   if (
     areDependenciesChanged(hook.pendingDependencies, hook.memoizedDependencies)
   ) {

@@ -151,13 +151,13 @@ export class ComponentBinding<TProps, TResult>
       const hook = hooks[i]!;
       switch (hook.type) {
         case HookType.PassiveEffect:
-          frame.passiveEffects.push(new CleanEffectHook(hook));
+          enqueueCleanEffectHook(hook, frame.passiveEffects);
           break;
         case HookType.LayoutEffect:
-          frame.layoutEffects.push(new CleanEffectHook(hook));
+          enqueueCleanEffectHook(hook, frame.layoutEffects);
           break;
         case HookType.InsertionEffect:
-          frame.mutationEffects.push(new CleanEffectHook(hook));
+          enqueueCleanEffectHook(hook, frame.mutationEffects);
           break;
       }
     }
@@ -193,6 +193,13 @@ function createComponentState(): ComponentState {
     hooks: [],
     pendingLanes: Lanes.NoLanes,
   };
+}
+
+function enqueueCleanEffectHook(
+  hook: Hook.EffectHook,
+  effects: Effect[],
+): void {
+  effects.push(new CleanEffectHook(hook));
 }
 
 function resolveBinding<TProps, TResult>(
