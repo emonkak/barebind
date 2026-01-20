@@ -223,7 +223,7 @@ export class ElementBinding implements Binding<ElementProps> {
 
   private readonly _part: Part.ElementPart;
 
-  private _memoizedValue: ElementProps | null = null;
+  private _memoizedProps: ElementProps | null = null;
 
   private readonly _listenerMap: Map<string, EventListenerWithOptions> =
     new Map();
@@ -251,7 +251,7 @@ export class ElementBinding implements Binding<ElementProps> {
 
   shouldUpdate(value: ElementProps): boolean {
     return (
-      this._memoizedValue === null || !shallowEqual(this._memoizedValue, value)
+      this._memoizedProps === null || !shallowEqual(this._memoizedProps, value)
     );
   }
 
@@ -261,7 +261,7 @@ export class ElementBinding implements Binding<ElementProps> {
 
   commit(): void {
     const newProps = this._props;
-    const oldProps = this._memoizedValue ?? ({} as ElementProps);
+    const oldProps = this._memoizedProps ?? ({} as ElementProps);
     const element = this._part.node;
 
     for (const key of Object.keys(oldProps)) {
@@ -283,20 +283,20 @@ export class ElementBinding implements Binding<ElementProps> {
       );
     }
 
-    this._memoizedValue = newProps;
+    this._memoizedProps = newProps;
   }
 
   rollback(): void {
-    const props = this._memoizedValue;
-    const element = this._part.node;
+    const props = this._memoizedProps;
 
     if (props !== null) {
+      const element = this._part.node;
       for (const key of Object.keys(props)) {
         this._deleteProperty(element, key, props[key as keyof ElementProps]);
       }
     }
 
-    this._memoizedValue = null;
+    this._memoizedProps = null;
   }
 
   handleEvent(event: Event): void {
