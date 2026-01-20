@@ -6,14 +6,10 @@ import {
   PerformanceProfiler,
 } from '@/addons/profiler.js';
 import { createComponent } from '@/component.js';
-import {
-  CommitPhase,
-  type Effect,
-  Lanes,
-  type RenderContext,
-} from '@/internal.js';
+import { CommitPhase, Lanes, type RenderContext } from '@/internal.js';
 import type { RuntimeEvent } from '@/runtime.js';
 import { MockEffect } from '../../mocks.js';
+import { createEffectQueue } from '../../test-helpers.js';
 
 describe('PerformanceProfiler', () => {
   describe('onRuntimeEvent()', () => {
@@ -26,9 +22,12 @@ describe('PerformanceProfiler', () => {
       const component = createComponent(function MyComponent(_props: {}) {
         return null;
       });
-      const mutationEffects = [new MockEffect(), new MockEffect()];
-      const layoutEffects = [new MockEffect()];
-      const passiveEffects: Effect[] = [];
+      const mutationEffects = createEffectQueue([
+        new MockEffect(),
+        new MockEffect(),
+      ]);
+      const layoutEffects = createEffectQueue([new MockEffect()]);
+      const passiveEffects = createEffectQueue([]);
       const events: RuntimeEvent[] = [
         {
           type: 'UPDATE_START',

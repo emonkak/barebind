@@ -12,6 +12,7 @@ import {
   type DirectiveContext,
   type DirectiveType,
   type Effect,
+  type EffectQueue,
   Lanes,
   type Layout,
   type Part,
@@ -35,10 +36,8 @@ import type {
 import { AbstractTemplate } from '@/template/template.js';
 
 export class MockBackend implements RuntimeBackend {
-  flushEffects(effects: Effect[], _phase: CommitPhase): void {
-    for (let i = effects.length - 1; i >= 0; i--) {
-      effects[i]!.commit();
-    }
+  flushEffects(effects: EffectQueue, _phase: CommitPhase): void {
+    effects.flush();
   }
 
   flushUpdate(runtime: Runtime): void {

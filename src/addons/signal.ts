@@ -99,7 +99,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   resume(session: UpdateSession): void {
     if (this._slot.reconcile(this._signal.value, session)) {
-      session.frame.mutationEffects.push(this._slot);
+      session.frame.mutationEffects.push(this._slot, this._scope.level);
     }
     this._pendingLanes = Lanes.NoLanes;
   }
@@ -331,7 +331,7 @@ export class Computed<
     );
 
     return () => {
-      for (let i = subscriptions.length - 1; i >= 0; i--) {
+      for (let i = 0, l = subscriptions.length; i < l; i++) {
         subscriptions[i]!();
       }
     };

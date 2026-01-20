@@ -10,52 +10,130 @@ import { stripComments } from '../test-helpers.js';
 
 test('invokes effects from child to parent', async () => {
   const logs: string[] = [];
-  const value = App({ logs });
   const container = document.createElement('div');
-  const root = Root.create(value, container, new Runtime(new BrowserBackend()));
+  const root = Root.create<unknown>(
+    Foo({ logs }),
+    container,
+    new Runtime(new BrowserBackend()),
+  );
 
   await root.mount().finished;
   await scheduler.postTask(() => {}, { priority: 'background' });
 
   expect(stripComments(container).innerHTML).toBe(
-    '<div class="parent"><div class="child1"><div class="grandchild1"></div></div><div class="child2"><div class="grandchild2"></div></div></div>',
+    '<div class="Foo.parent"><div class="Foo.child1"><div class="Foo.grandchild1"></div></div><div class="Foo.child2"><div class="Foo.grandchild2"></div></div></div>',
   );
   expect(logs).toStrictEqual([
-    'render parent',
-    'render child1',
-    'render child2',
-    'render grandchild1',
-    'render grandchild2',
-    'invoke #1 mutation effect in grandchild2',
-    'invoke #2 mutation effect in grandchild2',
-    'invoke #1 mutation effect in grandchild1',
-    'invoke #2 mutation effect in grandchild1',
-    'invoke #1 mutation effect in child2',
-    'invoke #2 mutation effect in child2',
-    'invoke #1 mutation effect in child1',
-    'invoke #2 mutation effect in child1',
-    'invoke #1 mutation effect in parent',
-    'invoke #2 mutation effect in parent',
-    'invoke #1 layout effect in grandchild2',
-    'invoke #2 layout effect in grandchild2',
-    'invoke #1 layout effect in grandchild1',
-    'invoke #2 layout effect in grandchild1',
-    'invoke #1 layout effect in child2',
-    'invoke #2 layout effect in child2',
-    'invoke #1 layout effect in child1',
-    'invoke #2 layout effect in child1',
-    'invoke #1 layout effect in parent',
-    'invoke #2 layout effect in parent',
-    'invoke #1 passive effect in grandchild2',
-    'invoke #2 passive effect in grandchild2',
-    'invoke #1 passive effect in grandchild1',
-    'invoke #2 passive effect in grandchild1',
-    'invoke #1 passive effect in child2',
-    'invoke #2 passive effect in child2',
-    'invoke #1 passive effect in child1',
-    'invoke #2 passive effect in child1',
-    'invoke #1 passive effect in parent',
-    'invoke #2 passive effect in parent',
+    'render Foo.parent',
+    'render Foo.child1',
+    'render Foo.child2',
+    'render Foo.grandchild1',
+    'render Foo.grandchild2',
+    'invoke #0 mutation effect in Foo.grandchild1',
+    'invoke #1 mutation effect in Foo.grandchild1',
+    'invoke #0 mutation effect in Foo.grandchild2',
+    'invoke #1 mutation effect in Foo.grandchild2',
+    'invoke #0 mutation effect in Foo.child1',
+    'invoke #1 mutation effect in Foo.child1',
+    'invoke #0 mutation effect in Foo.child2',
+    'invoke #1 mutation effect in Foo.child2',
+    'invoke #0 mutation effect in Foo.parent',
+    'invoke #1 mutation effect in Foo.parent',
+    'invoke ref in Foo.parent',
+    'invoke ref in Foo.child1',
+    'invoke ref in Foo.child2',
+    'invoke ref in Foo.grandchild1',
+    'invoke ref in Foo.grandchild2',
+    'invoke #0 layout effect in Foo.grandchild1',
+    'invoke #1 layout effect in Foo.grandchild1',
+    'invoke #0 layout effect in Foo.grandchild2',
+    'invoke #1 layout effect in Foo.grandchild2',
+    'invoke #0 layout effect in Foo.child1',
+    'invoke #1 layout effect in Foo.child1',
+    'invoke #0 layout effect in Foo.child2',
+    'invoke #1 layout effect in Foo.child2',
+    'invoke #0 layout effect in Foo.parent',
+    'invoke #1 layout effect in Foo.parent',
+    'invoke #0 passive effect in Foo.grandchild1',
+    'invoke #1 passive effect in Foo.grandchild1',
+    'invoke #0 passive effect in Foo.grandchild2',
+    'invoke #1 passive effect in Foo.grandchild2',
+    'invoke #0 passive effect in Foo.child1',
+    'invoke #1 passive effect in Foo.child1',
+    'invoke #0 passive effect in Foo.child2',
+    'invoke #1 passive effect in Foo.child2',
+    'invoke #0 passive effect in Foo.parent',
+    'invoke #1 passive effect in Foo.parent',
+  ]);
+
+  logs.length = 0;
+
+  await root.update(Bar({ logs })).finished;
+  await scheduler.postTask(() => {}, { priority: 'background' });
+
+  expect(stripComments(container).innerHTML).toBe(
+    '<div class="Bar.parent"><div class="Bar.child1"><div class="Bar.grandchild1"></div></div></div>',
+  );
+  expect(logs).toStrictEqual([
+    'render Bar.parent',
+    'render Bar.child1',
+    'render Bar.grandchild1',
+    'clean #0 mutation effect in Foo.parent',
+    'clean #1 mutation effect in Foo.parent',
+    'clean #0 mutation effect in Foo.child1',
+    'clean #1 mutation effect in Foo.child1',
+    'clean #0 mutation effect in Foo.grandchild1',
+    'clean #1 mutation effect in Foo.grandchild1',
+    'clean #0 mutation effect in Foo.child2',
+    'clean #1 mutation effect in Foo.child2',
+    'clean #0 mutation effect in Foo.grandchild2',
+    'clean #1 mutation effect in Foo.grandchild2',
+    'invoke #0 mutation effect in Bar.grandchild1',
+    'invoke #1 mutation effect in Bar.grandchild1',
+    'invoke #0 mutation effect in Bar.child1',
+    'invoke #1 mutation effect in Bar.child1',
+    'invoke #0 mutation effect in Bar.parent',
+    'invoke #1 mutation effect in Bar.parent',
+    'clean ref in Foo.parent',
+    'clean ref in Foo.child1',
+    'clean ref in Foo.grandchild1',
+    'clean ref in Foo.child2',
+    'clean ref in Foo.grandchild2',
+    'clean #0 layout effect in Foo.parent',
+    'clean #1 layout effect in Foo.parent',
+    'clean #0 layout effect in Foo.child1',
+    'clean #1 layout effect in Foo.child1',
+    'clean #0 layout effect in Foo.grandchild1',
+    'clean #1 layout effect in Foo.grandchild1',
+    'clean #0 layout effect in Foo.child2',
+    'clean #1 layout effect in Foo.child2',
+    'clean #0 layout effect in Foo.grandchild2',
+    'clean #1 layout effect in Foo.grandchild2',
+    'invoke ref in Bar.parent',
+    'invoke ref in Bar.child1',
+    'invoke ref in Bar.grandchild1',
+    'invoke #0 layout effect in Bar.grandchild1',
+    'invoke #1 layout effect in Bar.grandchild1',
+    'invoke #0 layout effect in Bar.child1',
+    'invoke #1 layout effect in Bar.child1',
+    'invoke #0 layout effect in Bar.parent',
+    'invoke #1 layout effect in Bar.parent',
+    'clean #0 passive effect in Foo.parent',
+    'clean #1 passive effect in Foo.parent',
+    'clean #0 passive effect in Foo.child1',
+    'clean #1 passive effect in Foo.child1',
+    'clean #0 passive effect in Foo.grandchild1',
+    'clean #1 passive effect in Foo.grandchild1',
+    'clean #0 passive effect in Foo.child2',
+    'clean #1 passive effect in Foo.child2',
+    'clean #0 passive effect in Foo.grandchild2',
+    'clean #1 passive effect in Foo.grandchild2',
+    'invoke #0 passive effect in Bar.grandchild1',
+    'invoke #1 passive effect in Bar.grandchild1',
+    'invoke #0 passive effect in Bar.child1',
+    'invoke #1 passive effect in Bar.child1',
+    'invoke #0 passive effect in Bar.parent',
+    'invoke #1 passive effect in Bar.parent',
   ]);
 
   logs.length = 0;
@@ -65,59 +143,66 @@ test('invokes effects from child to parent', async () => {
 
   expect(container.innerHTML).toBe('');
   expect(logs).toStrictEqual([
-    'clean #1 mutation effect in parent',
-    'clean #2 mutation effect in parent',
-    'clean #1 mutation effect in child1',
-    'clean #2 mutation effect in child1',
-    'clean #1 mutation effect in grandchild1',
-    'clean #2 mutation effect in grandchild1',
-    'clean #1 mutation effect in child2',
-    'clean #2 mutation effect in child2',
-    'clean #1 mutation effect in grandchild2',
-    'clean #2 mutation effect in grandchild2',
-    'clean #1 layout effect in parent',
-    'clean #2 layout effect in parent',
-    'clean #1 layout effect in child1',
-    'clean #2 layout effect in child1',
-    'clean #1 layout effect in grandchild1',
-    'clean #2 layout effect in grandchild1',
-    'clean #1 layout effect in child2',
-    'clean #2 layout effect in child2',
-    'clean #1 layout effect in grandchild2',
-    'clean #2 layout effect in grandchild2',
-    'clean #1 passive effect in parent',
-    'clean #2 passive effect in parent',
-    'clean #1 passive effect in child1',
-    'clean #2 passive effect in child1',
-    'clean #1 passive effect in grandchild1',
-    'clean #2 passive effect in grandchild1',
-    'clean #1 passive effect in child2',
-    'clean #2 passive effect in child2',
-    'clean #1 passive effect in grandchild2',
-    'clean #2 passive effect in grandchild2',
+    'clean #0 mutation effect in Bar.parent',
+    'clean #1 mutation effect in Bar.parent',
+    'clean #0 mutation effect in Bar.child1',
+    'clean #1 mutation effect in Bar.child1',
+    'clean #0 mutation effect in Bar.grandchild1',
+    'clean #1 mutation effect in Bar.grandchild1',
+    'clean ref in Bar.parent',
+    'clean ref in Bar.child1',
+    'clean ref in Bar.grandchild1',
+    'clean #0 layout effect in Bar.parent',
+    'clean #1 layout effect in Bar.parent',
+    'clean #0 layout effect in Bar.child1',
+    'clean #1 layout effect in Bar.child1',
+    'clean #0 layout effect in Bar.grandchild1',
+    'clean #1 layout effect in Bar.grandchild1',
+    'clean #0 passive effect in Bar.parent',
+    'clean #1 passive effect in Bar.parent',
+    'clean #0 passive effect in Bar.child1',
+    'clean #1 passive effect in Bar.child1',
+    'clean #0 passive effect in Bar.grandchild1',
+    'clean #1 passive effect in Bar.grandchild1',
   ]);
 });
 
-const App = createComponent(function Parent({
+const Foo = createComponent(function Parent({
   logs,
 }: {
   logs: string[];
 }): unknown {
   return Node({
-    name: 'parent',
+    name: 'Foo.parent',
     logs,
     children: Fragment([
       Node({
-        name: 'child1',
+        name: 'Foo.child1',
         logs,
-        children: Node({ name: 'grandchild1', logs }),
+        children: Node({ name: 'Foo.grandchild1', logs }),
       }),
       Node({
-        name: 'child2',
+        name: 'Foo.child2',
         logs,
-        children: Node({ name: 'grandchild2', logs }),
+        children: Node({ name: 'Foo.grandchild2', logs }),
       }),
     ]),
+  });
+});
+
+const Bar = createComponent(function Parent({
+  logs,
+}: {
+  logs: string[];
+}): unknown {
+  return Node({
+    name: 'Bar.parent',
+    logs,
+    children: Node({
+      name: 'Bar.child1',
+      logs,
+      children: Node({ name: 'Bar.grandchild1', logs }),
+    }),
   });
 });
 
@@ -135,40 +220,47 @@ const Node = createComponent(function Child(
 ): unknown {
   logs.push(`render ${name}`);
 
-  $.use(TestEffects(name, logs));
+  $.use(TestEffects(2, name, logs));
+
+  const ref = (element: Element) => {
+    logs.push(`invoke ref in ${element.className}`);
+    return () => {
+      logs.push(`clean ref in ${element.className}`);
+    };
+  };
 
   return $.html`
-    <div class=${name}>
+    <div :ref=${ref} class=${name}>
       <${children}>
     </div>
   `;
 });
 
-function TestEffects(name: unknown, logs: string[]): HookFunction<void> {
+function TestEffects(
+  times: number,
+  name: unknown,
+  logs: string[],
+): HookFunction<void> {
   return ($) => {
-    for (const n of [1, 2]) {
+    for (let i = 0; i < times; i++) {
       $.useInsertionEffect(() => {
-        logs.push(`invoke #${n} mutation effect in ${name}`);
+        logs.push(`invoke #${i} mutation effect in ${name}`);
         return () => {
-          logs.push(`clean #${n} mutation effect in ${name}`);
+          logs.push(`clean #${i} mutation effect in ${name}`);
         };
       });
-    }
 
-    for (const n of [1, 2]) {
       $.useLayoutEffect(() => {
-        logs.push(`invoke #${n} layout effect in ${name}`);
+        logs.push(`invoke #${i} layout effect in ${name}`);
         return () => {
-          logs.push(`clean #${n} layout effect in ${name}`);
+          logs.push(`clean #${i} layout effect in ${name}`);
         };
       });
-    }
 
-    for (const n of [1, 2]) {
       $.useEffect(() => {
-        logs.push(`invoke #${n} passive effect in ${name}`);
+        logs.push(`invoke #${i} passive effect in ${name}`);
         return () => {
-          logs.push(`clean #${n} passive effect in ${name}`);
+          logs.push(`clean #${i} passive effect in ${name}`);
         };
       });
     }

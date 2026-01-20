@@ -10,6 +10,7 @@ import {
   DETACHED_SCOPE,
   type DirectiveContext,
   type Effect,
+  type EffectQueue,
   type Hook,
   HookType,
   Lanes,
@@ -94,8 +95,7 @@ export class ComponentBinding<TProps, TResult>
 
   resume(session: UpdateSession): void {
     const { frame, rootScope, context } = session;
-    const subScope = createScope(this._scope);
-    const subSession = createUpdateSession(frame, subScope, rootScope, context);
+    const subScope = createScope(this._scope, this._scope.level + 1);
     const result = context.renderComponent(
       this._component,
       this._props,
@@ -105,6 +105,7 @@ export class ComponentBinding<TProps, TResult>
       subScope,
     );
 
+    const subSession = createUpdateSession(frame, subScope, rootScope, context);
     let dirty: boolean;
 
     if (this._slot !== null) {
@@ -120,7 +121,7 @@ export class ComponentBinding<TProps, TResult>
       this._scope === rootScope &&
       this._state.pendingLanes !== Lanes.NoLanes
     ) {
-      frame.mutationEffects.push(this._slot);
+      frame.mutationEffects.push(this._slot, this._scope.level);
     }
 
     this._state.pendingLanes &= ~frame.lanes;
@@ -142,12 +143,10 @@ export class ComponentBinding<TProps, TResult>
     const { hooks } = this._state;
     const { frame } = session;
 
-    this._slot?.detach(session);
-
     // Cleanup effects follow the same declaration order within a component,
     // but must run from parent to child. Therefore, we collect cleanup effects
-    // after all children are detached and then register them.
-    for (let i = hooks.length - 2; i >= 0; i--) {
+    // before all children are detached and then register them.
+    for (let i = 0, l = hooks.length - 1; i < l; i++) {
       const hook = hooks[i]!;
       switch (hook.type) {
         case HookType.PassiveEffect:
@@ -161,6 +160,8 @@ export class ComponentBinding<TProps, TResult>
           break;
       }
     }
+
+    this._slot?.detach(session);
 
     this._scope = DETACHED_SCOPE;
     this._state = createComponentState();
@@ -176,7 +177,7 @@ export class ComponentBinding<TProps, TResult>
 }
 
 class CleanEffectHook implements Effect {
-  private _hook: Hook.EffectHook;
+  private readonly _hook: Hook.EffectHook;
 
   constructor(hook: Hook.EffectHook) {
     this._hook = hook;
@@ -197,9 +198,9 @@ function createComponentState(): ComponentState {
 
 function enqueueCleanEffectHook(
   hook: Hook.EffectHook,
-  effects: Effect[],
+  effects: EffectQueue,
 ): void {
-  effects.push(new CleanEffectHook(hook));
+  effects.pushBefore(new CleanEffectHook(hook));
 }
 
 function resolveBinding<TProps, TResult>(

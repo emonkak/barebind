@@ -2,6 +2,8 @@ import {
   BoundaryType,
   type Coroutine,
   createScope,
+  type Effect,
+  EffectQueue,
   type Hook,
   HookType,
   Lanes,
@@ -176,6 +178,13 @@ export function* combinations<T>(xs: T[], r: number): Generator<T[]> {
   }
 }
 
+export function createEffectQueue(effects: Effect[]): EffectQueue {
+  return effects.reduce((effects, effect) => {
+    effects.push(effect, 0);
+    return effects;
+  }, new EffectQueue());
+}
+
 export function createElement<const TName extends keyof HTMLElementTagNameMap>(
   name: TName,
   attributes: { [key: string]: string } = {},
@@ -220,9 +229,9 @@ export function createRenderFrame(id: number, lanes: Lanes): RenderFrame {
     id,
     lanes,
     pendingCoroutines: [],
-    mutationEffects: [],
-    layoutEffects: [],
-    passiveEffects: [],
+    mutationEffects: new EffectQueue(),
+    layoutEffects: new EffectQueue(),
+    passiveEffects: new EffectQueue(),
   };
 }
 

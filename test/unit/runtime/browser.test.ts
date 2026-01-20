@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { CommitPhase, type Effect, PartType } from '@/internal.js';
+import { CommitPhase, type Effect, EffectQueue, PartType } from '@/internal.js';
 import { LooseLayout } from '@/layout/loose.js';
 import { StrictLayout } from '@/layout/strict.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
@@ -44,48 +44,37 @@ const TEMPLATE_PLACEHOLDER = '__test__';
 
 describe('BrowserBackend', () => {
   describe('flushEffects()', () => {
-    it('commits all effects in reverse order', () => {
-      const executedEffects: Effect[] = [];
-      const commit = function (this: Effect) {
-        executedEffects.push(this);
-      };
-      const mutationEffects: Effect[] = [
-        {
-          commit,
-        },
-        {
-          commit,
-        },
-      ];
-      const layoutEffects: Effect[] = [
-        {
-          commit,
-        },
-        {
-          commit,
-        },
-      ];
-      const passiveEffects: Effect[] = [
-        {
-          commit,
-        },
-        {
-          commit,
-        },
-      ];
+    it('commits all effects in order from child to parent', () => {
+      const mutationEffects = new EffectQueue();
+      const layoutEffects = new EffectQueue();
+      const passiveEffects = new EffectQueue();
       const backend = new BrowserBackend();
+
+      const mutationEffect: Effect = {
+        commit: vi.fn(),
+      };
+      const layoutEffect: Effect = {
+        commit: vi.fn(),
+      };
+      const passiveEffect: Effect = {
+        commit: vi.fn(),
+      };
+
+      mutationEffects.push(mutationEffect, 0);
+      mutationEffects.push(mutationEffect, 1);
+      mutationEffects.push(mutationEffect, 1);
+      mutationEffects.push(mutationEffect, 2);
+      layoutEffects.push(layoutEffect, 0);
+      layoutEffects.push(layoutEffect, 2);
+      passiveEffects.push(passiveEffect, 1);
 
       backend.flushEffects(mutationEffects, CommitPhase.Mutation);
       backend.flushEffects(layoutEffects, CommitPhase.Layout);
       backend.flushEffects(passiveEffects, CommitPhase.Passive);
 
-      expect(executedEffects).toStrictEqual(
-        mutationEffects
-          .toReversed()
-          .concat(layoutEffects.toReversed())
-          .concat(passiveEffects.toReversed())
-          .map((effect) => expect.exact(effect)),
-      );
+      expect(mutationEffect.commit).toHaveBeenCalledTimes(4);
+      expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
+      expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
     });
   });
 

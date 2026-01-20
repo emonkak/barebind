@@ -204,7 +204,7 @@ export class RepeatBinding<TSource, TKey, TValue>
   }
 
   detach(session: UpdateSession): void {
-    for (let i = this._pendingSlots.length - 1; i >= 0; i--) {
+    for (let i = 0, l = this._pendingSlots.length; i < l; i++) {
       this._pendingSlots[i]!.detach(session);
     }
   }

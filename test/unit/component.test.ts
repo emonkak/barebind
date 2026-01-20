@@ -147,7 +147,7 @@ describe('ComponentBinding', () => {
         updater.startUpdate(
           (session) => {
             binding.attach(session);
-            session.frame.mutationEffects.push(binding);
+            session.frame.mutationEffects.push(binding, session.scope.level);
           },
           { priority: 'user-blocking' },
         );
@@ -163,7 +163,7 @@ describe('ComponentBinding', () => {
       SESSION2: {
         updater.startUpdate((session) => {
           binding.attach(session);
-          session.frame.mutationEffects.push(binding);
+          session.frame.mutationEffects.push(binding, session.scope.level);
         });
 
         expect(binding.pendingLanes).toBe(Lanes.NoLanes);
@@ -194,7 +194,7 @@ describe('ComponentBinding', () => {
       SESSION1: {
         updater.startUpdate((session) => {
           binding.attach(session);
-          session.frame.mutationEffects.push(binding);
+          session.frame.mutationEffects.push(binding, session.scope.level);
         });
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
@@ -212,7 +212,7 @@ describe('ComponentBinding', () => {
         updater.startUpdate((session) => {
           binding.value = props2;
           binding.attach(session);
-          session.frame.mutationEffects.push(binding);
+          session.frame.mutationEffects.push(binding, session.scope.level);
         });
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
@@ -246,7 +246,7 @@ describe('ComponentBinding', () => {
       SESSION1: {
         updater.startUpdate((session) => {
           binding.attach(session);
-          session.frame.mutationEffects.push(binding);
+          session.frame.mutationEffects.push(binding, session.scope.level);
         });
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);

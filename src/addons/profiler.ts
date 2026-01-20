@@ -126,7 +126,7 @@ export class PerformanceProfiler implements RuntimeObserver {
           const measurement = {
             startTime: performance.now(),
             duration: 0,
-            totalEffects: 0,
+            totalEffects: event.effects.length,
           };
           switch (event.phase) {
             case CommitPhase.Mutation:
@@ -159,7 +159,6 @@ export class PerformanceProfiler implements RuntimeObserver {
         }
         if (measurement !== null) {
           measurement.duration = performance.now() - measurement.startTime;
-          measurement.totalEffects = event.effects.length;
         }
         break;
       }

@@ -124,7 +124,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     if (this._pendingResult !== null) {
       const { slots } = this._pendingResult;
 
-      for (let i = slots.length - 1; i >= 0; i--) {
+      for (let i = 0, l = slots.length; i < l; i++) {
         slots[i]!.detach(session);
       }
     }
@@ -152,7 +152,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     if (this._memoizedResult !== null) {
       const { children, slots } = this._memoizedResult;
 
-      for (let i = slots.length - 1; i >= 0; i--) {
+      for (let i = 0, l = slots.length; i < l; i++) {
         const slot = slots[i]!;
 
         if (
@@ -165,7 +165,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
         }
       }
 
-      for (let i = children.length - 1; i >= 0; i--) {
+      for (let i = 0, l = children.length; i < l; i++) {
         children[i]!.remove();
       }
     }

@@ -7,7 +7,7 @@ import {
   type Coroutine,
   createUpdateSession,
   type Directive,
-  type Effect,
+  EffectQueue,
   getLanesFromOptions,
   isBindable,
   Lanes,
@@ -32,7 +32,7 @@ import { LinkedList } from './linked-list.js';
 import { RenderSession } from './render-session.js';
 
 export interface RuntimeBackend {
-  flushEffects(effects: Effect[], phase: CommitPhase): void;
+  flushEffects(effects: EffectQueue, phase: CommitPhase): void;
   flushUpdate(runtime: Runtime): void;
   getTaskPriority(): TaskPriority;
   parseTemplate(
@@ -64,7 +64,7 @@ export type RuntimeEvent =
   | {
       type: 'COMMIT_START' | 'COMMIT_END';
       id: number;
-      effects: Effect[];
+      effects: EffectQueue;
       phase: CommitPhase;
     }
   | {
@@ -175,8 +175,7 @@ export class Runtime implements SessionContext {
           frame.lanes = Lanes.NoLanes;
         }
 
-        const { mutationEffects, layoutEffects, passiveEffects } =
-          consumeEffects(frame);
+        const { mutationEffects, layoutEffects, passiveEffects } = frame;
 
         if (mutationEffects.length > 0 || layoutEffects.length > 0) {
           const callback = () => {
@@ -289,8 +288,7 @@ export class Runtime implements SessionContext {
           frame.lanes = Lanes.NoLanes;
         }
 
-        const { mutationEffects, layoutEffects, passiveEffects } =
-          consumeEffects(frame);
+        const { mutationEffects, layoutEffects, passiveEffects } = frame;
 
         if (mutationEffects.length > 0) {
           this._flushEffects(id, mutationEffects, CommitPhase.Mutation);
@@ -458,7 +456,7 @@ export class Runtime implements SessionContext {
 
   private _flushEffects(
     id: number,
-    effects: Effect[],
+    effects: EffectQueue,
     phase: CommitPhase,
   ): void {
     notifyObservers(this._observers, {
@@ -485,20 +483,6 @@ function consumeCoroutines(frame: RenderFrame): Coroutine[] {
   return pendingCoroutines;
 }
 
-function consumeEffects(
-  frame: RenderFrame,
-): Pick<RenderFrame, 'mutationEffects' | 'layoutEffects' | 'passiveEffects'> {
-  const { mutationEffects, layoutEffects, passiveEffects } = frame;
-  frame.mutationEffects = [];
-  frame.layoutEffects = [];
-  frame.passiveEffects = [];
-  return {
-    mutationEffects,
-    layoutEffects,
-    passiveEffects,
-  };
-}
-
 function createRenderFrame(
   id: number,
   lanes: Lanes,
@@ -508,9 +492,9 @@ function createRenderFrame(
     id,
     lanes,
     pendingCoroutines: [coroutine],
-    mutationEffects: [],
-    layoutEffects: [],
-    passiveEffects: [],
+    mutationEffects: new EffectQueue(),
+    layoutEffects: new EffectQueue(),
+    passiveEffects: new EffectQueue(),
   };
 }
 

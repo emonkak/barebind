@@ -2,7 +2,7 @@
 
 import {
   CommitPhase,
-  type Effect,
+  type EffectQueue,
   type Layout,
   type Part,
   PartType,
@@ -32,13 +32,9 @@ export class ServerBackend implements RuntimeBackend {
     this._document = document;
   }
 
-  flushEffects(effects: Effect[], phase: CommitPhase): void {
-    switch (phase) {
-      case CommitPhase.Mutation:
-        for (let i = effects.length - 1; i >= 0; i--) {
-          effects[i]!.commit();
-        }
-        break;
+  flushEffects(effects: EffectQueue, phase: CommitPhase): void {
+    if (phase === CommitPhase.Mutation) {
+      effects.flush();
     }
   }
 

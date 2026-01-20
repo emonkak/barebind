@@ -104,6 +104,67 @@ export interface Effect {
   commit(): void;
 }
 
+export class EffectQueue {
+  private _headEffects: Effect[] = [];
+
+  private _middleEffects: Effect[] = [];
+
+  private _tailEffects: Effect[] = [];
+
+  private _lastLevel = 0;
+
+  get length(): number {
+    return (
+      this._headEffects.length +
+      this._middleEffects.length +
+      this._tailEffects.length
+    );
+  }
+
+  flush(): void {
+    for (let i = 0, l = this._headEffects.length; i < l; i++) {
+      this._headEffects[i]!.commit();
+    }
+    for (let i = 0, l = this._middleEffects.length; i < l; i++) {
+      this._middleEffects[i]!.commit();
+    }
+    for (let i = 0, l = this._tailEffects.length; i < l; i++) {
+      this._tailEffects[i]!.commit();
+    }
+    this._headEffects = [];
+    this._middleEffects = [];
+    this._tailEffects = [];
+    this._lastLevel = 0;
+  }
+
+  push(effect: Effect, level: number): void {
+    if (level > this._lastLevel) {
+      this._middleEffects.push(...this._tailEffects);
+      this._tailEffects = this._middleEffects;
+      this._middleEffects = [effect];
+    } else if (level < this._lastLevel) {
+      this._headEffects.push(...this._middleEffects, ...this._tailEffects);
+      this._middleEffects = [effect];
+      this._tailEffects = [];
+    } else {
+      this._middleEffects.push(effect);
+    }
+    this._lastLevel = level;
+  }
+
+  pushAfter(effect: Effect): void {
+    this._tailEffects.push(effect);
+  }
+
+  pushBefore(effect: Effect): void {
+    this._headEffects.push(effect);
+  }
+
+  toArray(): Effect[] {
+    return this._headEffects.concat(this._middleEffects, this._tailEffects);
+  }
+}
+
 export type ErrorHandler = (
   error: unknown,
   handle: (erorr: unknown) => void,
@@ -346,9 +407,9 @@ export interface RenderFrame {
   id: number;
   lanes: Lanes;
   pendingCoroutines: Coroutine[];
-  mutationEffects: Effect[];
-  layoutEffects: Effect[];
-  passiveEffects: Effect[];
+  mutationEffects: EffectQueue;
+  layoutEffects: EffectQueue;
+  passiveEffects: EffectQueue;
 }
 
 export interface RequestCallbackOptions {
@@ -380,6 +441,7 @@ export interface SessionContext extends DirectiveContext {
 
 export interface Scope {
   parent: Scope | null;
+  level: number;
   boundary: Boundary | null;
 }
 
@@ -463,9 +525,13 @@ export function areDirectiveTypesEqual(
 /**
  * @internal
  */
-export function createScope(parent: Scope | null = null): Scope {
+export function createScope(
+  parent: Scope | null = null,
+  level: number = 0,
+): Scope {
   return {
     parent,
+    level,
     boundary: null,
   };
 }

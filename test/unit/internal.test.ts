@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   areDirectiveTypesEqual,
+  EffectQueue,
   getLanesFromOptions,
   getPriorityFromLanes,
   getStartNode,
@@ -12,6 +13,77 @@ import {
 } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBindable, MockDirective, MockPrimitive } from '../mocks.js';
+
+describe('EffectQueue', () => {
+  it('commits pending effects in order from child to parent', () => {
+    const queue = new EffectQueue();
+    const effects = [
+      {
+        id: 0,
+        level: 0,
+        commit() {
+          commitTraces.push(this.id);
+        },
+      },
+      {
+        id: 1,
+        level: 1,
+        commit() {
+          commitTraces.push(this.id);
+        },
+      },
+      {
+        id: 2,
+        level: 1,
+        commit() {
+          commitTraces.push(this.id);
+        },
+      },
+      {
+        id: 3,
+        level: 2,
+        commit() {
+          commitTraces.push(this.id);
+        },
+      },
+      {
+        id: 4,
+        level: 0,
+        commit() {
+          commitTraces.push(this.id);
+        },
+      },
+      {
+        id: 5,
+        level: 1,
+        commit() {
+          commitTraces.push(this.id);
+        },
+      },
+    ] as const;
+    const commitTraces: number[] = [];
+
+    for (const effect of effects) {
+      queue.push(effect, effect.level);
+    }
+
+    expect(queue.length).toBe(effects.length);
+    expect(queue.toArray()).toStrictEqual([
+      effects[3],
+      effects[1],
+      effects[2],
+      effects[0],
+      effects[5],
+      effects[4],
+    ]);
+
+    queue.flush();
+
+    expect(queue.length).toBe(0);
+    expect(queue.toArray()).toStrictEqual([]);
+    expect(commitTraces).toStrictEqual([3, 1, 2, 0, 5, 4]);
+  });
+});
 
 describe('areDirectiveTypesEqual()', () => {
   it('returns the result from Directive.equals() if it is definied', () => {

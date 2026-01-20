@@ -7,6 +7,7 @@ import {
   type ComponentState,
   createScope,
   type Directive,
+  EffectQueue,
   Lanes,
   PartType,
 } from '@/internal.js';
@@ -51,8 +52,11 @@ describe('Runtime', () => {
 
       SESSION1: {
         const coroutine = new MockCoroutine((session) => {
-          session.frame.mutationEffects.push(mutationEffect);
-          session.frame.layoutEffects.push(layoutEffect);
+          session.frame.mutationEffects.push(
+            mutationEffect,
+            session.scope.level,
+          );
+          session.frame.layoutEffects.push(layoutEffect, session.scope.level);
         });
 
         const handle1 = runtime.scheduleUpdate(coroutine, {
@@ -120,25 +124,25 @@ describe('Runtime', () => {
             type: 'COMMIT_START',
             id: 1,
             phase: CommitPhase.Mutation,
-            effects: [mutationEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
             id: 1,
             phase: CommitPhase.Mutation,
-            effects: [mutationEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_START',
             id: 1,
             phase: CommitPhase.Layout,
-            effects: [layoutEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
             id: 1,
             phase: CommitPhase.Layout,
-            effects: [layoutEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'UPDATE_END',
@@ -153,8 +157,8 @@ describe('Runtime', () => {
           session.frame.pendingCoroutines.push(subcoroutine);
         });
         const subcoroutine = new MockCoroutine((session) => {
-          session.frame.layoutEffects.push(layoutEffect);
-          session.frame.passiveEffects.push(passiveEffect);
+          session.frame.layoutEffects.push(layoutEffect, session.scope.level);
+          session.frame.passiveEffects.push(passiveEffect, session.scope.level);
         });
 
         const handle = runtime.scheduleUpdate(coroutine, {
@@ -213,25 +217,25 @@ describe('Runtime', () => {
             type: 'COMMIT_START',
             id: 2,
             phase: CommitPhase.Layout,
-            effects: [layoutEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
             id: 2,
             phase: CommitPhase.Layout,
-            effects: [layoutEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_START',
             id: 2,
             phase: CommitPhase.Passive,
-            effects: [passiveEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
             id: 2,
             phase: CommitPhase.Passive,
-            effects: [passiveEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'UPDATE_END',
@@ -301,9 +305,12 @@ describe('Runtime', () => {
 
       SESSION1: {
         const coroutine = new MockCoroutine((session) => {
-          session.frame.mutationEffects.push(mutationEffect);
-          session.frame.layoutEffects.push(layoutEffect);
-          session.frame.passiveEffects.push(passiveEffect);
+          session.frame.mutationEffects.push(
+            mutationEffect,
+            session.scope.level,
+          );
+          session.frame.layoutEffects.push(layoutEffect, session.scope.level);
+          session.frame.passiveEffects.push(passiveEffect, session.scope.level);
         });
 
         const handle1 = runtime.scheduleUpdate(coroutine, {
@@ -369,37 +376,37 @@ describe('Runtime', () => {
             type: 'COMMIT_START',
             id: 1,
             phase: CommitPhase.Mutation,
-            effects: [mutationEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
             id: 1,
             phase: CommitPhase.Mutation,
-            effects: [mutationEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_START',
             id: 1,
             phase: CommitPhase.Layout,
-            effects: [layoutEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
             id: 1,
             phase: CommitPhase.Layout,
-            effects: [layoutEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_START',
             id: 1,
             phase: CommitPhase.Passive,
-            effects: [passiveEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
             id: 1,
             phase: CommitPhase.Passive,
-            effects: [passiveEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'UPDATE_END',
@@ -414,8 +421,11 @@ describe('Runtime', () => {
           session.frame.pendingCoroutines.push(subcoroutine);
         });
         const subcoroutine = new MockCoroutine((session) => {
-          session.frame.mutationEffects.push(mutationEffect);
-          session.frame.layoutEffects.push(layoutEffect);
+          session.frame.mutationEffects.push(
+            mutationEffect,
+            session.scope.level,
+          );
+          session.frame.layoutEffects.push(layoutEffect, session.scope.level);
         });
 
         const handle = runtime.scheduleUpdate(coroutine, {
@@ -472,25 +482,25 @@ describe('Runtime', () => {
             type: 'COMMIT_START',
             id: 2,
             phase: CommitPhase.Mutation,
-            effects: [mutationEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
             id: 2,
             phase: CommitPhase.Mutation,
-            effects: [mutationEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_START',
             id: 2,
             phase: CommitPhase.Layout,
-            effects: [layoutEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
             id: 2,
             phase: CommitPhase.Layout,
-            effects: [layoutEffect],
+            effects: expect.any(EffectQueue),
           },
           {
             type: 'UPDATE_END',

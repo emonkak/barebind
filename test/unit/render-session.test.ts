@@ -4,6 +4,7 @@ import {
   $hook,
   CommitPhase,
   DETACHED_SCOPE,
+  EffectQueue,
   type RefObject,
   type RenderContext,
   type UpdateHandle,
@@ -378,7 +379,7 @@ describe('RenderSession', () => {
         expect(cleanup).toHaveBeenCalledTimes(0);
         expect(flushEffectsSpy).toHaveBeenCalledTimes(1);
         expect(flushEffectsSpy).toHaveBeenCalledWith(
-          [expect.any(Object)],
+          expect.any(EffectQueue),
           phase,
         );
       }
@@ -392,7 +393,7 @@ describe('RenderSession', () => {
         expect(cleanup).toHaveBeenCalledTimes(1);
         expect(flushEffectsSpy).toHaveBeenCalledTimes(2);
         expect(flushEffectsSpy).toHaveBeenCalledWith(
-          [expect.any(Object)],
+          expect.any(EffectQueue),
           phase,
         );
       }
@@ -415,7 +416,7 @@ describe('RenderSession', () => {
         expect(callback).toHaveBeenCalledTimes(1);
         expect(flushEffectsSpy).toHaveBeenCalledTimes(1);
         expect(flushEffectsSpy).toHaveBeenCalledWith(
-          [expect.any(Object)],
+          expect.any(EffectQueue),
           phase,
         );
       }
@@ -437,7 +438,7 @@ describe('RenderSession', () => {
         expect(callback).toHaveBeenCalledTimes(2);
         expect(flushEffectsSpy).toHaveBeenCalledTimes(2);
         expect(flushEffectsSpy).toHaveBeenCalledWith(
-          [expect.any(Object)],
+          expect.any(EffectQueue),
           phase,
         );
       }

@@ -55,7 +55,7 @@ export class Root<T> {
         targetTree,
       };
       this._slot.attach(session);
-      frame.mutationEffects.push(new HydrateSlot(this._slot, targetTree));
+      frame.mutationEffects.push(new HydrateSlot(this._slot, targetTree), 0);
     }, options);
   }
 
@@ -64,6 +64,7 @@ export class Root<T> {
       this._slot.attach(session);
       session.frame.mutationEffects.push(
         new MountSlot(this._slot, this._container),
+        session.scope.level,
       );
     }, options);
   }
@@ -71,7 +72,7 @@ export class Root<T> {
   update(value: T, options?: UpdateOptions): UpdateHandle {
     return this._beginUpdate((session) => {
       if (this._slot.reconcile(value, session)) {
-        session.frame.mutationEffects.push(this._slot);
+        session.frame.mutationEffects.push(this._slot, session.scope.level);
       }
     }, options);
   }
@@ -81,6 +82,7 @@ export class Root<T> {
       this._slot.detach(session);
       session.frame.mutationEffects.push(
         new UnmountSlot(this._slot, this._container),
+        session.scope.level,
       );
     }, options);
   }
