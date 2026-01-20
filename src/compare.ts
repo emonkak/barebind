@@ -1,3 +1,14 @@
+export function areDependenciesChanged(
+  nextDependencies: readonly unknown[] | null,
+  prevDependencies: readonly unknown[] | null,
+): boolean {
+  return (
+    nextDependencies === null ||
+    prevDependencies === null ||
+    !sequentialEqual(nextDependencies, prevDependencies)
+  );
+}
+
 export function sequentialEqual<T>(
   xs: ArrayLike<T>,
   ys: ArrayLike<T>,

@@ -1,6 +1,54 @@
 import { describe, expect, it } from 'vitest';
 
-import { sequentialEqual, shallowEqual } from '@/compare.js';
+import {
+  areDependenciesChanged,
+  sequentialEqual,
+  shallowEqual,
+} from '@/compare.js';
+
+describe('areDependenciesChanged()', () => {
+  it('returns true if a old or new dependency is null', () => {
+    expect(areDependenciesChanged(null, null)).toBe(true);
+    expect(areDependenciesChanged(null, [])).toBe(true);
+    expect(areDependenciesChanged([], null)).toBe(true);
+  });
+
+  it('returns true if the lengths of the new and old dependencies are different', () => {
+    expect(areDependenciesChanged([], ['foo'])).toBe(true);
+    expect(areDependenciesChanged(['foo'], [])).toBe(true);
+    expect(areDependenciesChanged(['foo'], ['foo', 'bar'])).toBe(true);
+    expect(areDependenciesChanged(['foo', 'bar'], ['foo'])).toBe(true);
+  });
+
+  it('returns true if there is a dependency that is not same from the other one', () => {
+    expect(areDependenciesChanged(['foo'], ['FOO'])).toBe(true);
+    expect(areDependenciesChanged(['FOO'], ['foo'])).toBe(true);
+    expect(areDependenciesChanged(['foO', 'bar'], ['FOO', 'bar'])).toBe(true);
+    expect(areDependenciesChanged(['FOO', 'bar'], ['foo', 'bar'])).toBe(true);
+    expect(areDependenciesChanged(['foo', 'bar'], ['foo', 'BAR'])).toBe(true);
+    expect(areDependenciesChanged(['foo', 'BAR'], ['foo', 'bar'])).toBe(true);
+    expect(areDependenciesChanged(['foo', 'bar'], ['FOO', 'BAR'])).toBe(true);
+    expect(areDependenciesChanged(['FOO', 'BAR'], ['foo', 'bar'])).toBe(true);
+    expect(areDependenciesChanged(['0'], [0])).toBe(true);
+    expect(areDependenciesChanged([0], ['0'])).toBe(true);
+    expect(areDependenciesChanged([1], ['1'])).toBe(true);
+    expect(areDependenciesChanged(['1'], [1])).toBe(true);
+  });
+
+  it('returns false if all dependencies are same', () => {
+    expect(areDependenciesChanged(['foo'], ['foo'])).toBe(false);
+    expect(areDependenciesChanged(['foo', 'bar'], ['foo', 'bar'])).toBe(false);
+    expect(areDependenciesChanged([0], [0])).toBe(false);
+    expect(areDependenciesChanged(['0'], ['0'])).toBe(false);
+    expect(areDependenciesChanged([1], [1])).toBe(false);
+    expect(areDependenciesChanged(['1'], ['1'])).toBe(false);
+    expect(areDependenciesChanged([Number.NaN], [Number.NaN])).toBe(false);
+  });
+
+  it('returns false if there are no dependencies', () => {
+    expect(areDependenciesChanged([], [])).toBe(false);
+  });
+});
 
 describe('sequentialEqual()', () => {
   it('returns false if the lengths of the first and second are different', () => {

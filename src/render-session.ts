@@ -1,4 +1,4 @@
-import { sequentialEqual } from './compare.js';
+import { areDependenciesChanged } from './compare.js';
 import { DirectiveSpecifier } from './directive.js';
 import {
   $hook,
@@ -420,17 +420,6 @@ class InvokeEffectHook implements Effect {
     this._hook.cleanup = callback();
     this._hook.memoizedDependencies = pendingDependencies;
   }
-}
-
-function areDependenciesChanged(
-  nextDependencies: readonly unknown[] | null,
-  prevDependencies: readonly unknown[] | null,
-): boolean {
-  return (
-    nextDependencies === null ||
-    prevDependencies === null ||
-    !sequentialEqual(nextDependencies, prevDependencies)
-  );
 }
 
 function enqueueInvokeEffectHook(
