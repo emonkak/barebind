@@ -6,7 +6,7 @@ import {
   type RenderContext,
   Repeat,
 } from 'barebind';
-import { EventCallback, ImperativeHandle } from 'barebind/addons/hooks';
+import { EffectEvent, ImperativeHandle } from 'barebind/addons/hooks';
 
 export interface VirtualScroller extends Component<VirtualScrollerProps<any>> {
   <T>(props: VirtualScrollerProps<T>): unknown;
@@ -123,7 +123,7 @@ export const VirtualScroller: VirtualScroller = createComponent(
     };
 
     const intersectionObserverCallback = $.use(
-      EventCallback((entries: IntersectionObserverEntry[]) => {
+      EffectEvent((entries: IntersectionObserverEntry[]) => {
         for (const entry of entries) {
           if (!entry.isIntersecting && !entry.target.isConnected) {
             continue;
@@ -142,7 +142,7 @@ export const VirtualScroller: VirtualScroller = createComponent(
       }),
     );
     const resizeObserverCallback = $.use(
-      EventCallback((entries: ResizeObserverEntry[]) => {
+      EffectEvent((entries: ResizeObserverEntry[]) => {
         for (const entry of entries) {
           if (!entry.target.isConnected) {
             continue;

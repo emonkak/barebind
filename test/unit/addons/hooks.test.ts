@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   DeferredValue,
-  EventCallback,
+  EffectEvent,
   ImperativeHandle,
   SyncEnternalStore,
 } from '@/addons/hooks.js';
@@ -73,21 +73,19 @@ describe('DeferredValue()', () => {
   });
 });
 
-describe('EventCallback()', () => {
-  it('returns a stable callback', () => {
+describe('EffectEvent()', () => {
+  it('returns an effect Event function.', () => {
     const renderer = new TestRenderer();
 
     const callback1 = vi.fn();
     const callback2 = vi.fn();
-    let stableCallback: () => void;
 
     SESSION1: {
-      stableCallback = renderer.startRender((session) => {
-        const callback = session.use(EventCallback(callback1));
+      renderer.startRender((session) => {
+        const onEffectEvent = session.use(EffectEvent(callback1));
         session.useEffect(() => {
-          callback();
+          onEffectEvent();
         });
-        return callback;
       });
 
       expect(callback1).toHaveBeenCalledOnce();
@@ -95,15 +93,13 @@ describe('EventCallback()', () => {
     }
 
     SESSION1: {
-      const callback = renderer.startRender((session) => {
-        const callback = session.use(EventCallback(callback2));
+      renderer.startRender((session) => {
+        const onEffectEvent = session.use(EffectEvent(callback2));
         session.useEffect(() => {
-          callback();
+          onEffectEvent();
         });
-        return callback;
       });
 
-      expect(callback).toBe(stableCallback);
       expect(callback1).toHaveBeenCalledOnce();
       expect(callback2).toHaveBeenCalledOnce();
     }

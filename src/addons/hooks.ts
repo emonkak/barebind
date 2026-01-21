@@ -19,21 +19,19 @@ export function DeferredValue<T>(
   };
 }
 
-export function EventCallback<TCallback extends (...args: any[]) => any>(
+export function EffectEvent<TCallback extends (...args: any[]) => any>(
   callback: TCallback,
 ): HookFunction<(...args: Parameters<TCallback>) => ReturnType<TCallback>> {
   return (context) => {
-    const eventCallback = context.useRef(callback);
+    const callbackRef = context.useRef(callback);
 
     context.useLayoutEffect(() => {
-      eventCallback.current = callback;
+      callbackRef.current = callback;
     }, [callback]);
 
-    // React's useEffectEvent() returns an unstable callback, but our
-    // implementation returns a stable callback.
-    return context.useCallback(function (this: ThisType<TCallback>, ...args) {
-      return eventCallback.current.apply(this, args);
-    }, []);
+    return function (this: ThisType<TCallback>, ...args) {
+      return callbackRef.current.apply(this, args);
+    };
   };
 }
 
