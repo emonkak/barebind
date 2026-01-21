@@ -41,19 +41,16 @@ export function ImperativeHandle<T>(
   dependencies?: unknown[],
 ): HookFunction<void> {
   return (context) => {
-    context.useLayoutEffect(
-      () => {
-        if (typeof ref === 'function') {
-          return ref(createHandle());
-        } else if (ref != null) {
-          ref.current = createHandle();
-          return () => {
-            ref.current = null;
-          };
-        }
-      },
-      dependencies !== undefined ? dependencies.concat(ref) : undefined,
-    );
+    context.useLayoutEffect(() => {
+      if (typeof ref === 'function') {
+        return ref(createHandle());
+      } else if (ref != null) {
+        ref.current = createHandle();
+        return () => {
+          ref.current = null;
+        };
+      }
+    }, dependencies?.concat(ref));
   };
 }
 
