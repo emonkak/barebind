@@ -263,7 +263,7 @@ export class Runtime implements SessionContext {
             id,
           });
 
-          while (true) {
+          do {
             const coroutines = consumeCoroutines(frame);
 
             for (let i = 0, l = coroutines.length; i < l; i++) {
@@ -274,11 +274,7 @@ export class Runtime implements SessionContext {
                 handleError(coroutine.scope, error);
               }
             }
-
-            if (frame.pendingCoroutines.length === 0) {
-              break;
-            }
-          }
+          } while (frame.pendingCoroutines.length > 0);
 
           notifyObservers(this._observers, {
             type: 'RENDER_END',
