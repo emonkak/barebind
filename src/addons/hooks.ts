@@ -19,9 +19,9 @@ export function DeferredValue<T>(
   };
 }
 
-export function EffectEvent<TCallback extends (...args: any[]) => any>(
-  callback: TCallback,
-): HookFunction<(...args: Parameters<TCallback>) => ReturnType<TCallback>> {
+export function EffectEvent<T extends (...args: any[]) => any>(
+  callback: T,
+): HookFunction<(...args: Parameters<T>) => ReturnType<T>> {
   return (context) => {
     const callbackRef = context.useRef(callback);
 
@@ -29,7 +29,7 @@ export function EffectEvent<TCallback extends (...args: any[]) => any>(
       callbackRef.current = callback;
     }, [callback]);
 
-    return function (this: ThisType<TCallback>, ...args) {
+    return function (this: ThisType<T>, ...args) {
       return callbackRef.current.apply(this, args);
     };
   };
@@ -54,9 +54,9 @@ export function ImperativeHandle<T>(
   };
 }
 
-export function SyncEnternalStore<TSnapshot>(
+export function SyncEnternalStore<T>(
   subscribe: (subscriber: () => void) => Cleanup | void,
-  getSnapshot: () => TSnapshot,
+  getSnapshot: () => T,
 ): HookFunction<void> {
   return (context) => {
     const snapshot = getSnapshot();
