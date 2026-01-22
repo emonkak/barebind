@@ -146,8 +146,7 @@ export class ComponentBinding<TProps, TResult>
     // Cleanup effects follow the same declaration order within a component,
     // but must run from parent to child. Therefore, we collect cleanup effects
     // before all children are detached and then register them.
-    for (let i = 0, l = hooks.length - 1; i < l; i++) {
-      const hook = hooks[i]!;
+    for (const hook of hooks) {
       switch (hook.type) {
         case HookType.PassiveEffect:
           enqueueCleanEffectHook(hook, frame.passiveEffects);

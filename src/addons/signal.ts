@@ -318,8 +318,8 @@ export class Computed<
   get version(): number {
     let version = 0;
 
-    for (let i = 0, l = this._dependencies.length; i < l; i++) {
-      version += this._dependencies[i]!.version;
+    for (const dependency of this._dependencies) {
+      version += dependency.version;
     }
 
     return version;
@@ -331,8 +331,8 @@ export class Computed<
     );
 
     return () => {
-      for (let i = 0, l = subscriptions.length; i < l; i++) {
-        subscriptions[i]!();
+      for (const subscription of subscriptions) {
+        subscription();
       }
     };
   }

@@ -122,14 +122,14 @@ export class EffectQueue {
   }
 
   flush(): void {
-    for (let i = 0, l = this._headEffects.length; i < l; i++) {
-      this._headEffects[i]!.commit();
+    for (const effect of this._headEffects) {
+      effect.commit();
     }
-    for (let i = 0, l = this._middleEffects.length; i < l; i++) {
-      this._middleEffects[i]!.commit();
+    for (const effect of this._middleEffects) {
+      effect.commit();
     }
-    for (let i = 0, l = this._tailEffects.length; i < l; i++) {
-      this._tailEffects[i]!.commit();
+    for (const effect of this._tailEffects) {
+      effect.commit();
     }
     this._headEffects = [];
     this._middleEffects = [];

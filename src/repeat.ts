@@ -204,14 +204,13 @@ export class RepeatBinding<TSource, TKey, TValue>
   }
 
   detach(session: UpdateSession): void {
-    for (let i = 0, l = this._pendingSlots.length; i < l; i++) {
-      this._pendingSlots[i]!.detach(session);
+    for (const slot of this._pendingSlots) {
+      slot.detach(session);
     }
   }
 
   commit(): void {
-    for (let i = 0, l = this._pendingOperations.length; i < l; i++) {
-      const operation = this._pendingOperations[i]!;
+    for (const operation of this._pendingOperations) {
       switch (operation.type) {
         case OPERATION_INSERT: {
           const { slot, referenceSlot } = operation;
@@ -251,8 +250,7 @@ export class RepeatBinding<TSource, TKey, TValue>
 
   rollback(): void {
     if (this._memoizedSlots !== null) {
-      for (let i = this._memoizedSlots.length - 1; i >= 0; i--) {
-        const slot = this._memoizedSlots[i]!;
+      for (const slot of this._memoizedSlots) {
         slot.rollback();
         slot.part.node.remove();
       }
@@ -321,8 +319,8 @@ function moveSiblings(siblings: ChildNode[], referenceNode: ChildNode): void {
       /* v8 ignore next */
       Element.prototype.moveBefore ?? Element.prototype.insertBefore;
 
-    for (let i = 0, l = siblings.length; i < l; i++) {
-      insertOrMoveBefore.call(parentNode, siblings[i]!, referenceNode);
+    for (const sibling of siblings) {
+      insertOrMoveBefore.call(parentNode, sibling, referenceNode);
     }
   }
 }

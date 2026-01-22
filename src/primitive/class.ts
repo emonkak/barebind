@@ -100,8 +100,8 @@ function toggleClass(
   if (className !== '') {
     const components = className.split(CLASS_SEPARATOR_PATTERN);
 
-    for (let i = 0, l = components.length; i < l; i++) {
-      classList.toggle(components[i]!, enabled);
+    for (const component of components) {
+      classList.toggle(component, enabled);
     }
   }
 }

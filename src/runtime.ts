@@ -149,10 +149,7 @@ export class Runtime implements SessionContext {
           });
 
           while (true) {
-            const coroutines = consumeCoroutines(frame);
-
-            for (let i = 0, l = coroutines.length; i < l; i++) {
-              const coroutine = coroutines[i]!;
+            for (const coroutine of consumeCoroutines(frame)) {
               try {
                 coroutine.resume(session);
               } catch (error) {
@@ -264,10 +261,7 @@ export class Runtime implements SessionContext {
           });
 
           do {
-            const coroutines = consumeCoroutines(frame);
-
-            for (let i = 0, l = coroutines.length; i < l; i++) {
-              const coroutine = coroutines[i]!;
+            for (const coroutine of consumeCoroutines(frame)) {
               try {
                 coroutine.resume(session);
               } catch (error) {

@@ -372,10 +372,9 @@ function parseAttribtues(
   holes: Hole[],
   index: number,
 ): void {
-  const attributeNames = element.getAttributeNames();
+  const names = element.getAttributeNames();
 
-  for (let i = 0, l = attributeNames.length; i < l; i++) {
-    const name = attributeNames[i]!;
+  for (const name of names) {
     const value = element.getAttribute(name)!;
     let hole: Hole;
 

@@ -60,9 +60,7 @@ export function preprocessTemplate(
   let preprocessedTemplates = preprocessedTemplateCache.get(strings);
 
   if (preprocessedTemplates !== undefined) {
-    for (let i = 0, l = preprocessedTemplates.length; i < l; i++) {
-      const preprocessedTemplate = preprocessedTemplates[i]!;
-
+    for (const preprocessedTemplate of preprocessedTemplates) {
       if (
         sequentialEqual(preprocessedTemplate.literalValues, literalValues) &&
         sequentialEqual(preprocessedTemplate.literalPositions, literalPositions)

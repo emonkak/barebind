@@ -182,8 +182,7 @@ export class VStaticFragment implements Bindable<unknown> {
     const templates: Template<readonly unknown[]>[] = [];
     const binds: unknown[] = [];
 
-    for (let i = 0, l = this.children.length; i < l; i++) {
-      const child = this.children[i]!;
+    for (const child of this.children) {
       if (child instanceof VElement) {
         if (typeof child.type === 'function') {
           templates.push(CHILD_NODE_TEMPLATE);

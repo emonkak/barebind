@@ -35,8 +35,7 @@ export class TestRenderer {
   }
 
   finalizeHooks(): void {
-    for (let i = this.hooks.length - 1; i >= 0; i--) {
-      const hook = this.hooks[i]!;
+    for (const hook of this.hooks) {
       if (
         hook.type === HookType.PassiveEffect ||
         hook.type === HookType.LayoutEffect ||

@@ -138,8 +138,8 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
         this._part.node.before(...children);
       }
 
-      for (let i = 0, l = slots.length; i < l; i++) {
-        slots[i]!.commit();
+      for (const slot of slots) {
+        slot.commit();
       }
 
       this._part.anchorNode = getAnchorNode(this._pendingResult);
@@ -152,9 +152,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     if (this._memoizedResult !== null) {
       const { children, slots } = this._memoizedResult;
 
-      for (let i = 0, l = slots.length; i < l; i++) {
-        const slot = slots[i]!;
-
+      for (const slot of slots) {
         if (
           (slot.part.type === PartType.ChildNode ||
             slot.part.type === PartType.Text) &&
@@ -165,8 +163,8 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
         }
       }
 
-      for (let i = 0, l = children.length; i < l; i++) {
-        children[i]!.remove();
+      for (const child of children) {
+        child.remove();
       }
     }
 

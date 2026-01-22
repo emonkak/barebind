@@ -40,8 +40,7 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
     const slots = [];
     let offset = 0;
 
-    for (let i = 0, l = this._templates.length; i < l; i++) {
-      const template = this._templates[i]!;
+    for (const template of this._templates) {
       const result = template.hydrate(
         binds.slice(offset, offset + template.arity),
         part,
@@ -65,8 +64,7 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
     const slots = [];
     let bindIndex = 0;
 
-    for (let i = 0, l = this._templates.length; i < l; i++) {
-      const template = this._templates[i]!;
+    for (const template of this._templates) {
       const result = template.render(
         binds.slice(bindIndex, bindIndex + template.arity),
         part,
