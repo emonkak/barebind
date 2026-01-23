@@ -27,7 +27,7 @@ export interface InvalidateEvent<T = unknown> {
   readonly oldValue: T;
 }
 
-export type Subscriber<T = unknown> = (event: InvalidateEvent<T>) => void;
+export type Subscriber = (event: InvalidateEvent) => void;
 
 export type Subscription = () => void;
 
