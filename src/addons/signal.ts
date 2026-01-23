@@ -22,7 +22,7 @@ import { LinkedList } from '../linked-list.js';
 
 export interface InvalidateEvent<T = unknown> {
   readonly source: Atom<T>;
-  readonly reversePath: readonly PropertyKey[];
+  readonly path: readonly PropertyKey[];
   readonly newValue: T;
   readonly oldValue: T;
 }
@@ -225,7 +225,7 @@ export class Atom<T> extends Signal<T> {
     this._value = newValue;
     this.invalidate({
       source: this,
-      reversePath: [],
+      path: [],
       newValue,
       oldValue,
     });

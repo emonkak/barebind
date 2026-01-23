@@ -311,7 +311,7 @@ describe('Atom', () => {
       const signal = new Atom('foo');
       const event: InvalidateEvent<string> = {
         source: signal,
-        reversePath: [],
+        path: [],
         newValue: 'foo',
         oldValue: 'foo',
       };
@@ -339,7 +339,7 @@ describe('Atom', () => {
       expect(subscriber).toHaveBeenCalledTimes(1);
       expect(subscriber).toHaveBeenLastCalledWith({
         source: signal,
-        reversePath: [],
+        path: [],
         newValue: 'bar',
         oldValue: 'foo',
       });
@@ -348,7 +348,7 @@ describe('Atom', () => {
       expect(subscriber).toHaveBeenCalledTimes(2);
       expect(subscriber).toHaveBeenLastCalledWith({
         source: signal,
-        reversePath: [],
+        path: [],
         newValue: 'baz',
         oldValue: 'bar',
       });
@@ -458,7 +458,7 @@ describe('Computed', () => {
       expect(subscriber).toHaveBeenCalledTimes(1);
       expect(subscriber).toHaveBeenLastCalledWith({
         source: foo,
-        reversePath: [],
+        path: [],
         newValue: 2,
         oldValue: 1,
       });
@@ -467,7 +467,7 @@ describe('Computed', () => {
       expect(subscriber).toHaveBeenCalledTimes(2);
       expect(subscriber).toHaveBeenLastCalledWith({
         source: bar,
-        reversePath: [],
+        path: [],
         newValue: 3,
         oldValue: 2,
       });
@@ -476,7 +476,7 @@ describe('Computed', () => {
       expect(subscriber).toHaveBeenCalledTimes(3);
       expect(subscriber).toHaveBeenLastCalledWith({
         source: baz,
-        reversePath: [],
+        path: [],
         newValue: 4,
         oldValue: 3,
       });
@@ -485,7 +485,7 @@ describe('Computed', () => {
       expect(subscriber).toHaveBeenCalledTimes(4);
       expect(subscriber).toHaveBeenLastCalledWith({
         source: foo,
-        reversePath: [],
+        path: [],
         newValue: 2,
         oldValue: 2,
       });

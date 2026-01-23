@@ -172,7 +172,7 @@ function getChildState<T>(
       state.flags |= FLAG_DIRTY;
       (state.signal as Atom<T>).invalidate({
         ...event,
-        reversePath: event.reversePath.concat(key),
+        path: [key, ...event.path],
       });
     });
   }

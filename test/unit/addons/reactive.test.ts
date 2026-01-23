@@ -294,7 +294,7 @@ describe('Reactive', () => {
       expect(subscriber).toHaveBeenCalledTimes(1);
       expect(subscriber).toHaveBeenLastCalledWith({
         source: expect.objectContaining({ value: true }),
-        reversePath: ['todos', 1, 'completed'].toReversed(),
+        path: ['todos', 1, 'completed'],
         newValue: true,
         oldValue: false,
       });
@@ -304,7 +304,7 @@ describe('Reactive', () => {
       expect(subscriber).toHaveBeenCalledTimes(2);
       expect(subscriber).toHaveBeenLastCalledWith({
         source: expect.objectContaining({ value: [] }),
-        reversePath: ['todos'],
+        path: ['todos'],
         newValue: [],
         oldValue: initialState.todos,
       });
@@ -314,7 +314,7 @@ describe('Reactive', () => {
       expect(subscriber).toHaveBeenCalledTimes(3);
       expect(subscriber).toHaveBeenLastCalledWith({
         source: expect.objectContaining({ value: new TodoState() }),
-        reversePath: [],
+        path: [],
         newValue: new TodoState(),
         oldValue: initialState,
       });
@@ -342,7 +342,7 @@ describe('Reactive', () => {
       expect(subscriber).toHaveBeenCalledTimes(1);
       expect(subscriber).toHaveBeenLastCalledWith({
         source: expect.objectContaining({ value: new TodoState() }),
-        reversePath: [],
+        path: [],
         newValue: new TodoState(),
         oldValue: initialState,
       });
