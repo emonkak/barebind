@@ -138,7 +138,7 @@ describe('Reactive', () => {
 
       expect(() => {
         (activeTodos$ as any).value = [];
-      }).toThrow('Cannot set value on a read-only value.');
+      }).toThrow('Cannot set value on a read-only signal.');
     });
   });
 
@@ -266,7 +266,7 @@ describe('Reactive', () => {
       });
 
       expect(() => state$.get('count').mutate(() => {})).toThrow(
-        'Cannot mutate value with a readonly value.',
+        'Cannot mutate value with a readonly signal.',
       );
     });
 
@@ -274,7 +274,7 @@ describe('Reactive', () => {
       const state$ = Reactive.from('foo');
 
       expect(() => state$.mutate(() => {})).toThrow(
-        'Cannot mutate value with a non-object value.',
+        'Cannot mutate value with a non-object signal.',
       );
     });
   });

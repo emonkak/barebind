@@ -50,9 +50,9 @@ type Or<TLhs extends boolean, TRhs extends boolean> = TLhs extends true
     ? true
     : false;
 
-interface ReactiveState<T> {
+interface ReactiveNode<T> {
   readonly signal: Signal<T>;
-  children: Map<PropertyKey, ReactiveState<unknown>> | null;
+  children: Map<PropertyKey, ReactiveNode<unknown>> | null;
   flags: number;
 }
 
@@ -70,37 +70,37 @@ type StrictEqual<TLhs, TRhs> =
     : false;
 
 export class Reactive<T> extends Signal<T> {
-  private readonly _state: ReactiveState<T>;
+  private readonly _node: ReactiveNode<T>;
 
   private readonly _shallow: boolean;
 
   static from<T>(value: T, options?: ReactiveOptions): Reactive<T> {
-    return new Reactive(createState(new Atom(value)), options);
+    return new Reactive(createNode(new Atom(value)), options);
   }
 
-  private constructor(state: ReactiveState<T>, options: ReactiveOptions = {}) {
+  private constructor(node: ReactiveNode<T>, options: ReactiveOptions = {}) {
     super();
-    this._state = state;
+    this._node = node;
     this._shallow = options.shallow ?? false;
   }
 
   get value(): T {
-    return takeSnapshot(this._state);
+    return takeSnapshot(this._node);
   }
 
   set value(value: T) {
-    if (!(this._state.signal instanceof Atom)) {
-      throw new TypeError('Cannot set value on a read-only value.');
+    if (!(this._node.signal instanceof Atom)) {
+      throw new TypeError('Cannot set value on a read-only signal.');
     }
 
-    this._state.children = null;
-    this._state.flags |= FLAG_PENGING_VALUE;
-    this._state.flags &= ~FLAG_NEEDS_SNAPSHOT;
-    this._state.signal.value = value;
+    this._node.children = null;
+    this._node.flags |= FLAG_PENGING_VALUE;
+    this._node.flags &= ~FLAG_NEEDS_SNAPSHOT;
+    this._node.signal.value = value;
   }
 
   get version(): number {
-    return this._state.signal.version;
+    return this._node.signal.version;
   }
 
   get<K extends ReactiveKeys<T>>(
@@ -112,43 +112,43 @@ export class Reactive<T> extends Signal<T> {
     options?: ReactiveOptions,
   ): T extends object ? Reactive<unknown> : null;
   get(key: PropertyKey, options?: ReactiveOptions): Reactive<unknown> | null {
-    if (!isObject(this._state.signal.value)) {
+    if (!isObject(this._node.signal.value)) {
       return null;
     }
 
-    const childState = getChildState(this._state, key);
-    return new Reactive(childState, options);
+    const child = getChild(this._node, key);
+    return new Reactive(child, options);
   }
 
   mutate<TResult>(callback: (value: T) => TResult): TResult {
-    if (!(this._state.signal instanceof Atom)) {
-      throw new TypeError('Cannot mutate value with a readonly value.');
+    if (!(this._node.signal instanceof Atom)) {
+      throw new TypeError('Cannot mutate value with a readonly signal.');
     }
 
-    if (!isObject(this._state.signal.value)) {
-      throw new TypeError('Cannot mutate value with a non-object value.');
+    if (!isObject(this._node.signal.value)) {
+      throw new TypeError('Cannot mutate value with a non-object signal.');
     }
 
-    const proxy = proxyObject(this._state);
+    const proxy = proxyObject(this._node);
     return callback(proxy);
   }
 
   subscribe(subscriber: Subscriber): Subscription {
-    const state = this._state;
+    const { signal } = this._node;
 
     if (this._shallow) {
-      return state.signal.subscribe((event) => {
-        if (event.source === state.signal) {
+      return signal.subscribe((event) => {
+        if (event.source === signal) {
           subscriber(event);
         }
       });
     } else {
-      return state.signal.subscribe(subscriber);
+      return signal.subscribe(subscriber);
     }
   }
 }
 
-function createState<T>(signal: Signal<T>): ReactiveState<T> {
+function createNode<T>(signal: Signal<T>): ReactiveNode<T> {
   return {
     signal,
     children: null,
@@ -156,31 +156,31 @@ function createState<T>(signal: Signal<T>): ReactiveState<T> {
   };
 }
 
-function getChildState<T>(
-  state: ReactiveState<T>,
+function getChild<T>(
+  node: ReactiveNode<T>,
   key: PropertyKey,
-): ReactiveState<unknown> {
-  let childState = state.children?.get(key);
-  if (childState !== undefined) {
-    return childState;
+): ReactiveNode<unknown> {
+  let child = node.children?.get(key);
+  if (child !== undefined) {
+    return child;
   }
 
-  childState = resolveChildState(state, key);
+  child = resolveChild(node, key);
 
-  if (state.signal instanceof Atom && childState.signal instanceof Atom) {
-    childState.signal.subscribe((event) => {
-      state.flags |= FLAG_DIRTY;
-      (state.signal as Atom<T>).invalidate({
+  if (node.signal instanceof Atom && child.signal instanceof Atom) {
+    child.signal.subscribe((event) => {
+      node.flags |= FLAG_DIRTY;
+      (node.signal as Atom<T>).invalidate({
         ...event,
         path: [key, ...event.path],
       });
     });
   }
 
-  state.children ??= new Map();
-  state.children.set(key, childState);
+  node.children ??= new Map();
+  node.children.set(key, child);
 
-  return childState;
+  return child;
 }
 
 function isObject<T>(value: T): value is T & object {
@@ -188,21 +188,21 @@ function isObject<T>(value: T): value is T & object {
 }
 
 function proxyObject<T>(
-  state: ReactiveState<T>,
-  getValue: <T>(state: ReactiveState<T>) => T = takeSnapshot,
+  node: ReactiveNode<T>,
+  getValue: <T>(node: ReactiveNode<T>) => T = takeSnapshot,
 ): T {
-  return new Proxy(state.signal.value as T & object, {
+  return new Proxy(node.signal.value as T & object, {
     get(_target, key, _receiver) {
-      const childState = getChildState(state, key);
-      return getValue(childState);
+      const child = getChild(node, key);
+      return getValue(child);
     },
     set(target, key, value, receiver) {
-      const childState = getChildState(state, key);
-      if (childState.signal instanceof Atom) {
-        childState.children = null;
-        childState.flags |= FLAG_PENGING_VALUE;
-        childState.flags &= ~FLAG_NEEDS_SNAPSHOT;
-        childState.signal.value = value;
+      const child = getChild(node, key);
+      if (child.signal instanceof Atom) {
+        child.children = null;
+        child.flags |= FLAG_PENGING_VALUE;
+        child.flags &= ~FLAG_NEEDS_SNAPSHOT;
+        child.signal.value = value;
         return true;
       } else {
         return Reflect.set(target, key, value, receiver);
@@ -211,11 +211,12 @@ function proxyObject<T>(
   });
 }
 
-function resolveChildState<T>(
-  state: ReactiveState<T>,
+function resolveChild<T>(
+  node: ReactiveNode<T>,
   key: PropertyKey,
-): ReactiveState<unknown> {
-  let prototype = state.signal.value;
+): ReactiveNode<unknown> {
+  const { signal } = node;
+  let prototype = signal.value;
 
   do {
     const propertyDescriptor = Object.getOwnPropertyDescriptor(prototype, key);
@@ -224,12 +225,12 @@ function resolveChildState<T>(
       const { get, set, value } = propertyDescriptor;
 
       if (get !== undefined && set !== undefined) {
-        return createState(new Atom(get.call(proxyObject(state))));
+        return createNode(new Atom(get.call(proxyObject(node))));
       } else if (get !== undefined) {
         const dependencies: Signal<unknown>[] = [];
-        const proxy = proxyObject(state, (state) => {
-          dependencies.push(state.signal);
-          return takeSnapshot(state);
+        const proxy = proxyObject(node, (node) => {
+          dependencies.push(node.signal);
+          return takeSnapshot(node);
         });
         const initialResult = get.call(proxy);
         const initialVersion = dependencies.reduce(
@@ -237,21 +238,21 @@ function resolveChildState<T>(
           0,
         );
         const signal = new Computed<unknown>(
-          () => get.call(proxyObject(state)),
+          () => get.call(proxyObject(node)),
           dependencies,
           initialResult,
           initialVersion,
         );
-        return createState(signal);
+        return createNode(signal);
       } else {
-        return createState(new Atom(value, state.signal.version));
+        return createNode(new Atom(value, signal.version));
       }
     }
 
     prototype = Object.getPrototypeOf(prototype);
   } while (prototype !== null && prototype !== Object.prototype);
 
-  return createState(new Atom(undefined, state.signal.version));
+  return createNode(new Atom(undefined, signal.version));
 }
 
 function shallowClone<T extends object>(object: T): T {
@@ -265,8 +266,8 @@ function shallowClone<T extends object>(object: T): T {
   }
 }
 
-function takeSnapshot<T>(state: ReactiveState<T>): T {
-  const { children, flags, signal } = state;
+function takeSnapshot<T>(node: ReactiveNode<T>): T {
+  const { children, flags, signal } = node;
 
   if (flags & FLAG_NEEDS_SNAPSHOT) {
     const oldValue = signal.value;
@@ -275,7 +276,7 @@ function takeSnapshot<T>(state: ReactiveState<T>): T {
       const newValue = shallowClone(oldValue);
 
       for (const [key, child] of children!.entries()) {
-        if (child !== null && child.flags & FLAG_PENGING_VALUE) {
+        if (child.flags & FLAG_PENGING_VALUE) {
           (newValue as any)[key] = takeSnapshot(child);
           child.flags &= ~FLAG_PENGING_VALUE;
         }
@@ -285,7 +286,7 @@ function takeSnapshot<T>(state: ReactiveState<T>): T {
       (signal as Atom<T>).poke(newValue);
     }
 
-    state.flags &= ~FLAG_NEEDS_SNAPSHOT;
+    node.flags &= ~FLAG_NEEDS_SNAPSHOT;
   }
 
   return signal.value;
