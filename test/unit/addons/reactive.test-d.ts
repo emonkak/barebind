@@ -4,7 +4,7 @@ import { Reactive } from '@/addons/reactive.js';
 
 describe('Reactive', () => {
   describe('get()', () => {
-    it('returns a nullable reactive if the key is a generic property key', () => {
+    it('returns a nullable reactive if the key is generic', () => {
       expectTypeOf(
         Reactive.from({ foo: 123 } as Record<string, number>).get('foo'),
       ).toEqualTypeOf<Reactive<number | undefined>>();
@@ -24,6 +24,18 @@ describe('Reactive', () => {
       expectTypeOf(Reactive.from({}).get('foo')).toEqualTypeOf<
         Reactive<unknown>
       >();
+    });
+
+    it('returns a read-only reactive if the key is read-only', () => {
+      expectTypeOf(
+        Reactive.from({ foo: 124 } as Readonly<{ foo: number }>).get('foo'),
+      ).toEqualTypeOf<Readonly<Reactive<number>>>();
+    });
+
+    it('returns a mutable reactive if the value is read-only array', () => {
+      expectTypeOf(
+        Reactive.from([] as ReadonlyArray<number>).get(0),
+      ).toEqualTypeOf<Reactive<number | undefined>>();
     });
   });
 });
