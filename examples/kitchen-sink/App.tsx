@@ -6,6 +6,7 @@ import {
 } from 'barebind';
 import { DynamicTemplate } from 'barebind/addons/dynamic-template';
 import { Atom, type Signal } from 'barebind/addons/signal';
+import { Resource, Suspense } from 'barebind/addons/suspense';
 import type { VElement } from 'barebind/addons/vdom';
 
 const ENV_CONTEXT = Symbol('ENV_CONTEXT');
@@ -119,6 +120,7 @@ export const App = createComponent(function App(_props: {}, $: RenderContext) {
         onDelete: handleDelete,
       })}>
       <${TemplateCounter({})}>
+      <${SuspenseExample({})}>
       <${VDOMCounter({})}>
       <${VDOMSVG({})}>
       <div>
@@ -330,6 +332,74 @@ const SVGCounter = createComponent(function SVGCounter(
   `;
 });
 
+const SuspenseExample = createComponent(function SuspenseExample(
+  _props: {},
+  $: RenderContext,
+): unknown {
+  const PER_ITEMS = 10;
+
+  const [offset, setOffset] = $.useState(0);
+
+  const loadPrevious = () => {
+    setOffset((offset) => Math.max(0, offset - PER_ITEMS));
+  };
+  const loadNext = () => {
+    setOffset((offset) => offset + PER_ITEMS);
+  };
+
+  return $.html`
+    <div>
+      <h1>Suspense</h1>
+      <div>
+        <button type="button" @click=${loadPrevious}>
+          Load Previous
+        </button>
+        <button type="button" @click=${loadNext}>
+          Load Next
+        </button>
+      </div>
+      <${Suspense({
+        children: AsyncItems({
+          offset,
+          perItems: PER_ITEMS,
+        }),
+        fallback: $.html`<p>Loading...</p>`,
+      })}>
+    </div>
+  `;
+});
+
+const AsyncItems = createComponent(function AsyncItems(
+  {
+    offset,
+    perItems,
+  }: {
+    offset: number;
+    perItems: number;
+  },
+  $: RenderContext,
+): unknown {
+  const items = $.use(
+    Resource(
+      () =>
+        sleep(1000).then(() =>
+          Array.from({ length: perItems }, (_v, i) => offset + i),
+        ),
+      [offset, perItems],
+    ),
+  );
+
+  return $.html`
+    <ul>
+      <${Repeat({
+        items: items.unwrap(),
+        keySelector: (item) => item,
+        valueSelector: (item) => $.html`<li>${item}</li>`,
+      })}>
+    </ul>
+  `;
+});
+
 function shuffle<T>(elements: T[]): T[] {
   let currentIndex = elements.length;
 
@@ -342,4 +412,10 @@ function shuffle<T>(elements: T[]): T[] {
   }
 
   return elements;
+}
+
+function sleep(timeout: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, timeout);
+  });
 }

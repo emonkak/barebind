@@ -36,7 +36,8 @@
         "noConfusingVoidType": "off",
         "noEmptyInterface": "off",
         "noExplicitAny": "off",
-        "noTemplateCurlyInString": "off"
+        "noTemplateCurlyInString": "off",
+        "noThenProperty": "off"
       }
     }
   },
