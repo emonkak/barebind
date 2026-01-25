@@ -23,11 +23,8 @@ test('catches an error during rendering', async () => {
   expect(container.innerHTML).toBe('');
 });
 
-const App = createComponent(function App(
-  _props: {},
-  context: RenderContext,
-): unknown {
-  return context.html`
+const App = createComponent(function App({}: {}, $: RenderContext): unknown {
+  return $.html`
     <main>
       <${ErrorBoundary({ children: Parent({}) })}>
     </main>
@@ -44,26 +41,26 @@ const Child = createComponent(function Child(): unknown {
 
 const ErrorBoundary = createComponent(function ErrorBoundary(
   { children }: { children: unknown },
-  context: RenderContext,
+  $: RenderContext,
 ): unknown {
-  const [errorCapture, setErrorCapture] = context.useState<{
+  const [errorCapture, setErrorCapture] = $.useState<{
     error: unknown;
     children: unknown;
   } | null>(null);
 
-  context.catchError((error) => {
+  $.catchError((error) => {
     setErrorCapture({
       error,
       children,
     });
   });
 
-  context.catchError((error, handle) => {
+  $.catchError((error, handle) => {
     handle(error);
   });
 
   if (errorCapture !== null && errorCapture.children === children) {
-    return context.html`
+    return $.html`
       <h1>Opps, an error occurred!</h1>
       <p>${String(errorCapture.error)}</p>
     `;

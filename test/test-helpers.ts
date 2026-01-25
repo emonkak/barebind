@@ -45,7 +45,6 @@ export class TestRenderer {
         hook.cleanup = undefined;
       }
     }
-    this.hooks = [];
   }
 
   startRender<T>(
