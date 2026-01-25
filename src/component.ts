@@ -140,13 +140,12 @@ export class ComponentBinding<TProps, TResult>
   }
 
   detach(session: UpdateSession): void {
-    const { hooks } = this._state;
     const { frame } = session;
 
     // Cleanup effects follow the same declaration order within a component,
     // but must run from parent to child. Therefore, we collect cleanup effects
     // before all children are detached and then register them.
-    for (const hook of hooks) {
+    for (const hook of this._state.hooks) {
       switch (hook.type) {
         case HookType.PassiveEffect:
           enqueueCleanEffectHook(hook, frame.passiveEffects);
@@ -163,7 +162,7 @@ export class ComponentBinding<TProps, TResult>
     this._slot?.detach(session);
 
     this._scope = DETACHED_SCOPE;
-    this._state = createComponentState();
+    this._state.pendingLanes = Lanes.NoLanes;
   }
 
   commit(): void {
