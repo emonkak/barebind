@@ -13,10 +13,10 @@ import {
 import { LayoutSpecifier } from './layout.js';
 
 export function Keyed<TKey, TValue>(
-  key: TKey,
   value: TValue,
+  key: TKey,
 ): LayoutSpecifier<TValue> {
-  return new LayoutSpecifier(new KeyedLayout(key), value);
+  return new LayoutSpecifier(value, new KeyedLayout(key));
 }
 
 export class KeyedLayout<TKey> implements Layout {
@@ -37,22 +37,22 @@ export class KeyedLayout<TKey> implements Layout {
   resolveSlot<TValue>(
     binding: Binding<UnwrapBindable<TValue>>,
   ): KeyedSlot<TKey, TValue> {
-    return new KeyedSlot(this._key, binding);
+    return new KeyedSlot(binding, this._key);
   }
 }
 
 export class KeyedSlot<TKey, TValue> implements Slot<TValue> {
-  private _key: TKey;
-
   private _pendingBinding: Binding<UnwrapBindable<TValue>>;
 
   private _memoizedBinding: Binding<UnwrapBindable<TValue>> | null = null;
 
+  private _key: TKey;
+
   private _dirty = false;
 
-  constructor(key: TKey, binding: Binding<UnwrapBindable<TValue>>) {
-    this._key = key;
+  constructor(binding: Binding<UnwrapBindable<TValue>>, key: TKey) {
     this._pendingBinding = binding;
+    this._key = key;
   }
 
   get type(): DirectiveType<UnwrapBindable<TValue>> {

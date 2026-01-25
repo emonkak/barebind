@@ -8,10 +8,20 @@ import { MockDirective, MockLayout, MockPrimitive } from '../../mocks.js';
 import { createRuntime } from '../../test-helpers.js';
 
 describe('LayoutSpecifier', () => {
+  describe('[$debug]()', () => {
+    it('returns a string representation of the value', () => {
+      const value = new DirectiveSpecifier(new MockDirective(), 'foo');
+      const layout = MockLayout;
+      const bindable = new LayoutSpecifier(value, layout);
+
+      expect(formatValue(bindable)).toBe('MockDirective("foo") in MockLayout');
+    });
+  });
+
   describe('[$toDirective]()', () => {
     it('returns a directive element with the primitive value', () => {
-      const layout = MockLayout;
       const value = 'foo';
+      const layout = MockLayout;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -19,7 +29,7 @@ describe('LayoutSpecifier', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = createRuntime();
-      const bindable = new LayoutSpecifier(layout, value);
+      const bindable = new LayoutSpecifier(value, layout);
       const directive = bindable[$toDirective](part, runtime);
 
       expect(directive.type).toBe(MockPrimitive);
@@ -37,22 +47,12 @@ describe('LayoutSpecifier', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = createRuntime();
-      const bindable = new LayoutSpecifier(layout, value);
+      const bindable = new LayoutSpecifier(value, layout);
       const directive = bindable[$toDirective](part, runtime);
 
       expect(directive.type).toBe(value.type);
       expect(directive.value).toBe(value.value);
       expect(directive.layout).toBe(layout);
-    });
-  });
-
-  describe('[$debug]()', () => {
-    it('returns a string representation of the value', () => {
-      const layout = MockLayout;
-      const value = new DirectiveSpecifier(new MockDirective(), 'foo');
-      const bindable = new LayoutSpecifier(layout, value);
-
-      expect(formatValue(bindable)).toBe('MockLayout(MockDirective("foo"))');
     });
   });
 });

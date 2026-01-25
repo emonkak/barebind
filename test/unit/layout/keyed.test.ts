@@ -9,9 +9,9 @@ import { TestUpdater } from '../../test-helpers.js';
 
 describe('Keyed()', () => {
   it('creates a LayoutSpecifier with KeyedLayout', () => {
-    const key = 'foo';
     const value = 'bar';
-    const bindable = Keyed(key, value);
+    const key = 123;
+    const bindable = Keyed(value, key);
 
     expect(bindable.value).toBe(value);
     expect(bindable.layout).toBeInstanceOf(KeyedLayout);
@@ -27,8 +27,8 @@ describe('KeyedLayout', () => {
 
   describe('resolveSlot', () => {
     it('constructs a new KeyedSlot', () => {
-      const key = 'foo';
-      const value = 'bar';
+      const value = 'foo';
+      const key = 123;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -48,9 +48,9 @@ describe('KeyedLayout', () => {
 describe('KeyedSlot', () => {
   describe('reconcile()', () => {
     it('updates the binding with the same key and the same directive type', () => {
-      const key = 'foo';
-      const value1 = 'bar';
-      const value2 = Keyed(key, 'baz');
+      const value1 = 'foo';
+      const value2 = 'bar';
+      const key = 123;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -58,7 +58,7 @@ describe('KeyedSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
-      const slot = new KeyedSlot(key, binding);
+      const slot = new KeyedSlot(binding, key);
       const updater = new TestUpdater();
 
       const shouldUpdateSpy = vi.spyOn(binding, 'shouldUpdate');
@@ -78,12 +78,12 @@ describe('KeyedSlot', () => {
         expect(requestRollbackSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(rollbackSpy).toHaveBeenCalledTimes(0);
-        expect(part.node.data).toBe('/MockPrimitive("bar")');
+        expect(part.node.data).toBe('/MockPrimitive("foo")');
       }
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(value2, session);
+          const dirty = slot.reconcile(Keyed(value2, key), session);
           slot.commit();
           slot.commit(); // ignore the second commit
           return dirty;
@@ -94,7 +94,7 @@ describe('KeyedSlot', () => {
         expect(requestRollbackSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(rollbackSpy).toHaveBeenCalledTimes(0);
-        expect(part.node.data).toBe('/MockPrimitive("baz")');
+        expect(part.node.data).toBe('/MockPrimitive("bar")');
         expect(dirty).toBe(true);
       }
 
@@ -115,10 +115,10 @@ describe('KeyedSlot', () => {
     });
 
     it('updates the binding with a different key', () => {
-      const key1 = 'foo';
-      const key2 = 'bar';
-      const value1 = 'baz';
-      const value2 = Keyed(key2, 'qux');
+      const value1 = 'foo';
+      const value2 = 'bar';
+      const key1 = 123;
+      const key2 = 456;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -126,7 +126,7 @@ describe('KeyedSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
-      const slot = new KeyedSlot(key1, binding);
+      const slot = new KeyedSlot(binding, key1);
       const updater = new TestUpdater();
 
       const shouldUpdateSpy = vi.spyOn(binding, 'shouldUpdate');
@@ -144,7 +144,7 @@ describe('KeyedSlot', () => {
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(value2, session);
+          const dirty = slot.reconcile(Keyed(value2, key2), session);
           slot.commit();
           return dirty;
         });
@@ -162,23 +162,22 @@ describe('KeyedSlot', () => {
             committed: true,
           }),
         );
-        expect(part.node.data).toBe('/MockPrimitive("qux")');
+        expect(part.node.data).toBe('/MockPrimitive("bar")');
         expect(dirty).toBe(true);
       }
     });
 
     it('updates the binding only if it is dirty', () => {
-      const key = 'foo';
-      const value1 = 'bar';
-      const value2 = Keyed(key, 'bar');
+      const value = 'foo';
+      const key = 123;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value1, part);
-      const slot = new KeyedSlot(key, binding);
+      const binding = new MockBinding(MockPrimitive, value, part);
+      const slot = new KeyedSlot(binding, key);
       const updater = new TestUpdater();
 
       const shouldUpdateSpy = vi.spyOn(binding, 'shouldUpdate');
@@ -194,28 +193,25 @@ describe('KeyedSlot', () => {
         expect(shouldUpdateSpy).toHaveBeenCalledTimes(0);
         expect(attachSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
-        expect(part.node.data).toBe('/MockPrimitive("bar")');
+        expect(part.node.data).toBe('/MockPrimitive("foo")');
       }
 
       SESSION2: {
         updater.startUpdate((session) => {
-          slot.reconcile(value2, session) && slot.commit();
+          slot.reconcile(Keyed(value, key), session) && slot.commit();
         });
 
         expect(shouldUpdateSpy).toHaveBeenCalledTimes(1);
         expect(attachSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
-        expect(part.node.data).toBe('/MockPrimitive("bar")');
+        expect(part.node.data).toBe('/MockPrimitive("foo")');
       }
     });
 
     it('throws an error if the keys match but the directive types are missmatched', () => {
-      const key = 'foo';
       const value1 = 'bar';
-      const value2 = Keyed(
-        key,
-        new DirectiveSpecifier(new MockDirective(), 'baz'),
-      );
+      const value2 = new DirectiveSpecifier(new MockDirective(), 'baz');
+      const key = 'foo';
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -223,7 +219,7 @@ describe('KeyedSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
-      const slot = new KeyedSlot(key, binding);
+      const slot = new KeyedSlot(binding, key);
       const updater = new TestUpdater();
 
       updater.startUpdate((session) => {
@@ -233,7 +229,7 @@ describe('KeyedSlot', () => {
 
       expect(() => {
         updater.startUpdate((session) => {
-          slot.reconcile(value2, session);
+          slot.reconcile(Keyed(value2, key), session);
         });
       }).toThrow(
         'The directive type must be MockPrimitive in this slot, but got MockDirective.',

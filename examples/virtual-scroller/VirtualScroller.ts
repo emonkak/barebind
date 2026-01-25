@@ -270,7 +270,7 @@ export const VirtualScroller: VirtualScroller = createComponent(
 
     return $.html`
       <div class="VirtualScroller">
-        <${Keyed(aboveSpace, aboveSpacer)}>
+        <${Keyed(aboveSpacer, aboveSpace)}>
         <ul class="VirtualScroller-list" :style=${{ scrollMargin }}>
           <${Repeat({
             items: items.slice(visibleRange.start, visibleRange.end),
@@ -291,7 +291,7 @@ export const VirtualScroller: VirtualScroller = createComponent(
             },
           })}>
         </ul>
-        <${Keyed(belowSpace, belowSpacer)}>
+        <${Keyed(belowSpacer, belowSpace)}>
       </div>
     `;
   },

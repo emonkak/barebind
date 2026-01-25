@@ -13,7 +13,7 @@ import {
 import { LayoutSpecifier } from './layout.js';
 
 export function Strict<T>(value: T): LayoutSpecifier<T> {
-  return new LayoutSpecifier(StrictLayout, value);
+  return new LayoutSpecifier(value, StrictLayout);
 }
 
 export const StrictLayout: Layout = {

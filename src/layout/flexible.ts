@@ -12,7 +12,7 @@ import {
 import { LayoutSpecifier } from './layout.js';
 
 export function Flexible<T>(value: T): LayoutSpecifier<T> {
-  return new LayoutSpecifier(FlexibleLayout, value);
+  return new LayoutSpecifier(value, FlexibleLayout);
 }
 
 export const FlexibleLayout: Layout = {
