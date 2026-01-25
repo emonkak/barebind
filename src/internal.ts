@@ -189,8 +189,9 @@ export namespace Hook {
       | typeof HookType.InsertionEffect;
     callback: () => Cleanup | void;
     cleanup: Cleanup | void;
-    pendingDependencies: readonly unknown[] | null;
+    dirty: boolean;
     memoizedDependencies: readonly unknown[] | null;
+    pendingDependencies: readonly unknown[] | null;
   }
 
   export interface IdHook {

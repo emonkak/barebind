@@ -197,7 +197,7 @@ export class RenderSession implements RenderContext {
       dependencies,
       HookType.PassiveEffect,
     );
-    enqueueInvokeEffectHook(
+    enqueueInvokeEffectHookIfDirty(
       hook,
       this._scope.level,
       this._frame.passiveEffects,
@@ -232,7 +232,7 @@ export class RenderSession implements RenderContext {
       dependencies,
       HookType.InsertionEffect,
     );
-    enqueueInvokeEffectHook(
+    enqueueInvokeEffectHookIfDirty(
       hook,
       this._scope.level,
       this._frame.mutationEffects,
@@ -248,7 +248,11 @@ export class RenderSession implements RenderContext {
       dependencies,
       HookType.LayoutEffect,
     );
-    enqueueInvokeEffectHook(hook, this._scope.level, this._frame.layoutEffects);
+    enqueueInvokeEffectHookIfDirty(
+      hook,
+      this._scope.level,
+      this._frame.layoutEffects,
+    );
   }
 
   useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T {
@@ -388,13 +392,18 @@ export class RenderSession implements RenderContext {
       ensureHookType<Hook.EffectHook>(type, currentHook);
       currentHook.callback = callback;
       currentHook.pendingDependencies = dependencies;
+      currentHook.dirty = areDependenciesChanged(
+        dependencies,
+        currentHook.memoizedDependencies,
+      );
     } else {
       currentHook = {
         type,
         callback,
-        pendingDependencies: dependencies,
-        memoizedDependencies: null,
         cleanup: undefined,
+        dirty: true,
+        memoizedDependencies: null,
+        pendingDependencies: dependencies,
       };
       hooks.push(currentHook);
     }
@@ -422,21 +431,22 @@ class InvokeEffectHook implements Effect {
   }
 
   commit(): void {
-    const { cleanup, callback, pendingDependencies } = this._hook;
-    cleanup?.();
-    this._hook.cleanup = callback();
-    this._hook.memoizedDependencies = pendingDependencies;
+    const { callback, cleanup } = this._hook;
+    if (this._hook.dirty) {
+      cleanup?.();
+      this._hook.cleanup = callback();
+      this._hook.dirty = false;
+      this._hook.memoizedDependencies = this._hook.pendingDependencies;
+    }
   }
 }
 
-function enqueueInvokeEffectHook(
+function enqueueInvokeEffectHookIfDirty(
   hook: Hook.EffectHook,
   level: number,
   effects: EffectQueue,
 ): void {
-  if (
-    areDependenciesChanged(hook.pendingDependencies, hook.memoizedDependencies)
-  ) {
+  if (hook.dirty) {
     effects.push(new InvokeEffectHook(hook), level);
   }
 }
