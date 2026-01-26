@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createComponent } from '@/component.js';
 import {
   $toDirective,
+  BoundaryType,
   CommitPhase,
   type ComponentState,
   createScope,
@@ -265,7 +266,7 @@ describe('Runtime', () => {
 
     it('handles an error that occurs during flushing', async () => {
       const runtime = createRuntime();
-      const error = new Error();
+      const error = new Error('fail');
 
       SESSION: {
         const coroutine = new MockCoroutine(() => {
@@ -284,6 +285,43 @@ describe('Runtime', () => {
         await runtime.flushAsync();
 
         await expect(handle.finished).rejects.toThrow(error);
+      }
+    });
+
+    it('aborts rendering when error is captured outside the root', async () => {
+      const runtime = createRuntime();
+      const errorHandler = vi.fn();
+      const error = new Error('fail');
+
+      SESSION: {
+        const parentScope = createScope();
+        parentScope.boundary = {
+          type: BoundaryType.Error,
+          next: null,
+          handler: errorHandler,
+        };
+        const childScope = createScope(parentScope, parentScope.level + 1);
+        const coroutine = new MockCoroutine(() => {
+          throw error;
+        }, childScope);
+
+        const handle = runtime.scheduleUpdate(coroutine, {
+          flush: false,
+        });
+
+        expect(await handle.scheduled).toStrictEqual({
+          canceled: false,
+          done: true,
+        });
+
+        await runtime.flushAsync();
+
+        expect(await handle.finished).toStrictEqual({
+          canceled: true,
+          done: false,
+        });
+        expect(errorHandler).toHaveBeenCalledOnce();
+        expect(errorHandler).toHaveBeenCalledWith(error, expect.any(Function));
       }
     });
   });
@@ -528,7 +566,7 @@ describe('Runtime', () => {
 
     it('handles an error that occurs during flushing', async () => {
       const runtime = createRuntime();
-      const error = new Error();
+      const error = new Error('fail');
 
       SESSION: {
         const coroutine = new MockCoroutine(() => {
@@ -538,6 +576,43 @@ describe('Runtime', () => {
         await expect(
           runtime.scheduleUpdate(coroutine).finished,
         ).rejects.toThrow(error);
+      }
+    });
+
+    it('aborts rendering when error is captured outside the root', async () => {
+      const runtime = createRuntime();
+      const errorHandler = vi.fn();
+      const error = new Error('fail');
+
+      SESSION: {
+        const parentScope = createScope();
+        parentScope.boundary = {
+          type: BoundaryType.Error,
+          next: null,
+          handler: errorHandler,
+        };
+        const childScope = createScope(parentScope, parentScope.level + 1);
+        const coroutine = new MockCoroutine(() => {
+          throw error;
+        }, childScope);
+
+        const handle = runtime.scheduleUpdate(coroutine, {
+          flush: false,
+        });
+
+        expect(await handle.scheduled).toStrictEqual({
+          canceled: false,
+          done: true,
+        });
+
+        runtime.flushSync();
+
+        expect(await handle.finished).toStrictEqual({
+          canceled: true,
+          done: false,
+        });
+        expect(errorHandler).toHaveBeenCalledOnce();
+        expect(errorHandler).toHaveBeenCalledWith(error, expect.any(Function));
       }
     });
   });

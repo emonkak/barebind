@@ -153,7 +153,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(coroutine.scope, error);
+                handleError(coroutine.scope, rootScope, error);
               }
             }
 
@@ -224,7 +224,12 @@ export class Runtime implements SessionContext {
           id,
           lanes,
         });
-        continuation.reject(error);
+
+        if (error instanceof CapturedError) {
+          continuation.resolve({ canceled: true, done: false });
+        } else {
+          continuation.reject(error);
+        }
       }
     }
   }
@@ -265,7 +270,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(coroutine.scope, error);
+                handleError(coroutine.scope, rootScope, error);
               }
             }
           } while (frame.pendingCoroutines.length > 0);
@@ -292,15 +297,25 @@ export class Runtime implements SessionContext {
           this._flushEffects(id, passiveEffects, CommitPhase.Passive);
         }
 
-        continuation.resolve({ canceled: false, done: true });
-      } catch (error) {
-        continuation.reject(error);
-      } finally {
         notifyObservers(this._observers, {
           type: 'UPDATE_END',
           id,
           lanes,
         });
+
+        continuation.resolve({ canceled: false, done: true });
+      } catch (error) {
+        notifyObservers(this._observers, {
+          type: 'UPDATE_END',
+          id,
+          lanes,
+        });
+
+        if (error instanceof CapturedError) {
+          continuation.resolve({ canceled: true, done: false });
+        } else {
+          continuation.reject(error);
+        }
       }
     }
   }
@@ -467,6 +482,8 @@ export class Runtime implements SessionContext {
   }
 }
 
+class CapturedError extends Error {}
+
 function consumeCoroutines(frame: RenderFrame): Coroutine[] {
   const { pendingCoroutines } = frame;
   frame.pendingCoroutines = [];
@@ -494,7 +511,8 @@ function generateRandomString(length: number): string {
   ).join('');
 }
 
-function handleError(scope: Scope, error: unknown): void {
+function handleError(scope: Scope, rootScope: Scope, error: unknown): void {
+  let capturedOutsideRoot = false;
   let { parent: nextScope, boundary: nextBoundary } = scope;
 
   const handle = (error: unknown) => {
@@ -510,6 +528,7 @@ function handleError(scope: Scope, error: unknown): void {
       }
       if (nextScope !== null) {
         const { parent, boundary } = nextScope;
+        capturedOutsideRoot = nextScope.level <= rootScope.level;
         nextScope = parent;
         nextBoundary = boundary;
       } else {
@@ -519,6 +538,10 @@ function handleError(scope: Scope, error: unknown): void {
   };
 
   handle(error);
+
+  if (capturedOutsideRoot) {
+    throw new CapturedError(undefined, { cause: error });
+  }
 }
 
 function incrementCount(count: number): number {
