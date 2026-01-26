@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
+
 import { formatValue } from '@/debug/value.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import { $toDirective, PartType } from '@/internal.js';
 import { LayoutSpecifier } from '@/layout/layout.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockDirective, MockLayout, MockPrimitive } from '../../mocks.js';
-import { createRuntime } from '../../test-helpers.js';
+import {
+  createRuntime,
+  MockDirective,
+  MockLayout,
+  MockPrimitive,
+} from '../../mocks.js';
 
 describe('LayoutSpecifier', () => {
   describe('[$debug]()', () => {

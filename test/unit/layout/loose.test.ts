@@ -5,7 +5,7 @@ import { PartType } from '@/internal.js';
 import { Loose, LooseLayout, LooseSlot } from '@/layout/loose.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
-import { TestUpdater } from '../../test-helpers.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('Loose()', () => {
   it('creates a LayoutSpecifier with LooseLayout', () => {

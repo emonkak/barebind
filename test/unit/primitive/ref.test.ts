@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { RefBinding, RefPrimitive } from '@/primitive/ref.js';
-import { createRuntime, TestUpdater } from '../../test-helpers.js';
+import { createRuntime } from '../../mocks.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('RefPrimitive', () => {
   describe('ensureValue()', () => {

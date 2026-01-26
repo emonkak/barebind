@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { ElementTemplate } from '@/template/element.js';
 import { FragmentTemplate } from '@/template/fragment.js';

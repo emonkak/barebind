@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
+
 import { createTreeWalker, HydrationError } from '@/hydration.js';
 import { PartType } from '@/internal.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockSlot, MockTemplate } from '../../mocks.js';
-import { createElement, TestUpdater } from '../../test-helpers.js';
+import { createElement } from '../../test-helpers.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('ChildNodeTemplate', () => {
   describe('arity', () => {

@@ -12,12 +12,13 @@ import {
   type DirectiveContext,
   type DirectiveType,
   type Effect,
-  type EffectQueue,
+  EffectQueue,
   Lanes,
   type Layout,
   type Part,
   PartType,
   type Primitive,
+  type RenderFrame,
   type RequestCallbackOptions,
   type Scope,
   type Slot,
@@ -27,11 +28,12 @@ import {
   type UnwrapBindable,
   type UpdateSession,
 } from '@/internal.js';
-import type {
+import {
   Runtime,
-  RuntimeBackend,
-  RuntimeEvent,
-  RuntimeObserver,
+  type RuntimeBackend,
+  type RuntimeEvent,
+  type RuntimeObserver,
+  type RuntimeOptions,
 } from '@/runtime.js';
 import { AbstractTemplate } from '@/template/template.js';
 
@@ -400,6 +402,28 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
       slots: [],
     };
   }
+}
+
+export function createEffectQueue(effects: Effect[]): EffectQueue {
+  return effects.reduce((effects, effect) => {
+    effects.push(effect, 0);
+    return effects;
+  }, new EffectQueue());
+}
+
+export function createRenderFrame(id: number, lanes: Lanes): RenderFrame {
+  return {
+    id,
+    lanes,
+    pendingCoroutines: [],
+    mutationEffects: new EffectQueue(),
+    layoutEffects: new EffectQueue(),
+    passiveEffects: new EffectQueue(),
+  };
+}
+
+export function createRuntime(options?: RuntimeOptions): Runtime {
+  return new Runtime(new MockBackend(), options);
 }
 
 function stringify(value: unknown): string {

@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { BlackholeBinding, BlackholePrimitive } from '@/primitive/blackhole.js';
-import { createRuntime, TestUpdater } from '../../test-helpers.js';
+import { createRuntime } from '../../mocks.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('BlackholePrimitive', () => {
   describe('resolveBinding()', () => {

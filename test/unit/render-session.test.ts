@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { shallowEqual } from '@/compare.js';
 import {
   $hook,
@@ -11,7 +12,7 @@ import {
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { MockCoroutine, MockTemplate } from '../mocks.js';
-import { TestRenderer } from '../test-helpers.js';
+import { TestRenderer } from '../test-renderer.js';
 
 describe('RenderSession', () => {
   describe('catchError()', () => {

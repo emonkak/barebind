@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { createTreeWalker, HydrationError } from '@/hydration.js';
 import { PartType } from '@/internal.js';
 import { TaggedTemplate } from '@/template/tagged.js';
@@ -8,11 +9,8 @@ import {
   SVG_NAMESPACE_URI,
 } from '@/template/template.js';
 import { MockSlot } from '../../mocks.js';
-import {
-  createElement,
-  serializeNode,
-  TestUpdater,
-} from '../../test-helpers.js';
+import { createElement, serializeNode } from '../../test-helpers.js';
+import { TestUpdater } from '../../test-updater.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
 

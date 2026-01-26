@@ -5,7 +5,7 @@ import { PartType } from '@/internal.js';
 import { Strict, StrictLayout, StrictSlot } from '@/layout/strict.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
-import { TestUpdater } from '../../test-helpers.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('Strcit()', () => {
   it('creates a LayoutSpecifier with StrictSlot', () => {

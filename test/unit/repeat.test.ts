@@ -11,13 +11,13 @@ import {
 } from '@/repeat.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
+import { createRuntime } from '../mocks.js';
 import {
   allCombinations,
   createElement,
-  createRuntime,
   permutations,
-  TestUpdater,
 } from '../test-helpers.js';
+import { TestUpdater } from '../test-updater.js';
 
 const TEXT_TEMPLATE = new TextTemplate<string>();
 

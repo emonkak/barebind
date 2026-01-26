@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { createTreeWalker } from '@/hydration.js';
 import { BoundaryType, createScope, PartType } from '@/internal.js';
 import {
@@ -9,16 +10,14 @@ import {
   TemplateBinding,
 } from '@/template/template.js';
 import {
+  createRuntime,
   MockBinding,
   MockPrimitive,
   MockSlot,
   MockTemplate,
 } from '../../mocks.js';
-import {
-  createElement,
-  createRuntime,
-  TestUpdater,
-} from '../../test-helpers.js';
+import { createElement } from '../../test-helpers.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('AbstractTemplate', () => {
   describe('displayName', () => {

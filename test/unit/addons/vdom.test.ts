@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import {
   createElement,
   createFragment,
@@ -20,12 +21,9 @@ import { EmptyTemplate } from '@/template/empty.js';
 import { FragmentTemplate } from '@/template/fragment.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
-import { MockBindable, MockPrimitive } from '../../mocks.js';
-import {
-  createElement as createDOMElement,
-  createRuntime,
-  TestUpdater,
-} from '../../test-helpers.js';
+import { createRuntime, MockBindable, MockPrimitive } from '../../mocks.js';
+import { createElement as createDOMElement } from '../../test-helpers.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('createElement()', () => {
   it('constructs the new VElement with normalized properties', () => {

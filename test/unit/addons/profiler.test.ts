@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import {
   type ConsoleLogger,
   ConsoleReporter,
@@ -8,8 +9,7 @@ import {
 import { createComponent } from '@/component.js';
 import { CommitPhase, Lanes, type RenderContext } from '@/internal.js';
 import type { RuntimeEvent } from '@/runtime.js';
-import { MockEffect } from '../../mocks.js';
-import { createEffectQueue } from '../../test-helpers.js';
+import { createEffectQueue, MockEffect } from '../../mocks.js';
 
 describe('PerformanceProfiler', () => {
   describe('onRuntimeEvent()', () => {

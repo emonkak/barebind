@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { createTreeWalker } from '@/hydration.js';
 import { PartType } from '@/internal.js';
 import { FragmentTemplate } from '@/template/fragment.js';
@@ -9,7 +10,8 @@ import {
   MockSlot,
   MockTemplate,
 } from '../../mocks.js';
-import { serializeNode, TestUpdater } from '../../test-helpers.js';
+import { serializeNode } from '../../test-helpers.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('FragmentTemplate', () => {
   describe('arity', () => {

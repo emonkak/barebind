@@ -5,7 +5,7 @@ import { PartType } from '@/internal.js';
 import { Keyed, KeyedLayout, KeyedSlot } from '@/layout/keyed.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
-import { TestUpdater } from '../../test-helpers.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('Keyed()', () => {
   it('creates a LayoutSpecifier with KeyedLayout', () => {

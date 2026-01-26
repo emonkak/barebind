@@ -10,8 +10,9 @@ import {
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockSlot } from '../mocks.js';
-import { createRuntime, TestRenderer, TestUpdater } from '../test-helpers.js';
+import { createRuntime, MockSlot } from '../mocks.js';
+import { TestRenderer } from '../test-renderer.js';
+import { TestUpdater } from '../test-updater.js';
 
 describe('createComponent()', () => {
   it('returns a directive with props', () => {

@@ -3,7 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType } from '@/internal.js';
 import { CommentBinding, CommentPrimitive } from '@/primitive/comment.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { createRuntime, TestUpdater } from '../../test-helpers.js';
+import { createRuntime } from '../../mocks.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('CommentPrimitive', () => {
   describe('resolveBinding()', () => {

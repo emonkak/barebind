@@ -5,7 +5,7 @@ import { PartType } from '@/internal.js';
 import { Flexible, FlexibleLayout, FlexibleSlot } from '@/layout/flexible.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
-import { TestUpdater } from '../../test-helpers.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('Flexible()', () => {
   it('creates a LayoutSpecifier with FlexibleSlot', () => {

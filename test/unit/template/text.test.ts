@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
+
 import { createTreeWalker, HydrationError } from '@/hydration.js';
 import { PartType } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
-import { createElement, TestUpdater } from '../../test-helpers.js';
+import { createElement } from '../../test-helpers.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('TextTemplate', () => {
   describe('arity', () => {

@@ -7,7 +7,8 @@ import {
 } from '@/addons/router/history.js';
 import { RelativeURL } from '@/addons/router/relative-url.js';
 import { ScrollRestration } from '@/addons/router/scroll-restration.js';
-import { createElement, TestRenderer } from '../../../test-helpers.js';
+import { createElement } from '../../../test-helpers.js';
+import { TestRenderer } from '../../../test-renderer.js';
 
 describe('ScrollRestration()', () => {
   let helper!: TestRenderer;

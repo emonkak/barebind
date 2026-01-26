@@ -14,6 +14,8 @@ import {
 import { RenderSession } from '@/render-session.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
+  createRenderFrame,
+  createRuntime,
   MockBindable,
   MockCoroutine,
   MockDirective,
@@ -22,7 +24,6 @@ import {
   MockSlot,
   MockTemplate,
 } from '../mocks.js';
-import { createRenderFrame, createRuntime } from '../test-helpers.js';
 
 describe('Runtime', () => {
   describe('flushAsync()', () => {

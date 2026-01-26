@@ -10,7 +10,8 @@ import {
 } from '@/addons/router/history.js';
 import { RelativeURL } from '@/addons/router/relative-url.js';
 import type { RenderSession } from '@/render-session.js';
-import { createElement, TestRenderer } from '../../../test-helpers.js';
+import { createElement } from '../../../test-helpers.js';
+import { TestRenderer } from '../../../test-renderer.js';
 
 describe('HashHistory()', () => {
   const originalURL = location.href;

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { PartType } from '@/internal.js';
 import { SpreadBinding, SpreadPrimitive } from '@/primitive/spread.js';
-import { MockSlot } from '../../mocks.js';
-import { createRuntime, TestUpdater } from '../../test-helpers.js';
+import { createRuntime, MockSlot } from '../../mocks.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('SpreadPrimitive', () => {
   describe('ensureValue()', () => {

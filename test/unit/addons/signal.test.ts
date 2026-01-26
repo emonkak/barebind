@@ -17,11 +17,9 @@ import {
   type RenderContext,
 } from '@/internal.js';
 import type { RenderSession } from '@/render-session.js';
-import {
-  createRuntime,
-  TestRenderer,
-  TestUpdater,
-} from '../../test-helpers.js';
+import { createRuntime } from '../../mocks.js';
+import { TestRenderer } from '../../test-renderer.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('SignalDirective', () => {
   describe('resolveBinding()', () => {

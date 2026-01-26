@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { CurrentHistory } from '@/addons/router/history.js';
-import { TestRenderer } from '../../../test-helpers.js';
+import { TestRenderer } from '../../../test-renderer.js';
 
 describe('CurrentHistory', () => {
   it('should throw an error if the current location is not registered', () => {

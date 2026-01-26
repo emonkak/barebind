@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
+
 import { createTreeWalker } from '@/hydration.js';
 import { PartType } from '@/internal.js';
 import { EmptyTemplate } from '@/template/empty.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockTemplate } from '../../mocks.js';
-import { TestUpdater } from '../../test-helpers.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('EmptyTemplate', () => {
   describe('arity', () => {

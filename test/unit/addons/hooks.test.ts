@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import {
   DeferredValue,
   EffectEvent,
@@ -7,7 +8,7 @@ import {
 } from '@/addons/hooks.js';
 import { LinkedList } from '@/linked-list.js';
 import type { RenderSession } from '@/render-session.js';
-import { TestRenderer } from '../../test-helpers.js';
+import { TestRenderer } from '../../test-renderer.js';
 
 describe('DeferredValue()', () => {
   it('returns the value deferred until next rendering', async () => {

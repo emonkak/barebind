@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { AttributeBinding, AttributePrimitive } from '@/primitive/attribute.js';
-import { createRuntime, TestUpdater } from '../../test-helpers.js';
+import { createRuntime } from '../../mocks.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('AttributePrimitive', () => {
   describe('resolveBinding()', () => {

@@ -2,11 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { ClassBinding, ClassPrimitive } from '@/primitive/class.js';
-import {
-  createElement,
-  createRuntime,
-  TestUpdater,
-} from '../../test-helpers.js';
+import { createRuntime } from '../../mocks.js';
+import { createElement } from '../../test-helpers.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('ClassPrimitive', () => {
   describe('ensureValue()', () => {

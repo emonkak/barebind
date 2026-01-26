@@ -1,13 +1,11 @@
 import { describe, expect, it } from 'vitest';
+
 import { createTreeWalker } from '@/hydration.js';
 import { PartType } from '@/internal.js';
 import { ElementTemplate } from '@/template/element.js';
 import { HTML_NAMESPACE_URI, SVG_NAMESPACE_URI } from '@/template/template.js';
-import {
-  createElement,
-  serializeNode,
-  TestUpdater,
-} from '../../test-helpers.js';
+import { createElement, serializeNode } from '../../test-helpers.js';
+import { TestUpdater } from '../../test-updater.js';
 
 describe('ElementTemplate', () => {
   describe('arity', () => {

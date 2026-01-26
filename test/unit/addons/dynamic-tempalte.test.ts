@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import {
   DynamicTemplate,
   Literal,
@@ -6,7 +7,8 @@ import {
 } from '@/addons/dynamic-template.js';
 import type { Directive } from '@/internal.js';
 import { MockTemplate } from '../../mocks.js';
-import { TestRenderer, templateLiteral } from '../../test-helpers.js';
+import { templateLiteral } from '../../test-helpers.js';
+import { TestRenderer } from '../../test-renderer.js';
 
 describe('DynamicTemplate', () => {
   it('render a HTML template', () => {
