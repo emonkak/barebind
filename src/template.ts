@@ -11,10 +11,12 @@ export function Element<TProps, TChildren>(
   return new DirectiveSpecifier(new ElementTemplate(name), [props, children]);
 }
 
-export function Fragment(children: unknown[]) {
+export function Fragment(
+  children: readonly unknown[],
+): DirectiveSpecifier<readonly unknown[]> {
   return new DirectiveSpecifier(
     new FragmentTemplate(
-      new Array<ChildNodeTemplate<any>>(children.length).fill(
+      new Array<ChildNodeTemplate<unknown>>(children.length).fill(
         new ChildNodeTemplate(),
       ),
     ),
