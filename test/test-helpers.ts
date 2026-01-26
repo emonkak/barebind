@@ -302,3 +302,9 @@ export function templateLiteral<TValues extends readonly unknown[]>(
 ): [TemplateStringsArray, ...TValues] {
   return [strings, ...values];
 }
+
+export function waitUntilIdle(): Promise<void> {
+  return new Promise((resolve) =>
+    scheduler.postTask(resolve, { priority: 'background' }),
+  );
+}

@@ -6,7 +6,7 @@ import { Root } from '@/root.js';
 import { BrowserBackend } from '@/runtime/browser.js';
 import { Runtime } from '@/runtime.js';
 import { Fragment } from '@/template.js';
-import { stripComments } from '../test-helpers.js';
+import { stripComments, waitUntilIdle } from '../test-helpers.js';
 
 test('invokes effects from child to parent', async () => {
   const logs: string[] = [];
@@ -18,7 +18,7 @@ test('invokes effects from child to parent', async () => {
   );
 
   await root.mount().finished;
-  await scheduler.postTask(() => {}, { priority: 'background' });
+  await waitUntilIdle();
 
   expect(stripComments(container).innerHTML).toBe(
     '<div class="Foo"><div class="Foo.0"><div class="Foo.0.0"></div></div><div class="Foo.1"><div class="Foo.1.0"></div></div></div>',
@@ -69,7 +69,7 @@ test('invokes effects from child to parent', async () => {
   logs.length = 0;
 
   await root.update(Bar({ logs })).finished;
-  await scheduler.postTask(() => {}, { priority: 'background' });
+  await waitUntilIdle();
 
   expect(stripComments(container).innerHTML).toBe(
     '<div class="Bar"><div class="Bar.0"><div class="Bar.0.0"></div></div></div>',
@@ -139,7 +139,7 @@ test('invokes effects from child to parent', async () => {
   logs.length = 0;
 
   await root.unmount().finished;
-  await scheduler.postTask(() => {}, { priority: 'background' });
+  await waitUntilIdle();
 
   expect(container.innerHTML).toBe('');
   expect(logs).toStrictEqual([
