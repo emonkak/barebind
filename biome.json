@@ -5,6 +5,7 @@
       "!coverage",
       "!examples/*/lib",
       "!lib",
+      "!tools/*/lib",
       "!tools/*/test/fixtures/*.js"
     ]
   },
