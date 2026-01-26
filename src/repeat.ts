@@ -17,8 +17,8 @@ import {
 const OPERATION_INSERT = 0;
 const OPERATION_MOVE = 1;
 const OPERATION_MOVE_AND_UPDATE = 2;
-const OPERATION_REMOVE = 3;
-const OPERATION_UPDATE = 4;
+const OPERATION_UPDATE = 3;
+const OPERATION_REMOVE = 4;
 
 export type RepeatProps<TSource, TKey = unknown, TValue = unknown> = {
   items: Iterable<TSource>;
@@ -26,24 +26,16 @@ export type RepeatProps<TSource, TKey = unknown, TValue = unknown> = {
   valueSelector?: (element: TSource, index: number) => TValue;
 };
 
-type Operation<T> =
-  | {
-      type: typeof OPERATION_INSERT;
-      slot: Slot<T>;
-      referenceSlot: Slot<T> | undefined;
-    }
-  | {
-      type: typeof OPERATION_MOVE;
-      slot: Slot<T>;
-      referenceSlot: Slot<T> | undefined;
-    }
-  | {
-      type: typeof OPERATION_MOVE_AND_UPDATE;
-      slot: Slot<T>;
-      referenceSlot: Slot<T> | undefined;
-    }
-  | { type: typeof OPERATION_UPDATE; slot: Slot<T> }
-  | { type: typeof OPERATION_REMOVE; slot: Slot<T> };
+interface Operation<T> {
+  type:
+    | typeof OPERATION_INSERT
+    | typeof OPERATION_MOVE
+    | typeof OPERATION_MOVE_AND_UPDATE
+    | typeof OPERATION_UPDATE
+    | typeof OPERATION_REMOVE;
+  slot: Slot<T>;
+  referenceSlot?: Slot<T> | undefined;
+}
 
 interface ReconciliationHandler<T> {
   insert(value: T, referenceSlot: Slot<T> | undefined): Slot<T>;
@@ -77,13 +69,13 @@ export class RepeatBinding<TSource, TKey, TValue>
 
   private readonly _part: Part.ChildNodePart;
 
-  private _latestKeys: TKey[] = [];
+  private _pendingKeys: TKey[] = [];
 
   private _pendingSlots: Slot<TValue>[] = [];
 
-  private _memoizedSlots: Slot<TValue>[] | null = null;
-
   private _pendingOperations: Operation<TValue>[] = [];
+
+  private _memoizedSlots: Slot<TValue>[] | null = null;
 
   constructor(
     props: RepeatProps<TSource, TKey, TValue>,
@@ -127,19 +119,22 @@ export class RepeatBinding<TSource, TKey, TValue>
       keySelector = defaultKeySelector,
       valueSelector = defaultValueSelector,
     } = this._props;
-    const items = Array.from(this._props.items);
-    const newKeys = new Array(items.length);
-    const newValues = new Array(items.length);
-    const oldKeys = this._latestKeys;
-    const oldSlots = this._pendingSlots;
+    const items = Array.isArray(this._props.items)
+      ? this._props.items
+      : Array.from(this._props.items);
+    const newKeys = items.map(keySelector);
+    const newValues = items.map(valueSelector);
+    const oldKeys = this._pendingKeys;
+    const oldSlots = this._pendingSlots ?? [];
 
-    for (let i = 0, l = items.length; i < l; i++) {
-      const item = items[i]!;
-      newKeys[i] = keySelector(item, i);
-      newValues[i] = valueSelector(item, i);
+    if (this._memoizedSlots === null) {
+      this._pendingOperations = this._pendingSlots.map((slot) => ({
+        type: OPERATION_INSERT,
+        slot,
+      }));
     }
 
-    const newSlots = reconcileSlots(oldKeys, oldSlots, newKeys, newValues, {
+    const newSlots = reconcileSlots(newKeys, newValues, oldKeys, oldSlots, {
       insert: (newValue, referenceSlot) => {
         const part = {
           type: PartType.ChildNode,
@@ -194,7 +189,7 @@ export class RepeatBinding<TSource, TKey, TValue>
       },
     });
 
-    this._latestKeys = newKeys;
+    this._pendingKeys = newKeys;
     this._pendingSlots = newSlots;
 
     if (targetTree !== null) {
@@ -210,42 +205,32 @@ export class RepeatBinding<TSource, TKey, TValue>
   }
 
   commit(): void {
-    for (const operation of this._pendingOperations) {
-      switch (operation.type) {
-        case OPERATION_INSERT: {
-          const { slot, referenceSlot } = operation;
+    for (const { type, slot, referenceSlot } of this._pendingOperations) {
+      switch (type) {
+        case OPERATION_INSERT:
           insertSlot(slot, referenceSlot, this._part);
           slot.commit();
           break;
-        }
-        case OPERATION_MOVE: {
-          const { slot, referenceSlot } = operation;
+        case OPERATION_MOVE:
           moveSlot(slot, referenceSlot, this._part);
           break;
-        }
-        case OPERATION_MOVE_AND_UPDATE: {
-          const { slot, referenceSlot } = operation;
+        case OPERATION_MOVE_AND_UPDATE:
           moveSlot(slot, referenceSlot, this._part);
           slot.commit();
           break;
-        }
-        case OPERATION_UPDATE: {
-          const { slot } = operation;
+        case OPERATION_UPDATE:
           slot.commit();
           break;
-        }
-        case OPERATION_REMOVE: {
-          const { slot } = operation;
+        case OPERATION_REMOVE:
           slot.rollback();
           slot.part.node.remove();
           break;
-        }
       }
     }
 
     this._part.anchorNode = getAnchorNode(this._pendingSlots);
-    this._memoizedSlots = this._pendingSlots;
     this._pendingOperations = [];
+    this._memoizedSlots = this._pendingSlots;
   }
 
   rollback(): void {
@@ -257,11 +242,8 @@ export class RepeatBinding<TSource, TKey, TValue>
     }
 
     this._part.anchorNode = null;
-
-    this._latestKeys = [];
-    this._pendingSlots = [];
-    this._memoizedSlots = null;
     this._pendingOperations = [];
+    this._memoizedSlots = null;
   }
 }
 
@@ -339,10 +321,10 @@ function moveSlot<T>(
 }
 
 function reconcileSlots<TKey, TValue>(
-  oldKeys: TKey[],
-  oldSlots: (Slot<TValue> | undefined)[],
   newKeys: TKey[],
   newValues: TValue[],
+  oldKeys: TKey[],
+  oldSlots: (Slot<TValue> | undefined)[],
   handler: ReconciliationHandler<TValue>,
 ): Slot<TValue>[] {
   const newSlots: Slot<TValue>[] = new Array(newKeys.length);
