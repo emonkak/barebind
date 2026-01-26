@@ -14,6 +14,7 @@ export interface PerformanceProfile {
 }
 
 export interface UpdateMeasurement {
+  success: boolean;
   startTime: number;
   duration: number;
   lanes: Lanes;
@@ -45,12 +46,16 @@ export type ConsoleLogger = Pick<
   'group' | 'groupCollapsed' | 'groupEnd' | 'log' | 'table'
 >;
 
+// Blue
 const RENDER_PHASE_STYLE =
   'color: light-dark(#0b57d0, #4c8df6); font-weight: bold';
+// Orange
 const MUTATION_PHASE_STYLE =
-  'color: light-dark(#b3261e, #e46962); font-weight: bold';
+  'color: light-dark(#9F4312, #E96725); font-weight: bold';
+// Purple
 const LAYOUT_PHASE_STYLE =
   'color: light-dark(#8c1ed3, #bf67ff); font-weight: bold';
+// Green
 const PASSIVE_PHASE_STYLE =
   'color: light-dark(#146c2e, #1ea446); font-weight: bold';
 const DURATION_STYLE =
@@ -78,15 +83,18 @@ export class PerformanceProfiler implements RuntimeObserver {
     switch (event.type) {
       case 'UPDATE_START': {
         profile.updateMeasurement = {
+          success: false,
           startTime: performance.now(),
           duration: 0,
           lanes: event.lanes,
         };
         break;
       }
-      case 'UPDATE_END': {
+      case 'UPDATE_SUCCESS':
+      case 'UPDATE_FAILURE': {
         const measurement = profile.updateMeasurement;
         if (measurement !== null) {
+          measurement.success = event.type === 'UPDATE_SUCCESS';
           measurement.duration = performance.now() - measurement.startTime;
         }
         this._reporter.reportProfile(profile);
@@ -191,10 +199,11 @@ export class ConsoleReporter implements PerformanceReporter {
       (updateMeasurement.lanes & Lanes.ViewTransitionLane) !== 0;
     const priority = getPriorityFromLanes(updateMeasurement.lanes);
     const titleLablel = viewTransition ? 'Transition' : 'Update';
+    const statusLablel = updateMeasurement.success ? 'Success' : 'FAILURE';
     const priorityLabel = priority !== null ? `with ${priority}` : 'without';
 
     this._logger.groupCollapsed(
-      `${titleLablel} #${profile.id} ${priorityLabel} priority in %c${updateMeasurement.duration}ms`,
+      `${titleLablel} #${profile.id} ${statusLablel} ${priorityLabel} priority in %c${updateMeasurement.duration}ms`,
       DURATION_STYLE,
     );
 

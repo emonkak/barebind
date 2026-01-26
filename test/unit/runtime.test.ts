@@ -147,7 +147,7 @@ describe('Runtime', () => {
             effects: expect.any(EffectQueue),
           },
           {
-            type: 'UPDATE_END',
+            type: 'UPDATE_SUCCESS',
             id: 1,
             lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
           },
@@ -240,7 +240,7 @@ describe('Runtime', () => {
             effects: expect.any(EffectQueue),
           },
           {
-            type: 'UPDATE_END',
+            type: 'UPDATE_SUCCESS',
             id: 2,
             lanes:
               Lanes.DefaultLane |
@@ -266,7 +266,10 @@ describe('Runtime', () => {
 
     it('handles an error that occurs during flushing', async () => {
       const runtime = createRuntime();
+      const observer = new MockObserver();
       const error = new Error('fail');
+
+      runtime.addObserver(observer);
 
       SESSION: {
         const coroutine = new MockCoroutine(() => {
@@ -286,12 +289,33 @@ describe('Runtime', () => {
 
         await expect(handle.finished).rejects.toThrow(error);
       }
+
+      expect(observer.flushEvents()).toStrictEqual([
+        {
+          type: 'UPDATE_START',
+          id: 1,
+          lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+        },
+        {
+          type: 'RENDER_START',
+          id: 1,
+        },
+        {
+          type: 'UPDATE_FAILURE',
+          id: 1,
+          lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+          error: error,
+        },
+      ]);
     });
 
     it('aborts rendering when error is captured outside the root', async () => {
       const runtime = createRuntime();
+      const observer = new MockObserver();
       const errorHandler = vi.fn();
       const error = new Error('fail');
+
+      runtime.addObserver(observer);
 
       SESSION: {
         const parentScope = createScope();
@@ -323,6 +347,24 @@ describe('Runtime', () => {
         expect(errorHandler).toHaveBeenCalledOnce();
         expect(errorHandler).toHaveBeenCalledWith(error, expect.any(Function));
       }
+
+      expect(observer.flushEvents()).toStrictEqual([
+        {
+          type: 'UPDATE_START',
+          id: 1,
+          lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+        },
+        {
+          type: 'RENDER_START',
+          id: 1,
+        },
+        {
+          type: 'UPDATE_FAILURE',
+          id: 1,
+          lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+          error: expect.objectContaining({ cause: error }),
+        },
+      ]);
     });
   });
 
@@ -448,7 +490,7 @@ describe('Runtime', () => {
             effects: expect.any(EffectQueue),
           },
           {
-            type: 'UPDATE_END',
+            type: 'UPDATE_SUCCESS',
             id: 1,
             lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
           },
@@ -542,7 +584,7 @@ describe('Runtime', () => {
             effects: expect.any(EffectQueue),
           },
           {
-            type: 'UPDATE_END',
+            type: 'UPDATE_SUCCESS',
             id: 2,
             lanes:
               Lanes.DefaultLane |
@@ -566,7 +608,10 @@ describe('Runtime', () => {
 
     it('handles an error that occurs during flushing', async () => {
       const runtime = createRuntime();
+      const observer = new MockObserver();
       const error = new Error('fail');
+
+      runtime.addObserver(observer);
 
       SESSION: {
         const coroutine = new MockCoroutine(() => {
@@ -577,12 +622,33 @@ describe('Runtime', () => {
           runtime.scheduleUpdate(coroutine).finished,
         ).rejects.toThrow(error);
       }
+
+      expect(observer.flushEvents()).toStrictEqual([
+        {
+          type: 'UPDATE_START',
+          id: 1,
+          lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+        },
+        {
+          type: 'RENDER_START',
+          id: 1,
+        },
+        {
+          type: 'UPDATE_FAILURE',
+          id: 1,
+          lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+          error: error,
+        },
+      ]);
     });
 
     it('aborts rendering when error is captured outside the root', async () => {
       const runtime = createRuntime();
+      const observer = new MockObserver();
       const errorHandler = vi.fn();
       const error = new Error('fail');
+
+      runtime.addObserver(observer);
 
       SESSION: {
         const parentScope = createScope();
@@ -614,6 +680,24 @@ describe('Runtime', () => {
         expect(errorHandler).toHaveBeenCalledOnce();
         expect(errorHandler).toHaveBeenCalledWith(error, expect.any(Function));
       }
+
+      expect(observer.flushEvents()).toStrictEqual([
+        {
+          type: 'UPDATE_START',
+          id: 1,
+          lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+        },
+        {
+          type: 'RENDER_START',
+          id: 1,
+        },
+        {
+          type: 'UPDATE_FAILURE',
+          id: 1,
+          lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+          error: expect.objectContaining({ cause: error }),
+        },
+      ]);
     });
   });
 

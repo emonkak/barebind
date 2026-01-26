@@ -53,9 +53,20 @@ export interface RuntimeBackend {
 
 export type RuntimeEvent =
   | {
-      type: 'UPDATE_START' | 'UPDATE_END';
+      type: 'UPDATE_START';
       id: number;
       lanes: Lanes;
+    }
+  | {
+      type: 'UPDATE_SUCCESS';
+      id: number;
+      lanes: Lanes;
+    }
+  | {
+      type: 'UPDATE_FAILURE';
+      id: number;
+      lanes: Lanes;
+      error: unknown;
     }
   | {
       type: 'RENDER_START' | 'RENDER_END';
@@ -204,14 +215,14 @@ export class Runtime implements SessionContext {
             )
             .finally(() => {
               notifyObservers(this._observers, {
-                type: 'UPDATE_END',
+                type: 'UPDATE_SUCCESS',
                 id,
                 lanes,
               });
             });
         } else {
           notifyObservers(this._observers, {
-            type: 'UPDATE_END',
+            type: 'UPDATE_SUCCESS',
             id,
             lanes,
           });
@@ -220,9 +231,10 @@ export class Runtime implements SessionContext {
         continuation.resolve({ canceled: false, done: true });
       } catch (error) {
         notifyObservers(this._observers, {
-          type: 'UPDATE_END',
+          type: 'UPDATE_FAILURE',
           id,
           lanes,
+          error,
         });
 
         if (error instanceof CapturedError) {
@@ -298,7 +310,7 @@ export class Runtime implements SessionContext {
         }
 
         notifyObservers(this._observers, {
-          type: 'UPDATE_END',
+          type: 'UPDATE_SUCCESS',
           id,
           lanes,
         });
@@ -306,9 +318,10 @@ export class Runtime implements SessionContext {
         continuation.resolve({ canceled: false, done: true });
       } catch (error) {
         notifyObservers(this._observers, {
-          type: 'UPDATE_END',
+          type: 'UPDATE_FAILURE',
           id,
           lanes,
+          error,
         });
 
         if (error instanceof CapturedError) {

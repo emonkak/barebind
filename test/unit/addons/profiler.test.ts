@@ -93,7 +93,7 @@ describe('PerformanceProfiler', () => {
           effects: passiveEffects,
         },
         {
-          type: 'UPDATE_END',
+          type: 'UPDATE_SUCCESS',
           id: 1,
           lanes: Lanes.UserBlockingLane,
         },
@@ -107,6 +107,7 @@ describe('PerformanceProfiler', () => {
       expect(reporter.reportProfile).toHaveBeenCalledWith({
         id: 1,
         updateMeasurement: {
+          success: true,
           startTime: expect.any(Number),
           duration: expect.any(Number),
           lanes: Lanes.UserBlockingLane,
@@ -161,6 +162,7 @@ describe('ConsoleReporter', () => {
         {
           id: 1,
           updateMeasurement: {
+            success: true,
             startTime: 0,
             duration: 10,
             lanes: Lanes.ViewTransitionLane,
@@ -172,7 +174,10 @@ describe('ConsoleReporter', () => {
           passiveMeasurement: null,
         },
         [
-          ['groupCollapsed', 'Transition #1 without priority in %c10ms'],
+          [
+            'groupCollapsed',
+            'Transition #1 Success without priority in %c10ms',
+          ],
           ['groupEnd'],
         ],
       ],
@@ -180,6 +185,7 @@ describe('ConsoleReporter', () => {
         {
           id: 1,
           updateMeasurement: {
+            success: true,
             startTime: 0,
             duration: 10,
             lanes: Lanes.UserBlockingLane,
@@ -212,7 +218,10 @@ describe('ConsoleReporter', () => {
           },
         },
         [
-          ['groupCollapsed', 'Update #1 with user-blocking priority in %c10ms'],
+          [
+            'groupCollapsed',
+            'Update #1 Success with user-blocking priority in %c10ms',
+          ],
           ['log', '%cRENDER PHASE:%c 1 component(s) rendered in %c4ms'],
           [
             'table',
@@ -230,10 +239,54 @@ describe('ConsoleReporter', () => {
           ['groupEnd'],
         ],
       ],
+      [
+        {
+          id: 1,
+          updateMeasurement: {
+            success: false,
+            error: new Error('fail'),
+            startTime: 0,
+            duration: 10,
+            lanes: Lanes.UserBlockingLane,
+          },
+          renderMeasurement: {
+            startTime: 0,
+            duration: 0,
+          },
+          componentMeasurements: [
+            {
+              name: 'MyComponent',
+              startTime: 0,
+              duration: 0,
+            },
+          ],
+          mutationMeasurement: null,
+          layoutMeasurement: null,
+          passiveMeasurement: null,
+        },
+        [
+          [
+            'groupCollapsed',
+            'Update #1 FAILURE with user-blocking priority in %c10ms',
+          ],
+          ['log', '%cRENDER PHASE:%c 1 component(s) rendered in %c0ms'],
+          [
+            'table',
+            [
+              {
+                name: 'MyComponent',
+                startTime: 0,
+                duration: 0,
+              },
+            ],
+          ],
+          ['groupEnd'],
+        ],
+      ],
     ] as [
       PerformanceProfile,
       [keyof ConsoleLogger, ...unknown[]][],
-    ][])('logs the profile', (profile, expectedLogs) => {
+    ][])('prints the profile to the console', (profile, expectedLogs) => {
       const logger = new MockLogger();
       const reporter = new ConsoleReporter(logger);
 
