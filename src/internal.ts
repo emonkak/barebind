@@ -159,10 +159,6 @@ export class EffectQueue {
   pushBefore(effect: Effect): void {
     this._headEffects.push(effect);
   }
-
-  toArray(): Effect[] {
-    return this._headEffects.concat(this._middleEffects, this._tailEffects);
-  }
 }
 
 export type ErrorHandler = (
