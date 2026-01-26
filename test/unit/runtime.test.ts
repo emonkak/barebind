@@ -69,11 +69,11 @@ describe('Runtime', () => {
           priority: 'user-blocking',
         });
 
-        await expect(handle1.scheduled).resolves.toStrictEqual({
+        expect(await handle1.scheduled).toStrictEqual({
           canceled: false,
           done: true,
         });
-        await expect(handle2.scheduled).resolves.toStrictEqual({
+        expect(await handle2.scheduled).toStrictEqual({
           canceled: false,
           done: true,
         });
@@ -93,11 +93,11 @@ describe('Runtime', () => {
 
         expect(runtime.getPendingTasks().toArray()).toStrictEqual([]);
 
-        await expect(handle1.finished).resolves.toStrictEqual({
+        expect(await handle1.finished).toStrictEqual({
           canceled: false,
           done: true,
         });
-        await expect(handle2.finished).resolves.toStrictEqual({
+        expect(await handle2.finished).toStrictEqual({
           canceled: true,
           done: true,
         });
@@ -168,7 +168,7 @@ describe('Runtime', () => {
           viewTransition: true,
         });
 
-        await expect(handle.scheduled).resolves.toStrictEqual({
+        expect(await handle.scheduled).toStrictEqual({
           canceled: false,
           done: true,
         });
@@ -187,7 +187,7 @@ describe('Runtime', () => {
 
         expect(runtime.getPendingTasks().toArray()).toStrictEqual([]);
 
-        await expect(handle.finished).resolves.toStrictEqual({
+        expect(await handle.finished).toStrictEqual({
           canceled: false,
           done: true,
         });
@@ -276,7 +276,7 @@ describe('Runtime', () => {
           flush: false,
         });
 
-        await expect(handle.scheduled).resolves.toStrictEqual({
+        expect(await handle.scheduled).toStrictEqual({
           canceled: false,
           done: true,
         });
@@ -323,11 +323,11 @@ describe('Runtime', () => {
           priority: 'user-blocking',
         });
 
-        await expect(handle1.scheduled).resolves.toStrictEqual({
+        expect(await handle1.scheduled).toStrictEqual({
           canceled: false,
           done: true,
         });
-        await expect(handle2.scheduled).resolves.toStrictEqual({
+        expect(await handle2.scheduled).toStrictEqual({
           canceled: false,
           done: true,
         });
@@ -347,11 +347,11 @@ describe('Runtime', () => {
 
         expect(runtime.getPendingTasks().toArray()).toStrictEqual([]);
 
-        await expect(handle1.finished).resolves.toStrictEqual({
+        expect(await handle1.finished).toStrictEqual({
           canceled: false,
           done: true,
         });
-        await expect(handle2.finished).resolves.toStrictEqual({
+        expect(await handle2.finished).toStrictEqual({
           canceled: true,
           done: true,
         });
@@ -435,7 +435,7 @@ describe('Runtime', () => {
           viewTransition: true,
         });
 
-        await expect(handle.scheduled).resolves.toStrictEqual({
+        expect(await handle.scheduled).toStrictEqual({
           canceled: false,
           done: true,
         });
@@ -454,7 +454,7 @@ describe('Runtime', () => {
 
         expect(runtime.getPendingTasks().toArray()).toStrictEqual([]);
 
-        await expect(handle.finished).resolves.toStrictEqual({
+        expect(await handle.finished).toStrictEqual({
           canceled: false,
           done: true,
         });
