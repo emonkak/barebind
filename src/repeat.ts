@@ -126,13 +126,6 @@ export class RepeatBinding<TSource, TKey, TValue>
     const oldKeys = this._pendingKeys;
     const oldSlots = this._pendingSlots;
 
-    if (this._memoizedSlots === null) {
-      this._pendingOperations = this._pendingSlots.map((slot) => ({
-        type: OPERATION_INSERT,
-        slot,
-      }));
-    }
-
     const newSlots = reconcileSlots(newKeys, newValues, oldKeys, oldSlots, {
       insert: (newValue, referenceSlot) => {
         const part = {
@@ -241,7 +234,10 @@ export class RepeatBinding<TSource, TKey, TValue>
     }
 
     this._part.anchorNode = null;
-    this._pendingOperations = [];
+    this._pendingOperations = this._pendingSlots.map((slot) => ({
+      type: OPERATION_INSERT,
+      slot,
+    }));
     this._memoizedSlots = null;
   }
 }
