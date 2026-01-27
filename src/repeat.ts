@@ -116,16 +116,15 @@ export class RepeatBinding<TSource, TKey, TValue>
     const targetTree = getHydrationTargetTree(rootScope);
 
     const {
+      items,
       keySelector = defaultKeySelector,
       valueSelector = defaultValueSelector,
     } = this._props;
-    const items = Array.isArray(this._props.items)
-      ? this._props.items
-      : Array.from(this._props.items);
-    const newKeys = items.map(keySelector);
-    const newValues = items.map(valueSelector);
+    const newItems = Array.isArray(items) ? items : Array.from(items);
+    const newKeys = newItems.map(keySelector);
+    const newValues = newItems.map(valueSelector);
     const oldKeys = this._pendingKeys;
-    const oldSlots = this._pendingSlots ?? [];
+    const oldSlots = this._pendingSlots;
 
     if (this._memoizedSlots === null) {
       this._pendingOperations = this._pendingSlots.map((slot) => ({
@@ -259,11 +258,11 @@ function buildKeyToIndexMap<T>(
   return keyToIndexMap;
 }
 
-function defaultKeySelector(_element: unknown, index: number): any {
+function defaultKeySelector(_element: any, index: number): any {
   return index;
 }
 
-function defaultValueSelector(element: unknown): any {
+function defaultValueSelector(element: any): any {
   return element;
 }
 
