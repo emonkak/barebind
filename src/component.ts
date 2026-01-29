@@ -182,13 +182,19 @@ export class ComponentBinding<TProps, TResult>
 class CleanEffectHook implements Effect {
   private readonly _hook: Hook.EffectHook;
 
+  private readonly _epoch: number;
+
   constructor(hook: Hook.EffectHook) {
     this._hook = hook;
+    this._epoch = hook.epoch;
   }
 
   commit(): void {
-    this._hook.cleanup?.();
-    this._hook.cleanup = undefined;
+    if (this._hook.epoch === this._epoch) {
+      this._hook.cleanup?.();
+      this._hook.cleanup = undefined;
+      this._hook.epoch++;
+    }
   }
 }
 

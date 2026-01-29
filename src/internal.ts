@@ -185,7 +185,7 @@ export namespace Hook {
       | typeof HookType.InsertionEffect;
     callback: () => Cleanup | void;
     cleanup: Cleanup | void;
-    dirty: boolean;
+    epoch: number;
     memoizedDependencies: readonly unknown[] | null;
     pendingDependencies: readonly unknown[] | null;
   }

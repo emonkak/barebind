@@ -192,14 +192,10 @@ export class RenderSession implements RenderContext {
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    const hook = this._createEffect(
+    this._createEffect(
       callback,
       dependencies,
       HookType.PassiveEffect,
-    );
-    enqueueInvokeEffectHookIfDirty(
-      hook,
-      this._scope.level,
       this._frame.passiveEffects,
     );
   }
@@ -227,14 +223,10 @@ export class RenderSession implements RenderContext {
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    const hook = this._createEffect(
+    this._createEffect(
       callback,
       dependencies,
       HookType.InsertionEffect,
-    );
-    enqueueInvokeEffectHookIfDirty(
-      hook,
-      this._scope.level,
       this._frame.mutationEffects,
     );
   }
@@ -243,14 +235,10 @@ export class RenderSession implements RenderContext {
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    const hook = this._createEffect(
+    this._createEffect(
       callback,
       dependencies,
       HookType.LayoutEffect,
-    );
-    enqueueInvokeEffectHookIfDirty(
-      hook,
-      this._scope.level,
       this._frame.layoutEffects,
     );
   }
@@ -388,28 +376,33 @@ export class RenderSession implements RenderContext {
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null,
     type: Hook.EffectHook['type'],
+    effects: EffectQueue,
   ): Hook.EffectHook {
     const { hooks } = this._state;
+    const { level } = this._scope;
     let currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.EffectHook>(type, currentHook);
       currentHook.callback = callback;
       currentHook.pendingDependencies = dependencies;
-      currentHook.dirty = areDependenciesChanged(
-        dependencies,
-        currentHook.memoizedDependencies,
-      );
+      if (
+        areDependenciesChanged(dependencies, currentHook.memoizedDependencies)
+      ) {
+        currentHook.epoch++;
+        enqueueInvokeEffectHook(currentHook, level, effects);
+      }
     } else {
       currentHook = {
         type,
         callback,
         cleanup: undefined,
-        dirty: true,
+        epoch: 0,
         memoizedDependencies: null,
         pendingDependencies: dependencies,
       };
       hooks.push(currentHook);
+      enqueueInvokeEffectHook(currentHook, level, effects);
     }
 
     this._hookIndex++;
@@ -430,29 +423,31 @@ export class RenderSession implements RenderContext {
 class InvokeEffectHook implements Effect {
   private readonly _hook: Hook.EffectHook;
 
+  private readonly _epoch: number;
+
   constructor(hook: Hook.EffectHook) {
     this._hook = hook;
+    this._epoch = hook.epoch;
   }
 
   commit(): void {
-    const { callback, cleanup } = this._hook;
-    if (this._hook.dirty) {
+    const { callback, cleanup, epoch } = this._hook;
+
+    if (epoch === this._epoch) {
       cleanup?.();
       this._hook.cleanup = callback();
-      this._hook.dirty = false;
       this._hook.memoizedDependencies = this._hook.pendingDependencies;
+      this._hook.epoch++;
     }
   }
 }
 
-function enqueueInvokeEffectHookIfDirty(
+function enqueueInvokeEffectHook(
   hook: Hook.EffectHook,
   level: number,
   effects: EffectQueue,
 ): void {
-  if (hook.dirty) {
-    effects.push(new InvokeEffectHook(hook), level);
-  }
+  effects.push(new InvokeEffectHook(hook), level);
 }
 
 function ensureHookType<TExpectedHook extends Hook>(

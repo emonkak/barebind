@@ -4,6 +4,7 @@ import { ComponentBinding, createComponent } from '@/component.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import {
   CommitPhase,
+  createScope,
   Lanes,
   PartType,
   type RenderContext,
@@ -283,6 +284,47 @@ describe('ComponentBinding', () => {
         expect(props.cleanup).toHaveBeenNthCalledWith(1, CommitPhase.Mutation);
         expect(props.cleanup).toHaveBeenNthCalledWith(2, CommitPhase.Layout);
         expect(props.cleanup).toHaveBeenNthCalledWith(3, CommitPhase.Passive);
+        expect(part.node.nodeValue).toBe('');
+      }
+    });
+
+    it('does not invoke pending effects when the component is detached', () => {
+      const props = {
+        callback: vi.fn(),
+        cleanup: vi.fn(),
+      };
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        anchorNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
+      const binding = new ComponentBinding(EnqueueEffect, props, part);
+      const updater = new TestUpdater();
+
+      SESSION: {
+        updater.startUpdate((session) => {
+          binding.attach(session);
+
+          session.frame.pendingCoroutines.push({
+            scope: createScope(session.scope, session.scope.level + 1),
+            pendingLanes: Lanes.DefaultLane,
+            resume(session) {
+              binding.detach(session);
+            },
+          });
+        });
+
+        expect(binding['_slot']).toBeInstanceOf(MockSlot);
+        expect(binding['_slot']).toStrictEqual(
+          expect.objectContaining({
+            dirty: true,
+            committed: false,
+          }),
+        );
+        expect(binding['_slot']?.part).toBe(part);
+        expect(props.callback).not.toHaveBeenCalled();
+        expect(props.cleanup).not.toHaveBeenCalled();
         expect(part.node.nodeValue).toBe('');
       }
     });
