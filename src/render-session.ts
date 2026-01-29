@@ -15,7 +15,7 @@ import {
   HookType,
   type InitialState,
   Lanes,
-  type NewState,
+  type NextState,
   type RefObject,
   type RenderContext,
   type RenderFrame,
@@ -309,7 +309,9 @@ export class RenderSession implements RenderContext {
       currentHook.reducer = reducer;
     } else {
       const state =
-        typeof initialState === 'function' ? initialState() : initialState;
+        typeof initialState === 'function'
+          ? (initialState as () => TState)()
+          : initialState;
       const hook: Hook.ReducerHook<TState, TAction> = {
         type: HookType.Reducer,
         reducer,
@@ -360,14 +362,16 @@ export class RenderSession implements RenderContext {
   ): [
     state: TState,
     setState: (
-      newState: NewState<TState>,
+      nextState: NextState<TState>,
       options?: DispatchOptions<TState>,
     ) => UpdateHandle,
     isPending: boolean,
   ] {
     return this.useReducer(
       (state, action) =>
-        typeof action === 'function' ? action(state) : action,
+        typeof action === 'function'
+          ? (action as (prevState: TState) => TState)(state)
+          : action,
       initialState,
     );
   }

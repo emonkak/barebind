@@ -229,7 +229,7 @@ export const HookType = {
 
 export type HookType = (typeof HookType)[keyof typeof HookType];
 
-export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;
+export type InitialState<T> = (T extends Function ? never : T) | (() => T);
 
 // biome-ignore format: Align lane flags
 export const Lanes = {
@@ -249,9 +249,9 @@ export interface Layout {
   resolveSlot<T>(binding: Binding<UnwrapBindable<T>>): Slot<T>;
 }
 
-export type NewState<T> = [T] extends [Function]
-  ? (prevState: T) => T
-  : ((prevState: T) => T) | T;
+export type NextState<T> =
+  | (T extends Function ? never : T)
+  | ((prevState: T) => T);
 
 export type Part =
   | Part.AttributePart
@@ -392,7 +392,7 @@ export interface RenderContext {
   ): [
     state: TState,
     setState: (
-      newState: NewState<TState>,
+      nextState: NextState<TState>,
       options?: DispatchOptions<TState>,
     ) => UpdateHandle,
     isPending: boolean,
