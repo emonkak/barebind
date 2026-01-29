@@ -143,8 +143,13 @@ export class Runtime implements SessionContext {
 
       const id = (this._updateCount = incrementCount(this._updateCount));
       const frame = createRenderFrame(id, lanes, coroutine);
-      const rootScope = coroutine.scope;
-      const session = createUpdateSession(frame, rootScope, rootScope, this);
+      const originScope = coroutine.scope;
+      const session = createUpdateSession(
+        frame,
+        originScope,
+        originScope,
+        this,
+      );
 
       try {
         notifyObservers(this._observers, {
@@ -164,7 +169,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(coroutine.scope, rootScope, error);
+                handleError(coroutine.scope, originScope, error);
               }
             }
 
@@ -261,8 +266,13 @@ export class Runtime implements SessionContext {
 
       const id = (this._updateCount = incrementCount(this._updateCount));
       const frame = createRenderFrame(id, lanes, coroutine);
-      const rootScope = coroutine.scope;
-      const session = createUpdateSession(frame, rootScope, rootScope, this);
+      const originScope = coroutine.scope;
+      const session = createUpdateSession(
+        frame,
+        originScope,
+        originScope,
+        this,
+      );
 
       try {
         notifyObservers(this._observers, {
@@ -282,7 +292,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(coroutine.scope, rootScope, error);
+                handleError(coroutine.scope, originScope, error);
               }
             }
           } while (frame.pendingCoroutines.length > 0);
@@ -524,7 +534,7 @@ function generateRandomString(length: number): string {
   ).join('');
 }
 
-function handleError(scope: Scope, rootScope: Scope, error: unknown): void {
+function handleError(scope: Scope, originScope: Scope, error: unknown): void {
   let capturedOutsideRoot = false;
   let { parent: nextScope, boundary: nextBoundary } = scope;
 
@@ -541,7 +551,7 @@ function handleError(scope: Scope, rootScope: Scope, error: unknown): void {
       }
       if (nextScope !== null) {
         const { parent, boundary } = nextScope;
-        capturedOutsideRoot = nextScope.level <= rootScope.level;
+        capturedOutsideRoot = nextScope.level <= originScope.level;
         nextScope = parent;
         nextBoundary = boundary;
       } else {

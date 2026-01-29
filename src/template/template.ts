@@ -99,7 +99,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
         slots[i]!.reconcile(this._binds[i]!, session);
       }
     } else {
-      const targetTree = getHydrationTargetTree(session.rootScope);
+      const targetTree = getHydrationTargetTree(session.originScope);
 
       if (targetTree !== null) {
         this._pendingResult = this._template.hydrate(

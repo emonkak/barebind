@@ -497,7 +497,7 @@ export interface UpdateResult {
 export interface UpdateSession {
   readonly frame: RenderFrame;
   readonly scope: Scope;
-  readonly rootScope: Scope;
+  readonly originScope: Scope;
   readonly context: SessionContext;
 }
 
@@ -539,13 +539,13 @@ export function createScope(
 export function createUpdateSession(
   frame: RenderFrame,
   scope: Scope,
-  rootScope: Scope,
+  originScope: Scope,
   context: SessionContext,
 ): UpdateSession {
   return {
     frame,
     scope,
-    rootScope,
+    originScope,
     context,
   };
 }
