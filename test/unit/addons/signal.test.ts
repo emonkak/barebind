@@ -159,10 +159,15 @@ describe('SignalBinding', () => {
       signal1.value = 'baz';
       signal2.value = 'qux';
 
+      expect(binding.pendingLanes).toBe(
+        Lanes.DefaultLane | Lanes.UserBlockingLane,
+      );
+
       await Promise.resolve(); // wait dirty checking
       await Promise.resolve(); // wait scheduling
 
       expect(part.node.nodeValue).toBe('qux');
+      expect(binding.pendingLanes).toBe(Lanes.NoLanes);
     });
   });
 
@@ -202,10 +207,13 @@ describe('SignalBinding', () => {
 
       signal.value = 'bar';
 
+      expect(binding.pendingLanes).toBe(Lanes.NoLanes);
+
       await Promise.resolve(); // wait dirty checking
       await Promise.resolve(); // wait scheduling
 
       expect(part.node.nodeValue).toBe('');
+      expect(binding.pendingLanes).toBe(Lanes.NoLanes);
     });
   });
 });

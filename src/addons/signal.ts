@@ -130,6 +130,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._slot.detach(session);
 
     this._scope = DETACHED_SCOPE;
+    this._pendingLanes = Lanes.NoLanes;
     this._subscription = null;
   }
 
