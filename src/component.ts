@@ -126,7 +126,7 @@ export class ComponentBinding<TProps, TResult>
       this._scope === originScope &&
       this._state.pendingLanes !== Lanes.NoLanes
     ) {
-      frame.mutationEffects.push(this._slot, this._scope.level);
+      frame.mutationEffects.push(this, this._scope.level);
     }
 
     this._state.pendingLanes &= ~frame.lanes;
@@ -171,11 +171,15 @@ export class ComponentBinding<TProps, TResult>
   }
 
   commit(): void {
-    this._slot?.commit();
+    if (!this._scope.poisoned) {
+      this._slot?.commit();
+    }
   }
 
   rollback(): void {
-    this._slot?.rollback();
+    if (!this._scope.poisoned) {
+      this._slot?.rollback();
+    }
   }
 }
 

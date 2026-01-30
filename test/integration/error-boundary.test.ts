@@ -15,7 +15,7 @@ test('catches an error during rendering', async () => {
   await root.mount().finished;
 
   expect(stripComments(container).innerHTML).toBe(
-    '<main><h1>Opps, an error occurred!</h1><p>Error: User error</p></main>',
+    '<main><h1>Opps, an error occurred!</h1><p>Error: fail</p></main>',
   );
 
   await root.unmount().finished;
@@ -36,7 +36,7 @@ const Parent = createComponent(function Parent(): unknown {
 });
 
 const Child = createComponent(function Child(): unknown {
-  throw new Error('User error');
+  throw new Error('fail');
 });
 
 const ErrorBoundary = createComponent(function ErrorBoundary(

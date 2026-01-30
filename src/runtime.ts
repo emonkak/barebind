@@ -540,6 +540,8 @@ function handleError(scope: Scope, originScope: Scope, error: unknown): void {
 
   const handleError = (error: unknown) => {
     while (true) {
+      scope.poisoned = true;
+
       while (nextBoundary !== null) {
         const boundary = nextBoundary;
         nextBoundary = nextBoundary.next;
@@ -549,11 +551,13 @@ function handleError(scope: Scope, originScope: Scope, error: unknown): void {
           return;
         }
       }
+
       if (nextScope !== null) {
         const { parent, boundary } = nextScope;
-        capturedOutsideRoot = nextScope.level <= originScope.level;
+        scope = nextScope;
         nextScope = parent;
         nextBoundary = boundary;
+        capturedOutsideRoot = scope.level <= originScope.level;
       } else {
         throw error;
       }

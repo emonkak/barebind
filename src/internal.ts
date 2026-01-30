@@ -440,6 +440,7 @@ export interface Scope {
   parent: Scope | null;
   level: number;
   boundary: Boundary | null;
+  poisoned: boolean;
 }
 
 export interface Slot<T> extends ReversibleEffect {
@@ -530,6 +531,7 @@ export function createScope(
     parent,
     level,
     boundary: null,
+    poisoned: false,
   };
 }
 
