@@ -27,7 +27,7 @@ export class FlexibleSlot<T> implements Slot<T> {
 
   private _memoizedBinding: Binding<UnwrapBindable<T>> | null = null;
 
-  private _reservedBinding: Binding<UnwrapBindable<T>> | null = null;
+  private _cachedBinding: Binding<UnwrapBindable<T>> | null = null;
 
   private _dirty = false;
 
@@ -61,18 +61,18 @@ export class FlexibleSlot<T> implements Slot<T> {
         this._dirty = true;
       }
     } else {
-      const reservedBinding = this._reservedBinding;
+      const cachedBinding = this._cachedBinding;
 
       this._pendingBinding.detach(session);
-      this._reservedBinding = this._pendingBinding;
+      this._cachedBinding = this._pendingBinding;
 
       if (
-        reservedBinding !== null &&
-        areDirectiveTypesEqual(reservedBinding.type, directive.type)
+        cachedBinding !== null &&
+        areDirectiveTypesEqual(cachedBinding.type, directive.type)
       ) {
-        reservedBinding.value = directive.value;
-        reservedBinding.attach(session);
-        this._pendingBinding = reservedBinding;
+        cachedBinding.value = directive.value;
+        cachedBinding.attach(session);
+        this._pendingBinding = cachedBinding;
       } else {
         this._pendingBinding = directive.type.resolveBinding(
           directive.value,
