@@ -55,8 +55,8 @@ const ErrorBoundary = createComponent(function ErrorBoundary(
     });
   });
 
-  $.catchError((error, handle) => {
-    handle(error);
+  $.catchError((error, handleError) => {
+    handleError(error);
   });
 
   if (errorCapture !== null && errorCapture.children === children) {

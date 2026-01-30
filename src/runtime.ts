@@ -538,14 +538,14 @@ function handleError(scope: Scope, originScope: Scope, error: unknown): void {
   let capturedOutsideRoot = false;
   let { parent: nextScope, boundary: nextBoundary } = scope;
 
-  const handle = (error: unknown) => {
+  const handleError = (error: unknown) => {
     while (true) {
       while (nextBoundary !== null) {
         const boundary = nextBoundary;
         nextBoundary = nextBoundary.next;
         if (boundary.type === BoundaryType.Error) {
           const { handler } = boundary;
-          handler(error, handle);
+          handler(error, handleError);
           return;
         }
       }
@@ -560,7 +560,7 @@ function handleError(scope: Scope, originScope: Scope, error: unknown): void {
     }
   };
 
-  handle(error);
+  handleError(error);
 
   if (capturedOutsideRoot) {
     throw new CapturedError(undefined, { cause: error });

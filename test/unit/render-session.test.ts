@@ -25,8 +25,8 @@ describe('RenderSession', () => {
         renderer.startRender((session) => {
           session.catchError(handler);
 
-          session.catchError((error, handle) => {
-            handle(error);
+          session.catchError((error, handleError) => {
+            handleError(error);
           });
 
           throw error;

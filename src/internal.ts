@@ -163,7 +163,7 @@ export class EffectQueue {
 
 export type ErrorHandler = (
   error: unknown,
-  handle: (error: unknown) => void,
+  handleError: (error: unknown) => void,
 ) => void;
 
 export type Hook =

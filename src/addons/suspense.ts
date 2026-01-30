@@ -19,7 +19,7 @@ export const Suspense = createComponent(function Suspense(
       ({ status }) => status === 'fulfilled' || status === 'rejected',
     );
 
-  $.catchError((error, handle) => {
+  $.catchError((error, handleError) => {
     if (error instanceof Suspend) {
       const callback = () => {
         if (areSuspendsSettled()) {
@@ -33,7 +33,7 @@ export const Suspense = createComponent(function Suspense(
         $.forceUpdate();
       }
     } else {
-      handle(error);
+      handleError(error);
     }
   });
 
