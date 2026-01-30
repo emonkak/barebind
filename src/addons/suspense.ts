@@ -12,27 +12,24 @@ export const Suspense = createComponent(function Suspense(
   { children, fallback }: SuspenseProps,
   $: RenderContext,
 ): unknown {
-  const pendingHandles = $.useMemo<RawResourceHandle<unknown>[]>(
-    () => [],
-    [children],
-  );
+  const pendingSuspends = $.useMemo<Suspend<unknown>[]>(() => [], [children]);
 
-  const areHandlesSettled = () =>
-    pendingHandles.every(
+  const areSuspendsSettled = () =>
+    pendingSuspends.every(
       ({ status }) => status === 'fulfilled' || status === 'rejected',
     );
 
   $.catchError((error, handle) => {
-    if (error instanceof RawResourceHandle) {
+    if (error instanceof Suspend) {
       const callback = () => {
-        if (areHandlesSettled()) {
+        if (areSuspendsSettled()) {
           $.forceUpdate();
         }
       };
 
       error.then(callback, callback);
 
-      if (pendingHandles.push(error) === 1) {
+      if (pendingSuspends.push(error) === 1) {
         $.forceUpdate();
       }
     } else {
@@ -42,13 +39,13 @@ export const Suspense = createComponent(function Suspense(
 
   $.useEffect(() => {
     return () => {
-      for (const handle of pendingHandles) {
-        handle.dispose();
+      for (const suspend of pendingSuspends) {
+        suspend.abort();
       }
     };
-  }, [pendingHandles]);
+  }, [pendingSuspends]);
 
-  const shouldRenderChildren = areHandlesSettled();
+  const shouldRenderChildren = areSuspendsSettled();
 
   return Fragment([
     Flexible(shouldRenderChildren ? children : null),
@@ -59,34 +56,23 @@ export const Suspense = createComponent(function Suspense(
 export const Resource = function Resource<T>(
   fetch: (signal: AbortSignal) => Promise<T>,
   dependencies: unknown[] = [],
-): HookFunction<ResourceHandle<T>> {
+): HookFunction<Suspend<T>> {
   return (context) =>
     context.useMemo(() => {
       const controller = new AbortController();
       const promise = fetch(controller.signal);
-      return new RawResourceHandle(promise, controller) as ResourceHandle<T>;
+      return new Suspend(promise, controller);
     }, dependencies);
 };
 
-export type ResourceHandle<T> = RawResourceHandle<T> &
-  ResourceHandleConstraint<T>;
+export type SuspendStatus = 'pending' | 'fulfilled' | 'rejected' | 'aborted';
 
-type ResourceHandleConstraint<T> =
-  | { status: 'pending'; value: never; reason: never }
-  | { status: 'fulfilled'; value: T; reason: never }
-  | { status: 'rejected' | 'aborted'; value: never; reason: unknown };
-
-type ResuorceStatus = 'pending' | 'fulfilled' | 'rejected' | 'aborted';
-
-/**
- * @internal
- */
-export class RawResourceHandle<T> implements PromiseLike<T> {
+export class Suspend<T> implements PromiseLike<T> {
   private readonly _promise: Promise<T>;
 
   private readonly _controller: AbortController;
 
-  private _status: ResuorceStatus = 'pending';
+  private _status: SuspendStatus = 'pending';
 
   private _value: T | undefined;
 
@@ -113,7 +99,7 @@ export class RawResourceHandle<T> implements PromiseLike<T> {
     this._controller = controller;
   }
 
-  get status(): ResuorceStatus {
+  get status(): SuspendStatus {
     return this._status;
   }
 
@@ -125,7 +111,7 @@ export class RawResourceHandle<T> implements PromiseLike<T> {
     return this._reason;
   }
 
-  dispose(): void {
+  abort(): void {
     if (this._status === 'pending') {
       this._controller.abort();
     }
@@ -144,20 +130,9 @@ export class RawResourceHandle<T> implements PromiseLike<T> {
     let promise: Promise<T>;
     switch (this._status) {
       case 'pending': {
-        const { signal } = this._controller;
         promise = Promise.race([
           this._promise,
-          new Promise<T>((_, reject) => {
-            signal.addEventListener(
-              'abort',
-              () => {
-                reject(signal.reason);
-              },
-              {
-                once: true,
-              },
-            );
-          }),
+          waitForSignal<T>(this._controller.signal),
         ]);
         break;
       }
@@ -183,4 +158,12 @@ export class RawResourceHandle<T> implements PromiseLike<T> {
         throw this._reason;
     }
   }
+}
+
+function waitForSignal<T>(signal: AbortSignal): Promise<T> {
+  return new Promise<T>((_resolve, reject) => {
+    signal.addEventListener('abort', () => {
+      reject(signal.reason);
+    });
+  });
 }
