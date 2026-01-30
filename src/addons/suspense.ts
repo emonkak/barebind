@@ -35,6 +35,10 @@ export const Suspense = createComponent(function Suspense(
       if (pendingHandles.push(error) === 1) {
         $.forceUpdate();
       }
+
+      if (rethrowSuspend) {
+        handle(error);
+      }
     } else {
       handle(error);
     }

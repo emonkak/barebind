@@ -64,6 +64,8 @@ export class RenderSession implements RenderContext {
 
   finalize(): void {
     const { hooks } = this._state;
+    const { passiveEffects, layoutEffects, mutationEffects } = this._frame;
+    const { level } = this._scope;
     const currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
@@ -73,6 +75,20 @@ export class RenderSession implements RenderContext {
 
       // Refuse to use new hooks after finalization.
       Object.freeze(hooks);
+    }
+
+    for (const hook of this._state.hooks) {
+      switch (hook.type) {
+        case HookType.PassiveEffect:
+          enqueueInvokeEffectHook(hook, level, passiveEffects);
+          break;
+        case HookType.LayoutEffect:
+          enqueueInvokeEffectHook(hook, level, layoutEffects);
+          break;
+        case HookType.InsertionEffect:
+          enqueueInvokeEffectHook(hook, level, mutationEffects);
+          break;
+      }
     }
 
     this._scope = DETACHED_SCOPE;
@@ -192,12 +208,7 @@ export class RenderSession implements RenderContext {
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    this._createEffect(
-      callback,
-      dependencies,
-      HookType.PassiveEffect,
-      this._frame.passiveEffects,
-    );
+    this._createEffect(callback, dependencies, HookType.PassiveEffect);
   }
 
   useId(): string {
@@ -223,24 +234,14 @@ export class RenderSession implements RenderContext {
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    this._createEffect(
-      callback,
-      dependencies,
-      HookType.InsertionEffect,
-      this._frame.mutationEffects,
-    );
+    this._createEffect(callback, dependencies, HookType.InsertionEffect);
   }
 
   useLayoutEffect(
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    this._createEffect(
-      callback,
-      dependencies,
-      HookType.LayoutEffect,
-      this._frame.layoutEffects,
-    );
+    this._createEffect(callback, dependencies, HookType.LayoutEffect);
   }
 
   useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T {
@@ -376,22 +377,15 @@ export class RenderSession implements RenderContext {
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null,
     type: Hook.EffectHook['type'],
-    effects: EffectQueue,
-  ): Hook.EffectHook {
+  ): void {
     const { hooks } = this._state;
-    const { level } = this._scope;
     let currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.EffectHook>(type, currentHook);
       currentHook.callback = callback;
       currentHook.pendingDependencies = dependencies;
-      if (
-        areDependenciesChanged(dependencies, currentHook.memoizedDependencies)
-      ) {
-        currentHook.epoch++;
-        enqueueInvokeEffectHook(currentHook, level, effects);
-      }
+      currentHook.epoch++;
     } else {
       currentHook = {
         type,
@@ -402,12 +396,9 @@ export class RenderSession implements RenderContext {
         pendingDependencies: dependencies,
       };
       hooks.push(currentHook);
-      enqueueInvokeEffectHook(currentHook, level, effects);
     }
 
     this._hookIndex++;
-
-    return currentHook;
   }
 
   private _createTemplate(
@@ -436,8 +427,8 @@ class InvokeEffectHook implements Effect {
     if (epoch === this._epoch) {
       cleanup?.();
       this._hook.cleanup = callback();
-      this._hook.memoizedDependencies = this._hook.pendingDependencies;
       this._hook.epoch++;
+      this._hook.memoizedDependencies = this._hook.pendingDependencies;
     }
   }
 }
@@ -447,7 +438,11 @@ function enqueueInvokeEffectHook(
   level: number,
   effects: EffectQueue,
 ): void {
-  effects.push(new InvokeEffectHook(hook), level);
+  if (
+    areDependenciesChanged(hook.pendingDependencies, hook.memoizedDependencies)
+  ) {
+    effects.push(new InvokeEffectHook(hook), level);
+  }
 }
 
 function ensureHookType<TExpectedHook extends Hook>(
