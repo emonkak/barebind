@@ -80,7 +80,7 @@ export class RenderSession implements RenderContext {
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    if (this._coroutine.scope === DETACHED_SCOPE) {
+    if (this._state.scope === DETACHED_SCOPE) {
       return {
         lanes: Lanes.NoLanes,
         scheduled: Promise.resolve({ canceled: true, done: false }),

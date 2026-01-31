@@ -58,9 +58,8 @@ export class ComponentBinding<TProps, TResult>
   private _state: ComponentState = {
     hooks: [],
     pendingLanes: Lanes.NoLanes,
+    scope: DETACHED_SCOPE,
   };
-
-  private _scope: Scope = DETACHED_SCOPE;
 
   constructor(
     component: Component<TProps, TResult>,
@@ -88,17 +87,18 @@ export class ComponentBinding<TProps, TResult>
     return this._part;
   }
 
-  get scope(): Scope {
-    return this._scope;
-  }
-
   get pendingLanes(): Lanes {
     return this._state.pendingLanes;
   }
 
+  get scope(): Scope {
+    return this._state.scope;
+  }
+
   resume(session: UpdateSession): void {
+    const { scope } = this._state;
     const { frame, originScope, context } = session;
-    const subScope = createScope(this._scope, this._scope.level + 1);
+    const subScope = createScope(scope, scope.level + 1);
     const result = context.renderComponent(
       this._component,
       this._props,
@@ -126,10 +126,10 @@ export class ComponentBinding<TProps, TResult>
 
     if (
       dirty &&
-      this._scope === originScope &&
+      scope === originScope &&
       this._state.pendingLanes !== Lanes.NoLanes
     ) {
-      frame.mutationEffects.push(this, this._scope.level);
+      frame.mutationEffects.push(this, scope.level);
     }
 
     this._state.pendingLanes &= ~frame.lanes;
@@ -137,14 +137,14 @@ export class ComponentBinding<TProps, TResult>
 
   shouldUpdate(props: TProps): boolean {
     return (
-      this._scope === DETACHED_SCOPE ||
+      this._state.scope === DETACHED_SCOPE ||
       !this._component.arePropsEqual(props, this._props)
     );
   }
 
   attach(session: UpdateSession): void {
     session.frame.pendingCoroutines.push(this);
-    this._scope = session.scope;
+    this._state.scope = session.scope;
   }
 
   detach(session: UpdateSession): void {
@@ -169,18 +169,18 @@ export class ComponentBinding<TProps, TResult>
 
     this._slot?.detach(session);
 
-    this._scope = DETACHED_SCOPE;
     this._state.pendingLanes = Lanes.NoLanes;
+    this._state.scope = DETACHED_SCOPE;
   }
 
   commit(): void {
-    if (!this._scope.poisoned) {
+    if (!this._state.scope.poisoned) {
       this._slot?.commit();
     }
   }
 
   rollback(): void {
-    if (!this._scope.poisoned) {
+    if (!this._state.scope.poisoned) {
       this._slot?.rollback();
     }
   }

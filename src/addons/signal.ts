@@ -60,9 +60,9 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   private readonly _slot: Slot<T>;
 
-  private _scope: Scope = DETACHED_SCOPE;
-
   private _pendingLanes: Lanes = Lanes.NoLanes;
+
+  private _scope: Scope = DETACHED_SCOPE;
 
   private _subscription: Subscription | null = null;
 
@@ -89,12 +89,12 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     return this._slot.part;
   }
 
-  get scope(): Scope {
-    return this._scope;
-  }
-
   get pendingLanes(): Lanes {
     return this._pendingLanes;
+  }
+
+  get scope(): Scope {
+    return this._scope;
   }
 
   resume(session: UpdateSession): void {

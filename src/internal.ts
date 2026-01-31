@@ -71,11 +71,12 @@ export interface Component<TProps, TResult = unknown>
 export interface ComponentState {
   hooks: Hook[];
   pendingLanes: Lanes;
+  scope: Scope;
 }
 
 export interface Coroutine {
-  readonly scope: Scope;
   readonly pendingLanes: Lanes;
+  readonly scope: Scope;
   resume(session: UpdateSession): void;
 }
 

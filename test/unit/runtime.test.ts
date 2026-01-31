@@ -717,10 +717,11 @@ describe('Runtime', () => {
       const state: ComponentState = {
         hooks: [],
         pendingLanes: Lanes.NoLanes,
+        scope: createScope(),
       };
       const coroutine = new MockCoroutine();
       const frame = createRenderFrame(1, Lanes.AllLanes);
-      const scope = createScope();
+      const scope = createScope(state.scope, state.scope.level + 1);
       const observer = new MockObserver();
       const runtime = createRuntime();
 

@@ -7,50 +7,39 @@ import {
   HookType,
   Lanes,
   type Scope,
-  type UpdateOptions,
   type UpdateSession,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import type { Runtime } from '@/runtime.js';
 import { createRuntime } from './mocks.js';
 
-export interface TestRendererOptions {
-  runtime?: Runtime;
-  scope?: Scope;
-}
-
-export interface RenderOptions extends UpdateOptions {
-  coroutine?: Coroutine;
-}
-
 export class TestRenderer<TProps, TResult> implements Coroutine {
   readonly callback: (props: TProps, session: RenderSession) => TResult;
 
-  readonly runtime: Runtime;
+  state: ComponentState;
 
-  scope: Scope;
+  coroutine: Coroutine | null = null;
 
-  state: ComponentState = {
-    hooks: [],
-    pendingLanes: Lanes.NoLanes,
-  };
-
-  coroutine: (Coroutine & { pendingLanes: Lanes }) | null = null;
+  readonly runtime: Runtime = createRuntime();
 
   constructor(
     callback: (props: TProps, session: RenderSession) => TResult,
-    {
-      runtime = createRuntime(),
-      scope = createScope(),
-    }: TestRendererOptions = {},
+    state: ComponentState = {
+      hooks: [],
+      pendingLanes: Lanes.NoLanes,
+      scope: createScope(),
+    },
   ) {
     this.callback = callback;
-    this.runtime = runtime;
-    this.scope = scope;
+    this.state = state;
   }
 
   get pendingLanes(): Lanes {
     return this.state.pendingLanes;
+  }
+
+  get scope(): Scope {
+    return this.state.scope;
   }
 
   resume(session: UpdateSession): void {
@@ -69,21 +58,21 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
         hook.cleanup = undefined;
       }
     }
-    this.scope = DETACHED_SCOPE;
+    this.state.scope = DETACHED_SCOPE;
   }
 
   reset(): void {
     this.state = {
       hooks: [],
       pendingLanes: Lanes.NoLanes,
+      scope: createScope(),
     };
-    this.scope = createScope();
   }
 
-  render(props: TProps, options: RenderOptions = {}): TResult {
+  render(props: TProps): TResult {
     const { state, callback } = this;
     const scope = createScope(this.scope, this.scope.level + 1);
-    const parentCoroutine = options.coroutine ?? this;
+    const that = this;
 
     let returnValue: TResult;
     let thrownError: unknown;
@@ -92,13 +81,7 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
       pendingLanes: Lanes.NoLanes,
       scope,
       resume({ frame, scope, context }: UpdateSession): void {
-        const session = new RenderSession(
-          state,
-          parentCoroutine,
-          frame,
-          scope,
-          context,
-        );
+        const session = new RenderSession(state, that, frame, scope, context);
 
         scope.boundary = {
           type: BoundaryType.Error,
@@ -119,7 +102,6 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
     const { lanes } = this.runtime.scheduleUpdate(coroutine, {
       flush: false,
       immediate: true,
-      ...options,
     });
 
     coroutine.pendingLanes |= lanes;

@@ -6,12 +6,13 @@ import {
   CommitPhase,
   DETACHED_SCOPE,
   EffectQueue,
+  Lanes,
   type RefObject,
   type RenderContext,
   type UpdateHandle,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
-import { MockCoroutine, MockTemplate } from '../mocks.js';
+import { MockTemplate } from '../mocks.js';
 import { waitForMicrotasks } from '../test-helpers.js';
 import { TestRenderer } from '../test-renderer.js';
 
@@ -198,23 +199,23 @@ describe('RenderSession', () => {
     it('should do nothing if the coroutine is detached', async () => {
       let handle: UpdateHandle | undefined;
 
-      const renderer = new TestRenderer((_props, session) => {
-        const [count, setCount] = session.useState(0);
+      const renderer = new TestRenderer(
+        (_props, session) => {
+          const [count, setCount] = session.useState(0);
 
-        session.useEffect(() => {
-          handle = setCount(1);
-        }, []);
-        return count;
-      });
+          session.useEffect(() => {
+            handle = setCount(1);
+          }, []);
+          return count;
+        },
+        { hooks: [], pendingLanes: Lanes.NoLanes, scope: DETACHED_SCOPE },
+      );
       const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
 
-      const count = renderer.render(
-        {},
-        { coroutine: new MockCoroutine(undefined, DETACHED_SCOPE) },
-      );
+      const count = renderer.render({});
 
-      expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
       expect(count).toBe(0);
+      expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
       expect(await handle?.scheduled).toStrictEqual({
         canceled: true,
         done: false,
