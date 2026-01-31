@@ -449,32 +449,26 @@ export class Runtime implements SessionContext {
 
     let scheduled: Promise<UpdateResult>;
 
-    if (options.immediate) {
+    const callback = () => {
       const shouldFlush = options.flush && this._pendingTasks.isEmpty();
 
       this._pendingTasks.pushBack(pendingTask);
-
-      scheduled = Promise.resolve({ canceled: false, done: true });
 
       if (shouldFlush) {
         scheduled.then(() => {
           this._backend.flushUpdate(this);
         });
       }
+
+      return { canceled: false, done: true };
+    };
+
+    if (options.immediate) {
+      const { promise, resolve } = Promise.withResolvers<UpdateResult>();
+      scheduled = promise;
+      resolve(callback());
     } else {
-      scheduled = this._backend.requestCallback(() => {
-        const shouldFlush = options.flush && this._pendingTasks.isEmpty();
-
-        this._pendingTasks.pushBack(pendingTask);
-
-        if (shouldFlush) {
-          scheduled.then(() => {
-            this._backend.flushUpdate(this);
-          });
-        }
-
-        return { canceled: false, done: true };
-      }, options);
+      scheduled = this._backend.requestCallback(callback, options);
     }
 
     return {
