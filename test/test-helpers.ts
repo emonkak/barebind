@@ -124,3 +124,9 @@ export function waitUntilIdle(): Promise<void> {
     scheduler.postTask(resolve, { priority: 'background' }),
   );
 }
+
+export async function waitForMicrotasks(times: number = 1): Promise<void> {
+  for (let i = 0; i < times; i++) {
+    await Promise.resolve();
+  }
+}

@@ -160,8 +160,6 @@ describe('ComponentBinding', () => {
         expect(part.node.nodeValue).toBe('100');
       }
 
-      await Promise.resolve();
-
       SESSION2: {
         updater.startUpdate((session) => {
           binding.attach(session);

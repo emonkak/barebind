@@ -18,6 +18,7 @@ import {
 } from '@/internal.js';
 import type { RenderSession } from '@/render-session.js';
 import { createRuntime } from '../../mocks.js';
+import { waitForMicrotasks } from '../../test-helpers.js';
 import { TestRenderer } from '../../test-renderer.js';
 import { TestUpdater } from '../../test-updater.js';
 
@@ -114,8 +115,7 @@ describe('SignalBinding', () => {
         Lanes.DefaultLane | Lanes.UserBlockingLane,
       );
 
-      await Promise.resolve(); // wait dirty checking
-      await Promise.resolve(); // wait scheduling
+      await waitForMicrotasks(2);
 
       expect(binding.pendingLanes).toBe(Lanes.NoLanes);
       expect(part.node.nodeValue).toBe(signal.value);
@@ -163,8 +163,7 @@ describe('SignalBinding', () => {
         Lanes.DefaultLane | Lanes.UserBlockingLane,
       );
 
-      await Promise.resolve(); // wait dirty checking
-      await Promise.resolve(); // wait scheduling
+      await waitForMicrotasks(2);
 
       expect(part.node.nodeValue).toBe('qux');
       expect(binding.pendingLanes).toBe(Lanes.NoLanes);
@@ -209,8 +208,7 @@ describe('SignalBinding', () => {
 
       expect(binding.pendingLanes).toBe(Lanes.NoLanes);
 
-      await Promise.resolve(); // wait dirty checking
-      await Promise.resolve(); // wait scheduling
+      await waitForMicrotasks(2);
 
       expect(part.node.nodeValue).toBe('');
       expect(binding.pendingLanes).toBe(Lanes.NoLanes);
@@ -242,16 +240,14 @@ describe('Signal', () => {
         expect(renderer.callback).toHaveLastReturnedWith('foo');
       }
 
-      await Promise.resolve(); // wait dirty checking
-      await Promise.resolve(); // wait scheduling
+      await waitForMicrotasks(3);
 
       expect(renderer.callback).toHaveBeenCalledTimes(2);
       expect(renderer.callback).toHaveLastReturnedWith('baz');
 
       signal.value = 'qux';
 
-      await Promise.resolve(); // wait dirty checking
-      await Promise.resolve(); // wait scheduling
+      await waitForMicrotasks(3);
 
       expect(renderer.callback).toHaveBeenCalledTimes(3);
       expect(renderer.callback).toHaveLastReturnedWith('qux');

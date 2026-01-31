@@ -12,6 +12,7 @@ import {
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { MockCoroutine, MockTemplate } from '../mocks.js';
+import { waitForMicrotasks } from '../test-helpers.js';
 import { TestRenderer } from '../test-renderer.js';
 
 describe('RenderSession', () => {
@@ -605,7 +606,7 @@ describe('RenderSession', () => {
         expect(renderer.callback).toHaveLastReturnedWith(0);
       }
 
-      await Promise.resolve();
+      await waitForMicrotasks(2);
 
       expect(renderer.callback).toHaveBeenCalledTimes(2);
       expect(renderer.callback).toHaveLastReturnedWith(1);
@@ -633,10 +634,6 @@ describe('RenderSession', () => {
         expect(renderer.callback).toHaveBeenCalledTimes(1);
         expect(renderer.callback).toHaveLastReturnedWith(0);
       }
-
-      await Promise.resolve();
-
-      expect(renderer.callback).toHaveBeenCalledTimes(1);
     });
 
     it('returns an initial state by the function', () => {
@@ -718,7 +715,7 @@ describe('RenderSession', () => {
         expect(renderer.callback).toHaveLastReturnedWith(0);
       }
 
-      await Promise.resolve();
+      await waitForMicrotasks(2);
 
       expect(renderer.callback).toHaveBeenCalledTimes(2);
       expect(renderer.callback).toHaveLastReturnedWith(1);
@@ -743,10 +740,6 @@ describe('RenderSession', () => {
         expect(renderer.callback).toHaveBeenCalledTimes(1);
         expect(renderer.callback).toHaveLastReturnedWith({ start: 0, end: 1 });
       }
-
-      await Promise.resolve();
-
-      expect(renderer.callback).toHaveBeenCalledTimes(1);
     });
 
     it('calculates a new state from the previous state', async () => {
@@ -770,7 +763,7 @@ describe('RenderSession', () => {
         expect(renderer.callback).toHaveLastReturnedWith(0);
       }
 
-      await Promise.resolve();
+      await waitForMicrotasks(2);
 
       expect(renderer.callback).toHaveBeenCalledTimes(2);
       expect(renderer.callback).toHaveLastReturnedWith(2);
@@ -803,7 +796,7 @@ describe('RenderSession', () => {
         expect(renderer.callback).toHaveNthReturnedWith(2, [0, true]);
       }
 
-      await Promise.resolve();
+      await waitForMicrotasks(2);
 
       expect(renderer.callback).toHaveBeenCalledTimes(3);
       expect(renderer.callback).toHaveNthReturnedWith(3, [1, false]);

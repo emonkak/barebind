@@ -457,7 +457,7 @@ export class Runtime implements SessionContext {
       scheduled = Promise.resolve({ canceled: false, done: true });
 
       if (shouldFlush) {
-        queueMicrotask(() => {
+        scheduled.then(() => {
           this._backend.flushUpdate(this);
         });
       }
@@ -468,7 +468,9 @@ export class Runtime implements SessionContext {
         this._pendingTasks.pushBack(pendingTask);
 
         if (shouldFlush) {
-          this._backend.flushUpdate(this);
+          scheduled.then(() => {
+            this._backend.flushUpdate(this);
+          });
         }
 
         return { canceled: false, done: true };

@@ -28,8 +28,6 @@ describe('DeferredValue()', () => {
       expect(renderer.callback).toHaveLastReturnedWith('foo');
     }
 
-    await Promise.resolve();
-
     SESSION2: {
       renderer.render({ value: 'bar' });
 
@@ -37,7 +35,7 @@ describe('DeferredValue()', () => {
       expect(renderer.callback).toHaveLastReturnedWith('foo');
     }
 
-    await Promise.resolve();
+    await waitForMicrotasks(2);
 
     expect(renderer.callback).toHaveBeenCalledTimes(3);
     expect(renderer.callback).toHaveLastReturnedWith('bar');
@@ -69,7 +67,7 @@ describe('DeferredValue()', () => {
       expect(renderer.callback).toHaveReturnedWith('foo');
     }
 
-    await Promise.resolve();
+    await waitForMicrotasks(2);
 
     expect(renderer.callback).toHaveBeenCalledTimes(2);
     expect(renderer.callback).toHaveReturnedWith('bar');
@@ -206,7 +204,7 @@ describe('SyncExternalStore()', () => {
       expect(unsubscribe).not.toHaveBeenCalled();
     }
 
-    await Promise.resolve();
+    await waitForMicrotasks(2);
 
     expect(renderer.callback).toHaveBeenCalledTimes(2);
     expect(renderer.callback).toHaveLastReturnedWith(1);
@@ -264,7 +262,7 @@ describe('SyncExternalStore()', () => {
       expect(Array.from(subscribers)).toStrictEqual([expect.any(Function)]);
     }
 
-    await Promise.resolve();
+    await waitForMicrotasks(2);
 
     expect(renderer.callback).toHaveBeenCalledTimes(2);
     expect(renderer.callback).toHaveLastReturnedWith(1);
