@@ -55,7 +55,10 @@ export class ComponentBinding<TProps, TResult>
 
   private _slot: Slot<TResult> | null = null;
 
-  private _state: ComponentState = createComponentState();
+  private _state: ComponentState = {
+    hooks: [],
+    pendingLanes: Lanes.NoLanes,
+  };
 
   private _scope: Scope = DETACHED_SCOPE;
 
@@ -200,13 +203,6 @@ class CleanEffectHook implements Effect {
       this._hook.epoch++;
     }
   }
-}
-
-function createComponentState(): ComponentState {
-  return {
-    hooks: [],
-    pendingLanes: Lanes.NoLanes,
-  };
 }
 
 function enqueueCleanEffectHook(
