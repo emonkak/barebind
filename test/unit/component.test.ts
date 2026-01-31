@@ -39,12 +39,12 @@ describe('createComponent()', () => {
     it('invokes the render function with props', () => {
       const render = vi.fn(() => null);
       const component = createComponent(render);
-      const props = {};
-      const renderer = new TestRenderer();
-
-      renderer.startRender((session) => {
-        component.render(props, session);
+      const renderer = new TestRenderer((props, session) => {
+        return component.render(props, session);
       });
+      const props = {};
+
+      renderer.render(props);
 
       expect(render).toHaveBeenCalledOnce();
       expect(render).toHaveBeenCalledWith(props, expect.any(RenderSession));

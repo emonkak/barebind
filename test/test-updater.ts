@@ -28,7 +28,7 @@ export class TestUpdater {
     let thrownError: unknown;
 
     const coroutine = {
-      pendingLanes: Lanes.AllLanes,
+      pendingLanes: Lanes.NoLanes,
       scope: options.scope ?? createScope(),
       resume(session: UpdateSession): void {
         this.scope.boundary = {
@@ -43,11 +43,13 @@ export class TestUpdater {
       },
     };
 
-    this.runtime.scheduleUpdate(coroutine, {
+    const { lanes } = this.runtime.scheduleUpdate(coroutine, {
       flush: false,
       immediate: true,
       ...options,
     });
+
+    coroutine.pendingLanes |= lanes;
 
     this.runtime.flushSync();
 

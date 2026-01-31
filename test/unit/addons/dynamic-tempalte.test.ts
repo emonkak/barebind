@@ -12,11 +12,12 @@ import { TestRenderer } from '../../test-renderer.js';
 
 describe('DynamicTemplate', () => {
   it('render a HTML template', () => {
-    const renderer = new TestRenderer();
-    const directive = renderer.startRender((session) => {
+    const renderer = new TestRenderer((_props, session) => {
       const { html, literal } = session.use(DynamicTemplate());
       return html`<${literal('div')}>Hello, ${'World'}!</${literal('div')}>` as unknown as Directive<any>;
     });
+
+    const directive = renderer.render({});
 
     expect(directive.type).toBeInstanceOf(MockTemplate);
     expect(directive.type).toStrictEqual(
@@ -30,11 +31,12 @@ describe('DynamicTemplate', () => {
   });
 
   it('render a SVG template', () => {
-    const renderer = new TestRenderer();
-    const directive = renderer.startRender((session) => {
+    const renderer = new TestRenderer((_props, session) => {
       const { svg, literal } = session.use(DynamicTemplate());
       return svg`<${literal('text')}>Hello, ${'World'}!</${literal('text')}>` as unknown as Directive<any>;
     });
+
+    const directive = renderer.render({});
 
     expect(directive.type).toBeInstanceOf(MockTemplate);
     expect(directive.type).toStrictEqual(
@@ -48,11 +50,12 @@ describe('DynamicTemplate', () => {
   });
 
   it('render a MathML template', () => {
-    const renderer = new TestRenderer();
-    const directive = renderer.startRender((session) => {
+    const renderer = new TestRenderer((_props, session) => {
       const { math, literal } = session.use(DynamicTemplate());
       return math`<${literal('mi')}>${'x'}</${literal('mi')}>` as unknown as Directive<any>;
     });
+
+    const directive = renderer.render({});
 
     expect(directive.type).toBeInstanceOf(MockTemplate);
     expect(directive.type).toStrictEqual(

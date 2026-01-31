@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   BrowserHistory,
@@ -10,21 +10,22 @@ import {
   type HistoryNavigator,
 } from '@/addons/router/history.js';
 import { RelativeURL } from '@/addons/router/relative-url.js';
-import type { RenderSession } from '@/render-session.js';
+import type { UpdateOptions } from '@/internal.js';
 import { createElement } from '../../../test-helpers.js';
 import { TestRenderer } from '../../../test-renderer.js';
 
 describe('BrowserHistory()', () => {
   const originalURL = location.href;
   const originalState = history.state;
-  let helper!: TestRenderer;
 
-  beforeEach(() => {
-    helper = new TestRenderer();
+  const renderer = new TestRenderer((options: UpdateOptions, session) => {
+    session.use(BrowserHistory(options));
+    return session.use(CurrentHistory);
   });
 
   afterEach(() => {
-    helper.finalizeHooks();
+    renderer.finalize();
+    renderer.reset();
     history.replaceState(originalState, '', originalURL);
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -37,9 +38,7 @@ describe('BrowserHistory()', () => {
       history.replaceState(state, '', '/foo/bar');
 
       SESSION: {
-        const { location, navigator } = helper.startRender((session) => {
-          return session.use(BrowserHistory());
-        });
+        const { location, navigator } = renderer.render({});
 
         expect(location.url.toString()).toBe('/foo/bar');
         expect(location.state).toStrictEqual(state);
@@ -52,18 +51,16 @@ describe('BrowserHistory()', () => {
     });
 
     it('pushes a new location', () => {
-      const callback = (session: RenderSession) => {
-        return session.use(BrowserHistory({ viewTransition: true }));
-      };
-
       const pushStateSpy = vi.spyOn(history, 'pushState');
       const replaceStateSpy = vi.spyOn(history, 'replaceState');
-      const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
+      const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
 
       let stableNavigator: HistoryNavigator;
 
       SESSION1: {
-        const { location, navigator } = helper.startRender(callback);
+        const { location, navigator } = renderer.render({
+          viewTransition: true,
+        });
 
         expect(location.url.toString()).toBe(
           RelativeURL.fromString(originalURL).toString(),
@@ -82,7 +79,9 @@ describe('BrowserHistory()', () => {
       });
 
       SESSION2: {
-        const { location, navigator } = helper.startRender(callback);
+        const { location, navigator } = renderer.render({
+          viewTransition: true,
+        });
 
         expect(pushStateSpy).toHaveBeenCalledOnce();
         expect(replaceStateSpy).not.toHaveBeenCalled();
@@ -98,18 +97,17 @@ describe('BrowserHistory()', () => {
 
     it('replaces with a new location', () => {
       const state = { key: 'foo' };
-      const callback = (session: RenderSession) => {
-        return session.use(BrowserHistory({ viewTransition: true }));
-      };
 
-      const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
+      const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
       const pushStateSpy = vi.spyOn(history, 'pushState');
       const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
       let stableNavigator: HistoryNavigator;
 
       SESSION1: {
-        const { location, navigator } = helper.startRender(callback);
+        const { location, navigator } = renderer.render({
+          viewTransition: true,
+        });
 
         expect(location.url.toString()).toBe(
           RelativeURL.fromString(originalURL).toString(),
@@ -131,7 +129,9 @@ describe('BrowserHistory()', () => {
       });
 
       SESSION2: {
-        const { location, navigator } = helper.startRender(callback);
+        const { location, navigator } = renderer.render({
+          viewTransition: true,
+        });
 
         expect(pushStateSpy).not.toHaveBeenCalled();
         expect(replaceStateSpy).toHaveBeenCalledOnce();
@@ -145,9 +145,7 @@ describe('BrowserHistory()', () => {
     });
 
     it('waits for navigation transition', async () => {
-      const { navigator } = helper.startRender((session) => {
-        return session.use(BrowserHistory());
-      });
+      const { navigator } = renderer.render({});
 
       navigator.navigate('/articles/foo%2Fbar');
 
@@ -161,29 +159,14 @@ describe('BrowserHistory()', () => {
     });
   });
 
-  it('registers the current history', () => {
-    const { browserHandle, currentHandle } = helper.startRender((session) => {
-      const browserHandle = session.use(BrowserHistory());
-      const currentHandle = session.use(CurrentHistory);
-      return { browserHandle, currentHandle };
-    });
-
-    expect(currentHandle).toBe(browserHandle);
-  });
-
   it('registers event listeners for "click", "submit" and "popstate"', () => {
     const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
     vi.stubGlobal('navigation', undefined);
 
-    SESSION: {
-      helper.startRender((session) => {
-        session.use(BrowserHistory());
-      });
-    }
-
-    helper.finalizeHooks();
+    renderer.render({});
+    renderer.finalize();
 
     expect(addEventListenerSpy).toHaveBeenCalledTimes(3);
     expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -227,11 +210,8 @@ describe('BrowserHistory()', () => {
         'removeEventListener',
       );
 
-      helper.startRender((session) => {
-        session.use(BrowserHistory());
-      });
-
-      helper.finalizeHooks();
+      renderer.render({});
+      renderer.finalize();
 
       expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
       expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -265,14 +245,10 @@ describe('BrowserHistory()', () => {
   );
 
   it('should update the state when the link is clicked', () => {
-    const callback = (session: RenderSession) => {
-      return session.use(BrowserHistory({ viewTransition: true }));
-    };
-
-    const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
+    const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
 
     SESSION1: {
-      helper.startRender(callback);
+      renderer.render({ viewTransition: true });
     }
 
     const element = createElement('a', { href: '/foo/bar' });
@@ -286,7 +262,7 @@ describe('BrowserHistory()', () => {
     });
 
     SESSION2: {
-      const { location } = helper.startRender(callback);
+      const { location } = renderer.render({ viewTransition: true });
 
       expect(location.url.toString()).toBe('/foo/bar');
       expect(location.state).toBe(null);
@@ -296,14 +272,10 @@ describe('BrowserHistory()', () => {
   });
 
   it('should update the state when the form is submitted', () => {
-    const callback = (session: RenderSession) => {
-      return session.use(BrowserHistory({ viewTransition: true }));
-    };
-
-    const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
+    const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
 
     SESSION1: {
-      helper.startRender(callback);
+      renderer.render({ viewTransition: true });
     }
 
     const element = createElement('form', {
@@ -325,7 +297,7 @@ describe('BrowserHistory()', () => {
     });
 
     SESSION2: {
-      const { location } = helper.startRender(callback);
+      const { location } = renderer.render({ viewTransition: true });
 
       expect(location.url.toString()).toBe('/foo/bar');
       expect(location.state).toBe(null);
@@ -338,14 +310,11 @@ describe('BrowserHistory()', () => {
     'should update the location when NavigateEvent is received',
     () => {
       const state = { key: 'foo' };
-      const callback = (session: RenderSession) => {
-        return session.use(BrowserHistory({ viewTransition: true }));
-      };
 
-      const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
+      const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
 
       SESSION1: {
-        helper.startRender(callback);
+        renderer.render({ viewTransition: true });
       }
 
       navigation!.dispatchEvent(
@@ -367,7 +336,7 @@ describe('BrowserHistory()', () => {
       });
 
       SESSION2: {
-        const { location } = helper.startRender(callback);
+        const { location } = renderer.render({ viewTransition: true });
 
         expect(location.url.toString()).toBe('/foo/bar');
         expect(location.state).toBe(state);
@@ -380,16 +349,13 @@ describe('BrowserHistory()', () => {
 
   it('should update the location when PopStateEvent is received', () => {
     const state = { key: 'foo' };
-    const callback = (session: RenderSession) => {
-      return session.use(BrowserHistory({ viewTransition: true }));
-    };
 
-    const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
+    const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
 
     vi.stubGlobal('navigation', undefined);
 
     SESSION1: {
-      helper.startRender(callback);
+      renderer.render({ viewTransition: true });
     }
 
     history.replaceState(state, '', '/foo/bar');
@@ -405,7 +371,7 @@ describe('BrowserHistory()', () => {
     });
 
     SESSION2: {
-      const { location } = helper.startRender(callback);
+      const { location } = renderer.render({ viewTransition: true });
 
       expect(location.url.toString()).toBe('/foo/bar');
       expect(location.state).toBe(state);
@@ -417,23 +383,20 @@ describe('BrowserHistory()', () => {
 
   it('should not update the location when only the hash has been changed', () => {
     const state = { key: 'foo' };
-    const callback = (session: RenderSession) => {
-      return session.use(BrowserHistory({ viewTransition: true }));
-    };
 
-    const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
+    const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
 
     vi.stubGlobal('navigation', undefined);
 
     SESSION1: {
-      helper.startRender(callback);
+      renderer.render({ viewTransition: true });
     }
 
     history.replaceState(state, '', '#foo');
     dispatchEvent(new PopStateEvent('popstate', { state }));
 
     SESSION2: {
-      helper.startRender(callback);
+      renderer.render({ viewTransition: true });
     }
 
     expect(scheduleUpdateSpy).toHaveBeenCalledTimes(2);

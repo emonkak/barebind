@@ -222,44 +222,45 @@ describe('Signal', () => {
   describe('[$hook]()', async () => {
     it('request an update if the signal value has been changed', async () => {
       const signal = new Atom('foo');
-      const renderer = new TestRenderer();
-      const callback = vi.fn((session: RenderContext) => {
-        const value = session.use(signal);
+      const renderer = new TestRenderer(
+        vi.fn((_props: {}, session: RenderContext) => {
+          const value = session.use(signal);
 
-        session.useEffect(() => {
-          signal.value = 'bar';
-          signal.value = 'baz';
-        }, []);
+          session.useEffect(() => {
+            signal.value = 'bar';
+            signal.value = 'baz';
+          }, []);
 
-        return value;
-      });
+          return value;
+        }),
+      );
 
-      SESSION1: {
-        renderer.startRender(callback);
+      SESSION: {
+        renderer.render({});
 
-        expect(callback).toHaveBeenCalledTimes(1);
-        expect(callback).toHaveLastReturnedWith('foo');
+        expect(renderer.callback).toHaveBeenCalledTimes(1);
+        expect(renderer.callback).toHaveLastReturnedWith('foo');
       }
 
       await Promise.resolve(); // wait dirty checking
       await Promise.resolve(); // wait scheduling
 
-      expect(callback).toHaveBeenCalledTimes(2);
-      expect(callback).toHaveLastReturnedWith('baz');
+      expect(renderer.callback).toHaveBeenCalledTimes(2);
+      expect(renderer.callback).toHaveLastReturnedWith('baz');
 
       signal.value = 'qux';
 
       await Promise.resolve(); // wait dirty checking
       await Promise.resolve(); // wait scheduling
 
-      expect(callback).toHaveBeenCalledTimes(3);
-      expect(callback).toHaveLastReturnedWith('qux');
+      expect(renderer.callback).toHaveBeenCalledTimes(3);
+      expect(renderer.callback).toHaveLastReturnedWith('qux');
 
-      renderer.finalizeHooks();
+      renderer.finalize();
 
       signal.value = 'quux';
 
-      expect(callback).toHaveBeenCalledTimes(3);
+      expect(renderer.callback).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -525,7 +526,7 @@ describe('Computed', () => {
 
 describe('LocalAtom()', () => {
   it('returns a custom hook that creates an atom signal with no subscription', async () => {
-    const callback = (session: RenderSession) => {
+    const renderer = new TestRenderer((_props, session) => {
       const signal = session.use(LocalAtom(100));
 
       session.useEffect(() => {
@@ -533,22 +534,20 @@ describe('LocalAtom()', () => {
       });
 
       return signal;
-    };
-    const renderer = new TestRenderer();
+    });
 
-    let stableSignal: Signal<number>;
+    let signal1: Signal<number>;
+    let signal2: Signal<number>;
 
     SESSION1: {
-      stableSignal = renderer.startRender(callback);
-
-      expect(stableSignal.value).toBe(101);
+      signal1 = renderer.render({});
+      expect(signal1.value).toBe(101);
     }
 
     SESSION2: {
-      const signal = renderer.startRender(callback);
-
-      expect(signal).toBe(stableSignal);
-      expect(signal.value).toBe(102);
+      signal2 = renderer.render({});
+      expect(signal2).toBe(signal1);
+      expect(signal2.value).toBe(102);
     }
   });
 });
@@ -558,7 +557,7 @@ describe('LocalComputed()', () => {
     const foo = new Atom(1);
     const bar = new Atom(2);
     const baz = new Atom(3);
-    const callback = (session: RenderSession) => {
+    const renderer = new TestRenderer((_props, session: RenderSession) => {
       const signal = session.use(
         LocalComputed((foo, bar, baz) => foo + bar + baz, [foo, bar, baz]),
       );
@@ -568,22 +567,22 @@ describe('LocalComputed()', () => {
       });
 
       return signal;
-    };
-    const renderer = new TestRenderer();
+    });
 
-    let stableSignal: Signal<number>;
+    let signal1: Signal<number>;
+    let signal2: Signal<number>;
 
     SESSION1: {
-      stableSignal = renderer.startRender(callback);
+      signal1 = renderer.render({});
 
-      expect(stableSignal.value).toBe(7);
+      expect(signal1.value).toBe(7);
     }
 
     SESSION2: {
-      const signal = renderer.startRender(callback);
+      signal2 = renderer.render({});
 
-      expect(signal).toBe(stableSignal);
-      expect(signal.value).toBe(8);
+      expect(signal2).toBe(signal1);
+      expect(signal2.value).toBe(8);
     }
   });
 });

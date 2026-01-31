@@ -1,8 +1,9 @@
 import {
   BoundaryType,
+  type ComponentState,
   type Coroutine,
   createScope,
-  type Hook,
+  DETACHED_SCOPE,
   HookType,
   Lanes,
   type Scope,
@@ -13,22 +14,52 @@ import { RenderSession } from '@/render-session.js';
 import type { Runtime } from '@/runtime.js';
 import { createRuntime } from './mocks.js';
 
-interface TestRenderOptions extends UpdateOptions {
+export interface TestRendererOptions {
+  runtime?: Runtime;
   scope?: Scope;
+}
+
+export interface RenderOptions extends UpdateOptions {
   coroutine?: Coroutine;
 }
 
-export class TestRenderer {
+export class TestRenderer<TProps, TResult> implements Coroutine {
+  readonly callback: (props: TProps, session: RenderSession) => TResult;
+
   readonly runtime: Runtime;
 
-  hooks: Hook[] = [];
+  scope: Scope;
 
-  constructor(runtime: Runtime = createRuntime()) {
+  state: ComponentState = {
+    hooks: [],
+    pendingLanes: Lanes.NoLanes,
+  };
+
+  coroutine: (Coroutine & { pendingLanes: Lanes }) | null = null;
+
+  constructor(
+    callback: (props: TProps, session: RenderSession) => TResult,
+    {
+      runtime = createRuntime(),
+      scope = createScope(),
+    }: TestRendererOptions = {},
+  ) {
+    this.callback = callback;
     this.runtime = runtime;
+    this.scope = scope;
   }
 
-  finalizeHooks(): void {
-    for (const hook of this.hooks) {
+  get pendingLanes(): Lanes {
+    return this.state.pendingLanes;
+  }
+
+  resume(session: UpdateSession): void {
+    this.coroutine?.resume(session);
+    this.state.pendingLanes &= ~session.frame.lanes;
+  }
+
+  finalize(): void {
+    for (const hook of this.state.hooks) {
       if (
         hook.type === HookType.PassiveEffect ||
         hook.type === HookType.LayoutEffect ||
@@ -38,54 +69,62 @@ export class TestRenderer {
         hook.cleanup = undefined;
       }
     }
+    this.scope = DETACHED_SCOPE;
   }
 
-  startRender<T>(
-    callback: (session: RenderSession) => T,
-    options: TestRenderOptions = {},
-  ): T {
-    let returnValue: T;
+  reset(): void {
+    this.state = {
+      hooks: [],
+      pendingLanes: Lanes.NoLanes,
+    };
+    this.scope = createScope();
+  }
+
+  render(props: TProps, options: RenderOptions = {}): TResult {
+    const { state, callback } = this;
+    const scope = createScope(this.scope, this.scope.level + 1);
+    const parentCoroutine = options.coroutine ?? this;
+
+    let returnValue: TResult;
     let thrownError: unknown;
 
-    const state = {
-      hooks: this.hooks,
-      pendingLanes: Lanes.AllLanes,
-    };
     const coroutine = {
-      get pendingLanes(): Lanes {
-        return state.pendingLanes;
-      },
-      scope: options.scope ?? createScope(),
+      pendingLanes: Lanes.NoLanes,
+      scope,
       resume({ frame, scope, context }: UpdateSession): void {
         const session = new RenderSession(
           state,
-          options.coroutine ?? coroutine,
+          parentCoroutine,
           frame,
           scope,
           context,
         );
 
-        this.scope.boundary = {
+        scope.boundary = {
           type: BoundaryType.Error,
-          next: this.scope.boundary,
+          next: scope.boundary,
           handler: (error) => {
             thrownError = error;
           },
         };
 
-        returnValue = callback(session);
+        returnValue = callback(props, session);
 
         session.finalize();
 
-        state.pendingLanes &= ~frame.lanes;
+        this.pendingLanes &= ~frame.lanes;
       },
     };
 
-    this.runtime.scheduleUpdate(coroutine, {
+    const { lanes } = this.runtime.scheduleUpdate(coroutine, {
       flush: false,
       immediate: true,
       ...options,
     });
+
+    coroutine.pendingLanes |= lanes;
+
+    this.coroutine = coroutine;
 
     this.runtime.flushSync();
 

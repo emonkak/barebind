@@ -5,12 +5,14 @@ import { TestRenderer } from '../../test-renderer.js';
 
 describe('Resource', () => {
   it('creates a RawResource using the given fetch function', async () => {
-    const renderer = new TestRenderer();
+    const renderer = new TestRenderer(
+      ({ fetchFn }: { fetchFn: () => Promise<string> }, session) => {
+        return session.use(Resource(fetchFn));
+      },
+    );
     const fetchFn = vi.fn(() => Promise.resolve('ok'));
 
-    const suspend = renderer.startRender((session) => {
-      return session.use(Resource(fetchFn));
-    });
+    const suspend = renderer.render({ fetchFn });
 
     expect(await suspend).toBe('ok');
     expect(fetchFn).toHaveBeenCalledOnce();
@@ -18,15 +20,15 @@ describe('Resource', () => {
   });
 
   it('returns the same resource instance across renders with same dependencies', async () => {
-    const renderer = new TestRenderer();
+    const renderer = new TestRenderer(
+      ({ fetchFn }: { fetchFn: () => Promise<string> }, session) => {
+        return session.use(Resource(fetchFn));
+      },
+    );
     const fetchFn = vi.fn(() => Promise.resolve('ok'));
 
-    const suspend1 = renderer.startRender((session) => {
-      return session.use(Resource(fetchFn));
-    });
-    const suspend2 = renderer.startRender((session) => {
-      return session.use(Resource(fetchFn));
-    });
+    const suspend1 = renderer.render({ fetchFn });
+    const suspend2 = renderer.render({ fetchFn });
 
     expect(suspend1).toBe(suspend2);
     expect(await suspend1).toBe('ok');
@@ -35,18 +37,24 @@ describe('Resource', () => {
   });
 
   it('recreates the suspend when dependencies change', async () => {
-    const renderer = new TestRenderer();
+    const renderer = new TestRenderer(
+      (
+        {
+          fetchFn,
+          dependencies,
+        }: { fetchFn: () => Promise<string>; dependencies: unknown[] },
+        session,
+      ) => {
+        return session.use(Resource(fetchFn, dependencies));
+      },
+    );
     const fetchFn = vi
       .fn()
       .mockReturnValueOnce(Promise.resolve('foo'))
       .mockReturnValueOnce(Promise.resolve('bar'));
 
-    const suspend1 = renderer.startRender((session) => {
-      return session.use(Resource(fetchFn, ['foo']));
-    });
-    const suspend2 = renderer.startRender((session) => {
-      return session.use(Resource(fetchFn, ['bar']));
-    });
+    const suspend1 = renderer.render({ fetchFn, dependencies: ['foo'] });
+    const suspend2 = renderer.render({ fetchFn, dependencies: ['bar'] });
 
     expect(suspend1).not.toBe(suspend2);
     expect(await suspend1).toBe('foo');

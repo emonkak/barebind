@@ -5,12 +5,12 @@ import { TestRenderer } from '../../../test-renderer.js';
 
 describe('CurrentHistory', () => {
   it('should throw an error if the current location is not registered', () => {
-    const renderer = new TestRenderer();
+    const renderer = new TestRenderer((_props, session) => {
+      session.use(CurrentHistory);
+    });
 
     expect(() => {
-      renderer.startRender((session) => {
-        session.use(CurrentHistory);
-      });
+      renderer.render({});
     }).toThrow('A context value for the hisotry handle does not exist,');
   });
 });

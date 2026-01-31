@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   CurrentHistory,
@@ -11,14 +11,22 @@ import { createElement } from '../../../test-helpers.js';
 import { TestRenderer } from '../../../test-renderer.js';
 
 describe('ScrollRestration()', () => {
-  let helper!: TestRenderer;
-
-  beforeEach(() => {
-    helper = new TestRenderer();
-  });
+  const renderer = new TestRenderer(
+    (
+      {
+        location,
+        navigator,
+      }: { location: HistoryLocation; navigator: HistoryNavigator },
+      session,
+    ) => {
+      session.setSharedContext(CurrentHistory, { location, navigator });
+      session.use(ScrollRestration());
+    },
+  );
 
   afterEach(() => {
-    helper.finalizeHooks();
+    renderer.finalize();
+    renderer.reset();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
@@ -36,10 +44,7 @@ describe('ScrollRestration()', () => {
 
     const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
-    helper.startRender((session) => {
-      session.setSharedContext(CurrentHistory, { location, navigator });
-      session.use(ScrollRestration());
-    });
+    renderer.render({ location, navigator });
 
     expect(scrollToSpy).toHaveBeenCalled();
     expect(scrollToSpy).toHaveBeenCalledWith(0, 0);
@@ -59,10 +64,7 @@ describe('ScrollRestration()', () => {
 
     const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
-    helper.startRender((session) => {
-      session.setSharedContext(CurrentHistory, { location, navigator });
-      session.use(ScrollRestration());
-    });
+    renderer.render({ location, navigator });
 
     expect(scrollToSpy).not.toHaveBeenCalled();
   });
@@ -82,10 +84,7 @@ describe('ScrollRestration()', () => {
 
     document.body.appendChild(element);
 
-    helper.startRender((session) => {
-      session.setSharedContext(CurrentHistory, { location, navigator });
-      session.use(ScrollRestration());
-    });
+    renderer.render({ location, navigator });
 
     document.body.removeChild(element);
 
@@ -102,10 +101,7 @@ describe('ScrollRestration()', () => {
 
     const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
-    helper.startRender((session) => {
-      session.setSharedContext(CurrentHistory, { location, navigator });
-      session.use(ScrollRestration());
-    });
+    renderer.render({ location, navigator });
 
     expect(scrollToSpy).toHaveBeenCalled();
     expect(scrollToSpy).toHaveBeenCalledWith(0, 0);
@@ -127,12 +123,9 @@ describe('ScrollRestration()', () => {
         'removeEventListener',
       );
 
-      helper.startRender((session) => {
-        session.setSharedContext(CurrentHistory, { location, navigator });
-        session.use(ScrollRestration());
-      });
+      renderer.render({ location, navigator });
 
-      helper.finalizeHooks();
+      renderer.finalize();
 
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
       expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -165,10 +158,7 @@ describe('ScrollRestration()', () => {
         scroll: vi.fn(),
       });
 
-      helper.startRender((session) => {
-        session.setSharedContext(CurrentHistory, { location, navigator });
-        session.use(ScrollRestration());
-      });
+      renderer.render({ location, navigator });
 
       navigation!.dispatchEvent(event);
 
@@ -201,10 +191,7 @@ describe('ScrollRestration()', () => {
         scroll: vi.fn(),
       });
 
-      helper.startRender((session) => {
-        session.setSharedContext(CurrentHistory, { location, navigator });
-        session.use(ScrollRestration());
-      });
+      renderer.render({ location, navigator });
 
       navigation!.dispatchEvent(event);
 
@@ -227,10 +214,7 @@ describe('ScrollRestration()', () => {
 
     vi.stubGlobal('navigation', undefined);
 
-    helper.startRender((session) => {
-      session.setSharedContext(CurrentHistory, { location, navigator });
-      session.use(ScrollRestration());
-    });
+    renderer.render({ location, navigator });
 
     expect(history.scrollRestoration).toBe('auto');
   });
