@@ -352,3 +352,56 @@ describe('SyncExternalStore()', () => {
     expect(unsubscribe2).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('Transition()', () => {
+  it('resets pending state to false after transition completes', async () => {
+    const renderer = new TestRenderer(
+      vi.fn((_props: {}, session: RenderSession) => {
+        const [counter, setCount] = session.useState(0);
+        const [isPending, startTransition] = session.use(Transition());
+
+        session.useEffect(() => {
+          startTransition(() => setCount((count) => count + 1));
+        }, []);
+
+        return { counter, isPending };
+      }),
+    );
+
+    SESSION1: {
+      renderer.render({});
+
+      expect(renderer.callback).toHaveBeenCalledTimes(1);
+      expect(renderer.callback).toHaveLastReturnedWith({
+        counter: 0,
+        isPending: false,
+      });
+    }
+
+    await waitForMicrotasks(2);
+
+    expect(renderer.callback).toHaveBeenCalledTimes(2);
+    expect(renderer.callback).toHaveLastReturnedWith({
+      counter: 0,
+      isPending: true,
+    });
+
+    await waitForMicrotasks(2);
+
+    expect(renderer.callback).toHaveBeenCalledTimes(3);
+    expect(renderer.callback).toHaveLastReturnedWith({
+      counter: 1,
+      isPending: false,
+    });
+
+    SESSION2: {
+      renderer.render({});
+
+      expect(renderer.callback).toHaveBeenCalledTimes(4);
+      expect(renderer.callback).toHaveLastReturnedWith({
+        counter: 1,
+        isPending: false,
+      });
+    }
+  });
+});

@@ -1,4 +1,10 @@
-import type { Cleanup, HookFunction, InitialState, Ref } from '../internal.js';
+import type {
+  Cleanup,
+  HookFunction,
+  InitialState,
+  Ref,
+  UpdateHandle,
+} from '../internal.js';
 
 export function DeferredValue<T>(
   value: T,
@@ -82,5 +88,33 @@ export function SyncEnternalStore<T>(
     }, [subscribe]);
 
     return snapshot;
+  };
+}
+
+export function Transition(): HookFunction<
+  [
+    isPending: boolean,
+    startTransition: (action: () => UpdateHandle) => UpdateHandle,
+  ]
+> {
+  return (context) => {
+    const [pendingAction, setPendingAction] = context.useState<
+      (() => UpdateHandle) | null
+    >(null);
+
+    context.useLayoutEffect(() => {
+      pendingAction?.().scheduled.then(({ done }) => {
+        if (done) {
+          setPendingAction(null, { immediate: true });
+        }
+      });
+    }, [pendingAction]);
+
+    const isPending = pendingAction !== null;
+    const startTransition = (action: () => UpdateHandle): UpdateHandle => {
+      return setPendingAction(() => action);
+    };
+
+    return [isPending, startTransition];
   };
 }
