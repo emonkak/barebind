@@ -103,7 +103,7 @@ export class ComponentBinding<TProps, TResult>
   resume(session: UpdateSession): void {
     const { scope } = this._state;
     const { frame, originScope, context } = session;
-    const childScope = createScope(scope);
+    const childScope = createScope(scope, this);
     const result = context.renderComponent(
       this._component,
       this._props,
@@ -134,7 +134,7 @@ export class ComponentBinding<TProps, TResult>
       scope === originScope &&
       this._state.pendingLanes !== Lanes.NoLanes
     ) {
-      frame.mutationEffects.push(this, scope.level);
+      frame.mutationEffects.push(this._slot, scope.level);
     }
 
     this._state.pendingLanes &= ~frame.lanes;
@@ -180,15 +180,11 @@ export class ComponentBinding<TProps, TResult>
   }
 
   commit(): void {
-    if (!this._state.scope.poisoned) {
-      this._slot?.commit();
-    }
+    this._slot?.commit();
   }
 
   rollback(): void {
-    if (!this._state.scope.poisoned) {
-      this._slot?.rollback();
-    }
+    this._slot?.rollback();
   }
 }
 

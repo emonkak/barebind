@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 
 import { createComponent } from '@/component.js';
 import type { RenderContext } from '@/internal.js';
@@ -8,30 +8,34 @@ import { Runtime } from '@/runtime.js';
 import { stripComments } from '../test-helpers.js';
 
 test('does not commit any DOM when an error occurs during render', async () => {
-  const value = App({});
+  const effect = vi.fn();
+
+  const value = App({ effect });
   const container = document.createElement('div');
   const root = Root.create(value, container, new Runtime(new BrowserBackend()));
 
   SESSION1: {
     await root.mount().finished;
 
+    expect(effect).not.toHaveBeenCalled();
     expect(stripComments(container).innerHTML).toBe('<main></main>');
   }
 
   SESSION2: {
     await root.unmount().finished;
 
+    expect(effect).not.toHaveBeenCalled();
     expect(container.innerHTML).toBe('');
   }
 });
 
 const App = createComponent(function App(
-  _props: {},
+  { effect }: { effect: () => void },
   $: RenderContext,
 ): unknown {
   return $.html`
     <main>
-      <${AbortOnError({ children: Parent({}) })}>
+      <${AbortOnError({ effect, children: Parent({}) })}>
     </main>
   `;
 });
@@ -48,10 +52,12 @@ const Child = createComponent(function Child(): unknown {
 });
 
 const AbortOnError = createComponent(function ErrorBoundary(
-  { children }: { children: unknown },
+  { effect, children }: { effect: () => void; children: unknown },
   $: RenderContext,
 ): unknown {
   $.catchError(() => {});
+
+  $.useLayoutEffect(effect);
 
   return children;
 });

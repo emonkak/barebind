@@ -26,6 +26,7 @@ import {
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
+  type UpdateSession,
   type UpdateTask,
 } from './internal.js';
 import { LinkedList } from './linked-list.js';
@@ -169,7 +170,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(error, coroutine.scope, originScope);
+                handleError(error, coroutine.scope, originScope, session);
               }
             }
 
@@ -292,7 +293,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(error, coroutine.scope, originScope);
+                handleError(error, coroutine.scope, originScope, session);
               }
             }
           } while (frame.pendingCoroutines.length > 0);
@@ -529,14 +530,17 @@ function generateRandomString(length: number): string {
   ).join('');
 }
 
-function handleError(error: unknown, scope: Scope, originScope: Scope): void {
+function handleError(
+  error: unknown,
+  scope: Scope,
+  originScope: Scope,
+  session: UpdateSession,
+): void {
   let capturedOutsideOrigin = false;
   let { parent: nextScope, boundary: nextBoundary } = scope;
 
   const handleError = (error: unknown) => {
     while (true) {
-      scope.poisoned = true;
-
       while (nextBoundary !== null) {
         const boundary = nextBoundary;
         nextBoundary = nextBoundary.next;
@@ -560,6 +564,10 @@ function handleError(error: unknown, scope: Scope, originScope: Scope): void {
   };
 
   handleError(error);
+
+  if (scope.owner?.pendingLanes === Lanes.NoLanes) {
+    scope.owner.detach(session);
+  }
 
   if (capturedOutsideOrigin) {
     throw new CapturedError(undefined, { cause: error });
