@@ -92,6 +92,10 @@ export class ComponentBinding<TProps, TResult>
     return this._part;
   }
 
+  get name(): string {
+    return this._component.name;
+  }
+
   get pendingLanes(): Lanes {
     return this._state.pendingLanes;
   }

@@ -95,6 +95,7 @@ export class Root<T> {
     options?: UpdateOptions,
   ): UpdateHandle {
     const coroutine: Coroutine = {
+      name: Root.name,
       scope: createScope(),
       pendingLanes: Lanes.DefaultLane,
       resume,

@@ -34,6 +34,10 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
     this.state = state;
   }
 
+  get name(): string {
+    return TestRenderer.name;
+  }
+
   get pendingLanes(): Lanes {
     return this.state.pendingLanes;
   }
@@ -78,6 +82,7 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
     let thrownError: unknown;
 
     const coroutine = {
+      name: this.callback.name,
       pendingLanes: Lanes.NoLanes,
       scope,
       resume({ frame, scope, context }: UpdateSession): void {

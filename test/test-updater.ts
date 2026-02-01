@@ -28,6 +28,7 @@ export class TestUpdater {
     let thrownError: unknown;
 
     const coroutine = {
+      name: callback.name,
       pendingLanes: Lanes.NoLanes,
       scope: options.scope ?? createScope(),
       resume(session: UpdateSession): void {

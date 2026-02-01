@@ -75,6 +75,7 @@ export interface ComponentState {
 }
 
 export interface Coroutine {
+  readonly name: string;
   readonly pendingLanes: Lanes;
   readonly scope: Scope;
   resume(session: UpdateSession): void;

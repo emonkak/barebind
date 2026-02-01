@@ -210,18 +210,22 @@ export class MockBinding<T> implements Binding<T> {
 export class MockCoroutine implements Coroutine {
   callback: (this: Coroutine, session: UpdateSession) => void;
 
-  scope: Scope;
-
   pendingLanes: Lanes;
+
+  scope: Scope;
 
   constructor(
     callback: (this: Coroutine, session: UpdateSession) => void = () => {},
-    scope: Scope = createScope(),
     pendingLanes: Lanes = Lanes.AllLanes,
+    scope: Scope = createScope(),
   ) {
     this.callback = callback;
     this.scope = scope;
     this.pendingLanes = pendingLanes;
+  }
+
+  get name(): string {
+    return MockCoroutine.name;
   }
 
   resume(session: UpdateSession): void {

@@ -89,6 +89,10 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     return this._slot.part;
   }
 
+  get name(): string {
+    return SignalDirective.name;
+  }
+
   get pendingLanes(): Lanes {
     return this._pendingLanes;
   }

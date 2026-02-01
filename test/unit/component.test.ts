@@ -305,8 +305,9 @@ describe('ComponentBinding', () => {
           binding.attach(session);
 
           session.frame.pendingCoroutines.push({
-            scope: createScope(session.scope),
+            name: 'MyCoroutine',
             pendingLanes: Lanes.DefaultLane,
+            scope: createScope(session.scope),
             resume(session) {
               binding.detach(session);
             },

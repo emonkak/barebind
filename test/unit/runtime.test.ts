@@ -325,9 +325,13 @@ describe('Runtime', () => {
           handler: errorHandler,
         };
         const childScope = createScope(parentScope);
-        const coroutine = new MockCoroutine(() => {
-          throw error;
-        }, childScope);
+        const coroutine = new MockCoroutine(
+          () => {
+            throw error;
+          },
+          Lanes.AllLanes,
+          childScope,
+        );
 
         const handle = runtime.scheduleUpdate(coroutine, {
           flush: false,
@@ -658,9 +662,13 @@ describe('Runtime', () => {
           handler: errorHandler,
         };
         const childScope = createScope(parentScope);
-        const coroutine = new MockCoroutine(() => {
-          throw error;
-        }, childScope);
+        const coroutine = new MockCoroutine(
+          () => {
+            throw error;
+          },
+          Lanes.AllLanes,
+          childScope,
+        );
 
         const handle = runtime.scheduleUpdate(coroutine, {
           flush: false,
