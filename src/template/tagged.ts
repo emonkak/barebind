@@ -1,4 +1,4 @@
-import { formatNode } from '../debug/node.js';
+import { emphasizeNode } from '../debug/node.js';
 import { formatPart } from '../debug/part.js';
 import {
   createTreeWalker,
@@ -520,7 +520,7 @@ function parseChildren(
             if ((currentNode as Comment).data.includes(marker)) {
               throw new Error(
                 'Expressions inside a comment must make up the entire comment value:\n' +
-                  formatNode(currentNode, ERROR_MAKER),
+                  emphasizeNode(currentNode, ERROR_MAKER),
               );
             }
           }

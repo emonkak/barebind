@@ -1,4 +1,4 @@
-import { formatNode } from './debug/node.js';
+import { emphasizeNode } from './debug/node.js';
 
 interface NodeTypeMap {
   [Node.COMMENT_NODE]: Comment;
@@ -12,7 +12,7 @@ export class HydrationError extends Error {
   constructor(targetTree: TreeWalker, message: string) {
     DEBUG: {
       message +=
-        '\n' + formatNode(targetTree.currentNode, '[[ERROR IN HERE!]]');
+        '\n' + emphasizeNode(targetTree.currentNode, '[[ERROR IN HERE!]]');
     }
 
     super(message);

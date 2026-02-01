@@ -3,8 +3,8 @@ const INDENT_STRING = '  ';
 // Minimum complexity score required to make a node identifiable.
 const COMPLEXITY_THRESHOLD = 10;
 
-export function formatNode(node: Node, marker: string): string {
-  const annotatedLines = annotateNode(node, marker);
+export function emphasizeNode(node: Node, marker: string): string {
+  const middleLines = markNode(node, marker);
   const precedingLines: string[] = [];
   const followingLines: string[] = [];
   let currentNode: Node | null = node;
@@ -49,47 +49,11 @@ export function formatNode(node: Node, marker: string): string {
     precedingLines.length > 0 ? precedingLines.reverse().join('\n') + '\n' : '';
   const followingString =
     followingLines.length > 0 ? '\n' + followingLines.join('\n') : '';
-  const middleString = annotatedLines
+  const middleString = middleLines
     .map((line) => INDENT_STRING.repeat(level) + line)
     .join('\n');
 
   return precedingString + middleString + followingString;
-}
-
-function annotateInsideTag(element: Element, marker: string): string[] {
-  const isSelfClosing = isSelfClosingTag(element);
-  const offset = isSelfClosing ? 1 : element.localName.length + 4;
-  const unclosedOpenTag = element.outerHTML.slice(
-    0,
-    -(element.innerHTML.length + offset),
-  );
-  const lines = [unclosedOpenTag + ' ' + marker + '>'];
-
-  if (!isSelfClosing) {
-    for (
-      let child = element.firstChild;
-      child !== null;
-      child = child.nextSibling
-    ) {
-      lines.push(...prettyPrintNode(child, 1));
-    }
-
-    if (lines.length > 1) {
-      lines.push(closeTag(element));
-    } else {
-      lines[0] += closeTag(element);
-    }
-  }
-
-  return lines;
-}
-
-function annotateNode(node: Node, marker: string): string[] {
-  if (node instanceof Element) {
-    return annotateInsideTag(node, marker);
-  } else {
-    return [marker + serializeNode(node)];
-  }
 }
 
 function closeTag(element: Element): string {
@@ -126,6 +90,42 @@ function getComplexity(node: Node): number {
 
 function isSelfClosingTag(element: Element): boolean {
   return !element.outerHTML.endsWith(closeTag(element));
+}
+
+function markInsideTag(element: Element, marker: string): string[] {
+  const isSelfClosing = isSelfClosingTag(element);
+  const offset = isSelfClosing ? 1 : element.localName.length + 4;
+  const unclosedOpenTag = element.outerHTML.slice(
+    0,
+    -(element.innerHTML.length + offset),
+  );
+  const lines = [unclosedOpenTag + ' ' + marker + '>'];
+
+  if (!isSelfClosing) {
+    for (
+      let child = element.firstChild;
+      child !== null;
+      child = child.nextSibling
+    ) {
+      lines.push(...prettyPrintNode(child, 1));
+    }
+
+    if (lines.length > 1) {
+      lines.push(closeTag(element));
+    } else {
+      lines[0] += closeTag(element);
+    }
+  }
+
+  return lines;
+}
+
+function markNode(node: Node, marker: string): string[] {
+  if (node instanceof Element) {
+    return markInsideTag(node, marker);
+  } else {
+    return [marker + serializeNode(node)];
+  }
 }
 
 function openTag(element: Element): string {

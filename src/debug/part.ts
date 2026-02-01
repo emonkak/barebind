@@ -1,5 +1,5 @@
 import { type DirectiveType, type Part, PartType } from '../internal.js';
-import { formatNode } from './node.js';
+import { emphasizeNode } from './node.js';
 import { formatValue } from './value.js';
 
 export function debugPart(
@@ -30,7 +30,7 @@ export function formatPart(part: Part, marker: string): string {
       marker = '.' + part.name + '=' + marker;
       break;
   }
-  return formatNode(part.node, marker);
+  return emphasizeNode(part.node, marker);
 }
 
 export function undebugPart(part: Part, type: DirectiveType<unknown>): void {
