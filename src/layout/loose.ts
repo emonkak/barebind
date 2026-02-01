@@ -9,7 +9,7 @@ import {
   type UnwrapBindable,
   type UpdateSession,
 } from '../internal.js';
-import { LayoutSpecifier } from './layout.js';
+import { LayoutSpecifier, SlotStatus } from './layout.js';
 
 export function Loose<T>(value: T): LayoutSpecifier<T> {
   return new LayoutSpecifier(value, LooseLayout);
@@ -27,7 +27,7 @@ export class LooseSlot<T> implements Slot<T> {
 
   private _memoizedBinding: Binding<UnwrapBindable<T>> | null = null;
 
-  private _dirty = false;
+  private _status: SlotStatus = SlotStatus.Idle;
 
   constructor(binding: Binding<UnwrapBindable<T>>) {
     this._pendingBinding = binding;
@@ -53,10 +53,13 @@ export class LooseSlot<T> implements Slot<T> {
     );
 
     if (areDirectiveTypesEqual(directive.type, this._pendingBinding.type)) {
-      if (this._dirty || this._pendingBinding.shouldUpdate(directive.value)) {
+      if (
+        this._status !== SlotStatus.Idle ||
+        this._pendingBinding.shouldUpdate(directive.value)
+      ) {
         this._pendingBinding.value = directive.value;
         this._pendingBinding.attach(session);
-        this._dirty = true;
+        this._status = SlotStatus.Attached;
       }
     } else {
       this._pendingBinding.detach(session);
@@ -66,24 +69,24 @@ export class LooseSlot<T> implements Slot<T> {
         context,
       );
       this._pendingBinding.attach(session);
-      this._dirty = true;
+      this._status = SlotStatus.Attached;
     }
 
-    return this._dirty;
+    return this._status === SlotStatus.Attached;
   }
 
   attach(session: UpdateSession): void {
     this._pendingBinding.attach(session);
-    this._dirty = true;
+    this._status = SlotStatus.Attached;
   }
 
   detach(session: UpdateSession): void {
     this._pendingBinding.detach(session);
-    this._dirty = true;
+    this._status = SlotStatus.Detached;
   }
 
   commit(): void {
-    if (!this._dirty) {
+    if (this._status !== SlotStatus.Attached) {
       return;
     }
 
@@ -107,11 +110,11 @@ export class LooseSlot<T> implements Slot<T> {
     newBinding.commit();
 
     this._memoizedBinding = newBinding;
-    this._dirty = false;
+    this._status = SlotStatus.Idle;
   }
 
   rollback(): void {
-    if (!this._dirty) {
+    if (this._status !== SlotStatus.Detached) {
       return;
     }
 
@@ -126,6 +129,6 @@ export class LooseSlot<T> implements Slot<T> {
     }
 
     this._memoizedBinding = null;
-    this._dirty = false;
+    this._status = SlotStatus.Idle;
   }
 }

@@ -10,7 +10,7 @@ import {
   type UnwrapBindable,
   type UpdateSession,
 } from '../internal.js';
-import { LayoutSpecifier } from './layout.js';
+import { LayoutSpecifier, SlotStatus } from './layout.js';
 
 export function Strict<T>(value: T): LayoutSpecifier<T> {
   return new LayoutSpecifier(value, StrictLayout);
@@ -26,7 +26,7 @@ export const StrictLayout: Layout = {
 export class StrictSlot<T> implements Slot<T> {
   private readonly _binding: Binding<UnwrapBindable<T>>;
 
-  private _dirty = false;
+  private _status: SlotStatus = SlotStatus.Idle;
 
   constructor(binding: Binding<UnwrapBindable<T>>) {
     this._binding = binding;
@@ -57,27 +57,30 @@ export class StrictSlot<T> implements Slot<T> {
       );
     }
 
-    if (this._dirty || this._binding.shouldUpdate(directive.value)) {
+    if (
+      this._status !== SlotStatus.Idle ||
+      this._binding.shouldUpdate(directive.value)
+    ) {
       this._binding.value = directive.value;
       this._binding.attach(session);
-      this._dirty = true;
+      this._status = SlotStatus.Attached;
     }
 
-    return this._dirty;
+    return this._status === SlotStatus.Attached;
   }
 
   attach(session: UpdateSession): void {
     this._binding.attach(session);
-    this._dirty = true;
+    this._status = SlotStatus.Attached;
   }
 
   detach(session: UpdateSession): void {
     this._binding.detach(session);
-    this._dirty = true;
+    this._status = SlotStatus.Detached;
   }
 
   commit(): void {
-    if (!this._dirty) {
+    if (this._status !== SlotStatus.Attached) {
       return;
     }
 
@@ -87,11 +90,11 @@ export class StrictSlot<T> implements Slot<T> {
 
     this._binding.commit();
 
-    this._dirty = false;
+    this._status = SlotStatus.Idle;
   }
 
   rollback(): void {
-    if (!this._dirty) {
+    if (this._status !== SlotStatus.Detached) {
       return;
     }
 
@@ -101,6 +104,6 @@ export class StrictSlot<T> implements Slot<T> {
       undebugPart(this._binding.part, this._binding.type);
     }
 
-    this._dirty = false;
+    this._status = SlotStatus.Idle;
   }
 }

@@ -10,7 +10,7 @@ import {
   type UnwrapBindable,
   type UpdateSession,
 } from '../internal.js';
-import { LayoutSpecifier } from './layout.js';
+import { LayoutSpecifier, SlotStatus } from './layout.js';
 
 export function Keyed<TKey, TValue>(
   value: TValue,
@@ -48,7 +48,7 @@ export class KeyedSlot<TKey, TValue> implements Slot<TValue> {
 
   private _key: TKey;
 
-  private _dirty = false;
+  private _status: SlotStatus = SlotStatus.Idle;
 
   constructor(binding: Binding<UnwrapBindable<TValue>>, key: TKey) {
     this._pendingBinding = binding;
@@ -87,10 +87,13 @@ export class KeyedSlot<TKey, TValue> implements Slot<TValue> {
         );
       }
 
-      if (this._dirty || this._pendingBinding.shouldUpdate(directive.value)) {
+      if (
+        this._status !== SlotStatus.Idle ||
+        this._pendingBinding.shouldUpdate(directive.value)
+      ) {
         this._pendingBinding.value = directive.value;
         this._pendingBinding.attach(session);
-        this._dirty = true;
+        this._status = SlotStatus.Attached;
       }
     } else {
       this._pendingBinding.detach(session);
@@ -100,26 +103,26 @@ export class KeyedSlot<TKey, TValue> implements Slot<TValue> {
         context,
       );
       this._pendingBinding.attach(session);
-      this._dirty = true;
+      this._status = SlotStatus.Attached;
     }
 
     this._key = key;
 
-    return this._dirty;
+    return this._status === SlotStatus.Attached;
   }
 
   attach(session: UpdateSession): void {
     this._pendingBinding.attach(session);
-    this._dirty = true;
+    this._status = SlotStatus.Attached;
   }
 
   detach(session: UpdateSession): void {
     this._pendingBinding.detach(session);
-    this._dirty = true;
+    this._status = SlotStatus.Detached;
   }
 
   commit(): void {
-    if (!this._dirty) {
+    if (this._status !== SlotStatus.Attached) {
       return;
     }
 
@@ -143,11 +146,11 @@ export class KeyedSlot<TKey, TValue> implements Slot<TValue> {
     newBinding.commit();
 
     this._memoizedBinding = newBinding;
-    this._dirty = false;
+    this._status = SlotStatus.Idle;
   }
 
   rollback(): void {
-    if (!this._dirty) {
+    if (this._status !== SlotStatus.Detached) {
       return;
     }
 
@@ -162,6 +165,6 @@ export class KeyedSlot<TKey, TValue> implements Slot<TValue> {
     }
 
     this._memoizedBinding = null;
-    this._dirty = false;
+    this._status = SlotStatus.Idle;
   }
 }
