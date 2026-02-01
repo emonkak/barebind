@@ -26,15 +26,19 @@ test('hydrate a component using a context value', async () => {
   );
   const root = Root.create(value, container, new Runtime(new BrowserBackend()));
 
-  await root.hydrate().finished;
+  SESSION1: {
+    await root.hydrate().finished;
 
-  expect(stripComments(container).innerHTML).toBe(
-    '<div>Hello, <strong>foo</strong>!</div>',
-  );
+    expect(stripComments(container).innerHTML).toBe(
+      '<div>Hello, <strong>foo</strong>!</div>',
+    );
+  }
 
-  await root.unmount().finished;
+  SESSION2: {
+    await root.unmount().finished;
 
-  expect(container.innerHTML).toBe('');
+    expect(container.innerHTML).toBe('');
+  }
 });
 
 test('mount a component using a context value', async () => {
@@ -53,21 +57,27 @@ test('mount a component using a context value', async () => {
     new Runtime(new BrowserBackend()),
   );
 
-  await root.mount().finished;
+  SESSION1: {
+    await root.mount().finished;
 
-  expect(stripComments(container).innerHTML).toBe(
-    '<div>Hello, <strong>foo</strong>!</div>',
-  );
+    expect(stripComments(container).innerHTML).toBe(
+      '<div>Hello, <strong>foo</strong>!</div>',
+    );
+  }
 
-  await root.update(value2).finished;
+  SESSION2: {
+    await root.update(value2).finished;
 
-  expect(stripComments(container).innerHTML).toBe(
-    '<div>Chao, <strong>bar</strong>!</div>',
-  );
+    expect(stripComments(container).innerHTML).toBe(
+      '<div>Chao, <strong>bar</strong>!</div>',
+    );
+  }
 
-  await root.unmount().finished;
+  SESSION3: {
+    await root.unmount().finished;
 
-  expect(container.innerHTML).toBe('');
+    expect(container.innerHTML).toBe('');
+  }
 });
 
 interface ParentProps {

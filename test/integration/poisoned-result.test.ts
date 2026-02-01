@@ -12,13 +12,17 @@ test('does not commit any DOM when an error occurs during render', async () => {
   const container = document.createElement('div');
   const root = Root.create(value, container, new Runtime(new BrowserBackend()));
 
-  await root.mount().finished;
+  SESSION1: {
+    await root.mount().finished;
 
-  expect(stripComments(container).innerHTML).toBe('<main></main>');
+    expect(stripComments(container).innerHTML).toBe('<main></main>');
+  }
 
-  await root.unmount().finished;
+  SESSION2: {
+    await root.unmount().finished;
 
-  expect(container.innerHTML).toBe('');
+    expect(container.innerHTML).toBe('');
+  }
 });
 
 const App = createComponent(function App(

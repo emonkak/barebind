@@ -21,18 +21,24 @@ test('suspends on a single promise in a child component', async () => {
   const container = document.createElement('div');
   const root = Root.create(value, container, new Runtime(new BrowserBackend()));
 
-  await root.mount().finished;
+  SESSION1: {
+    await root.mount().finished;
 
-  expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
+    expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
+  }
 
-  expect(await resourceFetcher.waitForAll()).toBe(1);
-  await waitUntilIdle();
+  SESSION2: {
+    expect(await resourceFetcher.waitForAll()).toBe(1);
+    await waitUntilIdle();
 
-  expect(stripComments(container).innerHTML).toBe('<ul><li>foo</li></ul>');
+    expect(stripComments(container).innerHTML).toBe('<ul><li>foo</li></ul>');
+  }
 
-  await root.unmount().finished;
+  SESSION3: {
+    await root.unmount().finished;
 
-  expect(container.innerHTML).toBe('');
+    expect(container.innerHTML).toBe('');
+  }
 });
 
 test('loads promises in parallel across child components', async () => {
@@ -44,36 +50,46 @@ test('loads promises in parallel across child components', async () => {
   const container = document.createElement('div');
   const root = Root.create(value, container, new Runtime(new BrowserBackend()));
 
-  await root.mount().finished;
+  SESSION1: {
+    await root.mount().finished;
 
-  expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
+    expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
+  }
 
-  expect(await resourceFetcher.waitForAll()).toBe(2);
-  await waitUntilIdle();
+  SESSION2: {
+    expect(await resourceFetcher.waitForAll()).toBe(2);
+    await waitUntilIdle();
 
-  expect(stripComments(container).innerHTML).toBe(
-    '<ul><li>foo</li><li>baz</li></ul>',
-  );
+    expect(stripComments(container).innerHTML).toBe(
+      '<ul><li>foo</li><li>baz</li></ul>',
+    );
+  }
 
-  await root.update(
-    App({
-      resourceFetcher,
-      resourceIds: ['bar', 'baz'],
-    }),
-  ).finished;
+  SESSION3: {
+    await root.update(
+      App({
+        resourceFetcher,
+        resourceIds: ['bar', 'baz'],
+      }),
+    ).finished;
 
-  expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
+    expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
+  }
 
-  expect(await resourceFetcher.waitForAll()).toBe(1);
-  await waitUntilIdle();
+  SESSION4: {
+    expect(await resourceFetcher.waitForAll()).toBe(1);
+    await waitUntilIdle();
 
-  expect(stripComments(container).innerHTML).toBe(
-    '<ul><li>bar</li><li>baz</li></ul>',
-  );
+    expect(stripComments(container).innerHTML).toBe(
+      '<ul><li>bar</li><li>baz</li></ul>',
+    );
+  }
 
-  await root.unmount().finished;
+  SESSION5: {
+    await root.unmount().finished;
 
-  expect(container.innerHTML).toBe('');
+    expect(container.innerHTML).toBe('');
+  }
 });
 
 test('throws the rejection reason when a suspended promise rejects', async () => {
@@ -82,20 +98,26 @@ test('throws the rejection reason when a suspended promise rejects', async () =>
   const container = document.createElement('div');
   const root = Root.create(value, container, new Runtime(new BrowserBackend()));
 
-  await root.mount().finished;
+  SESSION1: {
+    await root.mount().finished;
 
-  expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
+    expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
+  }
 
-  expect(await resourceFetcher.waitForAll()).toBe(3);
-  await waitUntilIdle(); // wait for retry rendering
+  SESSION2: {
+    expect(await resourceFetcher.waitForAll()).toBe(3);
+    await waitUntilIdle(); // wait for retry rendering
 
-  expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
+    expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
+  }
 
-  await waitUntilIdle(); // wait for error recovery
+  SESSION3: {
+    await waitUntilIdle(); // wait for error recovery
 
-  expect(stripComments(container).innerHTML).toBe(
-    '<p>Error: Resource qux not found</p>',
-  );
+    expect(stripComments(container).innerHTML).toBe(
+      '<p>Error: Resource qux not found</p>',
+    );
+  }
 
   await root.unmount().finished;
 
@@ -108,15 +130,19 @@ test('aborts pending resources on unmount', async () => {
   const container = document.createElement('div');
   const root = Root.create(value, container, new Runtime(new BrowserBackend()));
 
-  await root.mount().finished;
+  SESSION1: {
+    await root.mount().finished;
 
-  expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
+    expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
+  }
 
   expect(await resourceFetcher.waitForAll()).toBe(1);
 
-  await root.unmount().finished;
+  SESSION2: {
+    await root.unmount().finished;
 
-  expect(stripComments(container).innerHTML).toBe('');
+    expect(stripComments(container).innerHTML).toBe('');
+  }
 });
 
 const App = createComponent(function App(
@@ -156,7 +182,7 @@ const App = createComponent(function App(
   });
 });
 
-const ResourceLoader = createComponent(function Loader(
+const ResourceLoader = createComponent(function ResourceLoader(
   { delay, resourceId }: { delay: number; resourceId: string },
   $: RenderContext,
 ): unknown {

@@ -39,30 +39,38 @@ test('render a component returning virtual DOM', async () => {
     new Runtime(new BrowserBackend()),
   );
 
-  await root.mount().finished;
+  let itemElements: HTMLLIElement[];
 
-  const items = [...container.querySelectorAll('li')];
+  SESSION1: {
+    await root.mount().finished;
 
-  expect(stripComments(container).innerHTML).toBe(
-    '<div><ul><li>foo</li><li>bar</li><li>qux</li></ul><p>Hello, World!</p></div>',
-  );
-  expect(items).toHaveLength(3);
+    itemElements = [...container.querySelectorAll('li')];
 
-  await root.update(value2).finished;
+    expect(stripComments(container).innerHTML).toBe(
+      '<div><ul><li>foo</li><li>bar</li><li>qux</li></ul><p>Hello, World!</p></div>',
+    );
+    expect(itemElements).toHaveLength(3);
+  }
 
-  expect(stripComments(container).innerHTML).toBe(
-    '<div><ul><li>qux</li><li>baz</li><li>bar</li><li>foo</li></ul><p>Chao, Alternative world!</p><dt>foo</dt><dd>bar</dd><dt>baz</dt><dd>qux</dd></div>',
-  );
-  expect([...container.querySelectorAll('li')]).toStrictEqual([
-    expect.exact(items[2]),
-    expect.any(HTMLLIElement),
-    expect.exact(items[1]),
-    expect.exact(items[0]),
-  ]);
+  SESSION2: {
+    await root.update(value2).finished;
 
-  await root.unmount().finished;
+    expect(stripComments(container).innerHTML).toBe(
+      '<div><ul><li>qux</li><li>baz</li><li>bar</li><li>foo</li></ul><p>Chao, Alternative world!</p><dt>foo</dt><dd>bar</dd><dt>baz</dt><dd>qux</dd></div>',
+    );
+    expect([...container.querySelectorAll('li')]).toStrictEqual([
+      expect.exact(itemElements[2]),
+      expect.any(HTMLLIElement),
+      expect.exact(itemElements[1]),
+      expect.exact(itemElements[0]),
+    ]);
+  }
 
-  expect(container.innerHTML).toBe('');
+  SESSION3: {
+    await root.unmount().finished;
+
+    expect(container.innerHTML).toBe('');
+  }
 });
 
 interface AppProps {
