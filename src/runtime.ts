@@ -363,26 +363,26 @@ export class Runtime implements SessionContext {
     scope: Scope,
   ): TResult {
     const { id } = frame;
-    const session = new RenderSession(state, coroutine, frame, scope, this);
+    const context = new RenderSession(state, coroutine, frame, scope, this);
 
     notifyObservers(this._observers, {
       type: 'COMPONENT_RENDER_START',
       id,
       component,
       props,
-      context: session,
+      context,
     });
 
-    const result = component.render(props, session);
+    const result = component.render(props, context);
 
-    session.finalize();
+    context.finalize();
 
     notifyObservers(this._observers, {
       type: 'COMPONENT_RENDER_END',
       id,
       component,
       props,
-      context: session,
+      context,
     });
 
     return result;
