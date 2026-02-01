@@ -91,6 +91,7 @@ export class RenderSession implements RenderContext {
     if (this._frame.lanes !== Lanes.NoLanes) {
       for (const { lanes, continuation } of this._context.getPendingTasks()) {
         this._frame.pendingCoroutines.push(this._coroutine);
+        this._state.pendingLanes |= lanes;
         return {
           lanes,
           scheduled: Promise.resolve({ canceled: true, done: true }),
