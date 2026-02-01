@@ -16,7 +16,7 @@ export function Loose<T>(value: T): LayoutSpecifier<T> {
 }
 
 export const LooseLayout: Layout = {
-  displayName: 'LooseLayout',
+  name: 'LooseLayout',
   resolveSlot<T>(binding: Binding<UnwrapBindable<T>>): LooseSlot<T> {
     return new LooseSlot(binding);
   },

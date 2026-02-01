@@ -16,7 +16,7 @@ export function Flexible<T>(value: T): LayoutSpecifier<T> {
 }
 
 export const FlexibleLayout: Layout = {
-  displayName: 'FlexibleLayout',
+  name: 'FlexibleLayout',
   resolveSlot<T>(binding: Binding<UnwrapBindable<T>>): FlexibleSlot<T> {
     return new FlexibleSlot(binding);
   },

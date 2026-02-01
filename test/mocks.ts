@@ -237,7 +237,7 @@ export class MockDirective<T> implements DirectiveType<T> {
     this.id = id;
   }
 
-  get displayName(): string {
+  get name(): string {
     return MockDirective.name;
   }
 
@@ -251,7 +251,7 @@ export class MockDirective<T> implements DirectiveType<T> {
 }
 
 export const MockPrimitive: Primitive<any> = {
-  displayName: 'MockPrimitive',
+  name: 'MockPrimitive',
   ensureValue(_value: unknown): asserts _value is unknown {},
   resolveBinding(
     value: unknown,
@@ -267,7 +267,7 @@ export class MockEffect implements Effect {
 }
 
 export const MockLayout: Layout = {
-  displayName: 'MockLayout',
+  name: 'MockLayout',
   resolveSlot<T>(binding: Binding<UnwrapBindable<T>>) {
     return new MockSlot(binding);
   },
@@ -321,7 +321,7 @@ export class MockSlot<T> implements Slot<T> {
 
     if (!areDirectiveTypesEqual(this.binding.type, directive.type)) {
       throw new Error(
-        `The directive must be ${this.binding.type.displayName} in this slot, but got ${directive.type.displayName}.`,
+        `The directive must be ${this.binding.type.name} in this slot, but got ${directive.type.name}.`,
       );
     }
 

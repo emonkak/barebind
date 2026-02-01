@@ -18,7 +18,7 @@ export class DirectiveError<T> extends Error {
 
   constructor(type: DirectiveType<T>, value: T, part: Part, message: string) {
     DEBUG: {
-      const marker = `[[${type.displayName}(${formatValue(value)}) IS USED IN HERE!]]`;
+      const marker = `[[${type.name}(${formatValue(value)}) IS USED IN HERE!]]`;
       message += '\n' + formatPart(part, marker);
     }
 
@@ -46,7 +46,7 @@ export class DirectiveSpecifier<T>
   }
 
   [$debug](format: (value: unknown) => string): string {
-    return this.type.displayName + '(' + format(this.value) + ')';
+    return this.type.name + '(' + format(this.value) + ')';
   }
 
   [$toDirective](): Directive<T> {
@@ -65,7 +65,7 @@ export function ensurePartType<TExpectedPart extends Part>(
       type,
       value,
       part,
-      `${type.displayName} must be used in ${Object.keys(PartType)[expectedPartType]}Part.`,
+      `${type.name} must be used in ${Object.keys(PartType)[expectedPartType]}Part.`,
     );
   }
 }

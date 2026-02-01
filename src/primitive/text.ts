@@ -8,7 +8,7 @@ import {
 import { PrimitiveBinding } from './primitive.js';
 
 export const TextPrimitive: Primitive<any> = {
-  displayName: 'TextPrimitive',
+  name: 'TextPrimitive',
   resolveBinding(
     value: unknown,
     part: Part,

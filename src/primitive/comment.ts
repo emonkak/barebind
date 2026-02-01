@@ -8,7 +8,7 @@ import {
 import { PrimitiveBinding } from './primitive.js';
 
 export const CommentPrimitive: Primitive<any> = {
-  displayName: 'CommentPrimitive',
+  name: 'CommentPrimitive',
   resolveBinding(
     value: unknown,
     part: Part,

@@ -116,7 +116,7 @@ export class PerformanceProfiler implements RuntimeObserver {
       }
       case 'COMPONENT_RENDER_START': {
         profile.componentMeasurements.push({
-          name: event.component.displayName,
+          name: event.component.name,
           startTime: performance.now(),
           duration: 0,
         });

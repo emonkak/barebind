@@ -21,7 +21,7 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
 {
   abstract get arity(): TBinds['length'];
 
-  get displayName(): string {
+  get name(): string {
     return this.constructor.name;
   }
 

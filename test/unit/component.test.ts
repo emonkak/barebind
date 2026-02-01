@@ -25,13 +25,13 @@ describe('createComponent()', () => {
     expect(directive.value).toBe(props);
   });
 
-  describe('displayName', () => {
+  describe('name', () => {
     it('returns the component function name', () => {
       function MyComponent() {
         return null;
       }
 
-      expect(createComponent(MyComponent).displayName).toBe(MyComponent.name);
+      expect(createComponent(MyComponent).name).toBe(MyComponent.name);
     });
   });
 

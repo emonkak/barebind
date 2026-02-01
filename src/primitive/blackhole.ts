@@ -2,7 +2,7 @@ import type { DirectiveContext, Part, Primitive } from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export const BlackholePrimitive: Primitive<any> = {
-  displayName: 'BlackholePrimitive',
+  name: 'BlackholePrimitive',
   resolveBinding(
     value: unknown,
     part: Part,

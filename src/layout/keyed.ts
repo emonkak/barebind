@@ -26,7 +26,7 @@ export class KeyedLayout<TKey> implements Layout {
     this._key = key;
   }
 
-  get displayName(): string {
+  get name(): string {
     return KeyedLayout.name;
   }
 
@@ -83,7 +83,7 @@ export class KeyedSlot<TKey, TValue> implements Slot<TValue> {
           directive.type,
           directive.value,
           this._pendingBinding.part,
-          `The directive type must be ${this._pendingBinding.type.displayName} in this slot, but got ${directive.type.displayName}.`,
+          `The directive type must be ${this._pendingBinding.type.name} in this slot, but got ${directive.type.name}.`,
         );
       }
 

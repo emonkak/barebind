@@ -20,7 +20,7 @@ interface EventHandlerObject<T extends Event> extends AddEventListenerOptions {
 }
 
 export const EventPrimitive: Primitive<EventHandler> = {
-  displayName: 'EventPrimitive',
+  name: 'EventPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is EventHandler {
     if (!isEventHandler(value)) {
       throw new DirectiveError(

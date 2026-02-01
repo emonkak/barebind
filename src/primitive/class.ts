@@ -21,7 +21,7 @@ type ClassAtom = boolean | string | null | undefined;
 const CLASS_SEPARATOR_PATTERN = /\s+/;
 
 export const ClassPrimitive: Primitive<ClassSpecifier> = {
-  displayName: 'ClassPrimitive',
+  name: 'ClassPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is ClassSpecifier {
     if (!isObject(value)) {
       throw new DirectiveError(

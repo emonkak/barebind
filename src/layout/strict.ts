@@ -17,7 +17,7 @@ export function Strict<T>(value: T): LayoutSpecifier<T> {
 }
 
 export const StrictLayout: Layout = {
-  displayName: 'StrictLayout',
+  name: 'StrictLayout',
   resolveSlot<T>(binding: Binding<UnwrapBindable<T>>): StrictSlot<T> {
     return new StrictSlot(binding);
   },
@@ -53,7 +53,7 @@ export class StrictSlot<T> implements Slot<T> {
         directive.type,
         directive.value,
         this._binding.part,
-        `The directive type must be ${this._binding.type.displayName} in this slot, but got ${directive.type.displayName}.`,
+        `The directive type must be ${this._binding.type.name} in this slot, but got ${directive.type.name}.`,
       );
     }
 

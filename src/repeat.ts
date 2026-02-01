@@ -51,7 +51,7 @@ export function Repeat<TSource, TKey, TValue>(
 }
 
 export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
-  displayName: 'RepeatDirective',
+  name: 'RepeatDirective',
   resolveBinding(
     props: RepeatProps<unknown, unknown, unknown>,
     part: Part,

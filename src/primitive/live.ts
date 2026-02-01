@@ -8,7 +8,7 @@ import {
 import { PrimitiveBinding } from './primitive.js';
 
 export const LivePrimitive: Primitive<any> = {
-  displayName: 'LivePrimitive',
+  name: 'LivePrimitive',
   resolveBinding(
     value: unknown,
     part: Part,

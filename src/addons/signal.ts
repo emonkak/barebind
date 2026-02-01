@@ -39,7 +39,7 @@ export type UnwrapSignals<T> = {
  * @internal
  */
 export const SignalDirective: DirectiveType<Signal<any>> = {
-  displayName: 'SignalDirective',
+  name: 'SignalDirective',
   resolveBinding(
     signal: Signal<unknown>,
     part: Part,

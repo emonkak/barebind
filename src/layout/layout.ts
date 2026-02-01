@@ -25,7 +25,7 @@ export class LayoutSpecifier<T>
   }
 
   [$debug](format: (value: unknown) => string): string {
-    return format(this.value) + ' in ' + this.layout.displayName;
+    return format(this.value) + ' in ' + this.layout.name;
   }
 
   [$toDirective](

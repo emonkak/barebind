@@ -13,7 +13,7 @@ import {
 import { PrimitiveBinding } from './primitive.js';
 
 export const RefPrimitive: Primitive<Ref<Element>> = {
-  displayName: 'RefPrimitive',
+  name: 'RefPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is Ref<Element> {
     if (!isElementRef(value)) {
       throw new DirectiveError(

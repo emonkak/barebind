@@ -20,10 +20,10 @@ import { createElement } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
 
 describe('AbstractTemplate', () => {
-  describe('displayName', () => {
+  describe('name', () => {
     it('returns the name of the class', () => {
       const template = new MockTemplate();
-      expect(template.displayName).toBe(MockTemplate.name);
+      expect(template.name).toBe(MockTemplate.name);
     });
   });
 

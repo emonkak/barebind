@@ -74,7 +74,7 @@ interface TemplateDirective<TBinds extends readonly unknown[]>
  * @internal
  */
 export const ElementDirective: DirectiveType<ElementProps> = {
-  displayName: 'ElementDirective',
+  name: 'ElementDirective',
   resolveBinding(
     props: ElementProps,
     part: Part,

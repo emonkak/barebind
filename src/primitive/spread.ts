@@ -12,7 +12,7 @@ import { PrimitiveBinding } from './primitive.js';
 export type SpreadProps = { [key: string]: unknown };
 
 export const SpreadPrimitive: Primitive<SpreadProps> = {
-  displayName: 'SpreadPrimitive',
+  name: 'SpreadPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is SpreadProps {
     if (!isSpreadProps(value)) {
       throw new DirectiveError(

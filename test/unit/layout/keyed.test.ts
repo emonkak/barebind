@@ -22,7 +22,7 @@ describe('Keyed()', () => {
 describe('KeyedLayout', () => {
   it('returns the name of the class', () => {
     const layout = new KeyedLayout('foo');
-    expect(layout.displayName).toBe(KeyedLayout.name);
+    expect(layout.name).toBe(KeyedLayout.name);
   });
 
   describe('resolveSlot', () => {

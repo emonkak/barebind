@@ -10,7 +10,7 @@ import { PrimitiveBinding } from './primitive.js';
 const noValue = Symbol('noValue');
 
 export const PropertyPrimitive: Primitive<any> = {
-  displayName: 'PropertyPrimitive',
+  name: 'PropertyPrimitive',
   resolveBinding(
     value: unknown,
     part: Part,
