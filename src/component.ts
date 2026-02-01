@@ -148,8 +148,9 @@ export class ComponentBinding<TProps, TResult>
   }
 
   attach(session: UpdateSession): void {
-    session.frame.pendingCoroutines.push(this);
-    this._state.scope = session.scope;
+    const { frame, scope } = session;
+    frame.pendingCoroutines.push(this);
+    this._state.scope = scope;
   }
 
   detach(session: UpdateSession): void {
