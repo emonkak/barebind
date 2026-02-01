@@ -103,29 +103,29 @@ export class ComponentBinding<TProps, TResult>
   resume(session: UpdateSession): void {
     const { scope } = this._state;
     const { frame, originScope, context } = session;
-    const subScope = createScope(scope);
+    const childScope = createScope(scope);
     const result = context.renderComponent(
       this._component,
       this._props,
       this._state,
       this,
       frame,
-      subScope,
+      childScope,
     );
 
-    const subSession = createUpdateSession(
+    const childSession = createUpdateSession(
       frame,
-      subScope,
+      childScope,
       originScope,
       context,
     );
     let dirty: boolean;
 
     if (this._slot !== null) {
-      dirty = this._slot.reconcile(result, subSession);
+      dirty = this._slot.reconcile(result, childSession);
     } else {
       this._slot = context.resolveSlot(result, this._part);
-      this._slot.attach(subSession);
+      this._slot.attach(childSession);
       dirty = true;
     }
 
