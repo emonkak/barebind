@@ -111,44 +111,44 @@ describe('Runtime', () => {
         expect(observer.flushEvents()).toStrictEqual([
           {
             type: 'UPDATE_START',
-            id: 1,
+            id: 0,
             lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
           },
           {
             type: 'RENDER_START',
-            id: 1,
+            id: 0,
           },
           {
             type: 'RENDER_END',
-            id: 1,
+            id: 0,
           },
           {
             type: 'COMMIT_START',
-            id: 1,
+            id: 0,
             phase: CommitPhase.Mutation,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
-            id: 1,
+            id: 0,
             phase: CommitPhase.Mutation,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_START',
-            id: 1,
+            id: 0,
             phase: CommitPhase.Layout,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
-            id: 1,
+            id: 0,
             phase: CommitPhase.Layout,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'UPDATE_SUCCESS',
-            id: 1,
+            id: 0,
             lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
           },
         ]);
@@ -201,7 +201,7 @@ describe('Runtime', () => {
         expect(observer.flushEvents()).toStrictEqual([
           {
             type: 'UPDATE_START',
-            id: 2,
+            id: 1,
             lanes:
               Lanes.DefaultLane |
               Lanes.UserVisibleLane |
@@ -209,39 +209,39 @@ describe('Runtime', () => {
           },
           {
             type: 'RENDER_START',
-            id: 2,
+            id: 1,
           },
           {
             type: 'RENDER_END',
-            id: 2,
+            id: 1,
           },
           {
             type: 'COMMIT_START',
-            id: 2,
+            id: 1,
             phase: CommitPhase.Layout,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
-            id: 2,
+            id: 1,
             phase: CommitPhase.Layout,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_START',
-            id: 2,
+            id: 1,
             phase: CommitPhase.Passive,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
-            id: 2,
+            id: 1,
             phase: CommitPhase.Passive,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'UPDATE_SUCCESS',
-            id: 2,
+            id: 1,
             lanes:
               Lanes.DefaultLane |
               Lanes.UserVisibleLane |
@@ -293,16 +293,16 @@ describe('Runtime', () => {
       expect(observer.flushEvents()).toStrictEqual([
         {
           type: 'UPDATE_START',
-          id: 1,
+          id: 0,
           lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
         },
         {
           type: 'RENDER_START',
-          id: 1,
+          id: 0,
         },
         {
           type: 'UPDATE_FAILURE',
-          id: 1,
+          id: 0,
           lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
           error: error,
         },
@@ -351,16 +351,16 @@ describe('Runtime', () => {
       expect(observer.flushEvents()).toStrictEqual([
         {
           type: 'UPDATE_START',
-          id: 1,
+          id: 0,
           lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
         },
         {
           type: 'RENDER_START',
-          id: 1,
+          id: 0,
         },
         {
           type: 'UPDATE_FAILURE',
-          id: 1,
+          id: 0,
           lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
           error: expect.objectContaining({ cause: error }),
         },
@@ -442,56 +442,56 @@ describe('Runtime', () => {
         expect(observer.flushEvents()).toStrictEqual([
           {
             type: 'UPDATE_START',
-            id: 1,
+            id: 0,
             lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
           },
           {
             type: 'RENDER_START',
-            id: 1,
+            id: 0,
           },
           {
             type: 'RENDER_END',
-            id: 1,
+            id: 0,
           },
           {
             type: 'COMMIT_START',
-            id: 1,
+            id: 0,
             phase: CommitPhase.Mutation,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
-            id: 1,
+            id: 0,
             phase: CommitPhase.Mutation,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_START',
-            id: 1,
+            id: 0,
             phase: CommitPhase.Layout,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
-            id: 1,
+            id: 0,
             phase: CommitPhase.Layout,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_START',
-            id: 1,
+            id: 0,
             phase: CommitPhase.Passive,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
-            id: 1,
+            id: 0,
             phase: CommitPhase.Passive,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'UPDATE_SUCCESS',
-            id: 1,
+            id: 0,
             lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
           },
         ]);
@@ -545,7 +545,7 @@ describe('Runtime', () => {
         expect(observer.flushEvents()).toStrictEqual([
           {
             type: 'UPDATE_START',
-            id: 2,
+            id: 1,
             lanes:
               Lanes.DefaultLane |
               Lanes.UserVisibleLane |
@@ -553,39 +553,39 @@ describe('Runtime', () => {
           },
           {
             type: 'RENDER_START',
-            id: 2,
+            id: 1,
           },
           {
             type: 'RENDER_END',
-            id: 2,
+            id: 1,
           },
           {
             type: 'COMMIT_START',
-            id: 2,
+            id: 1,
             phase: CommitPhase.Mutation,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
-            id: 2,
+            id: 1,
             phase: CommitPhase.Mutation,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_START',
-            id: 2,
+            id: 1,
             phase: CommitPhase.Layout,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'COMMIT_END',
-            id: 2,
+            id: 1,
             phase: CommitPhase.Layout,
             effects: expect.any(EffectQueue),
           },
           {
             type: 'UPDATE_SUCCESS',
-            id: 2,
+            id: 1,
             lanes:
               Lanes.DefaultLane |
               Lanes.UserVisibleLane |
@@ -626,16 +626,16 @@ describe('Runtime', () => {
       expect(observer.flushEvents()).toStrictEqual([
         {
           type: 'UPDATE_START',
-          id: 1,
+          id: 0,
           lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
         },
         {
           type: 'RENDER_START',
-          id: 1,
+          id: 0,
         },
         {
           type: 'UPDATE_FAILURE',
-          id: 1,
+          id: 0,
           lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
           error: error,
         },
@@ -684,16 +684,16 @@ describe('Runtime', () => {
       expect(observer.flushEvents()).toStrictEqual([
         {
           type: 'UPDATE_START',
-          id: 1,
+          id: 0,
           lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
         },
         {
           type: 'RENDER_START',
-          id: 1,
+          id: 0,
         },
         {
           type: 'UPDATE_FAILURE',
-          id: 1,
+          id: 0,
           lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
           error: expect.objectContaining({ cause: error }),
         },

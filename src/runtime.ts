@@ -141,7 +141,7 @@ export class Runtime implements SessionContext {
         continue;
       }
 
-      const id = (this._updateCount = incrementCount(this._updateCount));
+      const id = this._updateCount++;
       const frame = createRenderFrame(id, lanes, coroutine);
       const originScope = coroutine.scope;
       const session = createUpdateSession(
@@ -264,7 +264,7 @@ export class Runtime implements SessionContext {
         continue;
       }
 
-      const id = (this._updateCount = incrementCount(this._updateCount));
+      const id = this._updateCount++;
       const frame = createRenderFrame(id, lanes, coroutine);
       const originScope = coroutine.scope;
       const session = createUpdateSession(
@@ -348,8 +348,7 @@ export class Runtime implements SessionContext {
   }
 
   nextIdentifier(): string {
-    const identifierCount = this._identifierCount;
-    this._identifierCount = incrementCount(this._identifierCount);
+    const identifierCount = this._identifierCount++;
     // The identifier is also valid as a view transition name.
     return 'id-' + this._randomToken + '-' + identifierCount;
   }
@@ -565,10 +564,6 @@ function handleError(error: unknown, scope: Scope, originScope: Scope): void {
   if (capturedOutsideOrigin) {
     throw new CapturedError(undefined, { cause: error });
   }
-}
-
-function incrementCount(count: number): number {
-  return (count % Number.MAX_SAFE_INTEGER) + 1;
 }
 
 function notifyObservers(
