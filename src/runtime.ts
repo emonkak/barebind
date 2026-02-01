@@ -509,11 +509,11 @@ export class RenderError extends Error {
     DEBUG: {
       message += getCoroutineStack(coroutine)
         .reverse()
-        .map((name, i, stack) => {
-          const prefix = i === 0 ? '' : '   '.repeat(i - 1) + '`- ';
+        .map((coroutine, i, stack) => {
+          const prefix = i > 0 ? '   '.repeat(i - 1) + '`- ' : '';
           const suffix =
             i === stack.length - 1 ? ' <- ERROR occurred here!' : '';
-          return '\n' + prefix + name + suffix;
+          return '\n' + prefix + coroutine.name + suffix;
         })
         .join('');
     }
