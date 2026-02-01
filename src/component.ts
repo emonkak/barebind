@@ -60,7 +60,7 @@ export class ComponentBinding<TProps, TResult>
 
   private _slot: Slot<TResult> | null = null;
 
-  private _state: ComponentState = {
+  private readonly _state: ComponentState = {
     hooks: [],
     pendingLanes: Lanes.NoLanes,
     scope: DETACHED_SCOPE,
