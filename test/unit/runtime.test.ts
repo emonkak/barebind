@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { createComponent } from '@/component.js';
+import { ComponentBinding, createComponent } from '@/component.js';
 import {
   $toDirective,
   BoundaryType,
   CommitPhase,
   type ComponentState,
+  type Coroutine,
   createScope,
   type Directive,
   EffectQueue,
@@ -13,6 +14,7 @@ import {
   PartType,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
+import { RenderError } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   createRenderFrame,
@@ -287,7 +289,13 @@ describe('Runtime', () => {
 
         await runtime.flushAsync();
 
-        await expect(handle.finished).rejects.toThrow(error);
+        try {
+          await handle.finished;
+          expect.unreachable();
+        } catch (caughtError) {
+          expect(caughtError).toBeInstanceOf(RenderError);
+          expect((caughtError as RenderError).cause).toBe(error);
+        }
       }
 
       expect(observer.flushEvents()).toStrictEqual([
@@ -304,7 +312,7 @@ describe('Runtime', () => {
           type: 'UPDATE_FAILURE',
           id: 0,
           lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
-          error: error,
+          error: expect.objectContaining({ cause: error }),
         },
       ]);
     });
@@ -622,9 +630,13 @@ describe('Runtime', () => {
           throw error;
         });
 
-        await expect(
-          runtime.scheduleUpdate(coroutine).finished,
-        ).rejects.toThrow(error);
+        try {
+          await runtime.scheduleUpdate(coroutine).finished;
+          expect.unreachable();
+        } catch (caughtError) {
+          expect(caughtError).toBeInstanceOf(RenderError);
+          expect((caughtError as RenderError).cause).toBe(error);
+        }
       }
 
       expect(observer.flushEvents()).toStrictEqual([
@@ -641,7 +653,7 @@ describe('Runtime', () => {
           type: 'UPDATE_FAILURE',
           id: 0,
           lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
-          error: error,
+          error: expect.objectContaining({ cause: error }),
         },
       ]);
     });
@@ -895,3 +907,34 @@ describe('Runtime', () => {
     });
   });
 });
+
+describe('RenderError', () => {
+  it('contains the coroutine stack in the message', () => {
+    const part = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+      anchorNode: null,
+      namespaceURI: HTML_NAMESPACE_URI,
+    };
+    const scope = createScope(
+      createScope(createScope(), new ComponentBinding(Parent, {}, part)),
+      new ComponentBinding(Child, {}, part),
+    );
+    const coroutine: Coroutine = {
+      name: 'ErrorPlace',
+      pendingLanes: Lanes.NoLanes,
+      scope,
+      resume() {},
+    };
+    const error = new RenderError(coroutine);
+
+    expect(error.message).toBe(`An error occurred while rendering.
+${Parent.name}
+\`- ${Child.name}
+   \`- ErrorPlace <- ERROR occurred here!`);
+  });
+});
+
+const Parent = createComponent(function Parent() {});
+
+const Child = createComponent(function Child() {});

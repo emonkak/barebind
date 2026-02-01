@@ -30,6 +30,7 @@ export { Root } from './root.js';
 export { BrowserBackend } from './runtime/browser.js';
 export { ServerBackend } from './runtime/server.js';
 export {
+  type RenderError,
   Runtime,
   type RuntimeBackend,
   type RuntimeEvent,

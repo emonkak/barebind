@@ -445,7 +445,7 @@ export interface Scope {
   boundary: Boundary | null;
 }
 
-export type ScopeHost = Binding<unknown> & Coroutine;
+export type ScopeHost = Coroutine & Binding<unknown>;
 
 export interface Slot<T> extends ReversibleEffect {
   readonly type: DirectiveType<UnwrapBindable<T>>;

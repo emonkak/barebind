@@ -1,3 +1,4 @@
+import { getCoroutineStack } from './debug/scope.js';
 import {
   $toDirective,
   BoundaryType,
@@ -170,7 +171,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(error, coroutine.scope, originScope, session);
+                handleError(error, coroutine, originScope, session);
               }
             }
 
@@ -293,7 +294,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(error, coroutine.scope, originScope, session);
+                handleError(error, coroutine, originScope, session);
               }
             }
           } while (frame.pendingCoroutines.length > 0);
@@ -501,6 +502,26 @@ export class Runtime implements SessionContext {
   }
 }
 
+export class RenderError extends Error {
+  constructor(coroutine: Coroutine, options?: ErrorOptions) {
+    let message = 'An error occurred while rendering.';
+
+    DEBUG: {
+      message += getCoroutineStack(coroutine)
+        .reverse()
+        .map((name, i, stack) => {
+          const prefix = i === 0 ? '' : '   '.repeat(i - 1) + '`- ';
+          const suffix =
+            i === stack.length - 1 ? ' <- ERROR occurred here!' : '';
+          return '\n' + prefix + name + suffix;
+        })
+        .join('');
+    }
+
+    super(message, options);
+  }
+}
+
 class CapturedError extends Error {}
 
 function consumeCoroutines(frame: RenderFrame): Coroutine[] {
@@ -532,12 +553,12 @@ function generateRandomString(length: number): string {
 
 function handleError(
   error: unknown,
-  scope: Scope,
+  coroutine: Coroutine,
   originScope: Scope,
   session: UpdateSession,
 ): void {
-  let capturedOutsideOrigin = false;
-  let { parent: nextScope, boundary: nextBoundary } = scope;
+  let currentScope = coroutine.scope;
+  let { parent: nextScope, boundary: nextBoundary } = currentScope;
 
   const handleError = (error: unknown) => {
     while (true) {
@@ -553,23 +574,24 @@ function handleError(
 
       if (nextScope !== null) {
         const { parent, boundary } = nextScope;
-        scope = nextScope;
+        currentScope = nextScope;
         nextScope = parent;
         nextBoundary = boundary;
-        capturedOutsideOrigin = scope.level <= originScope.level;
       } else {
-        throw error;
+        throw new RenderError(coroutine, { cause: error });
       }
     }
   };
 
   handleError(error);
 
-  if (scope.host?.pendingLanes === Lanes.NoLanes) {
-    scope.host.detach(session);
+  if (currentScope.host?.pendingLanes === Lanes.NoLanes) {
+    currentScope.host.detach(session);
   }
 
-  if (capturedOutsideOrigin) {
+  // If the error was captured by an ErrorBoundary outside the origin scope,
+  // we treat it as a graceful interruption rather than a fatal failure.
+  if (currentScope.level <= originScope.level) {
     throw new CapturedError(undefined, { cause: error });
   }
 }
