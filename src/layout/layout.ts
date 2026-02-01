@@ -12,12 +12,12 @@ import {
 export class LayoutSpecifier<T>
   implements Bindable<UnwrapBindable<T>>, Debuggable
 {
-  readonly value: T;
+  readonly source: T;
 
   readonly layout: Layout;
 
-  constructor(value: T, layout: Layout) {
-    this.value = value;
+  constructor(source: T, layout: Layout) {
+    this.source = source;
     this.layout = layout;
     DEBUG: {
       Object.freeze(this);
@@ -25,15 +25,15 @@ export class LayoutSpecifier<T>
   }
 
   [$debug](format: (value: unknown) => string): string {
-    return format(this.value) + ' in ' + this.layout.name;
+    return format(this.source) + ' in ' + this.layout.name;
   }
 
   [$toDirective](
     part: Part,
     context: DirectiveContext,
   ): Directive<UnwrapBindable<T>> {
-    const { value, layout } = this;
-    const directive = context.resolveDirective(value, part);
+    const { source, layout } = this;
+    const directive = context.resolveDirective(source, part);
     return { ...directive, layout };
   }
 }

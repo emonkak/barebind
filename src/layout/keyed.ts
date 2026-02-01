@@ -12,11 +12,11 @@ import {
 } from '../internal.js';
 import { LayoutSpecifier, SlotStatus } from './layout.js';
 
-export function Keyed<TKey, TValue>(
-  value: TValue,
+export function Keyed<TSource, TKey>(
+  source: TSource,
   key: TKey,
-): LayoutSpecifier<TValue> {
-  return new LayoutSpecifier(value, new KeyedLayout(key));
+): LayoutSpecifier<TSource> {
+  return new LayoutSpecifier(source, new KeyedLayout(key));
 }
 
 export class KeyedLayout<TKey> implements Layout {
@@ -34,32 +34,32 @@ export class KeyedLayout<TKey> implements Layout {
     return this._key;
   }
 
-  resolveSlot<TValue>(
-    binding: Binding<UnwrapBindable<TValue>>,
-  ): KeyedSlot<TKey, TValue> {
+  resolveSlot<TSource>(
+    binding: Binding<UnwrapBindable<TSource>>,
+  ): KeyedSlot<TSource, TKey> {
     return new KeyedSlot(binding, this._key);
   }
 }
 
-export class KeyedSlot<TKey, TValue> implements Slot<TValue> {
-  private _pendingBinding: Binding<UnwrapBindable<TValue>>;
+export class KeyedSlot<TSource, TKey> implements Slot<TSource> {
+  private _pendingBinding: Binding<UnwrapBindable<TSource>>;
 
-  private _memoizedBinding: Binding<UnwrapBindable<TValue>> | null = null;
+  private _memoizedBinding: Binding<UnwrapBindable<TSource>> | null = null;
 
   private _key: TKey;
 
   private _status: SlotStatus = SlotStatus.Idle;
 
-  constructor(binding: Binding<UnwrapBindable<TValue>>, key: TKey) {
+  constructor(binding: Binding<UnwrapBindable<TSource>>, key: TKey) {
     this._pendingBinding = binding;
     this._key = key;
   }
 
-  get type(): DirectiveType<UnwrapBindable<TValue>> {
+  get type(): DirectiveType<UnwrapBindable<TSource>> {
     return this._pendingBinding.type;
   }
 
-  get value(): UnwrapBindable<TValue> {
+  get value(): UnwrapBindable<TSource> {
     return this._pendingBinding.value;
   }
 
@@ -67,38 +67,38 @@ export class KeyedSlot<TKey, TValue> implements Slot<TValue> {
     return this._pendingBinding.part;
   }
 
-  reconcile(value: TValue, session: UpdateSession): boolean {
+  reconcile(source: TSource, session: UpdateSession): boolean {
     const { context } = session;
-    const directive = context.resolveDirective(
-      value,
+    const { type, value, layout } = context.resolveDirective(
+      source,
       this._pendingBinding.part,
     );
     const key = (
-      directive.layout instanceof KeyedLayout ? directive.layout.key : undefined
+      layout instanceof KeyedLayout ? layout.key : undefined
     ) as TKey;
 
     if (Object.is(key, this._key)) {
-      if (!areDirectiveTypesEqual(directive.type, this._pendingBinding.type)) {
+      if (!areDirectiveTypesEqual(type, this._pendingBinding.type)) {
         throw new DirectiveError(
-          directive.type,
-          directive.value,
+          type,
+          value,
           this._pendingBinding.part,
-          `The directive type must be ${this._pendingBinding.type.name} in this slot, but got ${directive.type.name}.`,
+          `The directive type must be ${this._pendingBinding.type.name} in this slot, but got ${type.name}.`,
         );
       }
 
       if (
         this._status !== SlotStatus.Idle ||
-        this._pendingBinding.shouldUpdate(directive.value)
+        this._pendingBinding.shouldUpdate(value)
       ) {
-        this._pendingBinding.value = directive.value;
+        this._pendingBinding.value = value;
         this._pendingBinding.attach(session);
         this._status = SlotStatus.Attached;
       }
     } else {
       this._pendingBinding.detach(session);
-      this._pendingBinding = directive.type.resolveBinding(
-        directive.value,
+      this._pendingBinding = type.resolveBinding(
+        value,
         this._pendingBinding.part,
         context,
       );

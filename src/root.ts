@@ -21,7 +21,7 @@ export class Root<T> {
   private readonly _context: SessionContext;
 
   static create<T>(
-    value: T,
+    source: T,
     container: Element,
     context: SessionContext,
   ): Root<T> {
@@ -31,7 +31,7 @@ export class Root<T> {
       anchorNode: null,
       namespaceURI: container.namespaceURI,
     };
-    const slot = context.resolveSlot(value, part);
+    const slot = context.resolveSlot(source, part);
     return new Root(slot, container, context);
   }
 
@@ -70,10 +70,10 @@ export class Root<T> {
     }, options);
   }
 
-  update(value: T, options?: UpdateOptions): UpdateHandle {
+  update(source: T, options?: UpdateOptions): UpdateHandle {
     return this._beginUpdate((session) => {
       const { frame, scope } = session;
-      if (this._slot.reconcile(value, session)) {
+      if (this._slot.reconcile(source, session)) {
         frame.mutationEffects.push(this._slot, scope.level);
       }
     }, options);

@@ -319,20 +319,20 @@ export class MockSlot<T> implements Slot<T> {
     this.dirty = true;
   }
 
-  reconcile(value: T, session: UpdateSession): boolean {
+  reconcile(source: T, session: UpdateSession): boolean {
     const { context } = session;
-    const directive = context.resolveDirective(value, this.binding.part);
+    const { type, value } = context.resolveDirective(source, this.binding.part);
 
-    if (!areDirectiveTypesEqual(this.binding.type, directive.type)) {
+    if (!areDirectiveTypesEqual(this.binding.type, type)) {
       throw new Error(
-        `The directive must be ${this.binding.type.name} in this slot, but got ${directive.type.name}.`,
+        `The directive must be ${this.binding.type.name} in this slot, but got ${type.name}.`,
       );
     }
 
-    const dirty = this.binding.shouldUpdate(directive.value);
+    const dirty = this.binding.shouldUpdate(value);
 
     if (dirty) {
-      this.binding.value = directive.value;
+      this.binding.value = value;
       this.binding.attach(session);
       this.dirty = true;
     }

@@ -86,8 +86,8 @@ export interface Directive<T> {
 }
 
 export interface DirectiveContext {
-  resolveDirective<T>(value: T, part: Part): Directive<UnwrapBindable<T>>;
-  resolveSlot<T>(value: T, part: Part): Slot<T>;
+  resolveDirective<T>(source: T, part: Part): Directive<UnwrapBindable<T>>;
+  resolveSlot<T>(source: T, part: Part): Slot<T>;
 }
 
 export interface DirectiveType<T> {
@@ -454,7 +454,7 @@ export interface Slot<T> extends ReversibleEffect, SessionLifecycle {
   readonly type: DirectiveType<UnwrapBindable<T>>;
   readonly value: UnwrapBindable<T>;
   readonly part: Part;
-  reconcile(value: T, session: UpdateSession): boolean;
+  reconcile(source: T, session: UpdateSession): boolean;
 }
 
 export interface Template<TBinds extends readonly unknown[]>

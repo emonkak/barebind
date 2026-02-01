@@ -47,8 +47,8 @@ export interface RuntimeBackend {
     callback: () => T | PromiseLike<T>,
     options?: RequestCallbackOptions,
   ): Promise<T>;
-  resolveLayout(value: unknown, part: Part): Layout;
-  resolvePrimitive(value: unknown, part: Part): Primitive<unknown>;
+  resolveLayout(source: unknown, part: Part): Layout;
+  resolvePrimitive(source: unknown, part: Part): Primitive<unknown>;
   startViewTransition(callback: () => Promise<void> | void): Promise<void>;
   yieldToMain(): Promise<void>;
 }
@@ -389,23 +389,23 @@ export class Runtime implements SessionContext {
     return result;
   }
 
-  resolveDirective<T>(value: T, part: Part): Directive<UnwrapBindable<T>> {
-    if (isBindable(value)) {
-      return value[$toDirective](part, this) as Directive<UnwrapBindable<T>>;
+  resolveDirective<T>(source: T, part: Part): Directive<UnwrapBindable<T>> {
+    if (isBindable(source)) {
+      return source[$toDirective](part, this) as Directive<UnwrapBindable<T>>;
     } else {
-      const type = this._backend.resolvePrimitive(value, part);
-      type.ensureValue?.(value, part);
+      const type = this._backend.resolvePrimitive(source, part);
+      type.ensureValue?.(source, part);
       return {
         type: type as Primitive<UnwrapBindable<T>>,
-        value: value as UnwrapBindable<T>,
+        value: source as UnwrapBindable<T>,
       };
     }
   }
 
-  resolveSlot<T>(value: T, part: Part): Slot<T> {
-    const directive = this.resolveDirective(value, part);
-    const binding = directive.type.resolveBinding(directive.value, part, this);
-    const layout = directive.layout ?? this._backend.resolveLayout(value, part);
+  resolveSlot<T>(source: T, part: Part): Slot<T> {
+    let { type, value, layout } = this.resolveDirective(source, part);
+    const binding = type.resolveBinding(value, part, this);
+    layout ??= this._backend.resolveLayout(source, part);
     return layout.resolveSlot(binding);
   }
 

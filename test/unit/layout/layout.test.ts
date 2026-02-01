@@ -15,9 +15,9 @@ import {
 describe('LayoutSpecifier', () => {
   describe('[$debug]()', () => {
     it('returns a string representation of the value', () => {
-      const value = new DirectiveSpecifier(new MockDirective(), 'foo');
+      const source = new DirectiveSpecifier(new MockDirective(), 'foo');
       const layout = MockLayout;
-      const bindable = new LayoutSpecifier(value, layout);
+      const bindable = new LayoutSpecifier(source, layout);
 
       expect(formatValue(bindable)).toBe('MockDirective("foo") in MockLayout');
     });
@@ -25,7 +25,7 @@ describe('LayoutSpecifier', () => {
 
   describe('[$toDirective]()', () => {
     it('returns a directive element with the primitive value', () => {
-      const value = 'foo';
+      const source = 'foo';
       const layout = MockLayout;
       const part = {
         type: PartType.ChildNode,
@@ -34,17 +34,17 @@ describe('LayoutSpecifier', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = createRuntime();
-      const bindable = new LayoutSpecifier(value, layout);
+      const bindable = new LayoutSpecifier(source, layout);
       const directive = bindable[$toDirective](part, runtime);
 
       expect(directive.type).toBe(MockPrimitive);
-      expect(directive.value).toBe(value);
+      expect(directive.value).toBe(source);
       expect(directive.layout).toBe(layout);
     });
 
     it('returns a directive element with the bindable value', () => {
+      const source = new DirectiveSpecifier(new MockDirective(), 'foo');
       const layout = MockLayout;
-      const value = new DirectiveSpecifier(new MockDirective(), 'foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -52,11 +52,11 @@ describe('LayoutSpecifier', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = createRuntime();
-      const bindable = new LayoutSpecifier(value, layout);
+      const bindable = new LayoutSpecifier(source, layout);
       const directive = bindable[$toDirective](part, runtime);
 
-      expect(directive.type).toBe(value.type);
-      expect(directive.value).toBe(value.value);
+      expect(directive.type).toBe(source.type);
+      expect(directive.value).toBe(source.value);
       expect(directive.layout).toBe(layout);
     });
   });

@@ -70,11 +70,11 @@ export class ServerBackend implements RuntimeBackend {
     }).then(callback);
   }
 
-  resolveLayout(_value: unknown, part: Part): Layout {
+  resolveLayout(_source: unknown, part: Part): Layout {
     return part.type === PartType.ChildNode ? LooseLayout : StrictLayout;
   }
 
-  resolvePrimitive(value: unknown, part: Part): Primitive<unknown> {
+  resolvePrimitive(source: unknown, part: Part): Primitive<unknown> {
     switch (part.type) {
       case PartType.Attribute:
         if (part.name[0] === ':') {
@@ -89,7 +89,7 @@ export class ServerBackend implements RuntimeBackend {
         }
         return AttributePrimitive;
       case PartType.ChildNode:
-        return value != null ? CommentPrimitive : BlackholePrimitive;
+        return source != null ? CommentPrimitive : BlackholePrimitive;
       case PartType.Element:
         return SpreadPrimitive;
       case PartType.Event:

@@ -12,8 +12,8 @@ import {
 } from '../internal.js';
 import { LayoutSpecifier, SlotStatus } from './layout.js';
 
-export function Strict<T>(value: T): LayoutSpecifier<T> {
-  return new LayoutSpecifier(value, StrictLayout);
+export function Strict<T>(source: T): LayoutSpecifier<T> {
+  return new LayoutSpecifier(source, StrictLayout);
 }
 
 export const StrictLayout: Layout = {
@@ -44,24 +44,24 @@ export class StrictSlot<T> implements Slot<T> {
     return this._binding.part;
   }
 
-  reconcile(value: T, session: UpdateSession): boolean {
+  reconcile(source: T, session: UpdateSession): boolean {
     const { context } = session;
-    const directive = context.resolveDirective(value, this._binding.part);
+    const { type, value } = context.resolveDirective(
+      source,
+      this._binding.part,
+    );
 
-    if (!areDirectiveTypesEqual(directive.type, this._binding.type)) {
+    if (!areDirectiveTypesEqual(type, this._binding.type)) {
       throw new DirectiveError(
-        directive.type,
-        directive.value,
+        type,
+        value,
         this._binding.part,
-        `The directive type must be ${this._binding.type.name} in this slot, but got ${directive.type.name}.`,
+        `The directive type must be ${this._binding.type.name} in this slot, but got ${type.name}.`,
       );
     }
 
-    if (
-      this._status !== SlotStatus.Idle ||
-      this._binding.shouldUpdate(directive.value)
-    ) {
-      this._binding.value = directive.value;
+    if (this._status !== SlotStatus.Idle || this._binding.shouldUpdate(value)) {
+      this._binding.value = value;
       this._binding.attach(session);
       this._status = SlotStatus.Attached;
     }

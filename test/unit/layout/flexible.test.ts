@@ -9,10 +9,10 @@ import { TestUpdater } from '../../test-updater.js';
 
 describe('Flexible()', () => {
   it('creates a LayoutSpecifier with FlexibleSlot', () => {
-    const value = 'foo';
-    const bindable = Flexible(value);
+    const source = 'foo';
+    const bindable = Flexible(source);
 
-    expect(bindable.value).toBe(value);
+    expect(bindable.source).toBe(source);
     expect(bindable.layout).toBe(FlexibleLayout);
   });
 });
@@ -40,15 +40,15 @@ describe('FlexibleLayout', () => {
 describe('FlexibleSlot', () => {
   describe('reconcile()', () => {
     it('updates the binding with the same directive type', () => {
-      const value1 = 'foo';
-      const value2 = 'bar';
+      const source1 = 'foo';
+      const source2 = 'bar';
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value1, part);
+      const binding = new MockBinding(MockPrimitive, source1, part);
       const slot = new FlexibleSlot(binding);
       const updater = new TestUpdater();
 
@@ -74,7 +74,7 @@ describe('FlexibleSlot', () => {
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(value2, session);
+          const dirty = slot.reconcile(source2, session);
           slot.commit();
           slot.commit(); // ignore the second commit
           return dirty;
@@ -106,15 +106,15 @@ describe('FlexibleSlot', () => {
     });
 
     it('updates the binding with a different directive type', () => {
-      const value1 = 'foo';
-      const value2 = new DirectiveSpecifier(new MockDirective(), 'bar');
+      const source1 = 'foo';
+      const source2 = new DirectiveSpecifier(new MockDirective(), 'bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value1, part);
+      const binding = new MockBinding(MockPrimitive, source1, part);
       const slot = new FlexibleSlot(binding);
       const updater = new TestUpdater();
 
@@ -132,14 +132,14 @@ describe('FlexibleSlot', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          slot.reconcile(value2, session);
+          slot.reconcile(source2, session);
           slot.commit();
         });
       }
 
       SESSION3: {
         updater.startUpdate((session) => {
-          slot.reconcile(value1, session);
+          slot.reconcile(source1, session);
           slot.commit();
         });
 
@@ -159,14 +159,14 @@ describe('FlexibleSlot', () => {
     });
 
     it('updates the binding only if it is dirty', () => {
-      const value = 'foo';
+      const source = 'foo';
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value, part);
+      const binding = new MockBinding(MockPrimitive, source, part);
       const slot = new FlexibleSlot(binding);
       const updater = new TestUpdater();
 
@@ -188,7 +188,7 @@ describe('FlexibleSlot', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          slot.reconcile(value, session) && slot.commit();
+          slot.reconcile(source, session) && slot.commit();
         });
 
         expect(shouldUpdateSpy).toHaveBeenCalledTimes(1);

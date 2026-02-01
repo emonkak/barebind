@@ -11,8 +11,8 @@ import {
 } from '../internal.js';
 import { LayoutSpecifier, SlotStatus } from './layout.js';
 
-export function Loose<T>(value: T): LayoutSpecifier<T> {
-  return new LayoutSpecifier(value, LooseLayout);
+export function Loose<T>(source: T): LayoutSpecifier<T> {
+  return new LayoutSpecifier(source, LooseLayout);
 }
 
 export const LooseLayout: Layout = {
@@ -45,26 +45,26 @@ export class LooseSlot<T> implements Slot<T> {
     return this._pendingBinding.part;
   }
 
-  reconcile(value: T, session: UpdateSession): boolean {
+  reconcile(source: T, session: UpdateSession): boolean {
     const { context } = session;
-    const directive = context.resolveDirective(
-      value,
+    const { type, value } = context.resolveDirective(
+      source,
       this._pendingBinding.part,
     );
 
-    if (areDirectiveTypesEqual(directive.type, this._pendingBinding.type)) {
+    if (areDirectiveTypesEqual(type, this._pendingBinding.type)) {
       if (
         this._status !== SlotStatus.Idle ||
-        this._pendingBinding.shouldUpdate(directive.value)
+        this._pendingBinding.shouldUpdate(value)
       ) {
-        this._pendingBinding.value = directive.value;
+        this._pendingBinding.value = value;
         this._pendingBinding.attach(session);
         this._status = SlotStatus.Attached;
       }
     } else {
       this._pendingBinding.detach(session);
-      this._pendingBinding = directive.type.resolveBinding(
-        directive.value,
+      this._pendingBinding = type.resolveBinding(
+        value,
         this._pendingBinding.part,
         context,
       );

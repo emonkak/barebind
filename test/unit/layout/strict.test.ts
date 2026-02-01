@@ -9,10 +9,10 @@ import { TestUpdater } from '../../test-updater.js';
 
 describe('Strcit()', () => {
   it('creates a LayoutSpecifier with StrictSlot', () => {
-    const value = 'foo';
-    const bindable = Strict(value);
+    const source = 'foo';
+    const bindable = Strict(source);
 
-    expect(bindable.value).toBe(value);
+    expect(bindable.source).toBe(source);
     expect(bindable.layout).toBe(StrictLayout);
   });
 });
@@ -40,15 +40,15 @@ describe('StrictLayout', () => {
 describe('StrictSlot', () => {
   describe('reconcile()', () => {
     it('updates the binding with the same directive type', () => {
-      const value1 = 'foo';
-      const value2 = 'bar';
+      const source1 = 'foo';
+      const source2 = 'bar';
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value1, part);
+      const binding = new MockBinding(MockPrimitive, source1, part);
       const slot = new StrictSlot(binding);
       const updater = new TestUpdater();
 
@@ -74,7 +74,7 @@ describe('StrictSlot', () => {
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(value2, session);
+          const dirty = slot.reconcile(source2, session);
           slot.commit();
           slot.commit(); // ignore the second commit
           return dirty;
@@ -106,14 +106,14 @@ describe('StrictSlot', () => {
     });
 
     it('updates the binding only if it is dirty', () => {
-      const value = 'foo';
+      const source = 'foo';
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value, part);
+      const binding = new MockBinding(MockPrimitive, source, part);
       const slot = new StrictSlot(binding);
       const updater = new TestUpdater();
 
@@ -135,7 +135,7 @@ describe('StrictSlot', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          slot.reconcile(value, session) && slot.commit();
+          slot.reconcile(source, session) && slot.commit();
         });
 
         expect(shouldUpdateSpy).toHaveBeenCalledTimes(1);
@@ -146,15 +146,15 @@ describe('StrictSlot', () => {
     });
 
     it('throws an error if directive types are mismatched', () => {
-      const value1 = 'foo';
-      const value2 = new DirectiveSpecifier(new MockDirective(), 'bar');
+      const source1 = 'foo';
+      const source2 = new DirectiveSpecifier(new MockDirective(), 'bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value1, part);
+      const binding = new MockBinding(MockPrimitive, source1, part);
       const slot = new StrictSlot(binding);
       const updater = new TestUpdater();
 
@@ -165,7 +165,7 @@ describe('StrictSlot', () => {
 
       expect(() => {
         updater.startUpdate((session) => {
-          slot.reconcile(value2, session);
+          slot.reconcile(source2, session);
         });
       }).toThrow(
         'The directive type must be MockPrimitive in this slot, but got MockDirective.',

@@ -781,8 +781,8 @@ describe('Runtime', () => {
   });
 
   describe('resolveDirective()', () => {
-    it('resolves the directive from the primitive value', () => {
-      const value = 'foo';
+    it('resolves the directive from the primitive source', () => {
+      const source = 'foo';
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -796,17 +796,17 @@ describe('Runtime', () => {
         'resolvePrimitive',
       );
 
-      const directive = runtime.resolveDirective(value, part);
+      const directive = runtime.resolveDirective(source, part);
 
       expect(resolvePrimitiveSpy).toHaveBeenCalledOnce();
-      expect(resolvePrimitiveSpy).toHaveBeenCalledWith(value, part);
+      expect(resolvePrimitiveSpy).toHaveBeenCalledWith(source, part);
       expect(directive.type).toBe(MockPrimitive);
-      expect(directive.value).toBe(value);
+      expect(directive.value).toBe(source);
       expect(directive.layout).toBe(undefined);
     });
 
-    it('resolves the directive from the bindable value', () => {
-      const value = new MockBindable({
+    it('resolves the directive from the bindable source', () => {
+      const source = new MockBindable({
         type: new MockDirective(),
         value: 'foo',
       });
@@ -818,25 +818,49 @@ describe('Runtime', () => {
       };
       const runtime = createRuntime();
 
-      const $toDirectiveSpy = vi.spyOn(value, $toDirective);
+      const $toDirectiveSpy = vi.spyOn(source, $toDirective);
 
-      const directive = runtime.resolveDirective(value, part);
+      const directive = runtime.resolveDirective(source, part);
 
       expect($toDirectiveSpy).toHaveBeenCalledOnce();
       expect($toDirectiveSpy).toHaveBeenCalledWith(part, runtime);
-      expect(directive.type).toBe(value.directive.type);
-      expect(directive.value).toBe(value.directive.value);
+      expect(directive.type).toBe(source.directive.type);
+      expect(directive.value).toBe(source.directive.value);
       expect(directive.layout).toBe(undefined);
     });
   });
 
   describe('resolveSlot()', () => {
-    it('resolves the slot from the bindable value', () => {
+    it('resolves the slot from the primitive source', () => {
+      const source = 'foo';
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        anchorNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
+      const runtime = createRuntime();
+
+      const resolvePrimitiveSpy = vi.spyOn(
+        runtime['_backend'],
+        'resolvePrimitive',
+      );
+
+      const slot = runtime.resolveSlot(source, part);
+
+      expect(resolvePrimitiveSpy).toHaveBeenCalledOnce();
+      expect(resolvePrimitiveSpy).toHaveBeenCalledWith(source, part);
+      expect(slot).toBeInstanceOf(MockSlot);
+      expect(slot.type).toBe(MockPrimitive);
+      expect(slot.value).toBe(source);
+      expect(slot.part).toBe(part);
+    });
+    it('resolves the slot from the bindable source', () => {
       const directive: Directive<string> = {
         type: MockPrimitive,
         value: 'foo',
       };
-      const value = {
+      const source = {
         [$toDirective]: vi.fn(() => directive),
       };
       const part = {
@@ -849,38 +873,13 @@ describe('Runtime', () => {
 
       const resolveLayoutSpy = vi.spyOn(runtime['_backend'], 'resolveLayout');
 
-      const slot = runtime.resolveSlot(value, part);
+      const slot = runtime.resolveSlot(source, part);
 
       expect(resolveLayoutSpy).toHaveBeenCalledOnce();
-      expect(resolveLayoutSpy).toHaveBeenCalledWith(value, part);
+      expect(resolveLayoutSpy).toHaveBeenCalledWith(source, part);
       expect(slot).toBeInstanceOf(MockSlot);
       expect(slot.type).toBe(directive.type);
       expect(slot.value).toBe(directive.value);
-      expect(slot.part).toBe(part);
-    });
-
-    it('resolves the slot from the primitive value', () => {
-      const value = 'foo';
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const runtime = createRuntime();
-
-      const resolvePrimitiveSpy = vi.spyOn(
-        runtime['_backend'],
-        'resolvePrimitive',
-      );
-
-      const slot = runtime.resolveSlot(value, part);
-
-      expect(resolvePrimitiveSpy).toHaveBeenCalledOnce();
-      expect(resolvePrimitiveSpy).toHaveBeenCalledWith(value, part);
-      expect(slot).toBeInstanceOf(MockSlot);
-      expect(slot.type).toBe(MockPrimitive);
-      expect(slot.value).toBe(value);
       expect(slot.part).toBe(part);
     });
   });

@@ -11,8 +11,8 @@ import {
 } from '../internal.js';
 import { LayoutSpecifier, SlotStatus } from './layout.js';
 
-export function Flexible<T>(value: T): LayoutSpecifier<T> {
-  return new LayoutSpecifier(value, FlexibleLayout);
+export function Flexible<T>(source: T): LayoutSpecifier<T> {
+  return new LayoutSpecifier(source, FlexibleLayout);
 }
 
 export const FlexibleLayout: Layout = {
@@ -47,19 +47,19 @@ export class FlexibleSlot<T> implements Slot<T> {
     return this._pendingBinding.part;
   }
 
-  reconcile(value: T, session: UpdateSession): boolean {
+  reconcile(source: T, session: UpdateSession): boolean {
     const { context } = session;
-    const directive = context.resolveDirective(
-      value,
+    const { type, value } = context.resolveDirective(
+      source,
       this._pendingBinding.part,
     );
 
-    if (areDirectiveTypesEqual(directive.type, this._pendingBinding.type)) {
+    if (areDirectiveTypesEqual(type, this._pendingBinding.type)) {
       if (
         this._status !== SlotStatus.Idle ||
-        this._pendingBinding.shouldUpdate(directive.value)
+        this._pendingBinding.shouldUpdate(value)
       ) {
-        this._pendingBinding.value = directive.value;
+        this._pendingBinding.value = value;
         this._pendingBinding.attach(session);
         this._status = SlotStatus.Attached;
       }
@@ -71,14 +71,14 @@ export class FlexibleSlot<T> implements Slot<T> {
 
       if (
         cachedBinding !== null &&
-        areDirectiveTypesEqual(cachedBinding.type, directive.type)
+        areDirectiveTypesEqual(cachedBinding.type, type)
       ) {
-        cachedBinding.value = directive.value;
+        cachedBinding.value = value;
         cachedBinding.attach(session);
         this._pendingBinding = cachedBinding;
       } else {
-        this._pendingBinding = directive.type.resolveBinding(
-          directive.value,
+        this._pendingBinding = type.resolveBinding(
+          value,
           this._pendingBinding.part,
           context,
         );

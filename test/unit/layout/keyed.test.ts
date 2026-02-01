@@ -9,11 +9,11 @@ import { TestUpdater } from '../../test-updater.js';
 
 describe('Keyed()', () => {
   it('creates a LayoutSpecifier with KeyedLayout', () => {
-    const value = 'bar';
+    const source = 'bar';
     const key = 123;
-    const bindable = Keyed(value, key);
+    const bindable = Keyed(source, key);
 
-    expect(bindable.value).toBe(value);
+    expect(bindable.source).toBe(source);
     expect(bindable.layout).toBeInstanceOf(KeyedLayout);
     expect((bindable.layout as KeyedLayout<string>).key).toBe(key);
   });
@@ -48,8 +48,8 @@ describe('KeyedLayout', () => {
 describe('KeyedSlot', () => {
   describe('reconcile()', () => {
     it('updates the binding with the same key and the same directive type', () => {
-      const value1 = 'foo';
-      const value2 = 'bar';
+      const source1 = 'foo';
+      const source2 = 'bar';
       const key = 123;
       const part = {
         type: PartType.ChildNode,
@@ -57,7 +57,7 @@ describe('KeyedSlot', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value1, part);
+      const binding = new MockBinding(MockPrimitive, source1, part);
       const slot = new KeyedSlot(binding, key);
       const updater = new TestUpdater();
 
@@ -83,7 +83,7 @@ describe('KeyedSlot', () => {
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(Keyed(value2, key), session);
+          const dirty = slot.reconcile(Keyed(source2, key), session);
           slot.commit();
           slot.commit(); // ignore the second commit
           return dirty;
@@ -115,8 +115,8 @@ describe('KeyedSlot', () => {
     });
 
     it('updates the binding with a different key', () => {
-      const value1 = 'foo';
-      const value2 = 'bar';
+      const source1 = 'foo';
+      const source2 = 'bar';
       const key1 = 123;
       const key2 = 456;
       const part = {
@@ -125,7 +125,7 @@ describe('KeyedSlot', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value1, part);
+      const binding = new MockBinding(MockPrimitive, source1, part);
       const slot = new KeyedSlot(binding, key1);
       const updater = new TestUpdater();
 
@@ -144,7 +144,7 @@ describe('KeyedSlot', () => {
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(Keyed(value2, key2), session);
+          const dirty = slot.reconcile(Keyed(source2, key2), session);
           slot.commit();
           return dirty;
         });
@@ -168,7 +168,7 @@ describe('KeyedSlot', () => {
     });
 
     it('updates the binding only if it is dirty', () => {
-      const value = 'foo';
+      const source = 'foo';
       const key = 123;
       const part = {
         type: PartType.ChildNode,
@@ -176,7 +176,7 @@ describe('KeyedSlot', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value, part);
+      const binding = new MockBinding(MockPrimitive, source, part);
       const slot = new KeyedSlot(binding, key);
       const updater = new TestUpdater();
 
@@ -198,7 +198,7 @@ describe('KeyedSlot', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          slot.reconcile(Keyed(value, key), session) && slot.commit();
+          slot.reconcile(Keyed(source, key), session) && slot.commit();
         });
 
         expect(shouldUpdateSpy).toHaveBeenCalledTimes(1);
@@ -209,8 +209,8 @@ describe('KeyedSlot', () => {
     });
 
     it('throws an error if the keys match but the directive types are missmatched', () => {
-      const value1 = 'bar';
-      const value2 = new DirectiveSpecifier(new MockDirective(), 'baz');
+      const source1 = 'bar';
+      const source2 = new DirectiveSpecifier(new MockDirective(), 'baz');
       const key = 'foo';
       const part = {
         type: PartType.ChildNode,
@@ -218,7 +218,7 @@ describe('KeyedSlot', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value1, part);
+      const binding = new MockBinding(MockPrimitive, source1, part);
       const slot = new KeyedSlot(binding, key);
       const updater = new TestUpdater();
 
@@ -229,7 +229,7 @@ describe('KeyedSlot', () => {
 
       expect(() => {
         updater.startUpdate((session) => {
-          slot.reconcile(Keyed(value2, key), session);
+          slot.reconcile(Keyed(source2, key), session);
         });
       }).toThrow(
         'The directive type must be MockPrimitive in this slot, but got MockDirective.',

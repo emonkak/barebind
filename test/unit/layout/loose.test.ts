@@ -9,10 +9,10 @@ import { TestUpdater } from '../../test-updater.js';
 
 describe('Loose()', () => {
   it('creates a LayoutSpecifier with LooseLayout', () => {
-    const value = 'foo';
-    const bindable = Loose(value);
+    const source = 'foo';
+    const bindable = Loose(source);
 
-    expect(bindable.value).toBe(value);
+    expect(bindable.source).toBe(source);
     expect(bindable.layout).toBe(LooseLayout);
   });
 });
@@ -20,18 +20,18 @@ describe('Loose()', () => {
 describe('LooseLayout', () => {
   describe('resolveSlot', () => {
     it('constructs a new LooseSlot', () => {
-      const value = 'foo';
+      const source = 'foo';
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value, part);
+      const binding = new MockBinding(MockPrimitive, source, part);
       const slot = LooseLayout.resolveSlot(binding);
 
       expect(slot.type).toBe(MockPrimitive);
-      expect(slot.value).toBe(value);
+      expect(slot.value).toBe(source);
       expect(slot.part).toBe(part);
     });
   });
@@ -40,15 +40,15 @@ describe('LooseLayout', () => {
 describe('LooseSlot', () => {
   describe('reconcile()', () => {
     it('updates the binding with the same directive type', () => {
-      const value1 = 'foo';
-      const value2 = 'bar';
+      const source1 = 'foo';
+      const source2 = 'bar';
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value1, part);
+      const binding = new MockBinding(MockPrimitive, source1, part);
       const slot = new LooseSlot(binding);
       const updater = new TestUpdater();
 
@@ -74,7 +74,7 @@ describe('LooseSlot', () => {
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(value2, session);
+          const dirty = slot.reconcile(source2, session);
           slot.commit();
           slot.commit(); // ignore the second commit
           return dirty;
@@ -106,15 +106,15 @@ describe('LooseSlot', () => {
     });
 
     it('updates the binding with a different directive type', () => {
-      const value1 = 'foo';
-      const value2 = new DirectiveSpecifier(new MockDirective(), 'bar');
+      const source1 = 'foo';
+      const source2 = new DirectiveSpecifier(new MockDirective(), 'bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value1, part);
+      const binding = new MockBinding(MockPrimitive, source1, part);
       const slot = new LooseSlot(binding);
       const updater = new TestUpdater();
 
@@ -133,7 +133,7 @@ describe('LooseSlot', () => {
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(value2, session);
+          const dirty = slot.reconcile(source2, session);
           slot.commit();
           return dirty;
         });
@@ -157,14 +157,14 @@ describe('LooseSlot', () => {
     });
 
     it('updates the binding only if it is dirty', () => {
-      const value = 'foo';
+      const source = 'foo';
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value, part);
+      const binding = new MockBinding(MockPrimitive, source, part);
       const slot = new LooseSlot(binding);
       const updater = new TestUpdater();
 
@@ -186,7 +186,7 @@ describe('LooseSlot', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          slot.reconcile(value, session) && slot.commit();
+          slot.reconcile(source, session) && slot.commit();
         });
 
         expect(shouldUpdateSpy).toHaveBeenCalledTimes(1);
