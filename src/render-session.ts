@@ -377,7 +377,7 @@ export class RenderSession implements RenderContext {
     dependencies: readonly unknown[] | null,
     type: Hook.EffectHook['type'],
     effects: EffectQueue,
-  ): Hook.EffectHook {
+  ): void {
     const { hooks } = this._state;
     const { level } = this._scope;
     let currentHook = hooks[this._hookIndex];
@@ -390,7 +390,7 @@ export class RenderSession implements RenderContext {
         areDependenciesChanged(dependencies, currentHook.memoizedDependencies)
       ) {
         currentHook.epoch++;
-        enqueueInvokeEffectHook(currentHook, level, effects);
+        effects.push(new InvokeEffectHook(currentHook), level);
       }
     } else {
       currentHook = {
@@ -402,12 +402,10 @@ export class RenderSession implements RenderContext {
         pendingDependencies: dependencies,
       };
       hooks.push(currentHook);
-      enqueueInvokeEffectHook(currentHook, level, effects);
+      effects.push(new InvokeEffectHook(currentHook), level);
     }
 
     this._hookIndex++;
-
-    return currentHook;
   }
 
   private _createTemplate(
@@ -440,14 +438,6 @@ class InvokeEffectHook implements Effect {
       this._hook.epoch++;
     }
   }
-}
-
-function enqueueInvokeEffectHook(
-  hook: Hook.EffectHook,
-  level: number,
-  effects: EffectQueue,
-): void {
-  effects.push(new InvokeEffectHook(hook), level);
 }
 
 function ensureHookType<TExpectedHook extends Hook>(
