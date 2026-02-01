@@ -169,7 +169,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(coroutine.scope, originScope, error);
+                handleError(error, coroutine.scope, originScope);
               }
             }
 
@@ -292,7 +292,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(coroutine.scope, originScope, error);
+                handleError(error, coroutine.scope, originScope);
               }
             }
           } while (frame.pendingCoroutines.length > 0);
@@ -530,8 +530,8 @@ function generateRandomString(length: number): string {
   ).join('');
 }
 
-function handleError(scope: Scope, originScope: Scope, error: unknown): void {
-  let capturedOutsideRoot = false;
+function handleError(error: unknown, scope: Scope, originScope: Scope): void {
+  let capturedOutsideOrigin = false;
   let { parent: nextScope, boundary: nextBoundary } = scope;
 
   const handleError = (error: unknown) => {
@@ -553,7 +553,7 @@ function handleError(scope: Scope, originScope: Scope, error: unknown): void {
         scope = nextScope;
         nextScope = parent;
         nextBoundary = boundary;
-        capturedOutsideRoot = scope.level <= originScope.level;
+        capturedOutsideOrigin = scope.level <= originScope.level;
       } else {
         throw error;
       }
@@ -562,7 +562,7 @@ function handleError(scope: Scope, originScope: Scope, error: unknown): void {
 
   handleError(error);
 
-  if (capturedOutsideRoot) {
+  if (capturedOutsideOrigin) {
     throw new CapturedError(undefined, { cause: error });
   }
 }
