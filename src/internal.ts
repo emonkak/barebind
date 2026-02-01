@@ -10,13 +10,11 @@ export interface Bindable<T = unknown> {
   [$toDirective](part: Part, context: DirectiveContext): Directive<T>;
 }
 
-export interface Binding<T> extends ReversibleEffect {
+export interface Binding<T> extends ReversibleEffect, SessionLifecycle {
   readonly type: DirectiveType<T>;
   value: T;
   readonly part: Part;
   shouldUpdate(value: T): boolean;
-  attach(session: UpdateSession): void;
-  detach(session: UpdateSession): void;
 }
 
 export type Boundary =
@@ -438,6 +436,11 @@ export interface SessionContext extends DirectiveContext {
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateHandle;
 }
 
+export interface SessionLifecycle {
+  attach(session: UpdateSession): void;
+  detach(session: UpdateSession): void;
+}
+
 export interface Scope {
   parent: Scope | null;
   host: ScopeHost | null;
@@ -445,15 +448,13 @@ export interface Scope {
   boundary: Boundary | null;
 }
 
-export type ScopeHost = Coroutine & Binding<unknown>;
+export interface ScopeHost extends Coroutine, SessionLifecycle {}
 
-export interface Slot<T> extends ReversibleEffect {
+export interface Slot<T> extends ReversibleEffect, SessionLifecycle {
   readonly type: DirectiveType<UnwrapBindable<T>>;
   readonly value: UnwrapBindable<T>;
   readonly part: Part;
   reconcile(value: T, session: UpdateSession): boolean;
-  attach(session: UpdateSession): void;
-  detach(session: UpdateSession): void;
 }
 
 export interface Template<TBinds extends readonly unknown[]>
