@@ -565,8 +565,8 @@ function handleError(
 
   handleError(error);
 
-  if (scope.owner?.pendingLanes === Lanes.NoLanes) {
-    scope.owner.detach(session);
+  if (scope.host?.pendingLanes === Lanes.NoLanes) {
+    scope.host.detach(session);
   }
 
   if (capturedOutsideOrigin) {

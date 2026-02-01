@@ -439,12 +439,12 @@ export interface SessionContext extends DirectiveContext {
 
 export interface Scope {
   parent: Scope | null;
-  owner: ScopeOwner | null;
+  host: ScopeHost | null;
   level: number;
   boundary: Boundary | null;
 }
 
-export type ScopeOwner = Binding<unknown> & Coroutine;
+export type ScopeHost = Binding<unknown> & Coroutine;
 
 export interface Slot<T> extends ReversibleEffect {
   readonly type: DirectiveType<UnwrapBindable<T>>;
@@ -528,11 +528,11 @@ export function areDirectiveTypesEqual(
  */
 export function createScope(
   parent: Scope | null = null,
-  owner: ScopeOwner | null = null,
+  host: ScopeHost | null = null,
 ): Scope {
   return {
     parent,
-    owner,
+    host,
     level: parent !== null ? parent.level + 1 : 0,
     boundary: null,
   };
