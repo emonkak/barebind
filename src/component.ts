@@ -103,7 +103,7 @@ export class ComponentBinding<TProps, TResult>
   resume(session: UpdateSession): void {
     const { scope } = this._state;
     const { frame, originScope, context } = session;
-    const subScope = createScope(scope, scope.level + 1);
+    const subScope = createScope(scope);
     const result = context.renderComponent(
       this._component,
       this._props,

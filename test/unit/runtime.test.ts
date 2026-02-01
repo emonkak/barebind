@@ -324,7 +324,7 @@ describe('Runtime', () => {
           next: null,
           handler: errorHandler,
         };
-        const childScope = createScope(parentScope, parentScope.level + 1);
+        const childScope = createScope(parentScope);
         const coroutine = new MockCoroutine(() => {
           throw error;
         }, childScope);
@@ -657,7 +657,7 @@ describe('Runtime', () => {
           next: null,
           handler: errorHandler,
         };
-        const childScope = createScope(parentScope, parentScope.level + 1);
+        const childScope = createScope(parentScope);
         const coroutine = new MockCoroutine(() => {
           throw error;
         }, childScope);
@@ -721,7 +721,7 @@ describe('Runtime', () => {
       };
       const coroutine = new MockCoroutine();
       const frame = createRenderFrame(1, Lanes.AllLanes);
-      const scope = createScope(state.scope, state.scope.level + 1);
+      const scope = createScope(state.scope);
       const observer = new MockObserver();
       const runtime = createRuntime();
 

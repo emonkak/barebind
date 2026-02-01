@@ -524,13 +524,10 @@ export function areDirectiveTypesEqual(
 /**
  * @internal
  */
-export function createScope(
-  parent: Scope | null = null,
-  level: number = 0,
-): Scope {
+export function createScope(parent: Scope | null = null): Scope {
   return {
     parent,
-    level,
+    level: parent !== null ? parent.level + 1 : 0,
     boundary: null,
     poisoned: false,
   };

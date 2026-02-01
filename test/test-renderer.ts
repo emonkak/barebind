@@ -71,7 +71,7 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
 
   render(props: TProps): TResult {
     const { state, callback } = this;
-    const scope = createScope(this.scope, this.scope.level + 1);
+    const scope = createScope(this.scope);
     const that = this;
 
     let returnValue: TResult;
