@@ -18,6 +18,7 @@ describe('LivePrimitive', () => {
       const runtime = createRuntime();
       const binding = LivePrimitive.resolveBinding(value, part, runtime);
 
+      expect(binding).toBeInstanceOf(LiveBinding);
       expect(binding.type).toBe(LivePrimitive);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);

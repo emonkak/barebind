@@ -17,6 +17,7 @@ describe('AttributePrimitive', () => {
       const runtime = createRuntime();
       const binding = AttributePrimitive.resolveBinding(value, part, runtime);
 
+      expect(binding).toBeInstanceOf(AttributeBinding);
       expect(binding.type).toBe(AttributePrimitive);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);

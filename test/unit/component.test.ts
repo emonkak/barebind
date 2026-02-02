@@ -83,8 +83,14 @@ describe('createComponent()', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = createRuntime();
-      const binding = Greet.resolveBinding(props, part, runtime);
+      const binding = Greet.resolveBinding(
+        props,
+        part,
+        runtime,
+      ) as ComponentBinding<typeof props, unknown>;
 
+      expect(binding).toBeInstanceOf(ComponentBinding);
+      expect(binding.name).toBe(Greet.name);
       expect(binding.type).toBe(Greet);
       expect(binding.value).toBe(props);
       expect(binding.part).toBe(part);

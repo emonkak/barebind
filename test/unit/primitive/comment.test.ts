@@ -19,6 +19,7 @@ describe('CommentPrimitive', () => {
       const runtime = createRuntime();
       const binding = CommentPrimitive.resolveBinding(value, part, runtime);
 
+      expect(binding).toBeInstanceOf(CommentBinding);
       expect(binding.type).toBe(CommentPrimitive);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);

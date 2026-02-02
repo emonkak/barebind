@@ -51,6 +51,7 @@ describe('RefPrimitive', () => {
       const runtime = createRuntime();
       const binding = RefPrimitive.resolveBinding(ref, part, runtime);
 
+      expect(binding).toBeInstanceOf(RefBinding);
       expect(binding.type).toBe(RefPrimitive);
       expect(binding.value).toBe(ref);
       expect(binding.part).toBe(part);

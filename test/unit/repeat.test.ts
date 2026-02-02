@@ -50,6 +50,7 @@ describe('RepeatDirective', () => {
       const runtime = createRuntime();
       const binding = RepeatDirective.resolveBinding(props, part, runtime);
 
+      expect(binding).toBeInstanceOf(RepeatBinding);
       expect(binding.type).toBe(RepeatDirective);
       expect(binding.value).toBe(props);
       expect(binding.part).toBe(part);

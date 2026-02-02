@@ -16,6 +16,7 @@ describe('BlackholePrimitive', () => {
       const runtime = createRuntime();
       const binding = BlackholePrimitive.resolveBinding(value, part, runtime);
 
+      expect(binding).toBeInstanceOf(BlackholeBinding);
       expect(binding.type).toBe(BlackholePrimitive);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);

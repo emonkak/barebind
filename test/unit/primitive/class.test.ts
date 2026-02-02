@@ -56,6 +56,7 @@ describe('ClassPrimitive', () => {
       const runtime = createRuntime();
       const binding = ClassPrimitive.resolveBinding(classes, part, runtime);
 
+      expect(binding).toBeInstanceOf(ClassBinding);
       expect(binding.type).toBe(ClassPrimitive);
       expect(binding.value).toBe(classes);
       expect(binding.part).toBe(part);

@@ -55,6 +55,7 @@ describe('StylePrimitive', () => {
       const runtime = createRuntime();
       const binding = StylePrimitive.resolveBinding(style, part, runtime);
 
+      expect(binding).toBeInstanceOf(StyleBinding);
       expect(binding.type).toBe(StylePrimitive);
       expect(binding.value).toBe(style);
       expect(binding.part).toBe(part);

@@ -33,8 +33,14 @@ describe('SignalDirective', () => {
         followingText: '',
       };
       const runtime = createRuntime();
-      const binding = SignalDirective.resolveBinding(signal, part, runtime);
+      const binding = SignalDirective.resolveBinding(
+        signal,
+        part,
+        runtime,
+      ) as SignalBinding<unknown>;
 
+      expect(binding).toBeInstanceOf(SignalBinding);
+      expect(binding.name).toBe('SignalDirective');
       expect(binding.type).toBe(SignalDirective);
       expect(binding.value).toBe(signal);
       expect(binding.part).toBe(part);

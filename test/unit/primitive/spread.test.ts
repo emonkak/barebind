@@ -47,6 +47,7 @@ describe('SpreadPrimitive', () => {
       const runtime = createRuntime();
       const binding = SpreadPrimitive.resolveBinding(props, part, runtime);
 
+      expect(binding).toBeInstanceOf(SpreadBinding);
       expect(binding.type).toBe(SpreadPrimitive);
       expect(binding.value).toBe(props);
       expect(binding.part).toBe(part);

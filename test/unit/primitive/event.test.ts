@@ -52,6 +52,7 @@ describe('EventPrimitive', () => {
       const runtime = createRuntime();
       const binding = EventPrimitive.resolveBinding(handler, part, runtime);
 
+      expect(binding).toBeInstanceOf(EventBinding);
       expect(binding.type).toBe(EventPrimitive);
       expect(binding.value).toBe(handler);
       expect(binding.part).toBe(part);

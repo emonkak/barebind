@@ -40,6 +40,7 @@ describe('AbstractTemplate', () => {
       const runtime = createRuntime();
       const binding = template.resolveBinding(binds, part, runtime);
 
+      expect(binding).toBeInstanceOf(TemplateBinding);
       expect(binding.type).toBe(template);
       expect(binding.value).toBe(binds);
       expect(binding.part).toBe(part);

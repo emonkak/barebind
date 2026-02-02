@@ -18,6 +18,7 @@ describe('PropertyPrimitive', () => {
       const runtime = createRuntime();
       const binding = PropertyPrimitive.resolveBinding(value, part, runtime);
 
+      expect(binding).toBeInstanceOf(PropertyBinding);
       expect(binding.type).toBe(PropertyPrimitive);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
