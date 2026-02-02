@@ -272,7 +272,7 @@ export class MockEffect implements Effect {
 
 export const MockLayout: Layout = {
   name: 'MockLayout',
-  resolveSlot<T>(binding: Binding<UnwrapBindable<T>>) {
+  placeBinding<T>(binding: Binding<UnwrapBindable<T>>) {
     return new MockSlot(binding);
   },
 };

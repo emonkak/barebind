@@ -25,7 +25,7 @@ describe('KeyedLayout', () => {
     expect(layout.name).toBe(KeyedLayout.name);
   });
 
-  describe('resolveSlot', () => {
+  describe('placeBinding()', () => {
     it('constructs a new KeyedSlot', () => {
       const value = 'foo';
       const key = 123;
@@ -36,7 +36,7 @@ describe('KeyedLayout', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new KeyedLayout(key).resolveSlot(binding);
+      const slot = new KeyedLayout(key).placeBinding(binding);
 
       expect(slot.type).toBe(MockPrimitive);
       expect(slot.value).toBe(value);

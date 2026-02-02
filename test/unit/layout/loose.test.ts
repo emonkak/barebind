@@ -18,7 +18,7 @@ describe('Loose()', () => {
 });
 
 describe('LooseLayout', () => {
-  describe('resolveSlot', () => {
+  describe('placeBinding()', () => {
     it('constructs a new LooseSlot', () => {
       const source = 'foo';
       const part = {
@@ -28,7 +28,7 @@ describe('LooseLayout', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, source, part);
-      const slot = LooseLayout.resolveSlot(binding);
+      const slot = LooseLayout.placeBinding(binding);
 
       expect(slot.type).toBe(MockPrimitive);
       expect(slot.value).toBe(source);

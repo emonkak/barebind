@@ -18,7 +18,7 @@ describe('Strcit()', () => {
 });
 
 describe('StrictLayout', () => {
-  describe('resolveSlot', () => {
+  describe('placeBinding()', () => {
     it('constructs a new LooseSlot', () => {
       const value = 'foo';
       const part = {
@@ -28,7 +28,7 @@ describe('StrictLayout', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = StrictLayout.resolveSlot(binding);
+      const slot = StrictLayout.placeBinding(binding);
 
       expect(slot.type).toBe(MockPrimitive);
       expect(slot.value).toBe(value);

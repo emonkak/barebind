@@ -18,7 +18,7 @@ export function Strict<T>(source: T): LayoutSpecifier<T> {
 
 export const StrictLayout: Layout = {
   name: 'StrictLayout',
-  resolveSlot<T>(binding: Binding<UnwrapBindable<T>>): StrictSlot<T> {
+  placeBinding<T>(binding: Binding<UnwrapBindable<T>>): StrictSlot<T> {
     return new StrictSlot(binding);
   },
 };

@@ -34,7 +34,7 @@ export class KeyedLayout<TKey> implements Layout {
     return this._key;
   }
 
-  resolveSlot<TSource>(
+  placeBinding<TSource>(
     binding: Binding<UnwrapBindable<TSource>>,
   ): KeyedSlot<TSource, TKey> {
     return new KeyedSlot(binding, this._key);

@@ -406,7 +406,7 @@ export class Runtime implements SessionContext {
     let { type, value, layout } = this.resolveDirective(source, part);
     const binding = type.resolveBinding(value, part, this);
     layout ??= this._backend.resolveLayout(source, part);
-    return layout.resolveSlot(binding);
+    return layout.placeBinding(binding);
   }
 
   resolveTemplate(

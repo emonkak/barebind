@@ -18,7 +18,7 @@ describe('Flexible()', () => {
 });
 
 describe('FlexibleLayout', () => {
-  describe('resolveSlot', () => {
+  describe('placeBinding()', () => {
     it('constructs a new FlexibleSlot', () => {
       const value = 'foo';
       const part = {
@@ -28,7 +28,7 @@ describe('FlexibleLayout', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = FlexibleLayout.resolveSlot(binding);
+      const slot = FlexibleLayout.placeBinding(binding);
 
       expect(slot.type).toBe(MockPrimitive);
       expect(slot.value).toBe(value);
