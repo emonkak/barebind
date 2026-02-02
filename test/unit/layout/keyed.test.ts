@@ -1,27 +1,30 @@
 import { describe, expect, it, vi } from 'vitest';
-
-import { DirectiveSpecifier } from '@/directive.js';
 import { PartType } from '@/internal.js';
 import { Keyed, KeyedLayout, KeyedSlot } from '@/layout/keyed.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
+import {
+  MockBinding,
+  MockLayout,
+  MockPrimitive,
+  MockSlot,
+} from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
 describe('Keyed()', () => {
-  it('creates a LayoutSpecifier with KeyedLayout', () => {
-    const source = 'bar';
+  it('creates a new KeySpecifier with the source and the key', () => {
+    const source = 'foo';
     const key = 123;
-    const bindable = Keyed(source, key);
+    const layout = MockLayout;
+    const bindable = Keyed(source, key, layout);
 
     expect(bindable.source).toBe(source);
-    expect(bindable.layout).toBeInstanceOf(KeyedLayout);
-    expect((bindable.layout as KeyedLayout<string>).key).toBe(key);
+    expect(bindable.layout).toStrictEqual(new KeyedLayout(key, layout));
   });
 });
 
 describe('KeyedLayout', () => {
   it('returns the name of the class', () => {
-    const layout = new KeyedLayout('foo');
+    const layout = new KeyedLayout('foo', MockLayout);
     expect(layout.name).toBe(KeyedLayout.name);
   });
 
@@ -36,7 +39,7 @@ describe('KeyedLayout', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new KeyedLayout(key).placeBinding(binding);
+      const slot = new KeyedLayout(key, MockLayout).placeBinding(binding);
 
       expect(slot.type).toBe(binding.type);
       expect(slot.value).toBe(binding.value);
@@ -47,10 +50,11 @@ describe('KeyedLayout', () => {
 
 describe('KeyedSlot', () => {
   describe('reconcile()', () => {
-    it('updates the binding with the same key and the same directive type', () => {
+    it('updates the binding with the same key', () => {
       const source1 = 'foo';
       const source2 = 'bar';
       const key = 123;
+      const layout = MockLayout;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -58,14 +62,15 @@ describe('KeyedSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, source1, part);
-      const slot = new KeyedSlot(binding, key);
+      const innerSlot = new MockSlot(binding);
+      const slot = new KeyedSlot(innerSlot, key);
       const updater = new TestUpdater();
 
-      const shouldUpdateSpy = vi.spyOn(binding, 'shouldUpdate');
-      const attachSpy = vi.spyOn(binding, 'attach');
-      const requestRollbackSpy = vi.spyOn(binding, 'detach');
-      const commitSpy = vi.spyOn(binding, 'commit');
-      const rollbackSpy = vi.spyOn(binding, 'rollback');
+      const reconcileSpy = vi.spyOn(innerSlot, 'reconcile');
+      const attachSpy = vi.spyOn(innerSlot, 'attach');
+      const detachSpy = vi.spyOn(innerSlot, 'detach');
+      const commitSpy = vi.spyOn(innerSlot, 'commit');
+      const rollbackSpy = vi.spyOn(innerSlot, 'rollback');
 
       SESSION1: {
         updater.startUpdate((session) => {
@@ -73,52 +78,51 @@ describe('KeyedSlot', () => {
           slot.commit();
         });
 
-        expect(shouldUpdateSpy).toHaveBeenCalledTimes(0);
+        expect(reconcileSpy).toHaveBeenCalledTimes(0);
         expect(attachSpy).toHaveBeenCalledTimes(1);
-        expect(requestRollbackSpy).toHaveBeenCalledTimes(0);
+        expect(detachSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(rollbackSpy).toHaveBeenCalledTimes(0);
-        expect(part.node.data).toBe('/MockPrimitive("foo")');
+        expect(part.node.nodeValue).toBe(source1);
       }
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(Keyed(source2, key), session);
+          const dirty = slot.reconcile(Keyed(source2, key, layout), session);
           slot.commit();
-          slot.commit(); // ignore the second commit
           return dirty;
         });
 
-        expect(shouldUpdateSpy).toHaveBeenCalledTimes(1);
-        expect(attachSpy).toHaveBeenCalledTimes(2);
-        expect(requestRollbackSpy).toHaveBeenCalledTimes(0);
+        expect(reconcileSpy).toHaveBeenCalledTimes(1);
+        expect(attachSpy).toHaveBeenCalledTimes(1);
+        expect(detachSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(rollbackSpy).toHaveBeenCalledTimes(0);
-        expect(part.node.data).toBe('/MockPrimitive("bar")');
         expect(dirty).toBe(true);
+        expect(part.node.nodeValue).toBe(source2);
       }
 
       SESSION3: {
         updater.startUpdate((session) => {
           slot.detach(session);
           slot.rollback();
-          slot.rollback(); // ignore the second rollback
         });
 
-        expect(shouldUpdateSpy).toHaveBeenCalledTimes(1);
-        expect(attachSpy).toHaveBeenCalledTimes(2);
-        expect(requestRollbackSpy).toHaveBeenCalledTimes(1);
+        expect(reconcileSpy).toHaveBeenCalledTimes(1);
+        expect(attachSpy).toHaveBeenCalledTimes(1);
+        expect(detachSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(rollbackSpy).toHaveBeenCalledTimes(1);
-        expect(part.node.data).toBe('');
+        expect(part.node.nodeValue).toBe('');
       }
     });
 
-    it('updates the binding with a different key', () => {
+    it('updates the binding with different keys', () => {
       const source1 = 'foo';
       const source2 = 'bar';
       const key1 = 123;
       const key2 = 456;
+      const layout = MockLayout;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -126,49 +130,73 @@ describe('KeyedSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, source1, part);
-      const slot = new KeyedSlot(binding, key1);
+      const innerSlot = new MockSlot(binding);
+      const slot = new KeyedSlot(innerSlot, key1);
       const updater = new TestUpdater();
 
-      const shouldUpdateSpy = vi.spyOn(binding, 'shouldUpdate');
-      const attachSpy = vi.spyOn(binding, 'attach');
-      const requestRollbackSpy = vi.spyOn(binding, 'detach');
-      const commitSpy = vi.spyOn(binding, 'commit');
-      const rollbackSpy = vi.spyOn(binding, 'rollback');
+      const reconcileSpy = vi.spyOn(innerSlot, 'reconcile');
+      const attachSpy = vi.spyOn(innerSlot, 'attach');
+      const detachSpy = vi.spyOn(innerSlot, 'detach');
+      const commitSpy = vi.spyOn(innerSlot, 'commit');
+      const rollbackSpy = vi.spyOn(innerSlot, 'rollback');
 
       SESSION1: {
         updater.startUpdate((session) => {
           slot.attach(session);
           slot.commit();
         });
+
+        expect(reconcileSpy).toHaveBeenCalledTimes(0);
+        expect(attachSpy).toHaveBeenCalledTimes(1);
+        expect(detachSpy).toHaveBeenCalledTimes(0);
+        expect(commitSpy).toHaveBeenCalledTimes(1);
+        expect(rollbackSpy).toHaveBeenCalledTimes(0);
+        expect(part.node.nodeValue).toBe(source1);
       }
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(Keyed(source2, key2), session);
+          const dirty = slot.reconcile(Keyed(source2, key2, layout), session);
           slot.commit();
           return dirty;
         });
 
-        expect(shouldUpdateSpy).not.toHaveBeenCalled();
-        expect(attachSpy).toHaveBeenCalledOnce();
-        expect(requestRollbackSpy).toHaveBeenCalledOnce();
-        expect(commitSpy).toHaveBeenCalledOnce();
-        expect(rollbackSpy).toHaveBeenCalledOnce();
-        expect(slot['_pendingBinding']).not.toBe(binding);
-        expect(slot['_pendingBinding']).toBeInstanceOf(MockBinding);
-        expect(slot['_pendingBinding']).toStrictEqual(
+        expect(reconcileSpy).toHaveBeenCalledTimes(0);
+        expect(attachSpy).toHaveBeenCalledTimes(1);
+        expect(detachSpy).toHaveBeenCalledTimes(1);
+        expect(commitSpy).toHaveBeenCalledTimes(1);
+        expect(rollbackSpy).toHaveBeenCalledTimes(1);
+        expect(slot['_pendingSlot']).not.toBe(slot);
+        expect(slot['_pendingSlot']).toBeInstanceOf(MockSlot);
+        expect(slot['_pendingSlot']).toStrictEqual(
           expect.objectContaining({
+            value: source2,
             dirty: false,
             committed: true,
           }),
         );
-        expect(part.node.data).toBe('/MockPrimitive("bar")');
         expect(dirty).toBe(true);
+        expect(part.node.nodeValue).toBe(source2);
+      }
+
+      SESSION3: {
+        updater.startUpdate((session) => {
+          slot.detach(session);
+          slot.rollback();
+        });
+
+        expect(reconcileSpy).toHaveBeenCalledTimes(0);
+        expect(attachSpy).toHaveBeenCalledTimes(1);
+        expect(detachSpy).toHaveBeenCalledTimes(1);
+        expect(commitSpy).toHaveBeenCalledTimes(1);
+        expect(rollbackSpy).toHaveBeenCalledTimes(1);
+        expect(part.node.nodeValue).toBe('');
       }
     });
 
-    it('updates the binding only if it is dirty', () => {
-      const source = 'foo';
+    it('updates the binding without keys', () => {
+      const source1 = 'foo';
+      const source2 = 'bar';
       const key = 123;
       const part = {
         type: PartType.ChildNode,
@@ -176,13 +204,16 @@ describe('KeyedSlot', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, source, part);
-      const slot = new KeyedSlot(binding, key);
+      const binding = new MockBinding(MockPrimitive, source1, part);
+      const innerSlot = new MockSlot(binding);
+      const slot = new KeyedSlot(innerSlot, key);
       const updater = new TestUpdater();
 
-      const shouldUpdateSpy = vi.spyOn(binding, 'shouldUpdate');
-      const attachSpy = vi.spyOn(binding, 'attach');
-      const commitSpy = vi.spyOn(binding, 'commit');
+      const reconcileSpy = vi.spyOn(innerSlot, 'reconcile');
+      const attachSpy = vi.spyOn(innerSlot, 'attach');
+      const detachSpy = vi.spyOn(innerSlot, 'detach');
+      const commitSpy = vi.spyOn(innerSlot, 'commit');
+      const rollbackSpy = vi.spyOn(innerSlot, 'rollback');
 
       SESSION1: {
         updater.startUpdate((session) => {
@@ -190,50 +221,52 @@ describe('KeyedSlot', () => {
           slot.commit();
         });
 
-        expect(shouldUpdateSpy).toHaveBeenCalledTimes(0);
+        expect(reconcileSpy).toHaveBeenCalledTimes(0);
         expect(attachSpy).toHaveBeenCalledTimes(1);
+        expect(detachSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(1);
-        expect(part.node.data).toBe('/MockPrimitive("foo")');
+        expect(rollbackSpy).toHaveBeenCalledTimes(0);
+        expect(part.node.nodeValue).toBe(source1);
       }
 
       SESSION2: {
-        updater.startUpdate((session) => {
-          slot.reconcile(Keyed(source, key), session) && slot.commit();
+        const dirty = updater.startUpdate((session) => {
+          const dirty = slot.reconcile(source2, session);
+          slot.commit();
+          return dirty;
         });
 
-        expect(shouldUpdateSpy).toHaveBeenCalledTimes(1);
+        expect(reconcileSpy).toHaveBeenCalledTimes(0);
         expect(attachSpy).toHaveBeenCalledTimes(1);
+        expect(detachSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
-        expect(part.node.data).toBe('/MockPrimitive("foo")');
+        expect(rollbackSpy).toHaveBeenCalledTimes(1);
+        expect(slot['_pendingSlot']).not.toBe(slot);
+        expect(slot['_pendingSlot']).toBeInstanceOf(MockSlot);
+        expect(slot['_pendingSlot']).toStrictEqual(
+          expect.objectContaining({
+            value: source2,
+            dirty: false,
+            committed: true,
+          }),
+        );
+        expect(dirty).toBe(true);
+        expect(part.node.nodeValue).toBe(source2);
       }
-    });
 
-    it('throws an error if the keys match but the directive types are missmatched', () => {
-      const source1 = 'bar';
-      const source2 = new DirectiveSpecifier(new MockDirective(), 'baz');
-      const key = 'foo';
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new MockBinding(MockPrimitive, source1, part);
-      const slot = new KeyedSlot(binding, key);
-      const updater = new TestUpdater();
-
-      updater.startUpdate((session) => {
-        slot.attach(session);
-        slot.commit();
-      });
-
-      expect(() => {
+      SESSION3: {
         updater.startUpdate((session) => {
-          slot.reconcile(Keyed(source2, key), session);
+          slot.detach(session);
+          slot.rollback();
         });
-      }).toThrow(
-        'The directive type must be MockPrimitive in the slot, but got MockDirective.',
-      );
+
+        expect(reconcileSpy).toHaveBeenCalledTimes(0);
+        expect(attachSpy).toHaveBeenCalledTimes(1);
+        expect(detachSpy).toHaveBeenCalledTimes(1);
+        expect(commitSpy).toHaveBeenCalledTimes(1);
+        expect(rollbackSpy).toHaveBeenCalledTimes(1);
+        expect(part.node.nodeValue).toBe('');
+      }
     });
   });
 });

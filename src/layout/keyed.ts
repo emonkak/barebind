@@ -1,29 +1,32 @@
-import { debugPart, undebugPart } from '../debug/part.js';
-import { DirectiveError } from '../directive.js';
 import {
-  areDirectiveTypesEqual,
   type Binding,
   type DirectiveType,
   type Layout,
   type Part,
   type Slot,
+  toDirective,
   type UnwrapBindable,
   type UpdateSession,
 } from '../internal.js';
-import { LayoutSpecifier, SlotStatus } from './layout.js';
+import { LayoutSpecifier } from './layout.js';
+import { StrictLayout } from './strict.js';
 
 export function Keyed<TSource, TKey>(
   source: TSource,
   key: TKey,
+  layout: Layout = StrictLayout,
 ): LayoutSpecifier<TSource> {
-  return new LayoutSpecifier(source, new KeyedLayout(key));
+  return new LayoutSpecifier(source, new KeyedLayout(key, layout));
 }
 
 export class KeyedLayout<TKey> implements Layout {
   private readonly _key: TKey;
 
-  constructor(key: TKey) {
+  private readonly _layout: Layout;
+
+  constructor(key: TKey, layout: Layout) {
     this._key = key;
+    this._layout = layout;
   }
 
   get name(): string {
@@ -34,137 +37,98 @@ export class KeyedLayout<TKey> implements Layout {
     return this._key;
   }
 
+  get layout(): Layout {
+    return this._layout;
+  }
+
   placeBinding<TSource>(
     binding: Binding<UnwrapBindable<TSource>>,
   ): KeyedSlot<TSource, TKey> {
-    return new KeyedSlot(binding, this._key);
+    const slot = this._layout.placeBinding(binding);
+    return new KeyedSlot(slot, this._key);
   }
 }
 
 export class KeyedSlot<TSource, TKey> implements Slot<TSource> {
-  private _pendingBinding: Binding<UnwrapBindable<TSource>>;
+  private _pendingSlot: Slot<TSource>;
 
-  private _memoizedBinding: Binding<UnwrapBindable<TSource>> | null = null;
+  private _memoizedSlot: Slot<TSource> | null = null;
 
   private _key: TKey;
 
-  private _status: SlotStatus = SlotStatus.Idle;
-
-  constructor(binding: Binding<UnwrapBindable<TSource>>, key: TKey) {
-    this._pendingBinding = binding;
+  constructor(slot: Slot<TSource>, key: TKey) {
+    this._pendingSlot = slot;
     this._key = key;
   }
 
   get type(): DirectiveType<UnwrapBindable<TSource>> {
-    return this._pendingBinding.type;
+    return this._pendingSlot.type;
   }
 
   get value(): UnwrapBindable<TSource> {
-    return this._pendingBinding.value;
+    return this._pendingSlot.value;
   }
 
   get part(): Part {
-    return this._pendingBinding.part;
+    return this._pendingSlot.part;
   }
 
   reconcile(source: TSource, session: UpdateSession): boolean {
-    const { context } = session;
-    const { type, value, layout } = context.resolveDirective(
-      source,
-      this._pendingBinding.part,
-    );
+    const { layout } = toDirective(source);
     const key = (
       layout instanceof KeyedLayout ? layout.key : undefined
     ) as TKey;
+    let dirty: boolean;
 
     if (Object.is(key, this._key)) {
-      if (!areDirectiveTypesEqual(type, this._pendingBinding.type)) {
-        throw new DirectiveError(
-          type,
-          value,
-          this._pendingBinding.part,
-          `The directive type must be ${this._pendingBinding.type.name} in the slot, but got ${type.name}.`,
-        );
-      }
-
-      if (
-        this._status !== SlotStatus.Idle ||
-        this._pendingBinding.shouldUpdate(value)
-      ) {
-        this._pendingBinding.value = value;
-        this._pendingBinding.attach(session);
-        this._status = SlotStatus.Attached;
-      }
+      dirty = this._pendingSlot.reconcile(source, session);
     } else {
-      this._pendingBinding.detach(session);
-      this._pendingBinding = type.resolveBinding(
+      this._pendingSlot.detach(session);
+      const { context } = session;
+      const { type, value, layout } = context.resolveDirective(
+        source,
+        this._pendingSlot.part,
+      );
+      const binding = type.resolveBinding(
         value,
-        this._pendingBinding.part,
+        this._pendingSlot.part,
         context,
       );
-      this._pendingBinding.attach(session);
-      this._status = SlotStatus.Attached;
+      const innerLayout =
+        layout instanceof KeyedLayout ? layout.layout : layout;
+      this._pendingSlot = innerLayout.placeBinding(binding);
+      this._pendingSlot.attach(session);
+      dirty = true;
     }
 
     this._key = key;
 
-    return this._status === SlotStatus.Attached;
+    return dirty;
   }
 
   attach(session: UpdateSession): void {
-    this._pendingBinding.attach(session);
-    this._status = SlotStatus.Attached;
+    this._pendingSlot.attach(session);
   }
 
   detach(session: UpdateSession): void {
-    this._pendingBinding.detach(session);
-    this._status = SlotStatus.Detached;
+    this._pendingSlot.detach(session);
   }
 
   commit(): void {
-    if (this._status !== SlotStatus.Attached) {
-      return;
+    const newSlot = this._pendingSlot;
+    const oldSlot = this._memoizedSlot;
+
+    if (newSlot !== oldSlot) {
+      oldSlot?.rollback();
     }
 
-    const newBinding = this._pendingBinding;
-    const oldBinding = this._memoizedBinding;
+    newSlot.commit();
 
-    if (newBinding !== oldBinding) {
-      if (oldBinding !== null) {
-        oldBinding.rollback();
-
-        DEBUG: {
-          undebugPart(oldBinding.part, oldBinding.type);
-        }
-      }
-    }
-
-    DEBUG: {
-      debugPart(newBinding.part, newBinding.type, newBinding.value);
-    }
-
-    newBinding.commit();
-
-    this._memoizedBinding = newBinding;
-    this._status = SlotStatus.Idle;
+    this._memoizedSlot = newSlot;
   }
 
   rollback(): void {
-    if (this._status !== SlotStatus.Detached) {
-      return;
-    }
-
-    const binding = this._memoizedBinding;
-
-    if (binding !== null) {
-      binding.rollback();
-
-      DEBUG: {
-        undebugPart(binding.part, binding.type);
-      }
-    }
-
-    this._memoizedBinding = null;
-    this._status = SlotStatus.Idle;
+    this._memoizedSlot?.rollback();
+    this._memoizedSlot = null;
   }
 }
