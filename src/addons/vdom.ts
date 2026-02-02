@@ -1,7 +1,7 @@
 import { shallowEqual } from '../compare.js';
 import { DirectiveSpecifier, ensurePartType } from '../directive.js';
 import {
-  $toDirective,
+  $directive,
   type Bindable,
   type Binding,
   type Component,
@@ -15,6 +15,7 @@ import {
   type UpdateSession,
 } from '../internal.js';
 import { KeyedLayout } from '../layout/keyed.js';
+import { LooseLayout } from '../layout/loose.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
 import { type StyleProps, updateStyles } from '../primitive/style.js';
 import { RepeatDirective, type RepeatProps } from '../repeat.js';
@@ -64,10 +65,10 @@ interface HasCleanup {
   [$cleanup]?: Cleanup | void;
 }
 
-interface TemplateDirective<TBinds extends readonly unknown[]>
-  extends Directive<TBinds> {
+interface TemplateDirective<TBinds extends readonly unknown[]> {
   type: Template<TBinds>;
   value: TBinds;
+  layout?: KeyedLayout<unknown>;
 }
 
 /**
@@ -132,17 +133,13 @@ export class VElement<TProps extends {} = {}> implements Bindable<unknown> {
     }
   }
 
-  [$toDirective](): Directive<unknown> {
-    const element =
-      typeof this.type === 'function'
-        ? {
-            type: this.type,
-            value: this.props,
-          }
-        : resolveElement(this.type, this.props, this.hasStaticChildren);
-    return this.key != null
-      ? { layout: new KeyedLayout(this.key), ...element }
-      : element;
+  [$directive](): Partial<Directive<unknown>> {
+    return typeof this.type === 'function'
+      ? {
+          type: this.type,
+          value: this.props,
+        }
+      : resolveElement(this.type, this.props, this.key, this.hasStaticChildren);
   }
 }
 
@@ -156,7 +153,7 @@ export class VFragment implements Bindable<RepeatProps<VNode>> {
     }
   }
 
-  [$toDirective](): Directive<RepeatProps<VNode>> {
+  [$directive](): Partial<Directive<RepeatProps<VNode>>> {
     return {
       type: RepeatDirective,
       value: {
@@ -178,7 +175,7 @@ export class VStaticFragment implements Bindable<unknown> {
     }
   }
 
-  [$toDirective](): Directive<unknown> {
+  [$directive](): Partial<Directive<unknown>> {
     const templates: Template<readonly unknown[]>[] = [];
     const binds: unknown[] = [];
 
@@ -191,6 +188,7 @@ export class VStaticFragment implements Bindable<unknown> {
           const { type, value } = resolveElement(
             child.type,
             child.props,
+            child.key,
             child.hasStaticChildren,
           );
           templates.push(type);
@@ -210,7 +208,10 @@ export class VStaticFragment implements Bindable<unknown> {
       }
     }
 
-    return { type: new FragmentTemplate(templates), value: binds };
+    return {
+      type: new FragmentTemplate(templates),
+      value: binds,
+    };
   }
 }
 
@@ -573,6 +574,7 @@ function resolveChild(child: VNode): Bindable<unknown> {
 function resolveElement(
   type: string,
   props: { children?: unknown },
+  key: unknown,
   hasStaticChildren: boolean,
 ): TemplateDirective<readonly [unknown, unknown]> {
   const element = new DirectiveSpecifier(ElementDirective, props);
@@ -581,10 +583,20 @@ function resolveElement(
       ? new VStaticFragment(props.children)
       : new VFragment(props.children)
     : resolveChild(props.children as VNode);
-  return {
-    type: new ElementTemplate(type),
-    value: [element, children],
-  };
+  const template = new ElementTemplate(type);
+  const binds = [element, children] as const;
+  if (key != null) {
+    return {
+      type: template,
+      value: binds,
+      layout: new KeyedLayout(key, LooseLayout),
+    };
+  } else {
+    return {
+      type: new ElementTemplate(type),
+      value: binds,
+    };
+  }
 }
 
 function resolveKey(child: VNode, index: number): unknown {

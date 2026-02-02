@@ -1,7 +1,7 @@
 import { formatPart } from './debug/part.js';
 import { $debug, type Debuggable, formatValue } from './debug/value.js';
 import {
-  $toDirective,
+  $directive,
   type Bindable,
   type Directive,
   type DirectiveType,
@@ -30,9 +30,7 @@ export class DirectiveError<T> extends Error {
   }
 }
 
-export class DirectiveSpecifier<T>
-  implements Bindable<T>, Debuggable, Directive<T>
-{
+export class DirectiveSpecifier<T> implements Bindable<T>, Debuggable {
   readonly type: DirectiveType<T>;
 
   readonly value: T;
@@ -49,7 +47,7 @@ export class DirectiveSpecifier<T>
     return this.type.name + '(' + format(this.value) + ')';
   }
 
-  [$toDirective](): Directive<T> {
+  [$directive](): Partial<Directive<T>> {
     return this;
   }
 }

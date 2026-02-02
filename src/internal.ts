@@ -1,13 +1,13 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-export const $hook: unique symbol = Symbol('$hook');
+export const $directive: unique symbol = Symbol('$directive');
 
-export const $toDirective: unique symbol = Symbol('$toDirective');
+export const $hook: unique symbol = Symbol('$hook');
 
 export const DETACHED_SCOPE: Scope = Object.freeze(createScope());
 
 export interface Bindable<T = unknown> {
-  [$toDirective](part: Part, context: DirectiveContext): Directive<T>;
+  [$directive](): Partial<Directive<T>>;
 }
 
 export interface Binding<T> extends ReversibleEffect, SessionLifecycle {
@@ -82,7 +82,7 @@ export interface Coroutine {
 export interface Directive<T> {
   type: DirectiveType<T>;
   value: T;
-  layout?: Layout;
+  layout: Layout;
 }
 
 export interface DirectiveContext {
@@ -625,6 +625,17 @@ export function getStartNode(part: Part): ChildNode {
 /**
  * @internal
  */
-export function isBindable(value: unknown): value is Bindable {
-  return typeof (value as Bindable)?.[$toDirective] === 'function';
+export function isBindable(value: unknown): value is Bindable<any> {
+  return typeof (value as Bindable)?.[$directive] === 'function';
+}
+
+/**
+ * @internal
+ */
+export function toDirective<T>(
+  source: T,
+): Partial<Directive<UnwrapBindable<T>>> {
+  return isBindable(source)
+    ? source[$directive]()
+    : { value: source as UnwrapBindable<T> };
 }

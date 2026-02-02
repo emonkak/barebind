@@ -30,9 +30,9 @@ describe('LooseLayout', () => {
       const binding = new MockBinding(MockPrimitive, source, part);
       const slot = LooseLayout.placeBinding(binding);
 
-      expect(slot.type).toBe(MockPrimitive);
-      expect(slot.value).toBe(source);
-      expect(slot.part).toBe(part);
+      expect(slot.type).toBe(binding.type);
+      expect(slot.value).toBe(binding.value);
+      expect(slot.part).toBe(binding.part);
     });
   });
 });

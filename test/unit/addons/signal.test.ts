@@ -7,15 +7,10 @@ import {
   LocalAtom,
   LocalComputed,
   type Signal,
-  type SignalBinding,
+  SignalBinding,
   SignalDirective,
 } from '@/addons/signal.js';
-import {
-  $toDirective,
-  Lanes,
-  PartType,
-  type RenderContext,
-} from '@/internal.js';
+import { $directive, Lanes, PartType, type RenderContext } from '@/internal.js';
 import type { RenderSession } from '@/render-session.js';
 import { createRuntime } from '../../mocks.js';
 import { waitForMicrotasks } from '../../test-helpers.js';
@@ -266,10 +261,10 @@ describe('Signal', () => {
     });
   });
 
-  describe('[$toDirective]()', () => {
+  describe('[$directive]()', () => {
     it('returns a DirectiveElement with the signal', () => {
       const signal = new Atom('foo');
-      const directive = signal[$toDirective]();
+      const directive = signal[$directive]();
 
       expect(directive.type).toBe(SignalDirective);
       expect(directive.value).toBe(signal);

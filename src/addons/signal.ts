@@ -1,6 +1,6 @@
 import {
+  $directive,
   $hook,
-  $toDirective,
   type Bindable,
   type Binding,
   type Coroutine,
@@ -188,7 +188,7 @@ export abstract class Signal<T> implements HookObject<T>, Bindable<Signal<T>> {
     return value;
   }
 
-  [$toDirective](): Directive<Signal<T>> {
+  [$directive](): Partial<Directive<Signal<T>>> {
     return { type: SignalDirective, value: this };
   }
 

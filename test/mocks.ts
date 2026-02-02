@@ -1,7 +1,7 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
 import {
-  $toDirective,
+  $directive,
   areDirectiveTypesEqual,
   type Bindable,
   type Binding,
@@ -90,7 +90,7 @@ export class MockBindable<T> implements Bindable<T> {
     this.directive = directive;
   }
 
-  [$toDirective](): Directive<T> {
+  [$directive](): Directive<T> {
     return this.directive;
   }
 }

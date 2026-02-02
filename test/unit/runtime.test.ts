@@ -2,13 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ComponentBinding, createComponent } from '@/component.js';
 import {
-  $toDirective,
+  $directive,
+  type Bindable,
   BoundaryType,
   CommitPhase,
   type ComponentState,
   type Coroutine,
   createScope,
-  type Directive,
   EffectQueue,
   Lanes,
   PartType,
@@ -22,6 +22,7 @@ import {
   MockBindable,
   MockCoroutine,
   MockDirective,
+  MockLayout,
   MockObserver,
   MockPrimitive,
   MockSlot,
@@ -802,13 +803,14 @@ describe('Runtime', () => {
       expect(resolvePrimitiveSpy).toHaveBeenCalledWith(source, part);
       expect(directive.type).toBe(MockPrimitive);
       expect(directive.value).toBe(source);
-      expect(directive.layout).toBe(undefined);
+      expect(directive.layout).toBe(MockLayout);
     });
 
     it('resolves the directive from the bindable source', () => {
       const source = new MockBindable({
         type: new MockDirective(),
         value: 'foo',
+        layout: MockLayout,
       });
       const part = {
         type: PartType.ChildNode,
@@ -818,15 +820,11 @@ describe('Runtime', () => {
       };
       const runtime = createRuntime();
 
-      const $toDirectiveSpy = vi.spyOn(source, $toDirective);
-
       const directive = runtime.resolveDirective(source, part);
 
-      expect($toDirectiveSpy).toHaveBeenCalledOnce();
-      expect($toDirectiveSpy).toHaveBeenCalledWith(part, runtime);
       expect(directive.type).toBe(source.directive.type);
       expect(directive.value).toBe(source.directive.value);
-      expect(directive.layout).toBe(undefined);
+      expect(directive.layout).toBe(MockLayout);
     });
   });
 
@@ -855,13 +853,17 @@ describe('Runtime', () => {
       expect(slot.value).toBe(source);
       expect(slot.part).toBe(part);
     });
+
     it('resolves the slot from the bindable source', () => {
-      const directive: Directive<string> = {
-        type: MockPrimitive,
-        value: 'foo',
-      };
-      const source = {
-        [$toDirective]: vi.fn(() => directive),
+      const type = MockPrimitive;
+      const value = 'foo';
+      const source: Bindable<string> = {
+        [$directive]() {
+          return {
+            type,
+            value,
+          };
+        },
       };
       const part = {
         type: PartType.ChildNode,
@@ -878,8 +880,8 @@ describe('Runtime', () => {
       expect(resolveLayoutSpy).toHaveBeenCalledOnce();
       expect(resolveLayoutSpy).toHaveBeenCalledWith(source, part);
       expect(slot).toBeInstanceOf(MockSlot);
-      expect(slot.type).toBe(directive.type);
-      expect(slot.value).toBe(directive.value);
+      expect(slot.type).toBe(type);
+      expect(slot.value).toBe(value);
       expect(slot.part).toBe(part);
     });
   });

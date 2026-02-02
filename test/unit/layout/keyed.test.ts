@@ -38,9 +38,9 @@ describe('KeyedLayout', () => {
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new KeyedLayout(key).placeBinding(binding);
 
-      expect(slot.type).toBe(MockPrimitive);
-      expect(slot.value).toBe(value);
-      expect(slot.part).toBe(part);
+      expect(slot.type).toBe(binding.type);
+      expect(slot.value).toBe(binding.value);
+      expect(slot.part).toBe(binding.part);
     });
   });
 });

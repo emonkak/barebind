@@ -1,11 +1,10 @@
 import { $debug, type Debuggable } from '../debug/value.js';
 import {
-  $toDirective,
+  $directive,
   type Bindable,
   type Directive,
-  type DirectiveContext,
   type Layout,
-  type Part,
+  toDirective,
   type UnwrapBindable,
 } from '../internal.js';
 
@@ -28,12 +27,9 @@ export class LayoutSpecifier<T>
     return format(this.source) + ' in ' + this.layout.name;
   }
 
-  [$toDirective](
-    part: Part,
-    context: DirectiveContext,
-  ): Directive<UnwrapBindable<T>> {
+  [$directive](): Partial<Directive<UnwrapBindable<T>>> {
     const { source, layout } = this;
-    const directive = context.resolveDirective(source, part);
+    const directive = toDirective(source);
     return { ...directive, layout };
   }
 }

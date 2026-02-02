@@ -1,6 +1,5 @@
 import { getCoroutineStack } from './debug/scope.js';
 import {
-  $toDirective,
   BoundaryType,
   CommitPhase,
   type Component,
@@ -8,9 +7,9 @@ import {
   type Coroutine,
   createUpdateSession,
   type Directive,
+  type DirectiveType,
   EffectQueue,
   getLanesFromOptions,
-  isBindable,
   Lanes,
   type Layout,
   type Part,
@@ -23,6 +22,7 @@ import {
   type Slot,
   type Template,
   type TemplateMode,
+  toDirective,
   type UnwrapBindable,
   type UpdateHandle,
   type UpdateOptions,
@@ -390,22 +390,24 @@ export class Runtime implements SessionContext {
   }
 
   resolveDirective<T>(source: T, part: Part): Directive<UnwrapBindable<T>> {
-    if (isBindable(source)) {
-      return source[$toDirective](part, this) as Directive<UnwrapBindable<T>>;
-    } else {
-      const type = this._backend.resolvePrimitive(source, part);
-      type.ensureValue?.(source, part);
-      return {
-        type: type as Primitive<UnwrapBindable<T>>,
-        value: source as UnwrapBindable<T>,
-      };
+    let { type, value, layout } = toDirective(source);
+
+    if (type === undefined) {
+      type = this._backend.resolvePrimitive(source, part) as DirectiveType<
+        UnwrapBindable<T>
+      >;
+      (type as Primitive<UnwrapBindable<T>>).ensureValue?.(source, part);
     }
+
+    value ??= source as UnwrapBindable<T>;
+    layout ??= this._backend.resolveLayout(source, part);
+
+    return { type, value, layout };
   }
 
   resolveSlot<T>(source: T, part: Part): Slot<T> {
-    let { type, value, layout } = this.resolveDirective(source, part);
+    const { type, value, layout } = this.resolveDirective(source, part);
     const binding = type.resolveBinding(value, part, this);
-    layout ??= this._backend.resolveLayout(source, part);
     return layout.placeBinding(binding);
   }
 
