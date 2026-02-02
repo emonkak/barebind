@@ -56,7 +56,7 @@ export class StrictSlot<T> implements Slot<T> {
         type,
         value,
         this._binding.part,
-        `The directive type must be ${this._binding.type.name} in this slot, but got ${type.name}.`,
+        `The directive type must be ${this._binding.type.name} in the slot, but got ${type.name}.`,
       );
     }
 

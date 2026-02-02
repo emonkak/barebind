@@ -325,7 +325,7 @@ export class MockSlot<T> implements Slot<T> {
 
     if (!areDirectiveTypesEqual(this.binding.type, type)) {
       throw new Error(
-        `The directive must be ${this.binding.type.name} in this slot, but got ${type.name}.`,
+        `The directive must be ${this.binding.type.name} in the slot, but got ${type.name}.`,
       );
     }
 

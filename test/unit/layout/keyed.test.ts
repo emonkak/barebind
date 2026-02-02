@@ -232,7 +232,7 @@ describe('KeyedSlot', () => {
           slot.reconcile(Keyed(source2, key), session);
         });
       }).toThrow(
-        'The directive type must be MockPrimitive in this slot, but got MockDirective.',
+        'The directive type must be MockPrimitive in the slot, but got MockDirective.',
       );
     });
   });

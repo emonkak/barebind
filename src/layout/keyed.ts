@@ -83,7 +83,7 @@ export class KeyedSlot<TSource, TKey> implements Slot<TSource> {
           type,
           value,
           this._pendingBinding.part,
-          `The directive type must be ${this._pendingBinding.type.name} in this slot, but got ${type.name}.`,
+          `The directive type must be ${this._pendingBinding.type.name} in the slot, but got ${type.name}.`,
         );
       }
 
