@@ -37,10 +37,13 @@ export const Suspense = createComponent(function Suspense(
     }
   });
 
-  $.useEffect(() => {
+  $.useLayoutEffect(() => {
+    for (const suspend of pendingSuspends) {
+      suspend.retain();
+    }
     return () => {
       for (const suspend of pendingSuspends) {
-        suspend.abort();
+        suspend.release();
       }
     };
   }, [pendingSuspends]);
@@ -54,15 +57,25 @@ export const Suspense = createComponent(function Suspense(
 });
 
 export const Resource = function Resource<T>(
-  fetch: (signal: AbortSignal) => Promise<T>,
+  fetchResource: (signal: AbortSignal) => Promise<T>,
   dependencies: unknown[] = [],
 ): HookFunction<Suspend<T>> {
-  return (context) =>
-    context.useMemo(() => {
+  return (context) => {
+    const suspend = context.useMemo(() => {
       const controller = new AbortController();
-      const promise = fetch(controller.signal);
+      const promise = fetchResource(controller.signal);
       return new Suspend(promise, controller);
     }, dependencies);
+
+    context.useLayoutEffect(() => {
+      suspend.retain();
+      () => {
+        suspend.release();
+      };
+    }, [suspend]);
+
+    return suspend;
+  };
 };
 
 export type SuspendStatus = 'pending' | 'fulfilled' | 'rejected' | 'aborted';
@@ -77,6 +90,8 @@ export class Suspend<T> implements PromiseLike<T> {
   private _value: T | undefined;
 
   private _reason: unknown;
+
+  private _refCount: number = 0;
 
   constructor(promise: Promise<T>, controller: AbortController) {
     promise.then(
@@ -115,6 +130,16 @@ export class Suspend<T> implements PromiseLike<T> {
     if (this._status === 'pending') {
       this._controller.abort();
     }
+  }
+
+  release(): void {
+    if (--this._refCount === 0) {
+      this.abort();
+    }
+  }
+
+  retain(): void {
+    this._refCount++;
   }
 
   then<TFulfilled = T, TRejected = never>(

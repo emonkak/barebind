@@ -7,17 +7,18 @@ import { Repeat } from '@/repeat.js';
 import { Root } from '@/root.js';
 import { BrowserBackend } from '@/runtime/browser.js';
 import { Runtime } from '@/runtime.js';
-import { stripComments, waitUntil } from '../test-helpers.js';
-
-const RESOURCE_TABLE: Record<string, string> = {
-  foo: 'foo',
-  bar: 'bar',
-  baz: 'baz',
-};
+import {
+  inspectPromise,
+  stripComments,
+  waitForMicrotasks,
+  waitForSignal,
+  waitUntil,
+} from '../test-helpers.js';
 
 test('suspends on a single promise in a child component', async () => {
-  const resourceFetcher = new ResourceFetcher(RESOURCE_TABLE);
-  const value = App({ resourceFetcher, resourceIds: ['foo'] });
+  const foo = Promise.withResolvers();
+
+  const value = App({ resources: [foo] });
   const container = document.createElement('div');
   const root = Root.create(value, container, new Runtime(new BrowserBackend()));
 
@@ -27,8 +28,10 @@ test('suspends on a single promise in a child component', async () => {
     expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
   }
 
+  foo.resolve('foo');
+
   SESSION2: {
-    expect(await resourceFetcher.waitForAll()).toBe(1);
+    await waitForMicrotasks(2);
     await waitUntil('background');
 
     expect(stripComments(container).innerHTML).toBe('<ul><li>foo</li></ul>');
@@ -41,11 +44,13 @@ test('suspends on a single promise in a child component', async () => {
   }
 });
 
-test('loads promises in parallel across child components', async () => {
-  const resourceFetcher = new ResourceFetcher(RESOURCE_TABLE);
+test('loads resources in parallel across child components', async () => {
+  const foo = Promise.withResolvers();
+  const bar = Promise.withResolvers();
+  const baz = Promise.withResolvers();
+
   const value = App({
-    resourceFetcher,
-    resourceIds: ['foo', 'baz'],
+    resources: [foo, bar],
   });
   const container = document.createElement('div');
   const root = Root.create(value, container, new Runtime(new BrowserBackend()));
@@ -56,28 +61,32 @@ test('loads promises in parallel across child components', async () => {
     expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
   }
 
+  foo.resolve('foo');
+  bar.resolve('bar');
+
   SESSION2: {
-    expect(await resourceFetcher.waitForAll()).toBe(2);
+    await waitForMicrotasks(2);
     await waitUntil('background');
 
     expect(stripComments(container).innerHTML).toBe(
-      '<ul><li>foo</li><li>baz</li></ul>',
+      '<ul><li>foo</li><li>bar</li></ul>',
     );
   }
 
   SESSION3: {
     await root.update(
       App({
-        resourceFetcher,
-        resourceIds: ['bar', 'baz'],
+        resources: [bar, baz],
       }),
     ).finished;
 
     expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
   }
 
+  baz.resolve('baz');
+
   SESSION4: {
-    expect(await resourceFetcher.waitForAll()).toBe(1);
+    await waitForMicrotasks(2);
     await waitUntil('background');
 
     expect(stripComments(container).innerHTML).toBe(
@@ -93,8 +102,10 @@ test('loads promises in parallel across child components', async () => {
 });
 
 test('throws the rejection reason when a suspended promise rejects', async () => {
-  const resourceFetcher = new ResourceFetcher(RESOURCE_TABLE);
-  const value = App({ resourceFetcher, resourceIds: ['foo', 'bar', 'qux'] });
+  const foo = Promise.withResolvers();
+  const bar = Promise.withResolvers();
+
+  const value = App({ resources: [foo, bar] });
   const container = document.createElement('div');
   const root = Root.create(value, container, new Runtime(new BrowserBackend()));
 
@@ -104,19 +115,20 @@ test('throws the rejection reason when a suspended promise rejects', async () =>
     expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
   }
 
+  foo.resolve('foo');
+  bar.reject('fail');
+
   SESSION2: {
-    expect(await resourceFetcher.waitForAll()).toBe(3);
-    await waitUntil('background'); // wait for retry rendering
+    await waitForMicrotasks(2);
+    await waitUntil('background');
 
     expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
   }
 
   SESSION3: {
-    await waitUntil('background'); // wait for error recovery
+    await waitUntil('background');
 
-    expect(stripComments(container).innerHTML).toBe(
-      '<p>Error: Resource qux not found</p>',
-    );
+    expect(stripComments(container).innerHTML).toBe('<p>fail</p>');
   }
 
   await root.unmount().finished;
@@ -125,8 +137,9 @@ test('throws the rejection reason when a suspended promise rejects', async () =>
 });
 
 test('aborts pending resources on unmount', async () => {
-  const resourceFetcher = new ResourceFetcher(RESOURCE_TABLE);
-  const value = App({ resourceFetcher, resourceIds: ['foo'] });
+  const foo = Promise.withResolvers();
+
+  const value = App({ resources: [foo] });
   const container = document.createElement('div');
   const root = Root.create(value, container, new Runtime(new BrowserBackend()));
 
@@ -134,30 +147,31 @@ test('aborts pending resources on unmount', async () => {
     await root.mount().finished;
 
     expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
+    expect(await inspectPromise(foo.promise)).toStrictEqual({
+      status: 'pending',
+    });
   }
-
-  expect(await resourceFetcher.waitForAll()).toBe(1);
 
   SESSION2: {
     await root.unmount().finished;
 
     expect(stripComments(container).innerHTML).toBe('');
+    expect(await inspectPromise(foo.promise)).toStrictEqual({
+      status: 'rejected',
+      reason: 'abort',
+    });
   }
 });
 
 const App = createComponent(function App(
   {
-    resourceFetcher,
-    resourceIds,
+    resources,
   }: {
-    resourceIds: string[];
-    resourceFetcher: ResourceFetcher;
+    resources: PromiseWithResolvers<unknown>[];
   },
   $: RenderContext,
 ): unknown {
   const [error, setError] = $.useState<unknown>(null);
-
-  $.setSharedContext(ResourceFetcher, resourceFetcher);
 
   $.catchError((error) => {
     setError(error);
@@ -171,10 +185,9 @@ const App = createComponent(function App(
     children: $.html`
       <ul>
         <${Repeat({
-          items: resourceIds,
+          items: resources,
           keySelector: (resourceId) => resourceId,
-          valueSelector: (resourceId, index) =>
-            ResourceLoader({ delay: index + 1, resourceId }),
+          valueSelector: (resource) => Loader({ resource }),
         })}>
       </ul>
     `,
@@ -182,21 +195,23 @@ const App = createComponent(function App(
   });
 });
 
-const ResourceLoader = createComponent(function ResourceLoader(
-  { delay, resourceId }: { delay: number; resourceId: string },
+const Loader = createComponent(function Loader(
+  { resource }: { resource: PromiseWithResolvers<unknown> },
   $: RenderContext,
 ): unknown {
-  const resourceFetcher = $.getSharedContext(
-    ResourceFetcher,
-  ) as ResourceFetcher;
-  const resource = $.use(
+  const suspend = $.use(
     Resource(
-      (signal) => resourceFetcher.fetch(resourceId, delay, signal),
-      [resourceId],
+      (signal) => {
+        signal.addEventListener('abort', () => {
+          resource.reject('abort');
+        });
+        return Promise.race([resource.promise, waitForSignal(signal)]);
+      },
+      [resource],
     ),
   );
 
-  return $.html`<li>${resource.unwrap()}</li>`;
+  return $.html`<li>${suspend.unwrap()}</li>`;
 });
 
 const Fallback = createComponent(function Fallback(
@@ -205,50 +220,3 @@ const Fallback = createComponent(function Fallback(
 ): unknown {
   return $.html`<p>Loading...</p>`;
 });
-
-class ResourceFetcher<T = unknown> {
-  private readonly _resourceTable: Record<string, T>;
-
-  private _pendingPromises: Promise<T>[] = [];
-
-  constructor(resource: Record<string, T>) {
-    this._resourceTable = resource;
-  }
-
-  fetch(resourceId: string, delay: number, signal: AbortSignal): Promise<T> {
-    const promise = this._fetch(resourceId, delay, signal);
-    this._pendingPromises.push(promise);
-    return promise;
-  }
-
-  async waitForAll(): Promise<number> {
-    let waitCount = 0;
-    while (this._pendingPromises.length > 0) {
-      const pendingPromises = this._pendingPromises;
-      this._pendingPromises = [];
-      await Promise.allSettled(pendingPromises);
-      waitCount += pendingPromises.length;
-    }
-    return waitCount;
-  }
-
-  private async _fetch(
-    resourceId: string,
-    delay: number,
-    signal: AbortSignal,
-  ): Promise<T> {
-    await sleep(delay);
-    signal.throwIfAborted();
-    const resource = this._resourceTable[resourceId];
-    if (resource === undefined) {
-      throw new Error(`Resource ${resourceId} not found`);
-    }
-    return resource;
-  }
-}
-
-function sleep(delay: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, delay);
-  });
-}

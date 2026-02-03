@@ -112,6 +112,7 @@ describe('Suspend', () => {
 
     expect(suspend.status).toBe('aborted');
     expect(suspend.reason).toBe(controller.signal.reason);
+    expect(controller.signal.aborted).toBe(true);
   });
 
   it('does not abort when already fulfilled', async () => {
@@ -125,6 +126,7 @@ describe('Suspend', () => {
 
     expect(suspend.status).toBe('fulfilled');
     expect(suspend.value).toBe('ok');
+    expect(controller.signal.aborted).toBe(false);
   });
 
   describe('then()', () => {
@@ -156,14 +158,15 @@ describe('Suspend', () => {
       const controller = new AbortController();
       const suspend = new Suspend(promise, controller);
 
-      const resultPromise = suspend.then(
+      const derivedPromise = suspend.then(
         () => {},
         (reason) => Promise.reject(reason),
       );
 
       suspend.abort();
 
-      await expect(resultPromise).rejects.toBe(controller.signal.reason);
+      await expect(derivedPromise).rejects.toBe(controller.signal.reason);
+      expect(controller.signal.aborted).toBe(true);
     });
 
     it('rejects when aborted', async () => {
@@ -174,6 +177,7 @@ describe('Suspend', () => {
       suspend.abort();
 
       await expect(suspend).rejects.toBe(controller.signal.reason);
+      expect(controller.signal.aborted).toBe(true);
     });
   });
 

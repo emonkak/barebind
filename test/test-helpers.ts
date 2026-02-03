@@ -1,3 +1,8 @@
+export type PromiseState<T> =
+  | { status: 'pending' }
+  | { status: 'fulfilled'; value: T }
+  | { status: 'rejected'; reason: unknown };
+
 export function* allCombinations<T>(xs: T[]): Generator<T[]> {
   for (let i = 1; i <= xs.length; i++) {
     yield* combinations(xs, i);
@@ -67,6 +72,19 @@ export function factorial(n: number): number {
   return result;
 }
 
+export function inspectPromise<T>(
+  promise: PromiseLike<T>,
+): Promise<PromiseState<T>> {
+  const pending = {};
+  return Promise.race([promise, pending]).then(
+    (value) =>
+      value === pending
+        ? { status: 'pending' }
+        : ({ status: 'fulfilled', value } as PromiseState<T>),
+    (reason) => ({ status: 'rejected', reason }),
+  );
+}
+
 export function* permutations<T>(
   xs: T[],
   r: number = xs.length,
@@ -119,12 +137,20 @@ export function templateLiteral<TValues extends readonly unknown[]>(
   return [strings, ...values];
 }
 
-export function waitUntil(priority: TaskPriority): Promise<void> {
-  return new Promise((resolve) => scheduler.postTask(resolve, { priority }));
-}
-
 export async function waitForMicrotasks(times: number = 1): Promise<void> {
   for (let i = 0; i < times; i++) {
     await Promise.resolve();
   }
+}
+
+export function waitForSignal<T>(signal: AbortSignal): Promise<T> {
+  return new Promise<T>((_resolve, reject) => {
+    signal.addEventListener('abort', () => {
+      reject(signal.reason);
+    });
+  });
+}
+
+export function waitUntil(priority: TaskPriority): Promise<void> {
+  return new Promise((resolve) => scheduler.postTask(resolve, { priority }));
 }
