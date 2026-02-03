@@ -10,7 +10,7 @@ describe('LayoutSpecifier', () => {
   describe('[$debug]()', () => {
     it('returns a string representation of the value', () => {
       const source = new DirectiveSpecifier(new MockDirective(), 'foo');
-      const layout = MockLayout;
+      const layout = new MockLayout();
       const bindable = new LayoutSpecifier(source, layout);
 
       expect(formatValue(bindable)).toBe('MockDirective("foo") in MockLayout');
@@ -18,9 +18,9 @@ describe('LayoutSpecifier', () => {
   });
 
   describe('[$directive]()', () => {
-    it('returns a directive with the primitive value', () => {
+    it('returns a directive with Primitive', () => {
       const source = 'foo';
-      const layout = MockLayout;
+      const layout = new MockLayout();
       const bindable = new LayoutSpecifier(source, layout);
       const directive = bindable[$directive]();
 
@@ -29,15 +29,29 @@ describe('LayoutSpecifier', () => {
       expect(directive.layout).toBe(layout);
     });
 
-    it('returns a directive with the bindable value', () => {
+    it('returns a directive with Bindable', () => {
       const source = new DirectiveSpecifier(new MockDirective(), 'foo');
-      const layout = MockLayout;
+      const layout = new MockLayout();
       const bindable = new LayoutSpecifier(source, layout);
       const directive = bindable[$directive]();
 
       expect(directive.type).toBe(source.type);
       expect(directive.value).toBe(source.value);
       expect(directive.layout).toBe(layout);
+    });
+
+    it('returns a directive with nested layout', () => {
+      const source = new DirectiveSpecifier(new MockDirective(), 'foo');
+      const layout = new MockLayout();
+      const bindable = new LayoutSpecifier(
+        new LayoutSpecifier(source, layout),
+        new MockLayout(),
+      );
+      const directive = bindable[$directive]();
+
+      expect(directive.type).toBe(source.type);
+      expect(directive.value).toBe(source.value);
+      expect(directive.layout).toStrictEqual(new MockLayout(new MockLayout()));
     });
   });
 });

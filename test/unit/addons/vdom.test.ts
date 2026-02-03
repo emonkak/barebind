@@ -22,12 +22,7 @@ import { EmptyTemplate } from '@/template/empty.js';
 import { FragmentTemplate } from '@/template/fragment.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
-import {
-  createRuntime,
-  MockBindable,
-  MockLayout,
-  MockPrimitive,
-} from '../../mocks.js';
+import { createRuntime, MockBindable, MockPrimitive } from '../../mocks.js';
 import { createElement as createDOMElement } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
 
@@ -154,7 +149,6 @@ describe('VStaticFragment', () => {
         new MockBindable({
           type: MockPrimitive,
           value: 'foo',
-          layout: MockLayout,
         }),
         ['foo', 'bar'],
         null,

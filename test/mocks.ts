@@ -67,7 +67,7 @@ export class MockBackend implements RuntimeBackend {
   }
 
   resolveLayout(_value: unknown, _part: Part): Layout {
-    return MockLayout;
+    return new MockLayout();
   }
 
   resolvePrimitive(_value: unknown, _part: Part): Primitive<unknown> {
@@ -84,13 +84,13 @@ export class MockBackend implements RuntimeBackend {
 }
 
 export class MockBindable<T> implements Bindable<T> {
-  directive: Directive<T>;
+  directive: Partial<Directive<T>>;
 
-  constructor(directive: Directive<T>) {
+  constructor(directive: Partial<Directive<T>>) {
     this.directive = directive;
   }
 
-  [$directive](): Directive<T> {
+  [$directive](): Partial<Directive<T>> {
     return this.directive;
   }
 }
@@ -270,12 +270,25 @@ export class MockEffect implements Effect {
   commit(): void {}
 }
 
-export const MockLayout: Layout = {
-  name: 'MockLayout',
+export class MockLayout implements Layout {
+  layout: Layout | null = null;
+
+  constructor(layout: Layout | null = null) {
+    this.layout = layout;
+  }
+
+  get name(): string {
+    return 'MockLayout';
+  }
+
+  compose(): Layout {
+    return new MockLayout(this);
+  }
+
   placeBinding<T>(binding: Binding<UnwrapBindable<T>>) {
     return new MockSlot(binding);
-  },
-};
+  }
+}
 
 export class MockObserver implements RuntimeObserver {
   events: RuntimeEvent[] = [];

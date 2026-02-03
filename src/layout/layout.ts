@@ -28,9 +28,15 @@ export class LayoutSpecifier<T>
   }
 
   [$directive](): Partial<Directive<UnwrapBindable<T>>> {
-    const { source, layout } = this;
-    const directive = toDirective(source);
-    return { ...directive, layout };
+    const directive = toDirective(this.source);
+    const layout =
+      directive.layout !== undefined
+        ? this.layout.compose(directive.layout)
+        : this.layout;
+    return {
+      ...directive,
+      layout,
+    };
   }
 }
 

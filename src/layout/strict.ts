@@ -18,6 +18,9 @@ export function Strict<T>(source: T): LayoutSpecifier<T> {
 
 export const StrictLayout: Layout = {
   name: 'StrictLayout',
+  compose(): Layout {
+    return this;
+  },
   placeBinding<T>(binding: Binding<UnwrapBindable<T>>): StrictSlot<T> {
     return new StrictSlot(binding);
   },

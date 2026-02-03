@@ -12,12 +12,7 @@ import {
   type UpdateOptions,
 } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import {
-  MockBindable,
-  MockDirective,
-  MockLayout,
-  MockPrimitive,
-} from '../mocks.js';
+import { MockBindable, MockDirective, MockPrimitive } from '../mocks.js';
 
 describe('EffectQueue', () => {
   it('commits pending effects in order from child to parent', () => {
@@ -198,7 +193,6 @@ describe('isBindable()', () => {
         new MockBindable({
           type: MockPrimitive,
           value: 'foo',
-          layout: MockLayout,
         }),
       ),
     ).toBe(true);

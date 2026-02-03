@@ -4,7 +4,12 @@ import { DirectiveSpecifier } from '@/directive.js';
 import { PartType } from '@/internal.js';
 import { Strict, StrictLayout, StrictSlot } from '@/layout/strict.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
+import {
+  MockBinding,
+  MockDirective,
+  MockLayout,
+  MockPrimitive,
+} from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
 describe('Strcit()', () => {
@@ -18,6 +23,13 @@ describe('Strcit()', () => {
 });
 
 describe('StrictLayout', () => {
+  describe('compose()', () => {
+    it('returns itself', () => {
+      const layout = StrictLayout.compose(new MockLayout());
+      expect(layout).toBe(StrictLayout);
+    });
+  });
+
   describe('placeBinding()', () => {
     it('constructs a new LooseSlot', () => {
       const value = 'foo';

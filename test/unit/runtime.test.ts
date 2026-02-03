@@ -782,7 +782,7 @@ describe('Runtime', () => {
   });
 
   describe('resolveDirective()', () => {
-    it('resolves the directive from the primitive source', () => {
+    it('resolves the directive from Primitive', () => {
       const source = 'foo';
       const part = {
         type: PartType.ChildNode,
@@ -803,14 +803,14 @@ describe('Runtime', () => {
       expect(resolvePrimitiveSpy).toHaveBeenCalledWith(source, part);
       expect(directive.type).toBe(MockPrimitive);
       expect(directive.value).toBe(source);
-      expect(directive.layout).toBe(MockLayout);
+      expect(directive.layout).toStrictEqual(new MockLayout());
     });
 
-    it('resolves the directive from the bindable source', () => {
+    it('resolves the directive from Bindable', () => {
       const source = new MockBindable({
         type: new MockDirective(),
         value: 'foo',
-        layout: MockLayout,
+        layout: new MockLayout(),
       });
       const part = {
         type: PartType.ChildNode,
@@ -824,7 +824,7 @@ describe('Runtime', () => {
 
       expect(directive.type).toBe(source.directive.type);
       expect(directive.value).toBe(source.directive.value);
-      expect(directive.layout).toBe(MockLayout);
+      expect(directive.layout).toBe(source.directive.layout);
     });
   });
 

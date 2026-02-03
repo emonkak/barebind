@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { PartType } from '@/internal.js';
 import { Keyed, KeyedLayout, KeyedSlot } from '@/layout/keyed.js';
+import { StrictLayout } from '@/layout/strict.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   MockBinding,
@@ -14,18 +15,28 @@ describe('Keyed()', () => {
   it('creates a new KeySpecifier with the source and the key', () => {
     const source = 'foo';
     const key = 123;
-    const layout = MockLayout;
-    const bindable = Keyed(source, key, layout);
+    const bindable = Keyed(source, key);
 
     expect(bindable.source).toBe(source);
-    expect(bindable.layout).toStrictEqual(new KeyedLayout(key, layout));
+    expect(bindable.layout).toStrictEqual(new KeyedLayout(key, StrictLayout));
   });
 });
 
 describe('KeyedLayout', () => {
-  it('returns the name of the class', () => {
-    const layout = new KeyedLayout('foo', MockLayout);
-    expect(layout.name).toBe(KeyedLayout.name);
+  describe('name', () => {
+    it('returns the name of the class', () => {
+      const layout = new KeyedLayout('foo', new MockLayout());
+      expect(layout.name).toBe(KeyedLayout.name);
+    });
+  });
+
+  describe('compose()', () => {
+    it('creates a new KeyedLayout with the layout', () => {
+      const layout = new KeyedLayout('foo', StrictLayout).compose(
+        new MockLayout(),
+      );
+      expect(layout).toStrictEqual(new KeyedLayout('foo', new MockLayout()));
+    });
   });
 
   describe('placeBinding()', () => {
@@ -39,7 +50,7 @@ describe('KeyedLayout', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new KeyedLayout(key, MockLayout).placeBinding(binding);
+      const slot = new KeyedLayout(key, new MockLayout()).placeBinding(binding);
 
       expect(slot.type).toBe(binding.type);
       expect(slot.value).toBe(binding.value);
@@ -54,7 +65,7 @@ describe('KeyedSlot', () => {
       const source1 = 'foo';
       const source2 = 'bar';
       const key = 123;
-      const layout = MockLayout;
+      const layout = new MockLayout();
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -122,7 +133,7 @@ describe('KeyedSlot', () => {
       const source2 = 'bar';
       const key1 = 123;
       const key2 = 456;
-      const layout = MockLayout;
+      const layout = new MockLayout();
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),

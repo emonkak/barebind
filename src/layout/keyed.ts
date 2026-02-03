@@ -41,6 +41,10 @@ export class KeyedLayout<TKey> implements Layout {
     return this._layout;
   }
 
+  compose(layout: Layout): Layout {
+    return new KeyedLayout(this._key, layout);
+  }
+
   placeBinding<TSource>(
     binding: Binding<UnwrapBindable<TSource>>,
   ): KeyedSlot<TSource, TKey> {

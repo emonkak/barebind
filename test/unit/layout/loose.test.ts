@@ -4,7 +4,12 @@ import { DirectiveSpecifier } from '@/directive.js';
 import { PartType } from '@/internal.js';
 import { Loose, LooseLayout, LooseSlot } from '@/layout/loose.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
+import {
+  MockBinding,
+  MockDirective,
+  MockLayout,
+  MockPrimitive,
+} from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
 describe('Loose()', () => {
@@ -18,6 +23,13 @@ describe('Loose()', () => {
 });
 
 describe('LooseLayout', () => {
+  describe('compose()', () => {
+    it('returns itself', () => {
+      const layout = LooseLayout.compose(new MockLayout());
+      expect(layout).toBe(LooseLayout);
+    });
+  });
+
   describe('placeBinding()', () => {
     it('constructs a new LooseSlot', () => {
       const source = 'foo';

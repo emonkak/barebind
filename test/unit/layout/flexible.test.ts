@@ -4,7 +4,12 @@ import { DirectiveSpecifier } from '@/directive.js';
 import { PartType } from '@/internal.js';
 import { Flexible, FlexibleLayout, FlexibleSlot } from '@/layout/flexible.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
+import {
+  MockBinding,
+  MockDirective,
+  MockLayout,
+  MockPrimitive,
+} from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
 describe('Flexible()', () => {
@@ -18,6 +23,13 @@ describe('Flexible()', () => {
 });
 
 describe('FlexibleLayout', () => {
+  describe('compose()', () => {
+    it('returns itself', () => {
+      const layout = FlexibleLayout.compose(new MockLayout());
+      expect(layout).toBe(FlexibleLayout);
+    });
+  });
+
   describe('placeBinding()', () => {
     it('constructs a new FlexibleSlot', () => {
       const value = 'foo';
@@ -28,7 +40,7 @@ describe('FlexibleLayout', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = FlexibleLayout.placeBinding(binding);
+      const slot = FlexibleLayout.placeBinding(binding, new MockLayout());
 
       expect(slot.type).toBe(binding.type);
       expect(slot.value).toBe(binding.value);

@@ -246,7 +246,11 @@ export type Lanes = number;
 
 export interface Layout {
   readonly name: string;
-  placeBinding<T>(binding: Binding<UnwrapBindable<T>>): Slot<T>;
+  compose(other: Layout): Layout;
+  placeBinding<T>(
+    binding: Binding<UnwrapBindable<T>>,
+    defaultLayout: Layout,
+  ): Slot<T>;
 }
 
 export type NextState<T> =
