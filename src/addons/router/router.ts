@@ -146,11 +146,11 @@ function extractCaptures<TPatterns extends Pattern[]>(
         return null;
       }
     } else {
-      const value = pattern(component, url);
-      if (value === null) {
+      const capture = pattern(component, url);
+      if (capture === null) {
         return null;
       }
-      captures.push(value);
+      captures.push(capture);
     }
   }
   return captures as ExtractCaptures<TPatterns>;
