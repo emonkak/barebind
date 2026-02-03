@@ -14,6 +14,7 @@ export {
   type RenderContext,
   type UpdateOptions,
 } from './internal.js';
+export { Cached } from './layout/cached.js';
 export { Flexible } from './layout/flexible.js';
 export { Keyed } from './layout/keyed.js';
 export { Loose } from './layout/loose.js';
