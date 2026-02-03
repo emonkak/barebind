@@ -13,7 +13,7 @@ import {
 import { TestUpdater } from '../../test-updater.js';
 
 describe('Strcit()', () => {
-  it('creates a LayoutSpecifier with StrictSlot', () => {
+  it('creates a LayoutModifier with StrictSlot', () => {
     const source = 'foo';
     const bindable = Strict(source);
 

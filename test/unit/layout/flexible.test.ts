@@ -13,7 +13,7 @@ import {
 import { TestUpdater } from '../../test-updater.js';
 
 describe('Flexible()', () => {
-  it('creates a LayoutSpecifier with FlexibleSlot', () => {
+  it('creates a LayoutModifier with FlexibleSlot', () => {
     const source = 'foo';
     const bindable = Flexible(source);
 

@@ -5,8 +5,11 @@ import {
   type Bindable,
   type Directive,
   type DirectiveType,
+  type Layout,
   type Part,
   PartType,
+  toDirective,
+  type UnwrapBindable,
 } from './internal.js';
 
 export class DirectiveError<T> extends Error {
@@ -49,6 +52,38 @@ export class DirectiveSpecifier<T> implements Bindable<T>, Debuggable {
 
   [$directive](): Partial<Directive<T>> {
     return this;
+  }
+}
+
+export class LayoutModifier<T>
+  implements Bindable<UnwrapBindable<T>>, Debuggable
+{
+  readonly source: T;
+
+  readonly layout: Layout;
+
+  constructor(source: T, layout: Layout) {
+    this.source = source;
+    this.layout = layout;
+    DEBUG: {
+      Object.freeze(this);
+    }
+  }
+
+  [$debug](format: (value: unknown) => string): string {
+    return format(this.source) + ' with ' + this.layout.name;
+  }
+
+  [$directive](): Partial<Directive<UnwrapBindable<T>>> {
+    const directive = toDirective(this.source);
+    const layout =
+      directive.layout !== undefined
+        ? this.layout.compose(directive.layout)
+        : this.layout;
+    return {
+      ...directive,
+      layout,
+    };
   }
 }
 

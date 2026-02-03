@@ -13,7 +13,7 @@ import {
 import { TestUpdater } from '../../test-updater.js';
 
 describe('Loose()', () => {
-  it('creates a LayoutSpecifier with LooseLayout', () => {
+  it('creates a LayoutModifier with LooseLayout', () => {
     const source = 'foo';
     const bindable = Loose(source);
 

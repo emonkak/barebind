@@ -1,3 +1,4 @@
+import { LayoutModifier } from '../directive.js';
 import {
   type Binding,
   type DirectiveType,
@@ -8,13 +9,13 @@ import {
   type UnwrapBindable,
   type UpdateSession,
 } from '../internal.js';
-import { DefaultLayout, LayoutSpecifier } from './layout.js';
+import { DefaultLayout } from './layout.js';
 
 export function Keyed<TSource, TKey>(
   source: TSource,
   key: TKey,
-): LayoutSpecifier<TSource> {
-  return new LayoutSpecifier(source, new KeyedLayout(key, DefaultLayout));
+): LayoutModifier<TSource> {
+  return new LayoutModifier(source, new KeyedLayout(key, DefaultLayout));
 }
 
 export class KeyedLayout<TKey> implements Layout {

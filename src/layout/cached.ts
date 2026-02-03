@@ -1,3 +1,4 @@
+import { LayoutModifier } from '../directive.js';
 import {
   type Binding,
   type DirectiveType,
@@ -8,13 +9,13 @@ import {
   type UnwrapBindable,
   type UpdateSession,
 } from '../internal.js';
-import { DefaultLayout, LayoutSpecifier } from './layout.js';
+import { DefaultLayout } from './layout.js';
 
 export function Cached<TSource, TKey>(
   source: TSource,
   key: TKey,
-): LayoutSpecifier<TSource> {
-  return new LayoutSpecifier(source, new CachedLayout(key, DefaultLayout));
+): LayoutModifier<TSource> {
+  return new LayoutModifier(source, new CachedLayout(key, DefaultLayout));
 }
 
 export class CachedLayout<TKey> implements Layout {
