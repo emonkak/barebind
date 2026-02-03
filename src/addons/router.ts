@@ -7,6 +7,8 @@ export {
 } from './router/history.js';
 export { RelativeURL } from './router/relative-url.js';
 export {
+  decoded,
+  encoded,
   integer,
   type Matcher,
   type Pattern,
@@ -15,6 +17,5 @@ export {
   Router,
   regexp,
   route,
-  wildcard,
 } from './router/router.js';
 export { ScrollRestration } from './router/scroll-restration.js';

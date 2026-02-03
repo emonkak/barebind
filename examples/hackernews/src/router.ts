@@ -1,4 +1,4 @@
-import { integer, Router, route, wildcard } from 'barebind/addons/router';
+import { decoded, integer, Router, route } from 'barebind/addons/router';
 
 import { ItemPage } from './item/ItemPage.js';
 import { StoriesPage } from './story/StoriesPage.js';
@@ -22,5 +22,5 @@ export const router = new Router<any, any>([
     route([integer], ([page]) => StoriesPage({ type: 'jobs', page })),
   ]),
   route(['items', integer], ([id]) => ItemPage({ id })),
-  route(['users', wildcard], ([id]) => UserPage({ id })),
+  route(['users', decoded], ([id]) => UserPage({ id })),
 ]);

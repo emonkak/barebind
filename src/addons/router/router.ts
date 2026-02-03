@@ -90,6 +90,14 @@ export class Router<TResult, TContext> {
   }
 }
 
+export function decoded(component: string): string {
+  return decodeURIComponent(component);
+}
+
+export function encoded(component: string): string {
+  return component;
+}
+
 export function integer(component: string): number | null {
   const n = Number.parseInt(component, 10);
   return n.toString() === component ? n : null;
@@ -119,10 +127,6 @@ export function route<
     resolver,
     childRoutes,
   };
-}
-
-export function wildcard(component: string): string {
-  return decodeURIComponent(component);
 }
 
 function extractCaptures<TPatterns extends Pattern[]>(

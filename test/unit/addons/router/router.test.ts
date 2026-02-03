@@ -2,11 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { RelativeURL } from '@/addons/router/relative-url.js';
 import {
+  decoded,
+  encoded,
   integer,
   Router,
   regexp,
   route,
-  wildcard,
 } from '@/addons/router/router.js';
 
 describe('Router', () => {
@@ -16,13 +17,14 @@ describe('Router', () => {
       route([regexp(/^\d+$/)], ([id]) => `showArticle(${id})`, [
         route(['edit'], ([id]) => `editArticle(${id})`),
       ]),
+      route([encoded], ([title]) => `showArticleByTitle(${title})`),
     ]),
     route(['categories'], () => 'indexCategories', [
       route([''], () => 'indexCategories'),
       route([integer], ([id]) => `showCategory(${id})`),
     ]),
     route(['tags'], () => 'indexTags'),
-    route(['tags', wildcard], ([label]) => `showTag(${label})`),
+    route(['tags', decoded], ([label]) => `showTag(${label})`),
   ]);
   const context = {};
 
@@ -33,6 +35,9 @@ describe('Router', () => {
       expect(appRouter.match(new RelativeURL('/articles/123'), context)).toBe(
         'showArticle(123)',
       );
+      expect(
+        appRouter.match(new RelativeURL('/articles/GNU%2FLinux'), context),
+      ).toBe('showArticleByTitle(GNU%2FLinux)');
       expect(
         appRouter.match(new RelativeURL('/articles/123/edit'), context),
       ).toBe('editArticle(123)');
@@ -73,9 +78,6 @@ describe('Router', () => {
 
     it('returns null if there is no route matches the URL', () => {
       expect(appRouter.match(new RelativeURL('/articles'), context)).toBe(null);
-      expect(appRouter.match(new RelativeURL('/articles/'), context)).toBe(
-        null,
-      );
       expect(
         appRouter.match(new RelativeURL('/categories/abc/'), context),
       ).toBe(null);
