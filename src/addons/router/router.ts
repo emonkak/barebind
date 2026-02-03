@@ -7,7 +7,7 @@ export interface Route<
   TInheritArgs extends unknown[] = [],
 > {
   patterns: TPatterns;
-  handler: Handler<
+  resolver: Resolver<
     [...TInheritArgs, ...ExtractArgs<TPatterns>],
     TResult,
     TContext
@@ -24,7 +24,7 @@ export type Pattern = string | Matcher<unknown>;
 
 export type Matcher<T> = (component: string, url: RelativeURL) => T | null;
 
-export type Handler<TArgs extends unknown[], TResult, TContext> = (
+export type Resolver<TArgs extends unknown[], TResult, TContext> = (
   args: TArgs,
   url: RelativeURL,
   context: TContext,
@@ -60,7 +60,7 @@ export class Router<TResult, TContext> {
     let allArgs: unknown[] = [];
 
     while (routeIndex < routes.length) {
-      const { patterns, childRoutes, handler } = routes[routeIndex]!;
+      const { patterns, childRoutes, resolver } = routes[routeIndex]!;
       const args = extractArgs(
         patterns,
         components.slice(componentIndex, componentIndex + patterns.length),
@@ -69,8 +69,8 @@ export class Router<TResult, TContext> {
 
       if (args !== null) {
         if (components.length === componentIndex + patterns.length) {
-          return handler !== null
-            ? handler(allArgs.concat(args), url, context)
+          return resolver !== null
+            ? resolver(allArgs.concat(args), url, context)
             : null;
         }
         if (childRoutes.length > 0) {
@@ -106,7 +106,7 @@ export function route<
   const TInheritArgs extends unknown[] = [],
 >(
   patterns: TPatterns,
-  handler: Route<TResult, TContext, TPatterns, TInheritArgs>['handler'],
+  resolver: Route<TResult, TContext, TPatterns, TInheritArgs>['resolver'],
   childRoutes: Route<
     TResult,
     TContext,
@@ -116,7 +116,7 @@ export function route<
 ): Route<TResult, TContext, TPatterns, TInheritArgs> {
   return {
     patterns,
-    handler,
+    resolver,
     childRoutes,
   };
 }

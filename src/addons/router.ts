@@ -7,10 +7,10 @@ export {
 } from './router/history.js';
 export { RelativeURL } from './router/relative-url.js';
 export {
-  type Handler,
   integer,
   type Matcher,
   type Pattern,
+  type Resolver,
   type Route,
   Router,
   regexp,

@@ -27,7 +27,7 @@ describe('Router', () => {
   const context = {};
 
   describe('match()', () => {
-    it('returns the handler that matches the URL', () => {
+    it('invokes the resolver that matches the URL', () => {
       expect(appRouter.match(new RelativeURL(''), context)).toBe('index');
       expect(appRouter.match(new RelativeURL('/'), context)).toBe('index');
       expect(appRouter.match(new RelativeURL('/articles/123'), context)).toBe(
@@ -84,19 +84,19 @@ describe('Router', () => {
       );
     });
 
-    it('dispatches the handler with args, url and state', () => {
-      const handler = vi.fn(
+    it('invokes the resolver with args, url and state', () => {
+      const resolver = vi.fn(
         ([articleId, commentId]) =>
           `showArticleComment(${articleId}, ${commentId})`,
       );
       const router = new Router([
-        route(['articles', regexp(/^\d+$/), 'comments', integer], handler),
+        route(['articles', regexp(/^\d+$/), 'comments', integer], resolver),
       ]);
       const url = new RelativeURL('/articles/123/comments/456');
 
       expect(router.match(url, context)).toBe('showArticleComment(123, 456)');
-      expect(handler).toHaveBeenCalledOnce();
-      expect(handler).toHaveBeenCalledWith(['123', 456], url, context);
+      expect(resolver).toHaveBeenCalledOnce();
+      expect(resolver).toHaveBeenCalledWith(['123', 456], url, context);
     });
 
     it('should match with a custom matcher', () => {
