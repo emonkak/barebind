@@ -69,7 +69,7 @@ export const Resource = function Resource<T>(
 
     context.useLayoutEffect(() => {
       suspend.retain();
-      () => {
+      return () => {
         suspend.release();
       };
     }, [suspend]);
