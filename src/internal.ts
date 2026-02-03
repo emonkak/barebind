@@ -83,6 +83,7 @@ export interface Directive<T> {
   type: DirectiveType<T>;
   value: T;
   layout: Layout;
+  defaultLayout: Layout;
 }
 
 export interface DirectiveContext {

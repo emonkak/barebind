@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { PartType } from '@/internal.js';
 import { Keyed, KeyedLayout, KeyedSlot } from '@/layout/keyed.js';
-import { StrictLayout } from '@/layout/strict.js';
+import { DefaultLayout } from '@/layout/layout.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   MockBinding,
@@ -18,7 +18,7 @@ describe('Keyed()', () => {
     const bindable = Keyed(source, key);
 
     expect(bindable.source).toBe(source);
-    expect(bindable.layout).toStrictEqual(new KeyedLayout(key, StrictLayout));
+    expect(bindable.layout).toStrictEqual(new KeyedLayout(key, DefaultLayout));
   });
 });
 
@@ -32,7 +32,7 @@ describe('KeyedLayout', () => {
 
   describe('compose()', () => {
     it('creates a new KeyedLayout with the layout', () => {
-      const layout = new KeyedLayout('foo', StrictLayout).compose(
+      const layout = new KeyedLayout('foo', DefaultLayout).compose(
         new MockLayout(),
       );
       expect(layout).toStrictEqual(new KeyedLayout('foo', new MockLayout()));
@@ -50,7 +50,10 @@ describe('KeyedLayout', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new KeyedLayout(key, new MockLayout()).placeBinding(binding);
+      const slot = new KeyedLayout(key, new MockLayout()).placeBinding(
+        binding,
+        new MockLayout(),
+      );
 
       expect(slot.type).toBe(binding.type);
       expect(slot.value).toBe(binding.value);
@@ -65,7 +68,6 @@ describe('KeyedSlot', () => {
       const source1 = 'foo';
       const source2 = 'bar';
       const key = 123;
-      const layout = new MockLayout();
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -99,7 +101,7 @@ describe('KeyedSlot', () => {
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(Keyed(source2, key, layout), session);
+          const dirty = slot.reconcile(Keyed(source2, key), session);
           slot.commit();
           return dirty;
         });
@@ -133,7 +135,6 @@ describe('KeyedSlot', () => {
       const source2 = 'bar';
       const key1 = 123;
       const key2 = 456;
-      const layout = new MockLayout();
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -167,7 +168,7 @@ describe('KeyedSlot', () => {
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(Keyed(source2, key2, layout), session);
+          const dirty = slot.reconcile(Keyed(source2, key2), session);
           slot.commit();
           return dirty;
         });

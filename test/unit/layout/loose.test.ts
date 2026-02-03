@@ -40,7 +40,7 @@ describe('LooseLayout', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, source, part);
-      const slot = LooseLayout.placeBinding(binding);
+      const slot = LooseLayout.placeBinding(binding, new MockLayout());
 
       expect(slot.type).toBe(binding.type);
       expect(slot.value).toBe(binding.value);

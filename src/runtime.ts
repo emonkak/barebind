@@ -390,7 +390,7 @@ export class Runtime implements SessionContext {
   }
 
   resolveDirective<T>(source: T, part: Part): Directive<UnwrapBindable<T>> {
-    let { type, value, layout } = toDirective(source);
+    let { type, value, layout, defaultLayout } = toDirective(source);
 
     if (type === undefined) {
       type = this._backend.resolvePrimitive(source, part) as DirectiveType<
@@ -400,15 +400,19 @@ export class Runtime implements SessionContext {
     }
 
     value ??= source as UnwrapBindable<T>;
-    layout ??= this._backend.resolveLayout(source, part);
+    defaultLayout ??= this._backend.resolveLayout(source, part);
+    layout ??= defaultLayout;
 
-    return { type, value, layout };
+    return { type, value, layout, defaultLayout };
   }
 
   resolveSlot<T>(source: T, part: Part): Slot<T> {
-    const { type, value, layout } = this.resolveDirective(source, part);
+    const { type, value, layout, defaultLayout } = this.resolveDirective(
+      source,
+      part,
+    );
     const binding = type.resolveBinding(value, part, this);
-    return layout.placeBinding(binding);
+    return layout.placeBinding(binding, defaultLayout);
   }
 
   resolveTemplate(

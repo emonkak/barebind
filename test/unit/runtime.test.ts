@@ -825,6 +825,7 @@ describe('Runtime', () => {
       expect(directive.type).toBe(source.directive.type);
       expect(directive.value).toBe(source.directive.value);
       expect(directive.layout).toBe(source.directive.layout);
+      expect(directive.defaultLayout).toStrictEqual(new MockLayout());
     });
   });
 

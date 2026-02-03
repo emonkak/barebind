@@ -8,15 +8,13 @@ import {
   type UnwrapBindable,
   type UpdateSession,
 } from '../internal.js';
-import { LayoutSpecifier } from './layout.js';
-import { StrictLayout } from './strict.js';
+import { DefaultLayout, LayoutSpecifier } from './layout.js';
 
 export function Keyed<TSource, TKey>(
   source: TSource,
   key: TKey,
-  layout: Layout = StrictLayout,
 ): LayoutSpecifier<TSource> {
-  return new LayoutSpecifier(source, new KeyedLayout(key, layout));
+  return new LayoutSpecifier(source, new KeyedLayout(key, DefaultLayout));
 }
 
 export class KeyedLayout<TKey> implements Layout {
@@ -47,8 +45,9 @@ export class KeyedLayout<TKey> implements Layout {
 
   placeBinding<TSource>(
     binding: Binding<UnwrapBindable<TSource>>,
+    defaultLayout: Layout,
   ): KeyedSlot<TSource, TKey> {
-    const slot = this._layout.placeBinding(binding);
+    const slot = this._layout.placeBinding(binding, defaultLayout);
     return new KeyedSlot(slot, this._key);
   }
 }
@@ -88,8 +87,9 @@ export class KeyedSlot<TSource, TKey> implements Slot<TSource> {
       dirty = this._pendingSlot.reconcile(source, session);
     } else {
       this._pendingSlot.detach(session);
+
       const { context } = session;
-      const { type, value, layout } = context.resolveDirective(
+      const { type, value, layout, defaultLayout } = context.resolveDirective(
         source,
         this._pendingSlot.part,
       );
@@ -100,7 +100,8 @@ export class KeyedSlot<TSource, TKey> implements Slot<TSource> {
       );
       const innerLayout =
         layout instanceof KeyedLayout ? layout.layout : layout;
-      this._pendingSlot = innerLayout.placeBinding(binding);
+
+      this._pendingSlot = innerLayout.placeBinding(binding, defaultLayout);
       this._pendingSlot.attach(session);
       dirty = true;
     }
