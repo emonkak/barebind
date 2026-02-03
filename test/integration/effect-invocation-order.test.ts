@@ -6,7 +6,7 @@ import { Root } from '@/root.js';
 import { BrowserBackend } from '@/runtime/browser.js';
 import { Runtime } from '@/runtime.js';
 import { Fragment } from '@/template.js';
-import { stripComments, waitUntilIdle } from '../test-helpers.js';
+import { stripComments, waitUntil } from '../test-helpers.js';
 
 test('invokes effects from child to parent', async () => {
   const logs: string[] = [];
@@ -19,7 +19,7 @@ test('invokes effects from child to parent', async () => {
 
   SESSION1: {
     await root.mount().finished;
-    await waitUntilIdle();
+    await waitUntil('background');
 
     expect(stripComments(container).innerHTML).toBe(
       '<div class="Foo"><div class="Foo.0"><div class="Foo.0.0"></div></div><div class="Foo.1"><div class="Foo.1.0"></div></div></div>',
@@ -72,7 +72,7 @@ test('invokes effects from child to parent', async () => {
 
   SESSION2: {
     await root.update(Bar({ logs })).finished;
-    await waitUntilIdle();
+    await waitUntil('background');
 
     expect(stripComments(container).innerHTML).toBe(
       '<div class="Bar"><div class="Bar.0"><div class="Bar.0.0"></div></div></div>',
@@ -144,7 +144,7 @@ test('invokes effects from child to parent', async () => {
 
   SESSION3: {
     await root.unmount().finished;
-    await waitUntilIdle();
+    await waitUntil('background');
 
     expect(container.innerHTML).toBe('');
     expect(logs).toStrictEqual([

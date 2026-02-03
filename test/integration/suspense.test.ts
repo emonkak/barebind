@@ -7,7 +7,7 @@ import { Repeat } from '@/repeat.js';
 import { Root } from '@/root.js';
 import { BrowserBackend } from '@/runtime/browser.js';
 import { Runtime } from '@/runtime.js';
-import { stripComments, waitUntilIdle } from '../test-helpers.js';
+import { stripComments, waitUntil } from '../test-helpers.js';
 
 const RESOURCE_TABLE: Record<string, string> = {
   foo: 'foo',
@@ -29,7 +29,7 @@ test('suspends on a single promise in a child component', async () => {
 
   SESSION2: {
     expect(await resourceFetcher.waitForAll()).toBe(1);
-    await waitUntilIdle();
+    await waitUntil('background');
 
     expect(stripComments(container).innerHTML).toBe('<ul><li>foo</li></ul>');
   }
@@ -58,7 +58,7 @@ test('loads promises in parallel across child components', async () => {
 
   SESSION2: {
     expect(await resourceFetcher.waitForAll()).toBe(2);
-    await waitUntilIdle();
+    await waitUntil('background');
 
     expect(stripComments(container).innerHTML).toBe(
       '<ul><li>foo</li><li>baz</li></ul>',
@@ -78,7 +78,7 @@ test('loads promises in parallel across child components', async () => {
 
   SESSION4: {
     expect(await resourceFetcher.waitForAll()).toBe(1);
-    await waitUntilIdle();
+    await waitUntil('background');
 
     expect(stripComments(container).innerHTML).toBe(
       '<ul><li>bar</li><li>baz</li></ul>',
@@ -106,13 +106,13 @@ test('throws the rejection reason when a suspended promise rejects', async () =>
 
   SESSION2: {
     expect(await resourceFetcher.waitForAll()).toBe(3);
-    await waitUntilIdle(); // wait for retry rendering
+    await waitUntil('background'); // wait for retry rendering
 
     expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
   }
 
   SESSION3: {
-    await waitUntilIdle(); // wait for error recovery
+    await waitUntil('background'); // wait for error recovery
 
     expect(stripComments(container).innerHTML).toBe(
       '<p>Error: Resource qux not found</p>',

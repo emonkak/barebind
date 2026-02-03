@@ -119,10 +119,8 @@ export function templateLiteral<TValues extends readonly unknown[]>(
   return [strings, ...values];
 }
 
-export function waitUntilIdle(): Promise<void> {
-  return new Promise((resolve) =>
-    scheduler.postTask(resolve, { priority: 'background' }),
-  );
+export function waitUntil(priority: TaskPriority): Promise<void> {
+  return new Promise((resolve) => scheduler.postTask(resolve, { priority }));
 }
 
 export async function waitForMicrotasks(times: number = 1): Promise<void> {
