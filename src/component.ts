@@ -207,7 +207,6 @@ class CleanEffectHook implements Effect {
     if (this._hook.epoch === this._epoch) {
       this._hook.cleanup?.();
       this._hook.cleanup = undefined;
-      this._hook.epoch++;
     }
   }
 }
@@ -216,6 +215,7 @@ function enqueueCleanEffectHook(
   hook: Hook.EffectHook,
   effects: EffectQueue,
 ): void {
+  hook.epoch++;
   effects.pushBefore(new CleanEffectHook(hook));
 }
 

@@ -436,7 +436,6 @@ class InvokeEffectHook implements Effect {
       cleanup?.();
       this._hook.cleanup = callback();
       this._hook.memoizedDependencies = this._hook.pendingDependencies;
-      this._hook.epoch++;
     }
   }
 }
