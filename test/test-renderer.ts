@@ -105,7 +105,7 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
     };
 
     const { lanes } = this.runtime.scheduleUpdate(coroutine, {
-      flush: false,
+      triggerFlush: false,
       immediate: true,
     });
 

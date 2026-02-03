@@ -45,7 +45,7 @@ export class TestUpdater {
     };
 
     const { lanes } = this.runtime.scheduleUpdate(coroutine, {
-      flush: false,
+      triggerFlush: false,
       immediate: true,
       ...options,
     });

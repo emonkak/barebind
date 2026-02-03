@@ -65,12 +65,12 @@ describe('Runtime', () => {
         });
 
         const handle1 = runtime.scheduleUpdate(coroutine, {
-          flush: false,
           priority: 'user-blocking',
+          triggerFlush: false,
         });
         const handle2 = runtime.scheduleUpdate(coroutine, {
-          flush: false,
           priority: 'user-blocking',
+          triggerFlush: false,
         });
 
         expect(await handle1.scheduled).toStrictEqual({
@@ -167,8 +167,8 @@ describe('Runtime', () => {
         });
 
         const handle = runtime.scheduleUpdate(coroutine, {
-          flush: false,
           priority: 'user-visible',
+          triggerFlush: false,
           viewTransition: true,
         });
 
@@ -280,7 +280,7 @@ describe('Runtime', () => {
         });
 
         const handle = runtime.scheduleUpdate(coroutine, {
-          flush: false,
+          triggerFlush: false,
         });
 
         expect(await handle.scheduled).toStrictEqual({
@@ -343,7 +343,7 @@ describe('Runtime', () => {
         );
 
         const handle = runtime.scheduleUpdate(coroutine, {
-          flush: false,
+          triggerFlush: false,
         });
 
         expect(await handle.scheduled).toStrictEqual({
@@ -408,12 +408,12 @@ describe('Runtime', () => {
         });
 
         const handle1 = runtime.scheduleUpdate(coroutine, {
-          flush: false,
           priority: 'user-blocking',
+          triggerFlush: false,
         });
         const handle2 = runtime.scheduleUpdate(coroutine, {
-          flush: false,
           priority: 'user-blocking',
+          triggerFlush: false,
         });
 
         expect(await handle1.scheduled).toStrictEqual({
@@ -523,8 +523,8 @@ describe('Runtime', () => {
         });
 
         const handle = runtime.scheduleUpdate(coroutine, {
-          flush: false,
           priority: 'user-visible',
+          triggerFlush: false,
           viewTransition: true,
         });
 
@@ -684,7 +684,7 @@ describe('Runtime', () => {
         );
 
         const handle = runtime.scheduleUpdate(coroutine, {
-          flush: false,
+          triggerFlush: false,
         });
 
         expect(await handle.scheduled).toStrictEqual({

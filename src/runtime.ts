@@ -440,9 +440,9 @@ export class Runtime implements SessionContext {
     options: UpdateOptions = {},
   ): UpdateHandle {
     options = {
-      flush: options.flush ?? true,
       immediate: options.immediate ?? false,
       priority: options.priority ?? this._backend.getTaskPriority(),
+      triggerFlush: options.triggerFlush ?? true,
       viewTransition: options.viewTransition ?? false,
     } satisfies Required<UpdateOptions>;
 
@@ -457,11 +457,12 @@ export class Runtime implements SessionContext {
     let scheduled: Promise<UpdateResult>;
 
     const callback = () => {
-      const shouldFlush = options.flush && this._pendingTasks.isEmpty();
+      const shouldTriggerFlush =
+        options.triggerFlush && this._pendingTasks.isEmpty();
 
       this._pendingTasks.pushBack(pendingTask);
 
-      if (shouldFlush) {
+      if (shouldTriggerFlush) {
         scheduled.then(() => {
           this._backend.flushUpdate(this);
         });
