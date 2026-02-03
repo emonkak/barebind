@@ -116,7 +116,7 @@ export class Runtime implements SessionContext {
 
   constructor(
     backend: RuntimeBackend,
-    { randomToken = generateRandomString(8) }: RuntimeOptions = {},
+    { randomToken = generateRandomToken(8) }: RuntimeOptions = {},
   ) {
     this._backend = backend;
     this._randomToken = randomToken;
@@ -552,7 +552,7 @@ function createRenderFrame(
   };
 }
 
-function generateRandomString(length: number): string {
+function generateRandomToken(length: number): string {
   return Array.from(crypto.getRandomValues(new Uint8Array(length)), (byte) =>
     (byte % 36).toString(36),
   ).join('');
