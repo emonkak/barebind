@@ -48,7 +48,9 @@ describe('LayoutSpecifier', () => {
       const layout = new MockLayout();
       const bindable = new LayoutSpecifier(source, layout);
 
-      expect(formatValue(bindable)).toBe('MockDirective("foo") in MockLayout');
+      expect(formatValue(bindable)).toBe(
+        'MockDirective("foo") with MockLayout',
+      );
     });
   });
 

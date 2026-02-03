@@ -47,7 +47,7 @@ export class LayoutSpecifier<T>
   }
 
   [$debug](format: (value: unknown) => string): string {
-    return format(this.source) + ' in ' + this.layout.name;
+    return format(this.source) + ' with ' + this.layout.name;
   }
 
   [$directive](): Partial<Directive<UnwrapBindable<T>>> {
