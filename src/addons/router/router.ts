@@ -4,11 +4,11 @@ export interface Route<
   TResult,
   TContext,
   TPatterns extends Pattern[] = Pattern[],
-  TInheritArgs extends unknown[] = [],
+  TInheritCaptures extends unknown[] = [],
 > {
   patterns: TPatterns;
   resolver: Resolver<
-    [...TInheritArgs, ...ExtractArgs<TPatterns>],
+    [...TInheritCaptures, ...ExtractCaptures<TPatterns>],
     TResult,
     TContext
   > | null;
@@ -16,7 +16,7 @@ export interface Route<
     TResult,
     TContext,
     Pattern[],
-    [...TInheritArgs, ...ExtractArgs<TPatterns>]
+    [...TInheritCaptures, ...ExtractCaptures<TPatterns>]
   >[];
 }
 
@@ -24,16 +24,16 @@ export type Pattern = string | Matcher<unknown>;
 
 export type Matcher<T> = (component: string, url: RelativeURL) => T | null;
 
-export type Resolver<TArgs extends unknown[], TResult, TContext> = (
-  args: TArgs,
+export type Resolver<TCaptures extends unknown[], TResult, TContext> = (
+  captures: TCaptures,
   url: RelativeURL,
   context: TContext,
 ) => TResult;
 
-type ExtractArgs<TPatterns> = TPatterns extends []
+type ExtractCaptures<TPatterns> = TPatterns extends []
   ? []
   : TPatterns extends [infer THead, ...infer TTail]
-    ? [...Match<THead>, ...ExtractArgs<TTail>]
+    ? [...Match<THead>, ...ExtractCaptures<TTail>]
     : unknown[];
 
 type Match<TPattern> = TPattern extends string
@@ -57,24 +57,24 @@ export class Router<TResult, TContext> {
     let routes = this._routes;
     let routeIndex = 0;
     let componentIndex = 0;
-    let allArgs: unknown[] = [];
+    let allCaptures: unknown[] = [];
 
     while (routeIndex < routes.length) {
       const { patterns, childRoutes, resolver } = routes[routeIndex]!;
-      const args = extractArgs(
+      const captures = extractCaptures(
         patterns,
         components.slice(componentIndex, componentIndex + patterns.length),
         url,
       );
 
-      if (args !== null) {
+      if (captures !== null) {
         if (components.length === componentIndex + patterns.length) {
           return resolver !== null
-            ? resolver(allArgs.concat(args), url, context)
+            ? resolver(allCaptures.concat(captures), url, context)
             : null;
         }
         if (childRoutes.length > 0) {
-          allArgs = allArgs.concat(args);
+          allCaptures = allCaptures.concat(captures);
           routes = childRoutes;
           routeIndex = 0;
           componentIndex += patterns.length;
@@ -103,17 +103,17 @@ export function route<
   TResult,
   TContext = unknown,
   const TPatterns extends Pattern[] = Pattern[],
-  const TInheritArgs extends unknown[] = [],
+  const TInheritCaptures extends unknown[] = [],
 >(
   patterns: TPatterns,
-  resolver: Route<TResult, TContext, TPatterns, TInheritArgs>['resolver'],
+  resolver: Route<TResult, TContext, TPatterns, TInheritCaptures>['resolver'],
   childRoutes: Route<
     TResult,
     TContext,
     TPatterns,
-    TInheritArgs
+    TInheritCaptures
   >['childRoutes'] = [],
-): Route<TResult, TContext, TPatterns, TInheritArgs> {
+): Route<TResult, TContext, TPatterns, TInheritCaptures> {
   return {
     patterns,
     resolver,
@@ -125,15 +125,15 @@ export function wildcard(component: string): string {
   return decodeURIComponent(component);
 }
 
-function extractArgs<TPatterns extends Pattern[]>(
+function extractCaptures<TPatterns extends Pattern[]>(
   patterns: TPatterns,
   components: string[],
   url: RelativeURL,
-): ExtractArgs<TPatterns> | null {
+): ExtractCaptures<TPatterns> | null {
   if (patterns.length !== components.length) {
     return null;
   }
-  const args: unknown[] = [];
+  const captures: unknown[] = [];
   for (let i = 0, l = patterns.length; i < l; i++) {
     const pattern = patterns[i]!;
     const component = components[i]!;
@@ -146,8 +146,8 @@ function extractArgs<TPatterns extends Pattern[]>(
       if (value === null) {
         return null;
       }
-      args.push(value);
+      captures.push(value);
     }
   }
-  return args as ExtractArgs<TPatterns>;
+  return captures as ExtractCaptures<TPatterns>;
 }

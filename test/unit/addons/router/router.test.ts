@@ -84,7 +84,7 @@ describe('Router', () => {
       );
     });
 
-    it('invokes the resolver with args, url and state', () => {
+    it('invokes the resolver with captures, url and context', () => {
       const resolver = vi.fn(
         ([articleId, commentId]) =>
           `showArticleComment(${articleId}, ${commentId})`,
