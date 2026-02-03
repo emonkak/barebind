@@ -163,6 +163,15 @@ describe('KeyedSlot', () => {
         expect(detachSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(rollbackSpy).toHaveBeenCalledTimes(0);
+        expect(slot['_pendingSlot']).toBe(innerSlot);
+        expect(slot['_pendingSlot']).toBeInstanceOf(MockSlot);
+        expect(slot['_pendingSlot']).toStrictEqual(
+          expect.objectContaining({
+            value: source1,
+            dirty: false,
+            committed: true,
+          }),
+        );
         expect(part.node.nodeValue).toBe(source1);
       }
 
@@ -178,7 +187,7 @@ describe('KeyedSlot', () => {
         expect(detachSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(rollbackSpy).toHaveBeenCalledTimes(1);
-        expect(slot['_pendingSlot']).not.toBe(slot);
+        expect(slot['_pendingSlot']).not.toBe(innerSlot);
         expect(slot['_pendingSlot']).toBeInstanceOf(MockSlot);
         expect(slot['_pendingSlot']).toStrictEqual(
           expect.objectContaining({
@@ -238,6 +247,15 @@ describe('KeyedSlot', () => {
         expect(detachSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(rollbackSpy).toHaveBeenCalledTimes(0);
+        expect(slot['_pendingSlot']).toBe(innerSlot);
+        expect(slot['_pendingSlot']).toBeInstanceOf(MockSlot);
+        expect(slot['_pendingSlot']).toStrictEqual(
+          expect.objectContaining({
+            value: source1,
+            dirty: false,
+            committed: true,
+          }),
+        );
         expect(part.node.nodeValue).toBe(source1);
       }
 
@@ -253,7 +271,7 @@ describe('KeyedSlot', () => {
         expect(detachSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(rollbackSpy).toHaveBeenCalledTimes(1);
-        expect(slot['_pendingSlot']).not.toBe(slot);
+        expect(slot['_pendingSlot']).not.toBe(innerSlot);
         expect(slot['_pendingSlot']).toBeInstanceOf(MockSlot);
         expect(slot['_pendingSlot']).toStrictEqual(
           expect.objectContaining({
