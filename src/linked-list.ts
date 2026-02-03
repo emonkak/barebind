@@ -1,10 +1,3 @@
-interface OwnedNode<T> {
-  value: T;
-  prev: OwnedNode<T> | null;
-  next: OwnedNode<T> | null;
-  ownership: symbol | null;
-}
-
 export namespace LinkedList {
   export interface Node<T> {
     readonly value: T;
@@ -12,6 +5,13 @@ export namespace LinkedList {
     readonly next: Node<T> | null;
     readonly ownership: symbol | null;
   }
+}
+
+interface OwnedNode<T> {
+  value: T;
+  prev: OwnedNode<T> | null;
+  next: OwnedNode<T> | null;
+  ownership: symbol | null;
 }
 
 export class LinkedList<T> implements Iterable<T> {
