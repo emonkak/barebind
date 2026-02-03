@@ -16,7 +16,7 @@ export const App = createComponent(function App(
 ): unknown {
   const { location } = $.use(HashHistory({ viewTransition: true }));
   const page =
-    router.handle(location.url, location.state) ??
+    router.match(location.url, location.state) ??
     NotFound({ url: location.url });
 
   $.use(store);

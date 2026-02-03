@@ -49,7 +49,7 @@ export class Router<TResult, TContext> {
     this._routes = routes;
   }
 
-  handle(url: RelativeURL, context: TContext): TResult | null {
+  match(url: RelativeURL, context: TContext): TResult | null {
     const path = url.pathname;
     const pathWithoutInitialSlash = path[0] === '/' ? path.slice(1) : path;
     const components = pathWithoutInitialSlash.split('/');
