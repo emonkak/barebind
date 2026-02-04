@@ -62,6 +62,24 @@ export function reconcileChildren<TSource, TTarget, TKey>(
       );
       oldTail--;
       newTail--;
+    } else if (
+      Object.is(oldKeys[oldHead]!, newKeys[newTail]!) &&
+      Object.is(oldKeys[oldTail]!, newKeys[newHead]!)
+    ) {
+      newTargets[newHead] = handler.move(
+        oldTargets[oldTail]!,
+        newSources[newHead]!,
+        oldTargets[oldHead],
+      );
+      newTargets[newTail] = handler.move(
+        oldTargets[oldHead]!,
+        newSources[newTail]!,
+        newTargets[newTail + 1],
+      );
+      oldHead++;
+      newHead++;
+      oldTail--;
+      newTail--;
     } else {
       newKeyToIndexMap ??= buildKeyToIndexMap(newKeys, newHead, newTail);
 
