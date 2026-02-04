@@ -8,7 +8,7 @@ export interface Route<
 > {
   patterns: TPatterns;
   resolver: Resolver<
-    [...TInheritCaptures, ...ExtractCaptures<TPatterns>],
+    [...TInheritCaptures, ...CollectCaptures<TPatterns>],
     TResult,
     TContext
   > | null;
@@ -16,7 +16,7 @@ export interface Route<
     TResult,
     TContext,
     Pattern[],
-    [...TInheritCaptures, ...ExtractCaptures<TPatterns>]
+    [...TInheritCaptures, ...CollectCaptures<TPatterns>]
   >[];
 }
 
@@ -30,10 +30,10 @@ export type Resolver<TCaptures extends unknown[], TResult, TContext> = (
   context: TContext,
 ) => TResult;
 
-type ExtractCaptures<TPatterns> = TPatterns extends []
+type CollectCaptures<TPatterns> = TPatterns extends []
   ? []
   : TPatterns extends [infer THead, ...infer TTail]
-    ? [...Match<THead>, ...ExtractCaptures<TTail>]
+    ? [...Match<THead>, ...CollectCaptures<TTail>]
     : unknown[];
 
 type Match<TPattern> = TPattern extends string
@@ -50,31 +50,27 @@ export class Router<TResult, TContext> {
   }
 
   match(url: RelativeURL, context: TContext): TResult | null {
-    const path = url.pathname;
-    const pathWithoutInitialSlash = path[0] === '/' ? path.slice(1) : path;
-    const components = pathWithoutInitialSlash.split('/');
+    const components = trimLeadingSlash(url.pathname).split('/');
+    const collectedCaptures: unknown[] = [];
 
     let routes = this._routes;
     let routeIndex = 0;
     let componentIndex = 0;
-    let allCaptures: unknown[] = [];
 
     while (routeIndex < routes.length) {
       const { patterns, childRoutes, resolver } = routes[routeIndex]!;
-      const captures = extractCaptures(
+      const captures = collectCaptures(
         patterns,
         components.slice(componentIndex, componentIndex + patterns.length),
         url,
       );
 
       if (captures !== null) {
+        collectedCaptures.push(...captures);
         if (components.length === componentIndex + patterns.length) {
-          return resolver !== null
-            ? resolver(allCaptures.concat(captures), url, context)
-            : null;
+          return resolver?.(collectedCaptures, url, context) ?? null;
         }
         if (childRoutes.length > 0) {
-          allCaptures = allCaptures.concat(captures);
           routes = childRoutes;
           routeIndex = 0;
           componentIndex += patterns.length;
@@ -129,11 +125,11 @@ export function route<
   };
 }
 
-function extractCaptures<TPatterns extends Pattern[]>(
+function collectCaptures<TPatterns extends Pattern[]>(
   patterns: TPatterns,
   components: string[],
   url: RelativeURL,
-): ExtractCaptures<TPatterns> | null {
+): CollectCaptures<TPatterns> | null {
   if (patterns.length !== components.length) {
     return null;
   }
@@ -153,5 +149,9 @@ function extractCaptures<TPatterns extends Pattern[]>(
       captures.push(capture);
     }
   }
-  return captures as ExtractCaptures<TPatterns>;
+  return captures as CollectCaptures<TPatterns>;
+}
+
+function trimLeadingSlash(path: string): string {
+  return path[0] === '/' ? path.slice(1) : path;
 }
