@@ -15,11 +15,11 @@ import {
 } from './internal.js';
 import { reconcileChildren } from './reconciliation.js';
 
-const OPERATION_INSERT = 0;
-const OPERATION_MOVE = 1;
-const OPERATION_MOVE_AND_UPDATE = 2;
-const OPERATION_UPDATE = 3;
-const OPERATION_REMOVE = 4;
+const MUTATION_TYPE_INSERT = 0;
+const MUTATION_TYPE_MOVE = 1;
+const MUTATION_TYPE_MOVE_AND_UPDATE = 2;
+const MUTATION_TYPE_UPDATE = 3;
+const MUTATION_TYPE_REMOVE = 4;
 
 export type RepeatProps<TSource, TKey = unknown, TValue = unknown> = {
   items: Iterable<TSource>;
@@ -27,13 +27,13 @@ export type RepeatProps<TSource, TKey = unknown, TValue = unknown> = {
   valueSelector?: (element: TSource, index: number) => TValue;
 };
 
-interface Operation<T> {
+interface Mutation<T> {
   type:
-    | typeof OPERATION_INSERT
-    | typeof OPERATION_MOVE
-    | typeof OPERATION_MOVE_AND_UPDATE
-    | typeof OPERATION_UPDATE
-    | typeof OPERATION_REMOVE;
+    | typeof MUTATION_TYPE_INSERT
+    | typeof MUTATION_TYPE_MOVE
+    | typeof MUTATION_TYPE_MOVE_AND_UPDATE
+    | typeof MUTATION_TYPE_UPDATE
+    | typeof MUTATION_TYPE_REMOVE;
   slot: Slot<T>;
   referenceSlot?: Slot<T> | undefined;
 }
@@ -67,7 +67,7 @@ export class RepeatBinding<TSource, TKey, TValue>
 
   private _pendingSlots: Slot<TValue>[] = [];
 
-  private _pendingOperations: Operation<TValue>[] = [];
+  private _pendingMutations: Mutation<TValue>[] = [];
 
   private _memoizedSlots: Slot<TValue>[] | null = null;
 
@@ -132,8 +132,8 @@ export class RepeatBinding<TSource, TKey, TValue>
         if (targetTree !== null) {
           replaceMarkerNode(targetTree, part.node);
         } else {
-          this._pendingOperations.push({
-            type: OPERATION_INSERT,
+          this._pendingMutations.push({
+            type: MUTATION_TYPE_INSERT,
             slot,
             referenceSlot,
           });
@@ -142,8 +142,8 @@ export class RepeatBinding<TSource, TKey, TValue>
       },
       update: (slot, source) => {
         if (slot.reconcile(source, session)) {
-          this._pendingOperations.push({
-            type: OPERATION_UPDATE,
+          this._pendingMutations.push({
+            type: MUTATION_TYPE_UPDATE,
             slot,
           });
         }
@@ -151,14 +151,14 @@ export class RepeatBinding<TSource, TKey, TValue>
       },
       move: (slot, source, referenceSlot) => {
         if (slot.reconcile(source, session)) {
-          this._pendingOperations.push({
-            type: OPERATION_MOVE_AND_UPDATE,
+          this._pendingMutations.push({
+            type: MUTATION_TYPE_MOVE_AND_UPDATE,
             slot,
             referenceSlot,
           });
         } else {
-          this._pendingOperations.push({
-            type: OPERATION_MOVE,
+          this._pendingMutations.push({
+            type: MUTATION_TYPE_MOVE,
             slot,
             referenceSlot,
           });
@@ -167,8 +167,8 @@ export class RepeatBinding<TSource, TKey, TValue>
       },
       remove: (slot) => {
         slot.detach(session);
-        this._pendingOperations.push({
-          type: OPERATION_REMOVE,
+        this._pendingMutations.push({
+          type: MUTATION_TYPE_REMOVE,
           slot,
         });
       },
@@ -190,23 +190,23 @@ export class RepeatBinding<TSource, TKey, TValue>
   }
 
   commit(): void {
-    for (const { type, slot, referenceSlot } of this._pendingOperations) {
+    for (const { type, slot, referenceSlot } of this._pendingMutations) {
       switch (type) {
-        case OPERATION_INSERT:
+        case MUTATION_TYPE_INSERT:
           insertSlot(slot, referenceSlot, this._part);
           slot.commit();
           break;
-        case OPERATION_MOVE:
+        case MUTATION_TYPE_MOVE:
           moveSlot(slot, referenceSlot, this._part);
           break;
-        case OPERATION_MOVE_AND_UPDATE:
+        case MUTATION_TYPE_MOVE_AND_UPDATE:
           moveSlot(slot, referenceSlot, this._part);
           slot.commit();
           break;
-        case OPERATION_UPDATE:
+        case MUTATION_TYPE_UPDATE:
           slot.commit();
           break;
-        case OPERATION_REMOVE:
+        case MUTATION_TYPE_REMOVE:
           slot.rollback();
           slot.part.node.remove();
           break;
@@ -214,7 +214,7 @@ export class RepeatBinding<TSource, TKey, TValue>
     }
 
     this._part.anchorNode = getAnchorNode(this._pendingSlots);
-    this._pendingOperations = [];
+    this._pendingMutations = [];
     this._memoizedSlots = this._pendingSlots;
   }
 
@@ -227,8 +227,8 @@ export class RepeatBinding<TSource, TKey, TValue>
     }
 
     this._part.anchorNode = null;
-    this._pendingOperations = this._pendingSlots.map((slot) => ({
-      type: OPERATION_INSERT,
+    this._pendingMutations = this._pendingSlots.map((slot) => ({
+      type: MUTATION_TYPE_INSERT,
       slot,
     }));
     this._memoizedSlots = null;
