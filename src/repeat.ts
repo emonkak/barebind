@@ -13,6 +13,7 @@ import {
   type Slot,
   type UpdateSession,
 } from './internal.js';
+import { reconcileChildren } from './reconciliation.js';
 
 const OPERATION_INSERT = 0;
 const OPERATION_MOVE = 1;
@@ -35,13 +36,6 @@ interface Operation<T> {
     | typeof OPERATION_REMOVE;
   slot: Slot<T>;
   referenceSlot?: Slot<T> | undefined;
-}
-
-interface ReconciliationHandler<T> {
-  insert(value: T, referenceSlot: Slot<T> | undefined): Slot<T>;
-  update(slot: Slot<T>, newValue: T): Slot<T>;
-  move(slot: Slot<T>, newValue: T, referenceSlot: Slot<T> | undefined): Slot<T>;
-  remove(slot: Slot<T>): void;
 }
 
 export function Repeat<TSource, TKey, TValue>(
@@ -120,21 +114,20 @@ export class RepeatBinding<TSource, TKey, TValue>
       keySelector = defaultKeySelector,
       valueSelector = defaultValueSelector,
     } = this._props;
+    const oldKeys = this._pendingKeys;
+    const oldSlots = this._pendingSlots;
     const newItems = Array.isArray(items) ? items : Array.from(items);
     const newKeys = newItems.map(keySelector);
     const newValues = newItems.map(valueSelector);
-    const oldKeys = this._pendingKeys;
-    const oldSlots = this._pendingSlots;
-
-    const newSlots = reconcileSlots(newKeys, newValues, oldKeys, oldSlots, {
-      insert: (newValue, referenceSlot) => {
+    const newSlots = reconcileChildren(oldKeys, oldSlots, newKeys, newValues, {
+      insert: (source, referenceSlot) => {
         const part = {
           type: PartType.ChildNode,
           node: document.createComment(''),
           anchorNode: null,
           namespaceURI: this._part.namespaceURI,
         };
-        const slot = context.resolveSlot(newValue, part);
+        const slot = context.resolveSlot(source, part);
         slot.attach(session);
         if (targetTree !== null) {
           replaceMarkerNode(targetTree, part.node);
@@ -147,8 +140,8 @@ export class RepeatBinding<TSource, TKey, TValue>
         }
         return slot;
       },
-      update: (slot, newValue) => {
-        if (slot.reconcile(newValue, session)) {
+      update: (slot, source) => {
+        if (slot.reconcile(source, session)) {
           this._pendingOperations.push({
             type: OPERATION_UPDATE,
             slot,
@@ -156,8 +149,8 @@ export class RepeatBinding<TSource, TKey, TValue>
         }
         return slot;
       },
-      move: (slot, newValue, referenceSlot) => {
-        if (slot.reconcile(newValue, session)) {
+      move: (slot, source, referenceSlot) => {
+        if (slot.reconcile(source, session)) {
           this._pendingOperations.push({
             type: OPERATION_MOVE_AND_UPDATE,
             slot,
@@ -242,18 +235,6 @@ export class RepeatBinding<TSource, TKey, TValue>
   }
 }
 
-function buildKeyToIndexMap<T>(
-  keys: T[],
-  head: number,
-  tail: number,
-): Map<T, number> {
-  const keyToIndexMap = new Map();
-  for (let i = head; i <= tail; i++) {
-    keyToIndexMap.set(keys[i]!, i);
-  }
-  return keyToIndexMap;
-}
-
 function defaultKeySelector(_element: any, index: number): any {
   return index;
 }
@@ -313,100 +294,4 @@ function moveSlot<T>(
   const referenceNode =
     referenceSlot !== undefined ? getStartNode(referenceSlot.part) : part.node;
   moveSiblings(siblings, referenceNode);
-}
-
-function reconcileSlots<TKey, TValue>(
-  newKeys: TKey[],
-  newValues: TValue[],
-  oldKeys: TKey[],
-  oldSlots: (Slot<TValue> | undefined)[],
-  handler: ReconciliationHandler<TValue>,
-): Slot<TValue>[] {
-  const newSlots: Slot<TValue>[] = new Array(newKeys.length);
-
-  let newHead = 0;
-  let newTail = newKeys.length - 1;
-  let oldHead = 0;
-  let oldTail = oldKeys.length - 1;
-
-  let newKeyToIndexMap: Map<TKey, number> | undefined;
-  let oldKeyToIndexMap: Map<TKey, number> | undefined;
-
-  while (true) {
-    if (newHead > newTail) {
-      while (oldHead <= oldTail) {
-        const oldSlot = oldSlots[oldHead];
-        if (oldSlot !== undefined) {
-          handler.remove(oldSlot);
-        }
-        oldHead++;
-      }
-      break;
-    } else if (oldHead > oldTail) {
-      while (newHead <= newTail) {
-        newSlots[newHead] = handler.insert(
-          newValues[newHead]!,
-          newSlots[newTail + 1],
-        );
-        newHead++;
-      }
-      break;
-    } else if (oldSlots[oldHead] === undefined) {
-      oldHead++;
-    } else if (oldSlots[oldTail] === undefined) {
-      oldTail--;
-    } else if (Object.is(oldKeys[oldHead]!, newKeys[newHead]!)) {
-      newSlots[newHead] = handler.update(
-        oldSlots[oldHead]!,
-        newValues[newHead]!,
-      );
-      newHead++;
-      oldHead++;
-    } else if (Object.is(oldKeys[oldTail]!, newKeys[newTail]!)) {
-      newSlots[newTail] = handler.update(
-        oldSlots[oldTail]!,
-        newValues[newTail]!,
-      );
-      newTail--;
-      oldTail--;
-    } else {
-      newKeyToIndexMap ??= buildKeyToIndexMap(newKeys, newHead, newTail);
-
-      if (!newKeyToIndexMap.has(oldKeys[oldHead]!)) {
-        handler.remove(oldSlots[oldHead]!);
-        oldHead++;
-      } else if (!newKeyToIndexMap.has(oldKeys[oldTail]!)) {
-        handler.remove(oldSlots[oldTail]!);
-        oldTail--;
-      } else {
-        oldKeyToIndexMap ??= buildKeyToIndexMap(oldKeys, oldHead, oldTail);
-
-        const newKey = newKeys[newTail]!;
-        const oldIndex = oldKeyToIndexMap.get(newKey);
-
-        if (
-          oldIndex !== undefined &&
-          oldIndex >= oldHead &&
-          oldIndex <= oldTail &&
-          oldSlots[oldIndex] !== undefined
-        ) {
-          newSlots[newTail] = handler.move(
-            oldSlots[oldIndex],
-            newValues[newTail]!,
-            newSlots[newTail + 1],
-          );
-          oldSlots[oldIndex] = undefined;
-        } else {
-          newSlots[newTail] = handler.insert(
-            newValues[newTail]!,
-            newSlots[newTail + 1],
-          );
-        }
-
-        newTail--;
-      }
-    }
-  }
-
-  return newSlots;
 }
