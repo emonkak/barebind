@@ -131,13 +131,12 @@ export class RepeatBinding<TSource, TKey, TValue>
         slot.attach(session);
         if (targetTree !== null) {
           replaceMarkerNode(targetTree, part.node);
-        } else {
-          this._pendingMutations.push({
-            type: MUTATION_TYPE_INSERT,
-            slot,
-            referenceSlot,
-          });
         }
+        this._pendingMutations.push({
+          type: MUTATION_TYPE_INSERT,
+          slot,
+          referenceSlot,
+        });
         return slot;
       },
       update: (slot, source) => {
