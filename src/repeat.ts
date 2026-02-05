@@ -23,8 +23,8 @@ const MUTATION_TYPE_REMOVE = 4;
 
 export type RepeatProps<TSource, TKey = unknown, TValue = unknown> = {
   items: Iterable<TSource>;
-  keySelector?: (element: TSource, index: number) => TKey;
-  valueSelector?: (element: TSource, index: number) => TValue;
+  keySelector?: (source: TSource, index: number) => TKey;
+  valueSelector?: (source: TSource, index: number) => TValue;
 };
 
 interface Mutation<T> {
@@ -229,12 +229,12 @@ export class RepeatBinding<TSource, TKey, TValue>
   }
 }
 
-function defaultKeySelector(_element: any, index: number): any {
+function defaultKeySelector(_source: any, index: number): any {
   return index;
 }
 
-function defaultValueSelector(element: any): any {
-  return element;
+function defaultValueSelector(source: any): any {
+  return source;
 }
 
 function getAnchorNode<T>(slots: Slot<T>[]): ChildNode | null {
