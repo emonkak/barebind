@@ -167,13 +167,13 @@ export class ComponentBinding<TProps, TResult>
     for (const hook of this._state.hooks) {
       switch (hook.type) {
         case HookType.PassiveEffect:
-          enqueueCleanEffectHook(hook, frame.passiveEffects);
+          enqueueCleanupEffectHook(hook, frame.passiveEffects);
           break;
         case HookType.LayoutEffect:
-          enqueueCleanEffectHook(hook, frame.layoutEffects);
+          enqueueCleanupEffectHook(hook, frame.layoutEffects);
           break;
         case HookType.InsertionEffect:
-          enqueueCleanEffectHook(hook, frame.mutationEffects);
+          enqueueCleanupEffectHook(hook, frame.mutationEffects);
           break;
       }
     }
@@ -193,7 +193,7 @@ export class ComponentBinding<TProps, TResult>
   }
 }
 
-class CleanEffectHook implements Effect {
+class CleanupEffectHook implements Effect {
   private readonly _hook: Hook.EffectHook;
 
   private readonly _epoch: number;
@@ -211,12 +211,12 @@ class CleanEffectHook implements Effect {
   }
 }
 
-function enqueueCleanEffectHook(
+function enqueueCleanupEffectHook(
   hook: Hook.EffectHook,
   effects: EffectQueue,
 ): void {
   hook.epoch++;
-  effects.pushBefore(new CleanEffectHook(hook));
+  effects.pushBefore(new CleanupEffectHook(hook));
 }
 
 function resolveBinding<TProps, TResult>(

@@ -55,7 +55,7 @@ export class RefBinding extends PrimitiveBinding<
   }
 
   override detach(session: UpdateSession): void {
-    session.frame.mutationEffects.pushAfter(new CleanRef(this));
+    session.frame.mutationEffects.pushAfter(new CleanupRef(this));
   }
 
   invokeRef(): void {
@@ -80,7 +80,7 @@ export class RefBinding extends PrimitiveBinding<
     this._memoizedValue = this.value;
   }
 
-  cleanRef(): void {
+  cleanupRef(): void {
     const ref = this._memoizedValue;
 
     if (ref != null) {
@@ -104,7 +104,7 @@ function isElementRef(value: unknown): value is Ref<Element> {
   );
 }
 
-class CleanRef implements Effect {
+class CleanupRef implements Effect {
   private readonly _binding: RefBinding;
 
   constructor(binding: RefBinding) {
@@ -112,7 +112,7 @@ class CleanRef implements Effect {
   }
 
   commit(): void {
-    this._binding.cleanRef();
+    this._binding.cleanupRef();
   }
 }
 
