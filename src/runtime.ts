@@ -36,7 +36,7 @@ import { RenderSession } from './render-session.js';
 export interface RuntimeBackend {
   flushEffects(effects: EffectQueue, phase: CommitPhase): void;
   flushUpdate(runtime: Runtime): void;
-  getTaskPriority(): TaskPriority;
+  getUpdatePriority(): TaskPriority;
   parseTemplate(
     strings: readonly string[],
     binds: readonly unknown[],
@@ -441,7 +441,7 @@ export class Runtime implements SessionContext {
   ): UpdateHandle {
     options = {
       immediate: options.immediate ?? false,
-      priority: options.priority ?? this._backend.getTaskPriority(),
+      priority: options.priority ?? this._backend.getUpdatePriority(),
       triggerFlush: options.triggerFlush ?? true,
       viewTransition: options.viewTransition ?? false,
     } satisfies Required<UpdateOptions>;

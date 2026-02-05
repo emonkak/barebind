@@ -36,7 +36,7 @@ export class BrowserBackend implements RuntimeBackend {
     runtime.flushAsync();
   }
 
-  getTaskPriority(): TaskPriority {
+  getUpdatePriority(): TaskPriority {
     const { event } = window;
     if (event !== undefined) {
       return isContinuousEvent(event) ? 'user-visible' : 'user-blocking';

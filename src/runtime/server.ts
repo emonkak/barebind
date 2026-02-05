@@ -42,7 +42,7 @@ export class ServerBackend implements RuntimeBackend {
     runtime.flushSync();
   }
 
-  getTaskPriority(): TaskPriority {
+  getUpdatePriority(): TaskPriority {
     return 'user-blocking';
   }
 

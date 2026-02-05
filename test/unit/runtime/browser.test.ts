@@ -78,7 +78,7 @@ describe('BrowserBackend', () => {
     });
   });
 
-  describe('getTaskPriority()', () => {
+  describe('getUpdatePriority()', () => {
     afterEach(() => {
       vi.restoreAllMocks();
     });
@@ -91,7 +91,7 @@ describe('BrowserBackend', () => {
         .spyOn(window, 'event', 'get')
         .mockReturnValue(new CustomEvent(eventType));
 
-      expect(backend.getTaskPriority()).toBe('user-visible');
+      expect(backend.getUpdatePriority()).toBe('user-visible');
       expect(getEventSpy).toHaveBeenCalled();
     });
 
@@ -101,7 +101,7 @@ describe('BrowserBackend', () => {
         .spyOn(window, 'event', 'get')
         .mockReturnValue(new MouseEvent('click'));
 
-      expect(backend.getTaskPriority()).toBe('user-blocking');
+      expect(backend.getUpdatePriority()).toBe('user-blocking');
       expect(getEventSpy).toHaveBeenCalled();
     });
 
@@ -115,7 +115,7 @@ describe('BrowserBackend', () => {
         .spyOn(document, 'readyState', 'get')
         .mockReturnValue('complete');
 
-      expect(backend.getTaskPriority()).toBe('background');
+      expect(backend.getUpdatePriority()).toBe('background');
       expect(getEventSpy).toHaveBeenCalledOnce();
       expect(getDocumentReadyState).toHaveBeenCalledOnce();
     });
@@ -130,7 +130,7 @@ describe('BrowserBackend', () => {
         .spyOn(document, 'readyState', 'get')
         .mockReturnValue('interactive');
 
-      expect(backend.getTaskPriority()).toBe('user-blocking');
+      expect(backend.getUpdatePriority()).toBe('user-blocking');
       expect(getEventSpy).toHaveBeenCalledOnce();
       expect(getDocumentReadyState).toHaveBeenCalledOnce();
     });
