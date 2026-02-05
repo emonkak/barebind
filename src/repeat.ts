@@ -149,19 +149,14 @@ export class RepeatBinding<TSource, TKey, TValue>
         return slot;
       },
       move: (slot, source, referenceSlot) => {
-        if (slot.reconcile(source, session)) {
-          this._pendingMutations.push({
-            type: MUTATION_TYPE_MOVE_AND_UPDATE,
-            slot,
-            referenceSlot,
-          });
-        } else {
-          this._pendingMutations.push({
-            type: MUTATION_TYPE_MOVE,
-            slot,
-            referenceSlot,
-          });
-        }
+        const type = slot.reconcile(source, session)
+          ? MUTATION_TYPE_MOVE_AND_UPDATE
+          : MUTATION_TYPE_MOVE;
+        this._pendingMutations.push({
+          type,
+          slot,
+          referenceSlot,
+        });
         return slot;
       },
       remove: (slot) => {
