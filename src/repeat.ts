@@ -21,10 +21,10 @@ const MUTATION_TYPE_MOVE_AND_UPDATE = 2;
 const MUTATION_TYPE_UPDATE = 3;
 const MUTATION_TYPE_REMOVE = 4;
 
-export type RepeatProps<TSource, TKey = unknown, TValue = unknown> = {
-  items: Iterable<TSource>;
-  keySelector?: (source: TSource, index: number) => TKey;
-  valueSelector?: (source: TSource, index: number) => TValue;
+export type RepeatProps<TItem, TKey = unknown, TValue = unknown> = {
+  items: Iterable<TItem>;
+  keySelector?: (item: TItem, index: number) => TKey;
+  valueSelector?: (item: TItem, index: number) => TValue;
 };
 
 interface Mutation<T> {
@@ -38,9 +38,9 @@ interface Mutation<T> {
   referenceSlot?: Slot<T> | undefined;
 }
 
-export function Repeat<TSource, TKey, TValue>(
-  props: RepeatProps<TSource, TKey, TValue>,
-): DirectiveSpecifier<RepeatProps<TSource, TKey, TValue>> {
+export function Repeat<TItem, TKey, TValue>(
+  props: RepeatProps<TItem, TKey, TValue>,
+): DirectiveSpecifier<RepeatProps<TItem, TKey, TValue>> {
   return new DirectiveSpecifier(RepeatDirective, props);
 }
 
@@ -56,10 +56,10 @@ export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
   },
 };
 
-export class RepeatBinding<TSource, TKey, TValue>
-  implements Binding<RepeatProps<TSource, TKey, TValue>>
+export class RepeatBinding<TItem, TKey, TValue>
+  implements Binding<RepeatProps<TItem, TKey, TValue>>
 {
-  private _props: RepeatProps<TSource, TKey, TValue>;
+  private _props: RepeatProps<TItem, TKey, TValue>;
 
   private readonly _part: Part.ChildNodePart;
 
@@ -72,22 +72,22 @@ export class RepeatBinding<TSource, TKey, TValue>
   private _memoizedSlots: Slot<TValue>[] | null = null;
 
   constructor(
-    props: RepeatProps<TSource, TKey, TValue>,
+    props: RepeatProps<TItem, TKey, TValue>,
     part: Part.ChildNodePart,
   ) {
     this._props = props;
     this._part = part;
   }
 
-  get type(): DirectiveType<RepeatProps<TSource, TKey, TValue>> {
+  get type(): DirectiveType<RepeatProps<TItem, TKey, TValue>> {
     return RepeatDirective;
   }
 
-  get value(): RepeatProps<TSource, TKey, TValue> {
+  get value(): RepeatProps<TItem, TKey, TValue> {
     return this._props;
   }
 
-  set value(props: RepeatProps<TSource, TKey, TValue>) {
+  set value(props: RepeatProps<TItem, TKey, TValue>) {
     this._props = props;
   }
 
@@ -95,7 +95,7 @@ export class RepeatBinding<TSource, TKey, TValue>
     return this._part;
   }
 
-  shouldUpdate(props: RepeatProps<TSource, TKey, TValue>): boolean {
+  shouldUpdate(props: RepeatProps<TItem, TKey, TValue>): boolean {
     return (
       this._memoizedSlots === null ||
       props.items !== this._props.items ||
@@ -229,12 +229,12 @@ export class RepeatBinding<TSource, TKey, TValue>
   }
 }
 
-function defaultKeySelector(_source: any, index: number): any {
+function defaultKeySelector(_item: any, index: number): any {
   return index;
 }
 
-function defaultValueSelector(source: any): any {
-  return source;
+function defaultValueSelector(item: any): any {
+  return item;
 }
 
 function getAnchorNode<T>(slots: Slot<T>[]): ChildNode | null {
