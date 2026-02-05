@@ -63,7 +63,7 @@ describe('FragmentTemplate', () => {
         new MockTemplate(['[', ', ', ']'], ['bar', 'baz']),
       ] as const;
       const template = new FragmentTemplate(innerTemplates);
-      const binds = ['foo', 'bar', 'baz'];
+      const args = ['foo', 'bar', 'baz'];
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -78,7 +78,7 @@ describe('FragmentTemplate', () => {
         vi.spyOn(template, 'hydrate').mockImplementation(() => {
           const part = {
             type: PartType.ChildNode,
-            node: document.createComment(template.binds.join('')),
+            node: document.createComment(template.args.join('')),
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           };
@@ -86,7 +86,7 @@ describe('FragmentTemplate', () => {
             children: [part.node],
             slots: [
               new MockSlot(
-                new MockBinding(new MockDirective(), template.binds, part),
+                new MockBinding(new MockDirective(), template.args, part),
               ),
             ],
           };
@@ -94,7 +94,7 @@ describe('FragmentTemplate', () => {
       );
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.hydrate(binds, part, targetTree, session);
+        return template.hydrate(args, part, targetTree, session);
       });
 
       expect(children.map(serializeNode)).toStrictEqual([
@@ -145,7 +145,7 @@ describe('FragmentTemplate', () => {
         new MockTemplate(['[', ', ', ']'], ['bar', 'baz']),
       ] as const;
       const template = new FragmentTemplate(innerTemplates);
-      const binds = ['foo', 'bar', 'baz'];
+      const args = ['foo', 'bar', 'baz'];
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -158,7 +158,7 @@ describe('FragmentTemplate', () => {
         vi.spyOn(template, 'render').mockImplementation(() => {
           const part = {
             type: PartType.ChildNode,
-            node: document.createComment(template.binds.join('')),
+            node: document.createComment(template.args.join('')),
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           };
@@ -166,7 +166,7 @@ describe('FragmentTemplate', () => {
             children: [part.node],
             slots: [
               new MockSlot(
-                new MockBinding(new MockDirective(), template.binds, part),
+                new MockBinding(new MockDirective(), template.args, part),
               ),
             ],
           };
@@ -174,7 +174,7 @@ describe('FragmentTemplate', () => {
       );
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.render(binds, part, session);
+        return template.render(args, part, session);
       });
 
       expect(children.map(serializeNode)).toStrictEqual([

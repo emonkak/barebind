@@ -238,7 +238,7 @@ describe('RenderSession', () => {
       expect(directive.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<div>Hello, ', '!</div>'],
-          binds: ['World'],
+          args: ['World'],
           mode: 'html',
         }),
       );
@@ -257,7 +257,7 @@ describe('RenderSession', () => {
       expect(directive.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<mi>', '</mi>'],
-          binds: ['x'],
+          args: ['x'],
           mode: 'math',
         }),
       );
@@ -276,7 +276,7 @@ describe('RenderSession', () => {
       expect(directive.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<text>Hello, ', '!</text>'],
-          binds: ['World'],
+          args: ['World'],
           mode: 'svg',
         }),
       );
@@ -295,7 +295,7 @@ describe('RenderSession', () => {
       expect(directive.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<div>Hello, ', '!</div>'],
-          binds: ['World'],
+          args: ['World'],
           mode: 'textarea',
         }),
       );

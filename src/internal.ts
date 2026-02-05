@@ -345,21 +345,21 @@ export interface RenderContext {
   getSharedContext(key: unknown): unknown;
   html(
     strings: readonly string[],
-    ...binds: readonly unknown[]
+    ...args: readonly unknown[]
   ): Bindable<readonly unknown[]>;
   isUpdatePending(): boolean;
   math(
     strings: readonly string[],
-    ...binds: readonly unknown[]
+    ...args: readonly unknown[]
   ): Bindable<readonly unknown[]>;
   setSharedContext(key: unknown, value: unknown): void;
   svg(
     strings: readonly string[],
-    ...binds: readonly unknown[]
+    ...args: readonly unknown[]
   ): Bindable<readonly unknown[]>;
   text(
     strings: readonly string[],
-    ...binds: readonly unknown[]
+    ...args: readonly unknown[]
   ): Bindable<readonly unknown[]>;
   use<T>(usable: Usable<T>): T;
   useCallback<TCallback extends (...args: any[]) => any>(
@@ -435,7 +435,7 @@ export interface SessionContext extends DirectiveContext {
   ): TResult;
   resolveTemplate(
     strings: readonly string[],
-    binds: readonly unknown[],
+    args: readonly unknown[],
     mode: TemplateMode,
   ): Template<readonly unknown[]>;
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateHandle;
@@ -462,16 +462,16 @@ export interface Slot<T> extends ReversibleEffect, SessionLifecycle {
   reconcile(source: T, session: UpdateSession): boolean;
 }
 
-export interface Template<TBinds extends readonly unknown[]>
-  extends DirectiveType<TBinds> {
-  readonly arity: TBinds['length'];
+export interface Template<TArgs extends readonly unknown[]>
+  extends DirectiveType<TArgs> {
+  readonly arity: TArgs['length'];
   render(
-    binds: TBinds,
+    args: TArgs,
     part: Part.ChildNodePart,
     session: UpdateSession,
   ): TemplateResult;
   hydrate(
-    binds: TBinds,
+    args: TArgs,
     part: Part.ChildNodePart,
     targetTree: TreeWalker,
     session: UpdateSession,

@@ -16,7 +16,7 @@ const TEMPLATE_PLACEHOLDER = '__test__';
 
 describe('TaggedTemplate', () => {
   describe('arity', () => {
-    it('returns the number of binds', () => {
+    it('returns the number of args', () => {
       expect(html``.template.arity).toBe(0);
       expect(html`${'foo'}`.template.arity).toBe(1);
       expect(html`${'foo'} ${'bar'}`.template.arity).toBe(2);
@@ -466,7 +466,7 @@ describe('TaggedTemplate', () => {
 
   describe('hydrate()', () => {
     it('hydrates a HTML template element with multiple holes', () => {
-      const { template, binds } = html`
+      const { template, args } = html`
         <div class=${'foo'}>
           <!-- ${'bar'} -->
           <label ${{ for: 'quux' }}>${'baz'}</label>
@@ -496,14 +496,14 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.hydrate(binds, part, targetTree, session);
+        return template.hydrate(args, part, targetTree, session);
       });
 
       expect(children.map(serializeNode)).toStrictEqual([
         '<div class="foo"><!----><label for="quux">baz</label><input type="text" id="quux"></div>',
         '<!---->',
       ]);
-      expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
+      expect(slots).toStrictEqual(args.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
@@ -511,7 +511,7 @@ describe('TaggedTemplate', () => {
             node: expect.exact(container.querySelector('div')),
             name: 'class',
           },
-          value: binds[0],
+          value: args[0],
           dirty: true,
           committed: false,
         }),
@@ -522,7 +522,7 @@ describe('TaggedTemplate', () => {
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          value: binds[1],
+          value: args[1],
           dirty: true,
           committed: false,
         }),
@@ -531,7 +531,7 @@ describe('TaggedTemplate', () => {
             type: PartType.Element,
             node: expect.exact(container.querySelector('label')),
           },
-          value: binds[2],
+          value: args[2],
           dirty: true,
           committed: false,
         }),
@@ -542,7 +542,7 @@ describe('TaggedTemplate', () => {
             followingText: '',
             precedingText: '',
           },
-          value: binds[3],
+          value: args[3],
           dirty: true,
           committed: false,
         }),
@@ -553,7 +553,7 @@ describe('TaggedTemplate', () => {
             name: 'value',
             defaultValue: '',
           },
-          value: binds[4],
+          value: args[4],
           dirty: true,
           committed: false,
         }),
@@ -564,7 +564,7 @@ describe('TaggedTemplate', () => {
             name: 'disabled',
             defaultValue: false,
           },
-          value: binds[5],
+          value: args[5],
           dirty: true,
           committed: false,
         }),
@@ -574,7 +574,7 @@ describe('TaggedTemplate', () => {
             node: expect.exact(container.querySelector('input')),
             name: 'onchange',
           },
-          value: binds[6],
+          value: args[6],
           dirty: true,
           committed: false,
         }),
@@ -583,7 +583,7 @@ describe('TaggedTemplate', () => {
             type: PartType.Element,
             node: expect.exact(container.querySelector('input')),
           },
-          value: binds[7],
+          value: args[7],
           dirty: true,
           committed: false,
         }),
@@ -594,7 +594,7 @@ describe('TaggedTemplate', () => {
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          value: binds[8],
+          value: args[8],
           dirty: true,
           committed: false,
         }),
@@ -602,7 +602,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('hydrates a HTML template element without holes', () => {
-      const { template, binds } = html`<div>foo</div>`;
+      const { template, args } = html`<div>foo</div>`;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -618,7 +618,7 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.hydrate(binds, part, targetTree, session);
+        return template.hydrate(args, part, targetTree, session);
       });
 
       expect(children.map(serializeNode)).toStrictEqual(['<div>foo</div>']);
@@ -626,7 +626,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('hydrates a split text template', () => {
-      const { template, binds } =
+      const { template, args } =
         html`(${'foo'}, ${'bar'}, ${'baz'})<div>[${'qux'}, ${'quux'}]</div>`;
       const part = {
         type: PartType.ChildNode,
@@ -644,7 +644,7 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.hydrate(binds, part, targetTree, session);
+        return template.hydrate(args, part, targetTree, session);
       });
 
       expect(children.map(serializeNode)).toStrictEqual([
@@ -659,7 +659,7 @@ describe('TaggedTemplate', () => {
         expect.exact(slots[2]?.part.node),
         expect.exact(container.lastChild),
       ]);
-      expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
+      expect(slots).toStrictEqual(args.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
@@ -668,7 +668,7 @@ describe('TaggedTemplate', () => {
             precedingText: '(',
             followingText: '',
           },
-          value: binds[0],
+          value: args[0],
           dirty: true,
           committed: false,
         }),
@@ -679,7 +679,7 @@ describe('TaggedTemplate', () => {
             precedingText: ', ',
             followingText: '',
           },
-          value: binds[1],
+          value: args[1],
           dirty: true,
           committed: false,
         }),
@@ -690,7 +690,7 @@ describe('TaggedTemplate', () => {
             precedingText: ', ',
             followingText: ')',
           },
-          value: binds[2],
+          value: args[2],
           dirty: true,
           committed: false,
         }),
@@ -701,7 +701,7 @@ describe('TaggedTemplate', () => {
             precedingText: '[',
             followingText: '',
           },
-          value: binds[3],
+          value: args[3],
           dirty: true,
           committed: false,
         }),
@@ -712,7 +712,7 @@ describe('TaggedTemplate', () => {
             precedingText: ', ',
             followingText: ']',
           },
-          value: binds[4],
+          value: args[4],
           dirty: true,
           committed: false,
         }),
@@ -720,7 +720,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('hydrates an empty template', () => {
-      const { template, binds } = html``;
+      const { template, args } = html``;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -732,7 +732,7 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.hydrate(binds, part, targetTree, session);
+        return template.hydrate(args, part, targetTree, session);
       });
 
       expect(children.map(serializeNode)).toStrictEqual([]);
@@ -803,7 +803,7 @@ describe('TaggedTemplate', () => {
 
   describe('render()', () => {
     it('renders a HTML template element with multiple holes', () => {
-      const { template, binds } = html`
+      const { template, args } = html`
         <div class=${'foo'}>
           <!-- ${'bar'} -->
           <label ${{ for: 'quux' }}>${'baz'}</label>
@@ -820,14 +820,14 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.render(binds, part, session);
+        return template.render(args, part, session);
       });
 
       expect(children.map(serializeNode)).toStrictEqual([
         '<div><!----><label></label><input type="text"></div>',
         '<!---->',
       ]);
-      expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
+      expect(slots).toStrictEqual(args.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
@@ -835,7 +835,7 @@ describe('TaggedTemplate', () => {
             node: expect.any(HTMLDivElement),
             name: 'class',
           },
-          value: binds[0],
+          value: args[0],
           dirty: true,
           committed: false,
         }),
@@ -846,7 +846,7 @@ describe('TaggedTemplate', () => {
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          value: binds[1],
+          value: args[1],
           dirty: true,
           committed: false,
         }),
@@ -855,7 +855,7 @@ describe('TaggedTemplate', () => {
             type: PartType.Element,
             node: expect.any(HTMLLabelElement),
           },
-          value: binds[2],
+          value: args[2],
           dirty: true,
           committed: false,
         }),
@@ -866,7 +866,7 @@ describe('TaggedTemplate', () => {
             followingText: '',
             precedingText: '',
           },
-          value: binds[3],
+          value: args[3],
           dirty: true,
           committed: false,
         }),
@@ -877,7 +877,7 @@ describe('TaggedTemplate', () => {
             name: 'value',
             defaultValue: '',
           },
-          value: binds[4],
+          value: args[4],
           dirty: true,
           committed: false,
         }),
@@ -888,7 +888,7 @@ describe('TaggedTemplate', () => {
             name: 'disabled',
             defaultValue: false,
           },
-          value: binds[5],
+          value: args[5],
           dirty: true,
           committed: false,
         }),
@@ -898,7 +898,7 @@ describe('TaggedTemplate', () => {
             node: expect.any(HTMLInputElement),
             name: 'onchange',
           },
-          value: binds[6],
+          value: args[6],
           dirty: true,
           committed: false,
         }),
@@ -907,7 +907,7 @@ describe('TaggedTemplate', () => {
             type: PartType.Element,
             node: expect.any(HTMLInputElement),
           },
-          value: binds[7],
+          value: args[7],
           dirty: true,
           committed: false,
         }),
@@ -918,7 +918,7 @@ describe('TaggedTemplate', () => {
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          value: binds[8],
+          value: args[8],
           dirty: true,
           committed: false,
         }),
@@ -926,7 +926,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('renders a HTML template element without holes', () => {
-      const { template, binds } = html`<div>foo</div>`;
+      const { template, args } = html`<div>foo</div>`;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -936,7 +936,7 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.render(binds, part, session);
+        return template.render(args, part, session);
       });
 
       expect(children.map(serializeNode)).toStrictEqual(['<div>foo</div>']);
@@ -944,7 +944,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('renders a split text template', () => {
-      const { template, binds } =
+      const { template, args } =
         html`(${'foo'}, ${'bar'}, ${'baz'})<div>[${'qux'}, ${'quux'}]</div>`;
       const part = {
         type: PartType.ChildNode,
@@ -955,7 +955,7 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.render(binds, part, session);
+        return template.render(args, part, session);
       });
 
       expect(children.map(serializeNode)).toStrictEqual([
@@ -970,7 +970,7 @@ describe('TaggedTemplate', () => {
         expect.exact(slots[2]?.part.node),
         expect.any(HTMLDivElement),
       ]);
-      expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
+      expect(slots).toStrictEqual(args.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
@@ -979,7 +979,7 @@ describe('TaggedTemplate', () => {
             precedingText: '(',
             followingText: '',
           },
-          value: binds[0],
+          value: args[0],
           dirty: true,
           committed: false,
         }),
@@ -990,7 +990,7 @@ describe('TaggedTemplate', () => {
             precedingText: ', ',
             followingText: '',
           },
-          value: binds[1],
+          value: args[1],
           dirty: true,
           committed: false,
         }),
@@ -1001,7 +1001,7 @@ describe('TaggedTemplate', () => {
             precedingText: ', ',
             followingText: ')',
           },
-          value: binds[2],
+          value: args[2],
           dirty: true,
           committed: false,
         }),
@@ -1012,7 +1012,7 @@ describe('TaggedTemplate', () => {
             precedingText: '[',
             followingText: '',
           },
-          value: binds[3],
+          value: args[3],
           dirty: true,
           committed: false,
         }),
@@ -1023,7 +1023,7 @@ describe('TaggedTemplate', () => {
             precedingText: ', ',
             followingText: ']',
           },
-          value: binds[4],
+          value: args[4],
           dirty: true,
           committed: false,
         }),
@@ -1031,7 +1031,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('renders a template containing nodes in another namespace', () => {
-      const { template, binds } =
+      const { template, args } =
         html`<${'foo'}><math><${'bar'}></math><svg><${'baz'}></svg>`;
       const part = {
         type: PartType.ChildNode,
@@ -1042,7 +1042,7 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.render(binds, part, session);
+        return template.render(args, part, session);
       });
 
       expect(children.map(serializeNode)).toStrictEqual([
@@ -1050,7 +1050,7 @@ describe('TaggedTemplate', () => {
         '<math><!----></math>',
         '<svg><!----></svg>',
       ]);
-      expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
+      expect(slots).toStrictEqual(args.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
@@ -1059,7 +1059,7 @@ describe('TaggedTemplate', () => {
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          value: binds[0],
+          value: args[0],
           dirty: true,
           committed: false,
         }),
@@ -1070,7 +1070,7 @@ describe('TaggedTemplate', () => {
             anchorNode: null,
             namespaceURI: MATH_NAMESPACE_URI,
           },
-          value: binds[1],
+          value: args[1],
           dirty: true,
           committed: false,
         }),
@@ -1081,7 +1081,7 @@ describe('TaggedTemplate', () => {
             anchorNode: null,
             namespaceURI: SVG_NAMESPACE_URI,
           },
-          value: binds[2],
+          value: args[2],
           dirty: true,
           committed: false,
         }),
@@ -1089,7 +1089,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('renders an empty template', () => {
-      const { template, binds } = html``;
+      const { template, args } = html``;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -1099,7 +1099,7 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.render(binds, part, session);
+        return template.render(args, part, session);
       });
 
       expect(children.map(serializeNode)).toStrictEqual([]);
@@ -1134,66 +1134,66 @@ describe('TaggedTemplate', () => {
   });
 });
 
-function html<TBinds extends readonly unknown[]>(
+function html<TArgs extends readonly unknown[]>(
   strings: TemplateStringsArray,
-  ...binds: TBinds
-): { template: TaggedTemplate<TBinds>; binds: TBinds } {
+  ...args: TArgs
+): { template: TaggedTemplate<TArgs>; args: TArgs } {
   return {
     template: TaggedTemplate.parse(
       strings,
-      binds,
+      args,
       TEMPLATE_PLACEHOLDER,
       'html',
       document,
     ),
-    binds,
+    args,
   };
 }
 
-function math<const TBinds extends readonly unknown[]>(
+function math<const TArgs extends readonly unknown[]>(
   strings: TemplateStringsArray,
-  ...binds: TBinds
-): { template: TaggedTemplate<TBinds>; binds: TBinds } {
+  ...args: TArgs
+): { template: TaggedTemplate<TArgs>; args: TArgs } {
   return {
     template: TaggedTemplate.parse(
       strings,
-      binds,
+      args,
       TEMPLATE_PLACEHOLDER,
       'math',
       document,
     ),
-    binds,
+    args,
   };
 }
 
-function svg<const TBinds extends readonly unknown[]>(
+function svg<const TArgs extends readonly unknown[]>(
   strings: TemplateStringsArray,
-  ...binds: TBinds
-): { template: TaggedTemplate<TBinds>; binds: TBinds } {
+  ...args: TArgs
+): { template: TaggedTemplate<TArgs>; args: TArgs } {
   return {
     template: TaggedTemplate.parse(
       strings,
-      binds,
+      args,
       TEMPLATE_PLACEHOLDER,
       'svg',
       document,
     ),
-    binds,
+    args,
   };
 }
 
-function text<const TBinds extends readonly unknown[]>(
+function text<const TArgs extends readonly unknown[]>(
   strings: TemplateStringsArray,
-  ...binds: TBinds
-): { template: TaggedTemplate<TBinds>; binds: TBinds } {
+  ...args: TArgs
+): { template: TaggedTemplate<TArgs>; args: TArgs } {
   return {
     template: TaggedTemplate.parse(
       strings,
-      binds,
+      args,
       TEMPLATE_PLACEHOLDER,
       'textarea',
       document,
     ),
-    binds,
+    args,
   };
 }

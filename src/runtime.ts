@@ -39,7 +39,7 @@ export interface RuntimeBackend {
   getUpdatePriority(): TaskPriority;
   parseTemplate(
     strings: readonly string[],
-    binds: readonly unknown[],
+    args: readonly unknown[],
     markerToken: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]>;
@@ -417,7 +417,7 @@ export class Runtime implements SessionContext {
 
   resolveTemplate(
     strings: readonly string[],
-    binds: readonly unknown[],
+    args: readonly unknown[],
     mode: TemplateMode,
   ): Template<readonly unknown[]> {
     let template = this._cachedTemplates.get(strings);
@@ -425,7 +425,7 @@ export class Runtime implements SessionContext {
     if (template === undefined) {
       template = this._backend.parseTemplate(
         strings,
-        binds,
+        args,
         this._randomToken,
         mode,
       );

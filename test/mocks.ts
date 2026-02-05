@@ -52,11 +52,11 @@ export class MockBackend implements RuntimeBackend {
 
   parseTemplate(
     strings: readonly string[],
-    binds: readonly unknown[],
+    args: readonly unknown[],
     markerToken: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]> {
-    return new MockTemplate(strings, binds, markerToken, mode);
+    return new MockTemplate(strings, args, markerToken, mode);
   }
 
   requestCallback<T>(
@@ -374,7 +374,7 @@ export class MockSlot<T> implements Slot<T> {
 export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
   readonly strings: readonly string[];
 
-  readonly binds: readonly unknown[];
+  readonly args: readonly unknown[];
 
   readonly markerToken: string;
 
@@ -382,19 +382,19 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
 
   constructor(
     strings: readonly string[] = [],
-    binds: readonly unknown[] = [],
+    args: readonly unknown[] = [],
     markerToken = '',
     mode: TemplateMode = 'html',
   ) {
     super();
     this.strings = strings;
-    this.binds = binds;
+    this.args = args;
     this.markerToken = markerToken;
     this.mode = mode;
   }
 
   get arity(): number {
-    return this.binds.length;
+    return this.args.length;
   }
 
   render(

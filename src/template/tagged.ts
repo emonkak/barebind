@@ -88,15 +88,15 @@ const LEADING_NEWLINE_PATTERN = /^\s*\n/;
 const TAILING_NEWLINE_PATTERN = /\n\s*$/;
 
 export class TaggedTemplate<
-  TBinds extends readonly unknown[] = unknown[],
-> extends AbstractTemplate<TBinds> {
-  static parse<TBinds extends readonly unknown[]>(
+  TArgs extends readonly unknown[] = unknown[],
+> extends AbstractTemplate<TArgs> {
+  static parse<TArgs extends readonly unknown[]>(
     strings: readonly string[],
-    binds: TBinds,
+    args: TArgs,
     markerToken: string,
     mode: TemplateMode,
     document: Document,
-  ): TaggedTemplate<TBinds> {
+  ): TaggedTemplate<TArgs> {
     const template = document.createElement('template');
     const marker = createMarker(markerToken);
     const htmlString = stripWhitespaces(strings.join(marker));
@@ -110,7 +110,7 @@ export class TaggedTemplate<
       );
     }
 
-    const holes = parseChildren(strings, binds, marker, template.content);
+    const holes = parseChildren(strings, args, marker, template.content);
 
     return new TaggedTemplate(template, holes, mode);
   }
@@ -137,7 +137,7 @@ export class TaggedTemplate<
   }
 
   hydrate(
-    binds: TBinds,
+    args: TArgs,
     part: Part.ChildNodePart,
     targetTree: TreeWalker,
     session: UpdateSession,
@@ -225,7 +225,7 @@ export class TaggedTemplate<
             break;
         }
 
-        const slot = context.resolveSlot(binds[holeIndex]!, currentPart!);
+        const slot = context.resolveSlot(args[holeIndex]!, currentPart!);
         slot.attach(session);
 
         if (currentPart!.type === PartType.ChildNode) {
@@ -260,7 +260,7 @@ export class TaggedTemplate<
   }
 
   render(
-    binds: TBinds,
+    args: TArgs,
     part: Part.ChildNodePart,
     session: UpdateSession,
   ): TemplateResult {
@@ -329,7 +329,7 @@ export class TaggedTemplate<
             break;
         }
 
-        const slot = context.resolveSlot(binds[i]!, currentPart);
+        const slot = context.resolveSlot(args[i]!, currentPart);
         slot.attach(session);
 
         slots[i] = slot;
@@ -470,7 +470,7 @@ function parseAttribtues(
 
 function parseChildren(
   strings: readonly string[],
-  binds: readonly unknown[],
+  args: readonly unknown[],
   marker: string,
   fragment: DocumentFragment,
 ): Hole[] {
@@ -571,9 +571,9 @@ function parseChildren(
     index++;
   }
 
-  if (binds.length !== holes.length) {
+  if (args.length !== holes.length) {
     throw new Error(
-      `The number of holes must be ${binds.length}, but got ${holes.length}. There may be multiple holes indicating the same attribute:\n` +
+      `The number of holes must be ${args.length}, but got ${holes.length}. There may be multiple holes indicating the same attribute:\n` +
         strings.join('${...}').trim(),
     );
   }

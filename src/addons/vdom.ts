@@ -61,9 +61,9 @@ interface HasCleanup {
   [$cleanup]?: Cleanup | void;
 }
 
-interface TemplateDirective<TBinds extends readonly unknown[]> {
-  type: Template<TBinds>;
-  value: TBinds;
+interface TemplateDirective<TArgs extends readonly unknown[]> {
+  type: Template<TArgs>;
+  value: TArgs;
   layout?: KeyedLayout<unknown>;
 }
 
@@ -173,13 +173,13 @@ export class VStaticFragment implements Bindable<unknown> {
 
   [$directive](): Partial<Directive<unknown>> {
     const templates: Template<readonly unknown[]>[] = [];
-    const binds: unknown[] = [];
+    const args: unknown[] = [];
 
     for (const child of this.children) {
       if (child instanceof VElement) {
         if (typeof child.type === 'function') {
           templates.push(ChildNodeTemplate.Default);
-          binds.push(child);
+          args.push(child);
         } else {
           const { type, value } = resolveElement(
             child.type,
@@ -188,25 +188,25 @@ export class VStaticFragment implements Bindable<unknown> {
             child.hasStaticChildren,
           );
           templates.push(type);
-          binds.push(value[0], value[1]);
+          args.push(value[0], value[1]);
         }
       } else if (isBindable(child)) {
         templates.push(ChildNodeTemplate.Default);
-        binds.push(child);
+        args.push(child);
       } else if (Array.isArray(child)) {
         templates.push(ChildNodeTemplate.Default);
-        binds.push(new VFragment(child));
+        args.push(new VFragment(child));
       } else if (child == null || typeof child === 'boolean') {
         templates.push(EmptyTemplate.Default);
       } else {
         templates.push(TextTemplate.Default);
-        binds.push(child);
+        args.push(child);
       }
     }
 
     return {
       type: new FragmentTemplate(templates),
-      value: binds,
+      value: args,
     };
   }
 }
@@ -580,17 +580,17 @@ function resolveElement(
       : new VFragment(props.children)
     : resolveChild(props.children as VNode);
   const template = new ElementTemplate(type);
-  const binds = [element, children] as const;
+  const args = [element, children] as const;
   if (key != null) {
     return {
       type: template,
-      value: binds,
+      value: args,
       layout: new KeyedLayout(key, LooseLayout),
     };
   } else {
     return {
       type: new ElementTemplate(type),
-      value: binds,
+      value: args,
     };
   }
 }

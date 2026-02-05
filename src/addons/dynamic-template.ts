@@ -20,12 +20,12 @@ interface PreprocessedTemplate {
 export function DynamicTemplate(): HookFunction<DynamicTemplateContext> {
   return (context) => {
     return {
-      html: (strings, ...binds) =>
-        context.html(...preprocessTemplate(strings, binds)),
-      math: (strings, ...binds) =>
-        context.math(...preprocessTemplate(strings, binds)),
-      svg: (strings, ...binds) =>
-        context.svg(...preprocessTemplate(strings, binds)),
+      html: (strings, ...values) =>
+        context.html(...preprocessTemplate(strings, values)),
+      math: (strings, ...values) =>
+        context.math(...preprocessTemplate(strings, values)),
+      svg: (strings, ...values) =>
+        context.svg(...preprocessTemplate(strings, values)),
       literal: (value) => new Literal(value),
     };
   };

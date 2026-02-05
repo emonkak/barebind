@@ -23,7 +23,7 @@ describe('DynamicTemplate', () => {
     expect(directive.type).toStrictEqual(
       expect.objectContaining({
         strings: ['<div>Hello, ', '!</div>'],
-        binds: ['World'],
+        args: ['World'],
         mode: 'html',
       }),
     );
@@ -42,7 +42,7 @@ describe('DynamicTemplate', () => {
     expect(directive.type).toStrictEqual(
       expect.objectContaining({
         strings: ['<text>Hello, ', '!</text>'],
-        binds: ['World'],
+        args: ['World'],
         mode: 'svg',
       }),
     );
@@ -61,7 +61,7 @@ describe('DynamicTemplate', () => {
     expect(directive.type).toStrictEqual(
       expect.objectContaining({
         strings: ['<mi>', '</mi>'],
-        binds: ['x'],
+        args: ['x'],
         mode: 'math',
       }),
     );

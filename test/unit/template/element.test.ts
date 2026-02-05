@@ -9,7 +9,7 @@ import { TestUpdater } from '../../test-updater.js';
 
 describe('ElementTemplate', () => {
   describe('arity', () => {
-    it('returns the number of binds', () => {
+    it('returns the number of args', () => {
       const template = new ElementTemplate('div');
 
       expect(template.arity).toBe(2);
@@ -29,7 +29,7 @@ describe('ElementTemplate', () => {
   describe('hydrate()', () => {
     it('hydrates a tree containing a element', () => {
       const template = new ElementTemplate('div');
-      const binds = [{ class: 'foo' }, 'bar'] as const;
+      const args = [{ class: 'foo' }, 'bar'] as const;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -45,13 +45,13 @@ describe('ElementTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.hydrate(binds, part, targetTree, session);
+        return template.hydrate(args, part, targetTree, session);
       });
 
       expect(children).toStrictEqual([container.firstChild]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
-          value: binds[0],
+          value: args[0],
           part: {
             type: PartType.Element,
             node: expect.exact(container.firstChild),
@@ -60,7 +60,7 @@ describe('ElementTemplate', () => {
           committed: false,
         }),
         expect.objectContaining({
-          value: binds[1],
+          value: args[1],
           part: {
             type: PartType.ChildNode,
             node: expect.exact(container.firstChild!.firstChild),
@@ -77,7 +77,7 @@ describe('ElementTemplate', () => {
   describe('render()', () => {
     it('renders an HTML element', () => {
       const template = new ElementTemplate('div');
-      const binds = [{ class: 'foo' }, 'bar'] as const;
+      const args = [{ class: 'foo' }, 'bar'] as const;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -87,13 +87,13 @@ describe('ElementTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.render(binds, part, session);
+        return template.render(args, part, session);
       });
 
       expect(children.map(serializeNode)).toStrictEqual(['<div><!----></div>']);
       expect(slots).toStrictEqual([
         expect.objectContaining({
-          value: binds[0],
+          value: args[0],
           part: {
             type: PartType.Element,
             node: expect.any(window.Element),
@@ -102,7 +102,7 @@ describe('ElementTemplate', () => {
           committed: false,
         }),
         expect.objectContaining({
-          value: binds[1],
+          value: args[1],
           part: {
             type: PartType.ChildNode,
             node: expect.any(Comment),
@@ -120,7 +120,7 @@ describe('ElementTemplate', () => {
 
     it('renders an SVG element', () => {
       const template = new ElementTemplate('svg');
-      const binds = [{ class: 'foo' }, 'bar'] as const;
+      const args = [{ class: 'foo' }, 'bar'] as const;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -130,13 +130,13 @@ describe('ElementTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.render(binds, part, session);
+        return template.render(args, part, session);
       });
 
       expect(children.map(serializeNode)).toStrictEqual(['<svg><!----></svg>']);
       expect(slots).toStrictEqual([
         expect.objectContaining({
-          value: binds[0],
+          value: args[0],
           part: {
             type: PartType.Element,
             node: expect.any(window.Element),
@@ -145,7 +145,7 @@ describe('ElementTemplate', () => {
           committed: false,
         }),
         expect.objectContaining({
-          value: binds[1],
+          value: args[1],
           part: {
             type: PartType.ChildNode,
             node: expect.any(Comment),

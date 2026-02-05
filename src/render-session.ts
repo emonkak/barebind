@@ -133,9 +133,9 @@ export class RenderSession implements RenderContext {
 
   html(
     strings: readonly string[],
-    ...binds: readonly unknown[]
+    ...args: readonly unknown[]
   ): DirectiveSpecifier<readonly unknown[]> {
-    return this._createTemplate(strings, binds, 'html');
+    return this._createTemplate(strings, args, 'html');
   }
 
   isUpdatePending(): boolean {
@@ -146,9 +146,9 @@ export class RenderSession implements RenderContext {
 
   math(
     strings: readonly string[],
-    ...binds: readonly unknown[]
+    ...args: readonly unknown[]
   ): DirectiveSpecifier<readonly unknown[]> {
-    return this._createTemplate(strings, binds, 'math');
+    return this._createTemplate(strings, args, 'math');
   }
 
   setSharedContext(key: unknown, value: unknown): void {
@@ -162,16 +162,16 @@ export class RenderSession implements RenderContext {
 
   svg(
     strings: readonly string[],
-    ...binds: readonly unknown[]
+    ...args: readonly unknown[]
   ): DirectiveSpecifier<readonly unknown[]> {
-    return this._createTemplate(strings, binds, 'svg');
+    return this._createTemplate(strings, args, 'svg');
   }
 
   text(
     strings: readonly string[],
-    ...binds: readonly unknown[]
+    ...args: readonly unknown[]
   ): DirectiveSpecifier<readonly unknown[]> {
-    return this._createTemplate(strings, binds, 'textarea');
+    return this._createTemplate(strings, args, 'textarea');
   }
 
   use<T>(usable: Usable<T>): T {
@@ -411,11 +411,11 @@ export class RenderSession implements RenderContext {
 
   private _createTemplate(
     strings: readonly string[],
-    binds: readonly unknown[],
+    args: readonly unknown[],
     mode: TemplateMode,
   ): DirectiveSpecifier<readonly unknown[]> {
-    const template = this._context.resolveTemplate(strings, binds, mode);
-    return new DirectiveSpecifier(template, binds);
+    const template = this._context.resolveTemplate(strings, args, mode);
+    return new DirectiveSpecifier(template, args);
   }
 }
 
