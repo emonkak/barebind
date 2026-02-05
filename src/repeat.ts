@@ -21,10 +21,10 @@ const MUTATION_TYPE_MOVE_AND_UPDATE = 2;
 const MUTATION_TYPE_UPDATE = 3;
 const MUTATION_TYPE_REMOVE = 4;
 
-export type RepeatProps<TItem, TKey = unknown, TValue = unknown> = {
-  items: Iterable<TItem>;
-  keySelector?: (item: TItem, index: number) => TKey;
-  valueSelector?: (item: TItem, index: number) => TValue;
+export type RepeatProps<TSource, TKey = unknown, TElement = unknown> = {
+  elementSelector?: (source: TSource, index: number) => TElement;
+  keySelector?: (source: TSource, index: number) => TKey;
+  source: Iterable<TSource>;
 };
 
 interface Mutation<T> {
@@ -38,9 +38,9 @@ interface Mutation<T> {
   referenceSlot?: Slot<T> | undefined;
 }
 
-export function Repeat<TItem, TKey, TValue>(
-  props: RepeatProps<TItem, TKey, TValue>,
-): DirectiveSpecifier<RepeatProps<TItem, TKey, TValue>> {
+export function Repeat<TSource, TKey, TElement>(
+  props: RepeatProps<TSource, TKey, TElement>,
+): DirectiveSpecifier<RepeatProps<TSource, TKey, TElement>> {
   return new DirectiveSpecifier(RepeatDirective, props);
 }
 
@@ -56,38 +56,38 @@ export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
   },
 };
 
-export class RepeatBinding<TItem, TKey, TValue>
-  implements Binding<RepeatProps<TItem, TKey, TValue>>
+export class RepeatBinding<TSource, TKey, TElement>
+  implements Binding<RepeatProps<TSource, TKey, TElement>>
 {
-  private _props: RepeatProps<TItem, TKey, TValue>;
+  private _props: RepeatProps<TSource, TKey, TElement>;
 
   private readonly _part: Part.ChildNodePart;
 
   private _pendingKeys: TKey[] = [];
 
-  private _pendingSlots: Slot<TValue>[] = [];
+  private _pendingSlots: Slot<TElement>[] = [];
 
-  private _pendingMutations: Mutation<TValue>[] = [];
+  private _pendingMutations: Mutation<TElement>[] = [];
 
-  private _memoizedSlots: Slot<TValue>[] | null = null;
+  private _memoizedSlots: Slot<TElement>[] | null = null;
 
   constructor(
-    props: RepeatProps<TItem, TKey, TValue>,
+    props: RepeatProps<TSource, TKey, TElement>,
     part: Part.ChildNodePart,
   ) {
     this._props = props;
     this._part = part;
   }
 
-  get type(): DirectiveType<RepeatProps<TItem, TKey, TValue>> {
+  get type(): DirectiveType<RepeatProps<TSource, TKey, TElement>> {
     return RepeatDirective;
   }
 
-  get value(): RepeatProps<TItem, TKey, TValue> {
+  get value(): RepeatProps<TSource, TKey, TElement> {
     return this._props;
   }
 
-  set value(props: RepeatProps<TItem, TKey, TValue>) {
+  set value(props: RepeatProps<TSource, TKey, TElement>) {
     this._props = props;
   }
 
@@ -95,12 +95,12 @@ export class RepeatBinding<TItem, TKey, TValue>
     return this._part;
   }
 
-  shouldUpdate(props: RepeatProps<TItem, TKey, TValue>): boolean {
+  shouldUpdate(props: RepeatProps<TSource, TKey, TElement>): boolean {
     return (
       this._memoizedSlots === null ||
-      props.items !== this._props.items ||
+      props.source !== this._props.source ||
       props.keySelector !== this._props.keySelector ||
-      props.valueSelector !== this._props.valueSelector
+      props.elementSelector !== this._props.elementSelector
     );
   }
 
@@ -110,63 +110,69 @@ export class RepeatBinding<TItem, TKey, TValue>
     const targetTree = getHydrationTargetTree(originScope);
 
     const {
-      items,
+      source,
       keySelector = defaultKeySelector,
-      valueSelector = defaultValueSelector,
+      elementSelector = defaultElementSelector,
     } = this._props;
     const oldKeys = this._pendingKeys;
     const oldSlots = this._pendingSlots;
-    const newItems = Array.isArray(items) ? items : Array.from(items);
-    const newKeys = newItems.map(keySelector);
-    const newValues = newItems.map(valueSelector);
-    const newSlots = reconcileChildren(oldKeys, oldSlots, newKeys, newValues, {
-      insert: (source, referenceSlot) => {
-        const part = {
-          type: PartType.ChildNode,
-          node: document.createComment(''),
-          anchorNode: null,
-          namespaceURI: this._part.namespaceURI,
-        };
-        const slot = context.resolveSlot(source, part);
-        slot.attach(session);
-        if (targetTree !== null) {
-          replaceMarkerNode(targetTree, part.node);
-        }
-        this._pendingMutations.push({
-          type: MUTATION_TYPE_INSERT,
-          slot,
-          referenceSlot,
-        });
-        return slot;
-      },
-      update: (slot, source) => {
-        if (slot.reconcile(source, session)) {
+    const newSources = Array.isArray(source) ? source : Array.from(source);
+    const newKeys = newSources.map(keySelector);
+    const newElements = newSources.map(elementSelector);
+    const newSlots = reconcileChildren(
+      oldKeys,
+      oldSlots,
+      newKeys,
+      newElements,
+      {
+        insert: (source, referenceSlot) => {
+          const part = {
+            type: PartType.ChildNode,
+            node: document.createComment(''),
+            anchorNode: null,
+            namespaceURI: this._part.namespaceURI,
+          };
+          const slot = context.resolveSlot(source, part);
+          slot.attach(session);
+          if (targetTree !== null) {
+            replaceMarkerNode(targetTree, part.node);
+          }
           this._pendingMutations.push({
-            type: MUTATION_TYPE_UPDATE,
+            type: MUTATION_TYPE_INSERT,
+            slot,
+            referenceSlot,
+          });
+          return slot;
+        },
+        update: (slot, source) => {
+          if (slot.reconcile(source, session)) {
+            this._pendingMutations.push({
+              type: MUTATION_TYPE_UPDATE,
+              slot,
+            });
+          }
+          return slot;
+        },
+        move: (slot, source, referenceSlot) => {
+          const type = slot.reconcile(source, session)
+            ? MUTATION_TYPE_MOVE_AND_UPDATE
+            : MUTATION_TYPE_MOVE;
+          this._pendingMutations.push({
+            type,
+            slot,
+            referenceSlot,
+          });
+          return slot;
+        },
+        remove: (slot) => {
+          slot.detach(session);
+          this._pendingMutations.push({
+            type: MUTATION_TYPE_REMOVE,
             slot,
           });
-        }
-        return slot;
+        },
       },
-      move: (slot, source, referenceSlot) => {
-        const type = slot.reconcile(source, session)
-          ? MUTATION_TYPE_MOVE_AND_UPDATE
-          : MUTATION_TYPE_MOVE;
-        this._pendingMutations.push({
-          type,
-          slot,
-          referenceSlot,
-        });
-        return slot;
-      },
-      remove: (slot) => {
-        slot.detach(session);
-        this._pendingMutations.push({
-          type: MUTATION_TYPE_REMOVE,
-          slot,
-        });
-      },
-    });
+    );
 
     this._pendingKeys = newKeys;
     this._pendingSlots = newSlots;
@@ -229,12 +235,12 @@ export class RepeatBinding<TItem, TKey, TValue>
   }
 }
 
-function defaultKeySelector(_item: any, index: number): any {
-  return index;
+function defaultElementSelector(source: any): any {
+  return source;
 }
 
-function defaultValueSelector(item: any): any {
-  return item;
+function defaultKeySelector(_source: any, index: number): any {
+  return index;
 }
 
 function getAnchorNode<T>(slots: Slot<T>[]): ChildNode | null {

@@ -28,7 +28,7 @@ type KeyValuePair = { key: string; value: string };
 describe('Repeat()', () => {
   it('returns a new DirectiveSpecifier with RepeatDirective', () => {
     const props: RepeatProps<string> = {
-      items: ['foo', 'bar', 'baz'],
+      source: ['foo', 'bar', 'baz'],
     };
     const bindable = Repeat(props);
 
@@ -40,7 +40,7 @@ describe('Repeat()', () => {
 describe('RepeatDirective', () => {
   describe('resolveBinding()', () => {
     it('constructs a new RepeatBinding', () => {
-      const props: RepeatProps<string> = { items: ['foo', 'bar', 'baz'] };
+      const props: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -57,7 +57,7 @@ describe('RepeatDirective', () => {
     });
 
     it('should throw the error if the part is not a child node part', () => {
-      const props: RepeatProps<string> = { items: ['foo', 'bar', 'baz'] };
+      const props: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
@@ -74,7 +74,7 @@ describe('RepeatDirective', () => {
 describe('RepeatBinding', () => {
   describe('shouldUpdate()', () => {
     it('returns true if committed slots does not exist', () => {
-      const props: RepeatProps<string> = { items: ['foo', 'bar', 'baz'] };
+      const props: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -87,8 +87,8 @@ describe('RepeatBinding', () => {
     });
 
     it('returns true if the props is different from the new one', () => {
-      const props1: RepeatProps<string> = { items: ['foo', 'bar', 'baz'] };
-      const props2: RepeatProps<string> = { items: ['baz', 'bar', 'foo'] };
+      const props1: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
+      const props2: RepeatProps<string> = { source: ['baz', 'bar', 'foo'] };
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -123,14 +123,14 @@ describe('RepeatBinding', () => {
       for (const combinations1 of allCombinations(items)) {
         for (const combinations2 of allCombinations(items)) {
           const props1: RepeatProps<KeyValuePair> = {
-            items: combinations1,
+            elementSelector: ({ value }) => textTemplate(value),
             keySelector: ({ key }) => key,
-            valueSelector: ({ value }) => textTemplate(value),
+            source: combinations1,
           };
           const props2: RepeatProps<KeyValuePair> = {
-            items: combinations2,
+            elementSelector: ({ value }) => textTemplate(value),
             keySelector: ({ key }) => key,
-            valueSelector: ({ value }) => textTemplate(value),
+            source: combinations2,
           };
           const part: Part.ChildNodePart = {
             type: PartType.ChildNode,
@@ -189,14 +189,14 @@ describe('RepeatBinding', () => {
       for (const permutation1 of permutations(items1)) {
         for (const permutation2 of permutations(items2)) {
           const props1: RepeatProps<KeyValuePair> = {
-            items: permutation1,
+            elementSelector: ({ value }) => textTemplate(value),
             keySelector: ({ key }) => key,
-            valueSelector: ({ value }) => textTemplate(value),
+            source: permutation1,
           };
           const props2: RepeatProps<KeyValuePair> = {
-            items: permutation2,
+            elementSelector: ({ value }) => textTemplate(value),
             keySelector: ({ key }) => key,
-            valueSelector: ({ value }) => textTemplate(value),
+            source: permutation2,
           };
           const part: Part.ChildNodePart = {
             type: PartType.ChildNode,
@@ -253,10 +253,10 @@ describe('RepeatBinding', () => {
     });
 
     it('hydrates the tree by slots', () => {
-      const items = ['foo', 'bar', 'baz'];
+      const source = ['foo', 'bar', 'baz'];
       const props: RepeatProps<string> = {
-        items,
-        valueSelector: textTemplate,
+        elementSelector: textTemplate,
+        source,
       };
       const part: Part.ChildNodePart = {
         type: PartType.ChildNode,
@@ -295,7 +295,7 @@ describe('RepeatBinding', () => {
 
       expect(part.anchorNode).toBe(container.firstChild);
       expect(container.innerHTML).toBe(
-        items.map((element) => element + EMPTY_COMMENT).join('') +
+        source.map((element) => element + EMPTY_COMMENT).join('') +
           EMPTY_COMMENT,
       );
 
@@ -303,34 +303,34 @@ describe('RepeatBinding', () => {
 
       expect(part.anchorNode).toBe(container.firstChild);
       expect(container.innerHTML).toBe(
-        items.map((element) => element + EMPTY_COMMENT).join('') +
+        source.map((element) => element + EMPTY_COMMENT).join('') +
           EMPTY_COMMENT,
       );
     });
 
     it('swaps slots according to keys', () => {
-      const items1: KeyValuePair[] = [
+      const source1: KeyValuePair[] = [
         { key: 'one', value: 'foo' },
         { key: 'two', value: 'bar' },
         { key: 'three', value: 'baz' },
       ];
-      const items2: KeyValuePair[] = [
+      const source2: KeyValuePair[] = [
         { key: 'one', value: 'baz' },
         { key: 'two', value: 'bar' },
         { key: 'three', value: 'foo' },
       ];
 
-      for (const permutation1 of permutations(items1)) {
-        for (const permutation2 of permutations(items2)) {
+      for (const permutation1 of permutations(source1)) {
+        for (const permutation2 of permutations(source2)) {
           const props1: RepeatProps<KeyValuePair> = {
-            items: permutation1,
+            elementSelector: ({ value }) => value,
             keySelector: ({ key }) => key,
-            valueSelector: ({ value }) => value,
+            source: permutation1,
           };
           const props2: RepeatProps<KeyValuePair> = {
-            items: permutation2,
+            elementSelector: ({ value }) => value,
             keySelector: ({ key }) => key,
-            valueSelector: ({ value }) => value,
+            source: permutation2,
           };
           const part: Part.ChildNodePart = {
             type: PartType.ChildNode,
@@ -396,12 +396,12 @@ describe('RepeatBinding', () => {
         ['bar', 'foo'],
       ],
       [['foo', 'bar', 'baz'], []],
-    ])('updates slots with a iterator according to indexes', (items1, items2) => {
+    ])('updates slots with a iterator according to indexes', (source1, source2) => {
       const props1: RepeatProps<string> = {
-        items: { [Symbol.iterator]: () => Iterator.from(items1) },
+        source: { [Symbol.iterator]: () => Iterator.from(source1) },
       };
       const props2: RepeatProps<string> = {
-        items: { [Symbol.iterator]: () => Iterator.from(items2) },
+        source: { [Symbol.iterator]: () => Iterator.from(source2) },
       };
       const part: Part.ChildNodePart = {
         type: PartType.ChildNode,
@@ -420,9 +420,9 @@ describe('RepeatBinding', () => {
         });
 
         expect(container.innerHTML).toBe(
-          items1.map(toCommentString).join('') + EMPTY_COMMENT,
+          source1.map(toCommentString).join('') + EMPTY_COMMENT,
         );
-        expect(part.anchorNode?.nodeValue).toBe(items1[0]);
+        expect(part.anchorNode?.nodeValue).toBe(source1[0]);
       }
 
       SESSION2: {
@@ -433,9 +433,9 @@ describe('RepeatBinding', () => {
         });
 
         expect(container.innerHTML).toBe(
-          items2.map(toCommentString).join('') + EMPTY_COMMENT,
+          source2.map(toCommentString).join('') + EMPTY_COMMENT,
         );
-        expect(part.anchorNode?.nodeValue).toBe(items2[0]);
+        expect(part.anchorNode?.nodeValue).toBe(source2[0]);
       }
 
       SESSION3: {
@@ -446,18 +446,18 @@ describe('RepeatBinding', () => {
         });
 
         expect(container.innerHTML).toBe(
-          items1.map(toCommentString).join('') + EMPTY_COMMENT,
+          source1.map(toCommentString).join('') + EMPTY_COMMENT,
         );
-        expect(part.anchorNode?.nodeValue).toBe(items1[0]);
+        expect(part.anchorNode?.nodeValue).toBe(source1[0]);
       }
     });
   });
 
   describe('detach()', () => {
     it('should restore rollbacked slots', () => {
-      const items = ['foo', 'bar', 'baz'];
+      const source = ['foo', 'bar', 'baz'];
       const props: RepeatProps<string> = {
-        items,
+        source,
       };
       const part: Part.ChildNodePart = {
         type: PartType.ChildNode,
@@ -476,7 +476,7 @@ describe('RepeatBinding', () => {
         });
 
         expect(container.innerHTML).toBe(
-          items.map(toCommentString).join('') + EMPTY_COMMENT,
+          source.map(toCommentString).join('') + EMPTY_COMMENT,
         );
       }
 
@@ -496,7 +496,7 @@ describe('RepeatBinding', () => {
         });
 
         expect(container.innerHTML).toBe(
-          items.map(toCommentString).join('') + EMPTY_COMMENT,
+          source.map(toCommentString).join('') + EMPTY_COMMENT,
         );
       }
     });

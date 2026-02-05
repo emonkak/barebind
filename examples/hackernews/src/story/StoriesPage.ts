@@ -65,9 +65,9 @@ export const StoriesPage = createComponent(function StoriesPage(
       <div class="story-list">
         <ul>
           <${Repeat({
-            items: storyState.stories,
+            elementSelector: (story) => StoryView({ story }),
             keySelector: (story) => story.id,
-            valueSelector: (story) => StoryView({ story }),
+            source: storyState.stories,
           })}>
         </ul>
       </div>

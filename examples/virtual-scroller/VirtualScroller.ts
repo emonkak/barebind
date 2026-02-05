@@ -273,10 +273,7 @@ export const VirtualScroller: VirtualScroller = createComponent(
         <${Keyed(aboveSpacer, aboveSpace)}>
         <ul class="VirtualScroller-list" :style=${{ scrollMargin }}>
           <${Repeat({
-            items: items.slice(visibleRange.start, visibleRange.end),
-            keySelector: (item, offset) =>
-              getItemKey(item, visibleRange.start + offset),
-            valueSelector: (item, offset) => {
+            elementSelector: (item, offset) => {
               const index = visibleRange.start + offset;
               return $.html`
                 <li
@@ -289,6 +286,9 @@ export const VirtualScroller: VirtualScroller = createComponent(
                 </li>
               `;
             },
+            keySelector: (item, offset) =>
+              getItemKey(item, visibleRange.start + offset),
+            source: items.slice(visibleRange.start, visibleRange.end),
           })}>
         </ul>
         <${Keyed(belowSpacer, belowSpace)}>

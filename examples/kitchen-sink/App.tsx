@@ -189,9 +189,7 @@ const List = createComponent(
     $: RenderContext,
   ): unknown {
     const itemsList = Repeat({
-      items,
-      keySelector: (item) => item,
-      valueSelector: (item, index) =>
+      elementSelector: (item, index) =>
         Item({
           index,
           isFirst: index === 0,
@@ -201,6 +199,8 @@ const List = createComponent(
           onDown,
           onDelete,
         }),
+      keySelector: (item) => item,
+      source: items,
     });
 
     return $.html`
@@ -392,9 +392,9 @@ const AsyncItems = createComponent(function AsyncItems(
   return $.html`
     <ul>
       <${Repeat({
-        items: items.unwrap(),
+        elementSelector: (item) => $.html`<li>${item}</li>`,
         keySelector: (item) => item,
-        valueSelector: (item) => $.html`<li>${item}</li>`,
+        source: items.unwrap(),
       })}>
     </ul>
   `;

@@ -135,7 +135,12 @@ export class VElement<TProps extends {} = {}> implements Bindable<unknown> {
           type: this.type,
           value: this.props,
         }
-      : resolveElement(this.type, this.props, this.key, this.hasStaticChildren);
+      : resolveVElement(
+          this.type,
+          this.props,
+          this.key,
+          this.hasStaticChildren,
+        );
   }
 }
 
@@ -153,9 +158,9 @@ export class VFragment implements Bindable<RepeatProps<VNode>> {
     return {
       type: RepeatDirective,
       value: {
-        items: this.children,
+        elementSelector: resolveVChild,
         keySelector: resolveKey,
-        valueSelector: resolveChild,
+        source: this.children,
       },
     };
   }
@@ -181,7 +186,7 @@ export class VStaticFragment implements Bindable<unknown> {
           templates.push(ChildNodeTemplate.Default);
           args.push(child);
         } else {
-          const { type, value } = resolveElement(
+          const { type, value } = resolveVElement(
             child.type,
             child.props,
             child.key,
@@ -555,7 +560,11 @@ function narrowElement<const TName extends keyof HTMLElementTagNameMap>(
   return (expectedNames as string[]).includes(element.localName);
 }
 
-function resolveChild(child: VNode): Bindable<unknown> {
+function resolveKey(child: VNode, index: number): unknown {
+  return child instanceof VElement ? (child.key ?? index) : index;
+}
+
+function resolveVChild(child: VNode): Bindable<unknown> {
   if (isBindable(child)) {
     return child;
   } else if (Array.isArray(child)) {
@@ -567,7 +576,7 @@ function resolveChild(child: VNode): Bindable<unknown> {
   }
 }
 
-function resolveElement(
+function resolveVElement(
   type: string,
   props: { children?: unknown },
   key: unknown,
@@ -578,7 +587,7 @@ function resolveElement(
     ? hasStaticChildren
       ? new VStaticFragment(props.children)
       : new VFragment(props.children)
-    : resolveChild(props.children as VNode);
+    : resolveVChild(props.children as VNode);
   const template = new ElementTemplate(type);
   const args = [element, children] as const;
   if (key != null) {
@@ -593,10 +602,6 @@ function resolveElement(
       value: args,
     };
   }
-}
-
-function resolveKey(child: VNode, index: number): unknown {
-  return child instanceof VElement ? (child.key ?? index) : index;
 }
 
 function safeToString(value: unknown): string {

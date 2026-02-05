@@ -40,9 +40,9 @@ export const Main = createComponent(function Main(
       }>
       <ul class="todo-list" data-testid="todo-list">
         <${Repeat({
-          items: visibleTodos,
+          elementSelector: (todo) => TodoItem({ todo }),
           keySelector: (todo) => todo.id,
-          valueSelector: (todo) => TodoItem({ todo }),
+          source: visibleTodos,
         })}>
       </ul>
     </main>

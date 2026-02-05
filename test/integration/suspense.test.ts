@@ -185,9 +185,9 @@ const App = createComponent(function App(
     children: $.html`
       <ul>
         <${Repeat({
-          items: resources,
+          elementSelector: (resource) => Loader({ resource }),
           keySelector: (resourceId) => resourceId,
-          valueSelector: (resource) => Loader({ resource }),
+          source: resources,
         })}>
       </ul>
     `,

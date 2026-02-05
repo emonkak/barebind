@@ -52,8 +52,7 @@ const App = createComponent(function App(
       <nav class="Header-nav">
         <select @change=${handleSelectedIndexChange}>
           <${Repeat({
-            items,
-            valueSelector: (item, index) => $.html`
+            elementSelector: (item, index) => $.html`
               <option
                 value=${index}
                 selected=${index === selectedIndex}
@@ -61,6 +60,7 @@ const App = createComponent(function App(
                 ${item.label}
               </option>
             `,
+            source: items,
           })}>
         </select>
         <input
