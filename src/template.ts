@@ -17,7 +17,7 @@ export function Fragment(
   return new DirectiveSpecifier(
     new FragmentTemplate(
       new Array<ChildNodeTemplate<unknown>>(children.length).fill(
-        new ChildNodeTemplate(),
+        ChildNodeTemplate.Default,
       ),
     ),
     children,

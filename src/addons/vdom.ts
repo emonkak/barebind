@@ -25,10 +25,6 @@ import { EmptyTemplate } from '../template/empty.js';
 import { FragmentTemplate } from '../template/fragment.js';
 import { TextTemplate } from '../template/text.js';
 
-const CHILD_NODE_TEMPLATE = new ChildNodeTemplate();
-const EMPTY_TEMPLATE = new EmptyTemplate();
-const TEXT_TEMPLATE = new TextTemplate();
-
 const $cleanup = Symbol('$cleanup');
 
 export type VNode =
@@ -182,7 +178,7 @@ export class VStaticFragment implements Bindable<unknown> {
     for (const child of this.children) {
       if (child instanceof VElement) {
         if (typeof child.type === 'function') {
-          templates.push(CHILD_NODE_TEMPLATE);
+          templates.push(ChildNodeTemplate.Default);
           binds.push(child);
         } else {
           const { type, value } = resolveElement(
@@ -195,15 +191,15 @@ export class VStaticFragment implements Bindable<unknown> {
           binds.push(value[0], value[1]);
         }
       } else if (isBindable(child)) {
-        templates.push(CHILD_NODE_TEMPLATE);
+        templates.push(ChildNodeTemplate.Default);
         binds.push(child);
       } else if (Array.isArray(child)) {
-        templates.push(CHILD_NODE_TEMPLATE);
+        templates.push(ChildNodeTemplate.Default);
         binds.push(new VFragment(child));
       } else if (child == null || typeof child === 'boolean') {
-        templates.push(EMPTY_TEMPLATE);
+        templates.push(EmptyTemplate.Default);
       } else {
-        templates.push(TEXT_TEMPLATE);
+        templates.push(TextTemplate.Default);
         binds.push(child);
       }
     }
@@ -567,7 +563,7 @@ function resolveChild(child: VNode): Bindable<unknown> {
   } else if (child == null || typeof child === 'boolean') {
     return new DirectiveSpecifier(BlackholePrimitive, child);
   } else {
-    return new DirectiveSpecifier(TEXT_TEMPLATE, [child]);
+    return new DirectiveSpecifier(TextTemplate.Default, [child]);
   }
 }
 

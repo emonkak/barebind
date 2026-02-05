@@ -160,14 +160,14 @@ describe('VStaticFragment', () => {
 
       expect(directive.type).toStrictEqual(
         new FragmentTemplate([
-          new ChildNodeTemplate(),
+          ChildNodeTemplate.Default,
           new ElementTemplate('div'),
           new ElementTemplate('div'),
-          new ChildNodeTemplate(),
-          new ChildNodeTemplate(),
-          new EmptyTemplate(),
-          new EmptyTemplate(),
-          new TextTemplate(),
+          ChildNodeTemplate.Default,
+          ChildNodeTemplate.Default,
+          EmptyTemplate.Default,
+          EmptyTemplate.Default,
+          TextTemplate.Default,
         ]),
       );
       expect(directive.value).toStrictEqual([

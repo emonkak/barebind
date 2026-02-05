@@ -24,9 +24,9 @@ describe('Fragment()', () => {
 
     expect(bindable.type).toBeInstanceOf(FragmentTemplate);
     expect((bindable.type as FragmentTemplate)['_templates']).toStrictEqual([
-      new ChildNodeTemplate(),
-      new ChildNodeTemplate(),
-      new ChildNodeTemplate(),
+      ChildNodeTemplate.Default,
+      ChildNodeTemplate.Default,
+      ChildNodeTemplate.Default,
     ]);
     expect(bindable.value).toStrictEqual(children);
   });
