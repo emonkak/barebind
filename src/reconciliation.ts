@@ -92,8 +92,7 @@ export function reconcileChildren<TSource, TTarget, TKey>(
       } else {
         oldKeyToIndexMap ??= buildKeyToIndexMap(oldKeys, oldHead, oldTail);
 
-        const newKey = newKeys[newTail]!;
-        const oldIndex = oldKeyToIndexMap.get(newKey);
+        const oldIndex = oldKeyToIndexMap.get(newKeys[newTail]!);
 
         if (
           oldIndex !== undefined &&
