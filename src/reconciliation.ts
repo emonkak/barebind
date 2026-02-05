@@ -28,9 +28,9 @@ export function reconcileChildren<TSource, TTarget, TKey>(
   while (true) {
     if (newHead > newTail) {
       while (oldHead <= oldTail) {
-        const oldSlot = oldTargets[oldHead];
-        if (oldSlot !== undefined) {
-          handler.remove(oldSlot);
+        const oldTarget = oldTargets[oldHead];
+        if (oldTarget !== undefined) {
+          handler.remove(oldTarget);
         }
         oldHead++;
       }
