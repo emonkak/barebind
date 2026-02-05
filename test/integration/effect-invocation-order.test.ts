@@ -173,7 +173,7 @@ test('invokes effects from child to parent', async () => {
   }
 });
 
-const Foo = createComponent(function Parent({
+const Foo = createComponent(function Foo({
   logs,
 }: {
   logs: string[];
@@ -196,7 +196,7 @@ const Foo = createComponent(function Parent({
   });
 });
 
-const Bar = createComponent(function Parent({
+const Bar = createComponent(function Bar({
   logs,
 }: {
   logs: string[];
@@ -212,7 +212,7 @@ const Bar = createComponent(function Parent({
   });
 });
 
-const Node = createComponent(function Child(
+const Node = createComponent(function Node(
   {
     name,
     logs,
