@@ -41,15 +41,16 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
     let offset = 0;
 
     for (const template of this._templates) {
+      const { arity } = template;
       const result = template.hydrate(
-        binds.slice(offset, offset + template.arity),
+        binds.slice(offset, offset + arity),
         part,
         targetTree,
         session,
       );
       children.push(...result.children);
       slots.push(...result.slots);
-      offset += template.arity;
+      offset += arity;
     }
 
     return { children, slots };
@@ -65,14 +66,15 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
     let offset = 0;
 
     for (const template of this._templates) {
+      const { arity } = template;
       const result = template.render(
-        binds.slice(offset, offset + template.arity),
+        binds.slice(offset, offset + arity),
         part,
         session,
       );
       children.push(...result.children);
       slots.push(...result.slots);
-      offset += template.arity;
+      offset += arity;
     }
 
     return { children, slots };
