@@ -116,7 +116,9 @@ export class RepeatBinding<TSource, TKey, TElement>
     } = this._props;
     const oldKeys = this._pendingKeys;
     const oldSlots = this._pendingSlots;
-    const newSources = Array.isArray(source) ? source : Array.from(source);
+    const newSources = Array.isArray(source)
+      ? (source as TSource[])
+      : Array.from(source);
     const newKeys = newSources.map(keySelector);
     const newElements = newSources.map(elementSelector);
     const newSlots = reconcileChildren(
@@ -235,12 +237,12 @@ export class RepeatBinding<TSource, TKey, TElement>
   }
 }
 
-function defaultElementSelector(source: any): any {
-  return source;
+function defaultElementSelector<TElement>(source: unknown): TElement {
+  return source as TElement;
 }
 
-function defaultKeySelector(_source: any, index: number): any {
-  return index;
+function defaultKeySelector<TKey>(_source: unknown, index: number): TKey {
+  return index as TKey;
 }
 
 function getAnchorNode<T>(slots: Slot<T>[]): ChildNode | null {
