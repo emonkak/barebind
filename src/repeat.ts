@@ -13,7 +13,7 @@ import {
   type Slot,
   type UpdateSession,
 } from './internal.js';
-import { reconcileChildren } from './reconciliation.js';
+import { reconcileProjections } from './reconciliation.js';
 
 const MUTATION_TYPE_INSERT = 0;
 const MUTATION_TYPE_MOVE = 1;
@@ -121,7 +121,7 @@ export class RepeatBinding<TSource, TKey, TElement>
       : Array.from(source);
     const newKeys = newSources.map(keySelector);
     const newElements = newSources.map(elementSelector);
-    const newSlots = reconcileChildren(
+    const newSlots = reconcileProjections(
       oldKeys,
       oldSlots,
       newKeys,

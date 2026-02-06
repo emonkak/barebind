@@ -9,7 +9,7 @@ export interface MutationHandler<TSource, TTarget> {
   remove(target: TTarget): void;
 }
 
-export function reconcileChildren<TSource, TTarget, TKey>(
+export function reconcileProjections<TSource, TTarget, TKey>(
   oldKeys: TKey[],
   oldTargets: (TTarget | undefined)[],
   newKeys: TKey[],
