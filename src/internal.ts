@@ -98,7 +98,7 @@ export interface DirectiveType<T> {
 }
 
 export interface DispatchOptions<T> extends UpdateOptions {
-  areStatesEqual?: (x: T, y: T) => boolean;
+  areStatesEqual?: (nextState: T, prevState: T) => boolean;
 }
 
 export interface Effect {
