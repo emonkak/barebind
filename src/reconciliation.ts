@@ -11,8 +11,8 @@ export interface MutationHandler<TSource, TTarget> {
 
 export function reconcileProjections<TSource, TTarget, TKey>(
   oldKeys: TKey[],
-  oldTargets: (TTarget | undefined)[],
   newKeys: TKey[],
+  oldTargets: (TTarget | undefined)[],
   newSources: TSource[],
   handler: MutationHandler<TSource, TTarget>,
 ): TTarget[] {

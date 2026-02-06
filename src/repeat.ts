@@ -123,8 +123,8 @@ export class RepeatBinding<TSource, TKey, TElement>
     const newElements = newSources.map(elementSelector);
     const newSlots = reconcileProjections(
       oldKeys,
-      oldSlots,
       newKeys,
+      oldSlots,
       newElements,
       {
         insert: (source, referenceSlot) => {
