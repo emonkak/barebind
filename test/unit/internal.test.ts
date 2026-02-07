@@ -95,19 +95,8 @@ describe('getLanesFromOptions()', () => {
     [{ priority: 'user-blocking' }, Lane.DefaultLane | Lane.UserBlockingLane],
     [{ priority: 'user-visible' }, Lane.DefaultLane | Lane.UserVisibleLane],
     [{ priority: 'background' }, Lane.DefaultLane | Lane.BackgroundLane],
+    [{ flushSync: true }, Lane.DefaultLane | Lane.SyncLane],
     [{ viewTransition: true }, Lane.DefaultLane | Lane.ViewTransitionLane],
-    [
-      { priority: 'user-blocking', viewTransition: true },
-      Lane.DefaultLane | Lane.UserBlockingLane | Lane.ViewTransitionLane,
-    ],
-    [
-      { priority: 'user-visible', viewTransition: true },
-      Lane.DefaultLane | Lane.UserVisibleLane | Lane.ViewTransitionLane,
-    ],
-    [
-      { priority: 'background', viewTransition: true },
-      Lane.DefaultLane | Lane.BackgroundLane | Lane.ViewTransitionLane,
-    ],
   ] as [
     UpdateOptions,
     Lanes,

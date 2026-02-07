@@ -89,7 +89,7 @@ export class RenderSession implements RenderContext {
     }
 
     if (this._frame.lanes !== Lane.NoLane) {
-      for (const { lanes, continuation } of this._context.getPendingTasks()) {
+      for (const { lanes, continuation } of this._context.getPendingUpdates()) {
         this._frame.pendingCoroutines.push(this._coroutine);
         this._state.pendingLanes |= lanes;
         return {
@@ -140,8 +140,8 @@ export class RenderSession implements RenderContext {
 
   isUpdatePending(): boolean {
     return this._context
-      .getPendingTasks()
-      .some((pendingTask) => pendingTask.coroutine === this._coroutine);
+      .getPendingUpdates()
+      .some((pendingUpdate) => pendingUpdate.coroutine === this._coroutine);
   }
 
   math(
@@ -367,9 +367,9 @@ export class RenderSession implements RenderContext {
 
   async waitForUpdate(): Promise<number> {
     const promises = this._context
-      .getPendingTasks()
-      .filter((pendingTask) => pendingTask.coroutine === this._coroutine)
-      .map((pendingTask) => pendingTask.continuation.promise);
+      .getPendingUpdates()
+      .filter((pendingUpdate) => pendingUpdate.coroutine === this._coroutine)
+      .map((pendingUpdate) => pendingUpdate.continuation.promise);
     return (await Promise.allSettled(promises)).length;
   }
 

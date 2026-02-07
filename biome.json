@@ -47,7 +47,7 @@
       "includes": [
         "src/**",
         "!src/addons/router/*.ts",
-        "!src/runtime/browser.ts"
+        "!src/backend/browser.ts"
       ],
       "linter": {
         "rules": {

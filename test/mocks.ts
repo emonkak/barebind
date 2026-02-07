@@ -1,5 +1,6 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
+import { type Backend, ExecutionMode, type ExecutionModes } from '@/backend.js';
 import {
   $directive,
   areDirectiveTypesEqual,
@@ -30,20 +31,25 @@ import {
 } from '@/internal.js';
 import {
   Runtime,
-  type RuntimeBackend,
   type RuntimeEvent,
   type RuntimeObserver,
   type RuntimeOptions,
 } from '@/runtime.js';
 import { AbstractTemplate } from '@/template/template.js';
 
-export class MockBackend implements RuntimeBackend {
+export class MockBackend implements Backend {
+  readonly mode: ExecutionModes;
+
+  constructor(mode: ExecutionModes = ExecutionMode.NoMode) {
+    this.mode = mode;
+  }
+
   flushEffects(effects: EffectQueue, _phase: CommitPhase): void {
     effects.flush();
   }
 
-  flushUpdate(runtime: Runtime): void {
-    runtime.flushSync();
+  getExecutionModes(): ExecutionModes {
+    return this.mode;
   }
 
   getUpdatePriority(): TaskPriority {
@@ -53,10 +59,10 @@ export class MockBackend implements RuntimeBackend {
   parseTemplate(
     strings: readonly string[],
     args: readonly unknown[],
-    markerToken: string,
+    markerIdentifier: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]> {
-    return new MockTemplate(strings, args, markerToken, mode);
+    return new MockTemplate(strings, args, markerIdentifier, mode);
   }
 
   requestCallback<T>(
@@ -376,20 +382,20 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
 
   readonly args: readonly unknown[];
 
-  readonly markerToken: string;
+  readonly markerIdentifier: string;
 
   readonly mode: TemplateMode;
 
   constructor(
     strings: readonly string[] = [],
     args: readonly unknown[] = [],
-    markerToken = '',
+    markerIdentifier = '',
     mode: TemplateMode = 'html',
   ) {
     super();
     this.strings = strings;
     this.args = args;
-    this.markerToken = markerToken;
+    this.markerIdentifier = markerIdentifier;
     this.mode = mode;
   }
 
@@ -439,8 +445,11 @@ export function createRenderFrame(id: number, lanes: Lanes): RenderFrame {
   };
 }
 
-export function createRuntime(options?: RuntimeOptions): Runtime {
-  return new Runtime(new MockBackend(), options);
+export function createRuntime(
+  mode?: ExecutionModes,
+  options?: RuntimeOptions,
+): Runtime {
+  return new Runtime(new MockBackend(mode), options);
 }
 
 function stringify(value: unknown): string {

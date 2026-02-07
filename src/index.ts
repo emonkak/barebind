@@ -1,3 +1,6 @@
+export { BrowserBackend } from './backend/browser.js';
+export { ServerBackend } from './backend/server.js';
+export { type Backend, ExecutionMode } from './backend.js';
 export { sequentialEqual, shallowEqual } from './compare.js';
 export { type ComponentOptions, createComponent } from './component.js';
 export { DirectiveError } from './directive.js';
@@ -28,12 +31,9 @@ export {
   type RepeatProps,
 } from './repeat.js';
 export { Root } from './root.js';
-export { BrowserBackend } from './runtime/browser.js';
-export { ServerBackend } from './runtime/server.js';
 export {
   type RenderError,
   Runtime,
-  type RuntimeBackend,
   type RuntimeEvent,
   type RuntimeObserver,
 } from './runtime.js';

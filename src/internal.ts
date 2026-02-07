@@ -239,7 +239,8 @@ export const Lane = {
   UserBlockingLane:   0b10,
   UserVisibleLane:    0b100,
   BackgroundLane:     0b1000,
-  ViewTransitionLane: 0b10000,
+  SyncLane:           0b10000,
+  ViewTransitionLane: 0b100000,
 } as const satisfies Record<string, Lanes>;
 
 export type Lanes = number;
@@ -422,7 +423,7 @@ export interface ReversibleEffect extends Effect {
 }
 
 export interface SessionContext extends DirectiveContext {
-  getPendingTasks(): IteratorObject<UpdateTask>;
+  getPendingUpdates(): IteratorObject<UpdateTask>;
   nextIdentifier(): string;
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,
@@ -493,6 +494,7 @@ export interface UpdateHandle {
 }
 
 export interface UpdateOptions {
+  flushSync?: boolean;
   immediate?: boolean;
   priority?: TaskPriority;
   triggerFlush?: boolean;
@@ -593,6 +595,10 @@ export function getLanesFromOptions(options: UpdateOptions): Lanes {
     case 'background':
       lanes |= Lane.BackgroundLane;
       break;
+  }
+
+  if (options.flushSync) {
+    lanes |= Lane.SyncLane;
   }
 
   if (options.viewTransition) {

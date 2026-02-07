@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-
+import { ExecutionMode } from '@/backend.js';
 import { ComponentBinding, createComponent } from '@/component.js';
 import {
   $directive,
@@ -30,683 +30,1016 @@ import {
 } from '../mocks.js';
 
 describe('Runtime', () => {
-  describe('flushAsync()', () => {
-    it('commits effects asynchronously', async () => {
-      const mutationEffect = {
-        commit: vi.fn(),
-      };
-      const layoutEffect = {
-        commit: vi.fn(),
-      };
-      const passiveEffect = {
-        commit: vi.fn(),
-      };
-      const observer = new MockObserver();
-      const runtime = createRuntime();
-
-      const requestCallbackSpy = vi.spyOn(
-        runtime['_backend'],
-        'requestCallback',
-      );
-      const startViewTransitionSpy = vi.spyOn(
-        runtime['_backend'],
-        'startViewTransition',
-      );
-
-      const removeObserver = runtime.addObserver(observer);
-
-      SESSION1: {
-        const coroutine = new MockCoroutine((session) => {
-          session.frame.mutationEffects.push(
-            mutationEffect,
-            session.scope.level,
-          );
-          session.frame.layoutEffects.push(layoutEffect, session.scope.level);
-        });
-
-        const handle1 = runtime.scheduleUpdate(coroutine, {
-          priority: 'user-blocking',
-          triggerFlush: false,
-        });
-        const handle2 = runtime.scheduleUpdate(coroutine, {
-          priority: 'user-blocking',
-          triggerFlush: false,
-        });
-
-        expect(await handle1.scheduled).toStrictEqual({
-          canceled: false,
-          done: true,
-        });
-        expect(await handle2.scheduled).toStrictEqual({
-          canceled: false,
-          done: true,
-        });
-
-        expect(runtime.getPendingTasks().toArray()).toStrictEqual([
-          expect.objectContaining({
-            coroutine,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
-          }),
-          expect.objectContaining({
-            coroutine,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
-          }),
-        ]);
-
-        await runtime.flushAsync();
-
-        expect(runtime.getPendingTasks().toArray()).toStrictEqual([]);
-
-        expect(await handle1.finished).toStrictEqual({
-          canceled: false,
-          done: true,
-        });
-        expect(await handle2.finished).toStrictEqual({
-          canceled: true,
-          done: true,
-        });
-
-        expect(requestCallbackSpy).toHaveBeenCalledTimes(3);
-        expect(startViewTransitionSpy).toHaveBeenCalledTimes(0);
-        expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
-        expect(layoutEffect.commit).toHaveBeenCalledTimes(1);
-        expect(passiveEffect.commit).toHaveBeenCalledTimes(0);
-        expect(observer.flushEvents()).toStrictEqual([
-          {
-            type: 'UPDATE_START',
-            id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
-          },
-          {
-            type: 'RENDER_START',
-            id: 0,
-          },
-          {
-            type: 'RENDER_END',
-            id: 0,
-          },
-          {
-            type: 'COMMIT_START',
-            id: 0,
-            phase: CommitPhase.Mutation,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'COMMIT_END',
-            id: 0,
-            phase: CommitPhase.Mutation,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'COMMIT_START',
-            id: 0,
-            phase: CommitPhase.Layout,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'COMMIT_END',
-            id: 0,
-            phase: CommitPhase.Layout,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'UPDATE_SUCCESS',
-            id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
-          },
-        ]);
-      }
-
-      SESSION2: {
-        const coroutine = new MockCoroutine((session) => {
-          session.frame.pendingCoroutines.push(subcoroutine);
-        });
-        const subcoroutine = new MockCoroutine((session) => {
-          session.frame.layoutEffects.push(layoutEffect, session.scope.level);
-          session.frame.passiveEffects.push(passiveEffect, session.scope.level);
-        });
-
-        const handle = runtime.scheduleUpdate(coroutine, {
-          priority: 'user-visible',
-          triggerFlush: false,
-          viewTransition: true,
-        });
-
-        expect(await handle.scheduled).toStrictEqual({
-          canceled: false,
-          done: true,
-        });
-
-        expect(runtime.getPendingTasks().toArray()).toStrictEqual([
-          expect.objectContaining({
-            coroutine,
-            lanes:
-              Lane.DefaultLane | Lane.UserVisibleLane | Lane.ViewTransitionLane,
-          }),
-        ]);
-
-        await runtime.flushAsync();
-
-        expect(runtime.getPendingTasks().toArray()).toStrictEqual([]);
-
-        expect(await handle.finished).toStrictEqual({
-          canceled: false,
-          done: true,
-        });
-
-        expect(requestCallbackSpy).toHaveBeenCalledTimes(5);
-        expect(startViewTransitionSpy).toHaveBeenCalledTimes(1);
-        expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
-        expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
-        expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
-        expect(observer.flushEvents()).toStrictEqual([
-          {
-            type: 'UPDATE_START',
-            id: 1,
-            lanes:
-              Lane.DefaultLane | Lane.UserVisibleLane | Lane.ViewTransitionLane,
-          },
-          {
-            type: 'RENDER_START',
-            id: 1,
-          },
-          {
-            type: 'RENDER_END',
-            id: 1,
-          },
-          {
-            type: 'COMMIT_START',
-            id: 1,
-            phase: CommitPhase.Layout,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'COMMIT_END',
-            id: 1,
-            phase: CommitPhase.Layout,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'COMMIT_START',
-            id: 1,
-            phase: CommitPhase.Passive,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'COMMIT_END',
-            id: 1,
-            phase: CommitPhase.Passive,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'UPDATE_SUCCESS',
-            id: 1,
-            lanes:
-              Lane.DefaultLane | Lane.UserVisibleLane | Lane.ViewTransitionLane,
-          },
-        ]);
-      }
-
-      SESSION3: {
-        removeObserver();
-
-        await runtime.flushAsync();
-
-        expect(requestCallbackSpy).toHaveBeenCalledTimes(5);
-        expect(startViewTransitionSpy).toHaveBeenCalledTimes(1);
-        expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
-        expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
-        expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
-        expect(observer.flushEvents()).toStrictEqual([]);
-      }
-    });
-
-    it('handles an error that occurs during flushing', async () => {
-      const runtime = createRuntime();
-      const observer = new MockObserver();
-      const error = new Error('fail');
-
-      runtime.addObserver(observer);
-
-      SESSION: {
-        const coroutine = new MockCoroutine(() => {
-          throw error;
-        });
-
-        const handle = runtime.scheduleUpdate(coroutine, {
-          triggerFlush: false,
-        });
-
-        expect(await handle.scheduled).toStrictEqual({
-          canceled: false,
-          done: true,
-        });
-
-        await runtime.flushAsync();
-
-        try {
-          await handle.finished;
-          expect.unreachable();
-        } catch (caughtError) {
-          expect(caughtError).toBeInstanceOf(RenderError);
-          expect((caughtError as RenderError).cause).toBe(error);
-        }
-      }
-
-      expect(observer.flushEvents()).toStrictEqual([
-        {
-          type: 'UPDATE_START',
-          id: 0,
-          lanes: Lane.DefaultLane | Lane.UserBlockingLane,
-        },
-        {
-          type: 'RENDER_START',
-          id: 0,
-        },
-        {
-          type: 'UPDATE_FAILURE',
-          id: 0,
-          lanes: Lane.DefaultLane | Lane.UserBlockingLane,
-          error: expect.objectContaining({ cause: error }),
-        },
-      ]);
-    });
-
-    it('aborts rendering when error is captured outside the root', async () => {
-      const runtime = createRuntime();
-      const observer = new MockObserver();
-      const errorHandler = vi.fn();
-      const error = new Error('fail');
-
-      runtime.addObserver(observer);
-
-      SESSION: {
-        const parentScope = createScope();
-        parentScope.boundary = {
-          type: BoundaryType.Error,
-          next: null,
-          handler: errorHandler,
+  describe('flushUpdates()', () => {
+    describe('in concurrent mode', () => {
+      it('commits effects asynchronously', async () => {
+        const mutationEffect = {
+          commit: vi.fn(),
         };
-        const childScope = createScope(parentScope);
-        const coroutine = new MockCoroutine(
-          () => {
-            throw error;
-          },
-          -1,
-          childScope,
+        const layoutEffect = {
+          commit: vi.fn(),
+        };
+        const passiveEffect = {
+          commit: vi.fn(),
+        };
+        const observer = new MockObserver();
+        const runtime = createRuntime(ExecutionMode.ConcurrentMode);
+
+        const requestCallbackSpy = vi.spyOn(
+          runtime['_backend'],
+          'requestCallback',
+        );
+        const startViewTransitionSpy = vi.spyOn(
+          runtime['_backend'],
+          'startViewTransition',
         );
 
-        const handle = runtime.scheduleUpdate(coroutine, {
-          triggerFlush: false,
-        });
+        const removeObserver = runtime.addObserver(observer);
 
-        expect(await handle.scheduled).toStrictEqual({
-          canceled: false,
-          done: true,
-        });
+        SESSION1: {
+          const coroutine = new MockCoroutine((session) => {
+            session.frame.mutationEffects.push(
+              mutationEffect,
+              session.scope.level,
+            );
+            session.frame.layoutEffects.push(layoutEffect, session.scope.level);
+          });
 
-        await runtime.flushAsync();
+          const handle1 = runtime.scheduleUpdate(coroutine, {
+            priority: 'user-blocking',
+          });
+          const handle2 = runtime.scheduleUpdate(coroutine, {
+            priority: 'user-blocking',
+          });
 
-        expect(await handle.finished).toStrictEqual({
-          canceled: true,
-          done: false,
-        });
-        expect(errorHandler).toHaveBeenCalledOnce();
-        expect(errorHandler).toHaveBeenCalledWith(error, expect.any(Function));
-      }
+          expect(await handle1.scheduled).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+          expect(await handle2.scheduled).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
 
-      expect(observer.flushEvents()).toStrictEqual([
-        {
-          type: 'UPDATE_START',
-          id: 0,
-          lanes: Lane.DefaultLane | Lane.UserBlockingLane,
-        },
-        {
-          type: 'RENDER_START',
-          id: 0,
-        },
-        {
-          type: 'UPDATE_FAILURE',
-          id: 0,
-          lanes: Lane.DefaultLane | Lane.UserBlockingLane,
-          error: expect.objectContaining({ cause: error }),
-        },
-      ]);
-    });
-  });
+          expect(runtime.getPendingUpdates().toArray()).toStrictEqual([
+            expect.objectContaining({
+              coroutine,
+              lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            }),
+            expect.objectContaining({
+              coroutine,
+              lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            }),
+          ]);
 
-  describe('flushSync()', () => {
-    it('commits effects synchronously', async () => {
-      const mutationEffect = {
-        commit: vi.fn(),
-      };
-      const layoutEffect = {
-        commit: vi.fn(),
-      };
-      const passiveEffect = {
-        commit: vi.fn(),
-      };
-      const observer = new MockObserver();
-      const runtime = createRuntime();
+          expect(await handle1.finished).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+          expect(await handle2.finished).toStrictEqual({
+            canceled: true,
+            done: true,
+          });
 
-      const removeObserver = runtime.addObserver(observer);
+          expect(runtime.getPendingUpdates().toArray()).toStrictEqual([]);
 
-      SESSION1: {
-        const coroutine = new MockCoroutine((session) => {
-          session.frame.mutationEffects.push(
-            mutationEffect,
-            session.scope.level,
-          );
-          session.frame.layoutEffects.push(layoutEffect, session.scope.level);
-          session.frame.passiveEffects.push(passiveEffect, session.scope.level);
-        });
-
-        const handle1 = runtime.scheduleUpdate(coroutine, {
-          priority: 'user-blocking',
-          triggerFlush: false,
-        });
-        const handle2 = runtime.scheduleUpdate(coroutine, {
-          priority: 'user-blocking',
-          triggerFlush: false,
-        });
-
-        expect(await handle1.scheduled).toStrictEqual({
-          canceled: false,
-          done: true,
-        });
-        expect(await handle2.scheduled).toStrictEqual({
-          canceled: false,
-          done: true,
-        });
-
-        expect(runtime.getPendingTasks().toArray()).toStrictEqual([
-          expect.objectContaining({
-            coroutine,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
-          }),
-          expect.objectContaining({
-            coroutine,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
-          }),
-        ]);
-
-        runtime.flushSync();
-
-        expect(runtime.getPendingTasks().toArray()).toStrictEqual([]);
-
-        expect(await handle1.finished).toStrictEqual({
-          canceled: false,
-          done: true,
-        });
-        expect(await handle2.finished).toStrictEqual({
-          canceled: true,
-          done: true,
-        });
-
-        expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
-        expect(layoutEffect.commit).toHaveBeenCalledTimes(1);
-        expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
-        expect(observer.flushEvents()).toStrictEqual([
-          {
-            type: 'UPDATE_START',
-            id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
-          },
-          {
-            type: 'RENDER_START',
-            id: 0,
-          },
-          {
-            type: 'RENDER_END',
-            id: 0,
-          },
-          {
-            type: 'COMMIT_START',
-            id: 0,
-            phase: CommitPhase.Mutation,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'COMMIT_END',
-            id: 0,
-            phase: CommitPhase.Mutation,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'COMMIT_START',
-            id: 0,
-            phase: CommitPhase.Layout,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'COMMIT_END',
-            id: 0,
-            phase: CommitPhase.Layout,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'COMMIT_START',
-            id: 0,
-            phase: CommitPhase.Passive,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'COMMIT_END',
-            id: 0,
-            phase: CommitPhase.Passive,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'UPDATE_SUCCESS',
-            id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
-          },
-        ]);
-      }
-
-      SESSION2: {
-        const coroutine = new MockCoroutine((session) => {
-          session.frame.pendingCoroutines.push(subcoroutine);
-        });
-        const subcoroutine = new MockCoroutine((session) => {
-          session.frame.mutationEffects.push(
-            mutationEffect,
-            session.scope.level,
-          );
-          session.frame.layoutEffects.push(layoutEffect, session.scope.level);
-        });
-
-        const handle = runtime.scheduleUpdate(coroutine, {
-          priority: 'user-visible',
-          triggerFlush: false,
-          viewTransition: true,
-        });
-
-        expect(await handle.scheduled).toStrictEqual({
-          canceled: false,
-          done: true,
-        });
-
-        expect(runtime.getPendingTasks().toArray()).toStrictEqual([
-          expect.objectContaining({
-            coroutine,
-            lanes:
-              Lane.DefaultLane | Lane.UserVisibleLane | Lane.ViewTransitionLane,
-          }),
-        ]);
-
-        runtime.flushSync();
-
-        expect(runtime.getPendingTasks().toArray()).toStrictEqual([]);
-
-        expect(await handle.finished).toStrictEqual({
-          canceled: false,
-          done: true,
-        });
-
-        expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
-        expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
-        expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
-        expect(observer.flushEvents()).toStrictEqual([
-          {
-            type: 'UPDATE_START',
-            id: 1,
-            lanes:
-              Lane.DefaultLane | Lane.UserVisibleLane | Lane.ViewTransitionLane,
-          },
-          {
-            type: 'RENDER_START',
-            id: 1,
-          },
-          {
-            type: 'RENDER_END',
-            id: 1,
-          },
-          {
-            type: 'COMMIT_START',
-            id: 1,
-            phase: CommitPhase.Mutation,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'COMMIT_END',
-            id: 1,
-            phase: CommitPhase.Mutation,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'COMMIT_START',
-            id: 1,
-            phase: CommitPhase.Layout,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'COMMIT_END',
-            id: 1,
-            phase: CommitPhase.Layout,
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'UPDATE_SUCCESS',
-            id: 1,
-            lanes:
-              Lane.DefaultLane | Lane.UserVisibleLane | Lane.ViewTransitionLane,
-          },
-        ]);
-      }
-
-      SESSION3: {
-        removeObserver();
-
-        runtime.flushSync();
-
-        expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
-        expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
-        expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
-        expect(observer.flushEvents()).toStrictEqual([]);
-      }
-    });
-
-    it('handles an error that occurs during flushing', async () => {
-      const runtime = createRuntime();
-      const observer = new MockObserver();
-      const error = new Error('fail');
-
-      runtime.addObserver(observer);
-
-      SESSION: {
-        const coroutine = new MockCoroutine(() => {
-          throw error;
-        });
-
-        try {
-          await runtime.scheduleUpdate(coroutine).finished;
-          expect.unreachable();
-        } catch (caughtError) {
-          expect(caughtError).toBeInstanceOf(RenderError);
-          expect((caughtError as RenderError).cause).toBe(error);
+          expect(requestCallbackSpy).toHaveBeenCalledTimes(3);
+          expect(startViewTransitionSpy).toHaveBeenCalledTimes(0);
+          expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
+          expect(layoutEffect.commit).toHaveBeenCalledTimes(1);
+          expect(passiveEffect.commit).toHaveBeenCalledTimes(0);
+          expect(observer.flushEvents()).toStrictEqual([
+            {
+              type: 'UPDATE_START',
+              id: 0,
+              lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            },
+            {
+              type: 'RENDER_START',
+              id: 0,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
+            },
+            {
+              type: 'RENDER_END',
+              id: 0,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_START',
+              id: 0,
+              phase: CommitPhase.Mutation,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_END',
+              id: 0,
+              phase: CommitPhase.Mutation,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_START',
+              id: 0,
+              phase: CommitPhase.Layout,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_END',
+              id: 0,
+              phase: CommitPhase.Layout,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'UPDATE_SUCCESS',
+              id: 0,
+              lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            },
+          ]);
         }
-      }
 
-      expect(observer.flushEvents()).toStrictEqual([
-        {
-          type: 'UPDATE_START',
-          id: 0,
-          lanes: Lane.DefaultLane | Lane.UserBlockingLane,
-        },
-        {
-          type: 'RENDER_START',
-          id: 0,
-        },
-        {
-          type: 'UPDATE_FAILURE',
-          id: 0,
-          lanes: Lane.DefaultLane | Lane.UserBlockingLane,
-          error: expect.objectContaining({ cause: error }),
-        },
-      ]);
+        SESSION2: {
+          const coroutine = new MockCoroutine((session) => {
+            session.frame.pendingCoroutines.push(subcoroutine);
+          });
+          const subcoroutine = new MockCoroutine((session) => {
+            session.frame.layoutEffects.push(layoutEffect, session.scope.level);
+            session.frame.passiveEffects.push(
+              passiveEffect,
+              session.scope.level,
+            );
+          });
+
+          const handle = runtime.scheduleUpdate(coroutine, {
+            priority: 'user-visible',
+            viewTransition: true,
+          });
+
+          expect(await handle.scheduled).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+
+          expect(runtime.getPendingUpdates().toArray()).toStrictEqual([
+            expect.objectContaining({
+              coroutine,
+              lanes:
+                Lane.DefaultLane |
+                Lane.UserVisibleLane |
+                Lane.ViewTransitionLane,
+            }),
+          ]);
+
+          expect(await handle.finished).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+
+          expect(runtime.getPendingUpdates().toArray()).toStrictEqual([]);
+
+          expect(requestCallbackSpy).toHaveBeenCalledTimes(5);
+          expect(startViewTransitionSpy).toHaveBeenCalledTimes(1);
+          expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
+          expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
+          expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
+          expect(observer.flushEvents()).toStrictEqual([
+            {
+              type: 'UPDATE_START',
+              id: 1,
+              lanes:
+                Lane.DefaultLane |
+                Lane.UserVisibleLane |
+                Lane.ViewTransitionLane,
+            },
+            {
+              type: 'RENDER_START',
+              id: 1,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
+            },
+            {
+              type: 'RENDER_END',
+              id: 1,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_START',
+              id: 1,
+              phase: CommitPhase.Layout,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_END',
+              id: 1,
+              phase: CommitPhase.Layout,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_START',
+              id: 1,
+              phase: CommitPhase.Passive,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_END',
+              id: 1,
+              phase: CommitPhase.Passive,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'UPDATE_SUCCESS',
+              id: 1,
+              lanes:
+                Lane.DefaultLane |
+                Lane.UserVisibleLane |
+                Lane.ViewTransitionLane,
+            },
+          ]);
+        }
+
+        SESSION3: {
+          removeObserver();
+
+          expect(runtime.getPendingUpdates().toArray()).toStrictEqual([]);
+
+          expect(requestCallbackSpy).toHaveBeenCalledTimes(5);
+          expect(startViewTransitionSpy).toHaveBeenCalledTimes(1);
+          expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
+          expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
+          expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
+          expect(observer.flushEvents()).toStrictEqual([]);
+        }
+      });
+
+      it('commits effects synchronously if the flushSync option is specified', async () => {
+        const mutationEffect = {
+          commit: vi.fn(),
+        };
+        const layoutEffect = {
+          commit: vi.fn(),
+        };
+        const passiveEffect = {
+          commit: vi.fn(),
+        };
+        const observer = new MockObserver();
+        const runtime = createRuntime(ExecutionMode.ConcurrentMode);
+
+        const removeObserver = runtime.addObserver(observer);
+
+        SESSION1: {
+          const coroutine = new MockCoroutine((session) => {
+            session.frame.mutationEffects.push(
+              mutationEffect,
+              session.scope.level,
+            );
+            session.frame.layoutEffects.push(layoutEffect, session.scope.level);
+            session.frame.passiveEffects.push(
+              passiveEffect,
+              session.scope.level,
+            );
+          });
+
+          const handle1 = runtime.scheduleUpdate(coroutine, {
+            flushSync: true,
+            priority: 'user-blocking',
+            triggerFlush: false,
+          });
+          const handle2 = runtime.scheduleUpdate(coroutine, {
+            flushSync: true,
+            priority: 'user-blocking',
+            triggerFlush: false,
+          });
+
+          expect(await handle1.scheduled).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+          expect(await handle2.scheduled).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+
+          expect(runtime.getPendingUpdates().toArray()).toStrictEqual([
+            expect.objectContaining({
+              coroutine,
+              lanes: Lane.DefaultLane | Lane.UserBlockingLane | Lane.SyncLane,
+            }),
+            expect.objectContaining({
+              coroutine,
+              lanes: Lane.DefaultLane | Lane.UserBlockingLane | Lane.SyncLane,
+            }),
+          ]);
+
+          runtime.flushUpdates();
+
+          expect(runtime.getPendingUpdates().toArray()).toStrictEqual([]);
+
+          expect(await handle1.finished).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+          expect(await handle2.finished).toStrictEqual({
+            canceled: true,
+            done: true,
+          });
+
+          expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
+          expect(layoutEffect.commit).toHaveBeenCalledTimes(1);
+          expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
+          expect(observer.flushEvents()).toStrictEqual([
+            {
+              type: 'UPDATE_START',
+              id: 0,
+              lanes: Lane.DefaultLane | Lane.UserBlockingLane | Lane.SyncLane,
+            },
+            {
+              type: 'RENDER_START',
+              id: 0,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
+            },
+            {
+              type: 'RENDER_END',
+              id: 0,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_START',
+              id: 0,
+              phase: CommitPhase.Mutation,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_END',
+              id: 0,
+              phase: CommitPhase.Mutation,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_START',
+              id: 0,
+              phase: CommitPhase.Layout,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_END',
+              id: 0,
+              phase: CommitPhase.Layout,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_START',
+              id: 0,
+              phase: CommitPhase.Passive,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_END',
+              id: 0,
+              phase: CommitPhase.Passive,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'UPDATE_SUCCESS',
+              id: 0,
+              lanes: Lane.DefaultLane | Lane.UserBlockingLane | Lane.SyncLane,
+            },
+          ]);
+        }
+
+        SESSION2: {
+          const coroutine = new MockCoroutine((session) => {
+            session.frame.pendingCoroutines.push(subcoroutine);
+          });
+          const subcoroutine = new MockCoroutine((session) => {
+            session.frame.mutationEffects.push(
+              mutationEffect,
+              session.scope.level,
+            );
+            session.frame.layoutEffects.push(layoutEffect, session.scope.level);
+          });
+
+          const handle = runtime.scheduleUpdate(coroutine, {
+            flushSync: true,
+            priority: 'user-visible',
+            triggerFlush: false,
+            viewTransition: true,
+          });
+
+          expect(await handle.scheduled).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+
+          expect(runtime.getPendingUpdates().toArray()).toStrictEqual([
+            expect.objectContaining({
+              coroutine,
+              lanes:
+                Lane.DefaultLane |
+                Lane.UserVisibleLane |
+                Lane.SyncLane |
+                Lane.ViewTransitionLane,
+            }),
+          ]);
+
+          runtime.flushUpdates();
+
+          expect(runtime.getPendingUpdates().toArray()).toStrictEqual([]);
+
+          expect(await handle.finished).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+
+          expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
+          expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
+          expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
+          expect(observer.flushEvents()).toStrictEqual([
+            {
+              type: 'UPDATE_START',
+              id: 1,
+              lanes:
+                Lane.DefaultLane |
+                Lane.UserVisibleLane |
+                Lane.SyncLane |
+                Lane.ViewTransitionLane,
+            },
+            {
+              type: 'RENDER_START',
+              id: 1,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
+            },
+            {
+              type: 'RENDER_END',
+              id: 1,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_START',
+              id: 1,
+              phase: CommitPhase.Mutation,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_END',
+              id: 1,
+              phase: CommitPhase.Mutation,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_START',
+              id: 1,
+              phase: CommitPhase.Layout,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_END',
+              id: 1,
+              phase: CommitPhase.Layout,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'UPDATE_SUCCESS',
+              id: 1,
+              lanes:
+                Lane.DefaultLane |
+                Lane.UserVisibleLane |
+                Lane.SyncLane |
+                Lane.ViewTransitionLane,
+            },
+          ]);
+        }
+
+        SESSION3: {
+          removeObserver();
+
+          expect(runtime.getPendingUpdates().toArray()).toStrictEqual([]);
+
+          expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
+          expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
+          expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
+          expect(observer.flushEvents()).toStrictEqual([]);
+        }
+      });
+
+      it('handles an error that occurs during flushing', async () => {
+        const runtime = createRuntime(ExecutionMode.ConcurrentMode);
+        const observer = new MockObserver();
+        const error = new Error('fail');
+
+        runtime.addObserver(observer);
+
+        SESSION: {
+          const coroutine = new MockCoroutine(() => {
+            throw error;
+          });
+
+          const handle = runtime.scheduleUpdate(coroutine);
+
+          expect(await handle.scheduled).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+
+          try {
+            await handle.finished;
+            expect.unreachable();
+          } catch (caughtError) {
+            expect(caughtError).toBeInstanceOf(RenderError);
+            expect((caughtError as RenderError).cause).toBe(error);
+          }
+        }
+
+        expect(observer.flushEvents()).toStrictEqual([
+          {
+            type: 'UPDATE_START',
+            id: 0,
+            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+          },
+          {
+            type: 'RENDER_START',
+            id: 0,
+            mutationEffects: expect.any(EffectQueue),
+            layoutEffects: expect.any(EffectQueue),
+            passiveEffects: expect.any(EffectQueue),
+          },
+          {
+            type: 'RENDER_END',
+            id: 0,
+            mutationEffects: expect.any(EffectQueue),
+            layoutEffects: expect.any(EffectQueue),
+            passiveEffects: expect.any(EffectQueue),
+          },
+          {
+            type: 'UPDATE_FAILURE',
+            id: 0,
+            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            error: expect.objectContaining({ cause: error }),
+          },
+        ]);
+      });
+
+      it('aborts rendering when error is captured outside the root', async () => {
+        const runtime = createRuntime(ExecutionMode.ConcurrentMode);
+        const observer = new MockObserver();
+        const errorHandler = vi.fn();
+        const error = new Error('fail');
+
+        runtime.addObserver(observer);
+
+        SESSION: {
+          const parentScope = createScope();
+          parentScope.boundary = {
+            type: BoundaryType.Error,
+            next: null,
+            handler: errorHandler,
+          };
+          const childScope = createScope(parentScope);
+          const coroutine = new MockCoroutine(
+            () => {
+              throw error;
+            },
+            -1,
+            childScope,
+          );
+
+          const handle = runtime.scheduleUpdate(coroutine);
+
+          expect(await handle.scheduled).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+
+          expect(await handle.finished).toStrictEqual({
+            canceled: true,
+            done: false,
+          });
+          expect(errorHandler).toHaveBeenCalledOnce();
+          expect(errorHandler).toHaveBeenCalledWith(
+            error,
+            expect.any(Function),
+          );
+        }
+
+        expect(observer.flushEvents()).toStrictEqual([
+          {
+            type: 'UPDATE_START',
+            id: 0,
+            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+          },
+          {
+            type: 'RENDER_START',
+            id: 0,
+            mutationEffects: expect.any(EffectQueue),
+            layoutEffects: expect.any(EffectQueue),
+            passiveEffects: expect.any(EffectQueue),
+          },
+          {
+            type: 'RENDER_END',
+            id: 0,
+            mutationEffects: expect.any(EffectQueue),
+            layoutEffects: expect.any(EffectQueue),
+            passiveEffects: expect.any(EffectQueue),
+          },
+          {
+            type: 'UPDATE_FAILURE',
+            id: 0,
+            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            error: expect.objectContaining({ cause: error }),
+          },
+        ]);
+      });
     });
 
-    it('aborts rendering when error is captured outside the root', async () => {
-      const runtime = createRuntime();
-      const observer = new MockObserver();
-      const errorHandler = vi.fn();
-      const error = new Error('fail');
-
-      runtime.addObserver(observer);
-
-      SESSION: {
-        const parentScope = createScope();
-        parentScope.boundary = {
-          type: BoundaryType.Error,
-          next: null,
-          handler: errorHandler,
+    describe('not in concurrent mode', () => {
+      it('commits effects synchronously', async () => {
+        const mutationEffect = {
+          commit: vi.fn(),
         };
-        const childScope = createScope(parentScope);
-        const coroutine = new MockCoroutine(
-          () => {
+        const layoutEffect = {
+          commit: vi.fn(),
+        };
+        const passiveEffect = {
+          commit: vi.fn(),
+        };
+        const observer = new MockObserver();
+        const runtime = createRuntime();
+
+        const removeObserver = runtime.addObserver(observer);
+
+        SESSION1: {
+          const coroutine = new MockCoroutine((session) => {
+            session.frame.mutationEffects.push(
+              mutationEffect,
+              session.scope.level,
+            );
+            session.frame.layoutEffects.push(layoutEffect, session.scope.level);
+            session.frame.passiveEffects.push(
+              passiveEffect,
+              session.scope.level,
+            );
+          });
+
+          const handle1 = runtime.scheduleUpdate(coroutine, {
+            priority: 'user-blocking',
+            triggerFlush: false,
+          });
+          const handle2 = runtime.scheduleUpdate(coroutine, {
+            priority: 'user-blocking',
+            triggerFlush: false,
+          });
+
+          expect(await handle1.scheduled).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+          expect(await handle2.scheduled).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+
+          expect(runtime.getPendingUpdates().toArray()).toStrictEqual([
+            expect.objectContaining({
+              coroutine,
+              lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            }),
+            expect.objectContaining({
+              coroutine,
+              lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            }),
+          ]);
+
+          runtime.flushUpdates();
+
+          expect(runtime.getPendingUpdates().toArray()).toStrictEqual([]);
+
+          expect(await handle1.finished).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+          expect(await handle2.finished).toStrictEqual({
+            canceled: true,
+            done: true,
+          });
+
+          expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
+          expect(layoutEffect.commit).toHaveBeenCalledTimes(1);
+          expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
+          expect(observer.flushEvents()).toStrictEqual([
+            {
+              type: 'UPDATE_START',
+              id: 0,
+              lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            },
+            {
+              type: 'RENDER_START',
+              id: 0,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
+            },
+            {
+              type: 'RENDER_END',
+              id: 0,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_START',
+              id: 0,
+              phase: CommitPhase.Mutation,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_END',
+              id: 0,
+              phase: CommitPhase.Mutation,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_START',
+              id: 0,
+              phase: CommitPhase.Layout,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_END',
+              id: 0,
+              phase: CommitPhase.Layout,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_START',
+              id: 0,
+              phase: CommitPhase.Passive,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_END',
+              id: 0,
+              phase: CommitPhase.Passive,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'UPDATE_SUCCESS',
+              id: 0,
+              lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            },
+          ]);
+        }
+
+        SESSION2: {
+          const coroutine = new MockCoroutine((session) => {
+            session.frame.pendingCoroutines.push(subcoroutine);
+          });
+          const subcoroutine = new MockCoroutine((session) => {
+            session.frame.mutationEffects.push(
+              mutationEffect,
+              session.scope.level,
+            );
+            session.frame.layoutEffects.push(layoutEffect, session.scope.level);
+          });
+
+          const handle = runtime.scheduleUpdate(coroutine, {
+            priority: 'user-visible',
+            triggerFlush: false,
+            viewTransition: true,
+          });
+
+          expect(await handle.scheduled).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+
+          expect(runtime.getPendingUpdates().toArray()).toStrictEqual([
+            expect.objectContaining({
+              coroutine,
+              lanes:
+                Lane.DefaultLane |
+                Lane.UserVisibleLane |
+                Lane.ViewTransitionLane,
+            }),
+          ]);
+
+          runtime.flushUpdates();
+
+          expect(runtime.getPendingUpdates().toArray()).toStrictEqual([]);
+
+          expect(await handle.finished).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+
+          expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
+          expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
+          expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
+          expect(observer.flushEvents()).toStrictEqual([
+            {
+              type: 'UPDATE_START',
+              id: 1,
+              lanes:
+                Lane.DefaultLane |
+                Lane.UserVisibleLane |
+                Lane.ViewTransitionLane,
+            },
+            {
+              type: 'RENDER_START',
+              id: 1,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
+            },
+            {
+              type: 'RENDER_END',
+              id: 1,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_START',
+              id: 1,
+              phase: CommitPhase.Mutation,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_END',
+              id: 1,
+              phase: CommitPhase.Mutation,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_START',
+              id: 1,
+              phase: CommitPhase.Layout,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'COMMIT_END',
+              id: 1,
+              phase: CommitPhase.Layout,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'UPDATE_SUCCESS',
+              id: 1,
+              lanes:
+                Lane.DefaultLane |
+                Lane.UserVisibleLane |
+                Lane.ViewTransitionLane,
+            },
+          ]);
+        }
+
+        SESSION3: {
+          removeObserver();
+
+          expect(runtime.getPendingUpdates().toArray()).toStrictEqual([]);
+
+          expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
+          expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
+          expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
+          expect(observer.flushEvents()).toStrictEqual([]);
+        }
+      });
+
+      it('handles an error that occurs during flushing', async () => {
+        const runtime = createRuntime();
+        const observer = new MockObserver();
+        const error = new Error('fail');
+
+        runtime.addObserver(observer);
+
+        SESSION: {
+          const coroutine = new MockCoroutine(() => {
             throw error;
+          });
+
+          try {
+            await runtime.scheduleUpdate(coroutine).finished;
+            expect.unreachable();
+          } catch (caughtError) {
+            expect(caughtError).toBeInstanceOf(RenderError);
+            expect((caughtError as RenderError).cause).toBe(error);
+          }
+        }
+
+        expect(observer.flushEvents()).toStrictEqual([
+          {
+            type: 'UPDATE_START',
+            id: 0,
+            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           },
-          -1,
-          childScope,
-        );
+          {
+            type: 'RENDER_START',
+            id: 0,
+            mutationEffects: expect.any(EffectQueue),
+            layoutEffects: expect.any(EffectQueue),
+            passiveEffects: expect.any(EffectQueue),
+          },
+          {
+            type: 'RENDER_END',
+            id: 0,
+            mutationEffects: expect.any(EffectQueue),
+            layoutEffects: expect.any(EffectQueue),
+            passiveEffects: expect.any(EffectQueue),
+          },
+          {
+            type: 'UPDATE_FAILURE',
+            id: 0,
+            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            error: expect.objectContaining({ cause: error }),
+          },
+        ]);
+      });
 
-        const handle = runtime.scheduleUpdate(coroutine, {
-          triggerFlush: false,
-        });
+      it('aborts rendering when error is captured outside the root', async () => {
+        const runtime = createRuntime();
+        const observer = new MockObserver();
+        const errorHandler = vi.fn();
+        const error = new Error('fail');
 
-        expect(await handle.scheduled).toStrictEqual({
-          canceled: false,
-          done: true,
-        });
+        runtime.addObserver(observer);
 
-        runtime.flushSync();
+        SESSION: {
+          const parentScope = createScope();
+          parentScope.boundary = {
+            type: BoundaryType.Error,
+            next: null,
+            handler: errorHandler,
+          };
+          const childScope = createScope(parentScope);
+          const coroutine = new MockCoroutine(
+            () => {
+              throw error;
+            },
+            -1,
+            childScope,
+          );
 
-        expect(await handle.finished).toStrictEqual({
-          canceled: true,
-          done: false,
-        });
-        expect(errorHandler).toHaveBeenCalledOnce();
-        expect(errorHandler).toHaveBeenCalledWith(error, expect.any(Function));
-      }
+          const handle = runtime.scheduleUpdate(coroutine, {
+            triggerFlush: false,
+          });
 
-      expect(observer.flushEvents()).toStrictEqual([
-        {
-          type: 'UPDATE_START',
-          id: 0,
-          lanes: Lane.DefaultLane | Lane.UserBlockingLane,
-        },
-        {
-          type: 'RENDER_START',
-          id: 0,
-        },
-        {
-          type: 'UPDATE_FAILURE',
-          id: 0,
-          lanes: Lane.DefaultLane | Lane.UserBlockingLane,
-          error: expect.objectContaining({ cause: error }),
-        },
-      ]);
+          expect(await handle.scheduled).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+
+          runtime.flushUpdates();
+
+          expect(await handle.finished).toStrictEqual({
+            canceled: true,
+            done: false,
+          });
+          expect(errorHandler).toHaveBeenCalledOnce();
+          expect(errorHandler).toHaveBeenCalledWith(
+            error,
+            expect.any(Function),
+          );
+        }
+
+        expect(observer.flushEvents()).toStrictEqual([
+          {
+            type: 'UPDATE_START',
+            id: 0,
+            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+          },
+          {
+            type: 'RENDER_START',
+            id: 0,
+            mutationEffects: expect.any(EffectQueue),
+            layoutEffects: expect.any(EffectQueue),
+            passiveEffects: expect.any(EffectQueue),
+          },
+          {
+            type: 'RENDER_END',
+            id: 0,
+            mutationEffects: expect.any(EffectQueue),
+            layoutEffects: expect.any(EffectQueue),
+            passiveEffects: expect.any(EffectQueue),
+          },
+          {
+            type: 'UPDATE_FAILURE',
+            id: 0,
+            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            error: expect.objectContaining({ cause: error }),
+          },
+        ]);
+      });
     });
   });
 

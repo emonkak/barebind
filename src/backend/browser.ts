@@ -1,6 +1,11 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
 import {
+  type Backend,
+  ExecutionMode,
+  type ExecutionModes,
+} from '../backend.js';
+import {
   type CommitPhase,
   type EffectQueue,
   type Layout,
@@ -24,16 +29,15 @@ import { RefPrimitive } from '../primitive/ref.js';
 import { SpreadPrimitive } from '../primitive/spread.js';
 import { StylePrimitive } from '../primitive/style.js';
 import { TextPrimitive } from '../primitive/text.js';
-import type { Runtime, RuntimeBackend } from '../runtime.js';
 import { TaggedTemplate } from '../template/tagged.js';
 
-export class BrowserBackend implements RuntimeBackend {
+export class BrowserBackend implements Backend {
   flushEffects(effects: EffectQueue, _phase: CommitPhase): void {
     effects.flush();
   }
 
-  flushUpdate(runtime: Runtime): void {
-    runtime.flushAsync();
+  getExecutionModes(): ExecutionModes {
+    return ExecutionMode.ConcurrentMode;
   }
 
   getUpdatePriority(): TaskPriority {
@@ -50,10 +54,16 @@ export class BrowserBackend implements RuntimeBackend {
   parseTemplate(
     strings: readonly string[],
     args: readonly unknown[],
-    markerToken: string,
+    markerIdentifier: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]> {
-    return TaggedTemplate.parse(strings, args, markerToken, mode, document);
+    return TaggedTemplate.parse(
+      strings,
+      args,
+      markerIdentifier,
+      mode,
+      document,
+    );
   }
 
   requestCallback<T>(

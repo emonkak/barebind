@@ -13,7 +13,7 @@ import { createEffectQueue, MockEffect } from '../../mocks.js';
 
 describe('PerformanceProfiler', () => {
   describe('onRuntimeEvent()', () => {
-    it('collects profiles from session events', () => {
+    it('reports the profile on update success', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
@@ -27,7 +27,8 @@ describe('PerformanceProfiler', () => {
         new MockEffect(),
       ]);
       const layoutEffects = createEffectQueue([new MockEffect()]);
-      const passiveEffects = createEffectQueue([]);
+      const passiveEffects = createEffectQueue([new MockEffect()]);
+      const emptyEffects = createEffectQueue([]);
       const events: RuntimeEvent[] = [
         {
           type: 'UPDATE_START',
@@ -37,6 +38,9 @@ describe('PerformanceProfiler', () => {
         {
           type: 'RENDER_START',
           id: 1,
+          mutationEffects,
+          layoutEffects,
+          passiveEffects,
         },
         {
           type: 'COMPONENT_RENDER_START',
@@ -55,6 +59,9 @@ describe('PerformanceProfiler', () => {
         {
           type: 'RENDER_END',
           id: 1,
+          mutationEffects,
+          layoutEffects,
+          passiveEffects,
         },
         {
           type: 'COMMIT_START',
@@ -66,7 +73,7 @@ describe('PerformanceProfiler', () => {
           type: 'COMMIT_END',
           id: 1,
           phase: CommitPhase.Mutation,
-          effects: mutationEffects,
+          effects: emptyEffects,
         },
         {
           type: 'COMMIT_START',
@@ -78,7 +85,7 @@ describe('PerformanceProfiler', () => {
           type: 'COMMIT_END',
           id: 1,
           phase: CommitPhase.Layout,
-          effects: layoutEffects,
+          effects: emptyEffects,
         },
         {
           type: 'COMMIT_START',
@@ -90,7 +97,7 @@ describe('PerformanceProfiler', () => {
           type: 'COMMIT_END',
           id: 1,
           phase: CommitPhase.Passive,
-          effects: passiveEffects,
+          effects: emptyEffects,
         },
         {
           type: 'UPDATE_SUCCESS',
@@ -106,8 +113,9 @@ describe('PerformanceProfiler', () => {
       expect(reporter.reportProfile).toHaveBeenCalledOnce();
       expect(reporter.reportProfile).toHaveBeenCalledWith({
         id: 1,
+        status: 'success',
+        pendingPhaeses: 0,
         updateMeasurement: {
-          success: true,
           startTime: expect.any(Number),
           duration: expect.any(Number),
           lanes: Lane.UserBlockingLane,
@@ -126,19 +134,233 @@ describe('PerformanceProfiler', () => {
         mutationMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
-          totalEffects: 2,
+          pendingEffects: 0,
+          committedEffects: 2,
         },
         layoutMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
-          totalEffects: 1,
+          pendingEffects: 0,
+          committedEffects: 1,
         },
         passiveMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
-          totalEffects: 0,
+          pendingEffects: 0,
+          committedEffects: 1,
         },
+      } satisfies PerformanceProfile);
+    });
+
+    it('reports the profile on update failure', () => {
+      const reporter = {
+        reportProfile: vi.fn(),
+      };
+      const profiler = new PerformanceProfiler(reporter);
+
+      const component = createComponent(function MyComponent(_props: {}) {
+        return null;
       });
+      const mutationEffects = createEffectQueue([
+        new MockEffect(),
+        new MockEffect(),
+      ]);
+      const layoutEffects = createEffectQueue([new MockEffect()]);
+      const passiveEffects = createEffectQueue([]);
+      const error = new Error('fail');
+      const events: RuntimeEvent[] = [
+        {
+          type: 'UPDATE_START',
+          id: 1,
+          lanes: Lane.UserBlockingLane,
+        },
+        {
+          type: 'RENDER_START',
+          id: 1,
+          mutationEffects,
+          layoutEffects,
+          passiveEffects,
+        },
+        {
+          type: 'COMPONENT_RENDER_START',
+          id: 1,
+          component,
+          props: {},
+          context: {} as RenderContext,
+        },
+        {
+          type: 'COMPONENT_RENDER_END',
+          id: 1,
+          component,
+          props: {},
+          context: {} as RenderContext,
+        },
+        {
+          type: 'RENDER_END',
+          id: 1,
+          mutationEffects,
+          layoutEffects,
+          passiveEffects,
+        },
+        {
+          type: 'UPDATE_FAILURE',
+          id: 1,
+          lanes: Lane.UserBlockingLane,
+          error,
+        },
+      ];
+
+      for (const event of events) {
+        profiler.onRuntimeEvent(event);
+      }
+
+      expect(reporter.reportProfile).toHaveBeenCalledOnce();
+      expect(reporter.reportProfile).toHaveBeenCalledWith({
+        id: 1,
+        status: 'failure',
+        pendingPhaeses: 2,
+        updateMeasurement: {
+          startTime: expect.any(Number),
+          duration: expect.any(Number),
+          lanes: Lane.UserBlockingLane,
+        },
+        renderMeasurement: {
+          startTime: expect.any(Number),
+          duration: expect.any(Number),
+        },
+        componentMeasurements: [
+          {
+            name: 'MyComponent',
+            startTime: expect.any(Number),
+            duration: expect.any(Number),
+          },
+        ],
+        mutationMeasurement: null,
+        layoutMeasurement: null,
+        passiveMeasurement: null,
+      } satisfies PerformanceProfile);
+    });
+
+    it('reports the profile after all effects are committed', () => {
+      const reporter = {
+        reportProfile: vi.fn(),
+      };
+      const profiler = new PerformanceProfiler(reporter);
+
+      const component = createComponent(function MyComponent(_props: {}) {
+        return null;
+      });
+      const mutationEffects = createEffectQueue([
+        new MockEffect(),
+        new MockEffect(),
+      ]);
+      const layoutEffects = createEffectQueue([]);
+      const passiveEffects = createEffectQueue([new MockEffect()]);
+      const emptyEffects = createEffectQueue([]);
+      const events: RuntimeEvent[] = [
+        {
+          type: 'UPDATE_START',
+          id: 1,
+          lanes: Lane.UserBlockingLane,
+        },
+        {
+          type: 'RENDER_START',
+          id: 1,
+          mutationEffects,
+          layoutEffects,
+          passiveEffects,
+        },
+        {
+          type: 'COMPONENT_RENDER_START',
+          id: 1,
+          component,
+          props: {},
+          context: {} as RenderContext,
+        },
+        {
+          type: 'COMPONENT_RENDER_END',
+          id: 1,
+          component,
+          props: {},
+          context: {} as RenderContext,
+        },
+        {
+          type: 'RENDER_END',
+          id: 1,
+          mutationEffects,
+          layoutEffects,
+          passiveEffects,
+        },
+        {
+          type: 'COMMIT_START',
+          id: 1,
+          phase: CommitPhase.Mutation,
+          effects: mutationEffects,
+        },
+        {
+          type: 'COMMIT_END',
+          id: 1,
+          phase: CommitPhase.Mutation,
+          effects: emptyEffects,
+        },
+        {
+          type: 'UPDATE_SUCCESS',
+          id: 1,
+          lanes: Lane.UserBlockingLane,
+        },
+        {
+          type: 'COMMIT_START',
+          id: 1,
+          phase: CommitPhase.Passive,
+          effects: passiveEffects,
+        },
+        {
+          type: 'COMMIT_END',
+          id: 1,
+          phase: CommitPhase.Passive,
+          effects: emptyEffects,
+        },
+      ];
+
+      for (const event of events) {
+        profiler.onRuntimeEvent(event);
+      }
+
+      expect(reporter.reportProfile).toHaveBeenCalledOnce();
+      expect(reporter.reportProfile).toHaveBeenCalledWith({
+        id: 1,
+        status: 'success',
+        pendingPhaeses: 0,
+        updateMeasurement: {
+          startTime: expect.any(Number),
+          duration: expect.any(Number),
+          lanes: Lane.UserBlockingLane,
+        },
+        renderMeasurement: {
+          startTime: expect.any(Number),
+          duration: expect.any(Number),
+        },
+        componentMeasurements: [
+          {
+            name: 'MyComponent',
+            startTime: expect.any(Number),
+            duration: expect.any(Number),
+          },
+        ],
+        mutationMeasurement: {
+          startTime: expect.any(Number),
+          duration: expect.any(Number),
+          pendingEffects: 0,
+          committedEffects: 2,
+        },
+        layoutMeasurement: null,
+        passiveMeasurement: {
+          startTime: expect.any(Number),
+          duration: expect.any(Number),
+          pendingEffects: 0,
+          committedEffects: 1,
+        },
+      } satisfies PerformanceProfile);
     });
   });
 });
@@ -149,6 +371,8 @@ describe('ConsoleReporter', () => {
       [
         {
           id: 1,
+          status: 'pending',
+          pendingPhaeses: 0,
           updateMeasurement: null,
           renderMeasurement: null,
           componentMeasurements: [],
@@ -161,6 +385,8 @@ describe('ConsoleReporter', () => {
       [
         {
           id: 1,
+          status: 'success',
+          pendingPhaeses: 0,
           updateMeasurement: {
             success: true,
             startTime: 0,
@@ -176,7 +402,7 @@ describe('ConsoleReporter', () => {
         [
           [
             'groupCollapsed',
-            'Transition #1 Success without priority in %c10ms',
+            'Transition #1 SUCCESS without priority in %c10ms',
           ],
           ['groupEnd'],
         ],
@@ -184,6 +410,8 @@ describe('ConsoleReporter', () => {
       [
         {
           id: 1,
+          status: 'success',
+          pendingPhaeses: 0,
           updateMeasurement: {
             success: true,
             startTime: 0,
@@ -204,23 +432,26 @@ describe('ConsoleReporter', () => {
           mutationMeasurement: {
             startTime: 4,
             duration: 3,
-            totalEffects: 3,
+            pendingEffects: 0,
+            committedEffects: 3,
           },
           layoutMeasurement: {
             startTime: 7,
             duration: 2,
-            totalEffects: 2,
+            pendingEffects: 0,
+            committedEffects: 2,
           },
           passiveMeasurement: {
             startTime: 9,
             duration: 1,
-            totalEffects: 1,
+            pendingEffects: 0,
+            committedEffects: 1,
           },
         },
         [
           [
             'groupCollapsed',
-            'Update #1 Success with user-blocking priority in %c10ms',
+            'Update #1 SUCCESS with user-blocking priority in %c10ms',
           ],
           ['log', '%cRENDER PHASE:%c 1 component(s) rendered in %c4ms'],
           [
@@ -242,6 +473,8 @@ describe('ConsoleReporter', () => {
       [
         {
           id: 1,
+          status: 'failure',
+          pendingPhaeses: 0,
           updateMeasurement: {
             success: false,
             error: new Error('fail'),

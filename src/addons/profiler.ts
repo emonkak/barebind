@@ -10,6 +10,8 @@ import type { RuntimeEvent, RuntimeObserver } from '../runtime.js';
 
 export interface PerformanceProfile {
   id: number;
+  status: 'pending' | 'success' | 'failure';
+  pendingPhaeses: number;
   updateMeasurement: UpdateMeasurement | null;
   renderMeasurement: RenderMeasurement | null;
   componentMeasurements: ComponentMeasurement[];
@@ -19,7 +21,6 @@ export interface PerformanceProfile {
 }
 
 export interface UpdateMeasurement {
-  success: boolean;
   startTime: number;
   duration: number;
   lanes: Lanes;
@@ -39,7 +40,8 @@ export interface ComponentMeasurement {
 export interface CommitMeasurement {
   startTime: number;
   duration: number;
-  totalEffects: number;
+  pendingEffects: number;
+  committedEffects: number;
 }
 
 export interface PerformanceReporter {
@@ -88,22 +90,28 @@ export class PerformanceProfiler implements RuntimeObserver {
     switch (event.type) {
       case 'UPDATE_START': {
         profile.updateMeasurement = {
-          success: false,
           startTime: performance.now(),
           duration: 0,
           lanes: event.lanes,
         };
         break;
       }
-      case 'UPDATE_SUCCESS':
+      case 'UPDATE_SUCCESS': {
+        const measurement = profile.updateMeasurement;
+        if (measurement !== null) {
+          measurement.duration = performance.now() - measurement.startTime;
+        }
+        profile.status = 'success';
+        this._reportProfile(profile);
+        break;
+      }
       case 'UPDATE_FAILURE': {
         const measurement = profile.updateMeasurement;
         if (measurement !== null) {
-          measurement.success = event.type === 'UPDATE_SUCCESS';
           measurement.duration = performance.now() - measurement.startTime;
         }
-        this._reporter.reportProfile(profile);
-        this._inProgressProfiles.delete(event.id);
+        profile.status = 'failure';
+        this._reportProfile(profile);
         break;
       }
       case 'RENDER_START':
@@ -116,6 +124,15 @@ export class PerformanceProfiler implements RuntimeObserver {
         const measurement = profile.renderMeasurement;
         if (measurement !== null) {
           measurement.duration = performance.now() - measurement.startTime;
+        }
+        if (event.mutationEffects.length > 0) {
+          profile.pendingPhaeses++;
+        }
+        if (event.layoutEffects.length > 0) {
+          profile.pendingPhaeses++;
+        }
+        if (event.passiveEffects.length > 0) {
+          profile.pendingPhaeses++;
         }
         break;
       }
@@ -134,26 +151,26 @@ export class PerformanceProfiler implements RuntimeObserver {
         }
         break;
       }
-      case 'COMMIT_START':
-        {
-          const measurement = {
-            startTime: performance.now(),
-            duration: 0,
-            totalEffects: event.effects.length,
-          };
-          switch (event.phase) {
-            case CommitPhase.Mutation:
-              profile.mutationMeasurement = measurement;
-              break;
-            case CommitPhase.Layout:
-              profile.layoutMeasurement = measurement;
-              break;
-            case CommitPhase.Passive:
-              profile.passiveMeasurement = measurement;
-              break;
-          }
+      case 'COMMIT_START': {
+        const measurement = {
+          startTime: performance.now(),
+          duration: 0,
+          pendingEffects: event.effects.length,
+          committedEffects: 0,
+        };
+        switch (event.phase) {
+          case CommitPhase.Mutation:
+            profile.mutationMeasurement = measurement;
+            break;
+          case CommitPhase.Layout:
+            profile.layoutMeasurement = measurement;
+            break;
+          case CommitPhase.Passive:
+            profile.passiveMeasurement = measurement;
+            break;
         }
         break;
+      }
       case 'COMMIT_END': {
         let measurement: CommitMeasurement | null = null;
         switch (event.phase) {
@@ -171,10 +188,26 @@ export class PerformanceProfiler implements RuntimeObserver {
           }
         }
         if (measurement !== null) {
+          const remainingEffects = event.effects.length;
           measurement.duration = performance.now() - measurement.startTime;
+          measurement.committedEffects =
+            measurement.pendingEffects - remainingEffects;
+          measurement.pendingEffects = remainingEffects;
         }
+        profile.pendingPhaeses--;
+        this._reportProfile(profile);
         break;
       }
+    }
+  }
+
+  private _reportProfile(profile: PerformanceProfile): void {
+    if (
+      (profile.status === 'success' && profile.pendingPhaeses === 0) ||
+      profile.status === 'failure'
+    ) {
+      this._reporter.reportProfile(profile);
+      this._inProgressProfiles.delete(profile.id);
     }
   }
 }
@@ -188,6 +221,7 @@ export class ConsoleReporter implements PerformanceReporter {
 
   reportProfile(profile: PerformanceProfile): void {
     const {
+      status,
       updateMeasurement,
       renderMeasurement,
       componentMeasurements,
@@ -204,7 +238,7 @@ export class ConsoleReporter implements PerformanceReporter {
       (updateMeasurement.lanes & Lane.ViewTransitionLane) !== 0;
     const priority = getPriorityFromLanes(updateMeasurement.lanes);
     const titleLablel = viewTransition ? 'Transition' : 'Update';
-    const statusLablel = updateMeasurement.success ? 'Success' : 'FAILURE';
+    const statusLablel = status.toUpperCase();
     const priorityLabel = priority !== null ? `with ${priority}` : 'without';
 
     this._logger.groupCollapsed(
@@ -226,7 +260,7 @@ export class ConsoleReporter implements PerformanceReporter {
 
     if (mutationMeasurement !== null) {
       this._logger.log(
-        `%cMUTATION PHASE:%c ${mutationMeasurement.totalEffects} effect(s) committed in %c${mutationMeasurement.duration}ms`,
+        `%cMUTATION PHASE:%c ${mutationMeasurement.committedEffects} effect(s) committed in %c${mutationMeasurement.duration}ms`,
         MUTATION_PHASE_STYLE,
         DEFAULT_STYLE,
         DURATION_STYLE,
@@ -235,7 +269,7 @@ export class ConsoleReporter implements PerformanceReporter {
 
     if (layoutMeasurement !== null) {
       this._logger.log(
-        `%cLAYOUT PHASE:%c ${layoutMeasurement.totalEffects} effect(s) committed in %c${layoutMeasurement.duration}ms`,
+        `%cLAYOUT PHASE:%c ${layoutMeasurement.committedEffects} effect(s) committed in %c${layoutMeasurement.duration}ms`,
         LAYOUT_PHASE_STYLE,
         DEFAULT_STYLE,
         DURATION_STYLE,
@@ -244,7 +278,7 @@ export class ConsoleReporter implements PerformanceReporter {
 
     if (passiveMeasurement !== null) {
       this._logger.log(
-        `%cPASSIVE PHASE:%c ${passiveMeasurement.totalEffects} effect(s) committed in %c${passiveMeasurement.duration}ms`,
+        `%cPASSIVE PHASE:%c ${passiveMeasurement.committedEffects} effect(s) committed in %c${passiveMeasurement.duration}ms`,
         PASSIVE_PHASE_STYLE,
         DEFAULT_STYLE,
         DURATION_STYLE,
@@ -258,6 +292,8 @@ export class ConsoleReporter implements PerformanceReporter {
 function createProfile(id: number): PerformanceProfile {
   return {
     id,
+    status: 'pending',
+    pendingPhaeses: 0,
     updateMeasurement: null,
     renderMeasurement: null,
     componentMeasurements: [],

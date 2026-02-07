@@ -52,7 +52,7 @@ export class TestUpdater {
 
     coroutine.pendingLanes |= lanes;
 
-    this.runtime.flushSync();
+    this.runtime.flushUpdates();
 
     if (thrownError !== undefined) {
       throw thrownError;

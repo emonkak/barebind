@@ -114,7 +114,7 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
 
     this.coroutine = coroutine;
 
-    this.runtime.flushSync();
+    this.runtime.flushUpdates();
 
     if (thrownError !== undefined) {
       throw thrownError;

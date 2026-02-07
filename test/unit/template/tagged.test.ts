@@ -12,7 +12,7 @@ import { MockSlot } from '../../mocks.js';
 import { createElement, serializeNode } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
 
-const TEMPLATE_PLACEHOLDER = '__test__';
+const MARKER_IDENTIFIER = '__test__';
 
 describe('TaggedTemplate', () => {
   describe('arity', () => {
@@ -346,19 +346,19 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should throw an error if passed a marker token in an invalid format', () => {
+    it('should throw an error if the passed marker identifier has an invalid format', () => {
       expect(() => {
         TaggedTemplate.parse([], [], 'INVALID_MARKER', 'html', document);
-      }).toThrow('The marker token is in an invalid format.');
+      }).toThrow('A marker identifier must match pattern /^[0-9a-z_-]+$/');
       expect(() => {
         TaggedTemplate.parse(
           [],
           [],
-          TEMPLATE_PLACEHOLDER.toUpperCase(),
+          MARKER_IDENTIFIER.toUpperCase(),
           'html',
           document,
         );
-      }).toThrow('The marker token is in an invalid format.');
+      }).toThrow('A marker identifier must match pattern /^[0-9a-z_-]+$/');
     });
 
     it('should throw an error when there is a hole as an attribute name', () => {
@@ -1142,7 +1142,7 @@ function html<TArgs extends readonly unknown[]>(
     template: TaggedTemplate.parse(
       strings,
       args,
-      TEMPLATE_PLACEHOLDER,
+      MARKER_IDENTIFIER,
       'html',
       document,
     ),
@@ -1158,7 +1158,7 @@ function math<const TArgs extends readonly unknown[]>(
     template: TaggedTemplate.parse(
       strings,
       args,
-      TEMPLATE_PLACEHOLDER,
+      MARKER_IDENTIFIER,
       'math',
       document,
     ),
@@ -1174,7 +1174,7 @@ function svg<const TArgs extends readonly unknown[]>(
     template: TaggedTemplate.parse(
       strings,
       args,
-      TEMPLATE_PLACEHOLDER,
+      MARKER_IDENTIFIER,
       'svg',
       document,
     ),
@@ -1190,7 +1190,7 @@ function text<const TArgs extends readonly unknown[]>(
     template: TaggedTemplate.parse(
       strings,
       args,
-      TEMPLATE_PLACEHOLDER,
+      MARKER_IDENTIFIER,
       'textarea',
       document,
     ),
