@@ -1,9 +1,6 @@
+import { BrowserBackend, createComponent, Root, Runtime } from 'barebind';
 import { expect, test } from 'vitest';
 
-import { createComponent } from '@/component.js';
-import { Root } from '@/root.js';
-import { BrowserBackend } from '@/runtime/browser.js';
-import { Runtime } from '@/runtime.js';
 import { stripComments } from '../test-helpers.js';
 
 test('render a component returning virtual DOM', async () => {

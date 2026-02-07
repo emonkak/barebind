@@ -1,10 +1,12 @@
+import {
+  BrowserBackend,
+  createComponent,
+  type RenderContext,
+  Root,
+  Runtime,
+} from 'barebind';
 import { expect, test } from 'vitest';
 
-import { createComponent } from '@/component.js';
-import type { RenderContext } from '@/internal.js';
-import { Root } from '@/root.js';
-import { BrowserBackend } from '@/runtime/browser.js';
-import { Runtime } from '@/runtime.js';
 import { createElement, stripComments } from '../test-helpers.js';
 
 test('hydrate a component using a context value', async () => {

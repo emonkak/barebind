@@ -1,12 +1,14 @@
+import type { RenderContext } from 'barebind';
+import {
+  BrowserBackend,
+  createComponent,
+  Repeat,
+  Root,
+  Runtime,
+} from 'barebind';
+import { Resource, Suspense } from 'barebind/addons/suspense';
 import { expect, test } from 'vitest';
 
-import { Resource, Suspense } from '@/addons/suspense.js';
-import { createComponent } from '@/component.js';
-import type { RenderContext } from '@/internal.js';
-import { Repeat } from '@/repeat.js';
-import { Root } from '@/root.js';
-import { BrowserBackend } from '@/runtime/browser.js';
-import { Runtime } from '@/runtime.js';
 import {
   inspectPromise,
   stripComments,
