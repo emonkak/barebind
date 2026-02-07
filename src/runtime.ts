@@ -77,6 +77,7 @@ export interface RuntimeObserver {
 
 export interface RuntimeOptions {
   uniqueIdentifier?: string;
+  maxCoroutinesPerYield?: number;
 }
 
 export class Runtime implements SessionContext {
@@ -93,15 +94,21 @@ export class Runtime implements SessionContext {
 
   private _identifierCount: number = 0;
 
+  private readonly _maxCoroutinesPerYield: number;
+
   private readonly _uniqueIdentifier: string;
 
   private _updateCount: number = 0;
 
   constructor(
     backend: Backend,
-    { uniqueIdentifier = generateUniqueIdentifier(8) }: RuntimeOptions = {},
+    {
+      maxCoroutinesPerYield = 100,
+      uniqueIdentifier = generateUniqueIdentifier(8),
+    }: RuntimeOptions = {},
   ) {
     this._backend = backend;
+    this._maxCoroutinesPerYield = maxCoroutinesPerYield;
     this._uniqueIdentifier = uniqueIdentifier;
   }
 
@@ -358,7 +365,10 @@ export class Runtime implements SessionContext {
 
     try {
       while (true) {
-        for (const coroutine of consumeCoroutines(frame)) {
+        for (const coroutine of consumeCoroutines(
+          frame,
+          this._maxCoroutinesPerYield,
+        )) {
           try {
             coroutine.resume(session);
           } catch (error) {
@@ -484,10 +494,11 @@ export class RenderError extends Error {
 
 class CapturedError extends Error {}
 
-function consumeCoroutines(frame: RenderFrame): Coroutine[] {
-  const { pendingCoroutines } = frame;
-  frame.pendingCoroutines = [];
-  return pendingCoroutines;
+function consumeCoroutines(
+  frame: RenderFrame,
+  maxCoroutines: number = Infinity,
+): Coroutine[] {
+  return frame.pendingCoroutines.splice(0, maxCoroutines);
 }
 
 function createRenderFrame(
