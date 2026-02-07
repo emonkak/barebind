@@ -13,7 +13,7 @@ import {
   type DirectiveType,
   type Effect,
   EffectQueue,
-  Lanes,
+  type Lanes,
   type Layout,
   type Part,
   PartType,
@@ -216,7 +216,7 @@ export class MockCoroutine implements Coroutine {
 
   constructor(
     callback: (this: Coroutine, session: UpdateSession) => void = () => {},
-    pendingLanes: Lanes = Lanes.AllLanes,
+    pendingLanes: Lanes = -1,
     scope: Scope = createScope(),
   ) {
     this.callback = callback;

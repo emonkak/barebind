@@ -6,7 +6,7 @@ import {
   CommitPhase,
   DETACHED_SCOPE,
   EffectQueue,
-  Lanes,
+  Lane,
   type RefObject,
   type RenderContext,
   type UpdateHandle,
@@ -208,7 +208,7 @@ describe('RenderSession', () => {
           }, []);
           return count;
         },
-        { hooks: [], pendingLanes: Lanes.NoLanes, scope: DETACHED_SCOPE },
+        { hooks: [], pendingLanes: Lane.NoLane, scope: DETACHED_SCOPE },
       );
       const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
 

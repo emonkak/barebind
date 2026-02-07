@@ -7,7 +7,8 @@ import {
   getPriorityFromLanes,
   getStartNode,
   isBindable,
-  Lanes,
+  Lane,
+  type Lanes,
   PartType,
   type UpdateOptions,
 } from '@/internal.js';
@@ -90,22 +91,22 @@ describe('areDirectiveTypesEqual()', () => {
 
 describe('getLanesFromOptions()', () => {
   it.each([
-    [{}, Lanes.DefaultLane],
-    [{ priority: 'user-blocking' }, Lanes.DefaultLane | Lanes.UserBlockingLane],
-    [{ priority: 'user-visible' }, Lanes.DefaultLane | Lanes.UserVisibleLane],
-    [{ priority: 'background' }, Lanes.DefaultLane | Lanes.BackgroundLane],
-    [{ viewTransition: true }, Lanes.DefaultLane | Lanes.ViewTransitionLane],
+    [{}, Lane.DefaultLane],
+    [{ priority: 'user-blocking' }, Lane.DefaultLane | Lane.UserBlockingLane],
+    [{ priority: 'user-visible' }, Lane.DefaultLane | Lane.UserVisibleLane],
+    [{ priority: 'background' }, Lane.DefaultLane | Lane.BackgroundLane],
+    [{ viewTransition: true }, Lane.DefaultLane | Lane.ViewTransitionLane],
     [
       { priority: 'user-blocking', viewTransition: true },
-      Lanes.DefaultLane | Lanes.UserBlockingLane | Lanes.ViewTransitionLane,
+      Lane.DefaultLane | Lane.UserBlockingLane | Lane.ViewTransitionLane,
     ],
     [
       { priority: 'user-visible', viewTransition: true },
-      Lanes.DefaultLane | Lanes.UserVisibleLane | Lanes.ViewTransitionLane,
+      Lane.DefaultLane | Lane.UserVisibleLane | Lane.ViewTransitionLane,
     ],
     [
       { priority: 'background', viewTransition: true },
-      Lanes.DefaultLane | Lanes.BackgroundLane | Lanes.ViewTransitionLane,
+      Lane.DefaultLane | Lane.BackgroundLane | Lane.ViewTransitionLane,
     ],
   ] as [
     UpdateOptions,

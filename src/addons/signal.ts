@@ -10,7 +10,8 @@ import {
   type DirectiveType,
   type HookFunction,
   type HookObject,
-  Lanes,
+  Lane,
+  type Lanes,
   type Part,
   type RenderContext,
   type Scope,
@@ -60,7 +61,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   private readonly _slot: Slot<T>;
 
-  private _pendingLanes: Lanes = Lanes.NoLanes;
+  private _pendingLanes: Lanes = Lane.NoLane;
 
   private _scope: Scope = DETACHED_SCOPE;
 
@@ -105,7 +106,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     if (this._slot.reconcile(this._signal.value, session)) {
       session.frame.mutationEffects.push(this._slot, this._scope.level);
     }
-    this._pendingLanes = Lanes.NoLanes;
+    this._pendingLanes = Lane.NoLane;
   }
 
   shouldUpdate(signal: Signal<T>): boolean {
@@ -134,7 +135,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._slot.detach(session);
 
     this._scope = DETACHED_SCOPE;
-    this._pendingLanes = Lanes.NoLanes;
+    this._pendingLanes = Lane.NoLane;
     this._subscription = null;
   }
 

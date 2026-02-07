@@ -5,7 +5,8 @@ import {
   createScope,
   DETACHED_SCOPE,
   HookType,
-  Lanes,
+  Lane,
+  type Lanes,
   type Scope,
   type UpdateSession,
 } from '@/internal.js';
@@ -26,7 +27,7 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
     callback: (props: TProps, session: RenderSession) => TResult,
     state: ComponentState = {
       hooks: [],
-      pendingLanes: Lanes.NoLanes,
+      pendingLanes: Lane.NoLane,
       scope: createScope(),
     },
   ) {
@@ -68,7 +69,7 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
   reset(): void {
     this.state = {
       hooks: [],
-      pendingLanes: Lanes.NoLanes,
+      pendingLanes: Lane.NoLane,
       scope: createScope(),
     };
   }
@@ -83,7 +84,7 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
 
     const coroutine = {
       name: this.callback.name,
-      pendingLanes: Lanes.NoLanes,
+      pendingLanes: Lane.NoLane,
       scope,
       resume({ frame, scope, context }: UpdateSession): void {
         const session = new RenderSession(state, that, frame, scope, context);

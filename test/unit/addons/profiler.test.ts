@@ -7,7 +7,7 @@ import {
   PerformanceProfiler,
 } from '@/addons/profiler.js';
 import { createComponent } from '@/component.js';
-import { CommitPhase, Lanes, type RenderContext } from '@/internal.js';
+import { CommitPhase, Lane, type RenderContext } from '@/internal.js';
 import type { RuntimeEvent } from '@/runtime.js';
 import { createEffectQueue, MockEffect } from '../../mocks.js';
 
@@ -32,7 +32,7 @@ describe('PerformanceProfiler', () => {
         {
           type: 'UPDATE_START',
           id: 1,
-          lanes: Lanes.UserBlockingLane,
+          lanes: Lane.UserBlockingLane,
         },
         {
           type: 'RENDER_START',
@@ -95,7 +95,7 @@ describe('PerformanceProfiler', () => {
         {
           type: 'UPDATE_SUCCESS',
           id: 1,
-          lanes: Lanes.UserBlockingLane,
+          lanes: Lane.UserBlockingLane,
         },
       ];
 
@@ -110,7 +110,7 @@ describe('PerformanceProfiler', () => {
           success: true,
           startTime: expect.any(Number),
           duration: expect.any(Number),
-          lanes: Lanes.UserBlockingLane,
+          lanes: Lane.UserBlockingLane,
         },
         renderMeasurement: {
           startTime: expect.any(Number),
@@ -165,7 +165,7 @@ describe('ConsoleReporter', () => {
             success: true,
             startTime: 0,
             duration: 10,
-            lanes: Lanes.ViewTransitionLane,
+            lanes: Lane.ViewTransitionLane,
           },
           renderMeasurement: null,
           componentMeasurements: [],
@@ -188,7 +188,7 @@ describe('ConsoleReporter', () => {
             success: true,
             startTime: 0,
             duration: 10,
-            lanes: Lanes.UserBlockingLane,
+            lanes: Lane.UserBlockingLane,
           },
           renderMeasurement: {
             startTime: 0,
@@ -247,7 +247,7 @@ describe('ConsoleReporter', () => {
             error: new Error('fail'),
             startTime: 0,
             duration: 10,
-            lanes: Lanes.UserBlockingLane,
+            lanes: Lane.UserBlockingLane,
           },
           renderMeasurement: {
             startTime: 0,

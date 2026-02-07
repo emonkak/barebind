@@ -1,6 +1,11 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
-import { CommitPhase, getPriorityFromLanes, Lanes } from '../internal.js';
+import {
+  CommitPhase,
+  getPriorityFromLanes,
+  Lane,
+  type Lanes,
+} from '../internal.js';
 import type { RuntimeEvent, RuntimeObserver } from '../runtime.js';
 
 export interface PerformanceProfile {
@@ -196,7 +201,7 @@ export class ConsoleReporter implements PerformanceReporter {
     }
 
     const viewTransition =
-      (updateMeasurement.lanes & Lanes.ViewTransitionLane) !== 0;
+      (updateMeasurement.lanes & Lane.ViewTransitionLane) !== 0;
     const priority = getPriorityFromLanes(updateMeasurement.lanes);
     const titleLablel = viewTransition ? 'Transition' : 'Update';
     const statusLablel = updateMeasurement.success ? 'Success' : 'FAILURE';

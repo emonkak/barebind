@@ -14,7 +14,7 @@ import {
   type Hook,
   HookType,
   type InitialState,
-  Lanes,
+  Lane,
   type NextState,
   type RefObject,
   type RenderContext,
@@ -82,13 +82,13 @@ export class RenderSession implements RenderContext {
   forceUpdate(options?: UpdateOptions): UpdateHandle {
     if (this._state.scope === DETACHED_SCOPE) {
       return {
-        lanes: Lanes.NoLanes,
+        lanes: Lane.NoLane,
         scheduled: Promise.resolve({ canceled: true, done: false }),
         finished: Promise.resolve({ canceled: true, done: false }),
       };
     }
 
-    if (this._frame.lanes !== Lanes.NoLanes) {
+    if (this._frame.lanes !== Lane.NoLane) {
       for (const { lanes, continuation } of this._context.getPendingTasks()) {
         this._frame.pendingCoroutines.push(this._coroutine);
         this._state.pendingLanes |= lanes;
@@ -292,7 +292,7 @@ export class RenderSession implements RenderContext {
         (currentHook.pendingLanes & this._frame.lanes) ===
         currentHook.pendingLanes
       ) {
-        currentHook.pendingLanes = Lanes.NoLanes;
+        currentHook.pendingLanes = Lane.NoLane;
         currentHook.memoizedState = currentHook.pendingState;
       }
       currentHook.reducer = reducer;
@@ -314,7 +314,7 @@ export class RenderSession implements RenderContext {
 
           if (areStatesEqual(nextState, prevState)) {
             return {
-              lanes: Lanes.NoLanes,
+              lanes: Lane.NoLane,
               scheduled: Promise.resolve({ canceled: true, done: true }),
               finished: Promise.resolve({ canceled: true, done: true }),
             };
@@ -325,7 +325,7 @@ export class RenderSession implements RenderContext {
             return handle;
           }
         },
-        pendingLanes: Lanes.NoLanes,
+        pendingLanes: Lane.NoLane,
         pendingState: state,
         memoizedState: state,
       };
@@ -338,7 +338,7 @@ export class RenderSession implements RenderContext {
     return [
       currentHook.memoizedState,
       currentHook.dispatch,
-      currentHook.pendingLanes !== Lanes.NoLanes,
+      currentHook.pendingLanes !== Lane.NoLane,
     ];
   }
 

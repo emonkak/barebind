@@ -13,7 +13,8 @@ import {
   type EffectQueue,
   type Hook,
   HookType,
-  Lanes,
+  Lane,
+  type Lanes,
   type Part,
   type RenderContext,
   type Scope,
@@ -63,7 +64,7 @@ export class ComponentBinding<TProps, TResult>
 
   private readonly _state: ComponentState = {
     hooks: [],
-    pendingLanes: Lanes.NoLanes,
+    pendingLanes: Lane.NoLane,
     scope: DETACHED_SCOPE,
   };
 
@@ -137,7 +138,7 @@ export class ComponentBinding<TProps, TResult>
     if (
       dirty &&
       scope === originScope &&
-      this._state.pendingLanes !== Lanes.NoLanes
+      this._state.pendingLanes !== Lane.NoLane
     ) {
       frame.mutationEffects.push(this._slot, scope.level);
     }
@@ -180,7 +181,7 @@ export class ComponentBinding<TProps, TResult>
 
     this._slot?.detach(session);
 
-    this._state.pendingLanes = Lanes.NoLanes;
+    this._state.pendingLanes = Lane.NoLane;
     this._state.scope = DETACHED_SCOPE;
   }
 

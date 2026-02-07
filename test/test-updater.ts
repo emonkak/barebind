@@ -1,7 +1,7 @@
 import {
   BoundaryType,
   createScope,
-  Lanes,
+  Lane,
   type Scope,
   type UpdateOptions,
   type UpdateSession,
@@ -29,7 +29,7 @@ export class TestUpdater {
 
     const coroutine = {
       name: callback.name,
-      pendingLanes: Lanes.NoLanes,
+      pendingLanes: Lane.NoLane,
       scope: options.scope ?? createScope(),
       resume(session: UpdateSession): void {
         this.scope.boundary = {

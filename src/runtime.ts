@@ -10,7 +10,8 @@ import {
   type DirectiveType,
   EffectQueue,
   getLanesFromOptions,
-  Lanes,
+  Lane,
+  type Lanes,
   type Layout,
   type Part,
   type Primitive,
@@ -138,7 +139,7 @@ export class Runtime implements SessionContext {
     ) {
       const { coroutine, lanes, continuation } = pendingTask;
 
-      if ((coroutine.pendingLanes & lanes) === Lanes.NoLanes) {
+      if ((coroutine.pendingLanes & lanes) === Lane.NoLane) {
         continuation.resolve({ canceled: true, done: true });
         continue;
       }
@@ -187,7 +188,7 @@ export class Runtime implements SessionContext {
             id,
           });
         } finally {
-          frame.lanes = Lanes.NoLanes;
+          frame.lanes = Lane.NoLane;
         }
 
         const { mutationEffects, layoutEffects, passiveEffects } = frame;
@@ -203,7 +204,7 @@ export class Runtime implements SessionContext {
             }
           };
 
-          if (lanes & Lanes.ViewTransitionLane) {
+          if (lanes & Lane.ViewTransitionLane) {
             await this._backend.startViewTransition(callback);
           } else {
             await this._backend.requestCallback(callback, {
@@ -261,7 +262,7 @@ export class Runtime implements SessionContext {
     ) {
       const { coroutine, lanes, continuation } = pendingTask;
 
-      if ((coroutine.pendingLanes & lanes) === Lanes.NoLanes) {
+      if ((coroutine.pendingLanes & lanes) === Lane.NoLane) {
         continuation.resolve({ canceled: true, done: true });
         continue;
       }
@@ -304,7 +305,7 @@ export class Runtime implements SessionContext {
             id,
           });
         } finally {
-          frame.lanes = Lanes.NoLanes;
+          frame.lanes = Lane.NoLane;
         }
 
         const { mutationEffects, layoutEffects, passiveEffects } = frame;
@@ -592,7 +593,7 @@ function handleError(
 
   handleError(error);
 
-  if (currentScope.host?.pendingLanes === Lanes.NoLanes) {
+  if (currentScope.host?.pendingLanes === Lane.NoLane) {
     currentScope.host.detach(session);
   }
 

@@ -232,15 +232,14 @@ export type HookType = (typeof HookType)[keyof typeof HookType];
 
 export type InitialState<T> = (T extends Function ? never : T) | (() => T);
 
-// biome-ignore format: Align lane flags
-export const Lanes = {
-  NoLanes:            0,
-  AllLanes:           -1,
+// biome-ignore format: Align Lane flags
+export const Lane = {
+  NoLane:             0,
   DefaultLane:        0b1,
-  ViewTransitionLane: 0b10,
-  UserBlockingLane:   0b100,
-  UserVisibleLane:    0b1000,
-  BackgroundLane:     0b10000,
+  UserBlockingLane:   0b10,
+  UserVisibleLane:    0b100,
+  BackgroundLane:     0b1000,
+  ViewTransitionLane: 0b10000,
 } as const satisfies Record<string, Lanes>;
 
 export type Lanes = number;
@@ -582,22 +581,22 @@ export function getHydrationTargetTree(scope: Scope): TreeWalker | null {
  * @internal
  */
 export function getLanesFromOptions(options: UpdateOptions): Lanes {
-  let lanes = Lanes.DefaultLane;
+  let lanes = Lane.DefaultLane;
 
   switch (options.priority) {
     case 'user-blocking':
-      lanes |= Lanes.UserBlockingLane;
+      lanes |= Lane.UserBlockingLane;
       break;
     case 'user-visible':
-      lanes |= Lanes.UserVisibleLane;
+      lanes |= Lane.UserVisibleLane;
       break;
     case 'background':
-      lanes |= Lanes.BackgroundLane;
+      lanes |= Lane.BackgroundLane;
       break;
   }
 
   if (options.viewTransition) {
-    lanes |= Lanes.ViewTransitionLane;
+    lanes |= Lane.ViewTransitionLane;
   }
 
   return lanes;
@@ -607,11 +606,11 @@ export function getLanesFromOptions(options: UpdateOptions): Lanes {
  * @internal
  */
 export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
-  if (lanes & Lanes.BackgroundLane) {
+  if (lanes & Lane.BackgroundLane) {
     return 'background';
-  } else if (lanes & Lanes.UserVisibleLane) {
+  } else if (lanes & Lane.UserVisibleLane) {
     return 'user-visible';
-  } else if (lanes & Lanes.UserBlockingLane) {
+  } else if (lanes & Lane.UserBlockingLane) {
     return 'user-blocking';
   } else {
     return null;

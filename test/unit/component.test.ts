@@ -5,7 +5,7 @@ import { DirectiveSpecifier } from '@/directive.js';
 import {
   CommitPhase,
   createScope,
-  Lanes,
+  Lane,
   PartType,
   type RenderContext,
 } from '@/internal.js';
@@ -161,7 +161,7 @@ describe('ComponentBinding', () => {
         );
 
         expect(binding.pendingLanes).toBe(
-          Lanes.DefaultLane | Lanes.UserBlockingLane,
+          Lane.DefaultLane | Lane.UserBlockingLane,
         );
         expect(part.node.nodeValue).toBe('100');
       }
@@ -172,7 +172,7 @@ describe('ComponentBinding', () => {
           session.frame.mutationEffects.push(binding, session.scope.level);
         });
 
-        expect(binding.pendingLanes).toBe(Lanes.NoLanes);
+        expect(binding.pendingLanes).toBe(Lane.NoLane);
         expect(part.node.nodeValue).toBe('101');
       }
     });
@@ -312,7 +312,7 @@ describe('ComponentBinding', () => {
 
           session.frame.pendingCoroutines.push({
             name: '',
-            pendingLanes: Lanes.DefaultLane,
+            pendingLanes: Lane.DefaultLane,
             scope: createScope(session.scope),
             resume(session) {
               binding.detach(session);

@@ -4,7 +4,7 @@ import {
   type Coroutine,
   createScope,
   type Effect,
-  Lanes,
+  Lane,
   PartType,
   type SessionContext,
   type Slot,
@@ -97,7 +97,7 @@ export class Root<T> {
     const coroutine: Coroutine = {
       name: Root.name,
       scope: createScope(),
-      pendingLanes: Lanes.DefaultLane,
+      pendingLanes: Lane.DefaultLane,
       resume,
     };
     return this._context.scheduleUpdate(coroutine, {

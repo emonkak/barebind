@@ -10,7 +10,7 @@ import {
   type Coroutine,
   createScope,
   EffectQueue,
-  Lanes,
+  Lane,
   PartType,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
@@ -85,11 +85,11 @@ describe('Runtime', () => {
         expect(runtime.getPendingTasks().toArray()).toStrictEqual([
           expect.objectContaining({
             coroutine,
-            lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           }),
           expect.objectContaining({
             coroutine,
-            lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           }),
         ]);
 
@@ -115,7 +115,7 @@ describe('Runtime', () => {
           {
             type: 'UPDATE_START',
             id: 0,
-            lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           },
           {
             type: 'RENDER_START',
@@ -152,7 +152,7 @@ describe('Runtime', () => {
           {
             type: 'UPDATE_SUCCESS',
             id: 0,
-            lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           },
         ]);
       }
@@ -181,9 +181,7 @@ describe('Runtime', () => {
           expect.objectContaining({
             coroutine,
             lanes:
-              Lanes.DefaultLane |
-              Lanes.UserVisibleLane |
-              Lanes.ViewTransitionLane,
+              Lane.DefaultLane | Lane.UserVisibleLane | Lane.ViewTransitionLane,
           }),
         ]);
 
@@ -206,9 +204,7 @@ describe('Runtime', () => {
             type: 'UPDATE_START',
             id: 1,
             lanes:
-              Lanes.DefaultLane |
-              Lanes.UserVisibleLane |
-              Lanes.ViewTransitionLane,
+              Lane.DefaultLane | Lane.UserVisibleLane | Lane.ViewTransitionLane,
           },
           {
             type: 'RENDER_START',
@@ -246,9 +242,7 @@ describe('Runtime', () => {
             type: 'UPDATE_SUCCESS',
             id: 1,
             lanes:
-              Lanes.DefaultLane |
-              Lanes.UserVisibleLane |
-              Lanes.ViewTransitionLane,
+              Lane.DefaultLane | Lane.UserVisibleLane | Lane.ViewTransitionLane,
           },
         ]);
       }
@@ -303,7 +297,7 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_START',
           id: 0,
-          lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+          lanes: Lane.DefaultLane | Lane.UserBlockingLane,
         },
         {
           type: 'RENDER_START',
@@ -312,7 +306,7 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_FAILURE',
           id: 0,
-          lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+          lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           error: expect.objectContaining({ cause: error }),
         },
       ]);
@@ -338,7 +332,7 @@ describe('Runtime', () => {
           () => {
             throw error;
           },
-          Lanes.AllLanes,
+          -1,
           childScope,
         );
 
@@ -365,7 +359,7 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_START',
           id: 0,
-          lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+          lanes: Lane.DefaultLane | Lane.UserBlockingLane,
         },
         {
           type: 'RENDER_START',
@@ -374,7 +368,7 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_FAILURE',
           id: 0,
-          lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+          lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           error: expect.objectContaining({ cause: error }),
         },
       ]);
@@ -428,11 +422,11 @@ describe('Runtime', () => {
         expect(runtime.getPendingTasks().toArray()).toStrictEqual([
           expect.objectContaining({
             coroutine,
-            lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           }),
           expect.objectContaining({
             coroutine,
-            lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           }),
         ]);
 
@@ -456,7 +450,7 @@ describe('Runtime', () => {
           {
             type: 'UPDATE_START',
             id: 0,
-            lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           },
           {
             type: 'RENDER_START',
@@ -505,7 +499,7 @@ describe('Runtime', () => {
           {
             type: 'UPDATE_SUCCESS',
             id: 0,
-            lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           },
         ]);
       }
@@ -537,9 +531,7 @@ describe('Runtime', () => {
           expect.objectContaining({
             coroutine,
             lanes:
-              Lanes.DefaultLane |
-              Lanes.UserVisibleLane |
-              Lanes.ViewTransitionLane,
+              Lane.DefaultLane | Lane.UserVisibleLane | Lane.ViewTransitionLane,
           }),
         ]);
 
@@ -560,9 +552,7 @@ describe('Runtime', () => {
             type: 'UPDATE_START',
             id: 1,
             lanes:
-              Lanes.DefaultLane |
-              Lanes.UserVisibleLane |
-              Lanes.ViewTransitionLane,
+              Lane.DefaultLane | Lane.UserVisibleLane | Lane.ViewTransitionLane,
           },
           {
             type: 'RENDER_START',
@@ -600,9 +590,7 @@ describe('Runtime', () => {
             type: 'UPDATE_SUCCESS',
             id: 1,
             lanes:
-              Lanes.DefaultLane |
-              Lanes.UserVisibleLane |
-              Lanes.ViewTransitionLane,
+              Lane.DefaultLane | Lane.UserVisibleLane | Lane.ViewTransitionLane,
           },
         ]);
       }
@@ -644,7 +632,7 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_START',
           id: 0,
-          lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+          lanes: Lane.DefaultLane | Lane.UserBlockingLane,
         },
         {
           type: 'RENDER_START',
@@ -653,7 +641,7 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_FAILURE',
           id: 0,
-          lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+          lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           error: expect.objectContaining({ cause: error }),
         },
       ]);
@@ -679,7 +667,7 @@ describe('Runtime', () => {
           () => {
             throw error;
           },
-          Lanes.AllLanes,
+          -1,
           childScope,
         );
 
@@ -706,7 +694,7 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_START',
           id: 0,
-          lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+          lanes: Lane.DefaultLane | Lane.UserBlockingLane,
         },
         {
           type: 'RENDER_START',
@@ -715,7 +703,7 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_FAILURE',
           id: 0,
-          lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
+          lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           error: expect.objectContaining({ cause: error }),
         },
       ]);
@@ -737,11 +725,11 @@ describe('Runtime', () => {
       const props = {};
       const state: ComponentState = {
         hooks: [],
-        pendingLanes: Lanes.NoLanes,
+        pendingLanes: Lane.NoLane,
         scope: createScope(),
       };
       const coroutine = new MockCoroutine();
-      const frame = createRenderFrame(1, Lanes.AllLanes);
+      const frame = createRenderFrame(1, -1);
       const scope = createScope(state.scope);
       const observer = new MockObserver();
       const runtime = createRuntime();
@@ -924,7 +912,7 @@ describe('RenderError', () => {
     );
     const coroutine: Coroutine = {
       name: 'ErrorPlace',
-      pendingLanes: Lanes.NoLanes,
+      pendingLanes: Lane.NoLane,
       scope,
       resume() {},
     };

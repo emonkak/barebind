@@ -10,7 +10,7 @@ import {
   SignalBinding,
   SignalDirective,
 } from '@/addons/signal.js';
-import { $directive, Lanes, PartType, type RenderContext } from '@/internal.js';
+import { $directive, Lane, PartType, type RenderContext } from '@/internal.js';
 import type { RenderSession } from '@/render-session.js';
 import { createRuntime } from '../../mocks.js';
 import { waitForMicrotasks } from '../../test-helpers.js';
@@ -113,12 +113,12 @@ describe('SignalBinding', () => {
       signal.value = 'bar';
 
       expect(binding.pendingLanes).toBe(
-        Lanes.DefaultLane | Lanes.UserBlockingLane,
+        Lane.DefaultLane | Lane.UserBlockingLane,
       );
 
       await waitForMicrotasks(2);
 
-      expect(binding.pendingLanes).toBe(Lanes.NoLanes);
+      expect(binding.pendingLanes).toBe(Lane.NoLane);
       expect(part.node.nodeValue).toBe(signal.value);
     });
 
@@ -161,13 +161,13 @@ describe('SignalBinding', () => {
       signal2.value = 'qux';
 
       expect(binding.pendingLanes).toBe(
-        Lanes.DefaultLane | Lanes.UserBlockingLane,
+        Lane.DefaultLane | Lane.UserBlockingLane,
       );
 
       await waitForMicrotasks(2);
 
       expect(part.node.nodeValue).toBe('qux');
-      expect(binding.pendingLanes).toBe(Lanes.NoLanes);
+      expect(binding.pendingLanes).toBe(Lane.NoLane);
     });
   });
 
@@ -207,12 +207,12 @@ describe('SignalBinding', () => {
 
       signal.value = 'bar';
 
-      expect(binding.pendingLanes).toBe(Lanes.NoLanes);
+      expect(binding.pendingLanes).toBe(Lane.NoLane);
 
       await waitForMicrotasks(2);
 
       expect(part.node.nodeValue).toBe('');
-      expect(binding.pendingLanes).toBe(Lanes.NoLanes);
+      expect(binding.pendingLanes).toBe(Lane.NoLane);
     });
   });
 });
