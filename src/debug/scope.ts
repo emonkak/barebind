@@ -5,8 +5,8 @@ export function getCoroutineStack(coroutine: Coroutine): Coroutine[] {
   let current: Scope | null = coroutine.scope;
 
   do {
-    if (current.host !== null) {
-      stack.push(current.host);
+    if (current.context !== null) {
+      stack.push(current.context);
     }
     current = current.parent;
   } while (current !== null);

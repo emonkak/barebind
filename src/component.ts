@@ -18,7 +18,6 @@ import {
   type Part,
   type RenderContext,
   type Scope,
-  type ScopeHost,
   type Slot,
   type UpdateSession,
 } from './internal.js';
@@ -52,7 +51,7 @@ export function createComponent<TProps, TResult = unknown>(
 }
 
 export class ComponentBinding<TProps, TResult>
-  implements Binding<TProps>, Coroutine, ScopeHost
+  implements Binding<TProps>, Coroutine
 {
   private readonly _component: Component<TProps, TResult>;
 

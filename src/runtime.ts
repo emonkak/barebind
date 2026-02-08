@@ -586,8 +586,8 @@ function handleError(
 
   handleError(error);
 
-  if (currentScope.host?.pendingLanes === Lane.NoLane) {
-    currentScope.host.detach(session);
+  if (currentScope.context?.pendingLanes === Lane.NoLane) {
+    currentScope.context.detach(session);
   }
 
   // If the error was captured by an ErrorBoundary outside the origin scope,

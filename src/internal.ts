@@ -448,12 +448,12 @@ export interface SessionLifecycle {
 
 export interface Scope {
   parent: Scope | null;
-  host: ScopeHost | null;
+  context: ScopeContext | null;
   level: number;
   boundary: Boundary | null;
 }
 
-export interface ScopeHost extends Coroutine, SessionLifecycle {}
+export interface ScopeContext extends Coroutine, SessionLifecycle {}
 
 export interface Slot<T> extends ReversibleEffect, SessionLifecycle {
   readonly type: DirectiveType<UnwrapBindable<T>>;
@@ -536,11 +536,11 @@ export function areDirectiveTypesEqual(
  */
 export function createScope(
   parent: Scope | null = null,
-  host: ScopeHost | null = null,
+  context: ScopeContext | null = null,
 ): Scope {
   return {
     parent,
-    host,
+    context,
     level: parent !== null ? parent.level + 1 : 0,
     boundary: null,
   };
