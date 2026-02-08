@@ -252,7 +252,7 @@ export class TaggedTemplate<
 
     if (holeIndex < totalHoles) {
       throw new Error(
-        'There is no node that the hole indicates. This may be a bug or the template may have been modified.',
+        'There is no node that the hole indicates. The template may have been modified.',
       );
     }
 
@@ -280,7 +280,7 @@ export class TaggedTemplate<
         for (; nodeIndex <= hole.index; nodeIndex++) {
           if (sourceTree.nextNode() === null) {
             throw new Error(
-              'There is no node that the hole indicates. This may be a bug or the template may have been modified.',
+              'There is no node that the hole indicates. The template may have been modified.',
             );
           }
         }
