@@ -193,7 +193,7 @@ export class Runtime implements SessionContext {
 
   nextIdentifier(): string {
     // The identifier is also valid as a view transition name.
-    return 'id-' + this._uniqueIdentifier + '-' + this._identifierCount++;
+    return this._uniqueIdentifier + '-' + this._identifierCount++;
   }
 
   renderComponent<TProps, TResult>(
@@ -547,8 +547,12 @@ function createRenderFrame(
 }
 
 function generateUniqueIdentifier(length: number): string {
-  return Array.from(crypto.getRandomValues(new Uint8Array(length)), (byte) =>
-    (byte % 36).toString(36),
+  return Array.from(
+    crypto.getRandomValues(new Uint8Array(length)),
+    (byte, i) =>
+      i === 0
+        ? String.fromCharCode(0x61 + (byte % 26))
+        : (byte % 36).toString(36),
   ).join('');
 }
 

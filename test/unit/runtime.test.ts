@@ -1060,8 +1060,8 @@ describe('Runtime', () => {
     it('generates unique identifiers', () => {
       const runtime = createRuntime();
 
-      expect(runtime.nextIdentifier()).toMatch(/^id-[0-9a-z]+-0$/);
-      expect(runtime.nextIdentifier()).toMatch(/^id-[0-9a-z]+-1$/);
+      expect(runtime.nextIdentifier()).toMatch(/^[a-z][0-9a-z]*-0$/);
+      expect(runtime.nextIdentifier()).toMatch(/^[a-z][0-9a-z]*-1$/);
     });
   });
 
