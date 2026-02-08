@@ -35,40 +35,40 @@ import { RenderSession } from './render-session.js';
 
 export type RuntimeEvent =
   | {
-      type: 'UPDATE_START';
+      type: 'update-start';
       id: number;
       lanes: Lanes;
     }
   | {
-      type: 'UPDATE_SUCCESS';
+      type: 'update-success';
       id: number;
       lanes: Lanes;
     }
   | {
-      type: 'UPDATE_FAILURE';
+      type: 'update-failure';
       id: number;
       lanes: Lanes;
       error: unknown;
     }
   | {
-      type: 'RENDER_START' | 'RENDER_END';
+      type: 'render-phase-start' | 'render-phase-end';
       id: number;
       mutationEffects: EffectQueue;
       layoutEffects: EffectQueue;
       passiveEffects: EffectQueue;
     }
   | {
-      type: 'COMMIT_START' | 'COMMIT_END';
-      id: number;
-      effects: EffectQueue;
-      phase: CommitPhase;
-    }
-  | {
-      type: 'COMPONENT_RENDER_START' | 'COMPONENT_RENDER_END';
+      type: 'component-render-start' | 'component-render-end';
       id: number;
       component: Component<any>;
       props: unknown;
       context: RenderContext;
+    }
+  | {
+      type: 'effect-commit-start' | 'effect-commit-end';
+      id: number;
+      effects: EffectQueue;
+      phase: CommitPhase;
     };
 
 export interface RuntimeObserver {
@@ -147,7 +147,7 @@ export class Runtime implements SessionContext {
       );
 
       notifyObservers(this._observers, {
-        type: 'UPDATE_START',
+        type: 'update-start',
         id,
         lanes,
       });
@@ -160,7 +160,7 @@ export class Runtime implements SessionContext {
         }
 
         notifyObservers(this._observers, {
-          type: 'UPDATE_SUCCESS',
+          type: 'update-success',
           id,
           lanes,
         });
@@ -168,7 +168,7 @@ export class Runtime implements SessionContext {
         continuation.resolve({ canceled: false, done: true });
       } catch (error) {
         notifyObservers(this._observers, {
-          type: 'UPDATE_FAILURE',
+          type: 'update-failure',
           id,
           lanes,
           error,
@@ -205,7 +205,7 @@ export class Runtime implements SessionContext {
     const context = new RenderSession(state, coroutine, frame, scope, this);
 
     notifyObservers(this._observers, {
-      type: 'COMPONENT_RENDER_START',
+      type: 'component-render-start',
       id,
       component,
       props,
@@ -220,7 +220,7 @@ export class Runtime implements SessionContext {
       return result;
     } finally {
       notifyObservers(this._observers, {
-        type: 'COMPONENT_RENDER_END',
+        type: 'component-render-end',
         id,
         component,
         props,
@@ -333,7 +333,7 @@ export class Runtime implements SessionContext {
     phase: CommitPhase,
   ): void {
     notifyObservers(this._observers, {
-      type: 'COMMIT_START',
+      type: 'effect-commit-start',
       id,
       effects,
       phase,
@@ -343,7 +343,7 @@ export class Runtime implements SessionContext {
       this._backend.flushEffects(effects, phase);
     } finally {
       notifyObservers(this._observers, {
-        type: 'COMMIT_END',
+        type: 'effect-commit-end',
         id,
         effects,
         phase,
@@ -356,7 +356,7 @@ export class Runtime implements SessionContext {
     const { id, lanes, layoutEffects, mutationEffects, passiveEffects } = frame;
 
     notifyObservers(this._observers, {
-      type: 'RENDER_START',
+      type: 'render-phase-start',
       id,
       mutationEffects,
       layoutEffects,
@@ -384,7 +384,7 @@ export class Runtime implements SessionContext {
       }
     } finally {
       notifyObservers(this._observers, {
-        type: 'RENDER_END',
+        type: 'render-phase-end',
         id,
         mutationEffects,
         layoutEffects,
@@ -429,7 +429,7 @@ export class Runtime implements SessionContext {
     const { id, layoutEffects, mutationEffects, passiveEffects } = frame;
 
     notifyObservers(this._observers, {
-      type: 'RENDER_START',
+      type: 'render-phase-start',
       id,
       mutationEffects,
       layoutEffects,
@@ -448,7 +448,7 @@ export class Runtime implements SessionContext {
       } while (frame.pendingCoroutines.length > 0);
     } finally {
       notifyObservers(this._observers, {
-        type: 'RENDER_END',
+        type: 'render-phase-end',
         id,
         mutationEffects,
         layoutEffects,

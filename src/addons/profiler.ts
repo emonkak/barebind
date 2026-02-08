@@ -88,7 +88,7 @@ export class PerformanceProfiler implements RuntimeObserver {
     }
 
     switch (event.type) {
-      case 'UPDATE_START': {
+      case 'update-start': {
         profile.updateMeasurement = {
           startTime: performance.now(),
           duration: 0,
@@ -96,7 +96,7 @@ export class PerformanceProfiler implements RuntimeObserver {
         };
         break;
       }
-      case 'UPDATE_SUCCESS': {
+      case 'update-success': {
         const measurement = profile.updateMeasurement;
         if (measurement !== null) {
           measurement.duration = performance.now() - measurement.startTime;
@@ -105,7 +105,7 @@ export class PerformanceProfiler implements RuntimeObserver {
         this._reportProfile(profile);
         break;
       }
-      case 'UPDATE_FAILURE': {
+      case 'update-failure': {
         const measurement = profile.updateMeasurement;
         if (measurement !== null) {
           measurement.duration = performance.now() - measurement.startTime;
@@ -114,13 +114,13 @@ export class PerformanceProfiler implements RuntimeObserver {
         this._reportProfile(profile);
         break;
       }
-      case 'RENDER_START':
+      case 'render-phase-start':
         profile.renderMeasurement = {
           startTime: performance.now(),
           duration: 0,
         };
         break;
-      case 'RENDER_END': {
+      case 'render-phase-end': {
         const measurement = profile.renderMeasurement;
         if (measurement !== null) {
           measurement.duration = performance.now() - measurement.startTime;
@@ -136,7 +136,7 @@ export class PerformanceProfiler implements RuntimeObserver {
         }
         break;
       }
-      case 'COMPONENT_RENDER_START': {
+      case 'component-render-start': {
         profile.componentMeasurements.push({
           name: event.component.name,
           startTime: performance.now(),
@@ -144,14 +144,14 @@ export class PerformanceProfiler implements RuntimeObserver {
         });
         break;
       }
-      case 'COMPONENT_RENDER_END': {
+      case 'component-render-end': {
         const measurement = profile.componentMeasurements.at(-1);
         if (measurement !== undefined) {
           measurement.duration = performance.now() - measurement.startTime;
         }
         break;
       }
-      case 'COMMIT_START': {
+      case 'effect-commit-start': {
         const measurement = {
           startTime: performance.now(),
           duration: 0,
@@ -171,7 +171,7 @@ export class PerformanceProfiler implements RuntimeObserver {
         }
         break;
       }
-      case 'COMMIT_END': {
+      case 'effect-commit-end': {
         let measurement: CommitMeasurement | null = null;
         switch (event.phase) {
           case CommitPhase.Mutation: {

@@ -110,50 +110,50 @@ describe('Runtime', () => {
           expect(passiveEffect.commit).toHaveBeenCalledTimes(0);
           expect(observer.flushEvents()).toStrictEqual([
             {
-              type: 'UPDATE_START',
+              type: 'update-start',
               id: 0,
               lanes: Lane.DefaultLane | Lane.UserBlockingLane,
             },
             {
-              type: 'RENDER_START',
+              type: 'render-phase-start',
               id: 0,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
             },
             {
-              type: 'RENDER_END',
+              type: 'render-phase-end',
               id: 0,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_START',
+              type: 'effect-commit-start',
               id: 0,
               phase: CommitPhase.Mutation,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_END',
+              type: 'effect-commit-end',
               id: 0,
               phase: CommitPhase.Mutation,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_START',
+              type: 'effect-commit-start',
               id: 0,
               phase: CommitPhase.Layout,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_END',
+              type: 'effect-commit-end',
               id: 0,
               phase: CommitPhase.Layout,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'UPDATE_SUCCESS',
+              type: 'update-success',
               id: 0,
               lanes: Lane.DefaultLane | Lane.UserBlockingLane,
             },
@@ -206,7 +206,7 @@ describe('Runtime', () => {
           expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
           expect(observer.flushEvents()).toStrictEqual([
             {
-              type: 'UPDATE_START',
+              type: 'update-start',
               id: 1,
               lanes:
                 Lane.DefaultLane |
@@ -214,45 +214,45 @@ describe('Runtime', () => {
                 Lane.ViewTransitionLane,
             },
             {
-              type: 'RENDER_START',
+              type: 'render-phase-start',
               id: 1,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
             },
             {
-              type: 'RENDER_END',
+              type: 'render-phase-end',
               id: 1,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_START',
+              type: 'effect-commit-start',
               id: 1,
               phase: CommitPhase.Layout,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_END',
+              type: 'effect-commit-end',
               id: 1,
               phase: CommitPhase.Layout,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_START',
+              type: 'effect-commit-start',
               id: 1,
               phase: CommitPhase.Passive,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_END',
+              type: 'effect-commit-end',
               id: 1,
               phase: CommitPhase.Passive,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'UPDATE_SUCCESS',
+              type: 'update-success',
               id: 1,
               lanes:
                 Lane.DefaultLane |
@@ -353,62 +353,62 @@ describe('Runtime', () => {
           expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
           expect(observer.flushEvents()).toStrictEqual([
             {
-              type: 'UPDATE_START',
+              type: 'update-start',
               id: 0,
               lanes: Lane.DefaultLane | Lane.UserBlockingLane | Lane.SyncLane,
             },
             {
-              type: 'RENDER_START',
+              type: 'render-phase-start',
               id: 0,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
             },
             {
-              type: 'RENDER_END',
+              type: 'render-phase-end',
               id: 0,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_START',
+              type: 'effect-commit-start',
               id: 0,
               phase: CommitPhase.Mutation,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_END',
+              type: 'effect-commit-end',
               id: 0,
               phase: CommitPhase.Mutation,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_START',
+              type: 'effect-commit-start',
               id: 0,
               phase: CommitPhase.Layout,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_END',
+              type: 'effect-commit-end',
               id: 0,
               phase: CommitPhase.Layout,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_START',
+              type: 'effect-commit-start',
               id: 0,
               phase: CommitPhase.Passive,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_END',
+              type: 'effect-commit-end',
               id: 0,
               phase: CommitPhase.Passive,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'UPDATE_SUCCESS',
+              type: 'update-success',
               id: 0,
               lanes: Lane.DefaultLane | Lane.UserBlockingLane | Lane.SyncLane,
             },
@@ -464,7 +464,7 @@ describe('Runtime', () => {
           expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
           expect(observer.flushEvents()).toStrictEqual([
             {
-              type: 'UPDATE_START',
+              type: 'update-start',
               id: 1,
               lanes:
                 Lane.DefaultLane |
@@ -473,45 +473,45 @@ describe('Runtime', () => {
                 Lane.ViewTransitionLane,
             },
             {
-              type: 'RENDER_START',
+              type: 'render-phase-start',
               id: 1,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
             },
             {
-              type: 'RENDER_END',
+              type: 'render-phase-end',
               id: 1,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_START',
+              type: 'effect-commit-start',
               id: 1,
               phase: CommitPhase.Mutation,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_END',
+              type: 'effect-commit-end',
               id: 1,
               phase: CommitPhase.Mutation,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_START',
+              type: 'effect-commit-start',
               id: 1,
               phase: CommitPhase.Layout,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_END',
+              type: 'effect-commit-end',
               id: 1,
               phase: CommitPhase.Layout,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'UPDATE_SUCCESS',
+              type: 'update-success',
               id: 1,
               lanes:
                 Lane.DefaultLane |
@@ -564,26 +564,26 @@ describe('Runtime', () => {
 
         expect(observer.flushEvents()).toStrictEqual([
           {
-            type: 'UPDATE_START',
+            type: 'update-start',
             id: 0,
             lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           },
           {
-            type: 'RENDER_START',
+            type: 'render-phase-start',
             id: 0,
             mutationEffects: expect.any(EffectQueue),
             layoutEffects: expect.any(EffectQueue),
             passiveEffects: expect.any(EffectQueue),
           },
           {
-            type: 'RENDER_END',
+            type: 'render-phase-end',
             id: 0,
             mutationEffects: expect.any(EffectQueue),
             layoutEffects: expect.any(EffectQueue),
             passiveEffects: expect.any(EffectQueue),
           },
           {
-            type: 'UPDATE_FAILURE',
+            type: 'update-failure',
             id: 0,
             lanes: Lane.DefaultLane | Lane.UserBlockingLane,
             error: expect.objectContaining({ cause: error }),
@@ -635,26 +635,26 @@ describe('Runtime', () => {
 
         expect(observer.flushEvents()).toStrictEqual([
           {
-            type: 'UPDATE_START',
+            type: 'update-start',
             id: 0,
             lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           },
           {
-            type: 'RENDER_START',
+            type: 'render-phase-start',
             id: 0,
             mutationEffects: expect.any(EffectQueue),
             layoutEffects: expect.any(EffectQueue),
             passiveEffects: expect.any(EffectQueue),
           },
           {
-            type: 'RENDER_END',
+            type: 'render-phase-end',
             id: 0,
             mutationEffects: expect.any(EffectQueue),
             layoutEffects: expect.any(EffectQueue),
             passiveEffects: expect.any(EffectQueue),
           },
           {
-            type: 'UPDATE_FAILURE',
+            type: 'update-failure',
             id: 0,
             lanes: Lane.DefaultLane | Lane.UserBlockingLane,
             error: expect.objectContaining({ cause: error }),
@@ -739,62 +739,62 @@ describe('Runtime', () => {
           expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
           expect(observer.flushEvents()).toStrictEqual([
             {
-              type: 'UPDATE_START',
+              type: 'update-start',
               id: 0,
               lanes: Lane.DefaultLane | Lane.UserBlockingLane,
             },
             {
-              type: 'RENDER_START',
+              type: 'render-phase-start',
               id: 0,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
             },
             {
-              type: 'RENDER_END',
+              type: 'render-phase-end',
               id: 0,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_START',
+              type: 'effect-commit-start',
               id: 0,
               phase: CommitPhase.Mutation,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_END',
+              type: 'effect-commit-end',
               id: 0,
               phase: CommitPhase.Mutation,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_START',
+              type: 'effect-commit-start',
               id: 0,
               phase: CommitPhase.Layout,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_END',
+              type: 'effect-commit-end',
               id: 0,
               phase: CommitPhase.Layout,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_START',
+              type: 'effect-commit-start',
               id: 0,
               phase: CommitPhase.Passive,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_END',
+              type: 'effect-commit-end',
               id: 0,
               phase: CommitPhase.Passive,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'UPDATE_SUCCESS',
+              type: 'update-success',
               id: 0,
               lanes: Lane.DefaultLane | Lane.UserBlockingLane,
             },
@@ -848,7 +848,7 @@ describe('Runtime', () => {
           expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
           expect(observer.flushEvents()).toStrictEqual([
             {
-              type: 'UPDATE_START',
+              type: 'update-start',
               id: 1,
               lanes:
                 Lane.DefaultLane |
@@ -856,45 +856,45 @@ describe('Runtime', () => {
                 Lane.ViewTransitionLane,
             },
             {
-              type: 'RENDER_START',
+              type: 'render-phase-start',
               id: 1,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
             },
             {
-              type: 'RENDER_END',
+              type: 'render-phase-end',
               id: 1,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_START',
+              type: 'effect-commit-start',
               id: 1,
               phase: CommitPhase.Mutation,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_END',
+              type: 'effect-commit-end',
               id: 1,
               phase: CommitPhase.Mutation,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_START',
+              type: 'effect-commit-start',
               id: 1,
               phase: CommitPhase.Layout,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'COMMIT_END',
+              type: 'effect-commit-end',
               id: 1,
               phase: CommitPhase.Layout,
               effects: expect.any(EffectQueue),
             },
             {
-              type: 'UPDATE_SUCCESS',
+              type: 'update-success',
               id: 1,
               lanes:
                 Lane.DefaultLane |
@@ -939,26 +939,26 @@ describe('Runtime', () => {
 
         expect(observer.flushEvents()).toStrictEqual([
           {
-            type: 'UPDATE_START',
+            type: 'update-start',
             id: 0,
             lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           },
           {
-            type: 'RENDER_START',
+            type: 'render-phase-start',
             id: 0,
             mutationEffects: expect.any(EffectQueue),
             layoutEffects: expect.any(EffectQueue),
             passiveEffects: expect.any(EffectQueue),
           },
           {
-            type: 'RENDER_END',
+            type: 'render-phase-end',
             id: 0,
             mutationEffects: expect.any(EffectQueue),
             layoutEffects: expect.any(EffectQueue),
             passiveEffects: expect.any(EffectQueue),
           },
           {
-            type: 'UPDATE_FAILURE',
+            type: 'update-failure',
             id: 0,
             lanes: Lane.DefaultLane | Lane.UserBlockingLane,
             error: expect.objectContaining({ cause: error }),
@@ -1014,26 +1014,26 @@ describe('Runtime', () => {
 
         expect(observer.flushEvents()).toStrictEqual([
           {
-            type: 'UPDATE_START',
+            type: 'update-start',
             id: 0,
             lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           },
           {
-            type: 'RENDER_START',
+            type: 'render-phase-start',
             id: 0,
             mutationEffects: expect.any(EffectQueue),
             layoutEffects: expect.any(EffectQueue),
             passiveEffects: expect.any(EffectQueue),
           },
           {
-            type: 'RENDER_END',
+            type: 'render-phase-end',
             id: 0,
             mutationEffects: expect.any(EffectQueue),
             layoutEffects: expect.any(EffectQueue),
             passiveEffects: expect.any(EffectQueue),
           },
           {
-            type: 'UPDATE_FAILURE',
+            type: 'update-failure',
             id: 0,
             lanes: Lane.DefaultLane | Lane.UserBlockingLane,
             error: expect.objectContaining({ cause: error }),
@@ -1084,14 +1084,14 @@ describe('Runtime', () => {
       expect(renderSpy).toHaveBeenCalledWith(props, expect.any(RenderSession));
       expect(observer.flushEvents()).toStrictEqual([
         {
-          type: 'COMPONENT_RENDER_START',
+          type: 'component-render-start',
           id: 1,
           component,
           props,
           context: expect.any(RenderSession),
         },
         {
-          type: 'COMPONENT_RENDER_END',
+          type: 'component-render-end',
           id: 1,
           component,
           props,
