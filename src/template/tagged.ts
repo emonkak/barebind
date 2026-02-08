@@ -356,9 +356,8 @@ function createMarker(markerIdentifier: string): string {
   return '??' + markerIdentifier + '??';
 }
 
-function extractCaseSensitiveAttributeName(s: string): string {
-  /* v8 ignore next */
-  return s.match(ATTRIBUTE_NAME_PATTERN)?.[0] ?? s;
+function extractCaseSensitiveAttributeName(s: string): string | undefined {
+  return s.match(ATTRIBUTE_NAME_PATTERN)?.[0];
 }
 
 function getNamespaceURI(node: Node, mode: TemplateMode): string | null {
@@ -389,9 +388,9 @@ function parseAttribtues(
       );
 
       DEBUG: {
-        if (caseSensitiveName.toLowerCase() !== name) {
+        if (caseSensitiveName?.toLowerCase() !== name) {
           throw new Error(
-            `The attribute name must be "${name}", but got "${caseSensitiveName}". There may be a unclosed tag or a duplicate attribute:\n` +
+            `The attribute name must be "${name}", but got "${caseSensitiveName}". There may be an unclosed tag or a duplicate attribute:\n` +
               formatPart(
                 { type: PartType.Attribute, name, node: element },
                 ERROR_MAKER,
