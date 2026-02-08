@@ -67,9 +67,16 @@ export class MockBackend implements Backend {
 
   requestCallback<T>(
     callback: () => T | PromiseLike<T>,
-    _options?: RequestCallbackOptions,
+    options?: RequestCallbackOptions,
   ): Promise<T> {
-    return Promise.resolve().then(callback);
+    switch (options?.priority) {
+      case 'user-visible':
+        return new Promise((resolve) => setTimeout(resolve)).then(callback);
+      case 'background':
+        return new Promise((resolve) => setTimeout(resolve, 1)).then(callback);
+      default:
+        return Promise.resolve().then(callback);
+    }
   }
 
   resolveLayout(_value: unknown, _part: Part): Layout {

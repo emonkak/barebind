@@ -10,7 +10,7 @@ import {
 import type { Cleanup, RefCallback } from '@/internal.js';
 import { LinkedList } from '@/linked-list.js';
 import type { RenderSession } from '@/render-session.js';
-import { waitForMicrotasks } from '../../test-helpers.js';
+import { waitForMicrotasks, waitForTimeout } from '../../test-helpers.js';
 import { TestRenderer } from '../../test-renderer.js';
 
 describe('DeferredValue()', () => {
@@ -35,7 +35,7 @@ describe('DeferredValue()', () => {
       expect(renderer.callback).toHaveLastReturnedWith('foo');
     }
 
-    await waitForMicrotasks(2);
+    await waitForTimeout(1);
 
     expect(renderer.callback).toHaveBeenCalledTimes(3);
     expect(renderer.callback).toHaveLastReturnedWith('bar');
@@ -67,7 +67,7 @@ describe('DeferredValue()', () => {
       expect(renderer.callback).toHaveReturnedWith('foo');
     }
 
-    await waitForMicrotasks(2);
+    await waitForTimeout(1);
 
     expect(renderer.callback).toHaveBeenCalledTimes(2);
     expect(renderer.callback).toHaveReturnedWith('bar');

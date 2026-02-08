@@ -151,6 +151,10 @@ export function waitForSignal<T>(signal: AbortSignal): Promise<T> {
   });
 }
 
+export function waitForTimeout(timeout: number = 0): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, timeout));
+}
+
 export function waitUntil(priority: TaskPriority): Promise<void> {
   return new Promise((resolve) => scheduler.postTask(resolve, { priority }));
 }

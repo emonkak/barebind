@@ -28,6 +28,7 @@ import {
   MockSlot,
   MockTemplate,
 } from '../mocks.js';
+import { waitForTimeout } from '../test-helpers.js';
 
 describe('Runtime', () => {
   describe('flushUpdates()', () => {
@@ -117,13 +118,14 @@ describe('Runtime', () => {
             {
               type: 'render-phase-start',
               id: 0,
-              mutationEffects: expect.any(EffectQueue),
-              layoutEffects: expect.any(EffectQueue),
-              passiveEffects: expect.any(EffectQueue),
             },
             {
               type: 'render-phase-end',
               id: 0,
+            },
+            {
+              type: 'commit-phase-start',
+              id: 0,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
@@ -151,6 +153,13 @@ describe('Runtime', () => {
               id: 0,
               phase: CommitPhase.Layout,
               effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'commit-phase-end',
+              id: 0,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
             },
             {
               type: 'update-success',
@@ -165,7 +174,10 @@ describe('Runtime', () => {
             session.frame.pendingCoroutines.push(subcoroutine);
           });
           const subcoroutine = new MockCoroutine((session) => {
-            session.frame.layoutEffects.push(layoutEffect, session.scope.level);
+            session.frame.mutationEffects.push(
+              mutationEffect,
+              session.scope.level,
+            );
             session.frame.passiveEffects.push(
               passiveEffect,
               session.scope.level,
@@ -196,13 +208,14 @@ describe('Runtime', () => {
             canceled: false,
             done: true,
           });
+          await waitForTimeout(1);
 
           expect(runtime.getPendingUpdates().toArray()).toStrictEqual([]);
 
           expect(requestCallbackSpy).toHaveBeenCalledTimes(5);
           expect(startViewTransitionSpy).toHaveBeenCalledTimes(1);
-          expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
-          expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
+          expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
+          expect(layoutEffect.commit).toHaveBeenCalledTimes(1);
           expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
           expect(observer.flushEvents()).toStrictEqual([
             {
@@ -216,13 +229,14 @@ describe('Runtime', () => {
             {
               type: 'render-phase-start',
               id: 1,
-              mutationEffects: expect.any(EffectQueue),
-              layoutEffects: expect.any(EffectQueue),
-              passiveEffects: expect.any(EffectQueue),
             },
             {
               type: 'render-phase-end',
               id: 1,
+            },
+            {
+              type: 'commit-phase-start',
+              id: 1,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
@@ -230,25 +244,13 @@ describe('Runtime', () => {
             {
               type: 'effect-commit-start',
               id: 1,
-              phase: CommitPhase.Layout,
+              phase: CommitPhase.Mutation,
               effects: expect.any(EffectQueue),
             },
             {
               type: 'effect-commit-end',
               id: 1,
-              phase: CommitPhase.Layout,
-              effects: expect.any(EffectQueue),
-            },
-            {
-              type: 'effect-commit-start',
-              id: 1,
-              phase: CommitPhase.Passive,
-              effects: expect.any(EffectQueue),
-            },
-            {
-              type: 'effect-commit-end',
-              id: 1,
-              phase: CommitPhase.Passive,
+              phase: CommitPhase.Mutation,
               effects: expect.any(EffectQueue),
             },
             {
@@ -258,6 +260,25 @@ describe('Runtime', () => {
                 Lane.DefaultLane |
                 Lane.UserVisibleLane |
                 Lane.ViewTransitionLane,
+            },
+            {
+              type: 'effect-commit-start',
+              id: 1,
+              phase: CommitPhase.Passive,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-end',
+              id: 1,
+              phase: CommitPhase.Passive,
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'commit-phase-end',
+              id: 1,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
             },
           ]);
         }
@@ -269,8 +290,8 @@ describe('Runtime', () => {
 
           expect(requestCallbackSpy).toHaveBeenCalledTimes(5);
           expect(startViewTransitionSpy).toHaveBeenCalledTimes(1);
-          expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
-          expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
+          expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
+          expect(layoutEffect.commit).toHaveBeenCalledTimes(1);
           expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
           expect(observer.flushEvents()).toStrictEqual([]);
         }
@@ -360,13 +381,14 @@ describe('Runtime', () => {
             {
               type: 'render-phase-start',
               id: 0,
-              mutationEffects: expect.any(EffectQueue),
-              layoutEffects: expect.any(EffectQueue),
-              passiveEffects: expect.any(EffectQueue),
             },
             {
               type: 'render-phase-end',
               id: 0,
+            },
+            {
+              type: 'commit-phase-start',
+              id: 0,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
@@ -406,6 +428,13 @@ describe('Runtime', () => {
               id: 0,
               phase: CommitPhase.Passive,
               effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'commit-phase-end',
+              id: 0,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
             },
             {
               type: 'update-success',
@@ -475,13 +504,14 @@ describe('Runtime', () => {
             {
               type: 'render-phase-start',
               id: 1,
-              mutationEffects: expect.any(EffectQueue),
-              layoutEffects: expect.any(EffectQueue),
-              passiveEffects: expect.any(EffectQueue),
             },
             {
               type: 'render-phase-end',
               id: 1,
+            },
+            {
+              type: 'commit-phase-start',
+              id: 1,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
@@ -509,6 +539,13 @@ describe('Runtime', () => {
               id: 1,
               phase: CommitPhase.Layout,
               effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'commit-phase-end',
+              id: 1,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
             },
             {
               type: 'update-success',
@@ -571,16 +608,6 @@ describe('Runtime', () => {
           {
             type: 'render-phase-start',
             id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
-          },
-          {
-            type: 'render-phase-end',
-            id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
           },
           {
             type: 'update-failure',
@@ -642,16 +669,6 @@ describe('Runtime', () => {
           {
             type: 'render-phase-start',
             id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
-          },
-          {
-            type: 'render-phase-end',
-            id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
           },
           {
             type: 'update-failure',
@@ -746,13 +763,14 @@ describe('Runtime', () => {
             {
               type: 'render-phase-start',
               id: 0,
-              mutationEffects: expect.any(EffectQueue),
-              layoutEffects: expect.any(EffectQueue),
-              passiveEffects: expect.any(EffectQueue),
             },
             {
               type: 'render-phase-end',
               id: 0,
+            },
+            {
+              type: 'commit-phase-start',
+              id: 0,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
@@ -792,6 +810,13 @@ describe('Runtime', () => {
               id: 0,
               phase: CommitPhase.Passive,
               effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'commit-phase-end',
+              id: 0,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
             },
             {
               type: 'update-success',
@@ -858,13 +883,14 @@ describe('Runtime', () => {
             {
               type: 'render-phase-start',
               id: 1,
-              mutationEffects: expect.any(EffectQueue),
-              layoutEffects: expect.any(EffectQueue),
-              passiveEffects: expect.any(EffectQueue),
             },
             {
               type: 'render-phase-end',
               id: 1,
+            },
+            {
+              type: 'commit-phase-start',
+              id: 1,
               mutationEffects: expect.any(EffectQueue),
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
@@ -892,6 +918,13 @@ describe('Runtime', () => {
               id: 1,
               phase: CommitPhase.Layout,
               effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'commit-phase-end',
+              id: 1,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
             },
             {
               type: 'update-success',
@@ -946,16 +979,6 @@ describe('Runtime', () => {
           {
             type: 'render-phase-start',
             id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
-          },
-          {
-            type: 'render-phase-end',
-            id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
           },
           {
             type: 'update-failure',
@@ -1021,16 +1044,6 @@ describe('Runtime', () => {
           {
             type: 'render-phase-start',
             id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
-          },
-          {
-            type: 'render-phase-end',
-            id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
           },
           {
             type: 'update-failure',

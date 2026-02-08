@@ -13,7 +13,7 @@ import {
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { MockTemplate } from '../mocks.js';
-import { waitForMicrotasks } from '../test-helpers.js';
+import { waitForMicrotasks, waitForTimeout } from '../test-helpers.js';
 import { TestRenderer } from '../test-renderer.js';
 
 describe('RenderSession', () => {
@@ -797,7 +797,7 @@ describe('RenderSession', () => {
         expect(renderer.callback).toHaveNthReturnedWith(2, [0, true]);
       }
 
-      await waitForMicrotasks(2);
+      await waitForTimeout(1);
 
       expect(renderer.callback).toHaveBeenCalledTimes(3);
       expect(renderer.callback).toHaveNthReturnedWith(3, [1, false]);

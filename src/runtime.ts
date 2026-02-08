@@ -53,9 +53,6 @@ export type RuntimeEvent =
   | {
       type: 'render-phase-start' | 'render-phase-end';
       id: number;
-      mutationEffects: EffectQueue;
-      layoutEffects: EffectQueue;
-      passiveEffects: EffectQueue;
     }
   | {
       type: 'component-render-start' | 'component-render-end';
@@ -63,6 +60,13 @@ export type RuntimeEvent =
       component: Component<any>;
       props: unknown;
       context: RenderContext;
+    }
+  | {
+      type: 'commit-phase-start' | 'commit-phase-end';
+      id: number;
+      mutationEffects: EffectQueue;
+      layoutEffects: EffectQueue;
+      passiveEffects: EffectQueue;
     }
   | {
       type: 'effect-commit-start' | 'effect-commit-end';
@@ -212,21 +216,19 @@ export class Runtime implements SessionContext {
       context,
     });
 
-    try {
-      const result = component.render(props, context);
+    const result = component.render(props, context);
 
-      context.finalize();
+    context.finalize();
 
-      return result;
-    } finally {
-      notifyObservers(this._observers, {
-        type: 'component-render-end',
-        id,
-        component,
-        props,
-        context,
-      });
-    }
+    notifyObservers(this._observers, {
+      type: 'component-render-end',
+      id,
+      component,
+      props,
+      context,
+    });
+
+    return result;
   }
 
   resolveDirective<T>(source: T, part: Part): Directive<UnwrapBindable<T>> {
@@ -339,16 +341,14 @@ export class Runtime implements SessionContext {
       phase,
     });
 
-    try {
-      this._backend.flushEffects(effects, phase);
-    } finally {
-      notifyObservers(this._observers, {
-        type: 'effect-commit-end',
-        id,
-        effects,
-        phase,
-      });
-    }
+    this._backend.flushEffects(effects, phase);
+
+    notifyObservers(this._observers, {
+      type: 'effect-commit-end',
+      id,
+      effects,
+      phase,
+    });
   }
 
   private async _runUpdateAsync(session: UpdateSession): Promise<void> {
@@ -358,9 +358,6 @@ export class Runtime implements SessionContext {
     notifyObservers(this._observers, {
       type: 'render-phase-start',
       id,
-      mutationEffects,
-      layoutEffects,
-      passiveEffects,
     });
 
     try {
@@ -383,16 +380,21 @@ export class Runtime implements SessionContext {
         await this._backend.yieldToMain();
       }
     } finally {
-      notifyObservers(this._observers, {
-        type: 'render-phase-end',
-        id,
-        mutationEffects,
-        layoutEffects,
-        passiveEffects,
-      });
-
       frame.lanes = Lane.NoLane;
     }
+
+    notifyObservers(this._observers, {
+      type: 'render-phase-end',
+      id,
+    });
+
+    notifyObservers(this._observers, {
+      type: 'commit-phase-start',
+      id,
+      mutationEffects,
+      layoutEffects,
+      passiveEffects,
+    });
 
     if (mutationEffects.length > 0 || layoutEffects.length > 0) {
       const callback = () => {
@@ -415,12 +417,30 @@ export class Runtime implements SessionContext {
     }
 
     if (passiveEffects.length > 0) {
-      this._backend.requestCallback(
-        () => {
-          this._flushEffects(id, passiveEffects, CommitPhase.Passive);
-        },
-        { priority: 'background' },
-      );
+      this._backend
+        .requestCallback(
+          () => {
+            this._flushEffects(id, passiveEffects, CommitPhase.Passive);
+          },
+          { priority: 'background' },
+        )
+        .finally(() => {
+          notifyObservers(this._observers, {
+            type: 'commit-phase-end',
+            id,
+            mutationEffects,
+            layoutEffects,
+            passiveEffects,
+          });
+        });
+    } else {
+      notifyObservers(this._observers, {
+        type: 'commit-phase-end',
+        id,
+        mutationEffects,
+        layoutEffects,
+        passiveEffects,
+      });
     }
   }
 
@@ -431,9 +451,6 @@ export class Runtime implements SessionContext {
     notifyObservers(this._observers, {
       type: 'render-phase-start',
       id,
-      mutationEffects,
-      layoutEffects,
-      passiveEffects,
     });
 
     try {
@@ -447,16 +464,21 @@ export class Runtime implements SessionContext {
         }
       } while (frame.pendingCoroutines.length > 0);
     } finally {
-      notifyObservers(this._observers, {
-        type: 'render-phase-end',
-        id,
-        mutationEffects,
-        layoutEffects,
-        passiveEffects,
-      });
-
       frame.lanes = Lane.NoLane;
     }
+
+    notifyObservers(this._observers, {
+      type: 'render-phase-end',
+      id,
+    });
+
+    notifyObservers(this._observers, {
+      type: 'commit-phase-start',
+      id,
+      mutationEffects,
+      layoutEffects,
+      passiveEffects,
+    });
 
     if (mutationEffects.length > 0) {
       this._flushEffects(id, mutationEffects, CommitPhase.Mutation);
@@ -469,6 +491,14 @@ export class Runtime implements SessionContext {
     if (passiveEffects.length > 0) {
       this._flushEffects(id, passiveEffects, CommitPhase.Passive);
     }
+
+    notifyObservers(this._observers, {
+      type: 'commit-phase-end',
+      id,
+      mutationEffects,
+      layoutEffects,
+      passiveEffects,
+    });
   }
 }
 

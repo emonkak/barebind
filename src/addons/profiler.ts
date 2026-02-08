@@ -8,27 +8,11 @@ import {
 } from '../internal.js';
 import type { RuntimeEvent, RuntimeObserver } from '../runtime.js';
 
-export interface PerformanceProfile {
-  id: number;
-  status: 'pending' | 'success' | 'failure';
-  pendingPhaeses: number;
-  updateMeasurement: UpdateMeasurement | null;
-  renderMeasurement: RenderMeasurement | null;
-  componentMeasurements: ComponentMeasurement[];
-  mutationMeasurement: CommitMeasurement | null;
-  layoutMeasurement: CommitMeasurement | null;
-  passiveMeasurement: CommitMeasurement | null;
-}
-
-export interface UpdateMeasurement {
+export interface CommitMeasurement {
   startTime: number;
   duration: number;
-  lanes: Lanes;
-}
-
-export interface RenderMeasurement {
-  startTime: number;
-  duration: number;
+  pendingEffects: number;
+  committedEffects: number;
 }
 
 export interface ComponentMeasurement {
@@ -37,15 +21,32 @@ export interface ComponentMeasurement {
   duration: number;
 }
 
-export interface CommitMeasurement {
-  startTime: number;
-  duration: number;
-  pendingEffects: number;
-  committedEffects: number;
+export interface PerformanceProfile {
+  id: number;
+  status: 'pending' | 'success' | 'failure';
+  phase: 'idle' | 'render' | 'commit';
+  updateMeasurement: UpdateMeasurement | null;
+  renderMeasurement: RenderMeasurement | null;
+  componentMeasurements: ComponentMeasurement[];
+  commitMeasurement: CommitMeasurement | null;
+  mutationMeasurement: CommitMeasurement | null;
+  layoutMeasurement: CommitMeasurement | null;
+  passiveMeasurement: CommitMeasurement | null;
 }
 
 export interface PerformanceReporter {
   reportProfile(profile: PerformanceProfile): void;
+}
+
+export interface RenderMeasurement {
+  startTime: number;
+  duration: number;
+}
+
+export interface UpdateMeasurement {
+  startTime: number;
+  duration: number;
+  lanes: Lanes;
 }
 
 export type ConsoleLogger = Pick<
@@ -56,6 +57,9 @@ export type ConsoleLogger = Pick<
 // Blue
 const RENDER_PHASE_STYLE =
   'color: light-dark(#0b57d0, #4c8df6); font-weight: bold';
+// Pink
+const COMMIT_PHASE_STYLE =
+  'color: light-dark(#b90063, #ff4896); font-weight: bold';
 // Orange
 const MUTATION_PHASE_STYLE =
   'color: light-dark(#9F4312, #E96725); font-weight: bold';
@@ -65,6 +69,7 @@ const LAYOUT_PHASE_STYLE =
 // Green
 const PASSIVE_PHASE_STYLE =
   'color: light-dark(#146c2e, #1ea446); font-weight: bold';
+// Gray
 const DURATION_STYLE =
   'color: light-dark(#5e5d67, #918f9a); font-weight: normal';
 const DEFAULT_STYLE = 'font-weight: normal';
@@ -72,7 +77,7 @@ const DEFAULT_STYLE = 'font-weight: normal';
 export class PerformanceProfiler implements RuntimeObserver {
   private readonly _reporter: PerformanceReporter;
 
-  private readonly _inProgressProfiles: Map<number, PerformanceProfile> =
+  private readonly _pendingProfiles: Map<number, PerformanceProfile> =
     new Map();
 
   constructor(reporter: PerformanceReporter) {
@@ -80,29 +85,34 @@ export class PerformanceProfiler implements RuntimeObserver {
   }
 
   onRuntimeEvent(event: RuntimeEvent): void {
-    let profile = this._inProgressProfiles.get(event.id);
+    let profile = this._pendingProfiles.get(event.id);
 
     if (profile === undefined) {
-      profile = createProfile(event.id);
-      this._inProgressProfiles.set(event.id, profile);
+      if (event.type === 'update-start') {
+        profile = createProfile(event.id);
+        this._pendingProfiles.set(event.id, profile);
+      } else {
+        return;
+      }
     }
 
     switch (event.type) {
-      case 'update-start': {
+      case 'update-start':
         profile.updateMeasurement = {
           startTime: performance.now(),
           duration: 0,
           lanes: event.lanes,
         };
         break;
-      }
       case 'update-success': {
         const measurement = profile.updateMeasurement;
         if (measurement !== null) {
           measurement.duration = performance.now() - measurement.startTime;
         }
         profile.status = 'success';
-        this._reportProfile(profile);
+        if (profile.phase === 'idle') {
+          this._reportProfile(profile);
+        }
         break;
       }
       case 'update-failure': {
@@ -119,35 +129,57 @@ export class PerformanceProfiler implements RuntimeObserver {
           startTime: performance.now(),
           duration: 0,
         };
+        profile.phase = 'render';
         break;
       case 'render-phase-end': {
         const measurement = profile.renderMeasurement;
         if (measurement !== null) {
           measurement.duration = performance.now() - measurement.startTime;
         }
-        if (event.mutationEffects.length > 0) {
-          profile.pendingPhaeses++;
-        }
-        if (event.layoutEffects.length > 0) {
-          profile.pendingPhaeses++;
-        }
-        if (event.passiveEffects.length > 0) {
-          profile.pendingPhaeses++;
-        }
+        profile.phase = 'idle';
         break;
       }
-      case 'component-render-start': {
+      case 'component-render-start':
         profile.componentMeasurements.push({
           name: event.component.name,
           startTime: performance.now(),
           duration: 0,
         });
         break;
-      }
       case 'component-render-end': {
         const measurement = profile.componentMeasurements.at(-1);
         if (measurement !== undefined) {
           measurement.duration = performance.now() - measurement.startTime;
+        }
+        break;
+      }
+      case 'commit-phase-start':
+        profile.commitMeasurement = {
+          startTime: performance.now(),
+          duration: 0,
+          pendingEffects:
+            event.mutationEffects.length +
+            event.layoutEffects.length +
+            event.passiveEffects.length,
+          committedEffects: 0,
+        };
+        profile.phase = 'commit';
+        break;
+      case 'commit-phase-end': {
+        const measurement = profile.commitMeasurement;
+        if (measurement !== null) {
+          const pendingEffects =
+            event.mutationEffects.length +
+            event.layoutEffects.length +
+            event.passiveEffects.length;
+          measurement.duration = performance.now() - measurement.startTime;
+          measurement.committedEffects =
+            measurement.pendingEffects - pendingEffects;
+          measurement.pendingEffects = pendingEffects;
+        }
+        profile.phase = 'idle';
+        if (profile.status !== 'pending') {
+          this._reportProfile(profile);
         }
         break;
       }
@@ -174,41 +206,31 @@ export class PerformanceProfiler implements RuntimeObserver {
       case 'effect-commit-end': {
         let measurement: CommitMeasurement | null = null;
         switch (event.phase) {
-          case CommitPhase.Mutation: {
+          case CommitPhase.Mutation:
             measurement = profile.mutationMeasurement;
             break;
-          }
-          case CommitPhase.Layout: {
+          case CommitPhase.Layout:
             measurement = profile.layoutMeasurement;
             break;
-          }
-          case CommitPhase.Passive: {
+          case CommitPhase.Passive:
             measurement = profile.passiveMeasurement;
             break;
-          }
         }
         if (measurement !== null) {
-          const remainingEffects = event.effects.length;
+          const pendingEffects = event.effects.length;
           measurement.duration = performance.now() - measurement.startTime;
           measurement.committedEffects =
-            measurement.pendingEffects - remainingEffects;
-          measurement.pendingEffects = remainingEffects;
+            measurement.pendingEffects - pendingEffects;
+          measurement.pendingEffects = pendingEffects;
         }
-        profile.pendingPhaeses--;
-        this._reportProfile(profile);
         break;
       }
     }
   }
 
   private _reportProfile(profile: PerformanceProfile): void {
-    if (
-      (profile.status === 'success' && profile.pendingPhaeses === 0) ||
-      profile.status === 'failure'
-    ) {
-      this._reporter.reportProfile(profile);
-      this._inProgressProfiles.delete(profile.id);
-    }
+    this._reporter.reportProfile(profile);
+    this._pendingProfiles.delete(profile.id);
   }
 }
 
@@ -225,6 +247,7 @@ export class ConsoleReporter implements PerformanceReporter {
       updateMeasurement,
       renderMeasurement,
       componentMeasurements,
+      commitMeasurement,
       mutationMeasurement,
       layoutMeasurement,
       passiveMeasurement,
@@ -258,31 +281,42 @@ export class ConsoleReporter implements PerformanceReporter {
       }
     }
 
-    if (mutationMeasurement !== null) {
-      this._logger.log(
-        `%cMUTATION PHASE:%c ${mutationMeasurement.committedEffects} effect(s) committed in %c${mutationMeasurement.duration}ms`,
-        MUTATION_PHASE_STYLE,
+    if (commitMeasurement !== null) {
+      this._logger.group(
+        `%cCOMMIT PHASE:%c ${commitMeasurement.committedEffects} effect(s) committed in %c${commitMeasurement.duration}ms`,
+        COMMIT_PHASE_STYLE,
         DEFAULT_STYLE,
         DURATION_STYLE,
       );
-    }
 
-    if (layoutMeasurement !== null) {
-      this._logger.log(
-        `%cLAYOUT PHASE:%c ${layoutMeasurement.committedEffects} effect(s) committed in %c${layoutMeasurement.duration}ms`,
-        LAYOUT_PHASE_STYLE,
-        DEFAULT_STYLE,
-        DURATION_STYLE,
-      );
-    }
+      if (mutationMeasurement !== null) {
+        this._logger.log(
+          `%cMUTATION PHASE:%c ${mutationMeasurement.committedEffects} effect(s) committed in %c${mutationMeasurement.duration}ms`,
+          MUTATION_PHASE_STYLE,
+          DEFAULT_STYLE,
+          DURATION_STYLE,
+        );
+      }
 
-    if (passiveMeasurement !== null) {
-      this._logger.log(
-        `%cPASSIVE PHASE:%c ${passiveMeasurement.committedEffects} effect(s) committed in %c${passiveMeasurement.duration}ms`,
-        PASSIVE_PHASE_STYLE,
-        DEFAULT_STYLE,
-        DURATION_STYLE,
-      );
+      if (layoutMeasurement !== null) {
+        this._logger.log(
+          `%cLAYOUT PHASE:%c ${layoutMeasurement.committedEffects} effect(s) committed in %c${layoutMeasurement.duration}ms`,
+          LAYOUT_PHASE_STYLE,
+          DEFAULT_STYLE,
+          DURATION_STYLE,
+        );
+      }
+
+      if (passiveMeasurement !== null) {
+        this._logger.log(
+          `%cPASSIVE PHASE:%c ${passiveMeasurement.committedEffects} effect(s) committed in %c${passiveMeasurement.duration}ms`,
+          PASSIVE_PHASE_STYLE,
+          DEFAULT_STYLE,
+          DURATION_STYLE,
+        );
+      }
+
+      this._logger.groupEnd();
     }
 
     this._logger.groupEnd();
@@ -293,10 +327,11 @@ function createProfile(id: number): PerformanceProfile {
   return {
     id,
     status: 'pending',
-    pendingPhaeses: 0,
+    phase: 'idle',
     updateMeasurement: null,
     renderMeasurement: null,
     componentMeasurements: [],
+    commitMeasurement: null,
     mutationMeasurement: null,
     layoutMeasurement: null,
     passiveMeasurement: null,
