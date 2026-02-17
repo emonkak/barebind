@@ -79,6 +79,14 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
     const scope = createScope(this.scope);
     const that = this;
 
+    scope.boundary = {
+      type: BoundaryType.Error,
+      next: scope.boundary,
+      handler: (error) => {
+        thrownError = error;
+      },
+    };
+
     let returnValue: TResult;
     let thrownError: unknown;
 
@@ -88,14 +96,6 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
       scope,
       resume({ frame, scope, context }: UpdateSession): void {
         const session = new RenderSession(state, that, frame, scope, context);
-
-        scope.boundary = {
-          type: BoundaryType.Error,
-          next: scope.boundary,
-          handler: (error) => {
-            thrownError = error;
-          },
-        };
 
         returnValue = callback(props, session);
 

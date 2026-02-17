@@ -75,6 +75,9 @@ export class RenderSession implements RenderContext {
       Object.freeze(hooks);
     }
 
+    // Prevent parent scope mutation during child render.
+    Object.freeze(this._scope);
+
     this._scope = DETACHED_SCOPE;
     this._hookIndex++;
   }
