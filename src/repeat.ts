@@ -22,8 +22,8 @@ const MUTATION_TYPE_UPDATE = 3;
 const MUTATION_TYPE_REMOVE = 4;
 
 export type RepeatProps<TSource, TKey = unknown, TElement = unknown> = {
-  elementSelector?: (source: TSource, index: number) => TElement;
-  keySelector?: (source: TSource, index: number) => TKey;
+  elementSelector?: (item: TSource, index: number) => TElement;
+  keySelector?: (item: TSource, index: number) => TKey;
   source: Iterable<TSource>;
 };
 
@@ -116,25 +116,25 @@ export class RepeatBinding<TSource, TKey, TElement>
     } = this._props;
     const oldKeys = this._pendingKeys;
     const oldSlots = this._pendingSlots;
-    const newSources = Array.isArray(source)
+    const newItems = Array.isArray(source)
       ? (source as TSource[])
       : Array.from(source);
-    const newKeys = newSources.map(keySelector);
-    const newElements = newSources.map(elementSelector);
+    const newKeys = newItems.map(keySelector);
+    const newElements = newItems.map(elementSelector);
     const newSlots = reconcileProjections(
       oldKeys,
       newKeys,
       oldSlots,
       newElements,
       {
-        insert: (source, referenceSlot) => {
+        insert: (item, referenceSlot) => {
           const part = {
             type: PartType.ChildNode,
             node: document.createComment(''),
             anchorNode: null,
             namespaceURI: this._part.namespaceURI,
           };
-          const slot = context.resolveSlot(source, part);
+          const slot = context.resolveSlot(item, part);
           slot.attach(session);
           if (targetTree !== null) {
             replaceMarkerNode(targetTree, part.node);
@@ -146,8 +146,8 @@ export class RepeatBinding<TSource, TKey, TElement>
           });
           return slot;
         },
-        update: (slot, source) => {
-          if (slot.reconcile(source, session)) {
+        update: (slot, item) => {
+          if (slot.reconcile(item, session)) {
             this._pendingMutations.push({
               type: MUTATION_TYPE_UPDATE,
               slot,
@@ -155,8 +155,8 @@ export class RepeatBinding<TSource, TKey, TElement>
           }
           return slot;
         },
-        move: (slot, source, referenceSlot) => {
-          const type = slot.reconcile(source, session)
+        move: (slot, item, referenceSlot) => {
+          const type = slot.reconcile(item, session)
             ? MUTATION_TYPE_MOVE_AND_UPDATE
             : MUTATION_TYPE_MOVE;
           this._pendingMutations.push({
@@ -237,11 +237,11 @@ export class RepeatBinding<TSource, TKey, TElement>
   }
 }
 
-function defaultElementSelector<TElement>(source: unknown): TElement {
-  return source as TElement;
+function defaultElementSelector<TElement>(item: unknown): TElement {
+  return item as TElement;
 }
 
-function defaultKeySelector<TKey>(_source: unknown, index: number): TKey {
+function defaultKeySelector<TKey>(_item: unknown, index: number): TKey {
   return index as TKey;
 }
 
