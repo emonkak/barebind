@@ -411,7 +411,7 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
   }
 
   render(
-    _binds: readonly unknown[],
+    _args: readonly unknown[],
     _part: Part.ChildNodePart,
     _session: UpdateSession,
   ): TemplateResult {
@@ -422,7 +422,7 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
   }
 
   hydrate(
-    _binds: readonly unknown[],
+    _args: readonly unknown[],
     _part: Part.ChildNodePart,
     _targetTree: TreeWalker,
     _session: UpdateSession,
