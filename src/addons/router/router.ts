@@ -1,5 +1,7 @@
 import type { RelativeURL } from './relative-url.js';
 
+export const noMatch: unique symbol = Symbol('noMatch');
+
 export interface Route<
   TResult,
   TContext,
@@ -22,7 +24,10 @@ export interface Route<
 
 export type Pattern = string | Matcher<unknown>;
 
-export type Matcher<T> = (component: string, url: RelativeURL) => T | null;
+export type Matcher<T> = (
+  component: string,
+  url: RelativeURL,
+) => T | typeof noMatch;
 
 export type Resolver<TCaptures extends unknown[], TResult, TContext> = (
   captures: TCaptures,
@@ -94,13 +99,13 @@ export function encoded(component: string): string {
   return component;
 }
 
-export function integer(component: string): number | null {
+export function integer(component: string): number | typeof noMatch {
   const n = Number.parseInt(component, 10);
-  return n.toString() === component ? n : null;
+  return n.toString() === component ? n : noMatch;
 }
 
 export function regexp(pattern: RegExp): Matcher<string> {
-  return (component: string) => component.match(pattern)?.[0] ?? null;
+  return (component: string) => component.match(pattern)?.[0] ?? noMatch;
 }
 
 export function route<
@@ -143,7 +148,7 @@ function collectCaptures<TPatterns extends Pattern[]>(
       }
     } else {
       const capture = pattern(component, url);
-      if (capture === null) {
+      if (capture === noMatch) {
         return null;
       }
       captures.push(capture);

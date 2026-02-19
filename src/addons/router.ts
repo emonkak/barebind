@@ -11,6 +11,7 @@ export {
   encoded,
   integer,
   type Matcher,
+  noMatch,
   type Pattern,
   type Resolver,
   type Route,
