@@ -281,41 +281,39 @@ export class ConsoleReporter implements RuntimeProfileReporter {
     }
 
     if (commitMeasurement !== null) {
-      this._logger.group(
+      this._logger.log(
         `%cCOMMIT PHASE:%c ${commitMeasurement.committedEffects} effect(s) committed in %c${commitMeasurement.duration}ms`,
         COMMIT_PHASE_STYLE,
         DEFAULT_STYLE,
         DURATION_STYLE,
       );
+    }
 
-      if (mutationMeasurement !== null) {
-        this._logger.log(
-          `%cMUTATION PHASE:%c ${mutationMeasurement.committedEffects} effect(s) committed in %c${mutationMeasurement.duration}ms`,
-          MUTATION_PHASE_STYLE,
-          DEFAULT_STYLE,
-          DURATION_STYLE,
-        );
-      }
+    if (mutationMeasurement !== null) {
+      this._logger.log(
+        `%cMUTATION PHASE:%c ${mutationMeasurement.committedEffects} effect(s) committed in %c${mutationMeasurement.duration}ms`,
+        MUTATION_PHASE_STYLE,
+        DEFAULT_STYLE,
+        DURATION_STYLE,
+      );
+    }
 
-      if (layoutMeasurement !== null) {
-        this._logger.log(
-          `%cLAYOUT PHASE:%c ${layoutMeasurement.committedEffects} effect(s) committed in %c${layoutMeasurement.duration}ms`,
-          LAYOUT_PHASE_STYLE,
-          DEFAULT_STYLE,
-          DURATION_STYLE,
-        );
-      }
+    if (layoutMeasurement !== null) {
+      this._logger.log(
+        `%cLAYOUT PHASE:%c ${layoutMeasurement.committedEffects} effect(s) committed in %c${layoutMeasurement.duration}ms`,
+        LAYOUT_PHASE_STYLE,
+        DEFAULT_STYLE,
+        DURATION_STYLE,
+      );
+    }
 
-      if (passiveMeasurement !== null) {
-        this._logger.log(
-          `%cPASSIVE PHASE:%c ${passiveMeasurement.committedEffects} effect(s) committed in %c${passiveMeasurement.duration}ms`,
-          PASSIVE_PHASE_STYLE,
-          DEFAULT_STYLE,
-          DURATION_STYLE,
-        );
-      }
-
-      this._logger.groupEnd();
+    if (passiveMeasurement !== null) {
+      this._logger.log(
+        `%cPASSIVE PHASE:%c ${passiveMeasurement.committedEffects} effect(s) committed in %c${passiveMeasurement.duration}ms`,
+        PASSIVE_PHASE_STYLE,
+        DEFAULT_STYLE,
+        DURATION_STYLE,
+      );
     }
 
     this._logger.groupEnd();
