@@ -3,9 +3,9 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   type ConsoleLogger,
   ConsoleReporter,
-  type PerformanceProfile,
-  PerformanceProfiler,
-} from '@/addons/profiler.js';
+  type RuntimeProfile,
+  RuntimeProfiler,
+} from '@/addons/runtime-profiler.js';
 import { createComponent } from '@/component.js';
 import { CommitPhase, Lane, type RenderContext } from '@/internal.js';
 import type { RuntimeEvent } from '@/runtime.js';
@@ -17,7 +17,7 @@ describe('PerformanceProfiler', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
-      const profiler = new PerformanceProfiler(reporter);
+      const profiler = new RuntimeProfiler(reporter);
 
       const component = createComponent(function MyComponent(_props: {}) {
         return null;
@@ -163,14 +163,14 @@ describe('PerformanceProfiler', () => {
           pendingEffects: 0,
           committedEffects: 1,
         },
-      } satisfies PerformanceProfile);
+      } satisfies RuntimeProfile);
     });
 
     it('reports the profile on update failure', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
-      const profiler = new PerformanceProfiler(reporter);
+      const profiler = new RuntimeProfiler(reporter);
 
       const component = createComponent(function MyComponent(_props: {}) {
         return null;
@@ -230,14 +230,14 @@ describe('PerformanceProfiler', () => {
         mutationMeasurement: null,
         layoutMeasurement: null,
         passiveMeasurement: null,
-      } satisfies PerformanceProfile);
+      } satisfies RuntimeProfile);
     });
 
     it('reports the profile after all effects are committed', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
-      const profiler = new PerformanceProfiler(reporter);
+      const profiler = new RuntimeProfiler(reporter);
 
       const component = createComponent(function MyComponent(_props: {}) {
         return null;
@@ -366,14 +366,14 @@ describe('PerformanceProfiler', () => {
           pendingEffects: 0,
           committedEffects: 1,
         },
-      } satisfies PerformanceProfile);
+      } satisfies RuntimeProfile);
     });
 
     it('ignore events for updates that have not started', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
-      const profiler = new PerformanceProfiler(reporter);
+      const profiler = new RuntimeProfiler(reporter);
 
       const events: RuntimeEvent[] = [
         {
@@ -551,7 +551,7 @@ describe('ConsoleReporter', () => {
         ],
       ],
     ] as const satisfies [
-      PerformanceProfile,
+      RuntimeProfile,
       [keyof ConsoleLogger, ...unknown[]][],
     ][])('prints a profile to the logger', (profile, expectedLogs) => {
       const logger = new MockLogger();

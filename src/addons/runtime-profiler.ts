@@ -21,7 +21,7 @@ export interface ComponentMeasurement {
   duration: number;
 }
 
-export interface PerformanceProfile {
+export interface RuntimeProfile {
   id: number;
   status: 'pending' | 'success' | 'failure';
   phase: 'idle' | 'render' | 'commit';
@@ -34,8 +34,8 @@ export interface PerformanceProfile {
   passiveMeasurement: CommitMeasurement | null;
 }
 
-export interface PerformanceReporter {
-  reportProfile(profile: PerformanceProfile): void;
+export interface RuntimeProfileReporter {
+  reportProfile(profile: RuntimeProfile): void;
 }
 
 export interface RenderMeasurement {
@@ -74,13 +74,12 @@ const DURATION_STYLE =
   'color: light-dark(#5e5d67, #918f9a); font-weight: normal';
 const DEFAULT_STYLE = 'font-weight: normal';
 
-export class PerformanceProfiler implements RuntimeObserver {
-  private readonly _reporter: PerformanceReporter;
+export class RuntimeProfiler implements RuntimeObserver {
+  private readonly _reporter: RuntimeProfileReporter;
 
-  private readonly _pendingProfiles: Map<number, PerformanceProfile> =
-    new Map();
+  private readonly _pendingProfiles: Map<number, RuntimeProfile> = new Map();
 
-  constructor(reporter: PerformanceReporter) {
+  constructor(reporter: RuntimeProfileReporter) {
     this._reporter = reporter;
   }
 
@@ -228,20 +227,20 @@ export class PerformanceProfiler implements RuntimeObserver {
     }
   }
 
-  private _reportProfile(profile: PerformanceProfile): void {
+  private _reportProfile(profile: RuntimeProfile): void {
     this._reporter.reportProfile(profile);
     this._pendingProfiles.delete(profile.id);
   }
 }
 
-export class ConsoleReporter implements PerformanceReporter {
+export class ConsoleReporter implements RuntimeProfileReporter {
   private readonly _logger: ConsoleLogger;
 
   constructor(logger: ConsoleLogger = console) {
     this._logger = logger;
   }
 
-  reportProfile(profile: PerformanceProfile): void {
+  reportProfile(profile: RuntimeProfile): void {
     const {
       status,
       updateMeasurement,
@@ -323,7 +322,7 @@ export class ConsoleReporter implements PerformanceReporter {
   }
 }
 
-function createProfile(id: number): PerformanceProfile {
+function createProfile(id: number): RuntimeProfile {
   return {
     id,
     status: 'pending',

@@ -1,5 +1,8 @@
 import { BrowserBackend, Root, Runtime } from 'barebind';
-import { ConsoleReporter, PerformanceProfiler } from 'barebind/addons/profiler';
+import {
+  ConsoleReporter,
+  RuntimeProfiler,
+} from 'barebind/addons/runtime-profiler';
 
 import { App } from './App.js';
 import { TodoState } from './state.js';
@@ -11,6 +14,6 @@ const root = Root.create(
   runtime,
 );
 
-runtime.addObserver(new PerformanceProfiler(new ConsoleReporter()));
+runtime.addObserver(new RuntimeProfiler(new ConsoleReporter()));
 
 root.mount();
