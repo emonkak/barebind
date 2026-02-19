@@ -381,12 +381,12 @@ export class Runtime implements SessionContext {
       }
     } finally {
       frame.lanes = Lane.NoLane;
-    }
 
-    notifyObservers(this._observers, {
-      type: 'render-phase-end',
-      id,
-    });
+      notifyObservers(this._observers, {
+        type: 'render-phase-end',
+        id,
+      });
+    }
 
     notifyObservers(this._observers, {
       type: 'commit-phase-start',
@@ -396,51 +396,61 @@ export class Runtime implements SessionContext {
       passiveEffects,
     });
 
-    if (mutationEffects.length > 0 || layoutEffects.length > 0) {
-      const callback = () => {
-        if (mutationEffects.length > 0) {
-          this._flushEffects(id, mutationEffects, CommitPhase.Mutation);
-        }
+    try {
+      if (mutationEffects.length > 0 || layoutEffects.length > 0) {
+        const callback = () => {
+          if (mutationEffects.length > 0) {
+            this._flushEffects(id, mutationEffects, CommitPhase.Mutation);
+          }
 
-        if (layoutEffects.length > 0) {
-          this._flushEffects(id, layoutEffects, CommitPhase.Layout);
-        }
-      };
+          if (layoutEffects.length > 0) {
+            this._flushEffects(id, layoutEffects, CommitPhase.Layout);
+          }
+        };
 
-      if (lanes & Lane.ViewTransitionLane) {
-        await this._backend.startViewTransition(callback);
-      } else {
-        await this._backend.requestCallback(callback, {
-          priority: 'user-blocking',
+        if (lanes & Lane.ViewTransitionLane) {
+          await this._backend.startViewTransition(callback);
+        } else {
+          await this._backend.requestCallback(callback, {
+            priority: 'user-blocking',
+          });
+        }
+      }
+
+      if (passiveEffects.length > 0) {
+        this._backend
+          .requestCallback(
+            () => {
+              this._flushEffects(id, passiveEffects, CommitPhase.Passive);
+            },
+            { priority: 'background' },
+          )
+          .finally(() => {
+            notifyObservers(this._observers, {
+              type: 'commit-phase-end',
+              id,
+              mutationEffects,
+              layoutEffects,
+              passiveEffects,
+            });
+          });
+      }
+    } finally {
+      // Commit Phase ends when effects indicate failure to flush
+      // or when no passive effects were scheduled.
+      if (
+        mutationEffects.length > 0 ||
+        layoutEffects.length > 0 ||
+        passiveEffects.length === 0
+      ) {
+        notifyObservers(this._observers, {
+          type: 'commit-phase-end',
+          id,
+          mutationEffects,
+          layoutEffects,
+          passiveEffects,
         });
       }
-    }
-
-    if (passiveEffects.length > 0) {
-      this._backend
-        .requestCallback(
-          () => {
-            this._flushEffects(id, passiveEffects, CommitPhase.Passive);
-          },
-          { priority: 'background' },
-        )
-        .finally(() => {
-          notifyObservers(this._observers, {
-            type: 'commit-phase-end',
-            id,
-            mutationEffects,
-            layoutEffects,
-            passiveEffects,
-          });
-        });
-    } else {
-      notifyObservers(this._observers, {
-        type: 'commit-phase-end',
-        id,
-        mutationEffects,
-        layoutEffects,
-        passiveEffects,
-      });
     }
   }
 
@@ -465,12 +475,12 @@ export class Runtime implements SessionContext {
       } while (frame.pendingCoroutines.length > 0);
     } finally {
       frame.lanes = Lane.NoLane;
-    }
 
-    notifyObservers(this._observers, {
-      type: 'render-phase-end',
-      id,
-    });
+      notifyObservers(this._observers, {
+        type: 'render-phase-end',
+        id,
+      });
+    }
 
     notifyObservers(this._observers, {
       type: 'commit-phase-start',
@@ -480,25 +490,27 @@ export class Runtime implements SessionContext {
       passiveEffects,
     });
 
-    if (mutationEffects.length > 0) {
-      this._flushEffects(id, mutationEffects, CommitPhase.Mutation);
-    }
+    try {
+      if (mutationEffects.length > 0) {
+        this._flushEffects(id, mutationEffects, CommitPhase.Mutation);
+      }
 
-    if (layoutEffects.length > 0) {
-      this._flushEffects(id, layoutEffects, CommitPhase.Layout);
-    }
+      if (layoutEffects.length > 0) {
+        this._flushEffects(id, layoutEffects, CommitPhase.Layout);
+      }
 
-    if (passiveEffects.length > 0) {
-      this._flushEffects(id, passiveEffects, CommitPhase.Passive);
+      if (passiveEffects.length > 0) {
+        this._flushEffects(id, passiveEffects, CommitPhase.Passive);
+      }
+    } finally {
+      notifyObservers(this._observers, {
+        type: 'commit-phase-end',
+        id,
+        mutationEffects,
+        layoutEffects,
+        passiveEffects,
+      });
     }
-
-    notifyObservers(this._observers, {
-      type: 'commit-phase-end',
-      id,
-      mutationEffects,
-      layoutEffects,
-      passiveEffects,
-    });
   }
 }
 
