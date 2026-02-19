@@ -1,0 +1,131 @@
+import { CommitPhase } from '../internal.js';
+import type { RuntimeEvent, RuntimeObserver } from '../runtime.js';
+
+export type UserTimingAPI = Pick<Performance, 'mark' | 'measure'>;
+
+export class DevToolsProfiler implements RuntimeObserver {
+  private readonly _userTiming: UserTimingAPI;
+
+  private _componentIndex: number = 0;
+
+  constructor(userTiming: UserTimingAPI = performance) {
+    this._userTiming = userTiming;
+  }
+
+  onRuntimeEvent(event: RuntimeEvent): void {
+    switch (event.type) {
+      case 'update-start': {
+        const startMark = `barebind:update-start:${event.id}`;
+        this._mark(startMark);
+        this._componentIndex = 0;
+        break;
+      }
+      case 'update-success': {
+        const startMark = `barebind:update-start:${event.id}`;
+        const endMark = `barebind:update-end:${event.id}`;
+        this._mark(endMark);
+        this._measure(
+          `Barebind - Update Success #${event.id}`,
+          startMark,
+          endMark,
+        );
+        break;
+      }
+      case 'update-failure': {
+        const startMark = `barebind:update-start:${event.id}`;
+        const endMark = `barebind:update-end:${event.id}`;
+        this._mark(endMark);
+        this._measure(
+          `Barebind - Update Failure #${event.id}`,
+          startMark,
+          endMark,
+        );
+        break;
+      }
+      case 'render-phase-start': {
+        const startMark = `barebind:render-phase-start:${event.id}`;
+        this._mark(startMark);
+        break;
+      }
+      case 'render-phase-end': {
+        const startMark = `barebind:render-phase-start:${event.id}`;
+        const endMark = `barebind:render-phase-end:${event.id}`;
+        this._mark(endMark);
+        this._measure(
+          `Barebind - Render Phase #${event.id}`,
+          startMark,
+          endMark,
+        );
+        break;
+      }
+      case 'component-render-start': {
+        const index = this._componentIndex;
+        const startMark = `barebind:component-render-start:${event.id}:${event.component.name}:${index}`;
+        this._mark(startMark);
+        break;
+      }
+      case 'component-render-end': {
+        const index = this._componentIndex++;
+        const startMark = `barebind:component-render-start:${event.id}:${event.component.name}:${index}`;
+        const endMark = `barebind:component-render-end:${event.id}:${event.component.name}:${index}`;
+        this._mark(endMark);
+        this._measure(
+          `Barebind - Render ${event.component.name} #${event.id}`,
+          startMark,
+          endMark,
+        );
+        break;
+      }
+      case 'commit-phase-start': {
+        const startMark = `barebind:commit-phase-start:${event.id}`;
+        this._mark(startMark);
+        break;
+      }
+      case 'commit-phase-end': {
+        const startMark = `barebind:commit-phase-start:${event.id}`;
+        const endMark = `barebind:commit-phase-end:${event.id}`;
+        this._mark(endMark);
+        this._measure(
+          `Barebind - Commit Phase #${event.id}`,
+          startMark,
+          endMark,
+        );
+        break;
+      }
+      case 'effect-commit-start': {
+        const phaseName = getPhaseName(event.phase);
+        const startMark = `barebind:effect-commit-start:${phaseName.toLowerCase()}:${event.id}`;
+        this._mark(startMark);
+        break;
+      }
+      case 'effect-commit-end': {
+        const phaseName = getPhaseName(event.phase);
+        const startMark = `barebind:effect-commit-start:${phaseName.toLowerCase()}:${event.id}`;
+        const endMark = `barebind:effect-commit-end:${phaseName.toLowerCase()}:${event.id}`;
+        this._mark(endMark);
+        this._measure(
+          `Barebind - Commit ${phaseName} Effects #${event.id}`,
+          startMark,
+          endMark,
+        );
+        break;
+      }
+    }
+  }
+
+  private _mark(name: string): void {
+    this._userTiming.mark(name);
+  }
+
+  private _measure(name: string, startMark: string, endMark: string): void {
+    try {
+      this._userTiming.measure(name, startMark, endMark);
+    } catch {
+      // startMark may not exist if profiling started mid-flight; silently ignore.
+    }
+  }
+}
+
+function getPhaseName(phase: CommitPhase): string {
+  return Object.keys(CommitPhase)[phase]!;
+}
