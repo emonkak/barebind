@@ -27,7 +27,7 @@ export interface ComponentOptions<TProps> {
 }
 
 export function createComponent<TProps, TResult = unknown>(
-  componentFn: (props: TProps, context: RenderContext) => TResult,
+  render: (props: TProps, context: RenderContext) => TResult,
   options: ComponentOptions<TProps> = {},
 ): Component<TProps, TResult> {
   function Component(props: TProps): Bindable<TProps> {
@@ -39,11 +39,11 @@ export function createComponent<TProps, TResult = unknown>(
 
   DEBUG: {
     Object.defineProperty(Component, 'name', {
-      value: componentFn.name,
+      value: render.name,
     });
   }
 
-  Component.render = componentFn;
+  Component.render = render;
   Component.resolveBinding = resolveBinding;
   Component.arePropsEqual = options.arePropsEqual ?? Object.is;
 
