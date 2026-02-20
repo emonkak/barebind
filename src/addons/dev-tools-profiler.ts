@@ -13,98 +13,81 @@ export class DevToolsProfiler implements RuntimeObserver {
   }
 
   onRuntimeEvent(event: RuntimeEvent): void {
-    switch (event.type) {
+    const { id, type } = event;
+    switch (type) {
       case 'update-start': {
-        const startMark = `barebind:update-start:${event.id}`;
+        const startMark = `barebind:update-start:${id}`;
         this._mark(startMark);
         this._componentIndex = 0;
         break;
       }
       case 'update-success': {
-        const startMark = `barebind:update-start:${event.id}`;
-        const endMark = `barebind:update-end:${event.id}`;
+        const startMark = `barebind:update-start:${id}`;
+        const endMark = `barebind:update-end:${id}`;
         this._mark(endMark);
-        this._measure(
-          `Barebind - Update Success #${event.id}`,
-          startMark,
-          endMark,
-        );
+        this._measure(`Barebind - Update success #${id}`, startMark, endMark);
         break;
       }
       case 'update-failure': {
-        const startMark = `barebind:update-start:${event.id}`;
-        const endMark = `barebind:update-end:${event.id}`;
+        const startMark = `barebind:update-start:${id}`;
+        const endMark = `barebind:update-end:${id}`;
         this._mark(endMark);
-        this._measure(
-          `Barebind - Update Failure #${event.id}`,
-          startMark,
-          endMark,
-        );
+        this._measure(`Barebind - Update failure #${id}`, startMark, endMark);
         break;
       }
       case 'render-phase-start': {
-        const startMark = `barebind:render-phase-start:${event.id}`;
+        const startMark = `barebind:render-phase-start:${id}`;
         this._mark(startMark);
         break;
       }
       case 'render-phase-end': {
-        const startMark = `barebind:render-phase-start:${event.id}`;
-        const endMark = `barebind:render-phase-end:${event.id}`;
+        const startMark = `barebind:render-phase-start:${id}`;
+        const endMark = `barebind:render-phase-end:${id}`;
         this._mark(endMark);
-        this._measure(
-          `Barebind - Render Phase #${event.id}`,
-          startMark,
-          endMark,
-        );
+        this._measure(`Barebind - Render phase #${id}`, startMark, endMark);
         break;
       }
       case 'component-render-start': {
         const index = this._componentIndex;
-        const startMark = `barebind:component-render-start:${event.id}:${event.component.name}:${index}`;
+        const { name } = event.component;
+        const startMark = `barebind:component-render-start:${id}:${name}:${index}`;
         this._mark(startMark);
         break;
       }
       case 'component-render-end': {
         const index = this._componentIndex++;
-        const startMark = `barebind:component-render-start:${event.id}:${event.component.name}:${index}`;
-        const endMark = `barebind:component-render-end:${event.id}:${event.component.name}:${index}`;
+        const { name } = event.component;
+        const startMark = `barebind:component-render-start:${id}:${name}:${index}`;
+        const endMark = `barebind:component-render-end:${id}:${name}:${index}`;
         this._mark(endMark);
-        this._measure(
-          `Barebind - Render ${event.component.name} #${event.id}`,
-          startMark,
-          endMark,
-        );
+        this._measure(`Barebind - Render ${name} #${id}`, startMark, endMark);
         break;
       }
       case 'commit-phase-start': {
-        const startMark = `barebind:commit-phase-start:${event.id}`;
+        const startMark = `barebind:commit-phase-start:${id}`;
         this._mark(startMark);
         break;
       }
       case 'commit-phase-end': {
-        const startMark = `barebind:commit-phase-start:${event.id}`;
-        const endMark = `barebind:commit-phase-end:${event.id}`;
+        const startMark = `barebind:commit-phase-start:${id}`;
+        const endMark = `barebind:commit-phase-end:${id}`;
         this._mark(endMark);
-        this._measure(
-          `Barebind - Commit Phase #${event.id}`,
-          startMark,
-          endMark,
-        );
+        this._measure(`Barebind - Commit phase #${id}`, startMark, endMark);
         break;
       }
       case 'effect-commit-start': {
         const phaseName = getPhaseName(event.phase);
-        const startMark = `barebind:effect-commit-start:${phaseName.toLowerCase()}:${event.id}`;
+        const startMark = `barebind:effect-commit-start:${phaseName}:${id}`;
         this._mark(startMark);
         break;
       }
       case 'effect-commit-end': {
         const phaseName = getPhaseName(event.phase);
-        const startMark = `barebind:effect-commit-start:${phaseName.toLowerCase()}:${event.id}`;
-        const endMark = `barebind:effect-commit-end:${phaseName.toLowerCase()}:${event.id}`;
+        const startMark = `barebind:effect-commit-start:${phaseName}:${id}`;
+        const endMark = `barebind:effect-commit-end:${phaseName}:${id}`;
         this._mark(endMark);
         this._measure(
-          `Barebind - Commit ${phaseName} Effects #${event.id}`,
+          `Barebind - Commit ${phaseName} effects #${id}`,
           startMark,
           endMark,
         );
@@ -127,5 +110,5 @@ export class DevToolsProfiler implements RuntimeObserver {
 }
 
 function getPhaseName(phase: CommitPhase): string {
-  return Object.keys(CommitPhase)[phase]!;
+  return Object.keys(CommitPhase)[phase]!.toLowerCase();
 }

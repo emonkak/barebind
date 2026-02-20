@@ -33,7 +33,7 @@ describe('DevToolsProfiler', () => {
       ]);
       expect(measuresOf(performance)).toStrictEqual([
         {
-          name: 'Barebind - Update Success #0',
+          name: 'Barebind - Update success #0',
           start: 'barebind:update-start:0',
           end: 'barebind:update-end:0',
         },
@@ -57,7 +57,7 @@ describe('DevToolsProfiler', () => {
       ]);
       expect(measuresOf(performance)).toStrictEqual([
         {
-          name: 'Barebind - Update Failure #0',
+          name: 'Barebind - Update failure #0',
           start: 'barebind:update-start:0',
           end: 'barebind:update-end:0',
         },
@@ -76,7 +76,7 @@ describe('DevToolsProfiler', () => {
       ]);
       expect(measuresOf(performance)).toStrictEqual([
         {
-          name: 'Barebind - Render Phase #0',
+          name: 'Barebind - Render phase #0',
           start: 'barebind:render-phase-start:0',
           end: 'barebind:render-phase-end:0',
         },
@@ -266,7 +266,7 @@ describe('DevToolsProfiler', () => {
       ]);
       expect(measuresOf(performance)).toStrictEqual([
         {
-          name: 'Barebind - Commit Phase #0',
+          name: 'Barebind - Commit phase #0',
           start: 'barebind:commit-phase-start:0',
           end: 'barebind:commit-phase-end:0',
         },
@@ -276,10 +276,10 @@ describe('DevToolsProfiler', () => {
 
   describe('effect-commit-start / effect-commit-end', () => {
     it.each([
-      [CommitPhase.Mutation, 'mutation', 'Mutation'],
-      [CommitPhase.Layout, 'layout', 'Layout'],
-      [CommitPhase.Passive, 'passive', 'Passive'],
-    ] as const)('records marks and a measure for %s phase', (phase, slug, label) => {
+      [CommitPhase.Mutation, 'mutation'],
+      [CommitPhase.Layout, 'layout'],
+      [CommitPhase.Passive, 'passive'],
+    ] as const)('records marks and a measure for %s phase', (phase, name) => {
       profiler.onRuntimeEvent({
         type: 'effect-commit-start',
         id: 0,
@@ -294,14 +294,14 @@ describe('DevToolsProfiler', () => {
       });
 
       expect(marksOf(performance)).toStrictEqual([
-        `barebind:effect-commit-start:${slug}:0`,
-        `barebind:effect-commit-end:${slug}:0`,
+        `barebind:effect-commit-start:${name}:0`,
+        `barebind:effect-commit-end:${name}:0`,
       ]);
       expect(measuresOf(performance)).toStrictEqual([
         {
-          name: `Barebind - Commit ${label} Effects #0`,
-          start: `barebind:effect-commit-start:${slug}:0`,
-          end: `barebind:effect-commit-end:${slug}:0`,
+          name: `Barebind - Commit ${name} effects #0`,
+          start: `barebind:effect-commit-start:${name}:0`,
+          end: `barebind:effect-commit-end:${name}:0`,
         },
       ]);
     });
