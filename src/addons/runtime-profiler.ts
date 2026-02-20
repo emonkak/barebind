@@ -62,7 +62,7 @@ const COMMIT_PHASE_STYLE =
   'color: light-dark(#b90063, #ff4896); font-weight: bold';
 // Orange
 const MUTATION_PHASE_STYLE =
-  'color: light-dark(#9F4312, #E96725); font-weight: bold';
+  'color: light-dark(#9f4312, #e96725); font-weight: bold';
 // Purple
 const LAYOUT_PHASE_STYLE =
   'color: light-dark(#8c1ed3, #bf67ff); font-weight: bold';
