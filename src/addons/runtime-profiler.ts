@@ -110,7 +110,7 @@ export class RuntimeProfiler implements RuntimeObserver {
         }
         profile.status = 'success';
         if (profile.phase === 'idle') {
-          this._reportProfile(profile);
+          this._flushProfile(profile);
         }
         break;
       }
@@ -120,7 +120,7 @@ export class RuntimeProfiler implements RuntimeObserver {
           measurement.duration = performance.now() - measurement.startTime;
         }
         profile.status = 'failure';
-        this._reportProfile(profile);
+        this._flushProfile(profile);
         break;
       }
       case 'render-phase-start':
@@ -178,7 +178,7 @@ export class RuntimeProfiler implements RuntimeObserver {
         }
         profile.phase = 'idle';
         if (profile.status !== 'pending') {
-          this._reportProfile(profile);
+          this._flushProfile(profile);
         }
         break;
       }
@@ -227,7 +227,7 @@ export class RuntimeProfiler implements RuntimeObserver {
     }
   }
 
-  private _reportProfile(profile: RuntimeProfile): void {
+  private _flushProfile(profile: RuntimeProfile): void {
     this._reporter.reportProfile(profile);
     this._pendingProfiles.delete(profile.id);
   }
