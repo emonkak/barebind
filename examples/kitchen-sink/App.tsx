@@ -4,7 +4,7 @@ import {
   Repeat,
   shallowEqual,
 } from 'barebind';
-import { DynamicTemplate } from 'barebind/addons/dynamic-template';
+import { PartialTemplate } from 'barebind/addons/partial-template';
 import { Atom, type Signal } from 'barebind/addons/signal';
 import { Resource, Suspense } from 'barebind/addons/suspense';
 import type { VElement } from 'barebind/addons/vdom';
@@ -148,9 +148,11 @@ const Dashboard = createComponent(function Dashboard(
   const env = $.getSharedContext(ENV_CONTEXT);
   const countElementRef = $.useRef<Element | null>(null);
   const count = $.use(count$);
-  const { literal, html } = $.use(DynamicTemplate());
+  const { html } = $.use(PartialTemplate);
 
-  const greetTag = literal(count$.value % 2 === 0 ? 'span' : 'em');
+  const greetTag = PartialTemplate.literal(
+    count$.value % 2 === 0 ? 'span' : 'em',
+  );
 
   return $.html`
     <div
