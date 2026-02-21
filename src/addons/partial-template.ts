@@ -1,10 +1,13 @@
 import { sequentialEqual } from '../compare.js';
 import { $hook, type RenderContext } from '../internal.js';
 
-const templateCacheMap = new WeakMap<readonly string[], TemplateCache[]>();
+const stringInterpolationCache = new WeakMap<
+  readonly string[],
+  StringInterpolation[]
+>();
 
-interface TemplateCache {
-  expandedStrings: readonly string[];
+interface StringInterpolation {
+  interpolatedStrings: readonly string[];
   literalStrings: readonly string[];
   literalPositions: readonly number[];
 }
@@ -42,48 +45,51 @@ export class PartialTemplate {
   ): PartialTemplate {
     const literalStrings: string[] = [];
     const literalPositions: number[] = [];
-    const expandedValues: unknown[] = [];
+    const flattenedValues: unknown[] = [];
 
     for (let i = 0, l = values.length; i < l; i++) {
       const value = values[i]!;
       if (value instanceof PartialTemplate) {
         literalStrings.push(...value.strings);
         literalPositions.push(i);
-        expandedValues.push(...value.values);
+        flattenedValues.push(...value.values);
       } else {
-        expandedValues.push(value);
+        flattenedValues.push(value);
       }
     }
 
-    let templateCaches = templateCacheMap.get(strings);
+    let stringInterpolations = stringInterpolationCache.get(strings);
 
-    if (templateCaches !== undefined) {
-      for (const templateCache of templateCaches) {
+    if (stringInterpolations !== undefined) {
+      for (const stringInterpolation of stringInterpolations) {
         if (
-          sequentialEqual(templateCache.literalStrings, literalStrings) &&
-          sequentialEqual(templateCache.literalPositions, literalPositions)
+          sequentialEqual(stringInterpolation.literalStrings, literalStrings) &&
+          sequentialEqual(
+            stringInterpolation.literalPositions,
+            literalPositions,
+          )
         ) {
           return new PartialTemplate(
-            templateCache.expandedStrings,
-            expandedValues,
+            stringInterpolation.interpolatedStrings,
+            flattenedValues,
           );
         }
       }
     } else {
-      templateCaches = [];
-      templateCacheMap.set(strings, templateCaches);
+      stringInterpolations = [];
+      stringInterpolationCache.set(strings, stringInterpolations);
     }
 
-    const expandedStrings =
-      literalStrings.length > 0 ? expandStrings(strings, values) : strings;
+    const interpolatedStrings =
+      literalStrings.length > 0 ? interpolateStrings(strings, values) : strings;
 
-    templateCaches.push({
-      expandedStrings,
+    stringInterpolations.push({
+      interpolatedStrings,
       literalStrings,
       literalPositions,
     });
 
-    return new PartialTemplate(expandedStrings, expandedValues);
+    return new PartialTemplate(interpolatedStrings, flattenedValues);
   }
 
   static literal(s: string): PartialTemplate {
@@ -104,27 +110,27 @@ export class PartialTemplate {
   }
 }
 
-function expandStrings(
+function interpolateStrings(
   strings: readonly string[],
   values: readonly unknown[],
 ): readonly string[] {
-  const expandedStrings = [strings[0]!];
-  let lastStringIndex = 0;
+  const interpolatedStrings = [strings[0]!];
+  let interpolatedIndex = 0;
 
   for (let i = 0, l = values.length; i < l; i++) {
     const value = values[i];
     if (value instanceof PartialTemplate) {
-      expandedStrings[lastStringIndex] += value.strings[0]!;
+      interpolatedStrings[interpolatedIndex] += value.strings[0]!;
       for (let j = 0, m = value.values.length; j < m; j++) {
-        expandedStrings.push(value.strings[j + 1]!);
-        lastStringIndex++;
+        interpolatedStrings.push(value.strings[j + 1]!);
+        interpolatedIndex++;
       }
-      expandedStrings[lastStringIndex] += strings[i + 1]!;
+      interpolatedStrings[interpolatedIndex] += strings[i + 1]!;
     } else {
-      expandedStrings.push(strings[i + 1]!);
-      lastStringIndex++;
+      interpolatedStrings.push(strings[i + 1]!);
+      interpolatedIndex++;
     }
   }
 
-  return expandedStrings;
+  return interpolatedStrings;
 }
