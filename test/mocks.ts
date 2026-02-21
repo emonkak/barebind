@@ -58,11 +58,11 @@ export class MockBackend implements Backend {
 
   parseTemplate(
     strings: readonly string[],
-    args: readonly unknown[],
+    values: readonly unknown[],
     markerIdentifier: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]> {
-    return new MockTemplate(strings, args, markerIdentifier, mode);
+    return new MockTemplate(strings, values, markerIdentifier, mode);
   }
 
   requestCallback<T>(
@@ -387,7 +387,7 @@ export class MockSlot<T> implements Slot<T> {
 export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
   readonly strings: readonly string[];
 
-  readonly args: readonly unknown[];
+  readonly values: readonly unknown[];
 
   readonly markerIdentifier: string;
 
@@ -395,23 +395,23 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
 
   constructor(
     strings: readonly string[] = [],
-    args: readonly unknown[] = [],
+    values: readonly unknown[] = [],
     markerIdentifier = '',
     mode: TemplateMode = 'html',
   ) {
     super();
     this.strings = strings;
-    this.args = args;
+    this.values = values;
     this.markerIdentifier = markerIdentifier;
     this.mode = mode;
   }
 
   get arity(): number {
-    return this.args.length;
+    return this.values.length;
   }
 
   render(
-    _args: readonly unknown[],
+    _values: readonly unknown[],
     _part: Part.ChildNodePart,
     _session: UpdateSession,
   ): TemplateResult {
@@ -422,7 +422,7 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
   }
 
   hydrate(
-    _args: readonly unknown[],
+    _values: readonly unknown[],
     _part: Part.ChildNodePart,
     _targetTree: TreeWalker,
     _session: UpdateSession,

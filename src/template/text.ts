@@ -33,7 +33,7 @@ export class TextTemplate<T> extends AbstractTemplate<readonly [T]> {
   }
 
   hydrate(
-    args: readonly [T],
+    values: readonly [T],
     _part: Part.ChildNodePart,
     targetTree: TreeWalker,
     session: UpdateSession,
@@ -45,7 +45,7 @@ export class TextTemplate<T> extends AbstractTemplate<readonly [T]> {
       precedingText: this._precedingText,
       followingText: this._followingText,
     };
-    const textSlot = context.resolveSlot(args[0], textPart);
+    const textSlot = context.resolveSlot(values[0], textPart);
 
     textSlot.attach(session);
 
@@ -53,7 +53,7 @@ export class TextTemplate<T> extends AbstractTemplate<readonly [T]> {
   }
 
   render(
-    args: readonly [T],
+    values: readonly [T],
     part: Part.ChildNodePart,
     session: UpdateSession,
   ): TemplateResult {
@@ -65,7 +65,7 @@ export class TextTemplate<T> extends AbstractTemplate<readonly [T]> {
       precedingText: this._precedingText,
       followingText: this._followingText,
     };
-    const textSlot = context.resolveSlot(args[0], textPart);
+    const textSlot = context.resolveSlot(values[0], textPart);
 
     textSlot.attach(session);
 

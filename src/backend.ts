@@ -15,7 +15,7 @@ export interface Backend {
   getUpdatePriority(): TaskPriority;
   parseTemplate(
     strings: readonly string[],
-    args: readonly unknown[],
+    values: readonly unknown[],
     markerIdentifier: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]>;

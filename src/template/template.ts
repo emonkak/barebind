@@ -16,44 +16,44 @@ export const HTML_NAMESPACE_URI = 'http://www.w3.org/1999/xhtml';
 export const MATH_NAMESPACE_URI = 'http://www.w3.org/1998/Math/MathML';
 export const SVG_NAMESPACE_URI = 'http://www.w3.org/2000/svg';
 
-export abstract class AbstractTemplate<TArgs extends readonly unknown[]>
-  implements Template<TArgs>
+export abstract class AbstractTemplate<TValues extends readonly unknown[]>
+  implements Template<TValues>
 {
-  abstract get arity(): TArgs['length'];
+  abstract get arity(): TValues['length'];
 
   get name(): string {
     return this.constructor.name;
   }
 
   abstract render(
-    args: TArgs,
+    values: TValues,
     part: Part.ChildNodePart,
     session: UpdateSession,
   ): TemplateResult;
 
   abstract hydrate(
-    args: TArgs,
+    values: TValues,
     part: Part.ChildNodePart,
     targetTree: TreeWalker,
     session: UpdateSession,
   ): TemplateResult;
 
   resolveBinding(
-    args: TArgs,
+    values: TValues,
     part: Part,
     _context: DirectiveContext,
-  ): Binding<TArgs> {
-    ensurePartType<Part.ChildNodePart>(PartType.ChildNode, this, args, part);
-    return new TemplateBinding(this, args, part);
+  ): Binding<TValues> {
+    ensurePartType<Part.ChildNodePart>(PartType.ChildNode, this, values, part);
+    return new TemplateBinding(this, values, part);
   }
 }
 
-export class TemplateBinding<TArgs extends readonly unknown[]>
-  implements Binding<TArgs>, Effect
+export class TemplateBinding<TValues extends readonly unknown[]>
+  implements Binding<TValues>, Effect
 {
-  private readonly _template: Template<TArgs>;
+  private readonly _template: Template<TValues>;
 
-  private _args: TArgs;
+  private _values: TValues;
 
   private readonly _part: Part.ChildNodePart;
 
@@ -62,33 +62,33 @@ export class TemplateBinding<TArgs extends readonly unknown[]>
   private _memoizedResult: TemplateResult | null = null;
 
   constructor(
-    template: Template<TArgs>,
-    args: TArgs,
+    template: Template<TValues>,
+    values: TValues,
     part: Part.ChildNodePart,
   ) {
     this._template = template;
-    this._args = args;
+    this._values = values;
     this._part = part;
   }
 
-  get type(): Template<TArgs> {
+  get type(): Template<TValues> {
     return this._template;
   }
 
-  get value(): TArgs {
-    return this._args;
+  get value(): TValues {
+    return this._values;
   }
 
-  set value(args: TArgs) {
-    this._args = args;
+  set value(values: TValues) {
+    this._values = values;
   }
 
   get part(): Part.ChildNodePart {
     return this._part;
   }
 
-  shouldUpdate(args: TArgs): boolean {
-    return this._memoizedResult === null || args !== this._args;
+  shouldUpdate(values: TValues): boolean {
+    return this._memoizedResult === null || values !== this._values;
   }
 
   attach(session: UpdateSession): void {
@@ -96,14 +96,14 @@ export class TemplateBinding<TArgs extends readonly unknown[]>
       const { slots } = this._pendingResult;
 
       for (let i = 0, l = slots.length; i < l; i++) {
-        slots[i]!.reconcile(this._args[i]!, session);
+        slots[i]!.reconcile(this._values[i]!, session);
       }
     } else {
       const targetTree = getHydrationTargetTree(session.originScope);
 
       if (targetTree !== null) {
         this._pendingResult = this._template.hydrate(
-          this._args,
+          this._values,
           this._part,
           targetTree,
           session,
@@ -112,7 +112,7 @@ export class TemplateBinding<TArgs extends readonly unknown[]>
         this._memoizedResult = this._pendingResult;
       } else {
         this._pendingResult = this._template.render(
-          this._args,
+          this._values,
           this._part,
           session,
         );

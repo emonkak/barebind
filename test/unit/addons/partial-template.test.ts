@@ -20,7 +20,7 @@ describe('PartialTemplate', () => {
       expect(directive.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<div>Hello, ', '!</div>'],
-          args: ['World'],
+          values: ['World'],
           mode: 'html',
         }),
       );
@@ -40,7 +40,7 @@ describe('PartialTemplate', () => {
       expect(directive.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<text>Hello, ', '!</text>'],
-          args: ['World'],
+          values: ['World'],
           mode: 'svg',
         }),
       );
@@ -60,7 +60,7 @@ describe('PartialTemplate', () => {
       expect(directive.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<mi>', '</mi>'],
-          args: ['x'],
+          values: ['x'],
           mode: 'math',
         }),
       );

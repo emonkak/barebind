@@ -9,7 +9,7 @@ import { TestUpdater } from '../../test-updater.js';
 
 describe('TextTemplate', () => {
   describe('arity', () => {
-    it('returns the number of args', () => {
+    it('returns the number of values', () => {
       const template = new TextTemplate();
 
       expect(template.arity).toBe(1);
@@ -30,7 +30,7 @@ describe('TextTemplate', () => {
   describe('hydrate()', () => {
     it('hydrates a tree containing a text part', () => {
       const template = new TextTemplate('(', ')');
-      const args = ['foo'] as const;
+      const values = ['foo'] as const;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -42,13 +42,13 @@ describe('TextTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.hydrate(args, part, targetTree, session);
+        return template.hydrate(values, part, targetTree, session);
       });
 
       expect(children).toStrictEqual([expect.exact(container.firstChild)]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
-          value: args[0],
+          value: values[0],
           part: {
             type: PartType.Text,
             node: expect.exact(container.firstChild),
@@ -63,7 +63,7 @@ describe('TextTemplate', () => {
 
     it('should throw the error if there is a tree mismatch', () => {
       const template = new TextTemplate('(', ')');
-      const args = ['foo'] as const;
+      const values = ['foo'] as const;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -76,7 +76,7 @@ describe('TextTemplate', () => {
 
       expect(() => {
         updater.startUpdate((session) => {
-          template.hydrate(args, part, targetTree, session);
+          template.hydrate(values, part, targetTree, session);
         });
       }).toThrow(HydrationError);
     });
@@ -85,7 +85,7 @@ describe('TextTemplate', () => {
   describe('render()', () => {
     it('renders a template containing a text part', () => {
       const template = new TextTemplate('(', ')');
-      const args = ['foo'] as const;
+      const values = ['foo'] as const;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -95,13 +95,13 @@ describe('TextTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.render(args, part, session);
+        return template.render(values, part, session);
       });
 
       expect(children).toStrictEqual([expect.any(Text)]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
-          value: args[0],
+          value: values[0],
           part: {
             type: PartType.Text,
             node: expect.any(Text),

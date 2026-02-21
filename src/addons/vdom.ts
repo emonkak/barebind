@@ -61,9 +61,9 @@ interface HasCleanup {
   [$cleanup]?: Cleanup | void;
 }
 
-interface TemplateDirective<TArgs extends readonly unknown[]> {
-  type: Template<TArgs>;
-  value: TArgs;
+interface TemplateDirective<TValues extends readonly unknown[]> {
+  type: Template<TValues>;
+  value: TValues;
   layout?: KeyedLayout<unknown>;
 }
 
@@ -178,13 +178,13 @@ export class VStaticFragment implements Bindable<unknown> {
 
   [$directive](): Partial<Directive<unknown>> {
     const templates: Template<readonly unknown[]>[] = [];
-    const args: unknown[] = [];
+    const values: unknown[] = [];
 
     for (const child of this.children) {
       if (child instanceof VElement) {
         if (typeof child.type === 'function') {
           templates.push(ChildNodeTemplate.Default);
-          args.push(child);
+          values.push(child);
         } else {
           const { type, value } = resolveVElement(
             child.type,
@@ -193,25 +193,25 @@ export class VStaticFragment implements Bindable<unknown> {
             child.hasStaticChildren,
           );
           templates.push(type);
-          args.push(value[0], value[1]);
+          values.push(value[0], value[1]);
         }
       } else if (isBindable(child)) {
         templates.push(ChildNodeTemplate.Default);
-        args.push(child);
+        values.push(child);
       } else if (Array.isArray(child)) {
         templates.push(ChildNodeTemplate.Default);
-        args.push(new VFragment(child));
+        values.push(new VFragment(child));
       } else if (child == null || typeof child === 'boolean') {
         templates.push(EmptyTemplate.Default);
       } else {
         templates.push(TextTemplate.Default);
-        args.push(child);
+        values.push(child);
       }
     }
 
     return {
       type: new FragmentTemplate(templates),
-      value: args,
+      value: values,
     };
   }
 }
@@ -589,17 +589,17 @@ function resolveVElement(
       : new VFragment(props.children)
     : resolveVChild(props.children as VNode);
   const template = new ElementTemplate(type);
-  const args = [element, children] as const;
+  const values = [element, children] as const;
   if (key != null) {
     return {
       type: template,
-      value: args,
+      value: values,
       layout: new KeyedLayout(key, LooseLayout),
     };
   } else {
     return {
       type: new ElementTemplate(type),
-      value: args,
+      value: values,
     };
   }
 }

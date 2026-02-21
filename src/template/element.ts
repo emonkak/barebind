@@ -31,7 +31,7 @@ export class ElementTemplate<
   }
 
   hydrate(
-    args: readonly [TProps, TChildren],
+    values: readonly [TProps, TChildren],
     part: Part.ChildNodePart,
     targetTree: TreeWalker,
     session: UpdateSession,
@@ -54,8 +54,8 @@ export class ElementTemplate<
       anchorNode: null,
       namespaceURI,
     };
-    const elementSlot = context.resolveSlot(args[0], elementPart);
-    const childrenSlot = context.resolveSlot(args[1], childrenPart);
+    const elementSlot = context.resolveSlot(values[0], elementPart);
+    const childrenSlot = context.resolveSlot(values[1], childrenPart);
 
     elementSlot.attach(session);
     childrenSlot.attach(session);
@@ -69,7 +69,7 @@ export class ElementTemplate<
   }
 
   render(
-    args: readonly [TProps, TChildren],
+    values: readonly [TProps, TChildren],
     part: Part.ChildNodePart,
     session: UpdateSession,
   ): TemplateResult {
@@ -87,8 +87,8 @@ export class ElementTemplate<
       anchorNode: null,
       namespaceURI,
     };
-    const elementSlot = context.resolveSlot(args[0], elementPart);
-    const childrenSlot = context.resolveSlot(args[1], childrenPart);
+    const elementSlot = context.resolveSlot(values[0], elementPart);
+    const childrenSlot = context.resolveSlot(values[1], childrenPart);
 
     elementPart.node.appendChild(childrenPart.node);
 

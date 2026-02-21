@@ -20,7 +20,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
   }
 
   hydrate(
-    args: readonly [unknown],
+    values: readonly [unknown],
     part: Part.ChildNodePart,
     targetTree: TreeWalker,
     session: UpdateSession,
@@ -33,7 +33,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
       anchorNode: null,
       namespaceURI: part.namespaceURI,
     };
-    const childNodeSlot = context.resolveSlot(args[0], childNodePart);
+    const childNodeSlot = context.resolveSlot(values[0], childNodePart);
 
     childNodeSlot.attach(session);
 
@@ -43,7 +43,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
   }
 
   render(
-    args: readonly [unknown],
+    values: readonly [unknown],
     part: Part.ChildNodePart,
     session: UpdateSession,
   ): TemplateResult {
@@ -55,7 +55,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
       anchorNode: null,
       namespaceURI: part.namespaceURI,
     };
-    const childNodeSlot = context.resolveSlot(args[0], childNodePart);
+    const childNodeSlot = context.resolveSlot(values[0], childNodePart);
 
     childNodeSlot.attach(session);
 

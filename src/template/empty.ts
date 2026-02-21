@@ -18,7 +18,7 @@ export class EmptyTemplate extends AbstractTemplate<readonly []> {
   }
 
   hydrate(
-    _args: readonly [],
+    _values: readonly [],
     _part: Part.ChildNodePart,
     _targetTree: TreeWalker,
     _session: UpdateSession,
@@ -27,7 +27,7 @@ export class EmptyTemplate extends AbstractTemplate<readonly []> {
   }
 
   render(
-    _args: readonly [],
+    _values: readonly [],
     _part: Part.ChildNodePart,
     _session: UpdateSession,
   ): TemplateResult {

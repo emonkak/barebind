@@ -1240,22 +1240,22 @@ describe('Runtime', () => {
   describe('resolveTemplate()', () => {
     it('returns the cached template if it exists', () => {
       const strings = ['<div>', '</div>'];
-      const args = ['foo'];
+      const values = ['foo'];
       const mode = 'html';
       const runtime = createRuntime();
 
-      const template = runtime.resolveTemplate(strings, args, mode);
+      const template = runtime.resolveTemplate(strings, values, mode);
 
       expect(template).toBeInstanceOf(MockTemplate);
       expect(template).toStrictEqual(
         expect.objectContaining({
           strings,
-          args,
+          values,
           mode,
         }),
       );
 
-      expect(runtime.resolveTemplate(strings, args, mode)).toBe(template);
+      expect(runtime.resolveTemplate(strings, values, mode)).toBe(template);
     });
   });
 });

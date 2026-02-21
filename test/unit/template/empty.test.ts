@@ -9,7 +9,7 @@ import { TestUpdater } from '../../test-updater.js';
 
 describe('EmptyTemplate', () => {
   describe('arity', () => {
-    it('is the number of args', () => {
+    it('is the number of values', () => {
       const template = new EmptyTemplate();
 
       expect(template.arity).toBe(0);
@@ -28,7 +28,7 @@ describe('EmptyTemplate', () => {
   describe('hydrate()', () => {
     it('hydrates an empty tree', () => {
       const template = new EmptyTemplate();
-      const args = [] as const;
+      const values = [] as const;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -39,7 +39,7 @@ describe('EmptyTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.hydrate(args, part, targetTree, session);
+        return template.hydrate(values, part, targetTree, session);
       });
 
       expect(children).toStrictEqual([]);
@@ -50,7 +50,7 @@ describe('EmptyTemplate', () => {
   describe('render()', () => {
     it('renders an empty tree', () => {
       const template = new EmptyTemplate();
-      const args = [] as const;
+      const values = [] as const;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -60,7 +60,7 @@ describe('EmptyTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.render(args, part, session);
+        return template.render(values, part, session);
       });
 
       expect(children).toStrictEqual([]);

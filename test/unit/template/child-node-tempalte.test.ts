@@ -10,7 +10,7 @@ import { TestUpdater } from '../../test-updater.js';
 
 describe('ChildNodeTemplate', () => {
   describe('arity', () => {
-    it('is the number of args', () => {
+    it('is the number of values', () => {
       const template = new ChildNodeTemplate();
 
       expect(template.arity).toBe(1);
@@ -29,7 +29,7 @@ describe('ChildNodeTemplate', () => {
   describe('hydrate()', () => {
     it('hydrates a tree containing a comment node', () => {
       const template = new ChildNodeTemplate();
-      const args = ['foo'] as const;
+      const values = ['foo'] as const;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -41,14 +41,14 @@ describe('ChildNodeTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.hydrate(args, part, targetTree, session);
+        return template.hydrate(values, part, targetTree, session);
       });
 
       expect(children).toStrictEqual([expect.exact(container.firstChild)]);
       expect(slots).toStrictEqual([expect.any(MockSlot)]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
-          value: args[0],
+          value: values[0],
           part: {
             type: PartType.ChildNode,
             node: expect.exact(container.firstChild),
@@ -63,7 +63,7 @@ describe('ChildNodeTemplate', () => {
 
     it('should throw the error if there is a tree mismatch', () => {
       const template = new ChildNodeTemplate();
-      const args = ['foo'] as const;
+      const values = ['foo'] as const;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -76,7 +76,7 @@ describe('ChildNodeTemplate', () => {
 
       expect(() => {
         updater.startUpdate((session) => {
-          template.hydrate(args, part, targetTree, session);
+          template.hydrate(values, part, targetTree, session);
         });
       }).toThrow(HydrationError);
     });
@@ -85,7 +85,7 @@ describe('ChildNodeTemplate', () => {
   describe('render()', () => {
     it('renders a template containing a child node part', () => {
       const template = new ChildNodeTemplate();
-      const args = ['foo'] as const;
+      const values = ['foo'] as const;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -95,14 +95,14 @@ describe('ChildNodeTemplate', () => {
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
-        return template.render(args, part, session);
+        return template.render(values, part, session);
       });
 
       expect(children).toStrictEqual([expect.any(Comment)]);
       expect(slots).toStrictEqual([expect.any(MockSlot)]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
-          value: args[0],
+          value: values[0],
           part: {
             type: PartType.ChildNode,
             node: expect.any(Comment),

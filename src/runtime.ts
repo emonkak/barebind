@@ -259,7 +259,7 @@ export class Runtime implements SessionContext {
 
   resolveTemplate(
     strings: readonly string[],
-    args: readonly unknown[],
+    values: readonly unknown[],
     mode: TemplateMode,
   ): Template<readonly unknown[]> {
     let template = this._cachedTemplates.get(strings);
@@ -267,7 +267,7 @@ export class Runtime implements SessionContext {
     if (template === undefined) {
       template = this._backend.parseTemplate(
         strings,
-        args,
+        values,
         this._uniqueIdentifier,
         mode,
       );
