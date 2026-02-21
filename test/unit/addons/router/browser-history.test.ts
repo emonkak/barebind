@@ -6,7 +6,7 @@ import {
   createLinkClickHandler,
 } from '@/addons/router/browser-history.js';
 import {
-  CurrentHistory,
+  HistoryContext,
   type HistoryNavigator,
 } from '@/addons/router/history.js';
 import { RelativeURL } from '@/addons/router/relative-url.js';
@@ -20,7 +20,7 @@ describe('BrowserHistory()', () => {
 
   const renderer = new TestRenderer((options: UpdateOptions, session) => {
     session.use(BrowserHistory(options));
-    return session.use(CurrentHistory);
+    return session.use(HistoryContext);
   });
 
   afterEach(() => {

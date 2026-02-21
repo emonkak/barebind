@@ -1,7 +1,7 @@
 export { BrowserHistory } from './router/browser-history.js';
 export { HashHistory } from './router/hash-history.js';
 export {
-  CurrentHistory,
+  HistoryContext,
   type HistoryLocation,
   type HistoryNavigator,
 } from './router/history.js';

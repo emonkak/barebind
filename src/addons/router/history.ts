@@ -1,7 +1,7 @@
 import type { RenderContext } from '../../internal.js';
 import type { RelativeURL } from './relative-url.js';
 
-export const $currentHistory = Symbol('$currentHistory');
+export const $HistoryContext = Symbol('$HistoryContext');
 
 export interface HisotryContext {
   location: HistoryLocation;
@@ -21,26 +21,21 @@ export interface HistoryNavigator {
   waitForTransition(): Promise<number>;
 }
 
-export type NavigationListener = (
-  newLocation: HistoryLocation,
-  oldLocation: HistoryLocation,
-) => void;
-
 export interface NavigateOptions {
   replace?: boolean;
   state?: unknown;
 }
 
-export function CurrentHistory(context: RenderContext): HisotryContext {
-  const value = context.getSharedContext($currentHistory);
+export function HistoryContext(context: RenderContext): HisotryContext {
+  const historyContext = context.getSharedContext($HistoryContext);
 
-  if (value === undefined) {
+  if (historyContext === undefined) {
     throw new Error(
-      'No history context found. Make sure to register BrowserHistory or HashHistory with context.use() before using CurrentHistory.',
+      'No history context found. Make sure to register BrowserHistory or HashHistory with context.use() before using HisotryContext.',
     );
   }
 
-  return value as HisotryContext;
+  return historyContext as HisotryContext;
 }
 
 export function anyModifiersArePressed(event: MouseEvent): boolean {

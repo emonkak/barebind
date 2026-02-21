@@ -2,7 +2,7 @@
 
 import type { HookFunction, UpdateOptions } from '../../internal.js';
 import {
-  $currentHistory,
+  $HistoryContext,
   anyModifiersArePressed,
   type HisotryContext,
   type HistoryLocation,
@@ -116,7 +116,7 @@ export function BrowserHistory(
 
     const handle = { location, navigator };
 
-    context.setSharedContext($currentHistory, handle);
+    context.setSharedContext($HistoryContext, handle);
 
     return handle;
   };

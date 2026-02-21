@@ -5,7 +5,7 @@ import {
   HashHistory,
 } from '@/addons/router/hash-history.js';
 import {
-  CurrentHistory,
+  HistoryContext,
   type HistoryNavigator,
 } from '@/addons/router/history.js';
 import { RelativeURL } from '@/addons/router/relative-url.js';
@@ -19,7 +19,7 @@ describe('HashHistory()', () => {
 
   const renderer = new TestRenderer((options: UpdateOptions, session) => {
     session.use(HashHistory(options));
-    return session.use(CurrentHistory);
+    return session.use(HistoryContext);
   });
 
   afterEach(() => {
