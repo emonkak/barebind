@@ -57,6 +57,6 @@ export function isInternalLink(element: Element): element is HTMLAnchorElement {
   );
 }
 
-export function truncateHashMark(hash: string): string {
-  return hash.startsWith('#') ? hash.slice(1) : hash;
+export function trimHashMark(s: string): string {
+  return s.startsWith('#') ? s.slice(1) : s;
 }

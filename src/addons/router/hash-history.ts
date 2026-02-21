@@ -8,7 +8,7 @@ import {
   type HistoryLocation,
   type HistoryNavigator,
   isInternalLink,
-  truncateHashMark,
+  trimHashMark,
 } from './history.js';
 import { RelativeURL } from './relative-url.js';
 
@@ -17,7 +17,7 @@ export function HashHistory(
 ): HookFunction<HisotryContext> {
   return (context) => {
     const [location, setLocation] = context.useState<HistoryLocation>(() => ({
-      url: RelativeURL.fromString(truncateHashMark(window.location.hash)),
+      url: RelativeURL.fromString(trimHashMark(window.location.hash)),
       state: history.state,
       navigationType: null,
     }));
@@ -25,7 +25,7 @@ export function HashHistory(
     const navigator: HistoryNavigator = context.useMemo(
       () => ({
         getCurrentURL: () =>
-          RelativeURL.fromString(truncateHashMark(window.location.hash)),
+          RelativeURL.fromString(trimHashMark(window.location.hash)),
         isTransitionPending: () => context.isUpdatePending(),
         navigate: (url, { replace = false, state = null } = {}) => {
           setLocation(
@@ -61,7 +61,7 @@ export function HashHistory(
             setLocation(
               {
                 url: RelativeURL.fromString(
-                  truncateHashMark(new URL(event.destination.url).hash),
+                  trimHashMark(new URL(event.destination.url).hash),
                 ),
                 state: event.destination.getState(),
                 navigationType: event.navigationType,
@@ -86,7 +86,7 @@ export function HashHistory(
           setLocation(
             {
               url: RelativeURL.fromString(
-                truncateHashMark(new URL(event.newURL).hash),
+                trimHashMark(new URL(event.newURL).hash),
               ),
               state: history.state,
               navigationType: 'traverse',
@@ -139,7 +139,7 @@ export function createHashClickHandler({
     event.preventDefault();
 
     const base = getCurrentURL();
-    const url = RelativeURL.fromString(truncateHashMark(element.hash), base);
+    const url = RelativeURL.fromString(trimHashMark(element.hash), base);
     const replace =
       element.hasAttribute('data-link-replace') ||
       element.hash === window.location.hash;
