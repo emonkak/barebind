@@ -11,6 +11,6 @@ describe('CurrentHistory', () => {
 
     expect(() => {
       renderer.render({});
-    }).toThrow('A context value for the hisotry handle does not exist,');
+    }).toThrow('No history context found.');
   });
 });

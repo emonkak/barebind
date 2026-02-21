@@ -1,7 +1,9 @@
 import type { RenderContext } from '../../internal.js';
 import type { RelativeURL } from './relative-url.js';
 
-export interface HistoryHandle {
+export const $currentHistory = Symbol('$currentHistory');
+
+export interface HisotryContext {
   location: HistoryLocation;
   navigator: HistoryNavigator;
 }
@@ -29,16 +31,16 @@ export interface NavigateOptions {
   state?: unknown;
 }
 
-export function CurrentHistory(context: RenderContext): HistoryHandle {
-  const value = context.getSharedContext(CurrentHistory);
+export function CurrentHistory(context: RenderContext): HisotryContext {
+  const value = context.getSharedContext($currentHistory);
 
   if (value === undefined) {
     throw new Error(
-      'A context value for the hisotry handle does not exist, please ensure it is registered by context.use() with BrowserLocation or HashLocation.',
+      'No history context found. Make sure to register BrowserHistory or HashHistory with context.use() before using CurrentHistory.',
     );
   }
 
-  return value as HistoryHandle;
+  return value as HisotryContext;
 }
 
 export function anyModifiersArePressed(event: MouseEvent): boolean {

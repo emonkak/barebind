@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  CurrentHistory,
+  $currentHistory,
   type HistoryLocation,
   type HistoryNavigator,
 } from '@/addons/router/history.js';
@@ -19,7 +19,7 @@ describe('ScrollRestration()', () => {
       }: { location: HistoryLocation; navigator: HistoryNavigator },
       session,
     ) => {
-      session.setSharedContext(CurrentHistory, { location, navigator });
+      session.setSharedContext($currentHistory, { location, navigator });
       session.use(ScrollRestration());
     },
   );
