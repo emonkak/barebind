@@ -12,6 +12,9 @@ import {
   type EffectQueue,
   type ErrorHandler,
   type Hook,
+  type HookClass,
+  type HookFunction,
+  type HookObject,
   HookType,
   type InitialState,
   Lane,
@@ -25,7 +28,6 @@ import {
   type UpdateHandle,
   type UpdateOptions,
   type Usable,
-  type Use,
 } from './internal.js';
 
 export class RenderSession implements RenderContext {
@@ -178,7 +180,10 @@ export class RenderSession implements RenderContext {
     return this._createTemplate(strings, values, 'textarea');
   }
 
-  use<T extends Usable<any>>(usable: T): Use<T> {
+  use<T>(usable: HookClass<T>): T;
+  use<T>(usable: HookObject<T>): T;
+  use<T>(usable: HookFunction<T>): T;
+  use<T>(usable: Usable<T>): T {
     if ($hook in usable) {
       return usable[$hook](this);
     } else {

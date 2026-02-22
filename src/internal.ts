@@ -213,11 +213,11 @@ export namespace Hook {
 }
 
 /**
- * Represents a class with a static `[$hook]` method. `NoInfer<T>` ensures `T`
- * is inferred from the constructor only.
+ * Represents a class with a static [$hook] method. never[] and NoInfer<T>
+ * ensure T is inferred solely from the constructor.
  */
 export interface HookClass<T> {
-  new (...args: any[]): T;
+  new (...args: never[]): T;
   [$hook](context: RenderContext): NoInfer<T>;
 }
 
@@ -370,7 +370,9 @@ export interface RenderContext {
     strings: readonly string[],
     ...values: readonly unknown[]
   ): Bindable<readonly unknown[]>;
-  use<T extends Usable<any>>(usable: T): Use<T>;
+  use<T>(usable: HookClass<T>): T;
+  use<T>(usable: HookObject<T>): T;
+  use<T>(usable: HookFunction<T>): T;
   useCallback<TCallback extends (...args: any[]) => any>(
     callback: TCallback,
     dependencies: readonly unknown[],
@@ -529,15 +531,6 @@ export interface UpdateTask {
 }
 
 export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;
-
-export type Use<T> =
-  T extends HookClass<infer Result>
-    ? Result
-    : T extends HookObject<infer Result>
-      ? Result
-      : T extends HookFunction<infer Result>
-        ? Result
-        : never;
 
 /**
  * @internal
