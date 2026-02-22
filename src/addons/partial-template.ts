@@ -1,5 +1,5 @@
 import { sequentialEqual } from '../compare.js';
-import { $hook, type RenderContext } from '../internal.js';
+import type { RenderContext } from '../internal.js';
 
 const stringInterpolationCache = new WeakMap<
   readonly string[],
@@ -12,32 +12,10 @@ interface StringInterpolation {
   literalPositions: readonly number[];
 }
 
-export type PartialTemplateContext = Pick<
-  RenderContext,
-  'html' | 'math' | 'svg'
->;
-
 export class PartialTemplate {
   readonly strings: readonly string[];
 
   readonly values: readonly unknown[];
-
-  static [$hook](context: RenderContext): PartialTemplateContext {
-    return {
-      html(strings, ...values) {
-        const template = PartialTemplate.parse(strings, ...values);
-        return context.html(template.strings, ...template.values);
-      },
-      math(strings, ...values) {
-        const template = PartialTemplate.parse(strings, ...values);
-        return context.math(template.strings, ...template.values);
-      },
-      svg(strings, ...values) {
-        const template = PartialTemplate.parse(strings, ...values);
-        return context.svg(template.strings, ...template.values);
-      },
-    };
-  }
 
   static parse(
     strings: readonly string[],
@@ -108,6 +86,30 @@ export class PartialTemplate {
   toString(): string {
     return String.raw({ raw: this.strings }, ...this.values);
   }
+}
+
+export type PartialTemplateContext = Pick<
+  RenderContext,
+  'html' | 'math' | 'svg'
+>;
+
+export function PartialTemplateContext(
+  context: RenderContext,
+): PartialTemplateContext {
+  return {
+    html(strings, ...values) {
+      const template = PartialTemplate.parse(strings, ...values);
+      return context.html(template.strings, ...template.values);
+    },
+    math(strings, ...values) {
+      const template = PartialTemplate.parse(strings, ...values);
+      return context.math(template.strings, ...template.values);
+    },
+    svg(strings, ...values) {
+      const template = PartialTemplate.parse(strings, ...values);
+      return context.svg(template.strings, ...template.values);
+    },
+  };
 }
 
 function interpolateStrings(

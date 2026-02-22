@@ -4,7 +4,10 @@ import {
   Repeat,
   shallowEqual,
 } from 'barebind';
-import { PartialTemplate } from 'barebind/addons/partial-template';
+import {
+  PartialTemplate,
+  PartialTemplateContext,
+} from 'barebind/addons/partial-template';
 import { Atom, type Signal } from 'barebind/addons/signal';
 import { Resource, Suspense } from 'barebind/addons/suspense';
 import type { VElement } from 'barebind/addons/vdom';
@@ -148,7 +151,7 @@ const Dashboard = createComponent(function Dashboard(
   const env = $.getSharedContext(ENV_CONTEXT);
   const countElementRef = $.useRef<Element | null>(null);
   const count = $.use(count$);
-  const { html } = $.use(PartialTemplate);
+  const { html } = $.use(PartialTemplateContext);
 
   const greetTag = PartialTemplate.literal(
     count$.value % 2 === 0 ? 'span' : 'em',

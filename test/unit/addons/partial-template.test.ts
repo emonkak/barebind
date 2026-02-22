@@ -1,73 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { PartialTemplate } from '@/addons/partial-template.js';
+import {
+  PartialTemplate,
+  PartialTemplateContext,
+} from '@/addons/partial-template.js';
 import { $directive } from '@/internal.js';
 import { MockTemplate } from '../../mocks.js';
 import { TestRenderer } from '../../test-renderer.js';
 
 describe('PartialTemplate', () => {
-  describe('[$hook]()', () => {
-    it('should expand PartialTemplates in HTML tagged template', () => {
-      const renderer = new TestRenderer((_props, session) => {
-        const { html } = session.use(PartialTemplate);
-        const tag = PartialTemplate.literal('div');
-        return html`<${tag}>Hello, ${'World'}!</${tag}>`[$directive]();
-      });
-
-      const directive = renderer.render({});
-
-      expect(directive.type).toBeInstanceOf(MockTemplate);
-      expect(directive.type).toStrictEqual(
-        expect.objectContaining({
-          strings: ['<div>Hello, ', '!</div>'],
-          values: ['World'],
-          mode: 'html',
-        }),
-      );
-      expect(directive.value).toStrictEqual(['World']);
-    });
-
-    it('should expand PartialTemplates in SVG tagged template', () => {
-      const renderer = new TestRenderer((_props, session) => {
-        const { svg } = session.use(PartialTemplate);
-        const tag = PartialTemplate.literal('text');
-        return svg`<${tag}>Hello, ${'World'}!</${tag}>`[$directive]();
-      });
-
-      const directive = renderer.render({});
-
-      expect(directive.type).toBeInstanceOf(MockTemplate);
-      expect(directive.type).toStrictEqual(
-        expect.objectContaining({
-          strings: ['<text>Hello, ', '!</text>'],
-          values: ['World'],
-          mode: 'svg',
-        }),
-      );
-      expect(directive.value).toStrictEqual(['World']);
-    });
-
-    it('should expand PartialTemplates in MathML tagged template', () => {
-      const renderer = new TestRenderer((_props, session) => {
-        const { math } = session.use(PartialTemplate);
-        const tag = PartialTemplate.literal('mi');
-        return math`<${tag}>${'x'}</${tag}>`[$directive]();
-      });
-
-      const directive = renderer.render({});
-
-      expect(directive.type).toBeInstanceOf(MockTemplate);
-      expect(directive.type).toStrictEqual(
-        expect.objectContaining({
-          strings: ['<mi>', '</mi>'],
-          values: ['x'],
-          mode: 'math',
-        }),
-      );
-      expect(directive.value).toStrictEqual(['x']);
-    });
-  });
-
   describe('literal()', () => {
     it('should create a PartialTemplate with a single string and no values', () => {
       const template = PartialTemplate.literal('div');
@@ -88,7 +29,7 @@ describe('PartialTemplate', () => {
       expect(template.toString()).toBe('Hello, World!');
     });
 
-    it('should expand a nested PartialTemplate into strings', () => {
+    it('should interpolate a nested PartialTemplate into strings', () => {
       const tag = PartialTemplate.literal('div');
       const template = PartialTemplate.parse`<${tag}>content</${tag}>`;
       expect(template.strings).toStrictEqual(['<div>content</div>']);
@@ -96,7 +37,7 @@ describe('PartialTemplate', () => {
       expect(template.toString()).toBe('<div>content</div>');
     });
 
-    it('should expand a nested PartialTemplate that has values', () => {
+    it('should interpolate a nested PartialTemplate that has values', () => {
       const greeting = PartialTemplate.parse`Hello, ${'World'}!`;
       const template = PartialTemplate.parse`<p>${greeting}</p>`;
       expect(template.strings).toStrictEqual(['<p>Hello, ', '!</p>']);
@@ -114,7 +55,7 @@ describe('PartialTemplate', () => {
       expect(template2.values).toStrictEqual(['Bob']);
     });
 
-    it('should return different expanded strings when PartialTemplate values change', () => {
+    it('should return different interpolated strings when PartialTemplate values change', () => {
       const strings = ['<', '>content</', '>'];
       const tag1 = PartialTemplate.literal('div');
       const tag2 = PartialTemplate.literal('span');
@@ -132,5 +73,67 @@ describe('PartialTemplate', () => {
       expect(template.values).toStrictEqual([]);
       expect(template.toString()).toBe('no values here');
     });
+  });
+});
+
+describe('PartialTemplateContext', () => {
+  it('should preprocess PartialTemplates in HTML tagged template', () => {
+    const renderer = new TestRenderer((_props, session) => {
+      const { html } = session.use(PartialTemplateContext);
+      const tag = PartialTemplate.literal('div');
+      return html`<${tag}>Hello, ${'World'}!</${tag}>`[$directive]();
+    });
+
+    const directive = renderer.render({});
+
+    expect(directive.type).toBeInstanceOf(MockTemplate);
+    expect(directive.type).toStrictEqual(
+      expect.objectContaining({
+        strings: ['<div>Hello, ', '!</div>'],
+        values: ['World'],
+        mode: 'html',
+      }),
+    );
+    expect(directive.value).toStrictEqual(['World']);
+  });
+
+  it('should preprocess PartialTemplates in SVG tagged template', () => {
+    const renderer = new TestRenderer((_props, session) => {
+      const { svg } = session.use(PartialTemplateContext);
+      const tag = PartialTemplate.literal('text');
+      return svg`<${tag}>Hello, ${'World'}!</${tag}>`[$directive]();
+    });
+
+    const directive = renderer.render({});
+
+    expect(directive.type).toBeInstanceOf(MockTemplate);
+    expect(directive.type).toStrictEqual(
+      expect.objectContaining({
+        strings: ['<text>Hello, ', '!</text>'],
+        values: ['World'],
+        mode: 'svg',
+      }),
+    );
+    expect(directive.value).toStrictEqual(['World']);
+  });
+
+  it('should preprocess PartialTemplates in MathML tagged template', () => {
+    const renderer = new TestRenderer((_props, session) => {
+      const { math } = session.use(PartialTemplateContext);
+      const tag = PartialTemplate.literal('mi');
+      return math`<${tag}>${'x'}</${tag}>`[$directive]();
+    });
+
+    const directive = renderer.render({});
+
+    expect(directive.type).toBeInstanceOf(MockTemplate);
+    expect(directive.type).toStrictEqual(
+      expect.objectContaining({
+        strings: ['<mi>', '</mi>'],
+        values: ['x'],
+        mode: 'math',
+      }),
+    );
+    expect(directive.value).toStrictEqual(['x']);
   });
 });
