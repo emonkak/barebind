@@ -9,15 +9,6 @@ export interface Todo {
 
 export type TodoFilter = 'all' | 'active' | 'completed';
 
-export class TodoStore extends SharedContext {
-  state$: Reactive<TodoState>;
-
-  constructor(initialState: TodoState) {
-    super();
-    this.state$ = Reactive.from(initialState);
-  }
-}
-
 export class TodoState {
   todos: readonly Todo[] = [];
 
@@ -79,6 +70,15 @@ export class TodoState {
       }
       return { ...todo, title };
     });
+  }
+}
+
+export class TodoStore extends SharedContext {
+  readonly state$: Reactive<TodoState>;
+
+  constructor(initialState: TodoState) {
+    super();
+    this.state$ = Reactive.from(initialState);
   }
 }
 
