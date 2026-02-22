@@ -37,4 +37,5 @@ export {
   type RuntimeEvent,
   type RuntimeObserver,
 } from './runtime.js';
+export { SharedContext } from './shared-context.js';
 export { Element, Fragment } from './template.js';

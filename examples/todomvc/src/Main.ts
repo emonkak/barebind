@@ -1,6 +1,6 @@
 import { createComponent, type RenderContext, Repeat } from 'barebind';
 
-import { TodoState } from './state.js';
+import { TodoStore } from './state.js';
 import { TodoItem } from './TodoItem.js';
 
 export interface MainProps {}
@@ -9,11 +9,11 @@ export const Main = createComponent(function Main(
   _props: MainProps,
   $: RenderContext,
 ): unknown {
-  const todoState$ = $.use(TodoState);
-  const visibleTodos = $.use(todoState$.get('visibleTodos'));
+  const { state$ } = $.use(TodoStore);
+  const visibleTodos = $.use(state$.get('visibleTodos'));
 
   const handleToggleAll = () => {
-    todoState$.mutate((todoState) => {
+    state$.mutate((todoState) => {
       todoState.toggleAllTodos();
     });
   };

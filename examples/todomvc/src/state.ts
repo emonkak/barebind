@@ -1,4 +1,4 @@
-import { $hook, type RenderContext } from 'barebind';
+import { SharedContext } from 'barebind';
 import { Reactive } from 'barebind/addons/reactive';
 
 export interface Todo {
@@ -9,22 +9,19 @@ export interface Todo {
 
 export type TodoFilter = 'all' | 'active' | 'completed';
 
+export class TodoStore extends SharedContext {
+  state$: Reactive<TodoState>;
+
+  constructor(initialState: TodoState) {
+    super();
+    this.state$ = Reactive.from(initialState);
+  }
+}
+
 export class TodoState {
   todos: readonly Todo[] = [];
 
   filter: TodoFilter = 'all';
-
-  static [$hook](context: RenderContext): Reactive<TodoState> {
-    const state = context.getSharedContext(TodoState);
-    if (!(state instanceof Reactive && state.value instanceof TodoState)) {
-      throw new Error(`${TodoState.name} is not registered in this context.`);
-    }
-    return state;
-  }
-
-  [$hook](context: RenderContext): void {
-    context.setSharedContext(this.constructor, Reactive.from(this));
-  }
 
   get activeTodos(): readonly Todo[] {
     return this.todos.filter((todo) => !todo.completed);

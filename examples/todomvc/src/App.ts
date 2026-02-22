@@ -3,17 +3,17 @@ import { createComponent, type RenderContext } from 'barebind';
 import { Footer } from './Footer.js';
 import { Header } from './Header.js';
 import { Main } from './Main.js';
-import type { TodoState } from './state.js';
+import type { TodoStore } from './state.js';
 
 interface AppProps {
-  state: TodoState;
+  store: TodoStore;
 }
 
 export const App = createComponent(function App(
-  { state }: AppProps,
+  { store }: AppProps,
   $: RenderContext,
 ): unknown {
-  $.use(state);
+  $.use(store);
 
   return $.html`
     <section class="todoapp">

@@ -2,9 +2,8 @@
 
 import type { HookFunction, UpdateOptions } from '../../internal.js';
 import {
-  $HistoryContext,
   anyModifiersArePressed,
-  type HisotryContext,
+  HistoryContext,
   type HistoryLocation,
   type HistoryNavigator,
   isInternalLink,
@@ -13,7 +12,7 @@ import { RelativeURL } from './relative-url.js';
 
 export function BrowserHistory(
   options?: UpdateOptions,
-): HookFunction<HisotryContext> {
+): HookFunction<HistoryContext> {
   return (context) => {
     const [location, setLocation] = context.useState<HistoryLocation>(() => ({
       url: RelativeURL.fromURL(window.location),
@@ -114,11 +113,11 @@ export function BrowserHistory(
       }
     }, []);
 
-    const handle = { location, navigator };
+    const historyContext = new HistoryContext(location, navigator);
 
-    context.setSharedContext($HistoryContext, handle);
+    context.use(historyContext);
 
-    return handle;
+    return historyContext;
   };
 }
 

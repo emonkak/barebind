@@ -1,6 +1,6 @@
 import { createComponent, type RenderContext } from 'barebind';
 
-import { TodoState } from './state.js';
+import { TodoStore } from './state.js';
 import { TodoInput } from './TodoInput.js';
 
 export interface HeaderProps {}
@@ -9,11 +9,11 @@ export const Header = createComponent(function Header(
   _props: HeaderProps,
   $: RenderContext,
 ): unknown {
-  const todoState$ = $.use(TodoState);
+  const { state$ } = $.use(TodoStore);
 
   const handleSubmit = (title: string) => {
-    todoState$.mutate((todoState) => {
-      todoState.addTodo(title);
+    state$.mutate((state) => {
+      state.addTodo(title);
     });
   };
 

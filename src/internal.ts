@@ -212,6 +212,15 @@ export namespace Hook {
   }
 }
 
+/**
+ * Represents a class with a static `[$hook]` method. `NoInfer<T>` ensures `T`
+ * is inferred from the constructor only.
+ */
+export interface HookClass<T> {
+  new (...args: any[]): T;
+  [$hook](context: RenderContext): NoInfer<T>;
+}
+
 export type HookFunction<T> = (context: RenderContext) => T;
 
 export interface HookObject<T> {
@@ -361,7 +370,7 @@ export interface RenderContext {
     strings: readonly string[],
     ...values: readonly unknown[]
   ): Bindable<readonly unknown[]>;
-  use<T>(usable: Usable<T>): T;
+  use<T extends Usable<any>>(usable: T): Use<T>;
   useCallback<TCallback extends (...args: any[]) => any>(
     callback: TCallback,
     dependencies: readonly unknown[],
@@ -519,7 +528,16 @@ export interface UpdateTask {
   continuation: PromiseWithResolvers<UpdateResult>;
 }
 
-export type Usable<T> = HookFunction<T> | HookObject<T>;
+export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;
+
+export type Use<T> =
+  T extends HookClass<infer Result>
+    ? Result
+    : T extends HookObject<infer Result>
+      ? Result
+      : T extends HookFunction<infer Result>
+        ? Result
+        : never;
 
 /**
  * @internal

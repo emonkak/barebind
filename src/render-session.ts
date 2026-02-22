@@ -25,6 +25,7 @@ import {
   type UpdateHandle,
   type UpdateOptions,
   type Usable,
+  type Use,
 } from './internal.js';
 
 export class RenderSession implements RenderContext {
@@ -177,7 +178,7 @@ export class RenderSession implements RenderContext {
     return this._createTemplate(strings, values, 'textarea');
   }
 
-  use<T>(usable: Usable<T>): T {
+  use<T extends Usable<any>>(usable: T): Use<T> {
     if ($hook in usable) {
       return usable[$hook](this);
     } else {

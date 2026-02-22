@@ -1,32 +1,15 @@
-import { $hook, type RenderContext } from '../internal.js';
-
-const $LocaleContext = Symbol('$LocaleContext');
+import { SharedContext } from '../shared-context.js';
 
 export type LocaleMessages = Record<string, (...args: any[]) => any>;
 
-export class LocaleContext<TMessages extends LocaleMessages> {
+export class LocaleContext<
+  TMessages extends LocaleMessages,
+> extends SharedContext {
   private readonly _messages: TMessages;
 
-  static [$hook]<TMessages extends LocaleMessages>(
-    context: RenderContext,
-  ): LocaleContext<TMessages> {
-    const localeContext = context.getSharedContext($LocaleContext);
-
-    if (localeContext === undefined) {
-      throw new Error(
-        'No locale context found. Make sure to register LocaleContext instance with context.use() before using LocaleContext.',
-      );
-    }
-
-    return localeContext as LocaleContext<TMessages>;
-  }
-
   constructor(messages: TMessages) {
+    super();
     this._messages = messages;
-  }
-
-  [$hook](context: RenderContext): void {
-    context.setSharedContext($LocaleContext, this);
   }
 
   localize<TKey extends keyof TMessages>(

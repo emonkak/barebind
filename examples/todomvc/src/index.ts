@@ -5,11 +5,11 @@ import {
 } from 'barebind/addons/runtime-profiler';
 
 import { App } from './App.js';
-import { TodoState } from './state.js';
+import { TodoState, TodoStore } from './state.js';
 
 const runtime = new Runtime(new BrowserBackend());
 const root = Root.create(
-  App({ state: new TodoState() }),
+  App({ store: new TodoStore(new TodoState()) }),
   document.body,
   runtime,
 );

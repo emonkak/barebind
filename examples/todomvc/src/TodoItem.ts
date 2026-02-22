@@ -1,6 +1,6 @@
 import { createComponent, type RenderContext, shallowEqual } from 'barebind';
 
-import { type Todo, TodoState } from './state.js';
+import { type Todo, TodoStore } from './state.js';
 import { TodoInput } from './TodoInput.js';
 
 export interface TodoItemProps {
@@ -10,7 +10,7 @@ export interface TodoItemProps {
 export const TodoItem = createComponent(
   function TodoItem({ todo }: TodoItemProps, $: RenderContext): unknown {
     const [isEditing, setIsEditing] = $.useState(false);
-    const todoState$ = $.use(TodoState);
+    const { state$ } = $.use(TodoStore);
 
     const handleStartEditing = () => {
       setIsEditing(true);
@@ -21,7 +21,7 @@ export const TodoItem = createComponent(
     };
 
     const handleUpdate = (title: string) => {
-      todoState$.mutate((todoState) => {
+      state$.mutate((todoState) => {
         if (title.length === 0) {
           todoState.removeTodo(todo.id);
         } else {
@@ -32,13 +32,13 @@ export const TodoItem = createComponent(
     };
 
     const handleToggleItem = () => {
-      todoState$.mutate((todoState) => {
+      state$.mutate((todoState) => {
         todoState.toggleTodo(todo.id);
       });
     };
 
     const handleRemoveItem = () => {
-      todoState$.mutate((todoState) => {
+      state$.mutate((todoState) => {
         todoState.removeTodo(todo.id);
       });
     };
