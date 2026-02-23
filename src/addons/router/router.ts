@@ -4,19 +4,16 @@ export const noMatch: unique symbol = Symbol('noMatch');
 
 export interface Route<
   TResult,
-  TArgs extends unknown[],
   TPatterns extends Pattern[],
   TInheritCaptures extends unknown[],
 > {
   patterns: TPatterns;
   resolver: Resolver<
     TResult,
-    TArgs,
     [...TInheritCaptures, ...CollectCaptures<TPatterns>]
   > | null;
   childRoutes: Route<
     TResult,
-    TArgs,
     Pattern[],
     [...TInheritCaptures, ...CollectCaptures<TPatterns>]
   >[];
@@ -29,26 +26,23 @@ export type Matcher<T> = (
   url: RelativeURL,
 ) => T | typeof noMatch;
 
-export type Resolver<
-  TResult,
-  TArgs extends unknown[],
-  TCaptures extends unknown[],
-> = (captures: TCaptures, url: RelativeURL, ...args: TArgs) => TResult;
+export type Resolver<TResult, TCaptures extends unknown[]> = (
+  captures: TCaptures,
+  url: RelativeURL,
+) => TResult;
 
 type ApplyPattern<TPattern> = TPattern extends Matcher<infer T> ? [T] : [];
 
-type CollectCaptures<TPatterns> = TPatterns extends []
-  ? []
-  : TPatterns extends [infer Head, ...infer Tail]
-    ? [...ApplyPattern<Head>, ...CollectCaptures<Tail>]
+type CollectCaptures<TPatterns> = TPatterns extends [infer Head, ...infer Tail]
+  ? [...ApplyPattern<Head>, ...CollectCaptures<Tail>]
+  : TPatterns extends []
+    ? []
     : unknown[];
 
-export class Router<TResult, TArgs extends unknown[] = []>
-  implements Route<TResult, TArgs, [], []>
-{
-  private readonly _routes: Route<TResult, TArgs, Pattern[], []>[] = [];
+export class Router<TResult> implements Route<TResult, [], []> {
+  private readonly _routes: Route<TResult, Pattern[], []>[] = [];
 
-  constructor(routes: Route<TResult, TArgs, Pattern[], []>[]) {
+  constructor(routes: Route<TResult, Pattern[], []>[]) {
     this._routes = routes;
   }
 
@@ -60,11 +54,11 @@ export class Router<TResult, TArgs extends unknown[] = []>
     return null;
   }
 
-  get childRoutes(): Route<TResult, TArgs, Pattern[], []>[] {
+  get childRoutes(): Route<TResult, Pattern[], []>[] {
     return this._routes;
   }
 
-  match(url: RelativeURL, ...args: TArgs): TResult | null {
+  match(url: RelativeURL): TResult | null {
     const components = trimLeadingSlash(url.pathname).split('/');
     const collectedCaptures: unknown[] = [];
 
@@ -83,7 +77,7 @@ export class Router<TResult, TArgs extends unknown[] = []>
       if (captures !== null) {
         collectedCaptures.push(...captures);
         if (components.length === componentIndex + patterns.length) {
-          return resolver?.(collectedCaptures, url, ...args) ?? null;
+          return resolver?.(collectedCaptures, url) ?? null;
         }
         if (childRoutes.length > 0) {
           routes = childRoutes;
@@ -103,19 +97,13 @@ export class Router<TResult, TArgs extends unknown[] = []>
 
 export function route<
   TResult,
-  const TArgs extends unknown[],
   const TPatterns extends Pattern[],
   const TInheritCaptures extends unknown[],
 >(
   patterns: TPatterns,
-  resolver: Route<TResult, TArgs, TPatterns, TInheritCaptures>['resolver'],
-  childRoutes: Route<
-    TResult,
-    TArgs,
-    TPatterns,
-    TInheritCaptures
-  >['childRoutes'] = [],
-): Route<TResult, TArgs, TPatterns, TInheritCaptures> {
+  resolver: Route<TResult, TPatterns, TInheritCaptures>['resolver'],
+  childRoutes: Route<TResult, TPatterns, TInheritCaptures>['childRoutes'] = [],
+): Route<TResult, TPatterns, TInheritCaptures> {
   return {
     patterns,
     resolver,
@@ -136,7 +124,7 @@ function collectCaptures<TPatterns extends Pattern[]>(
     const pattern = patterns[i]!;
     const component = components[i]!;
     if (typeof pattern === 'string') {
-      if (pattern !== component) {
+      if (component !== pattern) {
         return null;
       }
     } else {

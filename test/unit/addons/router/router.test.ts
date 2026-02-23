@@ -15,9 +15,11 @@ describe('Router', () => {
   const router = new Router([
     route([''], () => '/'),
     route(['articles'], null, [
-      route([regexp(/^\d+$/)], ([match]) => `/articles/${match[0]}`, [
-        route(['edit'], ([id]) => `/articles/${id}/edit`),
-      ]),
+      route(
+        [select(regexp(/^\d+$/), (match) => match[0])],
+        ([id]) => `/articles/${id}`,
+        [route(['edit'], ([id]) => `/articles/${id}/edit`)],
+      ),
       route([encoded], ([title]) => `/articles/${title}`),
     ]),
     route(['categories'], () => '/categories', [
@@ -78,31 +80,6 @@ describe('Router', () => {
       expect(router.match(new RelativeURL('/articles'))).toBe(null);
       expect(router.match(new RelativeURL('/categories/abc/'))).toBe(null);
       expect(router.match(new RelativeURL('/not_found'))).toBe(null);
-    });
-
-    it('invokes the resolver with args', () => {
-      const router = new Router([
-        route(
-          [
-            'articles',
-            select(regexp(/^\d+$/), (match) => match[0]),
-            'comments',
-            integer,
-          ],
-          (captures, url, ...args) => ({
-            captures,
-            url,
-            args,
-          }),
-        ),
-      ]);
-      const url = new RelativeURL('/articles/123/comments/456');
-
-      expect(router.match(url, 'foo', 'bar')).toStrictEqual({
-        captures: ['123', 456],
-        url,
-        args: ['foo', 'bar'],
-      });
     });
 
     it('matches with a custom matcher', () => {

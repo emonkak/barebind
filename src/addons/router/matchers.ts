@@ -3,6 +3,21 @@ import { type Matcher, noMatch } from './router.js';
 type Match<TMatcher extends Matcher<unknown>> =
   TMatcher extends Matcher<infer T> ? T : never;
 
+export const decoded: Matcher<string> = (component: string): string => {
+  return decodeURIComponent(component);
+};
+
+export const encoded: Matcher<string> = (component: string): string => {
+  return component;
+};
+
+export const integer: Matcher<number> = (
+  component: string,
+): number | typeof noMatch => {
+  const n = Number.parseInt(component, 10);
+  return n.toString() === component ? n : noMatch;
+};
+
 export function choice<const TMatchers extends Matcher<unknown>[]>(
   ...matchers: TMatchers
 ): Matcher<Match<TMatchers[number]>> {
@@ -15,19 +30,6 @@ export function choice<const TMatchers extends Matcher<unknown>[]>(
     }
     return noMatch;
   };
-}
-
-export function decoded(component: string): string {
-  return decodeURIComponent(component);
-}
-
-export function encoded(component: string): string {
-  return component;
-}
-
-export function integer(component: string): number | typeof noMatch {
-  const n = Number.parseInt(component, 10);
-  return n.toString() === component ? n : noMatch;
 }
 
 export function keyword<const T extends string>(s: T): Matcher<T> {
