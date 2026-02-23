@@ -1,17 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
-
-import { RelativeURL } from '@/addons/router/relative-url.js';
 import {
   choice,
   decoded,
   encoded,
   integer,
   keyword,
-  Router,
   regexp,
-  route,
   select,
-} from '@/addons/router/router.js';
+} from '@/addons/router/matchers.js';
+import { RelativeURL } from '@/addons/router/relative-url.js';
+import { Router, route } from '@/addons/router/router.js';
 
 describe('Router', () => {
   const router = new Router([

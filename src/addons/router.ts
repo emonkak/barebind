@@ -5,21 +5,23 @@ export {
   type HistoryLocation,
   type HistoryNavigator,
 } from './router/history.js';
-export { RelativeURL } from './router/relative-url.js';
 export {
   choice,
   decoded,
   encoded,
   integer,
   keyword,
+  regexp,
+  select,
+} from './router/matchers.js';
+export { RelativeURL } from './router/relative-url.js';
+export {
   type Matcher,
   noMatch,
   type Pattern,
   type Resolver,
   type Route,
   Router,
-  regexp,
   route,
-  select,
 } from './router/router.js';
 export { ScrollRestration } from './router/scroll-restration.js';
