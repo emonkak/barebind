@@ -14,7 +14,7 @@ describe('Router', () => {
   const router = new Router([
     route([''], () => '/'),
     route(['articles'], null, [
-      route([regexp(/^\d+$/)], ([id]) => `/articles/${id}`, [
+      route([regexp(/^\d+$/)], ([match]) => `/articles/${match[0]}`, [
         route(['edit'], ([id]) => `/articles/${id}/edit`),
       ]),
       route([encoded], ([title]) => `/articles/${title}`),
@@ -83,7 +83,7 @@ describe('Router', () => {
       const url = new RelativeURL('/articles/123/comments/456');
 
       expect(router.match(url, 'foo', 'bar')).toStrictEqual({
-        captures: ['123', 456],
+        captures: [expect.arrayContaining(['123']), 456],
         url,
         args: ['foo', 'bar'],
       });

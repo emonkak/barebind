@@ -114,8 +114,8 @@ export function integer(component: string): number | typeof noMatch {
   return n.toString() === component ? n : noMatch;
 }
 
-export function regexp(pattern: RegExp): Matcher<string> {
-  return (component: string) => component.match(pattern)?.[0] ?? noMatch;
+export function regexp(pattern: RegExp): Matcher<RegExpMatchArray> {
+  return (component) => component.match(pattern) ?? noMatch;
 }
 
 export function route<
