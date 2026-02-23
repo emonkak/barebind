@@ -39,23 +39,11 @@ type CollectCaptures<TPatterns> = TPatterns extends [infer Head, ...infer Tail]
     ? []
     : unknown[];
 
-export class Router<TResult> implements Route<TResult, [], []> {
+export class Router<TResult> {
   private readonly _routes: Route<TResult, Pattern[], []>[] = [];
 
   constructor(routes: Route<TResult, Pattern[], []>[]) {
     this._routes = routes;
-  }
-
-  get patterns(): [] {
-    return [];
-  }
-
-  get resolver(): null {
-    return null;
-  }
-
-  get childRoutes(): Route<TResult, Pattern[], []>[] {
-    return this._routes;
   }
 
   match(url: RelativeURL): TResult | null {

@@ -93,12 +93,5 @@ describe('Router', () => {
       expect(matcher).toHaveBeenCalledOnce();
       expect(matcher).toHaveBeenCalledWith('123', url);
     });
-
-    it('matches with a nested router', () => {
-      const parentRouter = new Router([route(['prefix'], null, [router])]);
-      const url = new RelativeURL('/prefix/articles/123');
-
-      expect(parentRouter.match(url)).toBe('/articles/123');
-    });
   });
 });
