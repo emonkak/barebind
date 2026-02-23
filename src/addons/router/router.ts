@@ -4,19 +4,19 @@ export const noMatch: unique symbol = Symbol('noMatch');
 
 export interface Route<
   TResult,
-  TContext,
-  TPatterns extends Pattern[] = Pattern[],
-  TInheritCaptures extends unknown[] = [],
+  TArgs extends unknown[],
+  TPatterns extends Pattern[],
+  TInheritCaptures extends unknown[],
 > {
   patterns: TPatterns;
   resolver: Resolver<
-    [...TInheritCaptures, ...CollectCaptures<TPatterns>],
     TResult,
-    TContext
+    TArgs,
+    [...TInheritCaptures, ...CollectCaptures<TPatterns>]
   > | null;
   childRoutes: Route<
     TResult,
-    TContext,
+    TArgs,
     Pattern[],
     [...TInheritCaptures, ...CollectCaptures<TPatterns>]
   >[];
@@ -29,32 +29,28 @@ export type Matcher<T> = (
   url: RelativeURL,
 ) => T | typeof noMatch;
 
-export type Resolver<TCaptures extends unknown[], TResult, TContext> = (
-  captures: TCaptures,
-  url: RelativeURL,
-  context: TContext,
-) => TResult;
+export type Resolver<
+  TResult,
+  TArgs extends unknown[],
+  TCaptures extends unknown[],
+> = (captures: TCaptures, url: RelativeURL, ...args: TArgs) => TResult;
 
 type CollectCaptures<TPatterns> = TPatterns extends []
   ? []
-  : TPatterns extends [infer THead, ...infer TTail]
-    ? [...Match<THead>, ...CollectCaptures<TTail>]
+  : TPatterns extends [infer Head, ...infer Tail]
+    ? [...Match<Head>, ...CollectCaptures<Tail>]
     : unknown[];
 
-type Match<TPattern> = TPattern extends string
-  ? []
-  : TPattern extends Matcher<infer T>
-    ? [T]
-    : [];
+type Match<TPattern> = TPattern extends Matcher<infer T> ? [T] : [];
 
-export class Router<TResult, TContext> {
-  private readonly _routes: Route<TResult, TContext>[] = [];
+export class Router<TResult, TArgs extends unknown[] = []> {
+  private readonly _routes: Route<TResult, TArgs, Pattern[], []>[] = [];
 
-  constructor(routes: Route<TResult, TContext>[]) {
+  constructor(routes: Route<TResult, TArgs, Pattern[], []>[]) {
     this._routes = routes;
   }
 
-  match(url: RelativeURL, context: TContext): TResult | null {
+  match(url: RelativeURL, ...args: TArgs): TResult | null {
     const components = trimLeadingSlash(url.pathname).split('/');
     const collectedCaptures: unknown[] = [];
 
@@ -73,7 +69,7 @@ export class Router<TResult, TContext> {
       if (captures !== null) {
         collectedCaptures.push(...captures);
         if (components.length === componentIndex + patterns.length) {
-          return resolver?.(collectedCaptures, url, context) ?? null;
+          return resolver?.(collectedCaptures, url, ...args) ?? null;
         }
         if (childRoutes.length > 0) {
           routes = childRoutes;
@@ -110,19 +106,19 @@ export function regexp(pattern: RegExp): Matcher<string> {
 
 export function route<
   TResult,
-  TContext = unknown,
-  const TPatterns extends Pattern[] = Pattern[],
-  const TInheritCaptures extends unknown[] = [],
+  const TArgs extends unknown[],
+  const TPatterns extends Pattern[],
+  const TInheritCaptures extends unknown[],
 >(
   patterns: TPatterns,
-  resolver: Route<TResult, TContext, TPatterns, TInheritCaptures>['resolver'],
+  resolver: Route<TResult, TArgs, TPatterns, TInheritCaptures>['resolver'],
   childRoutes: Route<
     TResult,
-    TContext,
+    TArgs,
     TPatterns,
     TInheritCaptures
   >['childRoutes'] = [],
-): Route<TResult, TContext, TPatterns, TInheritCaptures> {
+): Route<TResult, TArgs, TPatterns, TInheritCaptures> {
   return {
     patterns,
     resolver,

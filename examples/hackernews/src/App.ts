@@ -15,9 +15,7 @@ export const App = createComponent(function App(
   $: RenderContext,
 ): unknown {
   const { location } = $.use(HashHistory({ viewTransition: true }));
-  const page =
-    router.match(location.url, location.state) ??
-    NotFound({ url: location.url });
+  const page = router.match(location.url) ?? NotFound({ url: location.url });
 
   $.use(store);
 

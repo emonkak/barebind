@@ -11,104 +11,92 @@ import {
 } from '@/addons/router/router.js';
 
 describe('Router', () => {
-  const appRouter = new Router([
-    route([''], () => 'index'),
+  const router = new Router([
+    route([''], () => '/'),
     route(['articles'], null, [
-      route([regexp(/^\d+$/)], ([id]) => `showArticle(${id})`, [
-        route(['edit'], ([id]) => `editArticle(${id})`),
+      route([regexp(/^\d+$/)], ([id]) => `/articles/${id}`, [
+        route(['edit'], ([id]) => `/articles/${id}/edit`),
       ]),
-      route([encoded], ([title]) => `showArticleByTitle(${title})`),
+      route([encoded], ([title]) => `/articles/${title}`),
     ]),
-    route(['categories'], () => 'indexCategories', [
-      route([''], () => 'indexCategories'),
-      route([integer], ([id]) => `showCategory(${id})`),
+    route(['categories'], () => '/categories', [
+      route([''], () => '/categories/'),
+      route([integer], ([id]) => `/categories/${id}`),
     ]),
-    route(['tags'], () => 'indexTags'),
-    route(['tags', decoded], ([label]) => `showTag(${label})`),
+    route(['tags'], () => '/tags'),
+    route(['tags', decoded], ([label]) => `/tags/${label}`),
   ]);
-  const context = {};
 
   describe('match()', () => {
     it('invokes the resolver that matches the URL', () => {
-      expect(appRouter.match(new RelativeURL(''), context)).toBe('index');
-      expect(appRouter.match(new RelativeURL('/'), context)).toBe('index');
-      expect(appRouter.match(new RelativeURL('/articles/123'), context)).toBe(
-        'showArticle(123)',
+      expect(router.match(new RelativeURL(''))).toBe('/');
+      expect(router.match(new RelativeURL('/'))).toBe('/');
+      expect(router.match(new RelativeURL('/articles/123'))).toBe(
+        '/articles/123',
       );
-      expect(
-        appRouter.match(new RelativeURL('/articles/GNU%2FLinux'), context),
-      ).toBe('showArticleByTitle(GNU%2FLinux)');
-      expect(
-        appRouter.match(new RelativeURL('/articles/123/edit'), context),
-      ).toBe('editArticle(123)');
-      expect(appRouter.match(new RelativeURL('/tags'), context)).toBe(
-        'indexTags',
+      expect(router.match(new RelativeURL('/articles/GNU%2FLinux'))).toBe(
+        '/articles/GNU%2FLinux',
       );
-      expect(appRouter.match(new RelativeURL('/tags/'), context)).toBe(
-        'showTag()',
+      expect(router.match(new RelativeURL('/articles/123/edit'))).toBe(
+        '/articles/123/edit',
       );
-      expect(
-        appRouter.match(new RelativeURL('/tags/javascript'), context),
-      ).toBe('showTag(javascript)');
-      expect(
-        appRouter.match(new RelativeURL('/tags/GNU%2FLinux'), context),
-      ).toBe('showTag(GNU/Linux)');
-      expect(appRouter.match(new RelativeURL('/categories'), context)).toBe(
-        'indexCategories',
+      expect(router.match(new RelativeURL('/tags'))).toBe('/tags');
+      expect(router.match(new RelativeURL('/tags/'))).toBe('/tags/');
+      expect(router.match(new RelativeURL('/tags/javascript'))).toBe(
+        '/tags/javascript',
       );
-      expect(appRouter.match(new RelativeURL('/categories/'), context)).toBe(
-        'indexCategories',
+      expect(router.match(new RelativeURL('/tags/GNU%2FLinux'))).toBe(
+        '/tags/GNU/Linux',
       );
-      expect(appRouter.match(new RelativeURL('/categories/123'), context)).toBe(
-        'showCategory(123)',
+      expect(router.match(new RelativeURL('/categories'))).toBe('/categories');
+      expect(router.match(new RelativeURL('/categories/'))).toBe(
+        '/categories/',
+      );
+      expect(router.match(new RelativeURL('/categories/123'))).toBe(
+        '/categories/123',
       );
     });
 
     it('returns null if the route restricts a trailing slash', () => {
-      expect(appRouter.match(new RelativeURL('/articles/123/'), context)).toBe(
-        null,
-      );
-      expect(
-        appRouter.match(new RelativeURL('/articles/123/edit/'), context),
-      ).toBe(null);
-      expect(
-        appRouter.match(new RelativeURL('/tags/javascript/'), context),
-      ).toBe(null);
+      expect(router.match(new RelativeURL('/articles/123/'))).toBe(null);
+      expect(router.match(new RelativeURL('/articles/123/edit/'))).toBe(null);
+      expect(router.match(new RelativeURL('/tags/javascript/'))).toBe(null);
     });
 
     it('returns null if there is no route matches the URL', () => {
-      expect(appRouter.match(new RelativeURL('/articles'), context)).toBe(null);
-      expect(
-        appRouter.match(new RelativeURL('/categories/abc/'), context),
-      ).toBe(null);
-      expect(appRouter.match(new RelativeURL('/not_found'), context)).toBe(
-        null,
-      );
+      expect(router.match(new RelativeURL('/articles'))).toBe(null);
+      expect(router.match(new RelativeURL('/categories/abc/'))).toBe(null);
+      expect(router.match(new RelativeURL('/not_found'))).toBe(null);
     });
 
-    it('invokes the resolver with captures, url and context', () => {
-      const resolver = vi.fn(
-        ([articleId, commentId]) =>
-          `showArticleComment(${articleId}, ${commentId})`,
-      );
+    it('invokes the resolver with args', () => {
       const router = new Router([
-        route(['articles', regexp(/^\d+$/), 'comments', integer], resolver),
+        route(
+          ['articles', regexp(/^\d+$/), 'comments', integer],
+          (captures, url, ...args) => ({
+            captures,
+            url,
+            args,
+          }),
+        ),
       ]);
       const url = new RelativeURL('/articles/123/comments/456');
 
-      expect(router.match(url, context)).toBe('showArticleComment(123, 456)');
-      expect(resolver).toHaveBeenCalledOnce();
-      expect(resolver).toHaveBeenCalledWith(['123', 456], url, context);
+      expect(router.match(url, 'foo', 'bar')).toStrictEqual({
+        captures: ['123', 456],
+        url,
+        args: ['foo', 'bar'],
+      });
     });
 
-    it('should match with a custom matcher', () => {
+    it('matches with a custom matcher', () => {
       const matcher = vi.fn((id) => +id);
       const router = new Router([
-        route(['articles', matcher], ([id]) => `showArticle(${id})`),
+        route(['articles', matcher], (captures) => ({ captures })),
       ]);
       const url = new RelativeURL('/articles/123');
 
-      expect(router.match(url, context)).toBe('showArticle(123)');
+      expect(router.match(url)).toStrictEqual({ captures: [123] });
       expect(matcher).toHaveBeenCalledOnce();
       expect(matcher).toHaveBeenCalledWith('123', url);
     });
