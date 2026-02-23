@@ -43,11 +43,25 @@ type CollectCaptures<TPatterns> = TPatterns extends []
 
 type Match<TPattern> = TPattern extends Matcher<infer T> ? [T] : [];
 
-export class Router<TResult, TArgs extends unknown[] = []> {
+export class Router<TResult, TArgs extends unknown[] = []>
+  implements Route<TResult, TArgs, [], []>
+{
   private readonly _routes: Route<TResult, TArgs, Pattern[], []>[] = [];
 
   constructor(routes: Route<TResult, TArgs, Pattern[], []>[]) {
     this._routes = routes;
+  }
+
+  get patterns(): [] {
+    return [];
+  }
+
+  get resolver(): null {
+    return null;
+  }
+
+  get childRoutes(): Route<TResult, TArgs, Pattern[], []>[] {
+    return this._routes;
   }
 
   match(url: RelativeURL, ...args: TArgs): TResult | null {
