@@ -2,9 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { RelativeURL } from '@/addons/router/relative-url.js';
 import {
+  choice,
   decoded,
   encoded,
   integer,
+  keyword,
   Router,
   regexp,
   route,
@@ -22,6 +24,10 @@ describe('Router', () => {
     ]),
     route(['categories'], () => '/categories', [
       route([''], () => '/categories/'),
+      route(
+        [choice(keyword('all'), keyword('newest'))],
+        ([type]) => `/categories/${type}`,
+      ),
       route([integer], ([id]) => `/categories/${id}`),
     ]),
     route(['tags'], () => '/tags'),
@@ -55,6 +61,12 @@ describe('Router', () => {
       );
       expect(router.match(new RelativeURL('/categories/123'))).toBe(
         '/categories/123',
+      );
+      expect(router.match(new RelativeURL('/categories/all'))).toBe(
+        '/categories/all',
+      );
+      expect(router.match(new RelativeURL('/categories/newest'))).toBe(
+        '/categories/newest',
       );
     });
 

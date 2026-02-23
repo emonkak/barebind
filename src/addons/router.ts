@@ -7,9 +7,11 @@ export {
 } from './router/history.js';
 export { RelativeURL } from './router/relative-url.js';
 export {
+  choice,
   decoded,
   encoded,
   integer,
+  keyword,
   type Matcher,
   noMatch,
   type Pattern,

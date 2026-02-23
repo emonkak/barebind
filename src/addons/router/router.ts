@@ -35,13 +35,16 @@ export type Resolver<
   TCaptures extends unknown[],
 > = (captures: TCaptures, url: RelativeURL, ...args: TArgs) => TResult;
 
+type ApplyPattern<TPattern> = TPattern extends Matcher<infer T> ? [T] : [];
+
 type CollectCaptures<TPatterns> = TPatterns extends []
   ? []
   : TPatterns extends [infer Head, ...infer Tail]
-    ? [...Match<Head>, ...CollectCaptures<Tail>]
+    ? [...ApplyPattern<Head>, ...CollectCaptures<Tail>]
     : unknown[];
 
-type Match<TPattern> = TPattern extends Matcher<infer T> ? [T] : [];
+type Match<TMatcher extends Matcher<unknown>> =
+  TMatcher extends Matcher<infer T> ? T : never;
 
 export class Router<TResult, TArgs extends unknown[] = []>
   implements Route<TResult, TArgs, [], []>
@@ -101,6 +104,20 @@ export class Router<TResult, TArgs extends unknown[] = []>
   }
 }
 
+export function choice<const TMatchers extends Matcher<unknown>[]>(
+  ...matchers: TMatchers
+): Matcher<Match<TMatchers[number]>> {
+  return (component, url) => {
+    for (const matcher of matchers) {
+      const result = matcher(component, url);
+      if (result !== noMatch) {
+        return result as Match<TMatchers[number]>;
+      }
+    }
+    return noMatch;
+  };
+}
+
 export function decoded(component: string): string {
   return decodeURIComponent(component);
 }
@@ -114,18 +131,12 @@ export function integer(component: string): number | typeof noMatch {
   return n.toString() === component ? n : noMatch;
 }
 
-export function regexp(pattern: RegExp): Matcher<RegExpMatchArray> {
-  return (component) => component.match(pattern) ?? noMatch;
+export function keyword<const T extends string>(s: T): Matcher<T> {
+  return (component) => (component === s ? s : noMatch);
 }
 
-export function select<TSource, TResult>(
-  matcher: Matcher<TSource>,
-  selector: (value: TSource) => TResult,
-): Matcher<TResult> {
-  return (component, url) => {
-    const source = matcher(component, url);
-    return source !== noMatch ? selector(source) : noMatch;
-  };
+export function regexp(pattern: RegExp): Matcher<RegExpMatchArray> {
+  return (component) => component.match(pattern) ?? noMatch;
 }
 
 export function route<
@@ -147,6 +158,16 @@ export function route<
     patterns,
     resolver,
     childRoutes,
+  };
+}
+
+export function select<TSource, TResult>(
+  matcher: Matcher<TSource>,
+  selector: (value: TSource) => TResult,
+): Matcher<TResult> {
+  return (component, url) => {
+    const source = matcher(component, url);
+    return source !== noMatch ? selector(source) : noMatch;
   };
 }
 
