@@ -8,6 +8,7 @@ import {
   Router,
   regexp,
   route,
+  select,
 } from '@/addons/router/router.js';
 
 describe('Router', () => {
@@ -72,7 +73,12 @@ describe('Router', () => {
     it('invokes the resolver with args', () => {
       const router = new Router([
         route(
-          ['articles', regexp(/^\d+$/), 'comments', integer],
+          [
+            'articles',
+            select(regexp(/^\d+$/), (match) => match[0]),
+            'comments',
+            integer,
+          ],
           (captures, url, ...args) => ({
             captures,
             url,
@@ -83,7 +89,7 @@ describe('Router', () => {
       const url = new RelativeURL('/articles/123/comments/456');
 
       expect(router.match(url, 'foo', 'bar')).toStrictEqual({
-        captures: [expect.arrayContaining(['123']), 456],
+        captures: ['123', 456],
         url,
         args: ['foo', 'bar'],
       });

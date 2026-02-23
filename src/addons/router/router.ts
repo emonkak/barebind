@@ -118,6 +118,16 @@ export function regexp(pattern: RegExp): Matcher<RegExpMatchArray> {
   return (component) => component.match(pattern) ?? noMatch;
 }
 
+export function select<TSource, TResult>(
+  matcher: Matcher<TSource>,
+  selector: (value: TSource) => TResult,
+): Matcher<TResult> {
+  return (component, url) => {
+    const source = matcher(component, url);
+    return source !== noMatch ? selector(source) : noMatch;
+  };
+}
+
 export function route<
   TResult,
   const TArgs extends unknown[],

@@ -18,5 +18,6 @@ export {
   Router,
   regexp,
   route,
+  select,
 } from './router/router.js';
 export { ScrollRestration } from './router/scroll-restration.js';
