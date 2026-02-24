@@ -1,5 +1,5 @@
 import { sequentialEqual } from '../compare.js';
-import type { RenderContext } from '../internal.js';
+import type { HookFunction, RenderContext } from '../internal.js';
 
 const stringInterpolationCache = new WeakMap<
   readonly string[],
@@ -96,9 +96,9 @@ export type PartialTemplateContext = Pick<
   'html' | 'math' | 'svg'
 >;
 
-export function PartialTemplateContext(
+export const PartialTemplateContext: HookFunction<PartialTemplateContext> = (
   context: RenderContext,
-): PartialTemplateContext {
+): PartialTemplateContext => {
   return {
     html(strings, ...values) {
       const template = PartialTemplate.parse(strings, ...values);
@@ -113,7 +113,7 @@ export function PartialTemplateContext(
       return context.svg(template.strings, ...template.values);
     },
   };
-}
+};
 
 function interpolateStrings(
   strings: readonly string[],
