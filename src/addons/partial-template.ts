@@ -36,6 +36,10 @@ export class PartialTemplate {
       }
     }
 
+    if (literalStrings.length === 0) {
+      return new PartialTemplate(strings, values);
+    }
+
     let stringInterpolations = stringInterpolationCache.get(strings);
 
     if (stringInterpolations !== undefined) {
@@ -58,8 +62,7 @@ export class PartialTemplate {
       stringInterpolationCache.set(strings, stringInterpolations);
     }
 
-    const interpolatedStrings =
-      literalStrings.length > 0 ? interpolateStrings(strings, values) : strings;
+    const interpolatedStrings = interpolateStrings(strings, values);
 
     stringInterpolations.push({
       interpolatedStrings,
