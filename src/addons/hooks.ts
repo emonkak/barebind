@@ -94,24 +94,24 @@ export function SyncEnternalStore<T>(
 export function Transition(): HookFunction<
   [
     isPending: boolean,
-    startTransition: (action: () => UpdateHandle) => UpdateHandle,
+    startTransition: (action: () => PromiseLike<unknown>) => UpdateHandle,
   ]
 > {
   return (context) => {
     const [pendingAction, setPendingAction] = context.useState<
-      (() => UpdateHandle) | null
+      (() => PromiseLike<unknown>) | null
     >(null);
 
     context.useLayoutEffect(() => {
-      pendingAction?.().scheduled.then(({ done }) => {
-        if (done) {
-          setPendingAction(null, { immediate: true });
-        }
+      pendingAction?.().then(() => {
+        setPendingAction(null, { immediate: true });
       });
     }, [pendingAction]);
 
     const isPending = pendingAction !== null;
-    const startTransition = (action: () => UpdateHandle): UpdateHandle => {
+    const startTransition = (
+      action: () => PromiseLike<unknown>,
+    ): UpdateHandle => {
       return setPendingAction(() => action);
     };
 

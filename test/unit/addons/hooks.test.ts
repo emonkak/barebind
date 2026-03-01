@@ -361,7 +361,7 @@ describe('Transition()', () => {
         const [isPending, startTransition] = session.use(Transition());
 
         session.useEffect(() => {
-          startTransition(() => setCount((count) => count + 1));
+          startTransition(() => setCount((count) => count + 1).scheduled);
         }, []);
 
         return { counter, isPending };
