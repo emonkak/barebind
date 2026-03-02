@@ -1,7 +1,6 @@
 import { type Backend, ExecutionMode } from './backend.js';
-import { getCoroutineStack } from './debug/scope.js';
+import { CapturedError, handleError } from './error.js';
 import {
-  BoundaryType,
   CommitPhase,
   type Component,
   type ComponentState,
@@ -369,7 +368,7 @@ export class Runtime implements SessionContext {
           try {
             coroutine.resume(session);
           } catch (error) {
-            handleError(error, coroutine, originScope, session);
+            captureError(error, coroutine, originScope, session);
           }
         }
 
@@ -468,7 +467,7 @@ export class Runtime implements SessionContext {
           try {
             coroutine.resume(session);
           } catch (error) {
-            handleError(error, coroutine, originScope, session);
+            captureError(error, coroutine, originScope, session);
           }
         }
       } while (frame.pendingCoroutines.length > 0);
@@ -513,27 +512,24 @@ export class Runtime implements SessionContext {
   }
 }
 
-export class RenderError extends Error {
-  constructor(coroutine: Coroutine, options?: ErrorOptions) {
-    let message = 'An error occurred while rendering.';
+function captureError(
+  error: unknown,
+  coroutine: Coroutine,
+  originScope: Scope,
+  session: UpdateSession,
+): void {
+  const scope = handleError(error, coroutine);
 
-    DEBUG: {
-      message += getCoroutineStack(coroutine)
-        .reverse()
-        .map((coroutine, i, stack) => {
-          const prefix = i > 0 ? '   '.repeat(i - 1) + '`- ' : '';
-          const suffix =
-            i === stack.length - 1 ? ' <- ERROR occurred here!' : '';
-          return '\n' + prefix + coroutine.name + suffix;
-        })
-        .join('');
-    }
+  if (scope.context?.pendingLanes === Lane.NoLane) {
+    scope.context.detach(session);
+  }
 
-    super(message, options);
+  // If the error was captured by an ErrorBoundary outside the origin scope,
+  // we treat it as a graceful interruption rather than a fatal failure.
+  if (scope.level <= originScope.level) {
+    throw new CapturedError(undefined, { cause: error });
   }
 }
-
-class CapturedError extends Error {}
 
 function consumeCoroutines(
   frame: RenderFrame,
@@ -565,51 +561,6 @@ function generateUniqueIdentifier(length: number): string {
         ? String.fromCharCode(0x61 + (byte % 26))
         : (byte % 36).toString(36),
   ).join('');
-}
-
-function handleError(
-  error: unknown,
-  coroutine: Coroutine,
-  originScope: Scope,
-  session: UpdateSession,
-): void {
-  let currentScope = coroutine.scope;
-  let { parent: nextScope, boundary: nextBoundary } = currentScope;
-
-  const handleError = (error: unknown) => {
-    while (true) {
-      while (nextBoundary !== null) {
-        const boundary = nextBoundary;
-        nextBoundary = nextBoundary.next;
-        if (boundary.type === BoundaryType.Error) {
-          const { handler } = boundary;
-          handler(error, handleError);
-          return;
-        }
-      }
-
-      if (nextScope !== null) {
-        const { parent, boundary } = nextScope;
-        currentScope = nextScope;
-        nextScope = parent;
-        nextBoundary = boundary;
-      } else {
-        throw new RenderError(coroutine, { cause: error });
-      }
-    }
-  };
-
-  handleError(error);
-
-  if (currentScope.context?.pendingLanes === Lane.NoLane) {
-    currentScope.context.detach(session);
-  }
-
-  // If the error was captured by an ErrorBoundary outside the origin scope,
-  // we treat it as a graceful interruption rather than a fatal failure.
-  if (currentScope.level <= originScope.level) {
-    throw new CapturedError(undefined, { cause: error });
-  }
 }
 
 function notifyObservers(

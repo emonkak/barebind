@@ -4,6 +4,7 @@ export { type Backend, ExecutionMode } from './backend.js';
 export { sequentialEqual, shallowEqual } from './compare.js';
 export { type ComponentOptions, createComponent } from './component.js';
 export { DirectiveError } from './directive.js';
+export { RenderError } from './error.js';
 export { HydrationError } from './hydration.js';
 export {
   $hook,
@@ -32,7 +33,6 @@ export {
 } from './repeat.js';
 export { Root } from './root.js';
 export {
-  type RenderError,
   Runtime,
   type RuntimeEvent,
   type RuntimeObserver,

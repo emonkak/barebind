@@ -1,20 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ExecutionMode } from '@/backend.js';
-import { ComponentBinding, createComponent } from '@/component.js';
+import { createComponent } from '@/component.js';
+import { RenderError } from '@/error.js';
 import {
   $directive,
   type Bindable,
   BoundaryType,
   CommitPhase,
   type ComponentState,
-  type Coroutine,
   createScope,
   EffectQueue,
   Lane,
   PartType,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
-import { RenderError } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   createRenderFrame,
@@ -1259,34 +1258,3 @@ describe('Runtime', () => {
     });
   });
 });
-
-describe('RenderError', () => {
-  it('contains the coroutine stack in the message', () => {
-    const part = {
-      type: PartType.ChildNode,
-      node: document.createComment(''),
-      anchorNode: null,
-      namespaceURI: HTML_NAMESPACE_URI,
-    };
-    const scope = createScope(
-      createScope(createScope(), new ComponentBinding(Parent, {}, part)),
-      new ComponentBinding(Child, {}, part),
-    );
-    const coroutine: Coroutine = {
-      name: 'ErrorPlace',
-      pendingLanes: Lane.NoLane,
-      scope,
-      resume() {},
-    };
-    const error = new RenderError(coroutine);
-
-    expect(error.message).toBe(`An error occurred while rendering.
-${Parent.name}
-\`- ${Child.name}
-   \`- ErrorPlace <- ERROR occurred here!`);
-  });
-});
-
-const Parent = createComponent(function Parent() {});
-
-const Child = createComponent(function Child() {});
