@@ -19,12 +19,13 @@ import {
   HookType,
   type InitialState,
   Lane,
-  type NextState,
+  type ReducerHandle,
   type RefObject,
   type RenderContext,
   type RenderFrame,
   type Scope,
   type SessionContext,
+  type StateHandle,
   type TemplateMode,
   type UpdateHandle,
   type UpdateOptions,
@@ -283,14 +284,7 @@ export class RenderSession implements RenderContext {
   useReducer<TState, TAction>(
     reducer: (state: TState, action: TAction) => TState,
     initialState: InitialState<TState>,
-  ): [
-    state: TState,
-    dispatch: (
-      action: TAction,
-      options?: DispatchOptions<TState>,
-    ) => UpdateHandle,
-    isPending: boolean,
-  ] {
+  ): ReducerHandle<TState, TAction> {
     const { hooks } = this._state;
     let currentHook = hooks[this._hookIndex];
 
@@ -357,16 +351,7 @@ export class RenderSession implements RenderContext {
     return this.useMemo(() => Object.seal({ current: initialValue }), []);
   }
 
-  useState<TState>(
-    initialState: InitialState<TState>,
-  ): [
-    state: TState,
-    setState: (
-      nextState: NextState<TState>,
-      options?: DispatchOptions<TState>,
-    ) => UpdateHandle,
-    isPending: boolean,
-  ] {
+  useState<TState>(initialState: InitialState<TState>): StateHandle<TState> {
     return this.useReducer(
       (state, action) =>
         typeof action === 'function'

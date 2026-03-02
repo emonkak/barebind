@@ -263,9 +263,7 @@ export interface Layout {
   ): Slot<T>;
 }
 
-export type NextState<T> =
-  | (T extends Function ? never : T)
-  | ((prevState: T) => T);
+export type NextState<T> = (T extends Function ? never : T) | ((state: T) => T);
 
 export type Part =
   | Part.AttributePart
@@ -339,6 +337,15 @@ export interface Primitive<T> extends DirectiveType<T> {
   ensureValue?(value: unknown, part: Part): asserts value is T;
 }
 
+export type ReducerHandle<TState, TAction> = [
+  state: TState,
+  dispatch: (
+    action: TAction,
+    options?: DispatchOptions<TState>,
+  ) => UpdateHandle,
+  isPending: boolean,
+];
+
 export type Ref<T> = RefCallback<T> | RefObject<T | null> | null | undefined;
 
 export type RefCallback<T> = (value: T) => Cleanup | void;
@@ -395,25 +402,9 @@ export interface RenderContext {
   useReducer<TState, TAction>(
     reducer: (state: TState, action: TAction) => TState,
     initialState: InitialState<TState>,
-  ): [
-    state: TState,
-    dispatch: (
-      action: TAction,
-      options?: DispatchOptions<TState>,
-    ) => UpdateHandle,
-    isPending: boolean,
-  ];
+  ): ReducerHandle<TState, TAction>;
   useRef<T>(initialValue: T): RefObject<T>;
-  useState<TState>(
-    initialState: InitialState<TState>,
-  ): [
-    state: TState,
-    setState: (
-      nextState: NextState<TState>,
-      options?: DispatchOptions<TState>,
-    ) => UpdateHandle,
-    isPending: boolean,
-  ];
+  useState<TState>(initialState: InitialState<TState>): StateHandle<TState>;
   waitForUpdate(): Promise<number>;
 }
 
@@ -472,6 +463,15 @@ export interface Slot<T> extends ReversibleEffect, SessionLifecycle {
   readonly part: Part;
   reconcile(source: T, session: UpdateSession): boolean;
 }
+
+export type StateHandle<TState> = [
+  state: TState,
+  setState: (
+    nextState: NextState<TState>,
+    options?: DispatchOptions<TState>,
+  ) => UpdateHandle,
+  isPending: boolean,
+];
 
 export interface Template<TValues extends readonly unknown[]>
   extends DirectiveType<TValues> {
