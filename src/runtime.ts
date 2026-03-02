@@ -201,11 +201,10 @@ export class Runtime implements SessionContext {
     state: ComponentState,
     coroutine: Coroutine,
     frame: RenderFrame,
-    scope: Scope,
   ): TResult {
     const { id } = frame;
 
-    const context = new RenderSession(state, coroutine, frame, scope, this);
+    const context = new RenderSession(state, coroutine, frame, this);
 
     notifyObservers(this._observers, {
       type: 'component-render-start',

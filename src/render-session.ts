@@ -1,5 +1,6 @@
 import { areDependenciesChanged } from './compare.js';
 import { DirectiveSpecifier } from './directive.js';
+import { handleError } from './error.js';
 import {
   $hook,
   BoundaryType,
@@ -37,8 +38,6 @@ export class RenderSession implements RenderContext {
 
   private readonly _frame: RenderFrame;
 
-  private _scope: Scope;
-
   private readonly _context: SessionContext;
 
   private _hookIndex = 0;
@@ -47,26 +46,25 @@ export class RenderSession implements RenderContext {
     state: ComponentState,
     coroutine: Coroutine,
     frame: RenderFrame,
-    scope: Scope,
     context: SessionContext,
   ) {
     this._state = state;
     this._coroutine = coroutine;
     this._frame = frame;
-    this._scope = scope;
     this._context = context;
   }
 
   catchError(handler: ErrorHandler): void {
-    this._scope.boundary = {
+    const { scope } = this._state;
+    scope.boundary = {
       type: BoundaryType.Error,
-      next: this._scope.boundary,
+      next: scope.boundary,
       handler,
     };
   }
 
   finalize(): void {
-    const { hooks } = this._state;
+    const { hooks, scope } = this._state;
     const currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
@@ -78,15 +76,14 @@ export class RenderSession implements RenderContext {
       Object.freeze(hooks);
     }
 
-    // Prevent parent scope mutation during child render.
-    Object.freeze(this._scope);
+    // Refuse to mutate scope after finalization.
+    Object.freeze(scope);
 
-    this._scope = DETACHED_SCOPE;
     this._hookIndex++;
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    if (this._state.scope === DETACHED_SCOPE) {
+    if (this._coroutine.scope === DETACHED_SCOPE) {
       return {
         lanes: Lane.NoLane,
         scheduled: Promise.resolve({ canceled: true, done: false }),
@@ -118,7 +115,7 @@ export class RenderSession implements RenderContext {
   }
 
   getSharedContext(key: unknown): unknown {
-    let currentScope: Scope | null = this._scope;
+    let currentScope: Scope | null = this._state.scope;
     do {
       for (
         let boundary = currentScope.boundary;
@@ -158,9 +155,10 @@ export class RenderSession implements RenderContext {
   }
 
   setSharedContext(key: unknown, value: unknown): void {
-    this._scope.boundary = {
+    const { scope } = this._state;
+    scope.boundary = {
       type: BoundaryType.SharedContext,
-      next: this._scope.boundary,
+      next: scope.boundary,
       key,
       value,
     };
@@ -388,8 +386,7 @@ export class RenderSession implements RenderContext {
     type: Hook.EffectHook['type'],
     effects: EffectQueue,
   ): void {
-    const { hooks } = this._state;
-    const { level } = this._scope;
+    const { hooks, scope } = this._state;
     let currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
@@ -400,7 +397,7 @@ export class RenderSession implements RenderContext {
         areDependenciesChanged(dependencies, currentHook.memoizedDependencies)
       ) {
         currentHook.epoch++;
-        effects.push(new InvokeEffectHook(currentHook), level);
+        effects.push(new InvokeEffectHook(currentHook), scope.level);
       }
     } else {
       currentHook = {
@@ -412,7 +409,7 @@ export class RenderSession implements RenderContext {
         pendingDependencies: dependencies,
       };
       hooks.push(currentHook);
-      effects.push(new InvokeEffectHook(currentHook), level);
+      effects.push(new InvokeEffectHook(currentHook), scope.level);
     }
 
     this._hookIndex++;

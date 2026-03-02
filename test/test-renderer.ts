@@ -1,3 +1,4 @@
+import { RenderError } from '@/error.js';
 import {
   BoundaryType,
   type ComponentState,
@@ -17,7 +18,13 @@ import { createRuntime } from './mocks.js';
 export class TestRenderer<TProps, TResult> implements Coroutine {
   readonly callback: (props: TProps, session: RenderSession) => TResult;
 
-  state: ComponentState;
+  scope: Scope;
+
+  state: ComponentState = {
+    hooks: [],
+    pendingLanes: Lane.NoLane,
+    scope: DETACHED_SCOPE,
+  };
 
   coroutine: Coroutine | null = null;
 
@@ -25,14 +32,10 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
 
   constructor(
     callback: (props: TProps, session: RenderSession) => TResult,
-    state: ComponentState = {
-      hooks: [],
-      pendingLanes: Lane.NoLane,
-      scope: createScope(),
-    },
+    scope: Scope = createScope(),
   ) {
     this.callback = callback;
-    this.state = state;
+    this.scope = scope;
   }
 
   get name(): string {
@@ -41,10 +44,6 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
 
   get pendingLanes(): Lanes {
     return this.state.pendingLanes;
-  }
-
-  get scope(): Scope {
-    return this.state.scope;
   }
 
   resume(session: UpdateSession): void {
@@ -79,23 +78,29 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
     const scope = createScope(this.scope);
     const that = this;
 
+    let returnValue: TResult;
+    let thrownError: unknown;
+
     scope.boundary = {
       type: BoundaryType.Error,
       next: scope.boundary,
-      handler: (error) => {
-        thrownError = error;
+      handler: (error, handleError) => {
+        try {
+          handleError(error);
+        } catch (error) {
+          thrownError = error instanceof RenderError ? error.cause : error;
+        }
       },
     };
-
-    let returnValue: TResult;
-    let thrownError: unknown;
 
     const coroutine = {
       name: this.callback.name,
       pendingLanes: Lane.NoLane,
       scope,
       resume({ frame, scope, context }: UpdateSession): void {
-        const session = new RenderSession(state, that, frame, scope, context);
+        state.scope = createScope(scope);
+
+        const session = new RenderSession(state, that, frame, context);
 
         returnValue = callback(props, session);
 
@@ -105,14 +110,14 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
       },
     };
 
-    const { lanes } = this.runtime.scheduleUpdate(coroutine, {
+    this.coroutine = coroutine;
+
+    const { lanes } = this.runtime.scheduleUpdate(this.coroutine, {
       triggerFlush: false,
       immediate: true,
     });
 
     coroutine.pendingLanes |= lanes;
-
-    this.coroutine = coroutine;
 
     this.runtime.flushUpdates();
 

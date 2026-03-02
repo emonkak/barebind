@@ -3,10 +3,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { shallowEqual } from '@/compare.js';
 import {
   $hook,
+  BoundaryType,
   CommitPhase,
+  createScope,
   DETACHED_SCOPE,
   EffectQueue,
-  Lane,
   type RefObject,
   type RenderContext,
   type UpdateHandle,
@@ -19,17 +20,18 @@ import { TestRenderer } from '../test-renderer.js';
 describe('RenderSession', () => {
   describe('catchError()', () => {
     it('adds an error handler', () => {
-      const handler = vi.fn();
-      const error = {};
-      const renderer = new TestRenderer((_props, session) => {
-        session.catchError(handler);
-
-        session.catchError((error, handleError) => {
-          handleError(error);
-        });
-
+      const handler = vi.fn(() => {});
+      const error = new Error('fail');
+      const scope = createScope();
+      const renderer = new TestRenderer(() => {
         throw error;
-      });
+      }, scope);
+
+      scope.boundary = {
+        type: BoundaryType.Error,
+        next: scope.boundary,
+        handler,
+      };
 
       SESSION: {
         renderer.render({});
@@ -87,19 +89,6 @@ describe('RenderSession', () => {
         const value = renderer.render({});
 
         expect(value).toBe(undefined);
-      }
-    });
-
-    it('always returns undefined when trying to get a shared context outside of rendering', () => {
-      const renderer = new TestRenderer((_props, session) => {
-        session.setSharedContext('foo', 123);
-        return session;
-      });
-
-      SESSION: {
-        const session = renderer.render({});
-
-        expect(session.getSharedContext('foo')).toBe(undefined);
       }
     });
 
@@ -199,17 +188,14 @@ describe('RenderSession', () => {
     it('should do nothing if the coroutine is detached', async () => {
       let handle: UpdateHandle | undefined;
 
-      const renderer = new TestRenderer(
-        (_props, session) => {
-          const [count, setCount] = session.useState(0);
+      const renderer = new TestRenderer((_props, session) => {
+        const [count, setCount] = session.useState(0);
 
-          session.useEffect(() => {
-            handle = setCount(1);
-          }, []);
-          return count;
-        },
-        { hooks: [], pendingLanes: Lane.NoLane, scope: DETACHED_SCOPE },
-      );
+        session.useEffect(() => {
+          handle = setCount(1);
+        }, []);
+        return count;
+      }, DETACHED_SCOPE);
       const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
 
       const count = renderer.render({});

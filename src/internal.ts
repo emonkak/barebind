@@ -442,7 +442,6 @@ export interface SessionContext extends DirectiveContext {
     state: ComponentState,
     coroutine: Coroutine,
     frame: RenderFrame,
-    scope: Scope,
   ): TResult;
   resolveTemplate(
     strings: readonly string[],

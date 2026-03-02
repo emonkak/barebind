@@ -1091,7 +1091,6 @@ describe('Runtime', () => {
       };
       const coroutine = new MockCoroutine();
       const frame = createRenderFrame(1, -1);
-      const scope = createScope(state.scope);
       const observer = new MockObserver();
       const runtime = createRuntime();
 
@@ -1105,7 +1104,6 @@ describe('Runtime', () => {
         state,
         coroutine,
         frame,
-        scope,
       );
 
       expect(renderSpy).toHaveBeenCalledOnce();

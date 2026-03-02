@@ -61,6 +61,8 @@ export class ComponentBinding<TProps, TResult>
 
   private _slot: Slot<TResult> | null = null;
 
+  private _scope: Scope = DETACHED_SCOPE;
+
   private readonly _state: ComponentState = {
     hooks: [],
     pendingLanes: Lane.NoLane,
@@ -102,25 +104,26 @@ export class ComponentBinding<TProps, TResult>
   }
 
   get scope(): Scope {
-    return this._state.scope;
+    return this._scope;
   }
 
   resume(session: UpdateSession): void {
-    const { scope } = this._state;
     const { frame, originScope, context } = session;
-    const childScope = createScope(scope, this);
+    const scope = createScope(this._scope, this);
+
+    this._state.scope = scope;
+
     const result = context.renderComponent(
       this._component,
       this._props,
       this._state,
       this,
       frame,
-      childScope,
     );
 
     const childSession = createUpdateSession(
       frame,
-      childScope,
+      scope,
       originScope,
       context,
     );
@@ -136,7 +139,7 @@ export class ComponentBinding<TProps, TResult>
 
     if (
       dirty &&
-      scope === originScope &&
+      originScope === this._scope &&
       this._state.pendingLanes !== Lane.NoLane
     ) {
       frame.mutationEffects.push(this._slot, scope.level);
@@ -155,7 +158,7 @@ export class ComponentBinding<TProps, TResult>
   attach(session: UpdateSession): void {
     const { frame, scope } = session;
     frame.pendingCoroutines.push(this);
-    this._state.scope = scope;
+    this._scope = scope;
   }
 
   detach(session: UpdateSession): void {
@@ -180,6 +183,7 @@ export class ComponentBinding<TProps, TResult>
 
     this._slot?.detach(session);
 
+    this._scope = DETACHED_SCOPE;
     this._state.pendingLanes = Lane.NoLane;
     this._state.scope = DETACHED_SCOPE;
   }
