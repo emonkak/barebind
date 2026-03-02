@@ -1,4 +1,5 @@
 import type {
+  Action,
   Cleanup,
   DispatchOptions,
   HookFunction,
@@ -131,21 +132,17 @@ export function OptimisticState<T>(
   };
 }
 
-export type TransitionAction = () => PromiseLike<void> | void;
-
 export function Transition(): HookFunction<
-  [
-    isPending: boolean,
-    startTransition: (action: TransitionAction) => UpdateHandle,
-  ]
+  [isPending: boolean, startTransition: (action: Action) => UpdateHandle]
 > {
   return (context) => {
-    const [pendingAction, setPendingAction] =
-      context.useState<TransitionAction | null>(null);
+    const [pendingAction, setPendingAction] = context.useState<Action | null>(
+      null,
+    );
 
     context.useLayoutEffect(() => {
       if (pendingAction !== null) {
-        const invokeAction = async (action: TransitionAction) => {
+        const invokeAction = async (action: Action) => {
           try {
             await action();
           } catch (error) {
@@ -159,7 +156,7 @@ export function Transition(): HookFunction<
     }, [pendingAction]);
 
     const isPending = pendingAction !== null;
-    const startTransition = (action: TransitionAction): UpdateHandle => {
+    const startTransition = (action: Action): UpdateHandle => {
       return setPendingAction(() => action);
     };
 

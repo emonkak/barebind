@@ -6,6 +6,8 @@ export const $hook: unique symbol = Symbol('$hook');
 
 export const DETACHED_SCOPE: Scope = Object.freeze(createScope());
 
+export type Action = () => Promise<void> | void;
+
 export interface Bindable<T = unknown> {
   [$directive](): Partial<Directive<T>>;
 }
@@ -369,6 +371,7 @@ export interface RenderContext {
     ...values: readonly unknown[]
   ): Bindable<readonly unknown[]>;
   setSharedContext(key: unknown, value: unknown): void;
+  startTransition(action: Action): Promise<void>;
   svg(
     strings: readonly string[],
     ...values: readonly unknown[]

@@ -3,6 +3,7 @@ import { DirectiveSpecifier } from './directive.js';
 import { handleError } from './error.js';
 import {
   $hook,
+  type Action,
   BoundaryType,
   type Cleanup,
   type ComponentState,
@@ -163,6 +164,14 @@ export class RenderSession implements RenderContext {
       key,
       value,
     };
+  }
+
+  async startTransition(action: Action): Promise<void> {
+    try {
+      await action();
+    } catch (error) {
+      handleError(error, this._coroutine, this._state.scope);
+    }
   }
 
   svg(

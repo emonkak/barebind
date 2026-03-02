@@ -267,6 +267,31 @@ describe('RenderSession', () => {
     });
   });
 
+  describe('startTransition()', () => {
+    it('propagates the error to error boundaries when handleError is invoked', () => {
+      const handler = vi.fn();
+      const error = new Error('fail');
+      const renderer = new TestRenderer((_props, session) => {
+        session.catchError(handler);
+
+        session.catchError((error, handleError) => {
+          handleError(error);
+        });
+
+        session.startTransition(() => {
+          throw error;
+        });
+      });
+
+      SESSION: {
+        renderer.render({});
+
+        expect(handler).toHaveBeenCalledOnce();
+        expect(handler).toHaveBeenCalledWith(error, expect.any(Function));
+      }
+    });
+  });
+
   describe('text()', () => {
     it('returns a bindable with the text template', () => {
       const renderer = new TestRenderer(
