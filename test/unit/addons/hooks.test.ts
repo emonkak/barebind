@@ -1,18 +1,119 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  Attempt,
   DeferredValue,
   EffectEvent,
   ImperativeHandle,
   Optimistic,
   SyncEnternalStore,
-  Transition,
 } from '@/addons/hooks.js';
 import type { Cleanup, RefCallback } from '@/internal.js';
 import { LinkedList } from '@/linked-list.js';
 import type { RenderSession } from '@/render-session.js';
 import { waitForMicrotasks, waitForTimeout } from '../../test-helpers.js';
 import { TestRenderer } from '../../test-renderer.js';
+
+describe('Attempt()', () => {
+  it('resets pending state to false after transition completes', async () => {
+    const renderer = new TestRenderer(
+      vi.fn((_props: {}, session: RenderSession) => {
+        const [counter, setCount] = session.useState(0);
+        const [isPending, attempt] = session.use(Attempt());
+
+        session.useEffect(() => {
+          attempt(async () => {
+            await setCount((count) => count + 1).scheduled;
+          });
+        }, []);
+
+        return { counter, isPending };
+      }),
+    );
+
+    SESSION1: {
+      renderer.render({});
+
+      expect(renderer.callback).toHaveBeenCalledTimes(1);
+      expect(renderer.callback).toHaveLastReturnedWith({
+        counter: 0,
+        isPending: false,
+      });
+    }
+
+    await waitForMicrotasks();
+
+    expect(renderer.callback).toHaveBeenCalledTimes(2);
+    expect(renderer.callback).toHaveLastReturnedWith({
+      counter: 0,
+      isPending: true,
+    });
+
+    await waitForMicrotasks(2);
+
+    expect(renderer.callback).toHaveBeenCalledTimes(3);
+    expect(renderer.callback).toHaveLastReturnedWith({
+      counter: 1,
+      isPending: true,
+    });
+
+    await waitForMicrotasks();
+
+    expect(renderer.callback).toHaveBeenCalledTimes(4);
+    expect(renderer.callback).toHaveLastReturnedWith({
+      counter: 1,
+      isPending: false,
+    });
+  });
+
+  it('handles errors thrown during a transition', async () => {
+    const renderer = new TestRenderer(
+      vi.fn(({ error }: { error: Error }, session: RenderSession) => {
+        const [thrownError, setThrownError] = session.useState<unknown>(null);
+        const [isPending, attempt] = session.use(Attempt());
+
+        session.catchError((error) => {
+          setThrownError(error);
+        });
+
+        session.useEffect(() => {
+          attempt(async () => {
+            throw error;
+          });
+        }, []);
+
+        return { thrownError, isPending };
+      }),
+    );
+    const error = new Error('fail');
+
+    SESSION1: {
+      renderer.render({ error });
+
+      expect(renderer.callback).toHaveBeenCalledTimes(1);
+      expect(renderer.callback).toHaveLastReturnedWith({
+        isPending: false,
+        thrownError: null,
+      });
+    }
+
+    await waitForMicrotasks();
+
+    expect(renderer.callback).toHaveBeenCalledTimes(2);
+    expect(renderer.callback).toHaveLastReturnedWith({
+      isPending: true,
+      thrownError: null,
+    });
+
+    await waitForMicrotasks(2);
+
+    expect(renderer.callback).toHaveBeenCalledTimes(3);
+    expect(renderer.callback).toHaveLastReturnedWith({
+      isPending: false,
+      thrownError: error,
+    });
+  });
+});
 
 describe('DeferredValue()', () => {
   it('returns the value deferred until next rendering', async () => {
@@ -461,107 +562,6 @@ describe('Optimistic', () => {
       optimisticCount: 0,
       isPending: false,
       capturedError: error,
-    });
-  });
-});
-
-describe('Transition()', () => {
-  it('resets pending state to false after transition completes', async () => {
-    const renderer = new TestRenderer(
-      vi.fn((_props: {}, session: RenderSession) => {
-        const [counter, setCount] = session.useState(0);
-        const [isPending, startTransition] = session.use(Transition());
-
-        session.useEffect(() => {
-          startTransition(async () => {
-            await setCount((count) => count + 1).scheduled;
-          });
-        }, []);
-
-        return { counter, isPending };
-      }),
-    );
-
-    SESSION1: {
-      renderer.render({});
-
-      expect(renderer.callback).toHaveBeenCalledTimes(1);
-      expect(renderer.callback).toHaveLastReturnedWith({
-        counter: 0,
-        isPending: false,
-      });
-    }
-
-    await waitForMicrotasks();
-
-    expect(renderer.callback).toHaveBeenCalledTimes(2);
-    expect(renderer.callback).toHaveLastReturnedWith({
-      counter: 0,
-      isPending: true,
-    });
-
-    await waitForMicrotasks(2);
-
-    expect(renderer.callback).toHaveBeenCalledTimes(3);
-    expect(renderer.callback).toHaveLastReturnedWith({
-      counter: 1,
-      isPending: true,
-    });
-
-    await waitForMicrotasks();
-
-    expect(renderer.callback).toHaveBeenCalledTimes(4);
-    expect(renderer.callback).toHaveLastReturnedWith({
-      counter: 1,
-      isPending: false,
-    });
-  });
-
-  it('handles errors thrown during a transition', async () => {
-    const renderer = new TestRenderer(
-      vi.fn(({ error }: { error: Error }, session: RenderSession) => {
-        const [thrownError, setThrownError] = session.useState<unknown>(null);
-        const [isPending, startTransition] = session.use(Transition());
-
-        session.catchError((error) => {
-          setThrownError(error);
-        });
-
-        session.useEffect(() => {
-          startTransition(async () => {
-            throw error;
-          });
-        }, []);
-
-        return { thrownError, isPending };
-      }),
-    );
-    const error = new Error('fail');
-
-    SESSION1: {
-      renderer.render({ error });
-
-      expect(renderer.callback).toHaveBeenCalledTimes(1);
-      expect(renderer.callback).toHaveLastReturnedWith({
-        isPending: false,
-        thrownError: null,
-      });
-    }
-
-    await waitForMicrotasks();
-
-    expect(renderer.callback).toHaveBeenCalledTimes(2);
-    expect(renderer.callback).toHaveLastReturnedWith({
-      isPending: true,
-      thrownError: null,
-    });
-
-    await waitForMicrotasks(2);
-
-    expect(renderer.callback).toHaveBeenCalledTimes(3);
-    expect(renderer.callback).toHaveLastReturnedWith({
-      isPending: false,
-      thrownError: error,
     });
   });
 });

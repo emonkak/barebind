@@ -10,6 +10,34 @@ import type {
   UpdateHandle,
 } from '../internal.js';
 
+export type AttemptHandle = [
+  isPending: boolean,
+  attempt: (action: Action) => UpdateHandle,
+];
+
+export function Attempt(): HookFunction<AttemptHandle> {
+  return (context) => {
+    const [pendingAction, setPendingAction] = context.useState<Action | null>(
+      null,
+    );
+
+    context.useEffect(() => {
+      if (pendingAction !== null) {
+        context.attempt(pendingAction).finally(() => {
+          setPendingAction(null, { immediate: true });
+        });
+      }
+    }, [pendingAction]);
+
+    const isPending = pendingAction !== null;
+    const attempt = (action: Action): UpdateHandle => {
+      return setPendingAction(() => action);
+    };
+
+    return [isPending, attempt];
+  };
+}
+
 export function DeferredValue<T>(
   value: T,
   initialValue?: InitialState<T>,
@@ -124,37 +152,5 @@ export function Optimistic<TState, TAction>(
     });
 
     return [optimisticState, dispatch, isPending];
-  };
-}
-
-export function Transition(): HookFunction<
-  [isPending: boolean, startTransition: (action: Action) => UpdateHandle]
-> {
-  return (context) => {
-    const [pendingAction, setPendingAction] = context.useState<Action | null>(
-      null,
-    );
-
-    context.useLayoutEffect(() => {
-      if (pendingAction !== null) {
-        const invokeAction = async (action: Action) => {
-          try {
-            await action();
-          } catch (error) {
-            context.throwError(error);
-          } finally {
-            setPendingAction(null, { immediate: true });
-          }
-        };
-        invokeAction(pendingAction);
-      }
-    }, [pendingAction]);
-
-    const isPending = pendingAction !== null;
-    const startTransition = (action: Action): UpdateHandle => {
-      return setPendingAction(() => action);
-    };
-
-    return [isPending, startTransition];
   };
 }
