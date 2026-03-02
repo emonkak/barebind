@@ -1,9 +1,11 @@
 import type {
   Cleanup,
+  DispatchOptions,
   HookFunction,
   InitialState,
   Ref,
   UpdateHandle,
+  UpdateOptions,
 } from '../internal.js';
 
 export function DeferredValue<T>(
@@ -88,6 +90,44 @@ export function SyncEnternalStore<T>(
     }, [subscribe]);
 
     return snapshot;
+  };
+}
+
+export type OptimisticStateHandle<T> = [
+  state: T,
+  setState: (nextState: T, options?: DispatchOptions<T>) => Promise<void>,
+  isPending: boolean,
+];
+
+export function OptimisticState<T>(
+  committedState: T,
+  saveState: (state: T) => PromiseLike<void> | void,
+): HookFunction<OptimisticStateHandle<T>> {
+  return (context) => {
+    const [pendingState, setPendingState] = context.useState<T>(
+      () => committedState,
+    );
+
+    context.catchError((error, handleError) => {
+      setPendingState(() => committedState);
+      handleError(error);
+    });
+
+    const setState = async (
+      nextState: T,
+      options?: UpdateOptions,
+    ): Promise<void> => {
+      setPendingState(() => nextState, options);
+      try {
+        await saveState(nextState);
+      } catch (error) {
+        context.throwError(error);
+      }
+    };
+
+    const isPending = pendingState !== committedState;
+
+    return [pendingState, setState, isPending];
   };
 }
 
