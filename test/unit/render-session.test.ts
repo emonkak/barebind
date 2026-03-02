@@ -3,9 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { shallowEqual } from '@/compare.js';
 import {
   $hook,
-  BoundaryType,
   CommitPhase,
-  createScope,
   DETACHED_SCOPE,
   EffectQueue,
   type RefObject,
@@ -19,19 +17,18 @@ import { TestRenderer } from '../test-renderer.js';
 
 describe('RenderSession', () => {
   describe('catchError()', () => {
-    it('adds an error handler', () => {
-      const handler = vi.fn(() => {});
+    it('propagates the error to error boundaries when handleError is invoked', () => {
+      const handler = vi.fn();
       const error = new Error('fail');
-      const scope = createScope();
-      const renderer = new TestRenderer(() => {
-        throw error;
-      }, scope);
+      const renderer = new TestRenderer((_props, session) => {
+        session.catchError(handler);
 
-      scope.boundary = {
-        type: BoundaryType.Error,
-        next: scope.boundary,
-        handler,
-      };
+        session.catchError((error, handleError) => {
+          handleError(error);
+        });
+
+        session.throwError(error);
+      });
 
       SESSION: {
         renderer.render({});
@@ -41,7 +38,7 @@ describe('RenderSession', () => {
       }
     });
 
-    it('throws an error when trying to add an error handler outside of rendering', () => {
+    it('throws an error after the session has ended', () => {
       const renderer = new TestRenderer((_props, session) => session);
 
       expect(() => {

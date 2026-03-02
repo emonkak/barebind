@@ -517,7 +517,7 @@ function captureError(
   originScope: Scope,
   session: UpdateSession,
 ): void {
-  const scope = handleError(error, coroutine);
+  const scope = handleError(error, coroutine, coroutine.scope);
 
   if (scope.context?.pendingLanes === Lane.NoLane) {
     scope.context.detach(session);

@@ -178,6 +178,10 @@ export class RenderSession implements RenderContext {
     return this._createTemplate(strings, values, 'textarea');
   }
 
+  throwError(error: unknown): void {
+    handleError(error, this._coroutine, this._state.scope);
+  }
+
   use<T>(usable: HookClass<T>): T;
   use<T>(usable: HookObject<T>): T;
   use<T>(usable: HookFunction<T>): T;

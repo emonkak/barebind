@@ -23,8 +23,12 @@ export class RenderError extends Error {
   }
 }
 
-export function handleError(error: unknown, coroutine: Coroutine): Scope {
-  let currentScope = coroutine.scope;
+export function handleError(
+  error: unknown,
+  coroutine: Coroutine,
+  scope: Scope,
+): Scope {
+  let currentScope = scope;
   let { parent: nextScope, boundary: nextBoundary } = currentScope;
 
   const handleError = (error: unknown) => {

@@ -91,27 +91,35 @@ export function SyncEnternalStore<T>(
   };
 }
 
+export type TransitionAction = () => PromiseLike<unknown> | void;
+
 export function Transition(): HookFunction<
   [
     isPending: boolean,
-    startTransition: (action: () => PromiseLike<unknown>) => UpdateHandle,
+    startTransition: (action: TransitionAction) => UpdateHandle,
   ]
 > {
   return (context) => {
-    const [pendingAction, setPendingAction] = context.useState<
-      (() => PromiseLike<unknown>) | null
-    >(null);
+    const [pendingAction, setPendingAction] =
+      context.useState<TransitionAction | null>(null);
 
     context.useLayoutEffect(() => {
-      pendingAction?.().then(() => {
-        setPendingAction(null, { immediate: true });
-      });
+      if (pendingAction !== null) {
+        const invokeAction = async (action: TransitionAction) => {
+          try {
+            await action();
+          } catch (error) {
+            context.throwError(error);
+          } finally {
+            setPendingAction(null, { immediate: true });
+          }
+        };
+        invokeAction(pendingAction);
+      }
     }, [pendingAction]);
 
     const isPending = pendingAction !== null;
-    const startTransition = (
-      action: () => PromiseLike<unknown>,
-    ): UpdateHandle => {
+    const startTransition = (action: TransitionAction): UpdateHandle => {
       return setPendingAction(() => action);
     };
 

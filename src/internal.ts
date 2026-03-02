@@ -370,6 +370,7 @@ export interface RenderContext {
     strings: readonly string[],
     ...values: readonly unknown[]
   ): Bindable<readonly unknown[]>;
+  throwError(error: unknown): void;
   use<T>(usable: HookClass<T>): T;
   use<T>(usable: HookObject<T>): T;
   use<T>(usable: HookFunction<T>): T;

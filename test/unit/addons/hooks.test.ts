@@ -404,4 +404,52 @@ describe('Transition()', () => {
       });
     }
   });
+
+  it('handles errors thrown during a transition', async () => {
+    const renderer = new TestRenderer(
+      vi.fn(({ error }: { error: Error }, session: RenderSession) => {
+        const [thrownError, setThrownError] = session.useState<unknown>(null);
+        const [isPending, startTransition] = session.use(Transition());
+
+        session.catchError((error) => {
+          setThrownError(error);
+        });
+
+        session.useEffect(() => {
+          startTransition(async () => {
+            throw error;
+          });
+        }, []);
+
+        return { thrownError, isPending };
+      }),
+    );
+    const error = new Error('fail');
+
+    SESSION1: {
+      renderer.render({ error });
+
+      expect(renderer.callback).toHaveBeenCalledTimes(1);
+      expect(renderer.callback).toHaveLastReturnedWith({
+        isPending: false,
+        thrownError: null,
+      });
+    }
+
+    await waitForMicrotasks(2);
+
+    expect(renderer.callback).toHaveBeenCalledTimes(2);
+    expect(renderer.callback).toHaveLastReturnedWith({
+      isPending: true,
+      thrownError: null,
+    });
+
+    await waitForMicrotasks(2);
+
+    expect(renderer.callback).toHaveBeenCalledTimes(3);
+    expect(renderer.callback).toHaveLastReturnedWith({
+      isPending: false,
+      thrownError: error,
+    });
+  });
 });
