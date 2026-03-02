@@ -4,7 +4,7 @@ import {
   DeferredValue,
   EffectEvent,
   ImperativeHandle,
-  OptimisticState,
+  Optimistic,
   SyncEnternalStore,
   Transition,
 } from '@/addons/hooks.js';
@@ -354,30 +354,31 @@ describe('SyncExternalStore()', () => {
   });
 });
 
-describe('OptimisticState', () => {
+describe('Optimistic', () => {
   it('applies optimistic state immediately and clears pending after successful save', async () => {
-    const saveState = vi.fn(async () => {
-      await waitForMicrotasks();
-    });
-
     const renderer = new TestRenderer(
-      vi.fn(({ state }: { state: string }, session: RenderSession) => {
-        const [optimisticState, setOptimisticState, isPending] = session.use(
-          OptimisticState<string>(state, saveState),
+      vi.fn(({ count }: { count: number }, session: RenderSession) => {
+        const [optimisticCount, setOptimisticCount, isPending] = session.use(
+          Optimistic(count),
         );
 
         session.useEffect(() => {
-          setOptimisticState('bar');
+          session.startTransition(() => {
+            setOptimisticCount((count) => count + 1);
+          });
         }, []);
 
-        return { state: optimisticState, isPending };
+        return { count, optimisticCount, isPending };
       }),
     );
 
     SESSION1: {
-      const { state, isPending } = renderer.render({ state: 'foo' });
+      const { count, optimisticCount, isPending } = renderer.render({
+        count: 0,
+      });
 
-      expect(state).toBe('foo');
+      expect(count).toBe(0);
+      expect(optimisticCount).toBe(0);
       expect(isPending).toBe(false);
     }
 
@@ -385,73 +386,82 @@ describe('OptimisticState', () => {
 
     expect(renderer.callback).toHaveBeenCalledTimes(2);
     expect(renderer.callback).toHaveLastReturnedWith({
-      state: 'bar',
-      isPending: true,
+      count: 0,
+      optimisticCount: 1,
+      isPending: false,
     });
-    expect(saveState).toHaveBeenCalledTimes(1);
 
     SESSION2: {
-      const { state, isPending } = renderer.render({ state: 'bar' });
+      const { count, optimisticCount, isPending } = renderer.render({
+        count: 1,
+      });
 
-      expect(state).toBe('bar');
+      expect(count).toBe(1);
+      expect(optimisticCount).toBe(1);
       expect(isPending).toBe(false);
     }
   });
 
   it('reverts to committed state and throws when save fails', async () => {
     const error = new Error('fail');
-    const saveState = vi.fn(async () => {
-      await waitForMicrotasks();
-      throw error;
-    });
 
     const renderer = new TestRenderer(
-      vi.fn((_props: {}, session: RenderSession) => {
-        const [error, setError] = session.useState<unknown>(null);
+      vi.fn(({ count }: { count: number }, session: RenderSession) => {
+        const [capturedError, setCapturedError] =
+          session.useState<unknown>(null);
 
         session.catchError((error) => {
-          setError(error);
+          setCapturedError(error);
         });
 
-        const [optimisticState, setOptimisticState, isPending] = session.use(
-          OptimisticState<string>('foo', saveState),
+        const [optimisticCount, dispatch, isPending] = session.use(
+          Optimistic<number, number>(
+            count,
+            (count, increment) => count + increment,
+          ),
         );
 
         session.useEffect(() => {
-          setOptimisticState('bar');
+          session.startTransition(async () => {
+            dispatch(1);
+            await waitForMicrotasks(0);
+            throw error;
+          });
         }, []);
 
-        return { error, state: optimisticState, isPending };
+        return { count, optimisticCount, isPending, capturedError };
       }),
     );
 
     SESSION: {
-      const { error, state, isPending } = renderer.render({});
+      const { count, optimisticCount, isPending, capturedError } =
+        renderer.render({ count: 0 });
 
-      expect(error).toBe(null);
-      expect(state).toBe('foo');
+      expect(count).toBe(0);
+      expect(optimisticCount).toBe(0);
       expect(isPending).toBe(false);
+      expect(capturedError).toBe(null);
     }
 
     await waitForMicrotasks();
 
     expect(renderer.callback).toHaveBeenCalledTimes(2);
     expect(renderer.callback).toHaveLastReturnedWith({
-      error: null,
-      state: 'bar',
-      isPending: true,
+      count: 0,
+      optimisticCount: 1,
+      isPending: false,
+      capturedError: null,
     });
-    expect(saveState).toHaveBeenCalledTimes(1);
 
-    await waitForMicrotasks(2);
+    await waitForMicrotasks();
 
     expect(renderer.callback).toHaveBeenCalledTimes(3);
     expect(renderer.callback).toHaveLastReturnedWith({
-      error,
-      state: 'foo',
+      count: 0,
+      optimisticCount: 0,
       isPending: false,
+      capturedError: error,
     });
-    expect(saveState).toHaveBeenCalledTimes(1);
   });
 });
 

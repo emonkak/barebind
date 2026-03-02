@@ -1,12 +1,13 @@
 import type {
   Action,
   Cleanup,
-  DispatchOptions,
   HookFunction,
   InitialState,
+  NextState,
+  ReducerHandle,
   Ref,
+  StateHandle,
   UpdateHandle,
-  UpdateOptions,
 } from '../internal.js';
 
 export function DeferredValue<T>(
@@ -94,41 +95,35 @@ export function SyncEnternalStore<T>(
   };
 }
 
-export type OptimisticStateHandle<T> = [
-  state: T,
-  setState: (nextState: T, options?: DispatchOptions<T>) => Promise<void>,
-  isPending: boolean,
-];
-
-export function OptimisticState<T>(
-  committedState: T,
-  saveState: (state: T) => PromiseLike<void> | void,
-): HookFunction<OptimisticStateHandle<T>> {
+export function Optimistic<TState>(
+  state: TState,
+): HookFunction<StateHandle<TState>>;
+export function Optimistic<TState, TAction>(
+  state: TState,
+  reducer: (state: TState, action: TAction) => TState,
+): HookFunction<ReducerHandle<TState, TAction>>;
+export function Optimistic<TState, TAction>(
+  state: TState,
+  reducer?: (state: TState, action: TAction) => TState,
+): HookFunction<StateHandle<TState> | ReducerHandle<TState, TAction>> {
   return (context) => {
-    const [pendingState, setPendingState] = context.useState<T>(
-      () => committedState,
+    const [optimisticState, dispatch, isPending] = context.useReducer<
+      TState,
+      TAction | NextState<TState>
+    >(
+      (state, action) =>
+        typeof action === 'function'
+          ? (action as (state: TState) => TState)(state)
+          : (reducer?.(state, action as TAction) ?? (action as TState)),
+      () => state,
     );
 
     context.catchError((error, handleError) => {
-      setPendingState(() => committedState);
+      dispatch(() => state);
       handleError(error);
     });
 
-    const setState = async (
-      nextState: T,
-      options?: UpdateOptions,
-    ): Promise<void> => {
-      setPendingState(() => nextState, options);
-      try {
-        await saveState(nextState);
-      } catch (error) {
-        context.throwError(error);
-      }
-    };
-
-    const isPending = pendingState !== committedState;
-
-    return [pendingState, setState, isPending];
+    return [optimisticState, dispatch, isPending];
   };
 }
 
