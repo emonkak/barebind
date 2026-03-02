@@ -47,7 +47,7 @@ export function DeferredValue<T>(
       initialValue ?? ((() => value) as InitialState<T>),
     );
 
-    context.useLayoutEffect(() => {
+    context.useEffect(() => {
       setDeferredValue(() => value, {
         priority: 'background',
       });
