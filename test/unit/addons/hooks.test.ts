@@ -184,7 +184,7 @@ describe('SyncExternalStore()', () => {
     const getSnapshot = () => count;
 
     const renderer = new TestRenderer(
-      vi.fn((_props, session: RenderSession) => {
+      vi.fn((_props: {}, session: RenderSession) => {
         const snapshot = session.use(SyncEnternalStore(subscribe, getSnapshot));
 
         session.useInsertionEffect(() => {
@@ -245,7 +245,7 @@ describe('SyncExternalStore()', () => {
     };
 
     const renderer = new TestRenderer(
-      vi.fn((_props, session: RenderSession) => {
+      vi.fn((_props: {}, session: RenderSession) => {
         const snapshot = session.use(SyncEnternalStore(subscribe, getSnapshot));
 
         session.useEffect(notifySubscribers, []);
