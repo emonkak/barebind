@@ -378,7 +378,7 @@ describe('Transition()', () => {
       });
     }
 
-    await waitForMicrotasks(2);
+    await waitForMicrotasks();
 
     expect(renderer.callback).toHaveBeenCalledTimes(2);
     expect(renderer.callback).toHaveLastReturnedWith({
@@ -386,7 +386,7 @@ describe('Transition()', () => {
       isPending: true,
     });
 
-    await waitForMicrotasks(2);
+    await waitForMicrotasks();
 
     expect(renderer.callback).toHaveBeenCalledTimes(3);
     expect(renderer.callback).toHaveLastReturnedWith({
@@ -394,15 +394,13 @@ describe('Transition()', () => {
       isPending: false,
     });
 
-    SESSION2: {
-      renderer.render({});
+    await waitForMicrotasks();
 
-      expect(renderer.callback).toHaveBeenCalledTimes(4);
-      expect(renderer.callback).toHaveLastReturnedWith({
-        counter: 1,
-        isPending: false,
-      });
-    }
+    expect(renderer.callback).toHaveBeenCalledTimes(4);
+    expect(renderer.callback).toHaveLastReturnedWith({
+      counter: 1,
+      isPending: false,
+    });
   });
 
   it('handles errors thrown during a transition', async () => {
@@ -436,7 +434,7 @@ describe('Transition()', () => {
       });
     }
 
-    await waitForMicrotasks(2);
+    await waitForMicrotasks();
 
     expect(renderer.callback).toHaveBeenCalledTimes(2);
     expect(renderer.callback).toHaveLastReturnedWith({
