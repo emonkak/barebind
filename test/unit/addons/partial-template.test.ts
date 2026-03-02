@@ -61,10 +61,13 @@ describe('PartialTemplate', () => {
       const tag2 = PartialTemplate.literal('span');
       const template1 = PartialTemplate.parse(strings, tag1, tag1);
       const template2 = PartialTemplate.parse(strings, tag2, tag2);
+      const template3 = PartialTemplate.parse(strings, tag2, tag2);
       expect(template1.strings).toStrictEqual(['<div>content</div>']);
       expect(template2.strings).toStrictEqual(['<span>content</span>']);
+      expect(template3.strings).toBe(template2.strings);
       expect(template1.values).toStrictEqual([]);
       expect(template2.values).toStrictEqual([]);
+      expect(template3.values).toStrictEqual([]);
     });
 
     it('should handle no values', () => {
