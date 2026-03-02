@@ -7,7 +7,6 @@ import {
   type Coroutine,
   createUpdateSession,
   type Directive,
-  type DirectiveType,
   EffectQueue,
   getLanesFromOptions,
   Lane,
@@ -233,7 +232,7 @@ export class Runtime implements SessionContext {
     let { type, value, layout, defaultLayout } = toDirective(source);
 
     if (type === undefined) {
-      type = this._backend.resolvePrimitive(source, part) as DirectiveType<
+      type = this._backend.resolvePrimitive(source, part) as Primitive<
         UnwrapBindable<T>
       >;
       (type as Primitive<UnwrapBindable<T>>).ensureValue?.(source, part);
