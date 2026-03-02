@@ -357,6 +357,7 @@ export interface RefObject<T> {
 }
 
 export interface RenderContext {
+  attempt(action: Action): Promise<void>;
   catchError(handler: ErrorHandler): void;
   forceUpdate(options?: UpdateOptions): UpdateHandle;
   getSessionContext(): SessionContext;
@@ -371,7 +372,6 @@ export interface RenderContext {
     ...values: readonly unknown[]
   ): Bindable<readonly unknown[]>;
   setSharedContext(key: unknown, value: unknown): void;
-  startTransition(action: Action): Promise<void>;
   svg(
     strings: readonly string[],
     ...values: readonly unknown[]

@@ -56,6 +56,14 @@ export class RenderSession implements RenderContext {
     this._context = context;
   }
 
+  async attempt(action: Action): Promise<void> {
+    try {
+      await action();
+    } catch (error) {
+      handleError(error, this._coroutine, this._state.scope);
+    }
+  }
+
   catchError(handler: ErrorHandler): void {
     const { scope } = this._state;
     scope.boundary = {
@@ -164,14 +172,6 @@ export class RenderSession implements RenderContext {
       key,
       value,
     };
-  }
-
-  async startTransition(action: Action): Promise<void> {
-    try {
-      await action();
-    } catch (error) {
-      handleError(error, this._coroutine, this._state.scope);
-    }
   }
 
   svg(

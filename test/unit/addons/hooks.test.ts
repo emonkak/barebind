@@ -363,7 +363,7 @@ describe('Optimistic', () => {
         );
 
         session.useEffect(() => {
-          session.startTransition(() => {
+          session.attempt(() => {
             setOptimisticCount((count) => count + 1);
           });
         }, []);
@@ -422,7 +422,7 @@ describe('Optimistic', () => {
         );
 
         session.useEffect(() => {
-          session.startTransition(async () => {
+          session.attempt(async () => {
             dispatch(1);
             await waitForMicrotasks(0);
             throw error;
