@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { LinkedList } from '@/linked-list.js';
+import { LinkedList } from '@/collections/linked-list.js';
 
 describe('LinkedList', () => {
   describe('constructor()', () => {

@@ -8,8 +8,8 @@ import {
   Optimistic,
   SyncEnternalStore,
 } from '@/addons/hooks.js';
+import { LinkedList } from '@/collections/linked-list.js';
 import type { Cleanup, RefCallback } from '@/internal.js';
-import { LinkedList } from '@/linked-list.js';
 import type { RenderSession } from '@/render-session.js';
 import { waitForMicrotasks, waitForTimeout } from '../../test-helpers.js';
 import { TestRenderer } from '../../test-renderer.js';

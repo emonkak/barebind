@@ -23,7 +23,6 @@ export { Flexible } from './layout/flexible.js';
 export { Keyed } from './layout/keyed.js';
 export { Loose } from './layout/loose.js';
 export { Strict } from './layout/strict.js';
-export { LinkedList } from './linked-list.js';
 export type { ClassSpecifier } from './primitive/class.js';
 export type { EventHandler } from './primitive/event.js';
 export type { StyleProps } from './primitive/style.js';

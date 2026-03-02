@@ -1,3 +1,4 @@
+import { LinkedList } from '../collections/linked-list.js';
 import {
   $directive,
   $hook,
@@ -19,7 +20,6 @@ import {
   type Slot,
   type UpdateSession,
 } from '../internal.js';
-import { LinkedList } from '../linked-list.js';
 
 export interface InvalidateEvent<T = unknown> {
   readonly source: Atom<T>;

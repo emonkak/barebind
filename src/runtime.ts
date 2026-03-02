@@ -1,4 +1,5 @@
 import { type Backend, ExecutionMode } from './backend.js';
+import { LinkedList } from './collections/linked-list.js';
 import { CapturedError, handleError } from './error.js';
 import {
   CommitPhase,
@@ -28,7 +29,6 @@ import {
   type UpdateSession,
   type UpdateTask,
 } from './internal.js';
-import { LinkedList } from './linked-list.js';
 import { RenderSession } from './render-session.js';
 
 export type RuntimeEvent =
