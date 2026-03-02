@@ -463,7 +463,9 @@ describe('Transition()', () => {
         const [isPending, startTransition] = session.use(Transition());
 
         session.useEffect(() => {
-          startTransition(() => setCount((count) => count + 1).scheduled);
+          startTransition(async () => {
+            await setCount((count) => count + 1).scheduled;
+          });
         }, []);
 
         return { counter, isPending };
@@ -488,12 +490,12 @@ describe('Transition()', () => {
       isPending: true,
     });
 
-    await waitForMicrotasks();
+    await waitForMicrotasks(2);
 
     expect(renderer.callback).toHaveBeenCalledTimes(3);
     expect(renderer.callback).toHaveLastReturnedWith({
       counter: 1,
-      isPending: false,
+      isPending: true,
     });
 
     await waitForMicrotasks();

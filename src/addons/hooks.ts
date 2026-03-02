@@ -131,7 +131,7 @@ export function OptimisticState<T>(
   };
 }
 
-export type TransitionAction = () => PromiseLike<unknown> | void;
+export type TransitionAction = () => PromiseLike<void> | void;
 
 export function Transition(): HookFunction<
   [
