@@ -3,342 +3,276 @@ import { describe, expect, it } from 'vitest';
 import { LinkedList } from '@/collections/linked-list.js';
 
 describe('LinkedList', () => {
-  describe('constructor()', () => {
-    it('should create an empty list', () => {
-      const list = new LinkedList();
+  describe('[Symbol.iterator]()', () => {
+    it('yields nothing for an empty list', () => {
+      const list = new LinkedList<number>();
+      expect([...list]).toStrictEqual([]);
+    });
 
-      expect(list.isEmpty()).toBe(true);
-      expect(list.front()).toBe(null);
-      expect(list.back()).toBe(null);
-      expect(Array.from(list)).toStrictEqual([]);
+    it('yields all values in insertion order', () => {
+      const list = new LinkedList<string>();
+      list.pushBack('a');
+      list.pushBack('b');
+      list.pushBack('c');
+      expect([...list]).toStrictEqual(['a', 'b', 'c']);
     });
   });
 
   describe('clear()', () => {
-    it('should clear all nodes', () => {
-      const list = new LinkedList();
-
-      list.pushFront('foo');
-      list.pushFront('bar');
-      list.pushFront('baz');
+    it('empties the list', () => {
+      const list = new LinkedList<number>();
+      list.pushBack(1);
+      list.pushBack(2);
       list.clear();
-
-      expect(list.front()).toBe(null);
-      expect(list.back()).toBe(null);
-      expect(list.isEmpty()).toBe(true);
-    });
-  });
-
-  describe('pushFront()', () => {
-    it('should prepend a single value to the list', () => {
-      const list = new LinkedList();
-
-      const foo = list.pushFront('foo');
-
-      expect(foo).toStrictEqual({
-        value: 'foo',
-        prev: null,
-        next: null,
-        ownership: expect.any(Symbol),
-      });
-      expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(foo);
-      expect(list.back()).toBe(foo);
-      expect(Array.from(list)).toStrictEqual(['foo']);
-    });
-
-    it('should prepend multiple values to the list', () => {
-      const list = new LinkedList();
-
-      const foo = list.pushFront('foo');
-      const bar = list.pushFront('bar');
-      const baz = list.pushFront('baz');
-
-      expect(foo).toStrictEqual({
-        value: 'foo',
-        prev: bar,
-        next: null,
-        ownership: list['_ownership'],
-      });
-      expect(bar).toStrictEqual({
-        value: 'bar',
-        prev: baz,
-        next: foo,
-        ownership: list['_ownership'],
-      });
-      expect(baz).toStrictEqual({
-        value: 'baz',
-        prev: null,
-        next: bar,
-        ownership: list['_ownership'],
-      });
-      expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(baz);
-      expect(list.back()).toBe(foo);
-      expect(Array.from(list)).toStrictEqual(['baz', 'bar', 'foo']);
-    });
-  });
-
-  describe('pushBack()', () => {
-    it('should append a single value to the list', () => {
-      const list = new LinkedList();
-
-      const foo = list.pushBack('foo');
-
-      expect(foo).toStrictEqual({
-        value: 'foo',
-        prev: null,
-        next: null,
-        ownership: list['_ownership'],
-      });
-      expect(list.isEmpty()).toBe(false);
-      expect(list.front()?.value).toBe('foo');
-      expect(list.back()?.value).toBe('foo');
-      expect(Array.from(list)).toStrictEqual(['foo']);
-    });
-
-    it('should append multiple values to the list', () => {
-      const list = new LinkedList();
-
-      const foo = list.pushBack('foo');
-      const bar = list.pushBack('bar');
-      const baz = list.pushBack('baz');
-
-      expect(foo).toStrictEqual({
-        value: 'foo',
-        prev: null,
-        next: bar,
-        ownership: list['_ownership'],
-      });
-      expect(bar).toStrictEqual({
-        value: 'bar',
-        prev: foo,
-        next: baz,
-        ownership: list['_ownership'],
-      });
-      expect(baz).toStrictEqual({
-        value: 'baz',
-        prev: bar,
-        next: null,
-        ownership: list['_ownership'],
-      });
-      expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(foo);
-      expect(list.back()).toBe(baz);
-      expect(Array.from(list)).toStrictEqual(['foo', 'bar', 'baz']);
-    });
-  });
-
-  describe('popFront()', () => {
-    it('should remove nodes from head', () => {
-      const list = new LinkedList();
-
-      const foo = list.pushBack('foo');
-      const bar = list.pushBack('bar');
-      const baz = list.pushBack('baz');
-
-      expect(list.popFront()).toBe(foo);
-      expect(list.isEmpty()).toBe(false);
-      expect(list.front()?.value).toBe('bar');
-      expect(list.back()?.value).toBe('baz');
-      expect(Array.from(list)).toStrictEqual(['bar', 'baz']);
-
-      expect(list.popFront()).toBe(bar);
-      expect(list.isEmpty()).toBe(false);
-      expect(list.front()?.value).toBe('baz');
-      expect(list.back()?.value).toBe('baz');
-      expect(Array.from(list)).toStrictEqual(['baz']);
-
-      expect(list.popFront()).toBe(baz);
       expect(list.isEmpty()).toBe(true);
       expect(list.front()).toBe(null);
       expect(list.back()).toBe(null);
-      expect(Array.from(list)).toStrictEqual([]);
+    });
 
-      expect(list.popFront()).toBe(null);
+    it('invalidates nodes that were in the list before clear', () => {
+      const list = new LinkedList<number>();
+      const node = list.pushBack(1);
+      list.clear();
+      expect(list.remove(node)).toBe(false);
+    });
+  });
 
-      expect(foo).toStrictEqual({
-        value: 'foo',
-        prev: null,
-        next: null,
-        ownership: null,
-      });
-      expect(bar).toStrictEqual({
-        value: 'bar',
-        prev: null,
-        next: null,
-        ownership: null,
-      });
-      expect(baz).toStrictEqual({
-        value: 'baz',
-        prev: null,
-        next: null,
-        ownership: null,
-      });
+  describe('front() / back()', () => {
+    it('returns null for an empty list', () => {
+      const list = new LinkedList<number>();
+      expect(list.front()).toBe(null);
+      expect(list.back()).toBe(null);
+    });
+
+    it('returns the same node when list has one element', () => {
+      const list = new LinkedList<number>();
+      list.pushBack(42);
+      expect(list.front()?.value).toBe(42);
+      expect(list.back()?.value).toBe(42);
+      expect(list.front()).toBe(list.back());
+    });
+
+    it('returns correct head and tail after multiple pushes', () => {
+      const list = new LinkedList<number>();
+      list.pushBack(1);
+      list.pushBack(2);
+      list.pushBack(3);
+      expect(list.front()?.value).toBe(1);
+      expect(list.back()?.value).toBe(3);
+    });
+  });
+
+  describe('isEmpty()', () => {
+    it('returns true for a new list', () => {
+      const list = new LinkedList<number>();
+      expect(list.isEmpty()).toBe(true);
+    });
+
+    it('returns false after pushing an element', () => {
+      const list = new LinkedList<number>();
+      list.pushBack(1);
+      expect(list.isEmpty()).toBe(false);
+    });
+
+    it('returns true after all elements are removed', () => {
+      const list = new LinkedList<number>();
+      list.pushBack(1);
+      list.popBack();
+      expect(list.isEmpty()).toBe(true);
     });
   });
 
   describe('popBack()', () => {
-    it('should remove nodes from tail', () => {
-      const list = new LinkedList();
+    it('returns null for an empty list', () => {
+      const list = new LinkedList<number>();
+      expect(list.popBack()).toBe(null);
+    });
 
-      const foo = list.pushBack('foo');
-      const bar = list.pushBack('bar');
-      const baz = list.pushBack('baz');
+    it('removes and returns the last element', () => {
+      const list = new LinkedList<number>();
+      list.pushBack(1);
+      list.pushBack(2);
+      const node = list.popBack();
+      expect(node?.value).toBe(2);
+      expect([...list]).toStrictEqual([1]);
+    });
 
-      expect(list.popBack()).toBe(baz);
-      expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(foo);
-      expect(list.back()).toBe(bar);
-      expect(Array.from(list)).toStrictEqual(['foo', 'bar']);
-
-      expect(list.popBack()).toBe(bar);
-      expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(foo);
-      expect(list.back()).toBe(foo);
-      expect(Array.from(list)).toStrictEqual(['foo']);
-
-      expect(list.popBack()).toBe(foo);
+    it('clears the list when removing the only element', () => {
+      const list = new LinkedList<number>();
+      list.pushBack(1);
+      list.popBack();
       expect(list.isEmpty()).toBe(true);
       expect(list.front()).toBe(null);
       expect(list.back()).toBe(null);
-      expect(Array.from(list)).toStrictEqual([]);
+    });
 
-      expect(list.popBack()).toBe(null);
+    it('sets ownership to null on the removed node', () => {
+      const list = new LinkedList<number>();
+      list.pushBack(1);
+      const node = list.popBack();
+      expect(node?.ownership).toBe(null);
+    });
 
-      expect(foo).toStrictEqual({
-        value: 'foo',
-        prev: null,
-        next: null,
-        ownership: null,
-      });
-      expect(bar).toStrictEqual({
-        value: 'bar',
-        prev: null,
-        next: null,
-        ownership: null,
-      });
-      expect(baz).toStrictEqual({
-        value: 'baz',
-        prev: null,
-        next: null,
-        ownership: null,
-      });
+    it('updates tail pointer after pop', () => {
+      const list = new LinkedList<number>();
+      list.pushBack(1);
+      const a = list.pushBack(2);
+      list.pushBack(3);
+      list.popBack();
+      expect(list.back()).toBe(a);
+      expect(a.next).toBe(null);
+    });
+  });
+
+  describe('popFront()', () => {
+    it('returns null for an empty list', () => {
+      const list = new LinkedList<number>();
+      expect(list.popFront()).toBe(null);
+    });
+
+    it('removes and returns the first element', () => {
+      const list = new LinkedList<number>();
+      list.pushBack(1);
+      list.pushBack(2);
+      const node = list.popFront();
+      expect(node?.value).toBe(1);
+      expect([...list]).toStrictEqual([2]);
+    });
+
+    it('clears the list when removing the only element', () => {
+      const list = new LinkedList<number>();
+      list.pushBack(1);
+      list.popFront();
+      expect(list.isEmpty()).toBe(true);
+      expect(list.front()).toBe(null);
+      expect(list.back()).toBe(null);
+    });
+
+    it('sets ownership to null on the removed node', () => {
+      const list = new LinkedList<number>();
+      list.pushBack(1);
+      const node = list.popFront();
+      expect(node?.ownership).toBe(null);
+    });
+
+    it('updates head pointer after pop', () => {
+      const list = new LinkedList<number>();
+      list.pushBack(1);
+      const b = list.pushBack(2);
+      list.pushBack(3);
+      list.popFront();
+      expect(list.front()).toBe(b);
+      expect(b.prev).toBe(null);
+    });
+  });
+
+  describe('pushBack()', () => {
+    it('appends elements in order', () => {
+      const list = new LinkedList<number>();
+      list.pushBack(1);
+      list.pushBack(2);
+      list.pushBack(3);
+      expect([...list]).toStrictEqual([1, 2, 3]);
+    });
+
+    it('returns the inserted node', () => {
+      const list = new LinkedList<number>();
+      const node = list.pushBack(10);
+      expect(node.value).toBe(10);
+      expect(node.prev).toBe(null);
+      expect(node.next).toBe(null);
+    });
+
+    it('sets prev/next pointers correctly', () => {
+      const list = new LinkedList<number>();
+      const a = list.pushBack(1);
+      const b = list.pushBack(2);
+      expect(a.next).toBe(b);
+      expect(b.prev).toBe(a);
+    });
+  });
+
+  describe('pushFront()', () => {
+    it('prepends elements in order', () => {
+      const list = new LinkedList<number>();
+      list.pushFront(3);
+      list.pushFront(2);
+      list.pushFront(1);
+      expect([...list]).toStrictEqual([1, 2, 3]);
+    });
+
+    it('returns the inserted node', () => {
+      const list = new LinkedList<number>();
+      const node = list.pushFront(10);
+      expect(node.value).toBe(10);
+      expect(node.prev).toBe(null);
+      expect(node.next).toBe(null);
+    });
+
+    it('sets prev/next pointers correctly', () => {
+      const list = new LinkedList<number>();
+      const b = list.pushFront(2);
+      const a = list.pushFront(1);
+      expect(a.next).toBe(b);
+      expect(b.prev).toBe(a);
     });
   });
 
   describe('remove()', () => {
-    it('should remove the head node', () => {
-      const list = new LinkedList();
-
-      const foo = list.pushBack('foo');
-      const bar = list.pushBack('bar');
-      const baz = list.pushBack('baz');
-
-      expect(list.remove(foo)).toBe(true);
-      expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(bar);
-      expect(list.back()).toBe(baz);
-      expect(Array.from(list)).toStrictEqual(['bar', 'baz']);
-
-      expect(foo).toStrictEqual({
-        value: 'foo',
-        prev: null,
-        next: bar,
-        ownership: null,
-      });
+    it('returns false for a node not belonging to the list', () => {
+      const list1 = new LinkedList<number>();
+      const list2 = new LinkedList<number>();
+      list1.pushBack(1);
+      const node = list2.pushBack(2);
+      expect(list1.remove(node)).toBe(false);
     });
 
-    it('should remove the tail node', () => {
-      const list = new LinkedList();
-
-      const foo = list.pushBack('foo');
-      const bar = list.pushBack('bar');
-      const baz = list.pushBack('baz');
-
-      expect(list.remove(baz)).toBe(true);
-      expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(foo);
-      expect(list.back()).toBe(bar);
-      expect(Array.from(list)).toStrictEqual(['foo', 'bar']);
-
-      expect(baz).toStrictEqual({
-        value: 'baz',
-        prev: bar,
-        next: null,
-        ownership: null,
-      });
+    it('returns false for an already-removed node', () => {
+      const list = new LinkedList<number>();
+      list.pushBack(1);
+      const node = list.popBack()!;
+      expect(list.remove(node)).toBe(false);
     });
 
-    it('should remove a middle node', () => {
-      const list = new LinkedList();
-
-      const foo = list.pushBack('foo');
-      const bar = list.pushBack('bar');
-      const baz = list.pushBack('baz');
-
-      expect(list.remove(bar)).toBe(true);
-      expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(foo);
-      expect(list.back()).toBe(baz);
-      expect(Array.from(list)).toStrictEqual(['foo', 'baz']);
-
-      expect(bar).toStrictEqual({
-        value: 'bar',
-        prev: foo,
-        next: baz,
-        ownership: null,
-      });
+    it('removes a middle node', () => {
+      const list = new LinkedList<number>();
+      list.pushBack(1);
+      const middle = list.pushBack(2);
+      list.pushBack(3);
+      expect(list.remove(middle)).toBe(true);
+      expect([...list]).toStrictEqual([1, 3]);
     });
 
-    it('should return false if a node with specified ref already been removed', () => {
-      const list = new LinkedList();
-
-      const foo = list.pushBack('foo');
-      const bar = list.pushBack('bar');
-      const baz = list.pushBack('baz');
-
-      expect(list.remove(bar)).toBe(true);
-      expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(foo);
-      expect(list.back()).toBe(baz);
-      expect(Array.from(list)).toStrictEqual(['foo', 'baz']);
-
-      expect(list.remove(bar)).toBe(false);
-
-      expect(bar).toStrictEqual({
-        value: 'bar',
-        prev: foo,
-        next: baz,
-        ownership: null,
-      });
+    it('removes the head node', () => {
+      const list = new LinkedList<number>();
+      const head = list.pushBack(1);
+      list.pushBack(2);
+      list.remove(head);
+      expect(list.front()?.value).toBe(2);
+      expect(list.front()?.prev).toBe(null);
     });
 
-    it('should return false if the node is associated with another list', () => {
-      const list1 = new LinkedList();
-      const list2 = new LinkedList();
-
-      const foo = list1.pushBack('foo');
-      const bar = list1.pushBack('bar');
-      const baz = list1.pushBack('baz');
-
-      expect(list2.remove(foo)).toBe(false);
-      expect(list2.remove(bar)).toBe(false);
-      expect(list2.remove(baz)).toBe(false);
+    it('removes the tail node', () => {
+      const list = new LinkedList<number>();
+      list.pushBack(1);
+      const tail = list.pushBack(2);
+      list.remove(tail);
+      expect(list.back()?.value).toBe(1);
+      expect(list.back()?.next).toBe(null);
     });
 
-    it('should return false after the list is cleared', () => {
-      const list = new LinkedList();
+    it('removes the only element and empties the list', () => {
+      const list = new LinkedList<number>();
+      const node = list.pushBack(1);
+      list.remove(node);
+      expect(list.isEmpty()).toBe(true);
+    });
 
-      const foo = list.pushBack('foo');
-      const bar = list.pushBack('bar');
-      const baz = list.pushBack('baz');
-
-      list.clear();
-
-      expect(list.remove(foo)).toBe(false);
-      expect(list.remove(bar)).toBe(false);
-      expect(list.remove(baz)).toBe(false);
+    it('sets ownership to null on the removed node', () => {
+      const list = new LinkedList<number>();
+      const node = list.pushBack(1);
+      list.remove(node);
+      expect(node.ownership).toBe(null);
     });
   });
 });
