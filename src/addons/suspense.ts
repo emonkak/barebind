@@ -157,7 +157,7 @@ export class Suspend<T> implements PromiseLike<T> {
       case 'pending': {
         promise = Promise.race([
           this._promise,
-          waitForSignal<T>(this._controller.signal),
+          waitForAbort<T>(this._controller.signal),
         ]);
         break;
       }
@@ -185,7 +185,7 @@ export class Suspend<T> implements PromiseLike<T> {
   }
 }
 
-function waitForSignal<T>(signal: AbortSignal): Promise<T> {
+function waitForAbort<T>(signal: AbortSignal): Promise<T> {
   return new Promise<T>((_resolve, reject) => {
     signal.addEventListener('abort', () => {
       reject(signal.reason);
