@@ -89,6 +89,23 @@ export class RenderSession implements RenderContext {
     // Refuse to mutate scope after finalization.
     Object.freeze(scope);
 
+    // Enqueue effects during finalization to avoid running them on render
+    // errors.
+    for (let i = 0, l = hooks.length - 1; i < l; i++) {
+      const hook = hooks[i]!;
+      switch (hook.type) {
+        case HookType.InsertionEffect:
+          enqueueEffect(this._frame.mutationEffects, hook, scope.level);
+          break;
+        case HookType.LayoutEffect:
+          enqueueEffect(this._frame.layoutEffects, hook, scope.level);
+          break;
+        case HookType.PassiveEffect:
+          enqueueEffect(this._frame.passiveEffects, hook, scope.level);
+          break;
+      }
+    }
+
     this._hookIndex++;
   }
 
@@ -214,12 +231,7 @@ export class RenderSession implements RenderContext {
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    this._createEffect(
-      callback,
-      dependencies,
-      HookType.PassiveEffect,
-      this._frame.passiveEffects,
-    );
+    this._createEffect(callback, dependencies, HookType.PassiveEffect);
   }
 
   useId(): string {
@@ -245,24 +257,14 @@ export class RenderSession implements RenderContext {
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    this._createEffect(
-      callback,
-      dependencies,
-      HookType.InsertionEffect,
-      this._frame.mutationEffects,
-    );
+    this._createEffect(callback, dependencies, HookType.InsertionEffect);
   }
 
   useLayoutEffect(
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    this._createEffect(
-      callback,
-      dependencies,
-      HookType.LayoutEffect,
-      this._frame.layoutEffects,
-    );
+    this._createEffect(callback, dependencies, HookType.LayoutEffect);
   }
 
   useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T {
@@ -382,21 +384,14 @@ export class RenderSession implements RenderContext {
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null,
     type: Hook.EffectHook['type'],
-    effects: EffectQueue,
   ): void {
-    const { hooks, scope } = this._state;
+    const { hooks } = this._state;
     let currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.EffectHook>(type, currentHook);
       currentHook.callback = callback;
       currentHook.pendingDependencies = dependencies;
-      if (
-        areDependenciesChanged(dependencies, currentHook.memoizedDependencies)
-      ) {
-        currentHook.epoch++;
-        effects.push(new InvokeEffectHook(currentHook), scope.level);
-      }
     } else {
       currentHook = {
         type,
@@ -407,7 +402,6 @@ export class RenderSession implements RenderContext {
         pendingDependencies: dependencies,
       };
       hooks.push(currentHook);
-      effects.push(new InvokeEffectHook(currentHook), scope.level);
     }
 
     this._hookIndex++;
@@ -441,6 +435,19 @@ class InvokeEffectHook implements Effect {
       this._hook.cleanup = callback();
       this._hook.memoizedDependencies = this._hook.pendingDependencies;
     }
+  }
+}
+
+function enqueueEffect(
+  effects: EffectQueue,
+  hook: Hook.EffectHook,
+  level: number,
+): void {
+  if (
+    areDependenciesChanged(hook.pendingDependencies, hook.memoizedDependencies)
+  ) {
+    hook.epoch++;
+    effects.push(new InvokeEffectHook(hook), level);
   }
 }
 
