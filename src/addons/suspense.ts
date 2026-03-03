@@ -3,6 +3,28 @@ import type { HookFunction, RenderContext } from '../internal.js';
 import { Flexible } from '../layout/flexible.js';
 import { Fragment } from '../template.js';
 
+export const Resource = function Resource<T>(
+  fetchResource: (signal: AbortSignal) => Promise<T>,
+  dependencies: unknown[] = [],
+): HookFunction<Suspend<T>> {
+  return (context) => {
+    const suspend = context.useMemo(() => {
+      const controller = new AbortController();
+      const promise = fetchResource(controller.signal);
+      return Suspend.await(promise, controller);
+    }, dependencies);
+
+    context.useLayoutEffect(() => {
+      suspend.retain();
+      return () => {
+        suspend.release();
+      };
+    }, [suspend]);
+
+    return suspend;
+  };
+};
+
 export interface SuspenseProps {
   children: unknown;
   fallback: unknown;
@@ -56,31 +78,21 @@ export const Suspense = createComponent(function Suspense(
   ]);
 });
 
-export const Resource = function Resource<T>(
-  fetchResource: (signal: AbortSignal) => Promise<T>,
-  dependencies: unknown[] = [],
-): HookFunction<Suspend<T>> {
-  return (context) => {
-    const suspend = context.useMemo(() => {
-      const controller = new AbortController();
-      const promise = fetchResource(controller.signal);
-      return new Suspend(promise, controller);
-    }, dependencies);
+export type Suspend<T> = SuspendInternal<T> & SuspendInvariant<T>;
 
-    context.useLayoutEffect(() => {
-      suspend.retain();
-      return () => {
-        suspend.release();
-      };
-    }, [suspend]);
-
-    return suspend;
-  };
+type SuspendClass = typeof SuspendInternal & {
+  [Symbol.hasInstance](value: any): value is Suspend<any>;
 };
 
-export type SuspendStatus = 'pending' | 'fulfilled' | 'rejected' | 'aborted';
+type SuspendStatus = 'pending' | 'fulfilled' | 'rejected' | 'aborted';
 
-export class Suspend<T> implements PromiseLike<T> {
+type SuspendInvariant<T> = Readonly<
+  | { status: 'pending'; value: never; reason: never }
+  | { status: 'fulfilled'; value: T; reason: never }
+  | { status: 'rejected' | 'aborted'; value: never; reason: unknown }
+>;
+
+class SuspendInternal<T> implements PromiseLike<T> {
   private readonly _promise: Promise<T>;
 
   private readonly _controller: AbortController;
@@ -93,23 +105,32 @@ export class Suspend<T> implements PromiseLike<T> {
 
   private _refCount: number = 0;
 
-  constructor(promise: Promise<T>, controller: AbortController) {
+  static await<T>(
+    promise: Promise<T>,
+    controller: AbortController,
+  ): Suspend<T> {
+    const suspend = new SuspendInternal(promise, controller);
+
     promise.then(
       (value) => {
-        this._status = 'fulfilled';
-        this._value = value;
+        suspend._status = 'fulfilled';
+        suspend._value = value;
       },
       (reason) => {
-        this._status = 'rejected';
-        this._reason = reason;
+        suspend._status = 'rejected';
+        suspend._reason = reason;
       },
     );
 
     controller.signal.addEventListener('abort', () => {
-      this._status = 'aborted';
-      this._reason = controller.signal.reason;
+      suspend._status = 'aborted';
+      suspend._reason = controller.signal.reason;
     });
 
+    return suspend as Suspend<T>;
+  }
+
+  private constructor(promise: Promise<T>, controller: AbortController) {
     this._promise = promise;
     this._controller = controller;
   }
@@ -184,6 +205,8 @@ export class Suspend<T> implements PromiseLike<T> {
     }
   }
 }
+
+export const Suspend: SuspendClass = SuspendInternal as SuspendClass;
 
 function waitForAbort<T>(signal: AbortSignal): Promise<T> {
   return new Promise<T>((_resolve, reject) => {
