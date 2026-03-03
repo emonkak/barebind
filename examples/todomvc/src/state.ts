@@ -1,5 +1,5 @@
 import { SharedContext } from 'barebind';
-import { Reactive } from 'barebind/addons/reactive';
+import { Reactive } from 'barebind/addons/signal';
 
 export interface Todo {
   id: string;
