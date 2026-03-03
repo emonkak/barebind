@@ -14,6 +14,21 @@ describe('LinkedList', () => {
     });
   });
 
+  describe('clear()', () => {
+    it('should clear all nodes', () => {
+      const list = new LinkedList();
+
+      list.pushFront('foo');
+      list.pushFront('bar');
+      list.pushFront('baz');
+      list.clear();
+
+      expect(list.front()).toBe(null);
+      expect(list.back()).toBe(null);
+      expect(list.isEmpty()).toBe(true);
+    });
+  });
+
   describe('pushFront()', () => {
     it('should prepend a single value to the list', () => {
       const list = new LinkedList();
@@ -299,7 +314,7 @@ describe('LinkedList', () => {
       });
     });
 
-    it('should return null if a node with specified ref does not exist', () => {
+    it('should return false if the node is associated with another list', () => {
       const list1 = new LinkedList();
       const list2 = new LinkedList();
 
@@ -310,6 +325,20 @@ describe('LinkedList', () => {
       expect(list2.remove(foo)).toBe(false);
       expect(list2.remove(bar)).toBe(false);
       expect(list2.remove(baz)).toBe(false);
+    });
+
+    it('should return false after the list is cleared', () => {
+      const list = new LinkedList();
+
+      const foo = list.pushBack('foo');
+      const bar = list.pushBack('bar');
+      const baz = list.pushBack('baz');
+
+      list.clear();
+
+      expect(list.remove(foo)).toBe(false);
+      expect(list.remove(bar)).toBe(false);
+      expect(list.remove(baz)).toBe(false);
     });
   });
 });

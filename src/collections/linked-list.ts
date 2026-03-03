@@ -19,7 +19,7 @@ export class LinkedList<T> implements Iterable<T> {
 
   private _tail: OwnedNode<T> | null = null;
 
-  private readonly _ownership = Symbol('LinkedList.ownership');
+  private _ownership = Symbol();
 
   *[Symbol.iterator](): Generator<T> {
     for (let node = this._head; node !== null; node = node.next) {
@@ -29,6 +29,12 @@ export class LinkedList<T> implements Iterable<T> {
 
   back(): LinkedList.Node<T> | null {
     return this._tail;
+  }
+
+  clear(): void {
+    this._head = null;
+    this._tail = null;
+    this._ownership = Symbol();
   }
 
   front(): LinkedList.Node<T> | null {
