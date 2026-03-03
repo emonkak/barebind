@@ -11,31 +11,38 @@ import {
 } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
+const CAPACITY = 10;
+
 describe('Cached()', () => {
   it('creates a new KeySpecifier with the source and the key', () => {
     const source = 'foo';
     const key = 123;
-    const bindable = Cached(source, key);
+    const capacity = CAPACITY;
+    const bindable = Cached(source, key, capacity);
 
     expect(bindable.source).toBe(source);
-    expect(bindable.layout).toStrictEqual(new CachedLayout(key, DefaultLayout));
+    expect(bindable.layout).toStrictEqual(
+      new CachedLayout(key, capacity, DefaultLayout),
+    );
   });
 });
 
 describe('CachedLayout', () => {
   describe('name', () => {
     it('returns the name of the class', () => {
-      const layout = new CachedLayout('foo', new MockLayout());
+      const layout = new CachedLayout('foo', CAPACITY, new MockLayout());
       expect(layout.name).toBe(CachedLayout.name);
     });
   });
 
   describe('compose()', () => {
     it('creates a new CachedLayout with the layout', () => {
-      const layout = new CachedLayout('foo', DefaultLayout).compose(
+      const layout = new CachedLayout('foo', CAPACITY, DefaultLayout).compose(
         new MockLayout(),
       );
-      expect(layout).toStrictEqual(new CachedLayout('foo', new MockLayout()));
+      expect(layout).toStrictEqual(
+        new CachedLayout('foo', CAPACITY, new MockLayout()),
+      );
     });
   });
 
@@ -50,10 +57,11 @@ describe('CachedLayout', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new CachedLayout(key, new MockLayout()).placeBinding(
-        binding,
+      const slot = new CachedLayout(
+        key,
+        CAPACITY,
         new MockLayout(),
-      );
+      ).placeBinding(binding, new MockLayout());
 
       expect(slot.type).toBe(binding.type);
       expect(slot.value).toBe(binding.value);
@@ -76,7 +84,7 @@ describe('CachedSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, source1, part);
       const innerSlot = new MockSlot(binding);
-      const slot = new CachedSlot(innerSlot, key);
+      const slot = new CachedSlot(innerSlot, key, CAPACITY);
       const updater = new TestUpdater();
 
       const reconcileSpy = vi.spyOn(innerSlot, 'reconcile');
@@ -101,7 +109,7 @@ describe('CachedSlot', () => {
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(Cached(source2, key), session);
+          const dirty = slot.reconcile(Cached(source2, key, CAPACITY), session);
           slot.commit();
           return dirty;
         });
@@ -143,7 +151,7 @@ describe('CachedSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, source1, part);
       const innerSlot = new MockSlot(binding);
-      const slot = new CachedSlot(innerSlot, key1);
+      const slot = new CachedSlot(innerSlot, key1, CAPACITY);
       const updater = new TestUpdater();
 
       const reconcileSpy = vi.spyOn(innerSlot, 'reconcile');
@@ -177,7 +185,10 @@ describe('CachedSlot', () => {
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(Cached(source2, key2), session);
+          const dirty = slot.reconcile(
+            Cached(source2, key2, CAPACITY),
+            session,
+          );
           slot.commit();
           return dirty;
         });
@@ -202,7 +213,10 @@ describe('CachedSlot', () => {
 
       SESSION3: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(Cached(source1, key1), session);
+          const dirty = slot.reconcile(
+            Cached(source1, key1, CAPACITY),
+            session,
+          );
           slot.commit();
           return dirty;
         });
@@ -252,7 +266,7 @@ describe('CachedSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, source1, part);
       const innerSlot = new MockSlot(binding);
-      const slot = new CachedSlot(innerSlot, key);
+      const slot = new CachedSlot(innerSlot, key, CAPACITY);
       const updater = new TestUpdater();
 
       const reconcileSpy = vi.spyOn(innerSlot, 'reconcile');
@@ -311,7 +325,7 @@ describe('CachedSlot', () => {
 
       SESSION3: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(Cached(source1, key), session);
+          const dirty = slot.reconcile(Cached(source1, key, CAPACITY), session);
           slot.commit();
           return dirty;
         });

@@ -38,6 +38,7 @@
         "noConfusingVoidType": "off",
         "noEmptyInterface": "off",
         "noExplicitAny": "off",
+        "noNonNullAssertedOptionalChain": "off",
         "noTemplateCurlyInString": "off",
         "noThenProperty": "off"
       }

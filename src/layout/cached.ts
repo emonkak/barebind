@@ -1,3 +1,4 @@
+import { LRUMap } from '../collections/lru-map.js';
 import { LayoutModifier } from '../directive.js';
 import {
   type Binding,
@@ -14,17 +15,24 @@ import { DefaultLayout } from './layout.js';
 export function Cached<TSource, TKey>(
   source: TSource,
   key: TKey,
+  capacity: number,
 ): LayoutModifier<TSource> {
-  return new LayoutModifier(source, new CachedLayout(key, DefaultLayout));
+  return new LayoutModifier(
+    source,
+    new CachedLayout(key, capacity, DefaultLayout),
+  );
 }
 
 export class CachedLayout<TKey> implements Layout {
   private readonly _key: TKey;
 
+  private readonly _capacity: number;
+
   private readonly _layout: Layout;
 
-  constructor(key: TKey, layout: Layout) {
+  constructor(key: TKey, capacity: number, layout: Layout) {
     this._key = key;
+    this._capacity = capacity;
     this._layout = layout;
   }
 
@@ -41,7 +49,7 @@ export class CachedLayout<TKey> implements Layout {
   }
 
   compose(layout: Layout): Layout {
-    return new CachedLayout(this._key, layout);
+    return new CachedLayout(this._key, this._capacity, layout);
   }
 
   placeBinding<TSource>(
@@ -49,7 +57,7 @@ export class CachedLayout<TKey> implements Layout {
     defaultLayout: Layout,
   ): CachedSlot<TSource, TKey> {
     const slot = this._layout.placeBinding(binding, defaultLayout);
-    return new CachedSlot(slot, this._key);
+    return new CachedSlot(slot, this._key, this._capacity);
   }
 }
 
@@ -58,13 +66,14 @@ export class CachedSlot<TSource, TKey> implements Slot<TSource> {
 
   private _memoizedSlot: Slot<TSource> | null = null;
 
-  private _cachedSlots: Map<TKey, Slot<TSource>> = new Map();
-
   private _key: TKey;
 
-  constructor(slot: Slot<TSource>, key: TKey) {
+  private _cachedSlots: LRUMap<TKey, Slot<TSource>>;
+
+  constructor(slot: Slot<TSource>, key: TKey, capacity: number) {
     this._pendingSlot = slot;
     this._key = key;
+    this._cachedSlots = new LRUMap(capacity);
   }
 
   get type(): DirectiveType<UnwrapBindable<TSource>> {
