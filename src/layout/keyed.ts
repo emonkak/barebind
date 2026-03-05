@@ -9,21 +9,20 @@ import {
   type UnwrapBindable,
   type UpdateSession,
 } from '../internal.js';
-import { DefaultLayout } from './layout.js';
 
 export function Keyed<TSource, TKey>(
   source: TSource,
   key: TKey,
 ): LayoutModifier<TSource> {
-  return new LayoutModifier(source, new KeyedLayout(key, DefaultLayout));
+  return new LayoutModifier(source, new KeyedLayout(key, null));
 }
 
 export class KeyedLayout<TKey> implements Layout {
   private readonly _key: TKey;
 
-  private readonly _layout: Layout;
+  private readonly _layout: Layout | null;
 
-  constructor(key: TKey, layout: Layout) {
+  constructor(key: TKey, layout: Layout | null) {
     this._key = key;
     this._layout = layout;
   }
@@ -36,7 +35,7 @@ export class KeyedLayout<TKey> implements Layout {
     return this._key;
   }
 
-  get layout(): Layout {
+  get layout(): Layout | null {
     return this._layout;
   }
 
@@ -48,7 +47,8 @@ export class KeyedLayout<TKey> implements Layout {
     binding: Binding<UnwrapBindable<TSource>>,
     defaultLayout: Layout,
   ): KeyedSlot<TSource, TKey> {
-    const slot = this._layout.placeBinding(binding, defaultLayout);
+    const layout = this._layout ?? defaultLayout;
+    const slot = layout.placeBinding(binding, defaultLayout);
     return new KeyedSlot(slot, this._key);
   }
 }
@@ -100,7 +100,9 @@ export class KeyedSlot<TSource, TKey> implements Slot<TSource> {
         context,
       );
       const innerLayout =
-        layout instanceof KeyedLayout ? layout.layout : layout;
+        layout instanceof KeyedLayout
+          ? (layout.layout ?? defaultLayout)
+          : layout;
 
       this._pendingSlot = innerLayout.placeBinding(binding, defaultLayout);
       this._pendingSlot.attach(session);

@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { PartType } from '@/internal.js';
 import { Keyed, KeyedLayout, KeyedSlot } from '@/layout/keyed.js';
-import { DefaultLayout } from '@/layout/layout.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   MockBinding,
@@ -18,7 +17,7 @@ describe('Keyed()', () => {
     const bindable = Keyed(source, key);
 
     expect(bindable.source).toBe(source);
-    expect(bindable.layout).toStrictEqual(new KeyedLayout(key, DefaultLayout));
+    expect(bindable.layout).toStrictEqual(new KeyedLayout(key, null));
   });
 });
 
@@ -32,9 +31,7 @@ describe('KeyedLayout', () => {
 
   describe('compose()', () => {
     it('creates a new KeyedLayout with the layout', () => {
-      const layout = new KeyedLayout('foo', DefaultLayout).compose(
-        new MockLayout(),
-      );
+      const layout = new KeyedLayout('foo', null).compose(new MockLayout());
       expect(layout).toStrictEqual(new KeyedLayout('foo', new MockLayout()));
     });
   });

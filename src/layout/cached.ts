@@ -10,17 +10,13 @@ import {
   type UnwrapBindable,
   type UpdateSession,
 } from '../internal.js';
-import { DefaultLayout } from './layout.js';
 
 export function Cached<TSource, TKey>(
   source: TSource,
   key: TKey,
   capacity: number,
 ): LayoutModifier<TSource> {
-  return new LayoutModifier(
-    source,
-    new CachedLayout(key, capacity, DefaultLayout),
-  );
+  return new LayoutModifier(source, new CachedLayout(key, capacity, null));
 }
 
 export class CachedLayout<TKey> implements Layout {
@@ -28,9 +24,9 @@ export class CachedLayout<TKey> implements Layout {
 
   private readonly _capacity: number;
 
-  private readonly _layout: Layout;
+  private readonly _layout: Layout | null;
 
-  constructor(key: TKey, capacity: number, layout: Layout) {
+  constructor(key: TKey, capacity: number, layout: Layout | null) {
     this._key = key;
     this._capacity = capacity;
     this._layout = layout;
@@ -44,7 +40,7 @@ export class CachedLayout<TKey> implements Layout {
     return this._key;
   }
 
-  get layout(): Layout {
+  get layout(): Layout | null {
     return this._layout;
   }
 
@@ -56,7 +52,8 @@ export class CachedLayout<TKey> implements Layout {
     binding: Binding<UnwrapBindable<TSource>>,
     defaultLayout: Layout,
   ): CachedSlot<TSource, TKey> {
-    const slot = this._layout.placeBinding(binding, defaultLayout);
+    const layout = this._layout ?? defaultLayout;
+    const slot = layout.placeBinding(binding, defaultLayout);
     return new CachedSlot(slot, this._key, this._capacity);
   }
 }
@@ -118,7 +115,9 @@ export class CachedSlot<TSource, TKey> implements Slot<TSource> {
           context,
         );
         const innerLayout =
-          layout instanceof CachedLayout ? layout.layout : layout;
+          layout instanceof CachedLayout
+            ? (layout.layout ?? defaultLayout)
+            : layout;
 
         this._pendingSlot = innerLayout.placeBinding(binding, defaultLayout);
         this._pendingSlot.attach(session);

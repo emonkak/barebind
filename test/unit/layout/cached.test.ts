@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { PartType } from '@/internal.js';
 import { Cached, CachedLayout, CachedSlot } from '@/layout/cached.js';
-import { DefaultLayout } from '@/layout/layout.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   MockBinding,
@@ -22,7 +21,7 @@ describe('Cached()', () => {
 
     expect(bindable.source).toBe(source);
     expect(bindable.layout).toStrictEqual(
-      new CachedLayout(key, capacity, DefaultLayout),
+      new CachedLayout(key, capacity, null),
     );
   });
 });
@@ -37,7 +36,7 @@ describe('CachedLayout', () => {
 
   describe('compose()', () => {
     it('creates a new CachedLayout with the layout', () => {
-      const layout = new CachedLayout('foo', CAPACITY, DefaultLayout).compose(
+      const layout = new CachedLayout('foo', CAPACITY, null).compose(
         new MockLayout(),
       );
       expect(layout).toStrictEqual(
