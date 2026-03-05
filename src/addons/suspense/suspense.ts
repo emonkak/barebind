@@ -13,28 +13,33 @@ export const Suspense = createComponent(function Suspense(
   { children, fallback }: SuspenseProps,
   $: RenderContext,
 ): unknown {
-  const pendingSuspends = $.useMemo<Suspend<unknown>[]>(() => [], [children]);
+  const pendingSuspends = $.useMemo<Set<Suspend<unknown>>>(
+    () => new Set(),
+    [children],
+  );
 
-  const areSuspendsSettled = () =>
-    pendingSuspends.every(
-      ({ status }) => status === 'fulfilled' || status === 'rejected',
-    );
+  const areAllSuspendsSettled = () =>
+    pendingSuspends.values().every(({ status }) => status !== 'pending');
 
-  $.catchError((error, handleError) => {
-    if (error instanceof Suspend) {
+  $.catchError((errorOrSuspend, handleError) => {
+    if (errorOrSuspend instanceof Suspend) {
+      if (pendingSuspends.has(errorOrSuspend)) {
+        return;
+      }
+
       const callback = () => {
-        if (areSuspendsSettled()) {
+        if (areAllSuspendsSettled()) {
           $.forceUpdate();
         }
       };
 
-      error.then(callback, callback);
+      errorOrSuspend.then(callback, callback);
 
-      if (pendingSuspends.push(error) === 1) {
-        $.forceUpdate();
-      }
+      callback();
+
+      pendingSuspends.add(errorOrSuspend);
     } else {
-      handleError(error);
+      handleError(errorOrSuspend);
     }
   });
 
@@ -49,7 +54,7 @@ export const Suspense = createComponent(function Suspense(
     };
   }, [pendingSuspends]);
 
-  const shouldRenderChildren = areSuspendsSettled();
+  const shouldRenderChildren = areAllSuspendsSettled();
 
   return Fragment([
     Flexible(shouldRenderChildren ? children : null),
