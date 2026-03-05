@@ -4,6 +4,6 @@
     "jsx": "react-jsx",
     "jsxImportSource": "barebind/addons",
     "outDir": "lib",
-    "rootDir": "."
+    "rootDir": "src"
   }
 }
