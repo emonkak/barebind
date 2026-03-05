@@ -1,6 +1,11 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-import { type Backend, ExecutionMode, type ExecutionModes } from '@/backend.js';
+import {
+  type Backend,
+  ExecutionMode,
+  type ExecutionModes,
+  type RequestCallbackOptions,
+} from '@/backend.js';
 import {
   $directive,
   areDirectiveTypesEqual,
@@ -20,7 +25,6 @@ import {
   PartType,
   type Primitive,
   type RenderFrame,
-  type RequestCallbackOptions,
   type Scope,
   type Slot,
   type Template,
@@ -67,16 +71,25 @@ export class MockBackend implements Backend {
 
   requestCallback<T>(
     callback: () => T | PromiseLike<T>,
-    options?: RequestCallbackOptions,
+    options: RequestCallbackOptions = {},
   ): Promise<T> {
+    let promise: Promise<T>;
     switch (options?.priority) {
       case 'user-visible':
-        return new Promise((resolve) => setTimeout(resolve)).then(callback);
+        promise = new Promise((resolve) => setTimeout(resolve)).then(callback);
+        break;
       case 'background':
-        return new Promise((resolve) => setTimeout(resolve, 1)).then(callback);
+        promise = new Promise((resolve) => setTimeout(resolve, 1)).then(
+          callback,
+        );
+        break;
       default:
-        return Promise.resolve().then(callback);
+        promise = Promise.resolve().then(callback);
+        break;
     }
+    return options.signal !== undefined
+      ? Promise.race([promise, waitForAbort<T>(options.signal)])
+      : promise;
   }
 
   resolveLayout(_value: unknown, _part: Part): Layout {
@@ -461,4 +474,12 @@ export function createRuntime(
 
 function stringify(value: unknown): string {
   return value?.toString() ?? '';
+}
+
+function waitForAbort<T>(signal: AbortSignal): Promise<T> {
+  return new Promise<T>((_resolve, reject) => {
+    signal.addEventListener('abort', () => {
+      reject(signal.reason);
+    });
+  });
 }

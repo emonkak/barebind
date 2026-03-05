@@ -4,7 +4,6 @@ import type {
   Layout,
   Part,
   Primitive,
-  RequestCallbackOptions,
   Template,
   TemplateMode,
 } from './internal.js';
@@ -36,3 +35,5 @@ export const ExecutionMode = {
 };
 
 export type ExecutionModes = number;
+
+export type RequestCallbackOptions = SchedulerPostTaskOptions;

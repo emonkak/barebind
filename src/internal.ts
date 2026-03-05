@@ -420,10 +420,6 @@ export interface RenderFrame {
   passiveEffects: EffectQueue;
 }
 
-export interface RequestCallbackOptions {
-  priority?: TaskPriority;
-}
-
 export interface ReversibleEffect extends Effect {
   rollback(): void;
 }
@@ -507,10 +503,9 @@ export interface UpdateHandle {
   finished: Promise<UpdateResult>;
 }
 
-export interface UpdateOptions {
+export interface UpdateOptions extends SchedulerPostTaskOptions {
   flushSync?: boolean;
   immediate?: boolean;
-  priority?: TaskPriority;
   triggerFlush?: boolean;
   viewTransition?: boolean;
 }
@@ -528,9 +523,9 @@ export interface UpdateSession {
 }
 
 export interface UpdateTask {
+  continuation: PromiseWithResolvers<UpdateResult>;
   coroutine: Coroutine;
   lanes: Lanes;
-  continuation: PromiseWithResolvers<UpdateResult>;
 }
 
 export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;

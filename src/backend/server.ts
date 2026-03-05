@@ -4,6 +4,7 @@ import {
   type Backend,
   ExecutionMode,
   type ExecutionModes,
+  type RequestCallbackOptions,
 } from '../backend.js';
 import {
   CommitPhase,
@@ -12,7 +13,6 @@ import {
   type Part,
   PartType,
   type Primitive,
-  type RequestCallbackOptions,
   type Template,
   type TemplateMode,
 } from '../internal.js';

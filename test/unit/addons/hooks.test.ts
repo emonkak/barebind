@@ -41,7 +41,7 @@ describe('Attempt()', () => {
       });
     }
 
-    await waitForMicrotasks();
+    await waitForMicrotasks(2);
 
     expect(renderer.callback).toHaveBeenCalledTimes(2);
     expect(renderer.callback).toHaveLastReturnedWith({
@@ -57,7 +57,7 @@ describe('Attempt()', () => {
       isPending: true,
     });
 
-    await waitForMicrotasks();
+    await waitForMicrotasks(2);
 
     expect(renderer.callback).toHaveBeenCalledTimes(4);
     expect(renderer.callback).toHaveLastReturnedWith({
@@ -77,7 +77,7 @@ describe('Attempt()', () => {
         });
 
         session.useEffect(() => {
-          attempt(async () => {
+          attempt(() => {
             throw error;
           });
         }, []);
@@ -97,7 +97,7 @@ describe('Attempt()', () => {
       });
     }
 
-    await waitForMicrotasks();
+    await waitForMicrotasks(2);
 
     expect(renderer.callback).toHaveBeenCalledTimes(2);
     expect(renderer.callback).toHaveLastReturnedWith({
@@ -483,7 +483,7 @@ describe('Optimistic', () => {
       expect(isPending).toBe(false);
     }
 
-    await waitForMicrotasks();
+    await waitForMicrotasks(2);
 
     expect(renderer.callback).toHaveBeenCalledTimes(2);
     expect(renderer.callback).toHaveLastReturnedWith({
@@ -525,7 +525,7 @@ describe('Optimistic', () => {
         session.useEffect(() => {
           session.attempt(async () => {
             dispatch(1);
-            await waitForMicrotasks(0);
+            await waitForMicrotasks();
             throw error;
           });
         }, []);
@@ -544,7 +544,7 @@ describe('Optimistic', () => {
       expect(capturedError).toBe(null);
     }
 
-    await waitForMicrotasks();
+    await waitForMicrotasks(2);
 
     expect(renderer.callback).toHaveBeenCalledTimes(2);
     expect(renderer.callback).toHaveLastReturnedWith({
@@ -554,7 +554,7 @@ describe('Optimistic', () => {
       capturedError: null,
     });
 
-    await waitForMicrotasks();
+    await waitForMicrotasks(2);
 
     expect(renderer.callback).toHaveBeenCalledTimes(3);
     expect(renderer.callback).toHaveLastReturnedWith({

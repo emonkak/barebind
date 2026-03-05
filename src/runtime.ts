@@ -279,19 +279,22 @@ export class Runtime implements SessionContext {
     options: UpdateOptions = {},
   ): UpdateHandle {
     options = {
-      flushSync: options.flushSync ?? false,
-      immediate: options.immediate ?? false,
-      priority: options.priority ?? this._backend.getUpdatePriority(),
-      triggerFlush: options.triggerFlush ?? true,
-      viewTransition: options.viewTransition ?? false,
-    } satisfies Required<UpdateOptions>;
+      flushSync: false,
+      immediate: false,
+      priority: this._backend.getUpdatePriority(),
+      triggerFlush: true,
+      viewTransition: false,
+      ...options,
+    } satisfies Required<
+      Omit<UpdateOptions, Exclude<keyof SchedulerPostTaskOptions, 'priority'>>
+    >;
 
     const lanes = getLanesFromOptions(options);
     const continuation = Promise.withResolvers<UpdateResult>();
     const pendingUpdate: UpdateTask = {
+      continuation,
       coroutine,
       lanes,
-      continuation,
     };
 
     let scheduled: Promise<UpdateResult>;
@@ -316,7 +319,11 @@ export class Runtime implements SessionContext {
       scheduled = promise;
       resolve(callback());
     } else {
-      scheduled = this._backend.requestCallback(callback, options);
+      scheduled = this._backend.requestCallback(callback, options).catch(() => {
+        // callback() is guaranteed not to throw anything; rejection here only
+        // indicates AbortSignal cancellation.
+        return { canceled: true, done: false };
+      });
     }
 
     return {
