@@ -46,11 +46,12 @@ describe('Suspend', () => {
       const promise = new Promise(() => {});
       const controller = new AbortController();
       const suspend = Suspend.await(promise, controller);
+      const error = new Error('abort');
 
-      suspend.abort();
+      suspend.abort(error);
 
       expect(suspend.status).toBe('aborted');
-      expect(suspend.reason).toBe(controller.signal.reason);
+      expect(suspend.reason).toBe(error);
       expect(controller.signal.aborted).toBe(true);
     });
 
