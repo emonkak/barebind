@@ -5,7 +5,7 @@ export abstract class SharedContext implements HookObject<void> {
     this: { new (...args: any[]): T },
     context: RenderContext,
   ): T {
-    const sharedContext = context.getSharedContext(this);
+    const sharedContext = context.getSharedContext<T>(this);
 
     if (sharedContext === undefined) {
       throw new Error(
@@ -13,7 +13,7 @@ export abstract class SharedContext implements HookObject<void> {
       );
     }
 
-    return sharedContext as T;
+    return sharedContext;
   }
 
   [$hook](context: RenderContext): void {

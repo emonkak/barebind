@@ -124,7 +124,7 @@ export class RenderSession implements RenderContext {
     return this._context;
   }
 
-  getSharedContext(key: unknown): unknown {
+  getSharedContext<T>(key: unknown): T | undefined {
     let currentScope: Scope | null = this._state.scope;
     do {
       for (
@@ -136,7 +136,7 @@ export class RenderSession implements RenderContext {
           boundary.type === BoundaryType.SharedContext &&
           Object.is(boundary.key, key)
         ) {
-          return boundary.value;
+          return boundary.value as T;
         }
       }
       currentScope = currentScope.parent;
@@ -164,7 +164,7 @@ export class RenderSession implements RenderContext {
     return this._createTemplate(strings, values, 'math');
   }
 
-  setSharedContext(key: unknown, value: unknown): void {
+  setSharedContext<T>(key: unknown, value: T): void {
     const { scope } = this._state;
     scope.boundary = {
       type: BoundaryType.SharedContext,

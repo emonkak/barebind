@@ -361,7 +361,7 @@ export interface RenderContext {
   catchError(handler: ErrorHandler): void;
   forceUpdate(options?: UpdateOptions): UpdateHandle;
   getSessionContext(): SessionContext;
-  getSharedContext(key: unknown): unknown;
+  getSharedContext<T>(key: unknown): T | undefined;
   html(
     strings: readonly string[],
     ...values: readonly unknown[]
@@ -371,7 +371,7 @@ export interface RenderContext {
     strings: readonly string[],
     ...values: readonly unknown[]
   ): Bindable<readonly unknown[]>;
-  setSharedContext(key: unknown, value: unknown): void;
+  setSharedContext<T>(key: unknown, value: T): void;
   svg(
     strings: readonly string[],
     ...values: readonly unknown[]
