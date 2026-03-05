@@ -11,7 +11,7 @@ type SuspendInvariant<T> = Readonly<
 >;
 
 class SuspendInternal<T> implements PromiseLike<T> {
-  private readonly _promise: Promise<T>;
+  private readonly _promise: PromiseLike<T>;
 
   private readonly _controller: AbortController;
 
@@ -24,7 +24,7 @@ class SuspendInternal<T> implements PromiseLike<T> {
   private _refCount: number = 0;
 
   static await<T>(
-    promise: Promise<T>,
+    promise: PromiseLike<T>,
     controller: AbortController,
   ): Suspend<T> {
     const suspend = new SuspendInternal(promise, controller);
@@ -48,7 +48,7 @@ class SuspendInternal<T> implements PromiseLike<T> {
     return suspend as Suspend<T>;
   }
 
-  private constructor(promise: Promise<T>, controller: AbortController) {
+  private constructor(promise: PromiseLike<T>, controller: AbortController) {
     this._promise = promise;
     this._controller = controller;
   }
