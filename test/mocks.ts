@@ -110,13 +110,13 @@ export class MockBackend implements Backend {
 }
 
 export class MockBindable<T> implements Bindable<T> {
-  directive: Partial<Directive<T>>;
+  directive: Directive<T>;
 
-  constructor(directive: Partial<Directive<T>>) {
+  constructor(directive: Directive<T>) {
     this.directive = directive;
   }
 
-  [$directive](): Partial<Directive<T>> {
+  [$directive](): Directive<T> {
     return this.directive;
   }
 }

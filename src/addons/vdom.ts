@@ -61,10 +61,9 @@ interface HasCleanup {
   [$cleanup]?: Cleanup | void;
 }
 
-interface TemplateDirective<TValues extends readonly unknown[]> {
+interface TemplateDirective<TValues extends readonly unknown[]>
+  extends Directive<TValues> {
   type: Template<TValues>;
-  value: TValues;
-  layout?: KeyedLayout<unknown>;
 }
 
 /**
@@ -129,7 +128,7 @@ export class VElement<TProps extends {} = {}> implements Bindable<unknown> {
     }
   }
 
-  [$directive](): Partial<Directive<unknown>> {
+  [$directive](): Directive<unknown> {
     return typeof this.type === 'function'
       ? {
           type: this.type,
@@ -154,7 +153,7 @@ export class VFragment implements Bindable<RepeatProps<VNode>> {
     }
   }
 
-  [$directive](): Partial<Directive<RepeatProps<VNode>>> {
+  [$directive](): Directive<RepeatProps<VNode>> {
     return {
       type: RepeatDirective,
       value: {
@@ -176,7 +175,7 @@ export class VStaticFragment implements Bindable<unknown> {
     }
   }
 
-  [$directive](): Partial<Directive<unknown>> {
+  [$directive](): Directive<unknown> {
     const templates: Template<readonly unknown[]>[] = [];
     const values: unknown[] = [];
 

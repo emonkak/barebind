@@ -182,7 +182,7 @@ export abstract class Signal<T> implements HookObject<T>, Bindable<Signal<T>> {
     return value;
   }
 
-  [$directive](): Partial<Directive<Signal<T>>> {
+  [$directive](): Directive<Signal<T>> {
     return { type: SignalDirective, value: this };
   }
 

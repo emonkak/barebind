@@ -33,7 +33,9 @@ export class DirectiveError<T> extends Error {
   }
 }
 
-export class DirectiveSpecifier<T> implements Bindable<T>, Debuggable {
+export class DirectiveSpecifier<T>
+  implements Bindable<T>, Directive<T>, Debuggable
+{
   readonly type: DirectiveType<T>;
 
   readonly value: T;
@@ -50,7 +52,7 @@ export class DirectiveSpecifier<T> implements Bindable<T>, Debuggable {
     return this.type.name + '(' + format(this.value) + ')';
   }
 
-  [$directive](): Partial<Directive<T>> {
+  [$directive](): Directive<T> {
     return this;
   }
 }
@@ -74,7 +76,7 @@ export class LayoutModifier<T>
     return format(this.source) + ' with ' + this.layout.name;
   }
 
-  [$directive](): Partial<Directive<UnwrapBindable<T>>> {
+  [$directive](): Directive<UnwrapBindable<T>> {
     const directive = toDirective(this.source);
     const layout =
       directive.layout !== undefined

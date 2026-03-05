@@ -228,7 +228,10 @@ export class Runtime implements SessionContext {
     return result;
   }
 
-  resolveDirective<T>(source: T, part: Part): Directive<UnwrapBindable<T>> {
+  resolveDirective<T>(
+    source: T,
+    part: Part,
+  ): Required<Directive<UnwrapBindable<T>>> {
     let { type, value, layout, defaultLayout } = toDirective(source);
 
     if (type === undefined) {
@@ -238,7 +241,6 @@ export class Runtime implements SessionContext {
       (type as Primitive<UnwrapBindable<T>>).ensureValue?.(source, part);
     }
 
-    value ??= source as UnwrapBindable<T>;
     defaultLayout ??= this._backend.resolveLayout(source, part);
     layout ??= defaultLayout;
 

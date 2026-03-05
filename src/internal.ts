@@ -9,7 +9,7 @@ export const DETACHED_SCOPE: Scope = Object.freeze(createScope());
 export type Action = () => Promise<void> | void;
 
 export interface Bindable<T = unknown> {
-  [$directive](): Partial<Directive<T>>;
+  [$directive](): Directive<T>;
 }
 
 export interface Binding<T> extends ReversibleEffect, SessionLifecycle {
@@ -82,14 +82,17 @@ export interface Coroutine {
 }
 
 export interface Directive<T> {
-  type: DirectiveType<T>;
+  type?: DirectiveType<T>;
   value: T;
-  layout: Layout;
-  defaultLayout: Layout;
+  layout?: Layout;
+  defaultLayout?: Layout;
 }
 
 export interface DirectiveContext {
-  resolveDirective<T>(source: T, part: Part): Directive<UnwrapBindable<T>>;
+  resolveDirective<T>(
+    source: T,
+    part: Part,
+  ): Required<Directive<UnwrapBindable<T>>>;
   resolveSlot<T>(source: T, part: Part): Slot<T>;
 }
 
@@ -651,9 +654,7 @@ export function isBindable(value: unknown): value is Bindable<any> {
 /**
  * @internal
  */
-export function toDirective<T>(
-  source: T,
-): Partial<Directive<UnwrapBindable<T>>> {
+export function toDirective<T>(source: T): Directive<UnwrapBindable<T>> {
   return isBindable(source)
     ? source[$directive]()
     : { value: source as UnwrapBindable<T> };

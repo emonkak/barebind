@@ -873,8 +873,11 @@ describe('Runtime', () => {
   });
 
   describe('resolveDirective()', () => {
-    it('resolves the directive from Primitive', () => {
-      const source = 'foo';
+    it.for([
+      'foo',
+      null,
+      undefined,
+    ])('resolves primitive values as primitive directives', (source) => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -897,7 +900,7 @@ describe('Runtime', () => {
       expect(directive.layout).toStrictEqual(new MockLayout());
     });
 
-    it('resolves the directive from Bindable', () => {
+    it('resolves the bindable value as a specific directive', () => {
       const source = new MockBindable({
         type: new MockDirective(),
         value: 'foo',
