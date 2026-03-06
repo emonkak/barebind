@@ -1,3 +1,11 @@
+import {
+  type Part,
+  PartType,
+  type Slot,
+  type TemplateMode,
+  type TemplateResult,
+  type UpdateSession,
+} from '../core.js';
 import { emphasizeNode } from '../debug/node.js';
 import { formatPart } from '../debug/part.js';
 import {
@@ -7,14 +15,6 @@ import {
   treatNodeName,
   treatNodeType,
 } from '../hydration.js';
-import {
-  type Part,
-  PartType,
-  type Slot,
-  type TemplateMode,
-  type TemplateResult,
-  type UpdateSession,
-} from '../internal.js';
 import { AbstractTemplate, getNamespaceURIByTagName } from './template.js';
 
 export type Hole =

@@ -7,7 +7,7 @@ import {
   SignalBinding,
   SignalDirective,
 } from '@/addons/signal/signal.js';
-import { $directive, Lane, PartType, type RenderContext } from '@/internal.js';
+import { $directive, Lane, PartType, type RenderContext } from '@/core.js';
 import { createRuntime } from '../../../mocks.js';
 import { waitForMicrotasks } from '../../../test-helpers.js';
 import { TestRenderer } from '../../../test-renderer.js';

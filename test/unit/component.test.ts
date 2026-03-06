@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ComponentBinding, createComponent } from '@/component.js';
-import { DirectiveSpecifier } from '@/directive.js';
 import {
   CommitPhase,
   createScope,
   Lane,
   PartType,
   type RenderContext,
-} from '@/internal.js';
+} from '@/core.js';
+import { DirectiveSpecifier } from '@/directive.js';
 import { RenderSession } from '@/render-session.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { createRuntime, MockSlot } from '../mocks.js';

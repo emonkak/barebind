@@ -1,4 +1,3 @@
-import { DirectiveError, ensurePartType } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -6,7 +5,8 @@ import {
   type Primitive,
   type Slot,
   type UpdateSession,
-} from '../internal.js';
+} from '../core.js';
+import { DirectiveError, ensurePartType } from '../directive.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export type SpreadProps = { [key: string]: unknown };

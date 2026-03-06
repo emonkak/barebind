@@ -1,4 +1,3 @@
-import { createTreeWalker, replaceMarkerNode } from './hydration.js';
 import {
   BoundaryType,
   type Coroutine,
@@ -11,7 +10,8 @@ import {
   type UpdateHandle,
   type UpdateOptions,
   type UpdateSession,
-} from './internal.js';
+} from './core.js';
+import { createTreeWalker, replaceMarkerNode } from './hydration.js';
 
 export class Root<T> {
   private readonly _slot: Slot<T>;

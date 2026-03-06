@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PartType } from '@/internal.js';
+import { PartType } from '@/core.js';
 import { CommentBinding, CommentPrimitive } from '@/primitive/comment.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { createRuntime } from '../../mocks.js';

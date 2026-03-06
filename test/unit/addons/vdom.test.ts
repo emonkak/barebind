@@ -10,8 +10,8 @@ import {
   VStaticFragment,
 } from '@/addons/vdom.js';
 import { createComponent } from '@/component.js';
+import { $directive, PartType } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
-import { $directive, PartType } from '@/internal.js';
 import { KeyedLayout } from '@/layout/keyed.js';
 import { LooseLayout } from '@/layout/loose.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';

@@ -1,5 +1,5 @@
 import { createComponent } from '../../component.js';
-import type { RenderContext } from '../../internal.js';
+import type { RenderContext } from '../../core.js';
 import { Flexible } from '../../layout/flexible.js';
 import { Fragment } from '../../template.js';
 import { Suspend } from './suspend.js';

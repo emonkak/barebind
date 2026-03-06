@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
-
+import { PartType } from '@/core.js';
 import { debugPart, formatPart, undebugPart } from '@/debug/part.js';
-import { PartType } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockDirective, MockPrimitive } from '../../mocks.js';
 import { createElement } from '../../test-helpers.js';

@@ -1,4 +1,3 @@
-import { RenderError } from '@/error.js';
 import {
   BoundaryType,
   type ComponentState,
@@ -10,7 +9,8 @@ import {
   type Lanes,
   type Scope,
   type UpdateSession,
-} from '@/internal.js';
+} from '@/core.js';
+import { RenderError } from '@/error.js';
 import { RenderSession } from '@/render-session.js';
 import type { Runtime } from '@/runtime.js';
 import { createRuntime } from './mocks.js';

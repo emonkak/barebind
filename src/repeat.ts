@@ -1,7 +1,5 @@
 /// <reference path="../typings/moveBefore.d.ts" />
 
-import { DirectiveSpecifier, ensurePartType } from './directive.js';
-import { replaceMarkerNode } from './hydration.js';
 import {
   type Binding,
   type DirectiveContext,
@@ -12,7 +10,9 @@ import {
   PartType,
   type Slot,
   type UpdateSession,
-} from './internal.js';
+} from './core.js';
+import { DirectiveSpecifier, ensurePartType } from './directive.js';
+import { replaceMarkerNode } from './hydration.js';
 import { reconcileProjections } from './reconciliation.js';
 
 const MUTATION_TYPE_INSERT = 0;

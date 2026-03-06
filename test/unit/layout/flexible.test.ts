@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-
+import { PartType } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
-import { PartType } from '@/internal.js';
 import { Flexible, FlexibleLayout, FlexibleSlot } from '@/layout/flexible.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {

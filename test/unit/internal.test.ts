@@ -11,7 +11,7 @@ import {
   type Lanes,
   PartType,
   type UpdateOptions,
-} from '@/internal.js';
+} from '@/core.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBindable, MockDirective, MockPrimitive } from '../mocks.js';
 

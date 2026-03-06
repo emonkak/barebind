@@ -7,7 +7,7 @@ import {
   type Lanes,
   type SessionEvent,
   type SessionObserver,
-} from '../internal.js';
+} from '../core.js';
 
 // Blue
 const RENDER_PHASE_STYLE =

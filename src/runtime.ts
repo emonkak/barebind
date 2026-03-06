@@ -1,6 +1,5 @@
 import { type Backend, ExecutionMode } from './backend.js';
 import { LinkedList } from './collections/linked-list.js';
-import { CapturedError, handleError, RenderError } from './error.js';
 import {
   CommitPhase,
   type Component,
@@ -29,7 +28,8 @@ import {
   type UpdateResult,
   type UpdateSession,
   type UpdateTask,
-} from './internal.js';
+} from './core.js';
+import { CapturedError, handleError, RenderError } from './error.js';
 import { RenderSession } from './render-session.js';
 
 export interface RuntimeOptions {

@@ -1,11 +1,11 @@
 import { shallowEqual } from '../compare.js';
-import { DirectiveError, ensurePartType } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
   PartType,
   type Primitive,
-} from '../internal.js';
+} from '../core.js';
+import { DirectiveError, ensurePartType } from '../directive.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export type ClassSpecifier = ClassArray | ClassObject;

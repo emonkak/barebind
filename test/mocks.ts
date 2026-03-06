@@ -34,7 +34,7 @@ import {
   type TemplateResult,
   type UnwrapBindable,
   type UpdateSession,
-} from '@/internal.js';
+} from '@/core.js';
 import { Runtime, type RuntimeOptions } from '@/runtime.js';
 import { AbstractTemplate } from '@/template/template.js';
 

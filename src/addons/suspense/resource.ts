@@ -1,4 +1,4 @@
-import type { HookFunction } from '../../internal.js';
+import type { HookFunction } from '../../core.js';
 import { Suspend } from './suspend.js';
 
 export const Resource = function Resource<T>(

@@ -1,4 +1,4 @@
-import type { Coroutine, Scope } from '../internal.js';
+import type { Coroutine, Scope } from '../core.js';
 
 export function getCoroutineStack(coroutine: Coroutine): Coroutine[] {
   const stack: Coroutine[] = [coroutine];

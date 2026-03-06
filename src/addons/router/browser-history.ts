@@ -1,6 +1,6 @@
 /// <reference types="navigation-api-types" />
 
-import type { HookFunction, UpdateOptions } from '../../internal.js';
+import type { HookFunction, UpdateOptions } from '../../core.js';
 import {
   anyModifiersArePressed,
   HistoryContext,

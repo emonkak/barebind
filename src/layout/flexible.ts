@@ -1,5 +1,3 @@
-import { debugPart, undebugPart } from '../debug/part.js';
-import { LayoutModifier } from '../directive.js';
 import {
   areDirectiveTypesEqual,
   type Binding,
@@ -9,7 +7,9 @@ import {
   type Slot,
   type UnwrapBindable,
   type UpdateSession,
-} from '../internal.js';
+} from '../core.js';
+import { debugPart, undebugPart } from '../debug/part.js';
+import { LayoutModifier } from '../directive.js';
 import { SlotStatus } from './layout.js';
 
 export function Flexible<T>(source: T): LayoutModifier<T> {

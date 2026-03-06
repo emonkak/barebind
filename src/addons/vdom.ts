@@ -1,5 +1,4 @@
 import { shallowEqual } from '../compare.js';
-import { DirectiveSpecifier, ensurePartType } from '../directive.js';
 import {
   $directive,
   type Bindable,
@@ -13,7 +12,8 @@ import {
   PartType,
   type Template,
   type UpdateSession,
-} from '../internal.js';
+} from '../core.js';
+import { DirectiveSpecifier, ensurePartType } from '../directive.js';
 import { KeyedLayout } from '../layout/keyed.js';
 import { LooseLayout } from '../layout/loose.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';

@@ -4,7 +4,7 @@ import {
   PartialTemplate,
   PartialTemplateContext,
 } from '@/addons/partial-template.js';
-import { $directive } from '@/internal.js';
+import { $directive } from '@/core.js';
 import { MockTemplate } from '../../mocks.js';
 import { TestRenderer } from '../../test-renderer.js';
 

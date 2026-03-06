@@ -9,7 +9,7 @@ import {
   type RefObject,
   type RenderContext,
   type UpdateHandle,
-} from '@/internal.js';
+} from '@/core.js';
 import { RenderSession } from '@/render-session.js';
 import { MockTemplate } from '../mocks.js';
 import { waitForMicrotasks, waitForTimeout } from '../test-helpers.js';

@@ -5,7 +5,7 @@ import {
   type Scope,
   type UpdateOptions,
   type UpdateSession,
-} from '@/internal.js';
+} from '@/core.js';
 import type { Runtime } from '@/runtime.js';
 import { createRuntime } from './mocks.js';
 

@@ -5,7 +5,7 @@ import {
   type Template,
   type TemplateResult,
   type UpdateSession,
-} from '../internal.js';
+} from '../core.js';
 import { AbstractTemplate } from './template.js';
 
 export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {

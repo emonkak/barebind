@@ -1,10 +1,10 @@
-import { splitText } from '../hydration.js';
 import {
   type Part,
   PartType,
   type TemplateResult,
   type UpdateSession,
-} from '../internal.js';
+} from '../core.js';
+import { splitText } from '../hydration.js';
 import { AbstractTemplate } from './template.js';
 
 export class TextTemplate<T> extends AbstractTemplate<readonly [T]> {

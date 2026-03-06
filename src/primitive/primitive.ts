@@ -1,4 +1,4 @@
-import type { Binding, Part, Primitive, UpdateSession } from '../internal.js';
+import type { Binding, Part, Primitive, UpdateSession } from '../core.js';
 
 export abstract class PrimitiveBinding<TValue, TPart extends Part>
   implements Binding<TValue>

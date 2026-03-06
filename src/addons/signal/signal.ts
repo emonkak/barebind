@@ -18,7 +18,7 @@ import {
   type SessionContext,
   type Slot,
   type UpdateSession,
-} from '../../internal.js';
+} from '../../core.js';
 
 export interface InvalidateEvent<T = unknown> {
   readonly source: Atom<T>;

@@ -11,8 +11,8 @@
     "./collections/*": {
       "import": "./src/collections/*.ts"
     },
-    "./internal": {
-      "import": "./src/internal.js"
+    "./core": {
+      "import": "./src/core.js"
     }
   },
   "publishConfig": {
@@ -29,8 +29,8 @@
         "import": "./lib/collections/*.js",
         "types": "./lib/collections/*.d.ts"
       },
-      "./internal": {
-        "import": "./lib/internal.js",
+      "./core": {
+        "import": "./lib/core.js",
         "types": "./lib/core.d.ts"
       }
     }

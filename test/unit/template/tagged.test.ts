@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
-
+import { PartType } from '@/core.js';
 import { createTreeWalker, HydrationError } from '@/hydration.js';
-import { PartType } from '@/internal.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import {
   HTML_NAMESPACE_URI,

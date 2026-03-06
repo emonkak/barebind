@@ -6,7 +6,7 @@ import type {
   Primitive,
   Template,
   TemplateMode,
-} from './internal.js';
+} from './core.js';
 
 export interface Backend {
   flushEffects(effects: EffectQueue, phase: CommitPhase): void;

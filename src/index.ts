@@ -3,9 +3,6 @@ export { ServerBackend } from './backend/server.js';
 export { type Backend, ExecutionMode } from './backend.js';
 export { sequentialEqual, shallowEqual } from './compare.js';
 export { type ComponentOptions, createComponent } from './component.js';
-export { DirectiveError } from './directive.js';
-export { RenderError } from './error.js';
-export { HydrationError } from './hydration.js';
 export {
   $hook,
   type Bindable,
@@ -19,7 +16,10 @@ export {
   type SessionEvent,
   type SessionObserver,
   type UpdateOptions,
-} from './internal.js';
+} from './core.js';
+export { DirectiveError } from './directive.js';
+export { RenderError } from './error.js';
+export { HydrationError } from './hydration.js';
 export { Cached } from './layout/cached.js';
 export { Flexible } from './layout/flexible.js';
 export { Keyed } from './layout/keyed.js';

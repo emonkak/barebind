@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ComponentBinding, createComponent } from '@/component.js';
+import { type Coroutine, createScope, Lane, PartType } from '@/core.js';
 import { RenderError } from '@/error.js';
-import { type Coroutine, createScope, Lane, PartType } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 
 describe('RenderError', () => {

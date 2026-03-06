@@ -1,5 +1,3 @@
-import { formatPart } from './debug/part.js';
-import { $debug, type Debuggable, formatValue } from './debug/value.js';
 import {
   $directive,
   type Bindable,
@@ -10,7 +8,9 @@ import {
   PartType,
   toDirective,
   type UnwrapBindable,
-} from './internal.js';
+} from './core.js';
+import { formatPart } from './debug/part.js';
+import { $debug, type Debuggable, formatValue } from './debug/value.js';
 
 export class DirectiveError<T> extends Error {
   readonly type: DirectiveType<T>;

@@ -1,11 +1,11 @@
-import { replaceMarkerNode, treatNodeName } from '../hydration.js';
 import {
   type DirectiveType,
   type Part,
   PartType,
   type TemplateResult,
   type UpdateSession,
-} from '../internal.js';
+} from '../core.js';
+import { replaceMarkerNode, treatNodeName } from '../hydration.js';
 import {
   AbstractTemplate,
   getNamespaceURIByTagName,

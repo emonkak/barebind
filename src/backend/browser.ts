@@ -15,7 +15,7 @@ import {
   type Primitive,
   type Template,
   type TemplateMode,
-} from '../internal.js';
+} from '../core.js';
 import { LooseLayout } from '../layout/loose.js';
 import { StrictLayout } from '../layout/strict.js';
 import { AttributePrimitive } from '../primitive/attribute.js';

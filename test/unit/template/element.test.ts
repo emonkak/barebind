@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
-
+import { PartType } from '@/core.js';
 import { createTreeWalker } from '@/hydration.js';
-import { PartType } from '@/internal.js';
 import { ElementTemplate } from '@/template/element.js';
 import { HTML_NAMESPACE_URI, SVG_NAMESPACE_URI } from '@/template/template.js';
 import { createElement, serializeNode } from '../../test-helpers.js';

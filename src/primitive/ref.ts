@@ -1,4 +1,3 @@
-import { DirectiveError, ensurePartType } from '../directive.js';
 import {
   type Cleanup,
   type DirectiveContext,
@@ -9,7 +8,8 @@ import {
   type Ref,
   type RefObject,
   type UpdateSession,
-} from '../internal.js';
+} from '../core.js';
+import { DirectiveError, ensurePartType } from '../directive.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export const RefPrimitive: Primitive<Ref<Element>> = {

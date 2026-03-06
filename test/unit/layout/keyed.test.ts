@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PartType } from '@/internal.js';
+import { PartType } from '@/core.js';
 import { Keyed, KeyedLayout, KeyedSlot } from '@/layout/keyed.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {

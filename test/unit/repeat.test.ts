@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
-
+import { BoundaryType, createScope, type Part, PartType } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import { createTreeWalker } from '@/hydration.js';
-import { BoundaryType, createScope, type Part, PartType } from '@/internal.js';
 import {
   Repeat,
   RepeatBinding,

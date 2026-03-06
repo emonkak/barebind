@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PartType } from '@/internal.js';
+import { PartType } from '@/core.js';
 import { SpreadBinding, SpreadPrimitive } from '@/primitive/spread.js';
 import { createRuntime, MockSlot } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';

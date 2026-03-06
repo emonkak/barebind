@@ -2,7 +2,7 @@ import {
   CommitPhase,
   type SessionEvent,
   type SessionObserver,
-} from '../internal.js';
+} from '../core.js';
 
 export type UserTimingAPI = Pick<Performance, 'mark' | 'measure'>;
 

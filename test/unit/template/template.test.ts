@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-
+import { BoundaryType, createScope, PartType } from '@/core.js';
 import { createTreeWalker } from '@/hydration.js';
-import { BoundaryType, createScope, PartType } from '@/internal.js';
 import {
   getNamespaceURIByTagName,
   HTML_NAMESPACE_URI,

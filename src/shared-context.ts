@@ -1,4 +1,4 @@
-import { $hook, type HookObject, type RenderContext } from './internal.js';
+import { $hook, type HookObject, type RenderContext } from './core.js';
 
 export abstract class SharedContext implements HookObject<void> {
   static [$hook]<T extends SharedContext>(

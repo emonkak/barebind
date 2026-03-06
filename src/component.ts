@@ -1,4 +1,3 @@
-import { DirectiveSpecifier } from './directive.js';
 import {
   type Bindable,
   type Binding,
@@ -20,7 +19,8 @@ import {
   type Scope,
   type Slot,
   type UpdateSession,
-} from './internal.js';
+} from './core.js';
+import { DirectiveSpecifier } from './directive.js';
 
 export interface ComponentOptions<TProps> {
   arePropsEqual?: (nextProps: TProps, prevProps: TProps) => boolean;

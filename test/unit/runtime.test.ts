@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ExecutionMode } from '@/backend.js';
 import { createComponent } from '@/component.js';
-import { RenderError } from '@/error.js';
 import {
   $directive,
   type Bindable,
@@ -12,7 +11,8 @@ import {
   EffectQueue,
   Lane,
   PartType,
-} from '@/internal.js';
+} from '@/core.js';
+import { RenderError } from '@/error.js';
 import { RenderSession } from '@/render-session.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {

@@ -1,6 +1,4 @@
 import { areDependenciesChanged } from './compare.js';
-import { DirectiveSpecifier } from './directive.js';
-import { handleError, RenderError } from './error.js';
 import {
   $hook,
   type Action,
@@ -31,7 +29,9 @@ import {
   type UpdateHandle,
   type UpdateOptions,
   type Usable,
-} from './internal.js';
+} from './core.js';
+import { DirectiveSpecifier } from './directive.js';
+import { handleError, RenderError } from './error.js';
 
 export class RenderSession implements RenderContext {
   private readonly _state: ComponentState;

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 import { DevToolsProfiler } from '@/addons/dev-tools-profiler.js';
 import { createComponent } from '@/component.js';
-import { CommitPhase, EffectQueue } from '@/internal.js';
+import { CommitPhase, EffectQueue } from '@/core.js';
 
 const Foo = createComponent(function Foo() {});
 

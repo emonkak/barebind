@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
-
+import { $directive } from '@/core.js';
 import { formatValue } from '@/debug/value.js';
 import { DirectiveSpecifier, LayoutModifier } from '@/directive.js';
-import { $directive } from '@/internal.js';
 import { MockDirective, MockLayout } from '../mocks.js';
 
 describe('DirectiveSpecifier', () => {

@@ -1,4 +1,4 @@
-import type { DirectiveContext, Part, Primitive } from '../internal.js';
+import type { DirectiveContext, Part, Primitive } from '../core.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export const BlackholePrimitive: Primitive<any> = {

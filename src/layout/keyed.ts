@@ -1,4 +1,3 @@
-import { LayoutModifier } from '../directive.js';
 import {
   type Binding,
   type DirectiveType,
@@ -8,7 +7,8 @@ import {
   toDirective,
   type UnwrapBindable,
   type UpdateSession,
-} from '../internal.js';
+} from '../core.js';
+import { LayoutModifier } from '../directive.js';
 
 export function Keyed<TSource, TKey>(
   source: TSource,

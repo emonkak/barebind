@@ -12,7 +12,7 @@ import {
   Lane,
   type RenderContext,
   type SessionEvent,
-} from '@/internal.js';
+} from '@/core.js';
 import { createEffectQueue, MockEffect } from '../../mocks.js';
 
 describe('SessionProfiler', () => {

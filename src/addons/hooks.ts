@@ -8,7 +8,7 @@ import type {
   Ref,
   StateHandle,
   UpdateHandle,
-} from '../internal.js';
+} from '../core.js';
 
 export type AttemptHandle = [
   isPending: boolean,

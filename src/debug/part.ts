@@ -1,4 +1,4 @@
-import { type DirectiveType, type Part, PartType } from '../internal.js';
+import { type DirectiveType, type Part, PartType } from '../core.js';
 import { emphasizeNode } from './node.js';
 import { formatValue } from './value.js';
 

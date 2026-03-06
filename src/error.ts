@@ -1,5 +1,5 @@
+import { BoundaryType, type Coroutine, type Scope } from './core.js';
 import { getCoroutineStack } from './debug/scope.js';
-import { BoundaryType, type Coroutine, type Scope } from './internal.js';
 
 export class CapturedError extends Error {}
 

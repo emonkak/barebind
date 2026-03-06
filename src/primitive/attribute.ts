@@ -1,10 +1,10 @@
-import { ensurePartType } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
   PartType,
   type Primitive,
-} from '../internal.js';
+} from '../core.js';
+import { ensurePartType } from '../directive.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export const AttributePrimitive: Primitive<any> = {

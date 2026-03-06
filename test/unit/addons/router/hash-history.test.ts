@@ -9,7 +9,7 @@ import {
   type HistoryNavigator,
 } from '@/addons/router/history.js';
 import { RelativeURL } from '@/addons/router/relative-url.js';
-import type { UpdateOptions } from '@/internal.js';
+import type { UpdateOptions } from '@/core.js';
 import { createElement } from '../../../test-helpers.js';
 import { TestRenderer } from '../../../test-renderer.js';
 
