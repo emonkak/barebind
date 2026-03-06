@@ -525,15 +525,21 @@ function captureError(
   originScope: Scope,
   session: UpdateSession,
 ): void {
-  const scope = handleError(error, coroutine, coroutine.scope);
+  let handlingScope = handleError(error, coroutine, coroutine.scope);
+  const capturedOutsideOrigin = handlingScope.level <= originScope.level;
 
-  if (scope.context?.pendingLanes === Lane.NoLane) {
-    scope.context.detach(session);
+  if (capturedOutsideOrigin) {
+    // Updates must not affect scopes outside the origin.
+    handlingScope = originScope;
+  }
+
+  if (handlingScope.context?.pendingLanes === Lane.NoLane) {
+    handlingScope.context.detach(session);
   }
 
   // If the error was captured by an ErrorBoundary outside the origin scope,
   // we treat it as a graceful interruption rather than a fatal failure.
-  if (scope.level <= originScope.level) {
+  if (capturedOutsideOrigin) {
     throw new CapturedError(undefined, { cause: error });
   }
 }
