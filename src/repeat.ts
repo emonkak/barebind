@@ -4,7 +4,6 @@ import {
   type Binding,
   type DirectiveContext,
   type DirectiveType,
-  getHydrationTargetTree,
   getStartNode,
   type Part,
   PartType,
@@ -12,7 +11,7 @@ import {
   type UpdateSession,
 } from './core.js';
 import { DirectiveSpecifier, ensurePartType } from './directive.js';
-import { replaceMarkerNode } from './hydration.js';
+import { getHydrationTargetTree, replaceMarkerNode } from './hydration.js';
 import { reconcileProjections } from './reconciliation.js';
 
 const MUTATION_TYPE_INSERT = 0;

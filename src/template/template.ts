@@ -2,7 +2,6 @@ import {
   type Binding,
   type DirectiveContext,
   type Effect,
-  getHydrationTargetTree,
   getStartNode,
   type Part,
   PartType,
@@ -11,6 +10,7 @@ import {
   type UpdateSession,
 } from '../core.js';
 import { ensurePartType } from '../directive.js';
+import { getHydrationTargetTree } from '../hydration.js';
 
 export const HTML_NAMESPACE_URI = 'http://www.w3.org/1999/xhtml';
 export const MATH_NAMESPACE_URI = 'http://www.w3.org/1998/Math/MathML';

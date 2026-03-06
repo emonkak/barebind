@@ -626,22 +626,6 @@ export function createUpdateSession(
 /**
  * @internal
  */
-export function getHydrationTargetTree(scope: Scope): TreeWalker | null {
-  for (
-    let boundary = scope.boundary;
-    boundary !== null;
-    boundary = boundary.next
-  ) {
-    if (boundary.type === BoundaryType.Hydration) {
-      return boundary.targetTree;
-    }
-  }
-  return null;
-}
-
-/**
- * @internal
- */
 export function getLanesFromOptions(options: UpdateOptions): Lanes {
   let lanes = Lane.DefaultLane;
 

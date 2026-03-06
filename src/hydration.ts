@@ -1,3 +1,4 @@
+import { BoundaryType, type Scope } from './core.js';
 import { emphasizeNode } from './debug/node.js';
 
 interface NodeTypeMap {
@@ -28,6 +29,19 @@ export function createTreeWalker(
     container,
     NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
   );
+}
+
+export function getHydrationTargetTree(scope: Scope): TreeWalker | null {
+  for (
+    let boundary = scope.boundary;
+    boundary !== null;
+    boundary = boundary.next
+  ) {
+    if (boundary.type === BoundaryType.Hydration) {
+      return boundary.targetTree;
+    }
+  }
+  return null;
 }
 
 export function replaceMarkerNode(
