@@ -10,7 +10,6 @@ import {
   type Scope,
   type UpdateSession,
 } from '@/core.js';
-import { RenderError } from '@/error.js';
 import { RenderSession } from '@/render-session.js';
 import type { Runtime } from '@/runtime.js';
 import { createRuntime } from './mocks.js';
@@ -88,7 +87,7 @@ export class TestRenderer<TProps, TResult> implements Coroutine {
         try {
           handleError(error);
         } catch (error) {
-          thrownError = error instanceof RenderError ? error.cause : error;
+          thrownError = error;
         }
       },
     };

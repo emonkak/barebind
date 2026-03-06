@@ -10,6 +10,7 @@ import {
   type RenderContext,
   type UpdateHandle,
 } from '@/core.js';
+import { RenderError } from '@/error.js';
 import { RenderSession } from '@/render-session.js';
 import { MockTemplate } from '../mocks.js';
 import { waitForMicrotasks, waitForTimeout } from '../test-helpers.js';
@@ -308,6 +309,22 @@ describe('RenderSession', () => {
         }),
       );
       expect(directive.value).toStrictEqual(['World']);
+    });
+  });
+
+  describe('throwError()', () => {
+    it('rethrows the error as a RenderError', () => {
+      const error = new Error('fail');
+      const renderer = new TestRenderer((_props, session) => {
+        session.catchError((error) => {
+          throw error;
+        });
+        session.throwError(error);
+      });
+
+      SESSION: {
+        expect(() => renderer.render({})).toThrow(RenderError);
+      }
     });
   });
 
