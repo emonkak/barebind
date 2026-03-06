@@ -474,6 +474,12 @@ describe('Runtime', () => {
             id: 0,
           },
           {
+            type: 'render-error',
+            id: 0,
+            error,
+            captured: false,
+          },
+          {
             type: 'render-phase-end',
             id: 0,
           },
@@ -537,6 +543,12 @@ describe('Runtime', () => {
           {
             type: 'render-phase-start',
             id: 0,
+          },
+          {
+            type: 'render-error',
+            id: 0,
+            error,
+            captured: true,
           },
           {
             type: 'render-phase-end',
@@ -715,6 +727,12 @@ describe('Runtime', () => {
             id: 0,
           },
           {
+            type: 'render-error',
+            id: 0,
+            error,
+            captured: false,
+          },
+          {
             type: 'render-phase-end',
             id: 0,
           },
@@ -782,6 +800,12 @@ describe('Runtime', () => {
           {
             type: 'render-phase-start',
             id: 0,
+          },
+          {
+            type: 'render-error',
+            id: 0,
+            error,
+            captured: true,
           },
           {
             type: 'render-phase-end',

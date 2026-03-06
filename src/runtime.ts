@@ -1,6 +1,6 @@
 import { type Backend, ExecutionMode } from './backend.js';
 import { LinkedList } from './collections/linked-list.js';
-import { CapturedError, handleError } from './error.js';
+import { CapturedError, handleError, RenderError } from './error.js';
 import {
   CommitPhase,
   type Component,
@@ -51,6 +51,12 @@ export type RuntimeEvent =
   | {
       type: 'render-phase-start' | 'render-phase-end';
       id: number;
+    }
+  | {
+      type: 'render-error';
+      id: number;
+      error: unknown;
+      captured: boolean;
     }
   | {
       type: 'component-render-start' | 'component-render-end';
@@ -360,7 +366,7 @@ export class Runtime implements SessionContext {
   }
 
   private async _runUpdateAsync(session: UpdateSession): Promise<void> {
-    const { frame, originScope } = session;
+    const { frame } = session;
     const { id, lanes, layoutEffects, mutationEffects, passiveEffects } = frame;
 
     notifyObservers(this._observers, {
@@ -377,7 +383,7 @@ export class Runtime implements SessionContext {
           try {
             coroutine.resume(session);
           } catch (error) {
-            captureError(error, coroutine, originScope, session);
+            captureError(error, coroutine, session, this._observers);
           }
         }
 
@@ -462,7 +468,7 @@ export class Runtime implements SessionContext {
   }
 
   private _runUpdateSync(session: UpdateSession): void {
-    const { frame, originScope } = session;
+    const { frame } = session;
     const { id, layoutEffects, mutationEffects, passiveEffects } = frame;
 
     notifyObservers(this._observers, {
@@ -476,7 +482,7 @@ export class Runtime implements SessionContext {
           try {
             coroutine.resume(session);
           } catch (error) {
-            captureError(error, coroutine, originScope, session);
+            captureError(error, coroutine, session, this._observers);
           }
         }
       } while (frame.pendingCoroutines.length > 0);
@@ -524,10 +530,25 @@ export class Runtime implements SessionContext {
 function captureError(
   error: unknown,
   coroutine: Coroutine,
-  originScope: Scope,
   session: UpdateSession,
+  observers: LinkedList<RuntimeObserver>,
 ): void {
-  let handlingScope = handleError(error, coroutine, coroutine.scope);
+  const { originScope, frame } = session;
+  let handlingScope: Scope | null = null;
+
+  try {
+    handlingScope = handleError(error, coroutine.scope);
+  } catch (cause) {
+    throw new RenderError(coroutine, { cause });
+  } finally {
+    notifyObservers(observers, {
+      type: 'render-error',
+      id: frame.id,
+      error,
+      captured: handlingScope !== null,
+    });
+  }
+
   const capturedOutsideOrigin = handlingScope.level <= originScope.level;
 
   if (capturedOutsideOrigin) {

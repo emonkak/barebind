@@ -1,6 +1,6 @@
 import { areDependenciesChanged } from './compare.js';
 import { DirectiveSpecifier } from './directive.js';
-import { handleError } from './error.js';
+import { handleError, RenderError } from './error.js';
 import {
   $hook,
   type Action,
@@ -60,7 +60,7 @@ export class RenderSession implements RenderContext {
     try {
       await action();
     } catch (error) {
-      handleError(error, this._coroutine, this._state.scope);
+      this.throwError(error);
     }
   }
 
@@ -191,7 +191,11 @@ export class RenderSession implements RenderContext {
   }
 
   throwError(error: unknown): void {
-    handleError(error, this._coroutine, this._state.scope);
+    try {
+      handleError(error, this._state.scope);
+    } catch (cause) {
+      throw new RenderError(this._coroutine, { cause });
+    }
   }
 
   use<T>(usable: HookClass<T>): T;

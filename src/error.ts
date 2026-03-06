@@ -23,11 +23,7 @@ export class RenderError extends Error {
   }
 }
 
-export function handleError(
-  error: unknown,
-  coroutine: Coroutine,
-  scope: Scope,
-): Scope {
+export function handleError(error: unknown, scope: Scope): Scope {
   let currentScope = scope;
   let { parent: nextScope, boundary: nextBoundary } = currentScope;
 
@@ -49,7 +45,7 @@ export function handleError(
         nextScope = parent;
         nextBoundary = boundary;
       } else {
-        throw new RenderError(coroutine, { cause: error });
+        throw error;
       }
     }
   };
