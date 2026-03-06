@@ -279,103 +279,103 @@ describe('LinkedList', () => {
 
 describe('LinkedList.concat()', () => {
   it('concatenates two non-empty lists', () => {
-    const a = new LinkedList<number>();
-    a.pushBack(1);
-    a.pushBack(2);
-    const b = new LinkedList<number>();
-    b.pushBack(3);
-    b.pushBack(4);
-    const c = LinkedList.concat(a, b);
-    expect([...c]).toEqual([1, 2, 3, 4]);
+    const xs = new LinkedList<number>();
+    xs.pushBack(1);
+    xs.pushBack(2);
+    const ys = new LinkedList<number>();
+    ys.pushBack(3);
+    ys.pushBack(4);
+    const zs = LinkedList.concat(xs, ys);
+    expect([...zs]).toEqual([1, 2, 3, 4]);
   });
 
-  it('clears both source lists after concat', () => {
-    const a = new LinkedList<number>();
-    a.pushBack(1);
-    const b = new LinkedList<number>();
-    b.pushBack(2);
-    LinkedList.concat(a, b);
-    expect(a.isEmpty()).toBe(true);
-    expect(b.isEmpty()).toBe(true);
+  it('clears both sources after concat', () => {
+    const xs = new LinkedList<number>();
+    xs.pushBack(1);
+    const ys = new LinkedList<number>();
+    ys.pushBack(2);
+    LinkedList.concat(xs, ys);
+    expect(xs.isEmpty()).toBe(true);
+    expect(ys.isEmpty()).toBe(true);
   });
 
-  it('concatenates when a is empty', () => {
-    const a = new LinkedList<number>();
-    const b = new LinkedList<number>();
-    b.pushBack(1);
-    b.pushBack(2);
-    const c = LinkedList.concat(a, b);
-    expect([...c]).toEqual([1, 2]);
+  it('concatenates when the first source is empty', () => {
+    const xs = new LinkedList<number>();
+    const ys = new LinkedList<number>();
+    ys.pushBack(1);
+    ys.pushBack(2);
+    const zs = LinkedList.concat(xs, ys);
+    expect([...zs]).toEqual([1, 2]);
   });
 
-  it('concatenates when b is empty', () => {
-    const a = new LinkedList<number>();
-    a.pushBack(1);
-    a.pushBack(2);
-    const b = new LinkedList<number>();
-    const c = LinkedList.concat(a, b);
-    expect([...c]).toEqual([1, 2]);
+  it('concatenates when the second source is empty', () => {
+    const xs = new LinkedList<number>();
+    xs.pushBack(1);
+    xs.pushBack(2);
+    const ys = new LinkedList<number>();
+    const zs = LinkedList.concat(xs, ys);
+    expect([...zs]).toEqual([1, 2]);
   });
 
-  it('returns an empty list when both are empty', () => {
-    const a = new LinkedList<number>();
-    const b = new LinkedList<number>();
-    const c = LinkedList.concat(a, b);
-    expect(c.isEmpty()).toBe(true);
+  it('returns an empty list when both sources are empty', () => {
+    const xs = new LinkedList<number>();
+    const ys = new LinkedList<number>();
+    const zs = LinkedList.concat(xs, ys);
+    expect(zs.isEmpty()).toBe(true);
   });
 
   it('sets correct head and tail on the result', () => {
-    const a = new LinkedList<number>();
-    a.pushBack(1);
-    a.pushBack(2);
-    const b = new LinkedList<number>();
-    b.pushBack(3);
-    b.pushBack(4);
-    const c = LinkedList.concat(a, b);
-    expect(c.front()?.value).toBe(1);
-    expect(c.back()?.value).toBe(4);
+    const xs = new LinkedList<number>();
+    xs.pushBack(1);
+    xs.pushBack(2);
+    const ys = new LinkedList<number>();
+    ys.pushBack(3);
+    ys.pushBack(4);
+    const zs = LinkedList.concat(xs, ys);
+    expect(zs.front()?.value).toBe(1);
+    expect(zs.back()?.value).toBe(4);
   });
 
   it('sets correct prev/next at the join point', () => {
-    const a = new LinkedList<number>();
-    a.pushBack(1);
-    a.pushBack(2);
-    const b = new LinkedList<number>();
-    b.pushBack(3);
-    b.pushBack(4);
-    const c = LinkedList.concat(a, b);
-    const joinLeft = c.front()?.next;
-    const joinRight = c.back()?.prev;
+    const xs = new LinkedList<number>();
+    xs.pushBack(1);
+    xs.pushBack(2);
+    const ys = new LinkedList<number>();
+    ys.pushBack(3);
+    ys.pushBack(4);
+    const zs = LinkedList.concat(xs, ys);
+    const joinLeft = zs.front()?.next;
+    const joinRight = zs.back()?.prev;
     expect(joinLeft?.next?.value).toBe(3);
     expect(joinRight?.prev?.value).toBe(2);
   });
 
   it('allows remove on result nodes after concat', () => {
-    const a = new LinkedList<number>();
-    const nodeToRemove = a.pushBack(1);
-    a.pushBack(2);
-    const b = new LinkedList<number>();
-    b.pushBack(3);
-    const c = LinkedList.concat(a, b);
-    expect(c.remove(nodeToRemove)).toBe(true);
-    expect([...c]).toEqual([2, 3]);
+    const xs = new LinkedList<number>();
+    const a = xs.pushBack(1);
+    xs.pushBack(2);
+    const ys = new LinkedList<number>();
+    ys.pushBack(3);
+    const zs = LinkedList.concat(xs, ys);
+    expect(zs.remove(a)).toBe(true);
+    expect([...zs]).toEqual([2, 3]);
   });
 
-  it('invalidates source a nodes after concat', () => {
-    const a = new LinkedList<number>();
-    const nodeA = a.pushBack(1);
-    const b = new LinkedList<number>();
-    b.pushBack(2);
-    LinkedList.concat(a, b);
-    expect(a.remove(nodeA)).toBe(false);
+  it('invalidates first source nodes after concat', () => {
+    const xs = new LinkedList<number>();
+    const a = xs.pushBack(1);
+    const ys = new LinkedList<number>();
+    ys.pushBack(2);
+    LinkedList.concat(xs, ys);
+    expect(xs.remove(a)).toBe(false);
   });
 
-  it('invalidates source b nodes after concat', () => {
-    const a = new LinkedList<number>();
-    a.pushBack(1);
-    const b = new LinkedList<number>();
-    const nodeB = b.pushBack(2);
-    LinkedList.concat(a, b);
-    expect(b.remove(nodeB)).toBe(false);
+  it('invalidates second source nodes after concat', () => {
+    const xs = new LinkedList<number>();
+    xs.pushBack(1);
+    const ys = new LinkedList<number>();
+    const a = ys.pushBack(2);
+    LinkedList.concat(xs, ys);
+    expect(ys.remove(a)).toBe(false);
   });
 });
