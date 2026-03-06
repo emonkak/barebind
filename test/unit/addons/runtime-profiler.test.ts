@@ -132,7 +132,8 @@ describe('PerformanceProfiler', () => {
           startTime: expect.any(Number),
           duration: expect.any(Number),
         },
-        componentMeasurements: [
+        errorRecords: [],
+        componentRenderMeasurements: [
           {
             name: 'MyComponent',
             startTime: expect.any(Number),
@@ -194,6 +195,12 @@ describe('PerformanceProfiler', () => {
           context: {} as RenderContext,
         },
         {
+          type: 'render-error',
+          id: 0,
+          error,
+          captured: false,
+        },
+        {
           type: 'update-failure',
           id: 0,
           lanes: Lane.UserBlockingLane,
@@ -219,7 +226,13 @@ describe('PerformanceProfiler', () => {
           startTime: expect.any(Number),
           duration: expect.any(Number),
         },
-        componentMeasurements: [
+        errorRecords: [
+          {
+            error,
+            captured: false,
+          },
+        ],
+        componentRenderMeasurements: [
           {
             name: 'MyComponent',
             startTime: expect.any(Number),
@@ -340,7 +353,8 @@ describe('PerformanceProfiler', () => {
           startTime: expect.any(Number),
           duration: expect.any(Number),
         },
-        componentMeasurements: [
+        errorRecords: [],
+        componentRenderMeasurements: [
           {
             name: 'MyComponent',
             startTime: expect.any(Number),
@@ -394,6 +408,8 @@ describe('PerformanceProfiler', () => {
 
 describe('ConsoleReporter', () => {
   describe('reportProfile()', () => {
+    const error = new Error('fail');
+
     it.each([
       [
         {
@@ -402,7 +418,8 @@ describe('ConsoleReporter', () => {
           phase: 'idle',
           updateMeasurement: null,
           renderMeasurement: null,
-          componentMeasurements: [],
+          errorRecords: [],
+          componentRenderMeasurements: [],
           commitMeasurement: null,
           mutationMeasurement: null,
           layoutMeasurement: null,
@@ -421,7 +438,8 @@ describe('ConsoleReporter', () => {
             lanes: Lane.ViewTransitionLane,
           },
           renderMeasurement: null,
-          componentMeasurements: [],
+          errorRecords: [],
+          componentRenderMeasurements: [],
           commitMeasurement: null,
           mutationMeasurement: null,
           layoutMeasurement: null,
@@ -449,7 +467,8 @@ describe('ConsoleReporter', () => {
             startTime: 0,
             duration: 4,
           },
-          componentMeasurements: [
+          errorRecords: [],
+          componentRenderMeasurements: [
             {
               name: 'MyComponent',
               startTime: 0,
@@ -514,11 +533,12 @@ describe('ConsoleReporter', () => {
             duration: 10,
             lanes: Lane.UserBlockingLane,
           },
+          errorRecords: [{ error, captured: false }],
           renderMeasurement: {
             startTime: 0,
             duration: 0,
           },
-          componentMeasurements: [
+          componentRenderMeasurements: [
             {
               name: 'MyComponent',
               startTime: 0,
@@ -536,6 +556,15 @@ describe('ConsoleReporter', () => {
             'Update #0 FAILURE with user-blocking priority in %c10ms',
           ],
           ['log', '%cRENDER PHASE:%c 1 component(s) rendered in %c0ms'],
+          [
+            'table',
+            [
+              {
+                error,
+                captured: false,
+              },
+            ],
+          ],
           [
             'table',
             [

@@ -15,8 +15,18 @@ export interface CommitMeasurement {
   committedEffects: number;
 }
 
-export interface ComponentMeasurement {
+export interface ComponentRenderMeasurement {
   name: string;
+  startTime: number;
+  duration: number;
+}
+
+export interface ErrorRecord {
+  error: unknown;
+  captured: boolean;
+}
+
+export interface RenderMeasurement {
   startTime: number;
   duration: number;
 }
@@ -27,7 +37,8 @@ export interface RuntimeProfile {
   phase: 'idle' | 'render' | 'commit';
   updateMeasurement: UpdateMeasurement | null;
   renderMeasurement: RenderMeasurement | null;
-  componentMeasurements: ComponentMeasurement[];
+  errorRecords: ErrorRecord[];
+  componentRenderMeasurements: ComponentRenderMeasurement[];
   commitMeasurement: CommitMeasurement | null;
   mutationMeasurement: CommitMeasurement | null;
   layoutMeasurement: CommitMeasurement | null;
@@ -36,11 +47,6 @@ export interface RuntimeProfile {
 
 export interface RuntimeProfileReporter {
   reportProfile(profile: RuntimeProfile): void;
-}
-
-export interface RenderMeasurement {
-  startTime: number;
-  duration: number;
 }
 
 export interface UpdateMeasurement {
@@ -138,15 +144,23 @@ export class RuntimeProfiler implements RuntimeObserver {
         profile.phase = 'idle';
         break;
       }
+      case 'render-error': {
+        const { error, captured } = event;
+        profile.errorRecords.push({
+          error,
+          captured,
+        });
+        break;
+      }
       case 'component-render-start':
-        profile.componentMeasurements.push({
+        profile.componentRenderMeasurements.push({
           name: event.component.name,
           startTime: performance.now(),
           duration: 0,
         });
         break;
       case 'component-render-end': {
-        const measurement = profile.componentMeasurements.at(-1);
+        const measurement = profile.componentRenderMeasurements.at(-1);
         if (measurement !== undefined) {
           measurement.duration = performance.now() - measurement.startTime;
         }
@@ -245,7 +259,8 @@ export class ConsoleReporter implements RuntimeProfileReporter {
       status,
       updateMeasurement,
       renderMeasurement,
-      componentMeasurements,
+      errorRecords,
+      componentRenderMeasurements,
       commitMeasurement,
       mutationMeasurement,
       layoutMeasurement,
@@ -270,13 +285,16 @@ export class ConsoleReporter implements RuntimeProfileReporter {
 
     if (renderMeasurement !== null) {
       this._logger.log(
-        `%cRENDER PHASE:%c ${componentMeasurements.length} component(s) rendered in %c${renderMeasurement.duration}ms`,
+        `%cRENDER PHASE:%c ${componentRenderMeasurements.length} component(s) rendered in %c${renderMeasurement.duration}ms`,
         RENDER_PHASE_STYLE,
         DEFAULT_STYLE,
         DURATION_STYLE,
       );
-      if (componentMeasurements.length > 0) {
-        this._logger.table(componentMeasurements, ['name', 'duration']);
+      if (errorRecords.length > 0) {
+        this._logger.table(errorRecords, ['error', 'captured']);
+      }
+      if (componentRenderMeasurements.length > 0) {
+        this._logger.table(componentRenderMeasurements, ['name', 'duration']);
       }
     }
 
@@ -327,7 +345,8 @@ function createProfile(id: number): RuntimeProfile {
     phase: 'idle',
     updateMeasurement: null,
     renderMeasurement: null,
-    componentMeasurements: [],
+    errorRecords: [],
+    componentRenderMeasurements: [],
     commitMeasurement: null,
     mutationMeasurement: null,
     layoutMeasurement: null,
