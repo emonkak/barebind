@@ -410,8 +410,6 @@ export class Runtime implements SessionContext {
       passiveEffects,
     });
 
-    let shouldFinalize = true;
-
     try {
       if (mutationEffects.length > 0 || layoutEffects.length > 0) {
         const callback = () => {
@@ -450,12 +448,15 @@ export class Runtime implements SessionContext {
               passiveEffects,
             });
           });
-        shouldFinalize = false;
       }
     } finally {
       // Commit Phase ends when effects indicate failure to flush
       // or when no passive effects were scheduled.
-      if (shouldFinalize) {
+      if (
+        mutationEffects.length > 0 ||
+        layoutEffects.length > 0 ||
+        passiveEffects.length === 0
+      ) {
         notifyObservers(this._observers, {
           type: 'commit-phase-end',
           id,
