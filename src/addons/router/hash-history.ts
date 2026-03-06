@@ -78,7 +78,7 @@ export function HashHistory(
           navigation.removeEventListener('navigate', handleNavigate);
         };
       } else {
-        // BUGS: "hashchange" event will also be fired when a link is clicked or
+        // XXX: "hashchange" event will also be fired when a link is clicked or
         // a new URL is entered in the address bar. Therefore the navigation type
         // cannot be detected correctly.
         const handleHashChange = (event: HashChangeEvent) => {
