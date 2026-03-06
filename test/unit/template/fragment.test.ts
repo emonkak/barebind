@@ -15,7 +15,7 @@ import { TestUpdater } from '../../test-updater.js';
 
 describe('FragmentTemplate', () => {
   describe('arity', () => {
-    it('returns the total arity of the internal templates', () => {
+    it('returns the total arity of the inner templates', () => {
       expect(
         new FragmentTemplate([
           new MockTemplate(['[', ']'], ['foo']),
@@ -29,34 +29,27 @@ describe('FragmentTemplate', () => {
 
   describe('equals()', () => {
     it('returns true if all templates are the same', () => {
-      const internalTemplate1 = new MockTemplate();
-      const internalTemplate2 = new MockTemplate();
+      const innerTemplate1 = new MockTemplate();
+      const innerTemplate2 = new MockTemplate();
 
-      const template = new FragmentTemplate([
-        internalTemplate1,
-        internalTemplate2,
-      ]);
+      const template = new FragmentTemplate([innerTemplate1, innerTemplate2]);
 
       expect(template.equals(template)).toBe(true);
       expect(template.equals(new FragmentTemplate([]))).toBe(false);
       expect(
-        template.equals(
-          new FragmentTemplate([internalTemplate1, internalTemplate2]),
-        ),
+        template.equals(new FragmentTemplate([innerTemplate1, innerTemplate2])),
       ).toBe(true);
-      expect(template.equals(new FragmentTemplate([internalTemplate1]))).toBe(
+      expect(template.equals(new FragmentTemplate([innerTemplate1]))).toBe(
         false,
       );
       expect(
-        template.equals(
-          new FragmentTemplate([internalTemplate2, internalTemplate1]),
-        ),
+        template.equals(new FragmentTemplate([innerTemplate2, innerTemplate1])),
       ).toBe(false);
     });
   });
 
   describe('hydrate()', () => {
-    it('delegate hydration to internal templates', () => {
+    it('delegate hydration to inner templates', () => {
       const innerTemplates = [
         new MockTemplate(['[', ']'], ['foo']),
         new MockTemplate(),
@@ -138,7 +131,7 @@ describe('FragmentTemplate', () => {
   });
 
   describe('render()', () => {
-    it('delegate rendering to internal templates', () => {
+    it('delegate rendering to inner templates', () => {
       const innerTemplates = [
         new MockTemplate(['[', ']'], ['foo']),
         new MockTemplate(),
