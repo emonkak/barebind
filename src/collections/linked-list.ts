@@ -25,6 +25,29 @@ export class LinkedList<T> implements Iterable<T> {
 
   private _ownership: Ownership = createOwnership();
 
+  static concat<T>(...sources: LinkedList<T>[]): LinkedList<T> {
+    const target = new LinkedList<T>();
+
+    for (const source of sources) {
+      source._ownership.id = target._ownership.id;
+
+      if (target._tail === null) {
+        target._head = source._head;
+        target._tail = source._tail;
+      } else {
+        if (source._head !== null) {
+          source._head.prev = target._tail;
+          target._tail.next = source._head;
+          target._tail = source._tail;
+        }
+      }
+
+      source.clear();
+    }
+
+    return target;
+  }
+
   *[Symbol.iterator](): Generator<T> {
     for (let node = this._head; node !== null; node = node.next) {
       yield node.value;
