@@ -150,7 +150,7 @@ export class ComponentBinding<TProps, TResult>
 
   shouldUpdate(props: TProps): boolean {
     return (
-      this._state.scope === DETACHED_SCOPE ||
+      this._scope === DETACHED_SCOPE ||
       !this._component.arePropsEqual(props, this._props)
     );
   }
