@@ -17,31 +17,6 @@ import { waitForMicrotasks, waitForTimeout } from '../test-helpers.js';
 import { TestRenderer } from '../test-renderer.js';
 
 describe('RenderSession', () => {
-  describe('attempt()', () => {
-    it('propagates the error to error boundaries when handleError is invoked', () => {
-      const handler = vi.fn();
-      const error = new Error('fail');
-      const renderer = new TestRenderer((_props, session) => {
-        session.catchError(handler);
-
-        session.catchError((error, handleError) => {
-          handleError(error);
-        });
-
-        session.attempt(() => {
-          throw error;
-        });
-      });
-
-      SESSION: {
-        renderer.render({});
-
-        expect(handler).toHaveBeenCalledOnce();
-        expect(handler).toHaveBeenCalledWith(error, expect.any(Function));
-      }
-    });
-  });
-
   describe('catchError()', () => {
     it('propagates the error to error boundaries when handleError is invoked', () => {
       const handler = vi.fn();

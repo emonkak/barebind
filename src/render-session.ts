@@ -1,7 +1,6 @@
 import { areDependenciesChanged } from './compare.js';
 import {
   $hook,
-  type Action,
   BoundaryType,
   type Cleanup,
   type ComponentState,
@@ -54,14 +53,6 @@ export class RenderSession implements RenderContext {
     this._coroutine = coroutine;
     this._frame = frame;
     this._context = context;
-  }
-
-  async attempt(action: Action): Promise<void> {
-    try {
-      await action();
-    } catch (error) {
-      this.throwError(error);
-    }
   }
 
   catchError(handler: ErrorHandler): void {

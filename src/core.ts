@@ -8,8 +8,6 @@ export const $hook: unique symbol = Symbol('$hook');
 
 export const DETACHED_SCOPE: Scope = Object.freeze(createScope());
 
-export type Action = () => Promise<void> | void;
-
 export interface Bindable<T = unknown> {
   [$directive](): Directive<T>;
 }
@@ -366,7 +364,6 @@ export interface RefObject<T> {
 }
 
 export interface RenderContext {
-  attempt(action: Action): Promise<void>;
   catchError(handler: ErrorHandler): void;
   forceUpdate(options?: UpdateOptions): UpdateHandle;
   getSessionContext(): SessionContext;

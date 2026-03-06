@@ -1,42 +1,4 @@
-import type {
-  Action,
-  Cleanup,
-  HookFunction,
-  InitialState,
-  NextState,
-  ReducerHandle,
-  Ref,
-  StateHandle,
-  UpdateHandle,
-} from '../core.js';
-
-export type AttemptHandle = [
-  isPending: boolean,
-  attempt: (action: Action) => UpdateHandle,
-];
-
-export function Attempt(): HookFunction<AttemptHandle> {
-  return (context) => {
-    const [pendingAction, setPendingAction] = context.useState<Action | null>(
-      null,
-    );
-
-    context.useEffect(() => {
-      if (pendingAction !== null) {
-        context.attempt(pendingAction).finally(() => {
-          setPendingAction(null, { immediate: true });
-        });
-      }
-    }, [pendingAction]);
-
-    const isPending = pendingAction !== null;
-    const attempt = (action: Action): UpdateHandle => {
-      return setPendingAction(() => action);
-    };
-
-    return [isPending, attempt];
-  };
-}
+import type { Cleanup, HookFunction, InitialState, Ref } from '../core.js';
 
 export function DeferredValue<T>(
   value: T,
@@ -120,37 +82,5 @@ export function SyncEnternalStore<T>(
     }, [subscribe]);
 
     return snapshot;
-  };
-}
-
-export function Optimistic<TState>(
-  state: TState,
-): HookFunction<StateHandle<TState>>;
-export function Optimistic<TState, TAction>(
-  state: TState,
-  reducer: (state: TState, action: TAction) => TState,
-): HookFunction<ReducerHandle<TState, TAction>>;
-export function Optimistic<TState, TAction>(
-  state: TState,
-  reducer?: (state: TState, action: TAction) => TState,
-): HookFunction<StateHandle<TState> | ReducerHandle<TState, TAction>> {
-  return (context) => {
-    const [optimisticState, dispatch, isPending] = context.useReducer<
-      TState,
-      TAction | NextState<TState>
-    >(
-      (state, action) =>
-        typeof action === 'function'
-          ? (action as (state: TState) => TState)(state)
-          : (reducer?.(state, action as TAction) ?? (action as TState)),
-      () => state,
-    );
-
-    context.catchError((error, handleError) => {
-      dispatch(() => state);
-      handleError(error);
-    });
-
-    return [optimisticState, dispatch, isPending];
   };
 }
