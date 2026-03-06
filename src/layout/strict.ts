@@ -1,15 +1,18 @@
-import {
-  areDirectiveTypesEqual,
-  type Binding,
-  type DirectiveType,
-  type Layout,
-  type Part,
-  type Slot,
-  type UnwrapBindable,
-  type UpdateSession,
+import type {
+  Binding,
+  DirectiveType,
+  Layout,
+  Part,
+  Slot,
+  UnwrapBindable,
+  UpdateSession,
 } from '../core.js';
 import { debugPart, undebugPart } from '../debug/part.js';
-import { DirectiveError, LayoutModifier } from '../directive.js';
+import {
+  areDirectiveTypesEqual,
+  DirectiveError,
+  LayoutModifier,
+} from '../directive.js';
 import { SlotStatus } from './layout.js';
 
 export function Strict<T>(source: T): LayoutModifier<T> {

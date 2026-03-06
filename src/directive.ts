@@ -6,7 +6,6 @@ import {
   type Layout,
   type Part,
   PartType,
-  toDirective,
   type UnwrapBindable,
 } from './core.js';
 import { formatPart } from './debug/part.js';
@@ -89,6 +88,13 @@ export class LayoutModifier<T>
   }
 }
 
+export function areDirectiveTypesEqual(
+  nextType: DirectiveType<unknown>,
+  prevType: DirectiveType<unknown>,
+): boolean {
+  return nextType.equals?.(prevType) ?? nextType === prevType;
+}
+
 export function ensurePartType<TExpectedPart extends Part>(
   expectedPartType: TExpectedPart['type'],
   type: DirectiveType<unknown>,
@@ -103,4 +109,14 @@ export function ensurePartType<TExpectedPart extends Part>(
       `${type.name} must be used in ${Object.keys(PartType)[expectedPartType]}Part.`,
     );
   }
+}
+
+export function isBindable(value: unknown): value is Bindable<any> {
+  return typeof (value as Bindable)?.[$directive] === 'function';
+}
+
+export function toDirective<T>(source: T): Directive<UnwrapBindable<T>> {
+  return isBindable(source)
+    ? source[$directive]()
+    : { value: source as UnwrapBindable<T> };
 }

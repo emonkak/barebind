@@ -594,16 +594,6 @@ export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;
 /**
  * @internal
  */
-export function areDirectiveTypesEqual(
-  nextType: DirectiveType<unknown>,
-  prevType: DirectiveType<unknown>,
-): boolean {
-  return nextType.equals?.(prevType) ?? nextType === prevType;
-}
-
-/**
- * @internal
- */
 export function createScope(
   parent: Scope | null = null,
   context: ScopeContext | null = null,
@@ -700,20 +690,4 @@ export function getStartNode(part: Part): ChildNode {
   return part.type === PartType.ChildNode
     ? (part.anchorNode ?? part.node)
     : part.node;
-}
-
-/**
- * @internal
- */
-export function isBindable(value: unknown): value is Bindable<any> {
-  return typeof (value as Bindable)?.[$directive] === 'function';
-}
-
-/**
- * @internal
- */
-export function toDirective<T>(source: T): Directive<UnwrapBindable<T>> {
-  return isBindable(source)
-    ? source[$directive]()
-    : { value: source as UnwrapBindable<T> };
 }

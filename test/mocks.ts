@@ -8,7 +8,6 @@ import {
 } from '@/backend.js';
 import {
   $directive,
-  areDirectiveTypesEqual,
   type Bindable,
   type Binding,
   type CommitPhase,
@@ -35,6 +34,7 @@ import {
   type UnwrapBindable,
   type UpdateSession,
 } from '@/core.js';
+import { areDirectiveTypesEqual } from '@/directive.js';
 import { Runtime, type RuntimeOptions } from '@/runtime.js';
 import { AbstractTemplate } from '@/template/template.js';
 

@@ -1,15 +1,14 @@
 import { LRUMap } from '../collections/lru-map.js';
-import {
-  type Binding,
-  type DirectiveType,
-  type Layout,
-  type Part,
-  type Slot,
-  toDirective,
-  type UnwrapBindable,
-  type UpdateSession,
+import type {
+  Binding,
+  DirectiveType,
+  Layout,
+  Part,
+  Slot,
+  UnwrapBindable,
+  UpdateSession,
 } from '../core.js';
-import { LayoutModifier } from '../directive.js';
+import { LayoutModifier, toDirective } from '../directive.js';
 
 export function Cached<TSource, TKey>(
   source: TSource,

@@ -21,7 +21,6 @@ import {
   type Slot,
   type Template,
   type TemplateMode,
-  toDirective,
   type UnwrapBindable,
   type UpdateHandle,
   type UpdateOptions,
@@ -29,6 +28,7 @@ import {
   type UpdateSession,
   type UpdateTask,
 } from './core.js';
+import { toDirective } from './directive.js';
 import { CapturedError, handleError, RenderError } from './error.js';
 import { RenderSession } from './render-session.js';
 

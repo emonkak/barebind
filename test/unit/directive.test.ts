@@ -1,8 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { $directive } from '@/core.js';
 import { formatValue } from '@/debug/value.js';
-import { DirectiveSpecifier, LayoutModifier } from '@/directive.js';
-import { MockDirective, MockLayout } from '../mocks.js';
+import {
+  areDirectiveTypesEqual,
+  DirectiveSpecifier,
+  isBindable,
+  LayoutModifier,
+} from '@/directive.js';
+import {
+  MockBindable,
+  MockDirective,
+  MockLayout,
+  MockPrimitive,
+} from '../mocks.js';
 
 describe('DirectiveSpecifier', () => {
   describe('[$debug]()', () => {
@@ -77,5 +87,31 @@ describe('LayoutModifier', () => {
       expect(directive.value).toBe(source.value);
       expect(directive.layout).toStrictEqual(new MockLayout(new MockLayout()));
     });
+  });
+});
+
+describe('areDirectiveTypesEqual()', () => {
+  it('returns the result from Directive.equals() if it is definied', () => {
+    const type1 = new MockDirective();
+    const type2 = MockPrimitive;
+
+    expect(areDirectiveTypesEqual(type1, type1)).toBe(true);
+    expect(areDirectiveTypesEqual(type1, type2)).toBe(false);
+    expect(areDirectiveTypesEqual(type2, type1)).toBe(false);
+    expect(areDirectiveTypesEqual(type2, type2)).toBe(true);
+  });
+});
+
+describe('isBindable()', () => {
+  it('returns true if the value is a bindable', () => {
+    expect(
+      isBindable(
+        new MockBindable({
+          type: MockPrimitive,
+          value: 'foo',
+        }),
+      ),
+    ).toBe(true);
+    expect(isBindable('foo')).toBe(false);
   });
 });

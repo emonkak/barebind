@@ -7,13 +7,16 @@ import {
   type Directive,
   type DirectiveContext,
   type DirectiveType,
-  isBindable,
   type Part,
   PartType,
   type Template,
   type UpdateSession,
 } from '../core.js';
-import { DirectiveSpecifier, ensurePartType } from '../directive.js';
+import {
+  DirectiveSpecifier,
+  ensurePartType,
+  isBindable,
+} from '../directive.js';
 import { KeyedLayout } from '../layout/keyed.js';
 import { LooseLayout } from '../layout/loose.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';

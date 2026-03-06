@@ -1,19 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  areDirectiveTypesEqual,
   EffectQueue,
   getLanesFromOptions,
   getPriorityFromLanes,
   getStartNode,
-  isBindable,
   Lane,
   type Lanes,
   PartType,
   type UpdateOptions,
 } from '@/core.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockBindable, MockDirective, MockPrimitive } from '../mocks.js';
 
 describe('EffectQueue', () => {
   it('commits pending effects in order from child to parent', () => {
@@ -74,18 +71,6 @@ describe('EffectQueue', () => {
 
     expect(queue.length).toBe(0);
     expect(commits).toStrictEqual([3, 1, 2, 0, 5, 4]);
-  });
-});
-
-describe('areDirectiveTypesEqual()', () => {
-  it('returns the result from Directive.equals() if it is definied', () => {
-    const type1 = new MockDirective();
-    const type2 = MockPrimitive;
-
-    expect(areDirectiveTypesEqual(type1, type1)).toBe(true);
-    expect(areDirectiveTypesEqual(type1, type2)).toBe(false);
-    expect(areDirectiveTypesEqual(type2, type1)).toBe(false);
-    expect(areDirectiveTypesEqual(type2, type2)).toBe(true);
   });
 });
 
@@ -173,19 +158,5 @@ describe('getStartNode()', () => {
     };
 
     expect(getStartNode(part)).toBe(part.anchorNode);
-  });
-});
-
-describe('isBindable()', () => {
-  it('returns true if the value is a bindable', () => {
-    expect(
-      isBindable(
-        new MockBindable({
-          type: MockPrimitive,
-          value: 'foo',
-        }),
-      ),
-    ).toBe(true);
-    expect(isBindable('foo')).toBe(false);
   });
 });
