@@ -131,14 +131,13 @@ export class Runtime implements SessionContext {
       (pendingUpdate = this._pendingUpdates.front()?.value) !== undefined;
       this._pendingUpdates.popFront()
     ) {
-      const { coroutine, lanes, continuation } = pendingUpdate;
+      const { id, coroutine, lanes, continuation } = pendingUpdate;
 
       if ((coroutine.pendingLanes & lanes) === Lane.NoLane) {
         continuation.resolve({ canceled: true, done: true });
         continue;
       }
 
-      const id = this._updateCount++;
       const frame = createRenderFrame(id, lanes, coroutine);
       const originScope = coroutine.scope;
       const session = createUpdateSession(
@@ -291,12 +290,14 @@ export class Runtime implements SessionContext {
       Omit<UpdateOptions, Exclude<keyof SchedulerPostTaskOptions, 'priority'>>
     >;
 
+    const id = this._updateCount++;
     const lanes = getLanesFromOptions(options);
     const continuation = Promise.withResolvers<UpdateResult>();
     const pendingUpdate: UpdateTask = {
+      id,
+      lanes,
       continuation,
       coroutine,
-      lanes,
     };
 
     let scheduled: Promise<UpdateResult>;
@@ -329,6 +330,7 @@ export class Runtime implements SessionContext {
     }
 
     return {
+      id,
       lanes,
       scheduled,
       finished: continuation.promise,

@@ -501,6 +501,7 @@ export interface TemplateResult {
 export type UnwrapBindable<T> = T extends Bindable<infer Value> ? Value : T;
 
 export interface UpdateHandle {
+  id: number;
   lanes: Lanes;
   scheduled: Promise<UpdateResult>;
   finished: Promise<UpdateResult>;
@@ -526,9 +527,10 @@ export interface UpdateSession {
 }
 
 export interface UpdateTask {
+  id: number;
+  lanes: Lanes;
   continuation: PromiseWithResolvers<UpdateResult>;
   coroutine: Coroutine;
-  lanes: Lanes;
 }
 
 export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;

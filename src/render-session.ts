@@ -95,6 +95,7 @@ export class RenderSession implements RenderContext {
   forceUpdate(options?: UpdateOptions): UpdateHandle {
     if (this._coroutine.scope === DETACHED_SCOPE) {
       return {
+        id: this._frame.id,
         lanes: Lane.NoLane,
         scheduled: Promise.resolve({ canceled: true, done: false }),
         finished: Promise.resolve({ canceled: true, done: false }),
@@ -106,6 +107,7 @@ export class RenderSession implements RenderContext {
         this._frame.pendingCoroutines.push(this._coroutine);
         this._state.pendingLanes |= lanes;
         return {
+          id: this._frame.id,
           lanes,
           scheduled: Promise.resolve({ canceled: true, done: true }),
           finished: continuation.promise,
@@ -328,6 +330,7 @@ export class RenderSession implements RenderContext {
 
           if (areStatesEqual(nextState, prevState)) {
             return {
+              id: this._frame.id,
               lanes: Lane.NoLane,
               scheduled: Promise.resolve({ canceled: true, done: true }),
               finished: Promise.resolve({ canceled: true, done: true }),
