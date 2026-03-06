@@ -3,21 +3,25 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   type ConsoleLogger,
   ConsoleReporter,
-  type RuntimeProfile,
-  RuntimeProfiler,
-} from '@/addons/runtime-profiler.js';
+  type SessionProfile,
+  SessionProfiler,
+} from '@/addons/session-profiler.js';
 import { createComponent } from '@/component.js';
-import { CommitPhase, Lane, type RenderContext } from '@/internal.js';
-import type { RuntimeEvent } from '@/runtime.js';
+import {
+  CommitPhase,
+  Lane,
+  type RenderContext,
+  type SessionEvent,
+} from '@/internal.js';
 import { createEffectQueue, MockEffect } from '../../mocks.js';
 
-describe('PerformanceProfiler', () => {
-  describe('onRuntimeEvent()', () => {
+describe('SessionProfiler', () => {
+  describe('onSessionEvent()', () => {
     it('reports the profile on update success', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
-      const profiler = new RuntimeProfiler(reporter);
+      const profiler = new SessionProfiler(reporter);
 
       const component = createComponent(function MyComponent(_props: {}) {
         return null;
@@ -29,7 +33,7 @@ describe('PerformanceProfiler', () => {
       const layoutEffects = createEffectQueue([new MockEffect()]);
       const passiveEffects = createEffectQueue([new MockEffect()]);
       const emptyEffects = createEffectQueue([]);
-      const events: RuntimeEvent[] = [
+      const events: SessionEvent[] = [
         {
           type: 'update-start',
           id: 0,
@@ -115,7 +119,7 @@ describe('PerformanceProfiler', () => {
       ];
 
       for (const event of events) {
-        profiler.onRuntimeEvent(event);
+        profiler.onSessionEvent(event);
       }
 
       expect(reporter.reportProfile).toHaveBeenCalledOnce();
@@ -164,20 +168,20 @@ describe('PerformanceProfiler', () => {
           pendingEffects: 0,
           committedEffects: 1,
         },
-      } satisfies RuntimeProfile);
+      } satisfies SessionProfile);
     });
 
     it('reports the profile on update failure', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
-      const profiler = new RuntimeProfiler(reporter);
+      const profiler = new SessionProfiler(reporter);
 
       const component = createComponent(function MyComponent(_props: {}) {
         return null;
       });
       const error = new Error('fail');
-      const events: RuntimeEvent[] = [
+      const events: SessionEvent[] = [
         {
           type: 'update-start',
           id: 0,
@@ -209,7 +213,7 @@ describe('PerformanceProfiler', () => {
       ];
 
       for (const event of events) {
-        profiler.onRuntimeEvent(event);
+        profiler.onSessionEvent(event);
       }
 
       expect(reporter.reportProfile).toHaveBeenCalledOnce();
@@ -243,14 +247,14 @@ describe('PerformanceProfiler', () => {
         mutationMeasurement: null,
         layoutMeasurement: null,
         passiveMeasurement: null,
-      } satisfies RuntimeProfile);
+      } satisfies SessionProfile);
     });
 
     it('reports the profile after all effects are committed', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
-      const profiler = new RuntimeProfiler(reporter);
+      const profiler = new SessionProfiler(reporter);
 
       const component = createComponent(function MyComponent(_props: {}) {
         return null;
@@ -262,7 +266,7 @@ describe('PerformanceProfiler', () => {
       const layoutEffects = createEffectQueue([]);
       const passiveEffects = createEffectQueue([new MockEffect()]);
       const emptyEffects = createEffectQueue([]);
-      const events: RuntimeEvent[] = [
+      const events: SessionEvent[] = [
         {
           type: 'update-start',
           id: 0,
@@ -336,7 +340,7 @@ describe('PerformanceProfiler', () => {
       ];
 
       for (const event of events) {
-        profiler.onRuntimeEvent(event);
+        profiler.onSessionEvent(event);
       }
 
       expect(reporter.reportProfile).toHaveBeenCalledOnce();
@@ -380,16 +384,16 @@ describe('PerformanceProfiler', () => {
           pendingEffects: 0,
           committedEffects: 1,
         },
-      } satisfies RuntimeProfile);
+      } satisfies SessionProfile);
     });
 
     it('ignore events for updates that have not started', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
-      const profiler = new RuntimeProfiler(reporter);
+      const profiler = new SessionProfiler(reporter);
 
-      const events: RuntimeEvent[] = [
+      const events: SessionEvent[] = [
         {
           type: 'update-success',
           id: 0,
@@ -398,7 +402,7 @@ describe('PerformanceProfiler', () => {
       ];
 
       for (const event of events) {
-        profiler.onRuntimeEvent(event);
+        profiler.onSessionEvent(event);
       }
 
       expect(reporter.reportProfile).not.toHaveBeenCalledOnce();
@@ -579,7 +583,7 @@ describe('ConsoleReporter', () => {
         ],
       ],
     ] as const satisfies [
-      RuntimeProfile,
+      SessionProfile,
       [keyof ConsoleLogger, ...unknown[]][],
     ][])('prints a profile to the logger', (profile, expectedLogs) => {
       const logger = new MockLogger();

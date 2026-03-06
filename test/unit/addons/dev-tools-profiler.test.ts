@@ -24,8 +24,8 @@ describe('DevToolsProfiler', () => {
 
   describe('update-start / update-success', () => {
     it('records an end mark and a measure', () => {
-      profiler.onRuntimeEvent({ type: 'update-start', id: 0, lanes: 0 });
-      profiler.onRuntimeEvent({ type: 'update-success', id: 0, lanes: 0 });
+      profiler.onSessionEvent({ type: 'update-start', id: 0, lanes: 0 });
+      profiler.onSessionEvent({ type: 'update-success', id: 0, lanes: 0 });
 
       expect(marksOf(performance)).toStrictEqual([
         'barebind:update-start:0',
@@ -43,8 +43,8 @@ describe('DevToolsProfiler', () => {
 
   describe('update-start / update-failure', () => {
     it('records an end mark and a failure measure', () => {
-      profiler.onRuntimeEvent({ type: 'update-start', id: 0, lanes: 0 });
-      profiler.onRuntimeEvent({
+      profiler.onSessionEvent({ type: 'update-start', id: 0, lanes: 0 });
+      profiler.onSessionEvent({
         type: 'update-failure',
         id: 0,
         lanes: 0,
@@ -67,8 +67,8 @@ describe('DevToolsProfiler', () => {
 
   describe('render-phase-start / render-phase-end', () => {
     it('records marks and a measure', () => {
-      profiler.onRuntimeEvent({ type: 'render-phase-start', id: 0 });
-      profiler.onRuntimeEvent({ type: 'render-phase-end', id: 0 });
+      profiler.onSessionEvent({ type: 'render-phase-start', id: 0 });
+      profiler.onSessionEvent({ type: 'render-phase-end', id: 0 });
 
       expect(marksOf(performance)).toStrictEqual([
         'barebind:render-phase-start:0',
@@ -86,15 +86,15 @@ describe('DevToolsProfiler', () => {
 
   describe('component-render-start / component-render-end', () => {
     it('records marks and a measure for a single component', () => {
-      profiler.onRuntimeEvent({ type: 'update-start', id: 0, lanes: 0 });
-      profiler.onRuntimeEvent({
+      profiler.onSessionEvent({ type: 'update-start', id: 0, lanes: 0 });
+      profiler.onSessionEvent({
         type: 'component-render-start',
         id: 0,
         component: Foo,
         props: {},
         context: null as any,
       });
-      profiler.onRuntimeEvent({
+      profiler.onSessionEvent({
         type: 'component-render-end',
         id: 0,
         component: Foo,
@@ -117,17 +117,17 @@ describe('DevToolsProfiler', () => {
     });
 
     it('disambiguates multiple renders of the same component', () => {
-      profiler.onRuntimeEvent({ type: 'update-start', id: 0, lanes: 0 });
+      profiler.onSessionEvent({ type: 'update-start', id: 0, lanes: 0 });
 
       for (let i = 0; i < 3; i++) {
-        profiler.onRuntimeEvent({
+        profiler.onSessionEvent({
           type: 'component-render-start',
           id: 0,
           component: Foo,
           props: {},
           context: null as any,
         });
-        profiler.onRuntimeEvent({
+        profiler.onSessionEvent({
           type: 'component-render-end',
           id: 0,
           component: Foo,
@@ -165,29 +165,29 @@ describe('DevToolsProfiler', () => {
     });
 
     it('disambiguates different components within the same update', () => {
-      profiler.onRuntimeEvent({ type: 'update-start', id: 0, lanes: 0 });
-      profiler.onRuntimeEvent({
+      profiler.onSessionEvent({ type: 'update-start', id: 0, lanes: 0 });
+      profiler.onSessionEvent({
         type: 'component-render-start',
         id: 0,
         component: Foo,
         props: {},
         context: null as any,
       });
-      profiler.onRuntimeEvent({
+      profiler.onSessionEvent({
         type: 'component-render-end',
         id: 0,
         component: Foo,
         props: {},
         context: null as any,
       });
-      profiler.onRuntimeEvent({
+      profiler.onSessionEvent({
         type: 'component-render-start',
         id: 0,
         component: Bar,
         props: {},
         context: null as any,
       });
-      profiler.onRuntimeEvent({
+      profiler.onSessionEvent({
         type: 'component-render-end',
         id: 0,
         component: Bar,
@@ -211,15 +211,15 @@ describe('DevToolsProfiler', () => {
 
     it('resets component index on each update-start', () => {
       for (const id of [0, 1]) {
-        profiler.onRuntimeEvent({ type: 'update-start', id, lanes: 0 });
-        profiler.onRuntimeEvent({
+        profiler.onSessionEvent({ type: 'update-start', id, lanes: 0 });
+        profiler.onSessionEvent({
           type: 'component-render-start',
           id,
           component: Foo,
           props: {},
           context: null as any,
         });
-        profiler.onRuntimeEvent({
+        profiler.onSessionEvent({
           type: 'component-render-end',
           id,
           component: Foo,
@@ -245,14 +245,14 @@ describe('DevToolsProfiler', () => {
 
   describe('commit-phase-start / commit-phase-end', () => {
     it('records marks and a measure', () => {
-      profiler.onRuntimeEvent({
+      profiler.onSessionEvent({
         type: 'commit-phase-start',
         id: 0,
         mutationEffects: new EffectQueue(),
         layoutEffects: new EffectQueue(),
         passiveEffects: new EffectQueue(),
       });
-      profiler.onRuntimeEvent({
+      profiler.onSessionEvent({
         type: 'commit-phase-end',
         id: 0,
         mutationEffects: new EffectQueue(),
@@ -280,13 +280,13 @@ describe('DevToolsProfiler', () => {
       [CommitPhase.Layout, 'layout'],
       [CommitPhase.Passive, 'passive'],
     ] as const)('records marks and a measure for %s phase', (phase, name) => {
-      profiler.onRuntimeEvent({
+      profiler.onSessionEvent({
         type: 'effect-commit-start',
         id: 0,
         effects: new EffectQueue(),
         phase,
       });
-      profiler.onRuntimeEvent({
+      profiler.onSessionEvent({
         type: 'effect-commit-end',
         id: 0,
         effects: new EffectQueue(),
@@ -314,7 +314,7 @@ describe('DevToolsProfiler', () => {
       });
 
       expect(() => {
-        profiler.onRuntimeEvent({ type: 'update-success', id: 99, lanes: 0 });
+        profiler.onSessionEvent({ type: 'update-success', id: 99, lanes: 0 });
       }).not.toThrow();
     });
   });

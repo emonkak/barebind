@@ -26,6 +26,8 @@ import {
   type Primitive,
   type RenderFrame,
   type Scope,
+  type SessionEvent,
+  type SessionObserver,
   type Slot,
   type Template,
   type TemplateMode,
@@ -33,12 +35,7 @@ import {
   type UnwrapBindable,
   type UpdateSession,
 } from '@/internal.js';
-import {
-  Runtime,
-  type RuntimeEvent,
-  type RuntimeObserver,
-  type RuntimeOptions,
-} from '@/runtime.js';
+import { Runtime, type RuntimeOptions } from '@/runtime.js';
 import { AbstractTemplate } from '@/template/template.js';
 
 export class MockBackend implements Backend {
@@ -316,14 +313,14 @@ export class MockLayout implements Layout {
   }
 }
 
-export class MockObserver implements RuntimeObserver {
-  events: RuntimeEvent[] = [];
+export class MockObserver implements SessionObserver {
+  events: SessionEvent[] = [];
 
-  onRuntimeEvent(event: RuntimeEvent): void {
+  onSessionEvent(event: SessionEvent): void {
     this.events.push(event);
   }
 
-  flushEvents(): RuntimeEvent[] {
+  flushEvents(): SessionEvent[] {
     const events = this.events;
     this.events = [];
     return events;

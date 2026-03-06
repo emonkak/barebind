@@ -1,9 +1,12 @@
-import { CommitPhase } from '../internal.js';
-import type { RuntimeEvent, RuntimeObserver } from '../runtime.js';
+import {
+  CommitPhase,
+  type SessionEvent,
+  type SessionObserver,
+} from '../internal.js';
 
 export type UserTimingAPI = Pick<Performance, 'mark' | 'measure'>;
 
-export class DevToolsProfiler implements RuntimeObserver {
+export class DevToolsProfiler implements SessionObserver {
   private readonly _userTiming: UserTimingAPI;
 
   private _componentIndex: number = 0;
@@ -12,7 +15,7 @@ export class DevToolsProfiler implements RuntimeObserver {
     this._userTiming = userTiming;
   }
 
-  onRuntimeEvent(event: RuntimeEvent): void {
+  onSessionEvent(event: SessionEvent): void {
     const { id, type } = event;
     switch (type) {
       case 'update-start': {

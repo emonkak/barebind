@@ -14,10 +14,11 @@ import {
   type Lanes,
   type Part,
   type Primitive,
-  type RenderContext,
   type RenderFrame,
   type Scope,
   type SessionContext,
+  type SessionEvent,
+  type SessionObserver,
   type Slot,
   type Template,
   type TemplateMode,
@@ -30,58 +31,6 @@ import {
   type UpdateTask,
 } from './internal.js';
 import { RenderSession } from './render-session.js';
-
-export type RuntimeEvent =
-  | {
-      type: 'update-start';
-      id: number;
-      lanes: Lanes;
-    }
-  | {
-      type: 'update-success';
-      id: number;
-      lanes: Lanes;
-    }
-  | {
-      type: 'update-failure';
-      id: number;
-      lanes: Lanes;
-      error: unknown;
-    }
-  | {
-      type: 'render-phase-start' | 'render-phase-end';
-      id: number;
-    }
-  | {
-      type: 'render-error';
-      id: number;
-      error: unknown;
-      captured: boolean;
-    }
-  | {
-      type: 'component-render-start' | 'component-render-end';
-      id: number;
-      component: Component<any>;
-      props: unknown;
-      context: RenderContext;
-    }
-  | {
-      type: 'commit-phase-start' | 'commit-phase-end';
-      id: number;
-      mutationEffects: EffectQueue;
-      layoutEffects: EffectQueue;
-      passiveEffects: EffectQueue;
-    }
-  | {
-      type: 'effect-commit-start' | 'effect-commit-end';
-      id: number;
-      effects: EffectQueue;
-      phase: CommitPhase;
-    };
-
-export interface RuntimeObserver {
-  onRuntimeEvent(event: RuntimeEvent): void;
-}
 
 export interface RuntimeOptions {
   uniqueIdentifier?: string;
@@ -96,7 +45,7 @@ export class Runtime implements SessionContext {
     Template<readonly unknown[]>
   > = new WeakMap();
 
-  private readonly _observers: LinkedList<RuntimeObserver> = new LinkedList();
+  private readonly _observers: LinkedList<SessionObserver> = new LinkedList();
 
   private readonly _pendingUpdates: LinkedList<UpdateTask> = new LinkedList();
 
@@ -120,7 +69,7 @@ export class Runtime implements SessionContext {
     this._uniqueIdentifier = uniqueIdentifier;
   }
 
-  addObserver(observer: RuntimeObserver): () => void {
+  addObserver(observer: SessionObserver): () => void {
     const observers = this._observers;
     const node = observers.pushBack(observer);
     return () => {
@@ -532,7 +481,7 @@ function captureError(
   error: unknown,
   coroutine: Coroutine,
   session: UpdateSession,
-  observers: LinkedList<RuntimeObserver>,
+  observers: LinkedList<SessionObserver>,
 ): void {
   const { originScope, frame } = session;
   let handlingScope: Scope | null = null;
@@ -601,10 +550,10 @@ function generateUniqueIdentifier(length: number): string {
 }
 
 function notifyObservers(
-  observers: LinkedList<RuntimeObserver>,
-  event: RuntimeEvent,
+  observers: LinkedList<SessionObserver>,
+  event: SessionEvent,
 ): void {
   for (let node = observers.front(); node !== null; node = node.next) {
-    node.value.onRuntimeEvent(event);
+    node.value.onSessionEvent(event);
   }
 }

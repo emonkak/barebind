@@ -5,60 +5,9 @@ import {
   getPriorityFromLanes,
   Lane,
   type Lanes,
+  type SessionEvent,
+  type SessionObserver,
 } from '../internal.js';
-import type { RuntimeEvent, RuntimeObserver } from '../runtime.js';
-
-export interface CommitMeasurement {
-  startTime: number;
-  duration: number;
-  pendingEffects: number;
-  committedEffects: number;
-}
-
-export interface ComponentRenderMeasurement {
-  name: string;
-  startTime: number;
-  duration: number;
-}
-
-export interface ErrorRecord {
-  error: unknown;
-  captured: boolean;
-}
-
-export interface RenderMeasurement {
-  startTime: number;
-  duration: number;
-}
-
-export interface RuntimeProfile {
-  id: number;
-  status: 'pending' | 'success' | 'failure';
-  phase: 'idle' | 'render' | 'commit';
-  updateMeasurement: UpdateMeasurement | null;
-  renderMeasurement: RenderMeasurement | null;
-  errorRecords: ErrorRecord[];
-  componentRenderMeasurements: ComponentRenderMeasurement[];
-  commitMeasurement: CommitMeasurement | null;
-  mutationMeasurement: CommitMeasurement | null;
-  layoutMeasurement: CommitMeasurement | null;
-  passiveMeasurement: CommitMeasurement | null;
-}
-
-export interface RuntimeProfileReporter {
-  reportProfile(profile: RuntimeProfile): void;
-}
-
-export interface UpdateMeasurement {
-  startTime: number;
-  duration: number;
-  lanes: Lanes;
-}
-
-export type ConsoleLogger = Pick<
-  Console,
-  'group' | 'groupCollapsed' | 'groupEnd' | 'log' | 'table'
->;
 
 // Blue
 const RENDER_PHASE_STYLE =
@@ -80,16 +29,68 @@ const DURATION_STYLE =
   'color: light-dark(#5e5d67, #918f9a); font-weight: normal';
 const DEFAULT_STYLE = 'font-weight: normal';
 
-export class RuntimeProfiler implements RuntimeObserver {
-  private readonly _reporter: RuntimeProfileReporter;
+export interface CommitMeasurement {
+  startTime: number;
+  duration: number;
+  pendingEffects: number;
+  committedEffects: number;
+}
 
-  private readonly _pendingProfiles: Map<number, RuntimeProfile> = new Map();
+export interface ComponentRenderMeasurement {
+  name: string;
+  startTime: number;
+  duration: number;
+}
 
-  constructor(reporter: RuntimeProfileReporter) {
+export type ConsoleLogger = Pick<
+  Console,
+  'group' | 'groupCollapsed' | 'groupEnd' | 'log' | 'table'
+>;
+
+export interface ErrorRecord {
+  error: unknown;
+  captured: boolean;
+}
+
+export interface RenderMeasurement {
+  startTime: number;
+  duration: number;
+}
+
+export interface SessionProfileReporter {
+  reportProfile(profile: SessionProfile): void;
+}
+
+export interface SessionProfile {
+  id: number;
+  status: 'pending' | 'success' | 'failure';
+  phase: 'idle' | 'render' | 'commit';
+  updateMeasurement: UpdateMeasurement | null;
+  renderMeasurement: RenderMeasurement | null;
+  errorRecords: ErrorRecord[];
+  componentRenderMeasurements: ComponentRenderMeasurement[];
+  commitMeasurement: CommitMeasurement | null;
+  mutationMeasurement: CommitMeasurement | null;
+  layoutMeasurement: CommitMeasurement | null;
+  passiveMeasurement: CommitMeasurement | null;
+}
+
+export interface UpdateMeasurement {
+  startTime: number;
+  duration: number;
+  lanes: Lanes;
+}
+
+export class SessionProfiler implements SessionObserver {
+  private readonly _reporter: SessionProfileReporter;
+
+  private readonly _pendingProfiles: Map<number, SessionProfile> = new Map();
+
+  constructor(reporter: SessionProfileReporter) {
     this._reporter = reporter;
   }
 
-  onRuntimeEvent(event: RuntimeEvent): void {
+  onSessionEvent(event: SessionEvent): void {
     let profile = this._pendingProfiles.get(event.id);
 
     if (profile === undefined) {
@@ -241,20 +242,20 @@ export class RuntimeProfiler implements RuntimeObserver {
     }
   }
 
-  private _flushProfile(profile: RuntimeProfile): void {
+  private _flushProfile(profile: SessionProfile): void {
     this._reporter.reportProfile(profile);
     this._pendingProfiles.delete(profile.id);
   }
 }
 
-export class ConsoleReporter implements RuntimeProfileReporter {
+export class ConsoleReporter implements SessionProfileReporter {
   private readonly _logger: ConsoleLogger;
 
   constructor(logger: ConsoleLogger = console) {
     this._logger = logger;
   }
 
-  reportProfile(profile: RuntimeProfile): void {
+  reportProfile(profile: SessionProfile): void {
     const {
       status,
       updateMeasurement,
@@ -338,7 +339,7 @@ export class ConsoleReporter implements RuntimeProfileReporter {
   }
 }
 
-function createProfile(id: number): RuntimeProfile {
+function createProfile(id: number): SessionProfile {
   return {
     id,
     status: 'pending',

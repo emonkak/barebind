@@ -1,8 +1,8 @@
 import { BrowserBackend, Root, Runtime } from 'barebind';
 import {
   ConsoleReporter,
-  RuntimeProfiler,
-} from 'barebind/addons/runtime-profiler';
+  SessionProfiler,
+} from 'barebind/addons/session-profiler';
 
 import { App } from './App.js';
 import { AppStore } from './store.js';
@@ -16,6 +16,6 @@ const root = Root.create(
   runtime,
 );
 
-runtime.addObserver(new RuntimeProfiler(new ConsoleReporter()));
+runtime.addObserver(new SessionProfiler(new ConsoleReporter()));
 
 root.mount();

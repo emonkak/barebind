@@ -16,6 +16,8 @@ export {
   type RefCallback,
   type RefObject,
   type RenderContext,
+  type SessionEvent,
+  type SessionObserver,
   type UpdateOptions,
 } from './internal.js';
 export { Cached } from './layout/cached.js';
@@ -31,10 +33,6 @@ export {
   type RepeatProps,
 } from './repeat.js';
 export { Root } from './root.js';
-export {
-  Runtime,
-  type RuntimeEvent,
-  type RuntimeObserver,
-} from './runtime.js';
+export { Runtime } from './runtime.js';
 export { SharedContext } from './shared-context.js';
 export { Element, Fragment } from './template.js';

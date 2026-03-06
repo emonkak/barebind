@@ -428,6 +428,7 @@ export interface ReversibleEffect extends Effect {
 }
 
 export interface SessionContext extends DirectiveContext {
+  addObserver(observer: SessionObserver): () => void;
   getPendingUpdates(): IteratorObject<UpdateTask>;
   nextIdentifier(): string;
   renderComponent<TProps, TResult>(
@@ -445,9 +446,61 @@ export interface SessionContext extends DirectiveContext {
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateHandle;
 }
 
+export type SessionEvent =
+  | {
+      type: 'update-start';
+      id: number;
+      lanes: Lanes;
+    }
+  | {
+      type: 'update-success';
+      id: number;
+      lanes: Lanes;
+    }
+  | {
+      type: 'update-failure';
+      id: number;
+      lanes: Lanes;
+      error: unknown;
+    }
+  | {
+      type: 'render-phase-start' | 'render-phase-end';
+      id: number;
+    }
+  | {
+      type: 'render-error';
+      id: number;
+      error: unknown;
+      captured: boolean;
+    }
+  | {
+      type: 'component-render-start' | 'component-render-end';
+      id: number;
+      component: Component<any>;
+      props: unknown;
+      context: RenderContext;
+    }
+  | {
+      type: 'commit-phase-start' | 'commit-phase-end';
+      id: number;
+      mutationEffects: EffectQueue;
+      layoutEffects: EffectQueue;
+      passiveEffects: EffectQueue;
+    }
+  | {
+      type: 'effect-commit-start' | 'effect-commit-end';
+      id: number;
+      effects: EffectQueue;
+      phase: CommitPhase;
+    };
+
 export interface SessionLifecycle {
   attach(session: UpdateSession): void;
   detach(session: UpdateSession): void;
+}
+
+export interface SessionObserver {
+  onSessionEvent(event: SessionEvent): void;
 }
 
 export interface Scope {
