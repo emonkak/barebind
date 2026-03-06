@@ -3,7 +3,7 @@ export namespace LinkedList {
     readonly value: T;
     readonly prev: Node<T> | null;
     readonly next: Node<T> | null;
-    readonly ownership: symbol | null;
+    readonly ownership: Ownership | null;
   }
 }
 
@@ -11,7 +11,11 @@ interface OwnedNode<T> {
   value: T;
   prev: OwnedNode<T> | null;
   next: OwnedNode<T> | null;
-  ownership: symbol | null;
+  ownership: Ownership | null;
+}
+
+interface Ownership {
+  id: symbol;
 }
 
 export class LinkedList<T> implements Iterable<T> {
@@ -19,7 +23,7 @@ export class LinkedList<T> implements Iterable<T> {
 
   private _tail: OwnedNode<T> | null = null;
 
-  private _ownership: symbol = Symbol();
+  private _ownership: Ownership = createOwnership();
 
   *[Symbol.iterator](): Generator<T> {
     for (let node = this._head; node !== null; node = node.next) {
@@ -34,7 +38,7 @@ export class LinkedList<T> implements Iterable<T> {
   clear(): void {
     this._head = null;
     this._tail = null;
-    this._ownership = Symbol();
+    this._ownership = createOwnership();
   }
 
   front(): LinkedList.Node<T> | null {
@@ -133,9 +137,13 @@ export class LinkedList<T> implements Iterable<T> {
   }
 }
 
+function createOwnership(): Ownership {
+  return { id: Symbol() };
+}
+
 function isOwnedNode<T>(
   node: LinkedList.Node<T>,
-  ownership: symbol,
+  ownership: Ownership,
 ): node is OwnedNode<T> {
-  return node.ownership === ownership;
+  return node.ownership?.id === ownership.id;
 }
