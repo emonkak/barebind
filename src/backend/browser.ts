@@ -133,7 +133,7 @@ export class BrowserBackend implements Backend {
 
   startViewTransition(callback: () => Promise<void> | void): Promise<void> {
     if (typeof document.startViewTransition === 'function') {
-      return document.startViewTransition(callback).ready;
+      return document.startViewTransition(callback).updateCallbackDone;
     } else {
       return Promise.resolve().then(callback);
     }
