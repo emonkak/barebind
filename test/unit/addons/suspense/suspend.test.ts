@@ -119,7 +119,7 @@ describe('Suspend', () => {
 
     it('throws the rejection reason when rejected', async () => {
       const controller = new AbortController();
-      const error = new Error('boom');
+      const error = new Error('fail');
       const promise = Promise.reject(error);
       const suspend = Suspend.await(promise, controller);
 
@@ -155,6 +155,35 @@ describe('Suspend', () => {
 
       expect(suspend.status).toBe('fulfilled');
       expect(suspend.value).toBe('ok');
+      expect(controller.signal.aborted).toBe(true);
+    });
+
+    it('does not affect when transitioned to fulfilled after abort', async () => {
+      const promise = Promise.resolve('ok');
+      const controller = new AbortController();
+      const suspend = Suspend.await(promise, controller);
+
+      suspend.abort();
+
+      await expect(promise).resolves.toBe('ok');
+      await expect(suspend).rejects.toThrow(controller.signal.reason);
+
+      expect(suspend.status).toBe('aborted');
+      expect(controller.signal.aborted).toBe(true);
+    });
+
+    it('does not affect when transitioned to rejected after abort', async () => {
+      const error = new Error('fail');
+      const promise = Promise.reject(error);
+      const controller = new AbortController();
+      const suspend = Suspend.await(promise, controller);
+
+      suspend.abort();
+
+      await expect(promise).rejects.toThrow(error);
+      await expect(suspend).rejects.toThrow(controller.signal.reason);
+
+      expect(suspend.status).toBe('aborted');
       expect(controller.signal.aborted).toBe(true);
     });
   });

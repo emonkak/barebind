@@ -54,11 +54,12 @@ describe('Resource', () => {
       .mockReturnValueOnce(Promise.resolve('bar'));
 
     const suspend1 = renderer.render({ fetchFn, dependencies: ['foo'] });
+    expect(await suspend1).toBe('foo');
+
     const suspend2 = renderer.render({ fetchFn, dependencies: ['bar'] });
+    expect(await suspend2).toBe('bar');
 
     expect(suspend1).not.toBe(suspend2);
-    expect(await suspend1).toBe('foo');
-    expect(await suspend2).toBe('bar');
     expect(fetchFn).toHaveBeenCalledTimes(2);
     expect(fetchFn).toHaveBeenCalledWith(expect.any(AbortSignal));
   });

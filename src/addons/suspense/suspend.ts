@@ -31,12 +31,16 @@ class SuspendInternal<T> implements PromiseLike<T> {
 
     promise.then(
       (value) => {
-        suspend._status = 'fulfilled';
-        suspend._value = value;
+        if (suspend._status === 'pending') {
+          suspend._status = 'fulfilled';
+          suspend._value = value;
+        }
       },
       (reason) => {
-        suspend._status = 'rejected';
-        suspend._reason = reason;
+        if (suspend._status === 'pending') {
+          suspend._status = 'rejected';
+          suspend._reason = reason;
+        }
       },
     );
 
