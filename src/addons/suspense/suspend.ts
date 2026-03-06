@@ -41,8 +41,10 @@ class SuspendInternal<T> implements PromiseLike<T> {
     );
 
     controller.signal.addEventListener('abort', () => {
-      suspend._status = 'aborted';
-      suspend._reason = controller.signal.reason;
+      if (suspend._status === 'pending') {
+        suspend._status = 'aborted';
+        suspend._reason = controller.signal.reason;
+      }
     });
 
     return suspend as Suspend<T>;
@@ -66,9 +68,7 @@ class SuspendInternal<T> implements PromiseLike<T> {
   }
 
   abort(reason?: unknown): void {
-    if (this._status === 'pending') {
-      this._controller.abort(reason);
-    }
+    this._controller.abort(reason);
   }
 
   release(): void {

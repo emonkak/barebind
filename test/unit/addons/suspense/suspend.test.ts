@@ -54,20 +54,6 @@ describe('Suspend', () => {
       expect(suspend.reason).toBe(error);
       expect(controller.signal.aborted).toBe(true);
     });
-
-    it('does not abort when already fulfilled', async () => {
-      const promise = Promise.resolve('ok');
-      const controller = new AbortController();
-      const suspend = Suspend.await(promise, controller);
-
-      await promise;
-
-      suspend.abort();
-
-      expect(suspend.status).toBe('fulfilled');
-      expect(suspend.value).toBe('ok');
-      expect(controller.signal.aborted).toBe(false);
-    });
   });
 
   describe('then()', () => {
@@ -154,6 +140,22 @@ describe('Suspend', () => {
       await promise;
 
       expect(suspend.unwrap()).toBe('value');
+    });
+  });
+
+  describe('abort()', () => {
+    it('does not affect when not pending', async () => {
+      const promise = Promise.resolve('ok');
+      const controller = new AbortController();
+      const suspend = Suspend.await(promise, controller);
+
+      await promise;
+
+      suspend.abort();
+
+      expect(suspend.status).toBe('fulfilled');
+      expect(suspend.value).toBe('ok');
+      expect(controller.signal.aborted).toBe(true);
     });
   });
 });
