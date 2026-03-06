@@ -32,7 +32,7 @@ export interface Backend {
 export const ExecutionMode = {
   NoMode:         0,
   ConcurrentMode: 0b1,
-};
+} as const satisfies Record<string, ExecutionModes>;
 
 export type ExecutionModes = number;
 
