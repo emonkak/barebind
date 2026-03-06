@@ -501,13 +501,10 @@ function captureError(
 
   const capturedOutsideOrigin = handlingScope.level <= originScope.level;
 
-  if (capturedOutsideOrigin) {
-    // Updates must not affect scopes outside the origin.
-    handlingScope = originScope;
-  }
-
   if (handlingScope.context?.pendingLanes === Lane.NoLane) {
-    handlingScope.context.detach(session);
+    // Updates must not affect scopes outside the origin.
+    const detachingScope = capturedOutsideOrigin ? originScope : handlingScope;
+    detachingScope.context?.detach(session);
   }
 
   // If the error was captured by an ErrorBoundary outside the origin scope,
