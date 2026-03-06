@@ -1,5 +1,7 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
+import { LinkedList } from './collections/linked-list.js';
+
 export const $directive: unique symbol = Symbol('$directive');
 
 export const $hook: unique symbol = Symbol('$hook');
@@ -111,20 +113,18 @@ export interface Effect {
 }
 
 export class EffectQueue {
-  private _headEffects: Effect[] = [];
+  private _headEffects: LinkedList<Effect> = new LinkedList();
 
-  private _middleEffects: Effect[] = [];
+  private _middleEffects: LinkedList<Effect> = new LinkedList();
 
-  private _tailEffects: Effect[] = [];
+  private _tailEffects: LinkedList<Effect> = new LinkedList();
 
   private _lastLevel = 0;
 
+  private _length = 0;
+
   get length(): number {
-    return (
-      this._headEffects.length +
-      this._middleEffects.length +
-      this._tailEffects.length
-    );
+    return this._length;
   }
 
   flush(): void {
@@ -137,33 +137,39 @@ export class EffectQueue {
     for (const effect of this._tailEffects) {
       effect.commit();
     }
-    this._headEffects = [];
-    this._middleEffects = [];
-    this._tailEffects = [];
+    this._headEffects.clear();
+    this._middleEffects.clear();
+    this._tailEffects.clear();
     this._lastLevel = 0;
+    this._length = 0;
   }
 
   push(effect: Effect, level: number): void {
     if (level > this._lastLevel) {
-      this._middleEffects.push(...this._tailEffects);
-      this._tailEffects = this._middleEffects;
-      this._middleEffects = [effect];
+      this._tailEffects = LinkedList.concat(
+        this._middleEffects,
+        this._tailEffects,
+      );
     } else if (level < this._lastLevel) {
-      this._headEffects.push(...this._middleEffects, ...this._tailEffects);
-      this._middleEffects = [effect];
-      this._tailEffects = [];
-    } else {
-      this._middleEffects.push(effect);
+      this._headEffects = LinkedList.concat(
+        this._headEffects,
+        this._middleEffects,
+        this._tailEffects,
+      );
     }
+    this._middleEffects.pushBack(effect);
     this._lastLevel = level;
+    this._length++;
   }
 
   pushAfter(effect: Effect): void {
-    this._tailEffects.push(effect);
+    this._tailEffects.pushBack(effect);
+    this._length++;
   }
 
   pushBefore(effect: Effect): void {
-    this._headEffects.push(effect);
+    this._headEffects.pushBack(effect);
+    this._length++;
   }
 }
 
