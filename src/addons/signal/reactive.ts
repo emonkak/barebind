@@ -25,9 +25,8 @@ type FunctionKeys<T> = {
   [K in AllKeys<T>]: T[K] extends Function ? K : never;
 }[AllKeys<T>];
 
-type Get<T, K extends keyof T> = K extends ExplicitKeys<T>
-  ? T[K]
-  : T[K] | undefined;
+type Get<T, K extends keyof T> =
+  K extends ExplicitKeys<T> ? T[K] : T[K] | undefined;
 
 type IsArray<T> = T extends readonly any[] ? true : false;
 
