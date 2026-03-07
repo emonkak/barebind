@@ -57,12 +57,16 @@ class SuspendInternal<T> implements PromiseLike<T> {
       },
     );
 
-    controller.signal.addEventListener('abort', () => {
-      if (suspend._status === STATUS_PENDING) {
-        suspend._status = STATUS_ABORTED;
-        suspend._reason = controller.signal.reason;
-      }
-    });
+    controller.signal.addEventListener(
+      'abort',
+      () => {
+        if (suspend._status === STATUS_PENDING) {
+          suspend._status = STATUS_ABORTED;
+          suspend._reason = controller.signal.reason;
+        }
+      },
+      { once: true },
+    );
 
     return suspend as Suspend<T>;
   }
@@ -146,8 +150,12 @@ export const Suspend: SuspendClass = SuspendInternal as SuspendClass;
 
 function waitForAbort<T>(signal: AbortSignal): Promise<T> {
   return new Promise<T>((_resolve, reject) => {
-    signal.addEventListener('abort', () => {
-      reject(signal.reason);
-    });
+    signal.addEventListener(
+      'abort',
+      () => {
+        reject(signal.reason);
+      },
+      { once: true },
+    );
   });
 }
