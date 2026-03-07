@@ -218,6 +218,7 @@ export namespace Hook {
     pendingLanes: Lanes;
     pendingState: TState;
     memoizedState: TState;
+    context: RenderContext;
   }
 }
 

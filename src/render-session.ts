@@ -307,6 +307,7 @@ export class RenderSession implements RenderContext {
         currentHook.memoizedState = currentHook.pendingState;
       }
       currentHook.reducer = reducer;
+      currentHook.context = this;
     } else {
       const state =
         typeof initialState === 'function'
@@ -319,9 +320,10 @@ export class RenderSession implements RenderContext {
           action: TAction,
           options: DispatchOptions<TState> = {},
         ): UpdateHandle => {
+          const { reducer, pendingState, context } = hook;
           const areStatesEqual = options.areStatesEqual ?? Object.is;
-          const prevState = hook.pendingState;
-          const nextState = hook.reducer(prevState, action);
+          const prevState = pendingState;
+          const nextState = reducer(prevState, action);
 
           if (areStatesEqual(nextState, prevState)) {
             return {
@@ -331,7 +333,7 @@ export class RenderSession implements RenderContext {
               finished: Promise.resolve({ canceled: true, done: true }),
             };
           } else {
-            const handle = this.forceUpdate(options);
+            const handle = context.forceUpdate(options);
             hook.pendingLanes = handle.lanes;
             hook.pendingState = nextState;
             return handle;
@@ -340,6 +342,7 @@ export class RenderSession implements RenderContext {
         pendingLanes: Lane.NoLane,
         pendingState: state,
         memoizedState: state,
+        context: this,
       };
       currentHook = hook;
       hooks.push(hook);
