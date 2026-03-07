@@ -141,8 +141,8 @@ export class Runtime implements SessionContext {
     }
   }
 
-  getPendingUpdates(): IteratorObject<UpdateTask> {
-    return Iterator.from(this._pendingUpdates);
+  getPendingUpdates(): UpdateTask[] {
+    return Array.from(this._pendingUpdates);
   }
 
   nextIdentifier(): string {
