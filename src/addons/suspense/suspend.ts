@@ -1,13 +1,26 @@
+const STATUS_PENDING = 'pending';
+const STATUS_FULFILLED = 'fulfilled';
+const STATUS_REJECTED = 'rejected';
+const STATUS_ABORTED = 'aborted';
+
 type SuspendClass = typeof SuspendInternal & {
   [Symbol.hasInstance](value: any): value is Suspend<any>;
 };
 
-type SuspendStatus = 'pending' | 'fulfilled' | 'rejected' | 'aborted';
+type SuspendStatus =
+  | typeof STATUS_PENDING
+  | typeof STATUS_FULFILLED
+  | typeof STATUS_REJECTED
+  | typeof STATUS_ABORTED;
 
 type SuspendInvariant<T> = Readonly<
-  | { status: 'pending'; value: never; reason: never }
-  | { status: 'fulfilled'; value: T; reason: never }
-  | { status: 'rejected' | 'aborted'; value: never; reason: unknown }
+  | { status: typeof STATUS_PENDING; value: never; reason: never }
+  | { status: typeof STATUS_FULFILLED; value: T; reason: never }
+  | {
+      status: typeof STATUS_REJECTED | typeof STATUS_ABORTED;
+      value: never;
+      reason: unknown;
+    }
 >;
 
 class SuspendInternal<T> implements PromiseLike<T> {
@@ -15,7 +28,7 @@ class SuspendInternal<T> implements PromiseLike<T> {
 
   private readonly _controller: AbortController;
 
-  private _status: SuspendStatus = 'pending';
+  private _status: SuspendStatus = STATUS_PENDING;
 
   private _value: T | undefined;
 
@@ -31,22 +44,22 @@ class SuspendInternal<T> implements PromiseLike<T> {
 
     promise.then(
       (value) => {
-        if (suspend._status === 'pending') {
-          suspend._status = 'fulfilled';
+        if (suspend._status === STATUS_PENDING) {
+          suspend._status = STATUS_FULFILLED;
           suspend._value = value;
         }
       },
       (reason) => {
-        if (suspend._status === 'pending') {
-          suspend._status = 'rejected';
+        if (suspend._status === STATUS_PENDING) {
+          suspend._status = STATUS_REJECTED;
           suspend._reason = reason;
         }
       },
     );
 
     controller.signal.addEventListener('abort', () => {
-      if (suspend._status === 'pending') {
-        suspend._status = 'aborted';
+      if (suspend._status === STATUS_PENDING) {
+        suspend._status = STATUS_ABORTED;
         suspend._reason = controller.signal.reason;
       }
     });
@@ -97,18 +110,17 @@ class SuspendInternal<T> implements PromiseLike<T> {
   ): Promise<TFulfilled | TRejected> {
     let promise: Promise<T>;
     switch (this._status) {
-      case 'pending': {
+      case STATUS_PENDING:
         promise = Promise.race([
           this._promise,
           waitForAbort<T>(this._controller.signal),
         ]);
         break;
-      }
-      case 'fulfilled':
+      case STATUS_FULFILLED:
         promise = Promise.resolve(this._value!);
         break;
-      case 'rejected':
-      case 'aborted':
+      case STATUS_REJECTED:
+      case STATUS_ABORTED:
         promise = Promise.reject(this._reason);
         break;
     }
@@ -117,12 +129,12 @@ class SuspendInternal<T> implements PromiseLike<T> {
 
   unwrap(): T {
     switch (this._status) {
-      case 'pending':
+      case STATUS_PENDING:
         throw this;
-      case 'fulfilled':
+      case STATUS_FULFILLED:
         return this._value!;
-      case 'rejected':
-      case 'aborted':
+      case STATUS_REJECTED:
+      case STATUS_ABORTED:
         throw this._reason;
     }
   }
