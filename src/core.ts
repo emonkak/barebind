@@ -125,6 +125,14 @@ export class EffectQueue {
     return this._length;
   }
 
+  clear(): void {
+    this._headEffects.clear();
+    this._middleEffects.clear();
+    this._tailEffects.clear();
+    this._lastLevel = 0;
+    this._length = 0;
+  }
+
   flush(): void {
     for (const effect of this._headEffects) {
       effect.commit();
@@ -135,11 +143,7 @@ export class EffectQueue {
     for (const effect of this._tailEffects) {
       effect.commit();
     }
-    this._headEffects.clear();
-    this._middleEffects.clear();
-    this._tailEffects.clear();
-    this._lastLevel = 0;
-    this._length = 0;
+    this.clear();
   }
 
   push(effect: Effect, level: number): void {
