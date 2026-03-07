@@ -1,5 +1,5 @@
 import { createComponent } from '../../component.js';
-import type { RenderContext } from '../../core.js';
+import { Lane, type RenderContext } from '../../core.js';
 import { Flexible } from '../../layout/flexible.js';
 import { Fragment } from '../../template.js';
 import { Suspend } from './suspend.js';
@@ -27,15 +27,20 @@ export const Suspense = createComponent(function Suspense(
         return;
       }
 
-      const callback = () => {
-        if (areAllSuspendsSettled()) {
-          $.forceUpdate();
-        }
-      };
+      const renderLanes =
+        $.getSessionContext().getPendingUpdates()[0]?.lanes ?? Lane.NoLane;
 
-      errorOrSuspend.then(callback, callback);
+      if (!(renderLanes & Lane.TransitionLane)) {
+        const updateWhenSettled = () => {
+          if (areAllSuspendsSettled()) {
+            $.forceUpdate();
+          }
+        };
 
-      callback();
+        errorOrSuspend.then(updateWhenSettled, updateWhenSettled);
+
+        updateWhenSettled();
+      }
 
       pendingSuspends.add(errorOrSuspend);
     } else {
