@@ -362,13 +362,13 @@ export class Runtime implements SessionContext {
     });
 
     try {
-      if (mutationEffects.length > 0 || layoutEffects.length > 0) {
+      if (mutationEffects.size > 0 || layoutEffects.size > 0) {
         const callback = () => {
-          if (mutationEffects.length > 0) {
+          if (mutationEffects.size > 0) {
             this._flushEffects(id, mutationEffects, CommitPhase.Mutation);
           }
 
-          if (layoutEffects.length > 0) {
+          if (layoutEffects.size > 0) {
             this._flushEffects(id, layoutEffects, CommitPhase.Layout);
           }
         };
@@ -382,7 +382,7 @@ export class Runtime implements SessionContext {
         }
       }
 
-      if (passiveEffects.length > 0) {
+      if (passiveEffects.size > 0) {
         this._backend
           .requestCallback(
             () => {
@@ -404,9 +404,9 @@ export class Runtime implements SessionContext {
       // Commit Phase ends when effects indicate failure to flush
       // or when no passive effects were scheduled.
       if (
-        mutationEffects.length > 0 ||
-        layoutEffects.length > 0 ||
-        passiveEffects.length === 0
+        mutationEffects.size > 0 ||
+        layoutEffects.size > 0 ||
+        passiveEffects.size === 0
       ) {
         notifyObservers(this._observers, {
           type: 'commit-phase-end',
@@ -456,15 +456,15 @@ export class Runtime implements SessionContext {
     });
 
     try {
-      if (mutationEffects.length > 0) {
+      if (mutationEffects.size > 0) {
         this._flushEffects(id, mutationEffects, CommitPhase.Mutation);
       }
 
-      if (layoutEffects.length > 0) {
+      if (layoutEffects.size > 0) {
         this._flushEffects(id, layoutEffects, CommitPhase.Layout);
       }
 
-      if (passiveEffects.length > 0) {
+      if (passiveEffects.size > 0) {
         this._flushEffects(id, passiveEffects, CommitPhase.Passive);
       }
     } finally {

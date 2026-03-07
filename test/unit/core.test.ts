@@ -14,43 +14,43 @@ import {
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 
 describe('EffectQueue', () => {
-  describe('length', () => {
+  describe('size', () => {
     it('is 0 for a new queue', () => {
       const queue = new EffectQueue();
-      expect(queue.length).toBe(0);
+      expect(queue.size).toBe(0);
     });
 
     it('increments by 1 for each push', () => {
       const queue = new EffectQueue();
       queue.push(createEffect(), 0);
       queue.push(createEffect(), 0);
-      expect(queue.length).toBe(2);
+      expect(queue.size).toBe(2);
     });
 
     it('increments by 1 for pushBefore', () => {
       const queue = new EffectQueue();
       queue.pushBefore(createEffect());
-      expect(queue.length).toBe(1);
+      expect(queue.size).toBe(1);
     });
 
     it('increments by 1 for pushAfter', () => {
       const queue = new EffectQueue();
       queue.pushAfter(createEffect());
-      expect(queue.length).toBe(1);
+      expect(queue.size).toBe(1);
     });
 
     it('resets to 0 after clear', () => {
       const queue = new EffectQueue();
       queue.push(createEffect(), 0);
       queue.clear();
-      expect(queue.length).toBe(0);
+      expect(queue.size).toBe(0);
     });
 
     it('resets to 0 after flush', () => {
       const queue = new EffectQueue();
       queue.push(createEffect(), 0);
       queue.flush();
-      expect(queue.length).toBe(0);
+      expect(queue.size).toBe(0);
     });
   });
 

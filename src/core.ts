@@ -119,10 +119,10 @@ export class EffectQueue {
 
   private _lastLevel = 0;
 
-  private _length = 0;
+  private _size = 0;
 
-  get length(): number {
-    return this._length;
+  get size(): number {
+    return this._size;
   }
 
   clear(): void {
@@ -130,7 +130,7 @@ export class EffectQueue {
     this._middleEffects.clear();
     this._tailEffects.clear();
     this._lastLevel = 0;
-    this._length = 0;
+    this._size = 0;
   }
 
   flush(): void {
@@ -161,17 +161,17 @@ export class EffectQueue {
     }
     this._middleEffects.pushBack(effect);
     this._lastLevel = level;
-    this._length++;
+    this._size++;
   }
 
   pushAfter(effect: Effect): void {
     this._tailEffects.pushBack(effect);
-    this._length++;
+    this._size++;
   }
 
   pushBefore(effect: Effect): void {
     this._headEffects.pushBack(effect);
-    this._length++;
+    this._size++;
   }
 }
 

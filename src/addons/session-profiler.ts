@@ -172,9 +172,9 @@ export class SessionProfiler implements SessionObserver {
           startTime: performance.now(),
           duration: 0,
           pendingEffects:
-            event.mutationEffects.length +
-            event.layoutEffects.length +
-            event.passiveEffects.length,
+            event.mutationEffects.size +
+            event.layoutEffects.size +
+            event.passiveEffects.size,
           committedEffects: 0,
         };
         profile.phase = 'commit';
@@ -183,9 +183,9 @@ export class SessionProfiler implements SessionObserver {
         const measurement = profile.commitMeasurement;
         if (measurement !== null) {
           const pendingEffects =
-            event.mutationEffects.length +
-            event.layoutEffects.length +
-            event.passiveEffects.length;
+            event.mutationEffects.size +
+            event.layoutEffects.size +
+            event.passiveEffects.size;
           measurement.duration = performance.now() - measurement.startTime;
           measurement.committedEffects =
             measurement.pendingEffects - pendingEffects;
@@ -201,7 +201,7 @@ export class SessionProfiler implements SessionObserver {
         const measurement = {
           startTime: performance.now(),
           duration: 0,
-          pendingEffects: event.effects.length,
+          pendingEffects: event.effects.size,
           committedEffects: 0,
         };
         switch (event.phase) {
@@ -231,7 +231,7 @@ export class SessionProfiler implements SessionObserver {
             break;
         }
         if (measurement !== null) {
-          const pendingEffects = event.effects.length;
+          const pendingEffects = event.effects.size;
           measurement.duration = performance.now() - measurement.startTime;
           measurement.committedEffects =
             measurement.pendingEffects - pendingEffects;
