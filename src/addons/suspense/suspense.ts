@@ -1,3 +1,5 @@
+/// <reference path="../../../typings/upsert.d.ts" />
+
 import { createComponent } from '../../component.js';
 import { Lane, type RenderContext } from '../../core.js';
 import { Flexible } from '../../layout/flexible.js';
@@ -9,21 +11,36 @@ export interface SuspenseProps {
   fallback: unknown;
 }
 
+interface RefCount {
+  count: number;
+}
+
 export const Suspense = createComponent(function Suspense(
   { children, fallback }: SuspenseProps,
   $: RenderContext,
 ): unknown {
-  const pendingSuspends = $.useMemo<Set<Suspend<unknown>>>(
+  const trackedSuspends = $.useMemo<Set<Suspend<unknown>>>(
     () => new Set(),
     [children],
   );
+  const suspendRefCounts = $.useMemo<WeakMap<Suspend<unknown>, RefCount>>(
+    () => new Map(),
+    [],
+  );
 
   const areAllSuspendsSettled = () =>
-    pendingSuspends.values().every(({ status }) => status !== 'pending');
+    trackedSuspends.values().every(({ status }) => status !== 'pending');
 
   $.catchError((errorOrSuspend, handleError) => {
     if (errorOrSuspend instanceof Suspend) {
-      if (pendingSuspends.has(errorOrSuspend)) {
+      const refCount = suspendRefCounts.getOrInsertComputed(
+        errorOrSuspend,
+        () => ({
+          count: 0,
+        }),
+      );
+
+      if (refCount.count++ > 0) {
         return;
       }
 
@@ -47,22 +64,22 @@ export const Suspense = createComponent(function Suspense(
         updateWhenSettled();
       }
 
-      pendingSuspends.add(errorOrSuspend);
+      trackedSuspends.add(errorOrSuspend);
     } else {
       handleError(errorOrSuspend);
     }
   });
 
   $.useLayoutEffect(() => {
-    for (const suspend of pendingSuspends) {
-      suspend.retain();
-    }
     return () => {
-      for (const suspend of pendingSuspends) {
-        suspend.release();
+      for (const suspend of trackedSuspends) {
+        const refCount = suspendRefCounts.get(suspend);
+        if (refCount !== undefined && --refCount.count === 0) {
+          suspend.abort();
+        }
       }
     };
-  }, [pendingSuspends]);
+  }, [trackedSuspends]);
 
   const shouldRenderChildren = areAllSuspendsSettled();
 

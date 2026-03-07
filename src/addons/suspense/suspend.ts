@@ -35,8 +35,6 @@ class SuspendInternal<T> implements PromiseLike<T> {
 
   private _reason: unknown;
 
-  private _refCount: number = 0;
-
   static await<T>(
     promise: PromiseLike<T>,
     controller: AbortController,
@@ -91,16 +89,6 @@ class SuspendInternal<T> implements PromiseLike<T> {
 
   abort(reason?: unknown): void {
     this._controller.abort(reason);
-  }
-
-  release(): void {
-    if (--this._refCount === 0) {
-      this.abort();
-    }
-  }
-
-  retain(): void {
-    this._refCount++;
   }
 
   then<TFulfilled = T, TRejected = never>(
