@@ -26,7 +26,7 @@ export interface ComponentOptions<TProps> {
   arePropsEqual?: (nextProps: TProps, prevProps: TProps) => boolean;
 }
 
-export function createComponent<TProps, TResult = unknown>(
+export function createComponent<TProps = {}, TResult = unknown>(
   render: (props: TProps, context: RenderContext) => TResult,
   options: ComponentOptions<TProps> = {},
 ): Component<TProps, TResult> {

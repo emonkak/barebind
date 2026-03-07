@@ -14,7 +14,7 @@ import { RenderSession } from '@/render-session.js';
 import type { Runtime } from '@/runtime.js';
 import { createRuntime } from './mocks.js';
 
-export class TestRenderer<TProps, TResult> implements Coroutine {
+export class TestRenderer<TProps = {}, TResult = unknown> implements Coroutine {
   readonly callback: (props: TProps, session: RenderSession) => TResult;
 
   scope: Scope;

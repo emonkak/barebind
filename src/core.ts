@@ -61,7 +61,7 @@ export const CommitPhase = {
 
 export type CommitPhase = (typeof CommitPhase)[keyof typeof CommitPhase];
 
-export interface Component<TProps, TResult = unknown>
+export interface Component<TProps = {}, TResult = unknown>
   extends DirectiveType<TProps> {
   (props: TProps): Bindable<TProps>;
   render(props: TProps, context: RenderContext): TResult;
