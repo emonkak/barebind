@@ -123,6 +123,8 @@ export class Runtime implements SessionContext {
 
         continuation.resolve({ canceled: false, done: true });
       } catch (error) {
+        resetRenderFrame(frame);
+
         notifyObservers(this._observers, {
           type: 'update-failure',
           id,
@@ -553,4 +555,11 @@ function notifyObservers(
   for (let node = observers.front(); node !== null; node = node.next) {
     node.value.onSessionEvent(event);
   }
+}
+
+function resetRenderFrame(frame: RenderFrame): void {
+  frame.pendingCoroutines.length = 0;
+  frame.mutationEffects.clear();
+  frame.layoutEffects.clear();
+  frame.passiveEffects.clear();
 }
