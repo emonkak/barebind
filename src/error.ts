@@ -1,7 +1,7 @@
 import { BoundaryType, type Coroutine, type Scope } from './core.js';
 import { getCoroutineStack } from './debug/scope.js';
 
-export class CapturedError extends Error {}
+export class InterruptError extends Error {}
 
 export class RenderError extends Error {
   constructor(coroutine: Coroutine, options?: ErrorOptions) {

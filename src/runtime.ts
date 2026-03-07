@@ -29,7 +29,7 @@ import {
   type UpdateTask,
 } from './core.js';
 import { toDirective } from './directive.js';
-import { CapturedError, handleError, RenderError } from './error.js';
+import { handleError, InterruptError, RenderError } from './error.js';
 import { RenderSession } from './render-session.js';
 
 export interface RuntimeOptions {
@@ -132,7 +132,7 @@ export class Runtime implements SessionContext {
           error,
         });
 
-        if (error instanceof CapturedError) {
+        if (error instanceof InterruptError) {
           continuation.resolve({ canceled: true, done: false });
         } else {
           continuation.reject(error);
@@ -334,7 +334,7 @@ export class Runtime implements SessionContext {
           try {
             coroutine.resume(session);
           } catch (error) {
-            captureError(error, coroutine, session, this._observers);
+            processError(error, coroutine, session, this._observers);
           }
         }
 
@@ -434,7 +434,7 @@ export class Runtime implements SessionContext {
           try {
             coroutine.resume(session);
           } catch (error) {
-            captureError(error, coroutine, session, this._observers);
+            processError(error, coroutine, session, this._observers);
           }
         }
       } while (frame.pendingCoroutines.length > 0);
@@ -479,43 +479,6 @@ export class Runtime implements SessionContext {
   }
 }
 
-function captureError(
-  error: unknown,
-  coroutine: Coroutine,
-  session: UpdateSession,
-  observers: LinkedList<SessionObserver>,
-): void {
-  const { originScope, frame } = session;
-  let handlingScope: Scope | null = null;
-
-  try {
-    handlingScope = handleError(error, coroutine.scope);
-  } catch (cause) {
-    throw new RenderError(coroutine, { cause });
-  } finally {
-    notifyObservers(observers, {
-      type: 'render-error',
-      id: frame.id,
-      error,
-      captured: handlingScope !== null,
-    });
-  }
-
-  const capturedOutsideOrigin = handlingScope.level <= originScope.level;
-
-  if (handlingScope.context?.pendingLanes === Lane.NoLane) {
-    // Updates must not affect scopes outside the origin.
-    const detachingScope = capturedOutsideOrigin ? originScope : handlingScope;
-    detachingScope.context?.detach(session);
-  }
-
-  // If the error was captured by an ErrorBoundary outside the origin scope,
-  // we treat it as a graceful interruption rather than a fatal failure.
-  if (capturedOutsideOrigin) {
-    throw new CapturedError(undefined, { cause: error });
-  }
-}
-
 function consumeCoroutines(
   frame: RenderFrame,
   maxCoroutines: number = Infinity,
@@ -554,6 +517,41 @@ function notifyObservers(
 ): void {
   for (let node = observers.front(); node !== null; node = node.next) {
     node.value.onSessionEvent(event);
+  }
+}
+
+function processError(
+  error: unknown,
+  coroutine: Coroutine,
+  session: UpdateSession,
+  observers: LinkedList<SessionObserver>,
+): void {
+  const { originScope, frame } = session;
+  let handlingScope: Scope | null = null;
+
+  try {
+    handlingScope = handleError(error, coroutine.scope);
+  } catch (cause) {
+    throw new RenderError(coroutine, { cause });
+  } finally {
+    notifyObservers(observers, {
+      type: 'render-error',
+      id: frame.id,
+      error,
+      captured: handlingScope !== null,
+    });
+  }
+
+  if (handlingScope.level <= originScope.level) {
+    // The error was captured by an ErrorBoundary outside the origin scope, we
+    // treat it as a graceful interruption rather than a fatal failure.
+    throw new InterruptError(undefined, { cause: error });
+  }
+
+  if (handlingScope.context?.pendingLanes === Lane.NoLane) {
+    // The error was captured but no recovery render was scheduled.
+    // Detach the scope to stop further updates on this subtree.
+    handlingScope.context.detach(session);
   }
 }
 
