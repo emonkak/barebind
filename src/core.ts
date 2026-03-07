@@ -264,6 +264,7 @@ export const Lane = {
   BackgroundLane:     0b1000,
   SyncLane:           0b10000,
   ViewTransitionLane: 0b100000,
+  TransitionLane:     0b1000000,
 } as const satisfies Record<string, Lanes>;
 
 export type Lanes = number;
@@ -652,6 +653,10 @@ export function getLanesFromOptions(options: UpdateOptions): Lanes {
 
   if (options.viewTransition) {
     lanes |= Lane.ViewTransitionLane;
+  }
+
+  if (options.signal !== undefined) {
+    lanes |= Lane.TransitionLane;
   }
 
   return lanes;

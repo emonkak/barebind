@@ -268,10 +268,14 @@ describe('getLanesFromOptions()', () => {
     [{ priority: 'background' }, Lane.DefaultLane | Lane.BackgroundLane],
     [{ flushSync: true }, Lane.DefaultLane | Lane.SyncLane],
     [{ viewTransition: true }, Lane.DefaultLane | Lane.ViewTransitionLane],
+    [
+      { signal: new AbortController().signal },
+      Lane.DefaultLane | Lane.TransitionLane,
+    ],
   ] as [
     UpdateOptions,
     Lanes,
-  ][])('returns lanes for schedule', (options, lanes) => {
+  ][])('returns lanes for options', (options, lanes) => {
     expect(getLanesFromOptions(options)).toBe(lanes);
     expect(getPriorityFromLanes(lanes)).toBe(options.priority ?? null);
   });
