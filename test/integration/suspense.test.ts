@@ -121,7 +121,6 @@ test('throws the rejection reason when a suspended promise rejects', async () =>
   bar.reject('fail');
 
   SESSION2: {
-    await waitForMicrotasks(2);
     await waitUntil('background');
 
     expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');

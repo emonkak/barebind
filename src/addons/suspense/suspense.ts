@@ -37,7 +37,12 @@ export const Suspense = createComponent(function Suspense(
           }
         };
 
-        errorOrSuspend.then(updateWhenSettled, updateWhenSettled);
+        errorOrSuspend.then(updateWhenSettled, (error) => {
+          updateWhenSettled();
+          if (errorOrSuspend.status !== 'aborted') {
+            $.throwError(error);
+          }
+        });
 
         updateWhenSettled();
       }
