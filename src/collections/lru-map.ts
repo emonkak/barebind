@@ -10,10 +10,14 @@ export class LRUMap<K, V> implements Iterable<[K, V]> {
 
   private readonly _recentKeys: LinkedList<K> = new LinkedList();
 
-  private readonly _capacity: number;
+  private _capacity: number;
 
   constructor(capacity: number) {
     this._capacity = capacity;
+  }
+
+  get capacity(): number {
+    return this._capacity;
   }
 
   get size(): number {
@@ -70,6 +74,7 @@ export class LRUMap<K, V> implements Iterable<[K, V]> {
     }
     const defaultValue = callback(key);
     this._insertEntry(key, defaultValue);
+    this._evictToCapacity();
     return defaultValue;
   }
 
@@ -81,6 +86,11 @@ export class LRUMap<K, V> implements Iterable<[K, V]> {
     for (const key of this._recentKeys) {
       yield key;
     }
+  }
+
+  resize(capacity: number): void {
+    this._capacity = capacity;
+    this._evictToCapacity();
   }
 
   set(key: K, value: V): V | undefined {
@@ -95,6 +105,7 @@ export class LRUMap<K, V> implements Iterable<[K, V]> {
     }
 
     this._insertEntry(key, value);
+    this._evictToCapacity();
 
     return undefined;
   }
@@ -105,15 +116,17 @@ export class LRUMap<K, V> implements Iterable<[K, V]> {
     }
   }
 
+  private _evictToCapacity(): void {
+    while (this._entries.size > this._capacity) {
+      const lruKey = this._recentKeys.popBack();
+      if (lruKey !== null) {
+        this._entries.delete(lruKey.value);
+      }
+    }
+  }
+
   private _insertEntry(key: K, value: V): void {
     const newEntry = { key: this._recentKeys.pushFront(key), value };
     this._entries.set(key, newEntry);
-
-    if (this._entries.size > this._capacity) {
-      const oldestKey = this._recentKeys.popBack();
-      if (oldestKey !== null) {
-        this._entries.delete(oldestKey.value);
-      }
-    }
   }
 }

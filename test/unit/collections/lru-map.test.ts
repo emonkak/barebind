@@ -6,12 +6,18 @@ describe('LRUMap', () => {
   describe('constructor()', () => {
     it('starts empty', () => {
       const map = new LRUMap<string, number>(3);
+      expect(map.capacity).toBe(3);
       expect(map.size).toBe(0);
+    });
+
+    it('reflects the initial capacity passed to the constructor', () => {
+      const map = new LRUMap<string, number>(5);
+      expect(map.capacity).toBe(5);
     });
   });
 
   describe('[Symbol.iterator]()', () => {
-    it('yields pairs in most recently used order', () => {
+    it('yields pairs in MRU order', () => {
       const map = new LRUMap<string, number>(3);
       map.set('a', 1);
       map.set('b', 2);
@@ -74,7 +80,7 @@ describe('LRUMap', () => {
   });
 
   describe('entries()', () => {
-    it('yields pairs in most recently used order', () => {
+    it('yields pairs in MRU order', () => {
       const map = new LRUMap<string, number>(3);
       map.set('a', 1);
       map.set('b', 2);
@@ -166,13 +172,13 @@ describe('LRUMap', () => {
     });
 
     it('evicts the LRU entry when capacity is exceeded on insert', () => {
-      const lru = new LRUMap<string, number>(2);
-      lru.set('a', 1);
-      lru.set('b', 2);
-      lru.getOrInsert('c', 3); // "a" is LRU and should be evicted
-      expect(lru.has('a')).toBe(false);
-      expect(lru.has('b')).toBe(true);
-      expect(lru.has('c')).toBe(true);
+      const map = new LRUMap<string, number>(2);
+      map.set('a', 1);
+      map.set('b', 2);
+      map.getOrInsert('c', 3); // "a" is LRU and should be evicted
+      expect(map.has('a')).toBe(false);
+      expect(map.has('b')).toBe(true);
+      expect(map.has('c')).toBe(true);
     });
   });
 
@@ -234,13 +240,119 @@ describe('LRUMap', () => {
   });
 
   describe('keys()', () => {
-    it('yields keys in most recently used order', () => {
+    it('yields keys in MRU order', () => {
       const map = new LRUMap<string, number>(3);
       map.set('a', 1);
       map.set('b', 2);
       map.set('c', 3);
       map.get('a');
       expect(map.keys().toArray()).toStrictEqual(['a', 'c', 'b']);
+    });
+  });
+
+  describe('resize()', () => {
+    it('does not evict any entries when increasing capacity', () => {
+      const map = new LRUMap<string, number>(3);
+      map.set('a', 1);
+      map.set('b', 2);
+      map.set('c', 3);
+      map.resize(10);
+      expect(map.capacity).toBe(10);
+      expect(map.size).toBe(3);
+      expect(map.has('a')).toBe(true);
+      expect(map.has('b')).toBe(true);
+      expect(map.has('c')).toBe(true);
+    });
+
+    it('allows new entries up to the new larger capacity', () => {
+      const map = new LRUMap<string, number>(2);
+      map.set('a', 1);
+      map.set('b', 2);
+      map.resize(4);
+      expect(map.capacity).toBe(4);
+      map.set('c', 3);
+      map.set('d', 4);
+      expect(map.size).toBe(4);
+    });
+
+    it('preserves MRU order after enlarging', () => {
+      const map = new LRUMap<string, number>(3);
+      map.set('a', 1);
+      map.set('b', 2);
+      map.set('c', 3);
+      map.get('a');
+      map.resize(5);
+      expect(map.capacity).toBe(5);
+      expect([...map.keys()]).toStrictEqual(['a', 'c', 'b']);
+    });
+
+    it('evicts the correct number of LRU entries when shrinking', () => {
+      const map = new LRUMap<string, number>(4);
+      map.set('a', 1);
+      map.set('b', 2);
+      map.set('c', 3);
+      map.set('d', 4);
+      // LRU order: a, b, c, d; "a" and "b" are the least recently used
+      map.resize(2);
+      expect(map.capacity).toBe(2);
+      expect(map.size).toBe(2);
+      expect(map.has('c')).toBe(true);
+      expect(map.has('d')).toBe(true);
+    });
+
+    it('evicts LRU entries respecting access history', () => {
+      const map = new LRUMap<string, number>(4);
+      map.set('a', 1);
+      map.set('b', 2);
+      map.set('c', 3);
+      map.set('d', 4);
+      map.get('a'); // LRU order: b, c, d, a
+      map.resize(2);
+      expect(map.has('b')).toBe(false);
+      expect(map.has('c')).toBe(false);
+      expect(map.has('d')).toBe(true);
+      expect(map.has('a')).toBe(true);
+    });
+
+    it('preserves the MRU order of the surviving entries', () => {
+      const map = new LRUMap<string, number>(4);
+      map.set('a', 1);
+      map.set('b', 2);
+      map.set('c', 3);
+      map.set('d', 4);
+      map.resize(2);
+      expect([...map.keys()]).toStrictEqual(['d', 'c']);
+    });
+
+    it('shrinking to 0 removes all entries', () => {
+      const map = new LRUMap<string, number>(3);
+      map.set('a', 1);
+      map.set('b', 2);
+      map.set('c', 3);
+      map.resize(0);
+      expect(map.capacity).toBe(0);
+      expect(map.size).toBe(0);
+    });
+
+    it('does nothing when new capacity equals current size', () => {
+      const map = new LRUMap<string, number>(3);
+      map.set('a', 1);
+      map.set('b', 2);
+      map.resize(2);
+      expect(map.size).toBe(2);
+      expect(map.has('a')).toBe(true);
+      expect(map.has('b')).toBe(true);
+    });
+
+    it('does not evict any entries when capacity is unchanged', () => {
+      const map = new LRUMap<string, number>(3);
+      map.set('a', 1);
+      map.set('b', 2);
+      map.set('c', 3);
+      map.resize(3);
+      expect(map.capacity).toBe(3);
+      expect(map.size).toBe(3);
+      expect([...map.keys()]).toStrictEqual(['c', 'b', 'a']);
     });
   });
 
@@ -292,7 +404,7 @@ describe('LRUMap', () => {
   });
 
   describe('values()', () => {
-    it('yields values in most recently used order', () => {
+    it('yields values in MRU order', () => {
       const map = new LRUMap<string, number>(3);
       map.set('a', 1);
       map.set('b', 2);
