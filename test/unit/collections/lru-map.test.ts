@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { LRUMap } from '@/collections/lru-map.js';
 
@@ -109,6 +109,107 @@ describe('LRUMap', () => {
       expect(map.has('a')).toBe(true);
       expect(map.has('b')).toBe(false);
       expect(map.has('c')).toBe(true);
+    });
+  });
+
+  describe('getOrInsert()', () => {
+    it('returns the default value and inserts it when the key does not exist', () => {
+      const map = new LRUMap<string, number>(3);
+      const result = map.getOrInsert('a', 42);
+      expect(result).toBe(42);
+      expect(map.get('a')).toBe(42);
+    });
+
+    it('returns the existing value without overwriting when the key already exists', () => {
+      const map = new LRUMap<string, number>(3);
+      map.set('a', 1);
+      const result = map.getOrInsert('a', 99);
+      expect(result).toBe(1);
+      expect(map.get('a')).toBe(1);
+    });
+
+    it('increases size when the key is new', () => {
+      const map = new LRUMap<string, number>(3);
+      map.getOrInsert('a', 1);
+      expect(map.size).toBe(1);
+    });
+
+    it('does not increase size when the key already exists', () => {
+      const map = new LRUMap<string, number>(3);
+      map.set('a', 1);
+      map.getOrInsert('a', 99);
+      expect(map.size).toBe(1);
+    });
+
+    it('promotes the key to most recently used on a hit', () => {
+      const map = new LRUMap<string, number>(2);
+      map.set('a', 1);
+      map.set('b', 2);
+      map.getOrInsert('a', 99); // "a" becomes MRU; "b" becomes LRU
+      map.set('c', 3); // "b" should be evicted, not "a"
+      expect(map.has('a')).toBe(true);
+      expect(map.has('b')).toBe(false);
+      expect(map.has('c')).toBe(true);
+    });
+
+    it('promotes the newly inserted key to most recently used on a miss', () => {
+      const map = new LRUMap<string, number>(2);
+      map.set('a', 1);
+      map.set('b', 2);
+      // Access "a" to make "b" the LRU
+      map.get('a');
+      // Insert "c" via getOrInsert; "b" should be evicted
+      map.getOrInsert('c', 3);
+      expect(map.has('a')).toBe(true);
+      expect(map.has('b')).toBe(false);
+      expect(map.has('c')).toBe(true);
+    });
+
+    it('evicts the LRU entry when capacity is exceeded on insert', () => {
+      const lru = new LRUMap<string, number>(2);
+      lru.set('a', 1);
+      lru.set('b', 2);
+      lru.getOrInsert('c', 3); // "a" is LRU and should be evicted
+      expect(lru.has('a')).toBe(false);
+      expect(lru.has('b')).toBe(true);
+      expect(lru.has('c')).toBe(true);
+    });
+  });
+
+  describe('getOrInsertComputed()', () => {
+    it('calls the callback and inserts the computed value when the key does not exist', () => {
+      const map = new LRUMap<string, number>(3);
+      const callback = vi.fn((key: string) => key.length);
+      const result = map.getOrInsertComputed('hello', callback);
+      expect(result).toBe(5);
+      expect(map.get('hello')).toBe(5);
+      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledWith('hello');
+    });
+
+    it('does not call the callback and returns the existing value on a hit', () => {
+      const map = new LRUMap<string, number>(3);
+      map.set('a', 1);
+      const callback = vi.fn((key: string) => key.length);
+      const result = map.getOrInsertComputed('a', callback);
+      expect(result).toBe(1);
+      expect(callback).not.toHaveBeenCalled();
+    });
+
+    it('passes the correct key to the callback', () => {
+      const map = new LRUMap<string, string>(3);
+      const callback = vi.fn((key: string) => key.toUpperCase());
+      map.getOrInsertComputed('foo', callback);
+      expect(callback).toHaveBeenCalledWith('foo');
+    });
+
+    it('calls the callback exactly once per miss', () => {
+      const map = new LRUMap<number, number>(3);
+      const callback = vi.fn((key: number) => key * key);
+      map.getOrInsertComputed(4, callback);
+      map.getOrInsertComputed(4, callback); // callback must NOT be called again
+      expect(callback).toHaveBeenCalledOnce();
+      expect(map.get(4)).toBe(16);
     });
   });
 

@@ -59,6 +59,20 @@ export class LRUMap<K, V> implements Iterable<[K, V]> {
     return undefined;
   }
 
+  getOrInsert(key: K, defaultValue: V): V {
+    return this.getOrInsertComputed(key, () => defaultValue);
+  }
+
+  getOrInsertComputed(key: K, callback: (key: K) => V): V {
+    const value = this.get(key);
+    if (value !== undefined) {
+      return value;
+    }
+    const defaultValue = callback(key);
+    this._insertEntry(key, defaultValue);
+    return defaultValue;
+  }
+
   has(key: K): boolean {
     return this._entries.has(key);
   }
@@ -80,6 +94,18 @@ export class LRUMap<K, V> implements Iterable<[K, V]> {
       return oldValue;
     }
 
+    this._insertEntry(key, value);
+
+    return undefined;
+  }
+
+  *values(): Generator<V> {
+    for (const key of this._recentKeys) {
+      yield this._entries.get(key)?.value!;
+    }
+  }
+
+  private _insertEntry(key: K, value: V): void {
     const newEntry = { key: this._recentKeys.pushFront(key), value };
     this._entries.set(key, newEntry);
 
@@ -88,14 +114,6 @@ export class LRUMap<K, V> implements Iterable<[K, V]> {
       if (oldestKey !== null) {
         this._entries.delete(oldestKey.value);
       }
-    }
-
-    return undefined;
-  }
-
-  *values(): Generator<V> {
-    for (const key of this._recentKeys) {
-      yield this._entries.get(key)?.value!;
     }
   }
 }
