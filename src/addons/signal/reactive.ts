@@ -3,7 +3,7 @@ import {
   Computed,
   Signal,
   type Subscriber,
-  type Subscription,
+  type Unsubscribe,
 } from './signal.js';
 
 const NO_FLAGS = 0;
@@ -132,7 +132,7 @@ export class Reactive<T> extends Signal<T> {
     return callback(proxy);
   }
 
-  subscribe(subscriber: Subscriber): Subscription {
+  subscribe(subscriber: Subscriber): Unsubscribe {
     const { signal } = this._node;
 
     if (this._shallow) {

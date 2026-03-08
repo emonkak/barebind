@@ -12,5 +12,5 @@ export {
   type InvalidateEvent,
   Signal,
   type Subscriber,
-  type Subscription,
+  type Unsubscribe,
 } from './signal/signal.js';

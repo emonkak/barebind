@@ -29,7 +29,7 @@ export interface InvalidateEvent<T = unknown> {
 
 export type Subscriber = (event: InvalidateEvent) => void;
 
-export type Subscription = () => void;
+export type Unsubscribe = () => void;
 
 export type UnwrapSignals<T> = {
   [K in keyof T]: T[K] extends Signal<infer Value> ? Value : never;
@@ -186,7 +186,7 @@ export abstract class Signal<T> implements HookObject<T>, Bindable<Signal<T>> {
     return { type: SignalDirective, value: this };
   }
 
-  abstract subscribe(subscriber: Subscriber): Subscription;
+  abstract subscribe(subscriber: Subscriber): Unsubscribe;
 
   map<TResult>(selector: (value: T) => TResult): Signal<TResult> {
     return new Computed<TResult, [Signal<T>]>(selector, [this]);
@@ -250,7 +250,7 @@ export class Atom<T> extends Signal<T> {
     this._value = value;
   }
 
-  subscribe(subscriber: Subscriber): Subscription {
+  subscribe(subscriber: Subscriber): Unsubscribe {
     const node = this._subscribers.pushBack(subscriber);
     return () => {
       this._subscribers.remove(node);
@@ -324,7 +324,7 @@ export class Computed<
     return version;
   }
 
-  subscribe(subscriber: Subscriber): Subscription {
+  subscribe(subscriber: Subscriber): Unsubscribe {
     const subscriptions = this._dependencies.map((dependency) =>
       dependency.subscribe(subscriber),
     );
