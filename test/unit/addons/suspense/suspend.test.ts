@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { Suspend } from '@/addons/suspense/suspend.js';
 
@@ -53,6 +53,33 @@ describe('Suspend', () => {
       expect(suspend.status).toBe('aborted');
       expect(suspend.reason).toBe(error);
       expect(controller.signal.aborted).toBe(true);
+    });
+  });
+
+  describe('catch()', () => {
+    it('should handle rejection and return the fallback value', async () => {
+      const error = new Error('fail');
+      const suspend = Suspend.await(
+        Promise.reject(error),
+        new AbortController(),
+      );
+      const result = await suspend.catch(() => 'fallback');
+
+      expect(result).toBe('fallback');
+    });
+  });
+
+  describe('finally', () => {
+    it('should call the callback regardless of fulfillment', async () => {
+      const suspend = Suspend.await(
+        Promise.resolve('ok'),
+        new AbortController(),
+      );
+      const callback = vi.fn();
+      const result = await suspend.finally(callback);
+
+      expect(callback).toHaveBeenCalledOnce();
+      expect(result).toBe('ok');
     });
   });
 

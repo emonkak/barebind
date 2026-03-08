@@ -23,6 +23,7 @@ type SuspendInvariant<T> = Readonly<
     }
 >;
 
+// biome-ignore lint/suspicious/noUnsafeDeclarationMerging: catch/finally are safely assigned via prototype
 class SuspendInternal<T> implements PromiseLike<T> {
   private readonly _promise: PromiseLike<T>;
 
@@ -143,6 +144,11 @@ class SuspendInternal<T> implements PromiseLike<T> {
     }
   }
 }
+
+interface SuspendInternal<T> extends Promise<T> {}
+
+SuspendInternal.prototype.catch = Promise.prototype.catch;
+SuspendInternal.prototype.finally = Promise.prototype.finally;
 
 export type Suspend<T> = SuspendInternal<T> & SuspendInvariant<T>;
 
