@@ -15,14 +15,14 @@ describe('Suspend', () => {
     });
 
     it('transitions to fulfilled when the promise resolves', async () => {
-      const promise = Promise.resolve(42);
+      const promise = Promise.resolve('ok');
       const controller = new AbortController();
       const suspend = Suspend.await(promise, controller);
 
       await promise;
 
       expect(suspend.status).toBe('fulfilled');
-      expect(suspend.value).toBe(42);
+      expect(suspend.value).toBe('ok');
       expect(suspend.reason).toBe(undefined);
     });
 
@@ -58,9 +58,7 @@ describe('Suspend', () => {
 
   describe('then()', () => {
     it('resolves like a Promise via then()', async () => {
-      const promise = Promise.resolve(10);
-      const controller = new AbortController();
-      const suspend = Suspend.await(promise, controller);
+      const suspend = Suspend.await(Promise.resolve(10), new AbortController());
 
       expect(await suspend.then((x) => x)).toBe(10);
       expect(await suspend.then((x) => x * 2)).toBe(20);
@@ -68,9 +66,10 @@ describe('Suspend', () => {
 
     it('rejects like a Promise via then()', async () => {
       const error = new Error('fail');
-      const promise = Promise.reject(error);
-      const controller = new AbortController();
-      const suspend = Suspend.await(promise, controller);
+      const suspend = Suspend.await(
+        Promise.reject(error),
+        new AbortController(),
+      );
 
       await expect(
         suspend.then(
@@ -81,10 +80,8 @@ describe('Suspend', () => {
     });
 
     it('rejects when aborted while pending', async () => {
-      const promise = new Promise(() => {});
       const controller = new AbortController();
-      const suspend = Suspend.await(promise, controller);
-
+      const suspend = Suspend.await(new Promise(() => {}), controller);
       const derivedPromise = suspend.then(
         () => {},
         (reason) => Promise.reject(reason),
@@ -97,9 +94,8 @@ describe('Suspend', () => {
     });
 
     it('rejects when aborted', async () => {
-      const promise = Promise.resolve();
       const controller = new AbortController();
-      const suspend = Suspend.await(promise, controller);
+      const suspend = Suspend.await(Promise.resolve(), controller);
 
       suspend.abort();
 
@@ -110,18 +106,18 @@ describe('Suspend', () => {
 
   describe('unwrap()', () => {
     it('throws the suspend itself when pending', () => {
-      const promise = new Promise(() => {});
-      const controller = new AbortController();
-      const suspend = Suspend.await(promise, controller);
+      const suspend = Suspend.await(
+        new Promise(() => {}),
+        new AbortController(),
+      );
 
       expect(() => suspend.unwrap()).toThrow(expect.exact(suspend) as any);
     });
 
     it('throws the rejection reason when rejected', async () => {
-      const controller = new AbortController();
       const error = new Error('fail');
       const promise = Promise.reject(error);
-      const suspend = Suspend.await(promise, controller);
+      const suspend = Suspend.await(promise, new AbortController());
 
       try {
         await promise;
@@ -133,13 +129,12 @@ describe('Suspend', () => {
     });
 
     it('returns the value when fulfilled', async () => {
-      const controller = new AbortController();
-      const promise = Promise.resolve('value');
-      const suspend = Suspend.await(promise, controller);
+      const promise = Promise.resolve('ok');
+      const suspend = Suspend.await(promise, new AbortController());
 
       await promise;
 
-      expect(suspend.unwrap()).toBe('value');
+      expect(suspend.unwrap()).toBe('ok');
     });
   });
 
