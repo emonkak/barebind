@@ -90,6 +90,12 @@ const TAILING_NEWLINE_PATTERN = /\n\s*$/;
 export class TaggedTemplate<
   TValues extends readonly unknown[] = unknown[],
 > extends AbstractTemplate<TValues> {
+  private readonly _template: HTMLTemplateElement;
+
+  private readonly _holes: Hole[];
+
+  private readonly _mode: TemplateMode;
+
   static parse<TValues extends readonly unknown[]>(
     strings: readonly string[],
     values: TValues,
@@ -114,12 +120,6 @@ export class TaggedTemplate<
 
     return new TaggedTemplate(template, holes, mode);
   }
-
-  private readonly _template: HTMLTemplateElement;
-
-  private readonly _holes: Hole[];
-
-  private readonly _mode: TemplateMode;
 
   constructor(
     template: HTMLTemplateElement,
