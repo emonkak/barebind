@@ -5,6 +5,8 @@ interface Entry<K, V> {
   value: V;
 }
 
+type EvictCallback<K, V> = (key: K, value: V) => void;
+
 export class LRUMap<K, V> implements Iterable<[K, V]> {
   private readonly _entries: Map<K, Entry<K, V>> = new Map();
 
@@ -12,8 +14,11 @@ export class LRUMap<K, V> implements Iterable<[K, V]> {
 
   private _capacity: number;
 
-  constructor(capacity: number) {
+  private _callback: EvictCallback<K, V> | null;
+
+  constructor(capacity: number, callback: EvictCallback<K, V> | null = null) {
     this._capacity = capacity;
+    this._callback = callback;
   }
 
   get capacity(): number {
@@ -120,7 +125,10 @@ export class LRUMap<K, V> implements Iterable<[K, V]> {
     while (this._entries.size > this._capacity) {
       const lruKey = this._recentKeys.popBack();
       if (lruKey !== null) {
-        this._entries.delete(lruKey.value);
+        const key = lruKey.value;
+        const { value } = this._entries.get(key)!;
+        this._entries.delete(key);
+        this._callback?.(key, value);
       }
     }
   }
