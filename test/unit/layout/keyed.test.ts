@@ -11,7 +11,7 @@ import {
 import { TestUpdater } from '../../test-updater.js';
 
 describe('Keyed()', () => {
-  it('creates a new KeySpecifier with the source and the key', () => {
+  it('creates a new LayoutModifier with the source and the key', () => {
     const source = 'foo';
     const key = 123;
     const bindable = Keyed(source, key);

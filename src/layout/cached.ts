@@ -39,6 +39,10 @@ export class CachedLayout<TKey> implements Layout {
     return this._key;
   }
 
+  get capacity(): number {
+    return this._capacity;
+  }
+
   get layout(): Layout | null {
     return this._layout;
   }
@@ -64,7 +68,7 @@ export class CachedSlot<TSource, TKey> implements Slot<TSource> {
 
   private _key: TKey;
 
-  private _cachedSlots: LRUMap<TKey, Slot<TSource>>;
+  private readonly _cachedSlots: LRUMap<TKey, Slot<TSource>>;
 
   constructor(slot: Slot<TSource>, key: TKey, capacity: number) {
     this._pendingSlot = slot;
@@ -84,12 +88,28 @@ export class CachedSlot<TSource, TKey> implements Slot<TSource> {
     return this._pendingSlot.part;
   }
 
+  attach(session: UpdateSession): void {
+    this._pendingSlot.attach(session);
+  }
+
+  detach(session: UpdateSession): void {
+    this._pendingSlot.detach(session);
+  }
+
   reconcile(source: TSource, session: UpdateSession): boolean {
     const { layout } = toDirective(source);
     const key = (
       layout instanceof CachedLayout ? layout.key : undefined
     ) as TKey;
+    const capacity =
+      layout instanceof CachedLayout
+        ? layout.capacity
+        : this._cachedSlots.capacity;
     let dirty: boolean;
+
+    if (this._cachedSlots.capacity !== capacity) {
+      this._cachedSlots.resize(capacity);
+    }
 
     if (Object.is(key, this._key)) {
       dirty = this._pendingSlot.reconcile(source, session);
@@ -127,14 +147,6 @@ export class CachedSlot<TSource, TKey> implements Slot<TSource> {
     this._key = key;
 
     return dirty;
-  }
-
-  attach(session: UpdateSession): void {
-    this._pendingSlot.attach(session);
-  }
-
-  detach(session: UpdateSession): void {
-    this._pendingSlot.detach(session);
   }
 
   commit(): void {

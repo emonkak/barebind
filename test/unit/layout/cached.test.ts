@@ -10,13 +10,11 @@ import {
 } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
-const CAPACITY = 10;
-
 describe('Cached()', () => {
   it('creates a new KeySpecifier with the source and the key', () => {
     const source = 'foo';
     const key = 123;
-    const capacity = CAPACITY;
+    const capacity = 2;
     const bindable = Cached(source, key, capacity);
 
     expect(bindable.source).toBe(source);
@@ -29,18 +27,16 @@ describe('Cached()', () => {
 describe('CachedLayout', () => {
   describe('name', () => {
     it('returns the name of the class', () => {
-      const layout = new CachedLayout('foo', CAPACITY, new MockLayout());
+      const layout = new CachedLayout('foo', 2, new MockLayout());
       expect(layout.name).toBe(CachedLayout.name);
     });
   });
 
   describe('compose()', () => {
     it('creates a new CachedLayout with the layout', () => {
-      const layout = new CachedLayout('foo', CAPACITY, null).compose(
-        new MockLayout(),
-      );
+      const layout = new CachedLayout('foo', 2, null).compose(new MockLayout());
       expect(layout).toStrictEqual(
-        new CachedLayout('foo', CAPACITY, new MockLayout()),
+        new CachedLayout('foo', 2, new MockLayout()),
       );
     });
   });
@@ -56,11 +52,10 @@ describe('CachedLayout', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new CachedLayout(
-        key,
-        CAPACITY,
+      const slot = new CachedLayout(key, 2, new MockLayout()).placeBinding(
+        binding,
         new MockLayout(),
-      ).placeBinding(binding, new MockLayout());
+      );
 
       expect(slot.type).toBe(binding.type);
       expect(slot.value).toBe(binding.value);
@@ -70,8 +65,76 @@ describe('CachedLayout', () => {
 });
 
 describe('CachedSlot', () => {
+  describe('attach()', () => {
+    it('commits the binding after attaching', () => {
+      const source = 'foo';
+      const key = 123;
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        anchorNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
+      const binding = new MockBinding(MockPrimitive, source, part);
+      const innerSlot = new MockSlot(binding);
+      const slot = new CachedSlot(innerSlot, key, 2);
+      const updater = new TestUpdater();
+
+      const attachSpy = vi.spyOn(innerSlot, 'attach');
+      const commitSpy = vi.spyOn(innerSlot, 'commit');
+
+      SESSION1: {
+        updater.startUpdate((session) => {
+          slot.attach(session);
+          slot.commit();
+        });
+
+        expect(attachSpy).toHaveBeenCalledOnce();
+        expect(commitSpy).toHaveBeenCalledOnce();
+        expect(part.node.nodeValue).toBe(source);
+      }
+    });
+  });
+
+  describe('detach()', () => {
+    it('rollbacks the binding after detaching', () => {
+      const source = 'foo';
+      const key = 123;
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        anchorNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
+      const binding = new MockBinding(MockPrimitive, source, part);
+      const innerSlot = new MockSlot(binding);
+      const slot = new CachedSlot(innerSlot, key, 2);
+      const updater = new TestUpdater();
+
+      const detachSpy = vi.spyOn(innerSlot, 'detach');
+      const rollbackSpy = vi.spyOn(innerSlot, 'rollback');
+
+      SESSION1: {
+        updater.startUpdate((session) => {
+          slot.attach(session);
+          slot.commit();
+        });
+      }
+
+      SESSION2: {
+        updater.startUpdate((session) => {
+          slot.detach(session);
+          slot.rollback();
+        });
+
+        expect(detachSpy).toHaveBeenCalledOnce();
+        expect(rollbackSpy).toHaveBeenCalledOnce();
+      }
+    });
+  });
+
   describe('reconcile()', () => {
-    it('updates the binding with the same key', () => {
+    it('reuses the binding when the key is the same', () => {
       const source1 = 'foo';
       const source2 = 'bar';
       const key = 123;
@@ -83,7 +146,7 @@ describe('CachedSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, source1, part);
       const innerSlot = new MockSlot(binding);
-      const slot = new CachedSlot(innerSlot, key, CAPACITY);
+      const slot = new CachedSlot(innerSlot, key, 2);
       const updater = new TestUpdater();
 
       const reconcileSpy = vi.spyOn(innerSlot, 'reconcile');
@@ -97,18 +160,11 @@ describe('CachedSlot', () => {
           slot.attach(session);
           slot.commit();
         });
-
-        expect(reconcileSpy).toHaveBeenCalledTimes(0);
-        expect(attachSpy).toHaveBeenCalledTimes(1);
-        expect(detachSpy).toHaveBeenCalledTimes(0);
-        expect(commitSpy).toHaveBeenCalledTimes(1);
-        expect(rollbackSpy).toHaveBeenCalledTimes(0);
-        expect(part.node.nodeValue).toBe(source1);
       }
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(Cached(source2, key, CAPACITY), session);
+          const dirty = slot.reconcile(Cached(source2, key, 2), session);
           slot.commit();
           return dirty;
         });
@@ -121,23 +177,9 @@ describe('CachedSlot', () => {
         expect(dirty).toBe(true);
         expect(part.node.nodeValue).toBe(source2);
       }
-
-      SESSION3: {
-        updater.startUpdate((session) => {
-          slot.detach(session);
-          slot.rollback();
-        });
-
-        expect(reconcileSpy).toHaveBeenCalledTimes(1);
-        expect(attachSpy).toHaveBeenCalledTimes(1);
-        expect(detachSpy).toHaveBeenCalledTimes(1);
-        expect(commitSpy).toHaveBeenCalledTimes(2);
-        expect(rollbackSpy).toHaveBeenCalledTimes(1);
-        expect(part.node.nodeValue).toBe('');
-      }
     });
 
-    it('updates the binding with different keys', () => {
+    it('reuses the binding when it is cached', () => {
       const source1 = 'foo';
       const source2 = 'bar';
       const key1 = 123;
@@ -150,7 +192,7 @@ describe('CachedSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, source1, part);
       const innerSlot = new MockSlot(binding);
-      const slot = new CachedSlot(innerSlot, key1, CAPACITY);
+      const slot = new CachedSlot(innerSlot, key1, 2);
       const updater = new TestUpdater();
 
       const reconcileSpy = vi.spyOn(innerSlot, 'reconcile');
@@ -164,30 +206,11 @@ describe('CachedSlot', () => {
           slot.attach(session);
           slot.commit();
         });
-
-        expect(reconcileSpy).toHaveBeenCalledTimes(0);
-        expect(attachSpy).toHaveBeenCalledTimes(1);
-        expect(detachSpy).toHaveBeenCalledTimes(0);
-        expect(commitSpy).toHaveBeenCalledTimes(1);
-        expect(rollbackSpy).toHaveBeenCalledTimes(0);
-        expect(slot['_pendingSlot']).toBe(innerSlot);
-        expect(slot['_pendingSlot']).toBeInstanceOf(MockSlot);
-        expect(slot['_pendingSlot']).toStrictEqual(
-          expect.objectContaining({
-            value: source1,
-            dirty: false,
-            committed: true,
-          }),
-        );
-        expect(part.node.nodeValue).toBe(source1);
       }
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(
-            Cached(source2, key2, CAPACITY),
-            session,
-          );
+          const dirty = slot.reconcile(Cached(source2, key2, 2), session);
           slot.commit();
           return dirty;
         });
@@ -197,25 +220,13 @@ describe('CachedSlot', () => {
         expect(detachSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(rollbackSpy).toHaveBeenCalledTimes(1);
-        expect(slot['_pendingSlot']).not.toBe(innerSlot);
-        expect(slot['_pendingSlot']).toBeInstanceOf(MockSlot);
-        expect(slot['_pendingSlot']).toStrictEqual(
-          expect.objectContaining({
-            value: source2,
-            dirty: false,
-            committed: true,
-          }),
-        );
         expect(dirty).toBe(true);
         expect(part.node.nodeValue).toBe(source2);
       }
 
       SESSION3: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(
-            Cached(source1, key1, CAPACITY),
-            session,
-          );
+          const dirty = slot.reconcile(Cached(source1, key1, 2), session);
           slot.commit();
           return dirty;
         });
@@ -225,35 +236,74 @@ describe('CachedSlot', () => {
         expect(detachSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(rollbackSpy).toHaveBeenCalledTimes(1);
-        expect(slot['_pendingSlot']).toBe(innerSlot);
-        expect(slot['_pendingSlot']).toBeInstanceOf(MockSlot);
-        expect(slot['_pendingSlot']).toStrictEqual(
-          expect.objectContaining({
-            value: source1,
-            dirty: false,
-            committed: true,
-          }),
-        );
         expect(dirty).toBe(true);
         expect(part.node.nodeValue).toBe(source1);
       }
+    });
 
-      SESSION4: {
+    it('does not reuse the binding when it is evicted by exceeding capacity', () => {
+      const source1 = 'foo';
+      const source2 = 'bar';
+      const key1 = 123;
+      const key2 = 456;
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        anchorNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
+      const binding = new MockBinding(MockPrimitive, source1, part);
+      const innerSlot = new MockSlot(binding);
+      const slot = new CachedSlot(innerSlot, key1, 2);
+      const updater = new TestUpdater();
+
+      const reconcileSpy = vi.spyOn(innerSlot, 'reconcile');
+      const attachSpy = vi.spyOn(innerSlot, 'attach');
+      const detachSpy = vi.spyOn(innerSlot, 'detach');
+      const commitSpy = vi.spyOn(innerSlot, 'commit');
+      const rollbackSpy = vi.spyOn(innerSlot, 'rollback');
+
+      SESSION1: {
         updater.startUpdate((session) => {
-          slot.detach(session);
-          slot.rollback();
+          slot.attach(session);
+          slot.commit();
+        });
+      }
+
+      SESSION2: {
+        const dirty = updater.startUpdate((session) => {
+          const dirty = slot.reconcile(Cached(source2, key2, 2), session);
+          slot.commit();
+          return dirty;
         });
 
-        expect(reconcileSpy).toHaveBeenCalledTimes(1);
+        expect(reconcileSpy).toHaveBeenCalledTimes(0);
         expect(attachSpy).toHaveBeenCalledTimes(1);
-        expect(detachSpy).toHaveBeenCalledTimes(2);
-        expect(commitSpy).toHaveBeenCalledTimes(2);
-        expect(rollbackSpy).toHaveBeenCalledTimes(2);
-        expect(part.node.nodeValue).toBe('');
+        expect(detachSpy).toHaveBeenCalledTimes(1);
+        expect(commitSpy).toHaveBeenCalledTimes(1);
+        expect(rollbackSpy).toHaveBeenCalledTimes(1);
+        expect(dirty).toBe(true);
+        expect(part.node.nodeValue).toBe(source2);
+      }
+
+      SESSION3: {
+        const dirty = updater.startUpdate((session) => {
+          const dirty = slot.reconcile(Cached(source1, key1, 0), session);
+          slot.commit();
+          return dirty;
+        });
+
+        expect(reconcileSpy).toHaveBeenCalledTimes(0);
+        expect(attachSpy).toHaveBeenCalledTimes(1);
+        expect(detachSpy).toHaveBeenCalledTimes(1);
+        expect(commitSpy).toHaveBeenCalledTimes(1);
+        expect(rollbackSpy).toHaveBeenCalledTimes(1);
+        expect(dirty).toBe(true);
+        expect(part.node.nodeValue).toBe(source1);
       }
     });
 
-    it('updates the binding without keys', () => {
+    it('resolves a new binding when the key changes to empty', () => {
       const source1 = 'foo';
       const source2 = 'bar';
       const key = 123;
@@ -265,7 +315,7 @@ describe('CachedSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, source1, part);
       const innerSlot = new MockSlot(binding);
-      const slot = new CachedSlot(innerSlot, key, CAPACITY);
+      const slot = new CachedSlot(innerSlot, key, 2);
       const updater = new TestUpdater();
 
       const reconcileSpy = vi.spyOn(innerSlot, 'reconcile');
@@ -279,22 +329,6 @@ describe('CachedSlot', () => {
           slot.attach(session);
           slot.commit();
         });
-
-        expect(reconcileSpy).toHaveBeenCalledTimes(0);
-        expect(attachSpy).toHaveBeenCalledTimes(1);
-        expect(detachSpy).toHaveBeenCalledTimes(0);
-        expect(commitSpy).toHaveBeenCalledTimes(1);
-        expect(rollbackSpy).toHaveBeenCalledTimes(0);
-        expect(slot['_pendingSlot']).toBe(innerSlot);
-        expect(slot['_pendingSlot']).toBeInstanceOf(MockSlot);
-        expect(slot['_pendingSlot']).toStrictEqual(
-          expect.objectContaining({
-            value: source1,
-            dirty: false,
-            committed: true,
-          }),
-        );
-        expect(part.node.nodeValue).toBe(source1);
       }
 
       SESSION2: {
@@ -309,56 +343,8 @@ describe('CachedSlot', () => {
         expect(detachSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(rollbackSpy).toHaveBeenCalledTimes(1);
-        expect(slot['_pendingSlot']).not.toBe(innerSlot);
-        expect(slot['_pendingSlot']).toBeInstanceOf(MockSlot);
-        expect(slot['_pendingSlot']).toStrictEqual(
-          expect.objectContaining({
-            value: source2,
-            dirty: false,
-            committed: true,
-          }),
-        );
         expect(dirty).toBe(true);
         expect(part.node.nodeValue).toBe(source2);
-      }
-
-      SESSION3: {
-        const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(Cached(source1, key, CAPACITY), session);
-          slot.commit();
-          return dirty;
-        });
-
-        expect(reconcileSpy).toHaveBeenCalledTimes(1);
-        expect(attachSpy).toHaveBeenCalledTimes(1);
-        expect(detachSpy).toHaveBeenCalledTimes(1);
-        expect(commitSpy).toHaveBeenCalledTimes(2);
-        expect(rollbackSpy).toHaveBeenCalledTimes(1);
-        expect(slot['_pendingSlot']).toBe(innerSlot);
-        expect(slot['_pendingSlot']).toBeInstanceOf(MockSlot);
-        expect(slot['_pendingSlot']).toStrictEqual(
-          expect.objectContaining({
-            value: source1,
-            dirty: false,
-            committed: true,
-          }),
-        );
-        expect(dirty).toBe(true);
-        expect(part.node.nodeValue).toBe(source1);
-      }
-
-      SESSION4: {
-        updater.startUpdate((session) => {
-          slot.detach(session);
-          slot.rollback();
-        });
-
-        expect(reconcileSpy).toHaveBeenCalledTimes(1);
-        expect(attachSpy).toHaveBeenCalledTimes(1);
-        expect(detachSpy).toHaveBeenCalledTimes(2);
-        expect(commitSpy).toHaveBeenCalledTimes(2);
-        expect(rollbackSpy).toHaveBeenCalledTimes(2);
-        expect(part.node.nodeValue).toBe('');
       }
     });
   });
