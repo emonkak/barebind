@@ -50,9 +50,9 @@ export const SignalDirective: DirectiveType<Signal<any>> = {
 export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   private _signal: Signal<T>;
 
-  private _version: number;
-
   private readonly _slot: Slot<T>;
+
+  private _memoizedVersion: number;
 
   private _pendingLanes: Lanes = Lane.NoLane;
 
@@ -62,8 +62,8 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   constructor(signal: Signal<T>, slot: Slot<T>) {
     this._signal = signal;
-    this._version = signal.version;
     this._slot = slot;
+    this._memoizedVersion = signal.version;
   }
 
   get type(): DirectiveType<Signal<T>> {
@@ -76,7 +76,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   set value(signal: Signal<T>) {
     this._signal = signal;
-    this._version = -1;
+    this._memoizedVersion = -1;
   }
 
   get part(): Part {
@@ -112,9 +112,9 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
     this._subscription?.();
 
-    if (this._version < version) {
+    if (this._memoizedVersion < version) {
       this._slot.reconcile(this._signal.value, session);
-      this._version = version;
+      this._memoizedVersion = version;
     } else {
       this._slot.attach(session);
     }
@@ -127,9 +127,8 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._subscription?.();
     this._slot.detach(session);
 
-    this._scope = DETACHED_SCOPE;
     this._pendingLanes = Lane.NoLane;
-    this._subscription = null;
+    this._scope = DETACHED_SCOPE;
   }
 
   commit(): void {
@@ -299,16 +298,16 @@ export class Computed<
   }
 
   get value(): TResult {
-    const currentVersion = this.version;
+    const version = this.version;
 
-    if (this._memoizedVersion < currentVersion) {
+    if (this._memoizedVersion < version) {
       const computation = this._computation;
       this._memoizedResult = computation(
         ...(this._dependencies.map(
           (dependency) => dependency.value,
         ) as UnwrapSignals<TDependencies>),
       );
-      this._memoizedVersion = currentVersion;
+      this._memoizedVersion = version;
     }
 
     return this._memoizedResult!;
@@ -316,11 +315,9 @@ export class Computed<
 
   get version(): number {
     let version = 0;
-
     for (const dependency of this._dependencies) {
       version += dependency.version;
     }
-
     return version;
   }
 
