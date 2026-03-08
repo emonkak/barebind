@@ -9,13 +9,13 @@ import {
   type Directive,
   type DirectiveContext,
   type DirectiveType,
+  type Effect,
   type HookObject,
   Lane,
   type Lanes,
   type Part,
   type RenderContext,
   type Scope,
-  type SessionContext,
   type Slot,
   type UpdateSession,
 } from '../../core.js';
@@ -34,6 +34,10 @@ export type Unsubscribe = () => void;
 export type UnwrapSignals<T> = {
   [K in keyof T]: T[K] extends Signal<infer Value> ? Value : never;
 };
+
+interface Subscription {
+  unsubscribe: Unsubscribe | null;
+}
 
 export const SignalDirective: DirectiveType<Signal<any>> = {
   name: 'SignalDirective',
@@ -58,7 +62,9 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   private _scope: Scope = DETACHED_SCOPE;
 
-  private _subscription: Subscription | null = null;
+  private _subscription: Subscription = {
+    unsubscribe: null,
+  };
 
   constructor(signal: Signal<T>, slot: Slot<T>) {
     this._signal = signal;
@@ -103,14 +109,20 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   }
 
   shouldUpdate(signal: Signal<T>): boolean {
-    return this._subscription === null || signal !== this._signal;
+    return this._subscription.unsubscribe === null || signal !== this._signal;
   }
 
   attach(session: UpdateSession): void {
-    const { scope, context } = session;
+    const { frame, scope, context } = session;
     const { version } = this._signal;
 
-    this._subscription?.();
+    frame.layoutEffects.push(
+      new SubscribeSignal(this._signal, this._subscription, () => {
+        const { lanes } = context.scheduleUpdate(this);
+        this._pendingLanes |= lanes;
+      }),
+      scope.level,
+    );
 
     if (this._memoizedVersion < version) {
       this._slot.reconcile(this._signal.value, session);
@@ -120,11 +132,13 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     }
 
     this._scope = scope;
-    this._subscription = this._subscribeSignal(context);
   }
 
   detach(session: UpdateSession): void {
-    this._subscription?.();
+    const { frame } = session;
+
+    frame.layoutEffects.pushBefore(new UnsubscribeSignal(this._subscription));
+
     this._slot.detach(session);
 
     this._pendingLanes = Lane.NoLane;
@@ -137,13 +151,6 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   rollback(): void {
     this._slot.rollback();
-  }
-
-  private _subscribeSignal(context: SessionContext): Subscription {
-    return this._signal.subscribe(() => {
-      const { lanes } = context.scheduleUpdate(this);
-      this._pendingLanes |= lanes;
-    });
   }
 }
 
@@ -331,5 +338,40 @@ export class Computed<
         subscription();
       }
     };
+  }
+}
+
+class SubscribeSignal<T> implements Effect {
+  private readonly _signal: Signal<T>;
+
+  private readonly _subscription: Subscription;
+
+  private readonly _subscriber: Subscriber;
+
+  constructor(
+    signal: Signal<T>,
+    subscription: Subscription,
+    subscriber: Subscriber,
+  ) {
+    this._signal = signal;
+    this._subscription = subscription;
+    this._subscriber = subscriber;
+  }
+
+  commit(): void {
+    this._subscription.unsubscribe?.();
+    this._subscription.unsubscribe = this._signal.subscribe(this._subscriber);
+  }
+}
+
+class UnsubscribeSignal implements Effect {
+  private readonly _subscription: Subscription;
+
+  constructor(subscription: Subscription) {
+    this._subscription = subscription;
+  }
+
+  commit(): void {
+    this._subscription.unsubscribe?.();
   }
 }
