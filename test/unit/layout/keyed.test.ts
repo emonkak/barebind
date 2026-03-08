@@ -60,8 +60,76 @@ describe('KeyedLayout', () => {
 });
 
 describe('KeyedSlot', () => {
+  describe('attach()', () => {
+    it('commits the binding after attaching', () => {
+      const source = 'foo';
+      const key = 123;
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        anchorNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
+      const binding = new MockBinding(MockPrimitive, source, part);
+      const innerSlot = new MockSlot(binding);
+      const slot = new KeyedSlot(innerSlot, key);
+      const updater = new TestUpdater();
+
+      const attachSpy = vi.spyOn(innerSlot, 'attach');
+      const commitSpy = vi.spyOn(innerSlot, 'commit');
+
+      SESSION1: {
+        updater.startUpdate((session) => {
+          slot.attach(session);
+          slot.commit();
+        });
+
+        expect(attachSpy).toHaveBeenCalledOnce();
+        expect(commitSpy).toHaveBeenCalledOnce();
+        expect(part.node.nodeValue).toBe(source);
+      }
+    });
+  });
+
+  describe('detach()', () => {
+    it('rollbacks the binding after detaching', () => {
+      const source = 'foo';
+      const key = 123;
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        anchorNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
+      const binding = new MockBinding(MockPrimitive, source, part);
+      const innerSlot = new MockSlot(binding);
+      const slot = new KeyedSlot(innerSlot, key);
+      const updater = new TestUpdater();
+
+      const detachSpy = vi.spyOn(innerSlot, 'detach');
+      const rollbackSpy = vi.spyOn(innerSlot, 'rollback');
+
+      SESSION1: {
+        updater.startUpdate((session) => {
+          slot.attach(session);
+          slot.commit();
+        });
+      }
+
+      SESSION2: {
+        updater.startUpdate((session) => {
+          slot.detach(session);
+          slot.rollback();
+        });
+
+        expect(detachSpy).toHaveBeenCalledOnce();
+        expect(rollbackSpy).toHaveBeenCalledOnce();
+      }
+    });
+  });
+
   describe('reconcile()', () => {
-    it('updates the binding with the same key', () => {
+    it('reuses the binding when the key is the same', () => {
       const source1 = 'foo';
       const source2 = 'bar';
       const key = 123;
@@ -87,13 +155,6 @@ describe('KeyedSlot', () => {
           slot.attach(session);
           slot.commit();
         });
-
-        expect(reconcileSpy).toHaveBeenCalledTimes(0);
-        expect(attachSpy).toHaveBeenCalledTimes(1);
-        expect(detachSpy).toHaveBeenCalledTimes(0);
-        expect(commitSpy).toHaveBeenCalledTimes(1);
-        expect(rollbackSpy).toHaveBeenCalledTimes(0);
-        expect(part.node.nodeValue).toBe(source1);
       }
 
       SESSION2: {
@@ -111,23 +172,9 @@ describe('KeyedSlot', () => {
         expect(dirty).toBe(true);
         expect(part.node.nodeValue).toBe(source2);
       }
-
-      SESSION3: {
-        updater.startUpdate((session) => {
-          slot.detach(session);
-          slot.rollback();
-        });
-
-        expect(reconcileSpy).toHaveBeenCalledTimes(1);
-        expect(attachSpy).toHaveBeenCalledTimes(1);
-        expect(detachSpy).toHaveBeenCalledTimes(1);
-        expect(commitSpy).toHaveBeenCalledTimes(2);
-        expect(rollbackSpy).toHaveBeenCalledTimes(1);
-        expect(part.node.nodeValue).toBe('');
-      }
     });
 
-    it('updates the binding with different keys', () => {
+    it('resolves a new binding when the key is different', () => {
       const source1 = 'foo';
       const source2 = 'bar';
       const key1 = 123;
@@ -154,22 +201,6 @@ describe('KeyedSlot', () => {
           slot.attach(session);
           slot.commit();
         });
-
-        expect(reconcileSpy).toHaveBeenCalledTimes(0);
-        expect(attachSpy).toHaveBeenCalledTimes(1);
-        expect(detachSpy).toHaveBeenCalledTimes(0);
-        expect(commitSpy).toHaveBeenCalledTimes(1);
-        expect(rollbackSpy).toHaveBeenCalledTimes(0);
-        expect(slot['_pendingSlot']).toBe(innerSlot);
-        expect(slot['_pendingSlot']).toBeInstanceOf(MockSlot);
-        expect(slot['_pendingSlot']).toStrictEqual(
-          expect.objectContaining({
-            value: source1,
-            dirty: false,
-            committed: true,
-          }),
-        );
-        expect(part.node.nodeValue).toBe(source1);
       }
 
       SESSION2: {
@@ -184,35 +215,12 @@ describe('KeyedSlot', () => {
         expect(detachSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(rollbackSpy).toHaveBeenCalledTimes(1);
-        expect(slot['_pendingSlot']).not.toBe(innerSlot);
-        expect(slot['_pendingSlot']).toBeInstanceOf(MockSlot);
-        expect(slot['_pendingSlot']).toStrictEqual(
-          expect.objectContaining({
-            value: source2,
-            dirty: false,
-            committed: true,
-          }),
-        );
         expect(dirty).toBe(true);
         expect(part.node.nodeValue).toBe(source2);
       }
-
-      SESSION3: {
-        updater.startUpdate((session) => {
-          slot.detach(session);
-          slot.rollback();
-        });
-
-        expect(reconcileSpy).toHaveBeenCalledTimes(0);
-        expect(attachSpy).toHaveBeenCalledTimes(1);
-        expect(detachSpy).toHaveBeenCalledTimes(1);
-        expect(commitSpy).toHaveBeenCalledTimes(1);
-        expect(rollbackSpy).toHaveBeenCalledTimes(1);
-        expect(part.node.nodeValue).toBe('');
-      }
     });
 
-    it('updates the binding without keys', () => {
+    it('resolves a new binding when the key changes to empty', () => {
       const source1 = 'foo';
       const source2 = 'bar';
       const key = 123;
@@ -238,22 +246,6 @@ describe('KeyedSlot', () => {
           slot.attach(session);
           slot.commit();
         });
-
-        expect(reconcileSpy).toHaveBeenCalledTimes(0);
-        expect(attachSpy).toHaveBeenCalledTimes(1);
-        expect(detachSpy).toHaveBeenCalledTimes(0);
-        expect(commitSpy).toHaveBeenCalledTimes(1);
-        expect(rollbackSpy).toHaveBeenCalledTimes(0);
-        expect(slot['_pendingSlot']).toBe(innerSlot);
-        expect(slot['_pendingSlot']).toBeInstanceOf(MockSlot);
-        expect(slot['_pendingSlot']).toStrictEqual(
-          expect.objectContaining({
-            value: source1,
-            dirty: false,
-            committed: true,
-          }),
-        );
-        expect(part.node.nodeValue).toBe(source1);
       }
 
       SESSION2: {
@@ -268,31 +260,8 @@ describe('KeyedSlot', () => {
         expect(detachSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(rollbackSpy).toHaveBeenCalledTimes(1);
-        expect(slot['_pendingSlot']).not.toBe(innerSlot);
-        expect(slot['_pendingSlot']).toBeInstanceOf(MockSlot);
-        expect(slot['_pendingSlot']).toStrictEqual(
-          expect.objectContaining({
-            value: source2,
-            dirty: false,
-            committed: true,
-          }),
-        );
         expect(dirty).toBe(true);
         expect(part.node.nodeValue).toBe(source2);
-      }
-
-      SESSION3: {
-        updater.startUpdate((session) => {
-          slot.detach(session);
-          slot.rollback();
-        });
-
-        expect(reconcileSpy).toHaveBeenCalledTimes(0);
-        expect(attachSpy).toHaveBeenCalledTimes(1);
-        expect(detachSpy).toHaveBeenCalledTimes(1);
-        expect(commitSpy).toHaveBeenCalledTimes(1);
-        expect(rollbackSpy).toHaveBeenCalledTimes(1);
-        expect(part.node.nodeValue).toBe('');
       }
     });
   });

@@ -355,6 +355,11 @@ export class MockSlot<T> implements Slot<T> {
     this.dirty = true;
   }
 
+  detach(session: UpdateSession): void {
+    this.binding.detach(session);
+    this.dirty = true;
+  }
+
   reconcile(source: T, session: UpdateSession): boolean {
     const { context } = session;
     const { type, value } = context.resolveDirective(source, this.binding.part);
@@ -374,11 +379,6 @@ export class MockSlot<T> implements Slot<T> {
     }
 
     return dirty;
-  }
-
-  detach(session: UpdateSession): void {
-    this.binding.detach(session);
-    this.dirty = true;
   }
 
   commit(): void {

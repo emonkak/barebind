@@ -50,6 +50,16 @@ export class StrictSlot<T> implements Slot<T> {
     return this._binding.part;
   }
 
+  attach(session: UpdateSession): void {
+    this._binding.attach(session);
+    this._status = SlotStatus.Attached;
+  }
+
+  detach(session: UpdateSession): void {
+    this._binding.detach(session);
+    this._status = SlotStatus.Detached;
+  }
+
   reconcile(source: T, session: UpdateSession): boolean {
     const { context } = session;
     const { type, value } = context.resolveDirective(
@@ -73,16 +83,6 @@ export class StrictSlot<T> implements Slot<T> {
     }
 
     return this._status === SlotStatus.Attached;
-  }
-
-  attach(session: UpdateSession): void {
-    this._binding.attach(session);
-    this._status = SlotStatus.Attached;
-  }
-
-  detach(session: UpdateSession): void {
-    this._binding.detach(session);
-    this._status = SlotStatus.Detached;
   }
 
   commit(): void {

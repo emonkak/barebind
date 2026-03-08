@@ -76,6 +76,14 @@ export class KeyedSlot<TSource, TKey> implements Slot<TSource> {
     return this._pendingSlot.part;
   }
 
+  attach(session: UpdateSession): void {
+    this._pendingSlot.attach(session);
+  }
+
+  detach(session: UpdateSession): void {
+    this._pendingSlot.detach(session);
+  }
+
   reconcile(source: TSource, session: UpdateSession): boolean {
     const { layout } = toDirective(source);
     const key = (
@@ -111,14 +119,6 @@ export class KeyedSlot<TSource, TKey> implements Slot<TSource> {
     this._key = key;
 
     return dirty;
-  }
-
-  attach(session: UpdateSession): void {
-    this._pendingSlot.attach(session);
-  }
-
-  detach(session: UpdateSession): void {
-    this._pendingSlot.detach(session);
   }
 
   commit(): void {

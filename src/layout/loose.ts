@@ -48,6 +48,16 @@ export class LooseSlot<T> implements Slot<T> {
     return this._pendingBinding.part;
   }
 
+  attach(session: UpdateSession): void {
+    this._pendingBinding.attach(session);
+    this._status = SlotStatus.Attached;
+  }
+
+  detach(session: UpdateSession): void {
+    this._pendingBinding.detach(session);
+    this._status = SlotStatus.Detached;
+  }
+
   reconcile(source: T, session: UpdateSession): boolean {
     const { context } = session;
     const { type, value } = context.resolveDirective(
@@ -76,16 +86,6 @@ export class LooseSlot<T> implements Slot<T> {
     }
 
     return this._status === SlotStatus.Attached;
-  }
-
-  attach(session: UpdateSession): void {
-    this._pendingBinding.attach(session);
-    this._status = SlotStatus.Attached;
-  }
-
-  detach(session: UpdateSession): void {
-    this._pendingBinding.detach(session);
-    this._status = SlotStatus.Detached;
   }
 
   commit(): void {
