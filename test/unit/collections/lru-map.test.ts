@@ -158,7 +158,7 @@ describe('LRUMap', () => {
       expect(map.has('b')).toBe(false);
       expect(map.has('c')).toBe(true);
       expect(evictListener).toHaveBeenCalledTimes(1);
-      expect(evictListener).toHaveBeenNthCalledWith(1, 'b', 2);
+      expect(evictListener).toHaveBeenNthCalledWith(1, { key: 'b', value: 2 });
     });
 
     it('promotes the newly inserted key to most recently used on a miss', () => {
@@ -174,7 +174,7 @@ describe('LRUMap', () => {
       expect(map.has('b')).toBe(false);
       expect(map.has('c')).toBe(true);
       expect(evictListener).toHaveBeenCalledTimes(1);
-      expect(evictListener).toHaveBeenNthCalledWith(1, 'b', 2);
+      expect(evictListener).toHaveBeenNthCalledWith(1, { key: 'b', value: 2 });
     });
 
     it('evicts the LRU entry when capacity is exceeded on insert', () => {
@@ -187,7 +187,7 @@ describe('LRUMap', () => {
       expect(map.has('b')).toBe(true);
       expect(map.has('c')).toBe(true);
       expect(evictListener).toHaveBeenCalledTimes(1);
-      expect(evictListener).toHaveBeenNthCalledWith(1, 'a', 1);
+      expect(evictListener).toHaveBeenNthCalledWith(1, { key: 'a', value: 1 });
     });
 
     it('does not evict when the key already exists', () => {
@@ -327,8 +327,8 @@ describe('LRUMap', () => {
       expect(map.has('c')).toBe(true);
       expect(map.has('d')).toBe(true);
       expect(evictListener).toHaveBeenCalledTimes(2);
-      expect(evictListener).toHaveBeenNthCalledWith(1, 'a', 1);
-      expect(evictListener).toHaveBeenNthCalledWith(2, 'b', 2);
+      expect(evictListener).toHaveBeenNthCalledWith(1, { key: 'a', value: 1 });
+      expect(evictListener).toHaveBeenNthCalledWith(2, { key: 'b', value: 2 });
     });
 
     it('evicts LRU entries respecting access history', () => {
@@ -345,8 +345,8 @@ describe('LRUMap', () => {
       expect(map.has('d')).toBe(true);
       expect(map.has('a')).toBe(true);
       expect(evictListener).toHaveBeenCalledTimes(2);
-      expect(evictListener).toHaveBeenNthCalledWith(1, 'b', 2);
-      expect(evictListener).toHaveBeenNthCalledWith(2, 'c', 3);
+      expect(evictListener).toHaveBeenNthCalledWith(1, { key: 'b', value: 2 });
+      expect(evictListener).toHaveBeenNthCalledWith(2, { key: 'c', value: 3 });
     });
 
     it('preserves the MRU order of the surviving entries', () => {
@@ -359,8 +359,8 @@ describe('LRUMap', () => {
       map.resize(2);
       expect([...map.keys()]).toStrictEqual(['d', 'c']);
       expect(evictListener).toHaveBeenCalledTimes(2);
-      expect(evictListener).toHaveBeenNthCalledWith(1, 'a', 1);
-      expect(evictListener).toHaveBeenNthCalledWith(2, 'b', 2);
+      expect(evictListener).toHaveBeenNthCalledWith(1, { key: 'a', value: 1 });
+      expect(evictListener).toHaveBeenNthCalledWith(2, { key: 'b', value: 2 });
     });
 
     it('shrinking to 0 removes all entries', () => {
@@ -373,9 +373,9 @@ describe('LRUMap', () => {
       expect(map.capacity).toBe(0);
       expect(map.size).toBe(0);
       expect(evictListener).toHaveBeenCalledTimes(3);
-      expect(evictListener).toHaveBeenNthCalledWith(1, 'a', 1);
-      expect(evictListener).toHaveBeenNthCalledWith(2, 'b', 2);
-      expect(evictListener).toHaveBeenNthCalledWith(3, 'c', 3);
+      expect(evictListener).toHaveBeenNthCalledWith(1, { key: 'a', value: 1 });
+      expect(evictListener).toHaveBeenNthCalledWith(2, { key: 'b', value: 2 });
+      expect(evictListener).toHaveBeenNthCalledWith(3, { key: 'c', value: 3 });
     });
 
     it('does nothing when new capacity equals current size', () => {
@@ -440,7 +440,7 @@ describe('LRUMap', () => {
       expect(map.has('b')).toBe(true);
       expect(map.has('c')).toBe(true);
       expect(evictListener).toHaveBeenCalledTimes(1);
-      expect(evictListener).toHaveBeenNthCalledWith(1, 'a', 1);
+      expect(evictListener).toHaveBeenNthCalledWith(1, { key: 'a', value: 1 });
     });
 
     it('does not evict when updating a key that is already present', () => {

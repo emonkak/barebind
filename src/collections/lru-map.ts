@@ -5,7 +5,9 @@ interface Entry<K, V> {
   value: V;
 }
 
-type EvictCallback<K, V> = (key: K, value: V) => void;
+export type EvictCallback<K, V> = (entry: EvictEntry<K, V>) => void;
+
+export type EvictEntry<K, V> = { key: K; value: V };
 
 export class LRUMap<K, V> implements Iterable<[K, V]> {
   private readonly _entries: Map<K, Entry<K, V>> = new Map();
@@ -128,7 +130,7 @@ export class LRUMap<K, V> implements Iterable<[K, V]> {
         const key = lruKey.value;
         const { value } = this._entries.get(key)!;
         this._entries.delete(key);
-        this._callback?.(key, value);
+        this._callback?.({ key, value });
       }
     }
   }
