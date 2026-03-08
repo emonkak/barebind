@@ -60,72 +60,68 @@ describe('KeyedLayout', () => {
 });
 
 describe('KeyedSlot', () => {
-  describe('attach()', () => {
-    it('commits the binding after attaching', () => {
-      const source = 'foo';
-      const key = 123;
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new MockBinding(MockPrimitive, source, part);
-      const innerSlot = new MockSlot(binding);
-      const slot = new KeyedSlot(innerSlot, key);
-      const updater = new TestUpdater();
+  it('can commit the binding after attaching', () => {
+    const source = 'foo';
+    const key = 123;
+    const part = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+      anchorNode: null,
+      namespaceURI: HTML_NAMESPACE_URI,
+    };
+    const binding = new MockBinding(MockPrimitive, source, part);
+    const innerSlot = new MockSlot(binding);
+    const slot = new KeyedSlot(innerSlot, key);
+    const updater = new TestUpdater();
 
-      const attachSpy = vi.spyOn(innerSlot, 'attach');
-      const commitSpy = vi.spyOn(innerSlot, 'commit');
+    const attachSpy = vi.spyOn(innerSlot, 'attach');
+    const commitSpy = vi.spyOn(innerSlot, 'commit');
 
-      SESSION1: {
-        updater.startUpdate((session) => {
-          slot.attach(session);
-          slot.commit();
-        });
+    SESSION1: {
+      updater.startUpdate((session) => {
+        slot.attach(session);
+        slot.commit();
+      });
 
-        expect(attachSpy).toHaveBeenCalledOnce();
-        expect(commitSpy).toHaveBeenCalledOnce();
-        expect(part.node.nodeValue).toBe(source);
-      }
-    });
+      expect(attachSpy).toHaveBeenCalledOnce();
+      expect(commitSpy).toHaveBeenCalledOnce();
+      expect(part.node.nodeValue).toBe(source);
+    }
   });
 
-  describe('detach()', () => {
-    it('rollbacks the binding after detaching', () => {
-      const source = 'foo';
-      const key = 123;
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new MockBinding(MockPrimitive, source, part);
-      const innerSlot = new MockSlot(binding);
-      const slot = new KeyedSlot(innerSlot, key);
-      const updater = new TestUpdater();
+  it('can rollback the binding after detaching', () => {
+    const source = 'foo';
+    const key = 123;
+    const part = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+      anchorNode: null,
+      namespaceURI: HTML_NAMESPACE_URI,
+    };
+    const binding = new MockBinding(MockPrimitive, source, part);
+    const innerSlot = new MockSlot(binding);
+    const slot = new KeyedSlot(innerSlot, key);
+    const updater = new TestUpdater();
 
-      const detachSpy = vi.spyOn(innerSlot, 'detach');
-      const rollbackSpy = vi.spyOn(innerSlot, 'rollback');
+    const detachSpy = vi.spyOn(innerSlot, 'detach');
+    const rollbackSpy = vi.spyOn(innerSlot, 'rollback');
 
-      SESSION1: {
-        updater.startUpdate((session) => {
-          slot.attach(session);
-          slot.commit();
-        });
-      }
+    SESSION1: {
+      updater.startUpdate((session) => {
+        slot.attach(session);
+        slot.commit();
+      });
+    }
 
-      SESSION2: {
-        updater.startUpdate((session) => {
-          slot.detach(session);
-          slot.rollback();
-        });
+    SESSION2: {
+      updater.startUpdate((session) => {
+        slot.detach(session);
+        slot.rollback();
+      });
 
-        expect(detachSpy).toHaveBeenCalledOnce();
-        expect(rollbackSpy).toHaveBeenCalledOnce();
-      }
-    });
+      expect(detachSpy).toHaveBeenCalledOnce();
+      expect(rollbackSpy).toHaveBeenCalledOnce();
+    }
   });
 
   describe('reconcile()', () => {

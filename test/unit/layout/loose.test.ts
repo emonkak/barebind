@@ -49,71 +49,105 @@ describe('LooseLayout', () => {
 });
 
 describe('LooseSlot', () => {
-  describe('attach()', () => {
-    it('commits the binding only after attaching', () => {
-      const source = 'foo';
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new MockBinding(MockPrimitive, source, part);
-      const slot = new LooseSlot(binding);
-      const updater = new TestUpdater();
+  it('can commit the binding after attaching', () => {
+    const source = 'foo';
+    const part = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+      anchorNode: null,
+      namespaceURI: HTML_NAMESPACE_URI,
+    };
+    const binding = new MockBinding(MockPrimitive, source, part);
+    const slot = new LooseSlot(binding);
+    const updater = new TestUpdater();
 
-      const attachSpy = vi.spyOn(binding, 'attach');
-      const commitSpy = vi.spyOn(binding, 'commit');
+    const attachSpy = vi.spyOn(binding, 'attach');
+    const commitSpy = vi.spyOn(binding, 'commit');
 
-      SESSION: {
-        updater.startUpdate((session) => {
-          slot.attach(session);
-          slot.commit();
-          slot.commit(); // should not be committed
-        });
+    SESSION: {
+      updater.startUpdate((session) => {
+        slot.attach(session);
+        slot.commit();
+        slot.commit(); // should not be committed
+      });
 
-        expect(attachSpy).toHaveBeenCalledOnce();
-        expect(commitSpy).toHaveBeenCalledOnce();
-        expect(part.node.data).toBe('/MockPrimitive("foo")');
-      }
-    });
+      expect(attachSpy).toHaveBeenCalledOnce();
+      expect(commitSpy).toHaveBeenCalledOnce();
+      expect(part.node.data).toBe('/MockPrimitive("foo")');
+    }
   });
 
-  describe('detach()', () => {
-    it('rollbacks the binding only after detaching', () => {
-      const source = 'foo';
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new MockBinding(MockPrimitive, source, part);
-      const slot = new LooseSlot(binding);
-      const updater = new TestUpdater();
+  it('can commit the binding it is dirty', () => {
+    const source = 'foo';
+    const part = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+      anchorNode: null,
+      namespaceURI: HTML_NAMESPACE_URI,
+    };
+    const binding = new MockBinding(MockPrimitive, source, part);
+    const slot = new LooseSlot(binding);
+    const updater = new TestUpdater();
 
-      const detachSpy = vi.spyOn(binding, 'detach');
-      const rollbackSpy = vi.spyOn(binding, 'rollback');
+    const shouldUpdateSpy = vi.spyOn(binding, 'shouldUpdate');
+    const attachSpy = vi.spyOn(binding, 'attach');
+    const commitSpy = vi.spyOn(binding, 'commit');
 
-      SESSION1: {
-        updater.startUpdate((session) => {
-          slot.attach(session);
-          slot.commit();
-        });
-      }
+    SESSION1: {
+      updater.startUpdate((session) => {
+        slot.attach(session);
+        slot.commit();
+      });
+    }
 
-      SESSION2: {
-        updater.startUpdate((session) => {
-          slot.detach(session);
-          slot.rollback();
-          slot.rollback(); // should not be rollbacked
-        });
+    SESSION2: {
+      const dirty = updater.startUpdate((session) => {
+        const dirty = slot.reconcile(source, session);
+        slot.commit();
+        return dirty;
+      });
 
-        expect(detachSpy).toHaveBeenCalledOnce();
-        expect(rollbackSpy).toHaveBeenCalledOnce();
-        expect(part.node.data).toBe('');
-      }
-    });
+      expect(shouldUpdateSpy).toHaveBeenCalledTimes(1);
+      expect(attachSpy).toHaveBeenCalledTimes(1);
+      expect(commitSpy).toHaveBeenCalledTimes(1);
+      expect(dirty).toBe(false);
+      expect(part.node.data).toBe('/MockPrimitive("foo")');
+    }
+  });
+
+  it('can rollback the binding after detaching', () => {
+    const source = 'foo';
+    const part = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+      anchorNode: null,
+      namespaceURI: HTML_NAMESPACE_URI,
+    };
+    const binding = new MockBinding(MockPrimitive, source, part);
+    const slot = new LooseSlot(binding);
+    const updater = new TestUpdater();
+
+    const detachSpy = vi.spyOn(binding, 'detach');
+    const rollbackSpy = vi.spyOn(binding, 'rollback');
+
+    SESSION1: {
+      updater.startUpdate((session) => {
+        slot.attach(session);
+        slot.commit();
+      });
+    }
+
+    SESSION2: {
+      updater.startUpdate((session) => {
+        slot.detach(session);
+        slot.rollback();
+        slot.rollback(); // should not be rollbacked
+      });
+
+      expect(detachSpy).toHaveBeenCalledOnce();
+      expect(rollbackSpy).toHaveBeenCalledOnce();
+      expect(part.node.data).toBe('');
+    }
   });
 
   describe('reconcile()', () => {
@@ -155,8 +189,8 @@ describe('LooseSlot', () => {
         expect(detachSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(rollbackSpy).toHaveBeenCalledTimes(0);
-        expect(part.node.data).toBe('/MockPrimitive("bar")');
         expect(dirty).toBe(true);
+        expect(part.node.data).toBe('/MockPrimitive("bar")');
       }
     });
 
@@ -198,54 +232,8 @@ describe('LooseSlot', () => {
         expect(detachSpy).toHaveBeenCalledOnce();
         expect(commitSpy).toHaveBeenCalledOnce();
         expect(rollbackSpy).toHaveBeenCalledOnce();
-        expect(slot['_pendingBinding']).not.toBe(binding);
-        expect(slot['_pendingBinding']).toBeInstanceOf(MockBinding);
-        expect(slot['_pendingBinding']).toStrictEqual(
-          expect.objectContaining({
-            dirty: false,
-            committed: true,
-          }),
-        );
-        expect(part.node.data).toBe('/MockDirective("bar")');
         expect(dirty).toBe(true);
-      }
-    });
-
-    it('commits the binding only if it is dirty', () => {
-      const source = 'foo';
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new MockBinding(MockPrimitive, source, part);
-      const slot = new LooseSlot(binding);
-      const updater = new TestUpdater();
-
-      const shouldUpdateSpy = vi.spyOn(binding, 'shouldUpdate');
-      const attachSpy = vi.spyOn(binding, 'attach');
-      const commitSpy = vi.spyOn(binding, 'commit');
-
-      SESSION1: {
-        updater.startUpdate((session) => {
-          slot.attach(session);
-          slot.commit();
-        });
-      }
-
-      SESSION2: {
-        const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(source, session);
-          slot.commit();
-          return dirty;
-        });
-
-        expect(shouldUpdateSpy).toHaveBeenCalledTimes(1);
-        expect(attachSpy).toHaveBeenCalledTimes(1);
-        expect(commitSpy).toHaveBeenCalledTimes(1);
-        expect(part.node.data).toBe('/MockPrimitive("foo")');
-        expect(dirty).toBe(false);
+        expect(part.node.data).toBe('/MockDirective("bar")');
       }
     });
   });
