@@ -228,7 +228,7 @@ export class ElementBinding implements Binding<ElementProps> {
 
   private _memoizedProps: ElementProps | null = null;
 
-  private readonly _listenerMap: Map<string, EventListenerWithOptions> =
+  private readonly _eventListenerMap: Map<string, EventListenerWithOptions> =
     new Map();
 
   constructor(props: ElementProps, part: Part.ElementPart) {
@@ -303,7 +303,7 @@ export class ElementBinding implements Binding<ElementProps> {
   }
 
   handleEvent(event: Event): void {
-    const listener = this._listenerMap.get(event.type);
+    const listener = this._eventListenerMap.get(event.type);
 
     if (typeof listener === 'function') {
       listener(event);
@@ -379,7 +379,7 @@ export class ElementBinding implements Binding<ElementProps> {
         if (key.length > 2 && key.startsWith('on')) {
           const type = key.slice(2).toLowerCase();
           this._removeEventListener(type, value as EventListenerWithOptions);
-          this._listenerMap.delete(type);
+          this._eventListenerMap.delete(type);
           return;
         }
     }
@@ -504,7 +504,10 @@ export class ElementBinding implements Binding<ElementProps> {
               );
             }
           }
-          this._listenerMap.set(type, newValue as EventListenerWithOptions);
+          this._eventListenerMap.set(
+            type,
+            newValue as EventListenerWithOptions,
+          );
           return;
         }
     }
