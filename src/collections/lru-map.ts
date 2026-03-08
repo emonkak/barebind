@@ -10,13 +10,13 @@ export type EvictCallback<K, V> = (entry: EvictEntry<K, V>) => void;
 export type EvictEntry<K, V> = { key: K; value: V };
 
 export class LRUMap<K, V> implements Iterable<[K, V]> {
+  private _capacity: number;
+
+  private readonly _callback: EvictCallback<K, V> | null;
+
   private readonly _entries: Map<K, Entry<K, V>> = new Map();
 
   private readonly _recentKeys: LinkedList<K> = new LinkedList();
-
-  private _capacity: number;
-
-  private _callback: EvictCallback<K, V> | null;
 
   constructor(capacity: number, callback: EvictCallback<K, V> | null = null) {
     this._capacity = capacity;
