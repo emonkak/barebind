@@ -46,7 +46,7 @@ export class Root<T> {
   }
 
   hydrate(options?: UpdateOptions): UpdateHandle {
-    return this._beginUpdate((session) => {
+    return this._startSession((session) => {
       const { frame, scope } = session;
       const targetTree = createTreeWalker(this._container);
       scope.boundary = {
@@ -60,7 +60,7 @@ export class Root<T> {
   }
 
   mount(options?: UpdateOptions): UpdateHandle {
-    return this._beginUpdate((session) => {
+    return this._startSession((session) => {
       const { frame, scope } = session;
       this._slot.attach(session);
       frame.mutationEffects.push(
@@ -71,7 +71,7 @@ export class Root<T> {
   }
 
   update(source: T, options?: UpdateOptions): UpdateHandle {
-    return this._beginUpdate((session) => {
+    return this._startSession((session) => {
       const { frame, scope } = session;
       if (this._slot.reconcile(source, session)) {
         frame.mutationEffects.push(this._slot, scope.level);
@@ -80,22 +80,22 @@ export class Root<T> {
   }
 
   unmount(options?: UpdateOptions): UpdateHandle {
-    return this._beginUpdate((session) => {
+    return this._startSession((session) => {
       const { frame, scope } = session;
       this._slot.detach(session);
       frame.mutationEffects.push(new UnmountSlot(this._slot), scope.level);
     }, options);
   }
 
-  private _beginUpdate(
-    resume: (session: UpdateSession) => void,
+  private _startSession(
+    callback: (session: UpdateSession) => void,
     options?: UpdateOptions,
   ): UpdateHandle {
     const coroutine = {
       name: Root.name,
       scope: createScope(),
       pendingLanes: Lane.NoLane,
-      resume,
+      resume: callback,
     } satisfies Coroutine;
     const handle = this._context.scheduleUpdate(coroutine, {
       immediate: true,
