@@ -413,7 +413,7 @@ export class ElementBinding implements Binding<ElementProps> {
       case 'innerHTML':
       case 'textContent':
         if (!Object.is(newValue, oldValue)) {
-          element[key] = safeToString(newValue);
+          element[key] = toStringOrEmpty(newValue);
         }
         return;
       case 'checked':
@@ -437,7 +437,7 @@ export class ElementBinding implements Binding<ElementProps> {
       case 'defaultValue':
         if (narrowElement(element, 'input', 'output', 'textarea')) {
           if (!Object.is(newValue, oldValue)) {
-            element.defaultValue = safeToString(newValue);
+            element.defaultValue = toStringOrEmpty(newValue);
           }
           return;
         }
@@ -445,7 +445,7 @@ export class ElementBinding implements Binding<ElementProps> {
       case 'htmlFor':
         if (narrowElement(element, 'label')) {
           if (!Object.is(newValue, oldValue)) {
-            element.htmlFor = safeToString(newValue);
+            element.htmlFor = toStringOrEmpty(newValue);
           }
           return;
         }
@@ -474,7 +474,7 @@ export class ElementBinding implements Binding<ElementProps> {
         return;
       case 'value':
         if (narrowElement(element, 'input', 'output', 'select', 'textarea')) {
-          const newString = safeToString(newValue);
+          const newString = toStringOrEmpty(newValue);
           const oldString = element.value;
           if (newString !== oldString) {
             element.value = newString;
@@ -609,6 +609,6 @@ function resolveVElement(
   }
 }
 
-function safeToString(value: unknown): string {
+function toStringOrEmpty(value: unknown): string {
   return value?.toString() ?? '';
 }
