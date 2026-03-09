@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 import { DevToolsProfiler } from '@/addons/dev-tools-profiler.js';
 import { createComponent } from '@/component.js';
-import { CommitPhase, EffectQueue } from '@/core.js';
+import { EffectQueue } from '@/core.js';
 
 const Foo = createComponent(function Foo() {});
 
@@ -275,11 +275,11 @@ describe('DevToolsProfiler', () => {
   });
 
   describe('effect-commit-start / effect-commit-end', () => {
-    it.each([
-      [CommitPhase.Mutation, 'mutation'],
-      [CommitPhase.Layout, 'layout'],
-      [CommitPhase.Passive, 'passive'],
-    ] as const)('records marks and a measure for %s phase', (phase, name) => {
+    it.for([
+      'mutation',
+      'layout',
+      'passive',
+    ] as const)('records marks and a measure for %s phase', (phase) => {
       profiler.onSessionEvent({
         type: 'effect-commit-start',
         id: 0,
@@ -294,14 +294,14 @@ describe('DevToolsProfiler', () => {
       });
 
       expect(marksOf(performance)).toStrictEqual([
-        `barebind:effect-commit-start:${name}:0`,
-        `barebind:effect-commit-end:${name}:0`,
+        `barebind:effect-commit-start:${phase}:0`,
+        `barebind:effect-commit-end:${phase}:0`,
       ]);
       expect(measuresOf(performance)).toStrictEqual([
         {
-          name: `Barebind - Commit ${name} effects #0`,
-          start: `barebind:effect-commit-start:${name}:0`,
-          end: `barebind:effect-commit-end:${name}:0`,
+          name: `Barebind - Commit ${phase} effects #0`,
+          start: `barebind:effect-commit-start:${phase}:0`,
+          end: `barebind:effect-commit-end:${phase}:0`,
         },
       ]);
     });

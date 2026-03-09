@@ -7,12 +7,7 @@ import {
   SessionProfiler,
 } from '@/addons/session-profiler.js';
 import { createComponent } from '@/component.js';
-import {
-  CommitPhase,
-  Lane,
-  type RenderContext,
-  type SessionEvent,
-} from '@/core.js';
+import { Lane, type RenderContext, type SessionEvent } from '@/core.js';
 import { createEffectQueue, MockEffect } from '../../mocks.js';
 
 describe('SessionProfiler', () => {
@@ -71,37 +66,37 @@ describe('SessionProfiler', () => {
         {
           type: 'effect-commit-start',
           id: 0,
-          phase: CommitPhase.Mutation,
+          phase: 'mutation',
           effects: mutationEffects,
         },
         {
           type: 'effect-commit-end',
           id: 0,
-          phase: CommitPhase.Mutation,
+          phase: 'mutation',
           effects: emptyEffects,
         },
         {
           type: 'effect-commit-start',
           id: 0,
-          phase: CommitPhase.Layout,
+          phase: 'layout',
           effects: layoutEffects,
         },
         {
           type: 'effect-commit-end',
           id: 0,
-          phase: CommitPhase.Layout,
+          phase: 'layout',
           effects: emptyEffects,
         },
         {
           type: 'effect-commit-start',
           id: 0,
-          phase: CommitPhase.Passive,
+          phase: 'passive',
           effects: passiveEffects,
         },
         {
           type: 'effect-commit-end',
           id: 0,
-          phase: CommitPhase.Passive,
+          phase: 'passive',
           effects: emptyEffects,
         },
         {
@@ -308,13 +303,13 @@ describe('SessionProfiler', () => {
         {
           type: 'effect-commit-start',
           id: 0,
-          phase: CommitPhase.Mutation,
+          phase: 'mutation',
           effects: mutationEffects,
         },
         {
           type: 'effect-commit-end',
           id: 0,
-          phase: CommitPhase.Mutation,
+          phase: 'mutation',
           effects: emptyEffects,
         },
         {
@@ -325,13 +320,13 @@ describe('SessionProfiler', () => {
         {
           type: 'effect-commit-start',
           id: 0,
-          phase: CommitPhase.Passive,
+          phase: 'passive',
           effects: passiveEffects,
         },
         {
           type: 'effect-commit-end',
           id: 0,
-          phase: CommitPhase.Passive,
+          phase: 'passive',
           effects: emptyEffects,
         },
         {

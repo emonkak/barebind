@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ComponentBinding, createComponent } from '@/component.js';
 import {
-  CommitPhase,
+  type CommitPhase,
   createScope,
   Lane,
   PartType,
@@ -281,13 +281,13 @@ describe('ComponentBinding', () => {
         );
         expect(binding['_slot']?.part).toBe(part);
         expect(props.callback).toHaveBeenCalledTimes(3);
-        expect(props.callback).toHaveBeenNthCalledWith(1, CommitPhase.Mutation);
-        expect(props.callback).toHaveBeenNthCalledWith(2, CommitPhase.Layout);
-        expect(props.callback).toHaveBeenNthCalledWith(3, CommitPhase.Passive);
+        expect(props.callback).toHaveBeenNthCalledWith(1, 'mutation');
+        expect(props.callback).toHaveBeenNthCalledWith(2, 'layout');
+        expect(props.callback).toHaveBeenNthCalledWith(3, 'passive');
         expect(props.cleanup).toHaveBeenCalledTimes(3);
-        expect(props.cleanup).toHaveBeenNthCalledWith(1, CommitPhase.Mutation);
-        expect(props.cleanup).toHaveBeenNthCalledWith(2, CommitPhase.Layout);
-        expect(props.cleanup).toHaveBeenNthCalledWith(3, CommitPhase.Passive);
+        expect(props.cleanup).toHaveBeenNthCalledWith(1, 'mutation');
+        expect(props.cleanup).toHaveBeenNthCalledWith(2, 'layout');
+        expect(props.cleanup).toHaveBeenNthCalledWith(3, 'passive');
         expect(part.node.nodeValue).toBe('');
       }
     });
@@ -389,23 +389,23 @@ const EnqueueEffect = createComponent(function EnqueueEffect(
   context: RenderContext,
 ): unknown {
   context.useInsertionEffect(() => {
-    callback(CommitPhase.Mutation);
+    callback('mutation');
     return () => {
-      cleanup(CommitPhase.Mutation);
+      cleanup('mutation');
     };
   }, [callback, cleanup]);
 
   context.useLayoutEffect(() => {
-    callback(CommitPhase.Layout);
+    callback('layout');
     return () => {
-      cleanup(CommitPhase.Layout);
+      cleanup('layout');
     };
   }, [callback, cleanup]);
 
   context.useEffect(() => {
-    callback(CommitPhase.Passive);
+    callback('passive');
     return () => {
-      cleanup(CommitPhase.Passive);
+      cleanup('passive');
     };
   }, [callback, cleanup]);
 

@@ -2,7 +2,7 @@
 
 import {
   type Backend,
-  CommitPhase,
+  type CommitPhase,
   type EffectQueue,
   ExecutionMode,
   type ExecutionModes,
@@ -35,7 +35,7 @@ export class ServerBackend implements Backend {
   }
 
   flushEffects(effects: EffectQueue, phase: CommitPhase): void {
-    if (phase === CommitPhase.Mutation) {
+    if (phase === 'mutation') {
       effects.flush();
     }
   }

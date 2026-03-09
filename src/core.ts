@@ -73,13 +73,7 @@ export const BoundaryType = {
 
 export type Cleanup = () => void;
 
-export const CommitPhase = {
-  Mutation: 0,
-  Layout: 1,
-  Passive: 2,
-} as const;
-
-export type CommitPhase = (typeof CommitPhase)[keyof typeof CommitPhase];
+export type CommitPhase = 'mutation' | 'layout' | 'passive';
 
 export interface Component<TProps = {}, TResult = unknown>
   extends DirectiveType<TProps> {

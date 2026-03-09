@@ -1,7 +1,7 @@
 import { LinkedList } from './collections/linked-list.js';
 import {
   type Backend,
-  CommitPhase,
+  type CommitPhase,
   type Component,
   type ComponentState,
   type Coroutine,
@@ -366,11 +366,11 @@ export class Runtime implements SessionContext {
       if (mutationEffects.size > 0 || layoutEffects.size > 0) {
         const callback = () => {
           if (mutationEffects.size > 0) {
-            this._flushEffects(id, mutationEffects, CommitPhase.Mutation);
+            this._flushEffects(id, mutationEffects, 'mutation');
           }
 
           if (layoutEffects.size > 0) {
-            this._flushEffects(id, layoutEffects, CommitPhase.Layout);
+            this._flushEffects(id, layoutEffects, 'layout');
           }
         };
 
@@ -387,7 +387,7 @@ export class Runtime implements SessionContext {
         this._backend
           .requestCallback(
             () => {
-              this._flushEffects(id, passiveEffects, CommitPhase.Passive);
+              this._flushEffects(id, passiveEffects, 'passive');
             },
             { priority: 'background' },
           )
@@ -458,15 +458,15 @@ export class Runtime implements SessionContext {
 
     try {
       if (mutationEffects.size > 0) {
-        this._flushEffects(id, mutationEffects, CommitPhase.Mutation);
+        this._flushEffects(id, mutationEffects, 'mutation');
       }
 
       if (layoutEffects.size > 0) {
-        this._flushEffects(id, layoutEffects, CommitPhase.Layout);
+        this._flushEffects(id, layoutEffects, 'layout');
       }
 
       if (passiveEffects.size > 0) {
-        this._flushEffects(id, passiveEffects, CommitPhase.Passive);
+        this._flushEffects(id, passiveEffects, 'passive');
       }
     } finally {
       notifyObservers(this._observers, {

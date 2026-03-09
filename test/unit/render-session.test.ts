@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { shallowEqual } from '@/compare.js';
 import {
   $hook,
-  CommitPhase,
   DETACHED_SCOPE,
   EffectQueue,
   type RefObject,
@@ -375,9 +374,9 @@ describe('RenderSession', () => {
   });
 
   describe.each([
-    ['useEffect', CommitPhase.Passive],
-    ['useLayoutEffect', CommitPhase.Layout],
-    ['useInsertionEffect', CommitPhase.Mutation],
+    ['useEffect', 'passive'],
+    ['useLayoutEffect', 'layout'],
+    ['useInsertionEffect', 'mutation'],
   ] as const)('useEffect()', (hookName, phase) => {
     it('cleans up the previous effect', () => {
       const renderer = new TestRenderer((_props, session) => {

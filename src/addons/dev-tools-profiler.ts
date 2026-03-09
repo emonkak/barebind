@@ -1,8 +1,4 @@
-import {
-  CommitPhase,
-  type SessionEvent,
-  type SessionObserver,
-} from '../core.js';
+import type { SessionEvent, SessionObserver } from '../core.js';
 
 export type UserTimingAPI = Pick<Performance, 'mark' | 'measure'>;
 
@@ -51,15 +47,15 @@ export class DevToolsProfiler implements SessionObserver {
         break;
       }
       case 'component-render-start': {
-        const index = this._componentIndex;
         const { name } = event.component;
+        const index = this._componentIndex;
         const startMark = `barebind:component-render-start:${id}:${name}:${index}`;
         this._mark(startMark);
         break;
       }
       case 'component-render-end': {
-        const index = this._componentIndex++;
         const { name } = event.component;
+        const index = this._componentIndex++;
         const startMark = `barebind:component-render-start:${id}:${name}:${index}`;
         const endMark = `barebind:component-render-end:${id}:${name}:${index}`;
         this._mark(endMark);
@@ -79,18 +75,18 @@ export class DevToolsProfiler implements SessionObserver {
         break;
       }
       case 'effect-commit-start': {
-        const phaseName = getPhaseName(event.phase);
-        const startMark = `barebind:effect-commit-start:${phaseName}:${id}`;
+        const { phase } = event;
+        const startMark = `barebind:effect-commit-start:${phase}:${id}`;
         this._mark(startMark);
         break;
       }
       case 'effect-commit-end': {
-        const phaseName = getPhaseName(event.phase);
-        const startMark = `barebind:effect-commit-start:${phaseName}:${id}`;
-        const endMark = `barebind:effect-commit-end:${phaseName}:${id}`;
+        const { phase } = event;
+        const startMark = `barebind:effect-commit-start:${phase}:${id}`;
+        const endMark = `barebind:effect-commit-end:${phase}:${id}`;
         this._mark(endMark);
         this._measure(
-          `Barebind - Commit ${phaseName} effects #${id}`,
+          `Barebind - Commit ${phase} effects #${id}`,
           startMark,
           endMark,
         );
@@ -110,8 +106,4 @@ export class DevToolsProfiler implements SessionObserver {
       // startMark may not exist if profiling started mid-flight; silently ignore.
     }
   }
-}
-
-function getPhaseName(phase: CommitPhase): string {
-  return Object.keys(CommitPhase)[phase]!.toLowerCase();
 }

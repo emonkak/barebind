@@ -1,12 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BrowserBackend } from '@/backend/browser.js';
-import {
-  CommitPhase,
-  type Effect,
-  EffectQueue,
-  ExecutionMode,
-  PartType,
-} from '@/core.js';
+import { type Effect, EffectQueue, ExecutionMode, PartType } from '@/core.js';
 import { LooseLayout } from '@/layout/loose.js';
 import { StrictLayout } from '@/layout/strict.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
@@ -72,9 +66,9 @@ describe('BrowserBackend', () => {
       layoutEffects.push(layoutEffect, 2);
       passiveEffects.push(passiveEffect, 1);
 
-      backend.flushEffects(mutationEffects, CommitPhase.Mutation);
-      backend.flushEffects(layoutEffects, CommitPhase.Layout);
-      backend.flushEffects(passiveEffects, CommitPhase.Passive);
+      backend.flushEffects(mutationEffects, 'mutation');
+      backend.flushEffects(layoutEffects, 'layout');
+      backend.flushEffects(passiveEffects, 'passive');
 
       expect(mutationEffect.commit).toHaveBeenCalledTimes(4);
       expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
