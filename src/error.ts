@@ -1,5 +1,5 @@
 import { BoundaryType, type Coroutine, type Scope } from './core.js';
-import { getCoroutineStack } from './debug/scope.js';
+import { getOwnerStack } from './debug/scope.js';
 
 export class InterruptError extends Error {}
 
@@ -8,7 +8,7 @@ export class RenderError extends Error {
     let message = 'An error occurred while rendering.';
 
     DEBUG: {
-      message += getCoroutineStack(coroutine)
+      message += getOwnerStack(coroutine)
         .reverse()
         .map((coroutine, i, stack) => {
           const prefix = i > 0 ? '   '.repeat(i - 1) + '`- ' : '';

@@ -514,12 +514,10 @@ export interface SessionObserver {
 
 export interface Scope {
   parent: Scope | null;
-  context: ScopeContext | null;
+  owner: Coroutine | null;
   level: number;
   boundary: Boundary | null;
 }
-
-export interface ScopeContext extends Coroutine, SessionLifecycle {}
 
 export interface Slot<T> extends ReversibleEffect, SessionLifecycle {
   readonly type: DirectiveType<UnwrapBindable<T>>;
@@ -602,11 +600,11 @@ export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;
  */
 export function createScope(
   parent: Scope | null = null,
-  context: ScopeContext | null = null,
+  owner: Coroutine | null = null,
 ): Scope {
   return {
     parent,
-    context,
+    owner,
     level: parent !== null ? parent.level + 1 : 0,
     boundary: null,
   };

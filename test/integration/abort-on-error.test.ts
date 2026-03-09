@@ -9,7 +9,7 @@ import { expect, test, vi } from 'vitest';
 
 import { stripComments } from '../test-helpers.js';
 
-test('does not commit any DOM when an error occurs during render', async () => {
+test('does not commit any effects when an error occurs during render', async () => {
   const effect = vi.fn();
 
   const value = App({ effect });
@@ -20,7 +20,7 @@ test('does not commit any DOM when an error occurs during render', async () => {
     await root.mount().finished;
 
     expect(effect).not.toHaveBeenCalled();
-    expect(stripComments(container).innerHTML).toBe('<main></main>');
+    expect(stripComments(container).innerHTML).toBe('');
   }
 
   SESSION2: {

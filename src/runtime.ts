@@ -526,7 +526,7 @@ function processError(
   session: UpdateSession,
   observers: LinkedList<SessionObserver>,
 ): void {
-  const { originScope, frame } = session;
+  const { frame } = session;
   let handlingScope: Scope | null = null;
 
   try {
@@ -542,16 +542,10 @@ function processError(
     });
   }
 
-  if (handlingScope.level <= originScope.level) {
-    // The error was captured by an ErrorBoundary outside the origin scope, we
-    // treat it as a graceful interruption rather than a fatal failure.
-    throw new InterruptError(undefined, { cause: error });
-  }
-
-  if (handlingScope.context?.pendingLanes === Lane.NoLane) {
+  if ((handlingScope.owner?.pendingLanes ?? Lane.NoLane) === Lane.NoLane) {
     // The error was captured but no recovery render was scheduled.
     // Detach the scope to stop further updates on this subtree.
-    handlingScope.context.detach(session);
+    throw new InterruptError(undefined, { cause: error });
   }
 }
 
