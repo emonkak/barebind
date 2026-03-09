@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ExecutionMode } from '@/backend.js';
 import { createComponent } from '@/component.js';
 import {
   $directive,
@@ -9,6 +8,7 @@ import {
   type ComponentState,
   createScope,
   EffectQueue,
+  ExecutionMode,
   Lane,
   PartType,
 } from '@/core.js';

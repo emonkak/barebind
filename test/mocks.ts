@@ -1,13 +1,8 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
 import {
-  type Backend,
-  ExecutionMode,
-  type ExecutionModes,
-  type RequestCallbackOptions,
-} from '@/backend.js';
-import {
   $directive,
+  type Backend,
   type Bindable,
   type Binding,
   type CommitPhase,
@@ -18,12 +13,15 @@ import {
   type DirectiveType,
   type Effect,
   EffectQueue,
+  ExecutionMode,
+  type ExecutionModes,
   type Lanes,
   type Layout,
   type Part,
   PartType,
   type Primitive,
   type RenderFrame,
+  type RequestCallbackOptions,
   type Scope,
   type SessionEvent,
   type SessionObserver,

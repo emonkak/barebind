@@ -1,6 +1,6 @@
-import { type Backend, ExecutionMode } from './backend.js';
 import { LinkedList } from './collections/linked-list.js';
 import {
+  type Backend,
   CommitPhase,
   type Component,
   type ComponentState,
@@ -8,6 +8,7 @@ import {
   createUpdateSession,
   type Directive,
   EffectQueue,
+  ExecutionMode,
   getLanesFromOptions,
   Lane,
   type Lanes,

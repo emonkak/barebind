@@ -8,6 +8,26 @@ export const $hook: unique symbol = Symbol('$hook');
 
 export const DETACHED_SCOPE: Scope = Object.freeze(createScope());
 
+export interface Backend {
+  flushEffects(effects: EffectQueue, phase: CommitPhase): void;
+  getExecutionModes(): ExecutionModes;
+  getUpdatePriority(): TaskPriority;
+  parseTemplate(
+    strings: readonly string[],
+    values: readonly unknown[],
+    markerIdentifier: string,
+    mode: TemplateMode,
+  ): Template<readonly unknown[]>;
+  requestCallback<T>(
+    callback: () => T | PromiseLike<T>,
+    options?: RequestCallbackOptions,
+  ): Promise<T>;
+  resolveLayout(source: unknown, part: Part): Layout;
+  resolvePrimitive(source: unknown, part: Part): Primitive<unknown>;
+  startViewTransition(callback: () => Promise<void> | void): Promise<void>;
+  yieldToMain(): Promise<void>;
+}
+
 export interface Bindable<T = unknown> {
   [$directive](): Directive<T>;
 }
@@ -179,6 +199,14 @@ export type ErrorHandler = (
   error: unknown,
   handleError: (error: unknown) => void,
 ) => void;
+
+// biome-ignore format: Align ExecutionMode flags
+export const ExecutionMode = {
+  NoMode:         0,
+  ConcurrentMode: 0b1,
+} as const satisfies Record<string, ExecutionModes>;
+
+export type ExecutionModes = number;
 
 export type Hook =
   | Hook.FinalizerHook
@@ -431,6 +459,8 @@ export interface RenderFrame {
   layoutEffects: EffectQueue;
   passiveEffects: EffectQueue;
 }
+
+export type RequestCallbackOptions = SchedulerPostTaskOptions;
 
 export interface ReversibleEffect extends Effect {
   rollback(): void;

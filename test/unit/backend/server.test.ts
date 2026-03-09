@@ -1,7 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ServerBackend } from '@/backend/server.js';
-import { ExecutionMode } from '@/backend.js';
-import { CommitPhase, type Effect, EffectQueue, PartType } from '@/core.js';
+import {
+  CommitPhase,
+  type Effect,
+  EffectQueue,
+  ExecutionMode,
+  PartType,
+} from '@/core.js';
 import { LooseLayout } from '@/layout/loose.js';
 import { StrictLayout } from '@/layout/strict.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';

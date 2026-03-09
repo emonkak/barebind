@@ -1,12 +1,13 @@
 export { BrowserBackend } from './backend/browser.js';
 export { ServerBackend } from './backend/server.js';
-export { type Backend, ExecutionMode } from './backend.js';
 export { sequentialEqual, shallowEqual } from './compare.js';
 export { type ComponentOptions, createComponent } from './component.js';
 export {
   $hook,
+  type Backend,
   type Bindable,
   type Component,
+  ExecutionMode,
   type HookFunction,
   type HookObject,
   type Ref,
