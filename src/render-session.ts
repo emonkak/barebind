@@ -10,6 +10,7 @@ import {
   type Effect,
   type EffectQueue,
   type ErrorHandler,
+  getLanesFromOptions,
   type Hook,
   type HookClass,
   type HookFunction,
@@ -93,16 +94,26 @@ export class RenderSession implements RenderContext {
       };
     }
 
-    if (this._frame.lanes !== Lane.NoLane) {
-      for (const { lanes, continuation } of this._context.getPendingUpdates()) {
-        this._frame.pendingCoroutines.push(this._coroutine);
-        this._state.pendingLanes |= lanes;
-        return {
-          id: this._frame.id,
-          lanes,
-          scheduled: Promise.resolve({ canceled: true, done: true }),
-          finished: continuation.promise,
-        };
+    const renderLanes = this._frame.lanes;
+
+    if (renderLanes !== Lane.NoLane) {
+      // We reuse the frame only for updates within the same lanes, which
+      // avoids scheduling a new update during rendering. This is generally
+      // undesirable, but necessary when an ErrorBoundary catches an error and
+      // sets new state.
+      const requestLanes = getLanesFromOptions(options ?? {});
+
+      if ((renderLanes & requestLanes) === requestLanes) {
+        for (const { continuation } of this._context.getPendingUpdates()) {
+          this._frame.pendingCoroutines.push(this._coroutine);
+          this._state.pendingLanes |= renderLanes;
+          return {
+            id: this._frame.id,
+            lanes: renderLanes,
+            scheduled: Promise.resolve({ canceled: true, done: true }),
+            finished: continuation.promise,
+          };
+        }
       }
     }
 
