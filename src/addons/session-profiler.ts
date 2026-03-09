@@ -1,7 +1,7 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
 import {
-  CommitPhase,
+  type CommitPhase,
   getPriorityFromLanes,
   Lane,
   type Lanes,
@@ -15,37 +15,34 @@ const RENDER_PHASE_STYLE =
 // Pink
 const COMMIT_PHASE_STYLE =
   'color: light-dark(#b90063, #ff4896); font-weight: bold';
-// Orange
-const MUTATION_PHASE_STYLE =
-  'color: light-dark(#9f4312, #e96725); font-weight: bold';
-// Purple
-const LAYOUT_PHASE_STYLE =
-  'color: light-dark(#8c1ed3, #bf67ff); font-weight: bold';
-// Green
-const PASSIVE_PHASE_STYLE =
-  'color: light-dark(#146c2e, #1ea446); font-weight: bold';
 // Gray
 const DURATION_STYLE =
   'color: light-dark(#5e5d67, #918f9a); font-weight: normal';
 const DEFAULT_STYLE = 'font-weight: normal';
 
+export type ConsoleLogger = Pick<
+  Console,
+  'group' | 'groupCollapsed' | 'groupEnd' | 'log' | 'table'
+>;
+
 export interface CommitMeasurement {
   startTime: number;
   duration: number;
-  pendingCount: number;
-  commitCount: number;
 }
 
-export interface ComponentRenderMeasurement {
+export interface ComponentRecord {
   name: string;
   startTime: number;
   duration: number;
 }
 
-export type ConsoleLogger = Pick<
-  Console,
-  'group' | 'groupCollapsed' | 'groupEnd' | 'log' | 'table'
->;
+export interface EffectRecord {
+  phase: CommitPhase;
+  startTime: number;
+  duration: number;
+  pendingCount: number;
+  commitCount: number;
+}
 
 export interface ErrorRecord {
   error: unknown;
@@ -57,22 +54,20 @@ export interface RenderMeasurement {
   duration: number;
 }
 
-export interface SessionProfileReporter {
-  reportProfile(profile: SessionProfile): void;
-}
-
 export interface SessionProfile {
   id: number;
   phase: 'idle' | 'render' | 'commit';
   status: 'pending' | 'success' | 'failure';
   updateMeasurement: UpdateMeasurement | null;
   renderMeasurement: RenderMeasurement | null;
-  errorRecords: ErrorRecord[];
-  componentRenderMeasurements: ComponentRenderMeasurement[];
   commitMeasurement: CommitMeasurement | null;
-  mutationMeasurement: CommitMeasurement | null;
-  layoutMeasurement: CommitMeasurement | null;
-  passiveMeasurement: CommitMeasurement | null;
+  errorRecords: ErrorRecord[];
+  componentRecords: ComponentRecord[];
+  effectRecords: EffectRecord[];
+}
+
+export interface SessionProfileReporter {
+  reportProfile(profile: SessionProfile): void;
 }
 
 export interface UpdateMeasurement {
@@ -150,16 +145,16 @@ export class SessionProfiler implements SessionObserver {
         break;
       }
       case 'component-render-start':
-        profile.componentRenderMeasurements.push({
+        profile.componentRecords.push({
           name: event.component.name,
           startTime: performance.now(),
           duration: 0,
         });
         break;
       case 'component-render-end': {
-        const measurement = profile.componentRenderMeasurements.at(-1);
-        if (measurement !== undefined) {
-          measurement.duration = performance.now() - measurement.startTime;
+        const record = profile.componentRecords.at(-1);
+        if (record !== undefined) {
+          record.duration = performance.now() - record.startTime;
         }
         break;
       }
@@ -167,66 +162,33 @@ export class SessionProfiler implements SessionObserver {
         profile.commitMeasurement = {
           startTime: performance.now(),
           duration: 0,
-          pendingCount:
-            event.mutationEffects.size +
-            event.layoutEffects.size +
-            event.passiveEffects.size,
-          commitCount: 0,
         };
         profile.phase = 'commit';
         break;
       case 'commit-end': {
         const measurement = profile.commitMeasurement;
         if (measurement !== null) {
-          const pendingCount =
-            event.mutationEffects.size +
-            event.layoutEffects.size +
-            event.passiveEffects.size;
           measurement.duration = performance.now() - measurement.startTime;
-          measurement.commitCount = measurement.pendingCount - pendingCount;
-          measurement.pendingCount = pendingCount;
         }
         profile.phase = 'idle';
         break;
       }
       case 'effect-commit-start': {
-        const measurement = {
+        profile.effectRecords.push({
+          phase: event.phase,
           startTime: performance.now(),
           duration: 0,
           pendingCount: event.effects.size,
           commitCount: 0,
-        };
-        switch (event.phase) {
-          case CommitPhase.Mutation:
-            profile.mutationMeasurement = measurement;
-            break;
-          case CommitPhase.Layout:
-            profile.layoutMeasurement = measurement;
-            break;
-          case CommitPhase.Passive:
-            profile.passiveMeasurement = measurement;
-            break;
-        }
+        });
         break;
       }
       case 'effect-commit-end': {
-        let measurement: CommitMeasurement | null = null;
-        switch (event.phase) {
-          case CommitPhase.Mutation:
-            measurement = profile.mutationMeasurement;
-            break;
-          case CommitPhase.Layout:
-            measurement = profile.layoutMeasurement;
-            break;
-          case CommitPhase.Passive:
-            measurement = profile.passiveMeasurement;
-            break;
-        }
-        if (measurement !== null) {
-          const pendingCount = event.effects.size;
-          measurement.duration = performance.now() - measurement.startTime;
-          measurement.commitCount = measurement.pendingCount - pendingCount;
-          measurement.pendingCount = pendingCount;
+        const record = profile.effectRecords.at(-1);
+        if (record !== undefined) {
+          record.duration = performance.now() - record.startTime;
+          record.commitCount = record.pendingCount - event.effects.size;
+          record.pendingCount = event.effects.size;
         }
         break;
       }
@@ -252,32 +214,32 @@ export class ConsoleReporter implements SessionProfileReporter {
       updateMeasurement,
       renderMeasurement,
       errorRecords,
-      componentRenderMeasurements,
+      componentRecords,
+      effectRecords,
       commitMeasurement,
-      mutationMeasurement,
-      layoutMeasurement,
-      passiveMeasurement,
     } = profile;
 
     if (updateMeasurement === null) {
       return;
     }
 
-    const viewTransition =
-      (updateMeasurement.lanes & Lane.ViewTransitionLane) !== 0;
-    const priority = getPriorityFromLanes(updateMeasurement.lanes);
-    const titleLablel = viewTransition ? 'Transition' : 'Update';
-    const statusLablel = status.toUpperCase();
-    const priorityLabel = priority !== null ? `with ${priority}` : 'without';
+    const { lanes } = updateMeasurement;
+    const kindLabel = getUpdateKind(lanes);
+    const statusLabel = status.toUpperCase();
+    const priority = getPriorityFromLanes(lanes);
+    const priorityLabel =
+      priority !== null ? `with ${priority} priority` : 'without priority';
+    const mode = getUpdateMode(lanes);
+    const modeLabel = `in ${mode} mode`;
 
     this._logger.groupCollapsed(
-      `${titleLablel} #${profile.id} ${statusLablel} ${priorityLabel} priority in %c${updateMeasurement.duration}ms`,
+      `#${profile.id} ${kindLabel} ${statusLabel} ${priorityLabel} ${modeLabel} %c(${updateMeasurement.duration}ms)`,
       DURATION_STYLE,
     );
 
     if (renderMeasurement !== null) {
-      this._logger.log(
-        `%cRENDER PHASE:%c ${componentRenderMeasurements.length} component(s) rendered in %c${renderMeasurement.duration}ms`,
+      this._logger.group(
+        `%cRENDER PHASE:%c ${componentRecords.length} component(s) rendered in %c${renderMeasurement.duration}ms`,
         RENDER_PHASE_STYLE,
         DEFAULT_STYLE,
         DURATION_STYLE,
@@ -285,45 +247,27 @@ export class ConsoleReporter implements SessionProfileReporter {
       if (errorRecords.length > 0) {
         this._logger.table(errorRecords, ['error', 'captured']);
       }
-      if (componentRenderMeasurements.length > 0) {
-        this._logger.table(componentRenderMeasurements, ['name', 'duration']);
+      if (componentRecords.length > 0) {
+        this._logger.table(componentRecords, ['name', 'duration']);
       }
+      this._logger.groupEnd();
     }
 
     if (commitMeasurement !== null) {
-      this._logger.log(
-        `%cCOMMIT PHASE:%c ${commitMeasurement.commitCount} effect(s) committed in %c${commitMeasurement.duration}ms`,
+      const totalCommits = effectRecords.reduce(
+        (totalCommits, { commitCount }) => totalCommits + commitCount,
+        0,
+      );
+      this._logger.group(
+        `%cCOMMIT PHASE:%c ${totalCommits} effect(s) committed in %c${commitMeasurement.duration}ms`,
         COMMIT_PHASE_STYLE,
         DEFAULT_STYLE,
         DURATION_STYLE,
       );
-    }
-
-    if (mutationMeasurement !== null) {
-      this._logger.log(
-        `%cMUTATION PHASE:%c ${mutationMeasurement.commitCount} effect(s) committed in %c${mutationMeasurement.duration}ms`,
-        MUTATION_PHASE_STYLE,
-        DEFAULT_STYLE,
-        DURATION_STYLE,
-      );
-    }
-
-    if (layoutMeasurement !== null) {
-      this._logger.log(
-        `%cLAYOUT PHASE:%c ${layoutMeasurement.commitCount} effect(s) committed in %c${layoutMeasurement.duration}ms`,
-        LAYOUT_PHASE_STYLE,
-        DEFAULT_STYLE,
-        DURATION_STYLE,
-      );
-    }
-
-    if (passiveMeasurement !== null) {
-      this._logger.log(
-        `%cPASSIVE PHASE:%c ${passiveMeasurement.commitCount} effect(s) committed in %c${passiveMeasurement.duration}ms`,
-        PASSIVE_PHASE_STYLE,
-        DEFAULT_STYLE,
-        DURATION_STYLE,
-      );
+      if (effectRecords.length > 0) {
+        this._logger.table(effectRecords, ['phase', 'commitCount', 'duration']);
+      }
+      this._logger.groupEnd();
     }
 
     this._logger.groupEnd();
@@ -337,11 +281,24 @@ function createProfile(id: number): SessionProfile {
     status: 'pending',
     updateMeasurement: null,
     renderMeasurement: null,
-    errorRecords: [],
-    componentRenderMeasurements: [],
     commitMeasurement: null,
-    mutationMeasurement: null,
-    layoutMeasurement: null,
-    passiveMeasurement: null,
+    errorRecords: [],
+    componentRecords: [],
+    effectRecords: [],
   };
+}
+
+function getUpdateKind(lanes: Lanes): string {
+  const tags = [];
+  if (lanes & Lane.ViewTransitionLane) {
+    tags.push('ViewTransition');
+  }
+  if (lanes & Lane.TransitionLane) {
+    tags.push('Transition');
+  }
+  return tags.length > 0 ? tags.join('/') : 'Update';
+}
+
+function getUpdateMode(lanes: Lanes): string {
+  return lanes & Lane.SyncLane ? 'sync' : 'concurrent';
 }

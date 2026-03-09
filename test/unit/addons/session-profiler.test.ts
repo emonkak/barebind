@@ -12,7 +12,7 @@ import { createEffectQueue, MockEffect } from '../../mocks.js';
 
 describe('SessionProfiler', () => {
   describe('onSessionEvent()', () => {
-    it('reports the profile on update success', () => {
+    it('flushs the profile when update is success', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
@@ -131,42 +131,45 @@ describe('SessionProfiler', () => {
           startTime: expect.any(Number),
           duration: expect.any(Number),
         },
+        commitMeasurement: {
+          startTime: expect.any(Number),
+          duration: expect.any(Number),
+        },
         errorRecords: [],
-        componentRenderMeasurements: [
+        componentRecords: [
           {
             name: 'MyComponent',
             startTime: expect.any(Number),
             duration: expect.any(Number),
           },
         ],
-        commitMeasurement: {
-          startTime: expect.any(Number),
-          duration: expect.any(Number),
-          pendingCount: 0,
-          commitCount: 4,
-        },
-        mutationMeasurement: {
-          startTime: expect.any(Number),
-          duration: expect.any(Number),
-          pendingCount: 0,
-          commitCount: 2,
-        },
-        layoutMeasurement: {
-          startTime: expect.any(Number),
-          duration: expect.any(Number),
-          pendingCount: 0,
-          commitCount: 1,
-        },
-        passiveMeasurement: {
-          startTime: expect.any(Number),
-          duration: expect.any(Number),
-          pendingCount: 0,
-          commitCount: 1,
-        },
+        effectRecords: [
+          {
+            phase: 'mutation',
+            startTime: expect.any(Number),
+            duration: expect.any(Number),
+            pendingCount: 0,
+            commitCount: 2,
+          },
+          {
+            phase: 'layout',
+            startTime: expect.any(Number),
+            duration: expect.any(Number),
+            pendingCount: 0,
+            commitCount: 1,
+          },
+          {
+            phase: 'passive',
+            startTime: expect.any(Number),
+            duration: expect.any(Number),
+            pendingCount: 0,
+            commitCount: 1,
+          },
+        ],
       } satisfies SessionProfile);
     });
 
-    it('reports the profile on update failure', () => {
+    it('reports the profile when update is failure', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
@@ -229,27 +232,25 @@ describe('SessionProfiler', () => {
           startTime: expect.any(Number),
           duration: expect.any(Number),
         },
+        commitMeasurement: null,
         errorRecords: [
           {
             error,
             captured: false,
           },
         ],
-        componentRenderMeasurements: [
+        componentRecords: [
           {
             name: 'MyComponent',
             startTime: expect.any(Number),
             duration: expect.any(Number),
           },
         ],
-        commitMeasurement: null,
-        mutationMeasurement: null,
-        layoutMeasurement: null,
-        passiveMeasurement: null,
+        effectRecords: [],
       } satisfies SessionProfile);
     });
 
-    it('reports the profile after all effects are committed', () => {
+    it('reports the profile after commit phase ends when passive effects are scheduled', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
@@ -356,33 +357,34 @@ describe('SessionProfiler', () => {
           startTime: expect.any(Number),
           duration: expect.any(Number),
         },
+        commitMeasurement: {
+          startTime: expect.any(Number),
+          duration: expect.any(Number),
+        },
         errorRecords: [],
-        componentRenderMeasurements: [
+        componentRecords: [
           {
             name: 'MyComponent',
             startTime: expect.any(Number),
             duration: expect.any(Number),
           },
         ],
-        commitMeasurement: {
-          startTime: expect.any(Number),
-          duration: expect.any(Number),
-          pendingCount: 0,
-          commitCount: 3,
-        },
-        mutationMeasurement: {
-          startTime: expect.any(Number),
-          duration: expect.any(Number),
-          pendingCount: 0,
-          commitCount: 2,
-        },
-        layoutMeasurement: null,
-        passiveMeasurement: {
-          startTime: expect.any(Number),
-          duration: expect.any(Number),
-          pendingCount: 0,
-          commitCount: 1,
-        },
+        effectRecords: [
+          {
+            phase: 'mutation',
+            pendingCount: 0,
+            commitCount: 2,
+            startTime: expect.any(Number),
+            duration: expect.any(Number),
+          },
+          {
+            phase: 'passive',
+            pendingCount: 0,
+            commitCount: 1,
+            startTime: expect.any(Number),
+            duration: expect.any(Number),
+          },
+        ],
       } satisfies SessionProfile);
     });
 
@@ -411,186 +413,272 @@ describe('SessionProfiler', () => {
 
 describe('ConsoleReporter', () => {
   describe('reportProfile()', () => {
-    const error = new Error('fail');
+    const logger = new MockLogger();
+    const reporter = new ConsoleReporter(logger);
+
+    it('reports nothing when update has not started', () => {
+      reporter.reportProfile({
+        id: 0,
+        phase: 'idle',
+        status: 'pending',
+        updateMeasurement: null,
+        renderMeasurement: null,
+        commitMeasurement: null,
+        errorRecords: [],
+        componentRecords: [],
+        effectRecords: [],
+      });
+
+      expect(logger.flush()).toStrictEqual([]);
+    });
+
+    it('reports the update as a view transition when lanes contains ViewTransitionLane', () => {
+      reporter.reportProfile({
+        id: 0,
+        phase: 'idle',
+        status: 'success',
+        updateMeasurement: {
+          startTime: 0,
+          duration: 10,
+          lanes: Lane.DefaultLane | Lane.ViewTransitionLane,
+        },
+        renderMeasurement: null,
+        commitMeasurement: null,
+        errorRecords: [],
+        componentRecords: [],
+        effectRecords: [],
+      });
+
+      expect(logger.flush()).toStrictEqual([
+        [
+          'groupCollapsed',
+          '#0 ViewTransition SUCCESS without priority in concurrent mode %c(10ms)',
+        ],
+        ['groupEnd'],
+      ]);
+    });
+
+    it('reports the update as a transition when lanes contains TransitionLane', () => {
+      reporter.reportProfile({
+        id: 0,
+        phase: 'idle',
+        status: 'success',
+        updateMeasurement: {
+          startTime: 0,
+          duration: 10,
+          lanes: Lane.DefaultLane | Lane.TransitionLane,
+        },
+        renderMeasurement: null,
+        commitMeasurement: null,
+        errorRecords: [],
+        componentRecords: [],
+        effectRecords: [],
+      });
+
+      expect(logger.flush()).toStrictEqual([
+        [
+          'groupCollapsed',
+          '#0 Transition SUCCESS without priority in concurrent mode %c(10ms)',
+        ],
+        ['groupEnd'],
+      ]);
+    });
 
     it.each([
-      [
-        {
-          id: 0,
-          status: 'pending',
-          phase: 'idle',
-          updateMeasurement: null,
-          renderMeasurement: null,
-          errorRecords: [],
-          componentRenderMeasurements: [],
-          commitMeasurement: null,
-          mutationMeasurement: null,
-          layoutMeasurement: null,
-          passiveMeasurement: null,
+      [Lane.DefaultLane | Lane.UserBlockingLane, 'user-blocking'],
+      [Lane.DefaultLane | Lane.UserVisibleLane, 'user-visible'],
+      [Lane.DefaultLane | Lane.BackgroundLane, 'background'],
+    ])('reports the priority when lanes contains a priority lane', (lanes, expectedPriority) => {
+      reporter.reportProfile({
+        id: 0,
+        phase: 'idle',
+        status: 'success',
+        updateMeasurement: {
+          startTime: 0,
+          duration: 10,
+          lanes,
         },
-        [],
-      ],
-      [
-        {
-          id: 0,
-          status: 'success',
-          phase: 'idle',
-          updateMeasurement: {
-            startTime: 0,
-            duration: 10,
-            lanes: Lane.ViewTransitionLane,
-          },
-          renderMeasurement: null,
-          errorRecords: [],
-          componentRenderMeasurements: [],
-          commitMeasurement: null,
-          mutationMeasurement: null,
-          layoutMeasurement: null,
-          passiveMeasurement: null,
-        },
+        renderMeasurement: null,
+        commitMeasurement: null,
+        errorRecords: [],
+        componentRecords: [],
+        effectRecords: [],
+      });
+
+      expect(logger.flush()).toStrictEqual([
         [
-          [
-            'groupCollapsed',
-            'Transition #0 SUCCESS without priority in %c10ms',
-          ],
-          ['groupEnd'],
+          'groupCollapsed',
+          `#0 Update SUCCESS with ${expectedPriority} priority in concurrent mode %c(10ms)`,
         ],
-      ],
-      [
-        {
-          id: 0,
-          status: 'success',
-          phase: 'idle',
-          updateMeasurement: {
+        ['groupEnd'],
+      ]);
+    });
+
+    it('reports the mode as sync mode when lanes contains SyncLane', () => {
+      reporter.reportProfile({
+        id: 0,
+        phase: 'idle',
+        status: 'success',
+        updateMeasurement: {
+          startTime: 0,
+          duration: 10,
+          lanes: Lane.DefaultLane | Lane.SyncLane,
+        },
+        renderMeasurement: null,
+        commitMeasurement: null,
+        errorRecords: [],
+        componentRecords: [],
+        effectRecords: [],
+      });
+
+      expect(logger.flush()).toStrictEqual([
+        [
+          'groupCollapsed',
+          `#0 Update SUCCESS without priority in sync mode %c(10ms)`,
+        ],
+        ['groupEnd'],
+      ]);
+    });
+
+    it('reports component records when render is measured', () => {
+      const profile: SessionProfile = {
+        id: 0,
+        phase: 'idle',
+        status: 'success',
+        updateMeasurement: {
+          startTime: 0,
+          duration: 10,
+          lanes: Lane.DefaultLane,
+        },
+        renderMeasurement: {
+          startTime: 0,
+          duration: 3,
+        },
+        commitMeasurement: null,
+        errorRecords: [],
+        componentRecords: [
+          {
+            name: 'Foo',
             startTime: 0,
-            duration: 10,
-            lanes: Lane.UserBlockingLane,
-          },
-          renderMeasurement: {
-            startTime: 0,
-            duration: 4,
-          },
-          errorRecords: [],
-          componentRenderMeasurements: [
-            {
-              name: 'MyComponent',
-              startTime: 0,
-              duration: 4,
-            },
-          ],
-          commitMeasurement: {
-            startTime: 4,
-            duration: 6,
-            pendingCount: 0,
-            commitCount: 6,
-          },
-          mutationMeasurement: {
-            startTime: 4,
-            duration: 3,
-            pendingCount: 0,
-            commitCount: 3,
-          },
-          layoutMeasurement: {
-            startTime: 7,
-            duration: 2,
-            pendingCount: 0,
-            commitCount: 2,
-          },
-          passiveMeasurement: {
-            startTime: 9,
             duration: 1,
-            pendingCount: 0,
-            commitCount: 1,
           },
-        },
-        [
-          [
-            'groupCollapsed',
-            'Update #0 SUCCESS with user-blocking priority in %c10ms',
-          ],
-          ['log', '%cRENDER PHASE:%c 1 component(s) rendered in %c4ms'],
-          [
-            'table',
-            [
-              {
-                name: 'MyComponent',
-                startTime: 0,
-                duration: 4,
-              },
-            ],
-          ],
-          ['log', '%cCOMMIT PHASE:%c 6 effect(s) committed in %c6ms'],
-          ['log', '%cMUTATION PHASE:%c 3 effect(s) committed in %c3ms'],
-          ['log', '%cLAYOUT PHASE:%c 2 effect(s) committed in %c2ms'],
-          ['log', '%cPASSIVE PHASE:%c 1 effect(s) committed in %c1ms'],
-          ['groupEnd'],
+          {
+            name: 'Bar',
+            startTime: 1,
+            duration: 2,
+          },
         ],
-      ],
-      [
-        {
-          id: 0,
-          status: 'failure',
-          phase: 'idle',
-          updateMeasurement: {
-            startTime: 0,
-            duration: 10,
-            lanes: Lane.UserBlockingLane,
-          },
-          errorRecords: [{ error, captured: false }],
-          renderMeasurement: {
-            startTime: 0,
-            duration: 0,
-          },
-          componentRenderMeasurements: [
-            {
-              name: 'MyComponent',
-              startTime: 0,
-              duration: 0,
-            },
-          ],
-          commitMeasurement: null,
-          mutationMeasurement: null,
-          layoutMeasurement: null,
-          passiveMeasurement: null,
-        },
-        [
-          [
-            'groupCollapsed',
-            'Update #0 FAILURE with user-blocking priority in %c10ms',
-          ],
-          ['log', '%cRENDER PHASE:%c 1 component(s) rendered in %c0ms'],
-          [
-            'table',
-            [
-              {
-                error,
-                captured: false,
-              },
-            ],
-          ],
-          [
-            'table',
-            [
-              {
-                name: 'MyComponent',
-                startTime: 0,
-                duration: 0,
-              },
-            ],
-          ],
-          ['groupEnd'],
-        ],
-      ],
-    ] as const satisfies [
-      SessionProfile,
-      [keyof ConsoleLogger, ...unknown[]][],
-    ][])('prints a profile to the logger', (profile, expectedLogs) => {
-      const logger = new MockLogger();
-      const reporter = new ConsoleReporter(logger);
+        effectRecords: [],
+      };
 
       reporter.reportProfile(profile);
 
-      expect(logger.flush()).toStrictEqual(expectedLogs);
+      expect(logger.flush()).toStrictEqual([
+        [
+          'groupCollapsed',
+          `#0 Update SUCCESS without priority in concurrent mode %c(10ms)`,
+        ],
+        ['group', '%cRENDER PHASE:%c 2 component(s) rendered in %c3ms'],
+        ['table', profile.componentRecords],
+        ['groupEnd'],
+        ['groupEnd'],
+      ]);
+    });
+
+    it('reports error records when render is measured', () => {
+      const error = new Error('fail');
+      const profile: SessionProfile = {
+        id: 0,
+        phase: 'idle',
+        status: 'failure',
+        updateMeasurement: {
+          startTime: 0,
+          duration: 10,
+          lanes: Lane.DefaultLane,
+        },
+        renderMeasurement: {
+          startTime: 0,
+          duration: 3,
+        },
+        commitMeasurement: null,
+        errorRecords: [
+          {
+            error,
+            captured: true,
+          },
+        ],
+        componentRecords: [],
+        effectRecords: [],
+      };
+
+      reporter.reportProfile(profile);
+
+      expect(logger.flush()).toStrictEqual([
+        [
+          'groupCollapsed',
+          `#0 Update FAILURE without priority in concurrent mode %c(10ms)`,
+        ],
+        ['group', '%cRENDER PHASE:%c 0 component(s) rendered in %c3ms'],
+        ['table', profile.errorRecords],
+        ['groupEnd'],
+        ['groupEnd'],
+      ]);
+    });
+
+    it('reports effect records when commit is measured', () => {
+      const profile: SessionProfile = {
+        id: 0,
+        phase: 'idle',
+        status: 'success',
+        updateMeasurement: {
+          startTime: 0,
+          duration: 10,
+          lanes: Lane.DefaultLane,
+        },
+        renderMeasurement: null,
+        commitMeasurement: {
+          startTime: 0,
+          duration: 3,
+        },
+        errorRecords: [],
+        componentRecords: [],
+        effectRecords: [
+          {
+            phase: 'mutation',
+            pendingCount: 0,
+            commitCount: 3,
+            startTime: 4,
+            duration: 3,
+          },
+          {
+            phase: 'layout',
+            pendingCount: 0,
+            commitCount: 2,
+            startTime: 7,
+            duration: 2,
+          },
+          {
+            phase: 'passive',
+            pendingCount: 0,
+            commitCount: 1,
+            startTime: 9,
+            duration: 1,
+          },
+        ],
+      };
+
+      reporter.reportProfile(profile);
+
+      expect(logger.flush()).toStrictEqual([
+        [
+          'groupCollapsed',
+          `#0 Update SUCCESS without priority in concurrent mode %c(10ms)`,
+        ],
+        ['group', '%cCOMMIT PHASE:%c 6 effect(s) committed in %c3ms'],
+        ['table', profile.effectRecords],
+        ['groupEnd'],
+        ['groupEnd'],
+      ]);
     });
   });
 });
