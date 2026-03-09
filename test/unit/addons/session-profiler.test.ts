@@ -440,7 +440,7 @@ describe('ConsoleReporter', () => {
         updateMeasurement: {
           startTime: 0,
           duration: 10,
-          lanes: Lane.DefaultLane | Lane.ViewTransitionLane,
+          lanes: Lane.ConcurrentLane | Lane.ViewTransitionLane,
         },
         renderMeasurement: null,
         commitMeasurement: null,
@@ -466,7 +466,7 @@ describe('ConsoleReporter', () => {
         updateMeasurement: {
           startTime: 0,
           duration: 10,
-          lanes: Lane.DefaultLane | Lane.TransitionLane,
+          lanes: Lane.ConcurrentLane | Lane.TransitionLane,
         },
         renderMeasurement: null,
         commitMeasurement: null,
@@ -485,9 +485,9 @@ describe('ConsoleReporter', () => {
     });
 
     it.each([
-      [Lane.DefaultLane | Lane.UserBlockingLane, 'user-blocking'],
-      [Lane.DefaultLane | Lane.UserVisibleLane, 'user-visible'],
-      [Lane.DefaultLane | Lane.BackgroundLane, 'background'],
+      [Lane.ConcurrentLane | Lane.UserBlockingLane, 'user-blocking'],
+      [Lane.ConcurrentLane | Lane.UserVisibleLane, 'user-visible'],
+      [Lane.ConcurrentLane | Lane.BackgroundLane, 'background'],
     ])('reports the priority when lanes contains a priority lane', (lanes, expectedPriority) => {
       reporter.reportProfile({
         id: 0,
@@ -522,7 +522,7 @@ describe('ConsoleReporter', () => {
         updateMeasurement: {
           startTime: 0,
           duration: 10,
-          lanes: Lane.DefaultLane | Lane.SyncLane,
+          lanes: Lane.ConcurrentLane | Lane.SyncLane,
         },
         renderMeasurement: null,
         commitMeasurement: null,
@@ -548,7 +548,7 @@ describe('ConsoleReporter', () => {
         updateMeasurement: {
           startTime: 0,
           duration: 10,
-          lanes: Lane.DefaultLane,
+          lanes: Lane.ConcurrentLane,
         },
         renderMeasurement: {
           startTime: 0,
@@ -594,7 +594,7 @@ describe('ConsoleReporter', () => {
         updateMeasurement: {
           startTime: 0,
           duration: 10,
-          lanes: Lane.DefaultLane,
+          lanes: Lane.ConcurrentLane,
         },
         renderMeasurement: {
           startTime: 0,
@@ -633,7 +633,7 @@ describe('ConsoleReporter', () => {
         updateMeasurement: {
           startTime: 0,
           duration: 10,
-          lanes: Lane.DefaultLane,
+          lanes: Lane.ConcurrentLane,
         },
         renderMeasurement: null,
         commitMeasurement: {

@@ -45,7 +45,7 @@ describe('Runtime', () => {
   describe('flushUpdates()', () => {
     describe('in concurrent mode', () => {
       it('commits effects asynchronously', async () => {
-        const runtime = createRuntime({ defaultLanes: Lane.DefaultLane });
+        const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
         const observer = new MockObserver();
         const mutationEffect = {
           commit: vi.fn(),
@@ -90,7 +90,7 @@ describe('Runtime', () => {
           expect(runtime.getPendingUpdates()).toStrictEqual([
             expect.objectContaining({
               coroutine,
-              lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+              lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
             }),
           ]);
 
@@ -113,7 +113,7 @@ describe('Runtime', () => {
           {
             type: 'update-start',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
           },
           {
             type: 'render-start',
@@ -157,7 +157,7 @@ describe('Runtime', () => {
           {
             type: 'update-success',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
           },
           {
             type: 'effect-commit-start',
@@ -182,7 +182,7 @@ describe('Runtime', () => {
       });
 
       it('commits effects synchronously if flushSync option is true', async () => {
-        const runtime = createRuntime({ defaultLanes: Lane.DefaultLane });
+        const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
         const observer = new MockObserver();
         const mutationEffect = {
           commit: vi.fn(),
@@ -224,7 +224,8 @@ describe('Runtime', () => {
           expect(runtime.getPendingUpdates()).toStrictEqual([
             expect.objectContaining({
               coroutine,
-              lanes: Lane.DefaultLane | Lane.UserBlockingLane | Lane.SyncLane,
+              lanes:
+                Lane.ConcurrentLane | Lane.SyncLane | Lane.UserBlockingLane,
             }),
           ]);
 
@@ -243,7 +244,7 @@ describe('Runtime', () => {
           {
             type: 'update-start',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane | Lane.SyncLane,
+            lanes: Lane.ConcurrentLane | Lane.SyncLane | Lane.UserBlockingLane,
           },
           {
             type: 'render-start',
@@ -306,13 +307,13 @@ describe('Runtime', () => {
           {
             type: 'update-success',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane | Lane.SyncLane,
+            lanes: Lane.ConcurrentLane | Lane.SyncLane | Lane.UserBlockingLane,
           },
         ]);
       });
 
       it('commits mutation and layout effects in view transition if viewTransition option is true', async () => {
-        const runtime = createRuntime({ defaultLanes: Lane.DefaultLane });
+        const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
         const observer = new MockObserver();
         const mutationEffect = {
           commit: vi.fn(),
@@ -350,7 +351,7 @@ describe('Runtime', () => {
             expect.objectContaining({
               coroutine,
               lanes:
-                Lane.DefaultLane |
+                Lane.ConcurrentLane |
                 Lane.UserBlockingLane |
                 Lane.ViewTransitionLane,
             }),
@@ -372,7 +373,7 @@ describe('Runtime', () => {
             type: 'update-start',
             id: 0,
             lanes:
-              Lane.DefaultLane |
+              Lane.ConcurrentLane |
               Lane.UserBlockingLane |
               Lane.ViewTransitionLane,
           },
@@ -426,7 +427,7 @@ describe('Runtime', () => {
             type: 'update-success',
             id: 0,
             lanes:
-              Lane.DefaultLane |
+              Lane.ConcurrentLane |
               Lane.UserBlockingLane |
               Lane.ViewTransitionLane,
           },
@@ -434,7 +435,7 @@ describe('Runtime', () => {
       });
 
       it('handles an error that occurs during rendering', async () => {
-        const runtime = createRuntime({ defaultLanes: Lane.DefaultLane });
+        const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
         const observer = new MockObserver();
         const error = new Error('fail');
 
@@ -465,7 +466,7 @@ describe('Runtime', () => {
           {
             type: 'update-start',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
           },
           {
             type: 'render-start',
@@ -484,14 +485,14 @@ describe('Runtime', () => {
           {
             type: 'update-failure',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
             error: expect.objectContaining({ cause: error }),
           },
         ]);
       });
 
       it('aborts rendering when error is captured outside the root', async () => {
-        const runtime = createRuntime({ defaultLanes: Lane.DefaultLane });
+        const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
         const observer = new MockObserver();
         const errorHandler = vi.fn();
         const error = new Error('fail');
@@ -536,7 +537,7 @@ describe('Runtime', () => {
           {
             type: 'update-start',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
           },
           {
             type: 'render-start',
@@ -555,7 +556,7 @@ describe('Runtime', () => {
           {
             type: 'update-failure',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
             error: expect.objectContaining({ cause: error }),
           },
         ]);
@@ -606,7 +607,7 @@ describe('Runtime', () => {
           expect(runtime.getPendingUpdates()).toStrictEqual([
             expect.objectContaining({
               coroutine,
-              lanes: Lane.DefaultLane | Lane.UserBlockingLane | Lane.SyncLane,
+              lanes: Lane.SyncLane | Lane.UserBlockingLane,
             }),
           ]);
 
@@ -625,7 +626,7 @@ describe('Runtime', () => {
           {
             type: 'update-start',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane | Lane.SyncLane,
+            lanes: Lane.SyncLane | Lane.UserBlockingLane,
           },
           {
             type: 'render-start',
@@ -688,7 +689,7 @@ describe('Runtime', () => {
           {
             type: 'update-success',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane | Lane.SyncLane,
+            lanes: Lane.SyncLane | Lane.UserBlockingLane,
           },
         ]);
       });
@@ -718,7 +719,7 @@ describe('Runtime', () => {
           {
             type: 'update-start',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.SyncLane | Lane.UserBlockingLane,
+            lanes: Lane.SyncLane | Lane.UserBlockingLane,
           },
           {
             type: 'render-start',
@@ -737,7 +738,7 @@ describe('Runtime', () => {
           {
             type: 'update-failure',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.SyncLane | Lane.UserBlockingLane,
+            lanes: Lane.SyncLane | Lane.UserBlockingLane,
             error: expect.objectContaining({ cause: error }),
           },
         ]);
@@ -793,7 +794,7 @@ describe('Runtime', () => {
           {
             type: 'update-start',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.SyncLane | Lane.UserBlockingLane,
+            lanes: Lane.SyncLane | Lane.UserBlockingLane,
           },
           {
             type: 'render-start',
@@ -812,7 +813,7 @@ describe('Runtime', () => {
           {
             type: 'update-failure',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.SyncLane | Lane.UserBlockingLane,
+            lanes: Lane.SyncLane | Lane.UserBlockingLane,
             error: expect.objectContaining({ cause: error }),
           },
         ]);

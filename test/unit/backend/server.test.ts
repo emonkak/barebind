@@ -55,10 +55,10 @@ describe('ServerBackend', () => {
   });
 
   describe('getDefaultLanes()', () => {
-    it('returns Lane.DefaultLane | Lane.SyncLane', () => {
+    it('returns SyncLane', () => {
       const backend = new ServerBackend(document);
 
-      expect(backend.getDefaultLanes()).toBe(Lane.DefaultLane | Lane.SyncLane);
+      expect(backend.getDefaultLanes()).toBe(Lane.SyncLane);
     });
   });
 

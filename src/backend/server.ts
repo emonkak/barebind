@@ -41,7 +41,7 @@ export class ServerBackend implements Backend {
   }
 
   getDefaultLanes(): Lanes {
-    return Lane.DefaultLane | Lane.SyncLane;
+    return Lane.SyncLane;
   }
 
   getUpdatePriority(): TaskPriority {

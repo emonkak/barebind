@@ -91,16 +91,18 @@ export class Root<T> {
     resume: (session: UpdateSession) => void,
     options?: UpdateOptions,
   ): UpdateHandle {
-    const coroutine: Coroutine = {
+    const coroutine = {
       name: Root.name,
       scope: createScope(),
-      pendingLanes: Lane.DefaultLane,
+      pendingLanes: Lane.NoLane,
       resume,
-    };
-    return this._context.scheduleUpdate(coroutine, {
+    } satisfies Coroutine;
+    const handle = this._context.scheduleUpdate(coroutine, {
       immediate: true,
       ...options,
     });
+    coroutine.pendingLanes |= handle.lanes;
+    return handle;
   }
 }
 

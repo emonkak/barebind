@@ -35,7 +35,7 @@ export class BrowserBackend implements Backend {
   }
 
   getDefaultLanes(): Lanes {
-    return Lane.DefaultLane;
+    return Lane.ConcurrentLane;
   }
 
   getUpdatePriority(): TaskPriority {

@@ -77,10 +77,10 @@ describe('BrowserBackend', () => {
   });
 
   describe('getDefaultLanes()', () => {
-    it('returns Lane.DefaultLane', () => {
+    it('returns ConcurrentLane', () => {
       const backend = new BrowserBackend();
 
-      expect(backend.getDefaultLanes()).toBe(Lane.DefaultLane);
+      expect(backend.getDefaultLanes()).toBe(Lane.ConcurrentLane);
     });
   });
 

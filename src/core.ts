@@ -272,7 +272,7 @@ export type InitialState<T> = (T extends Function ? never : T) | (() => T);
 // biome-ignore format: Align Lane flags
 export const Lane = {
   NoLane:             0,
-  DefaultLane:        0b1,
+  ConcurrentLane:     0b1,
   SyncLane:           0b10,
   UserBlockingLane:   0b100,
   UserVisibleLane:    0b1000,

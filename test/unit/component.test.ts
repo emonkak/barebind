@@ -161,7 +161,7 @@ describe('ComponentBinding', () => {
         );
 
         expect(binding.pendingLanes).toBe(
-          Lane.DefaultLane | Lane.SyncLane | Lane.UserBlockingLane,
+          Lane.SyncLane | Lane.UserBlockingLane,
         );
         expect(part.node.nodeValue).toBe('100');
       }
@@ -312,7 +312,7 @@ describe('ComponentBinding', () => {
 
           session.frame.pendingCoroutines.push({
             name: '',
-            pendingLanes: Lane.DefaultLane,
+            pendingLanes: Lane.ConcurrentLane,
             scope: createScope(session.scope),
             resume(session) {
               binding.detach(session);

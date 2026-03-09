@@ -108,9 +108,7 @@ describe('SignalBinding', () => {
 
       signal.value = 'bar';
 
-      expect(binding.pendingLanes).toBe(
-        Lane.DefaultLane | Lane.SyncLane | Lane.UserBlockingLane,
-      );
+      expect(binding.pendingLanes).toBe(Lane.SyncLane | Lane.UserBlockingLane);
 
       await waitForMicrotasks(2);
 
@@ -156,9 +154,7 @@ describe('SignalBinding', () => {
       signal1.value = 'baz';
       signal2.value = 'qux';
 
-      expect(binding.pendingLanes).toBe(
-        Lane.DefaultLane | Lane.SyncLane | Lane.UserBlockingLane,
-      );
+      expect(binding.pendingLanes).toBe(Lane.SyncLane | Lane.UserBlockingLane);
 
       await waitForMicrotasks(2);
 

@@ -38,7 +38,7 @@ import { AbstractTemplate } from '@/template/template.js';
 export class MockBackend implements Backend {
   readonly defaultLanes: Lanes;
 
-  constructor(defaultLanes: Lanes = Lane.DefaultLane | Lane.SyncLane) {
+  constructor(defaultLanes: Lanes = Lane.SyncLane) {
     this.defaultLanes = defaultLanes;
   }
 
