@@ -63,8 +63,8 @@ export interface SessionProfileReporter {
 
 export interface SessionProfile {
   id: number;
-  status: 'pending' | 'success' | 'failure';
   phase: 'idle' | 'render' | 'commit';
+  status: 'pending' | 'success' | 'failure';
   updateMeasurement: UpdateMeasurement | null;
   renderMeasurement: RenderMeasurement | null;
   errorRecords: ErrorRecord[];
@@ -116,9 +116,6 @@ export class SessionProfiler implements SessionObserver {
           measurement.duration = performance.now() - measurement.startTime;
         }
         profile.status = 'success';
-        if (profile.phase === 'idle') {
-          this._flushProfile(profile);
-        }
         break;
       }
       case 'update-failure': {
@@ -127,7 +124,6 @@ export class SessionProfiler implements SessionObserver {
           measurement.duration = performance.now() - measurement.startTime;
         }
         profile.status = 'failure';
-        this._flushProfile(profile);
         break;
       }
       case 'render-start':
@@ -192,9 +188,6 @@ export class SessionProfiler implements SessionObserver {
           measurement.pendingEffects = pendingEffects;
         }
         profile.phase = 'idle';
-        if (profile.status !== 'pending') {
-          this._flushProfile(profile);
-        }
         break;
       }
       case 'effect-commit-start': {
@@ -240,11 +233,11 @@ export class SessionProfiler implements SessionObserver {
         break;
       }
     }
-  }
 
-  private _flushProfile(profile: SessionProfile): void {
-    this._reporter.reportProfile(profile);
-    this._pendingProfiles.delete(profile.id);
+    if (profile.phase === 'idle' && profile.status !== 'pending') {
+      this._reporter.reportProfile(profile);
+      this._pendingProfiles.delete(profile.id);
+    }
   }
 }
 
@@ -342,8 +335,8 @@ export class ConsoleReporter implements SessionProfileReporter {
 function createProfile(id: number): SessionProfile {
   return {
     id,
-    status: 'pending',
     phase: 'idle',
+    status: 'pending',
     updateMeasurement: null,
     renderMeasurement: null,
     errorRecords: [],

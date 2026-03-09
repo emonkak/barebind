@@ -205,6 +205,10 @@ describe('SessionProfiler', () => {
           captured: false,
         },
         {
+          type: 'render-end',
+          id: 0,
+        },
+        {
           type: 'update-failure',
           id: 0,
           lanes: Lane.UserBlockingLane,
@@ -220,7 +224,7 @@ describe('SessionProfiler', () => {
       expect(reporter.reportProfile).toHaveBeenCalledWith({
         id: 0,
         status: 'failure',
-        phase: 'render',
+        phase: 'idle',
         updateMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
