@@ -118,15 +118,15 @@ describe('Runtime', () => {
             lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           },
           {
-            type: 'render-phase-start',
+            type: 'render-start',
             id: 0,
           },
           {
-            type: 'render-phase-end',
+            type: 'render-end',
             id: 0,
           },
           {
-            type: 'commit-phase-start',
+            type: 'commit-start',
             id: 0,
             mutationEffects: expect.any(EffectQueue),
             layoutEffects: expect.any(EffectQueue),
@@ -174,7 +174,7 @@ describe('Runtime', () => {
             effects: expect.any(EffectQueue),
           },
           {
-            type: 'commit-phase-end',
+            type: 'commit-end',
             id: 0,
             mutationEffects: expect.any(EffectQueue),
             layoutEffects: expect.any(EffectQueue),
@@ -248,15 +248,15 @@ describe('Runtime', () => {
             lanes: Lane.DefaultLane | Lane.UserBlockingLane | Lane.SyncLane,
           },
           {
-            type: 'render-phase-start',
+            type: 'render-start',
             id: 0,
           },
           {
-            type: 'render-phase-end',
+            type: 'render-end',
             id: 0,
           },
           {
-            type: 'commit-phase-start',
+            type: 'commit-start',
             id: 0,
             mutationEffects: expect.any(EffectQueue),
             layoutEffects: expect.any(EffectQueue),
@@ -299,7 +299,7 @@ describe('Runtime', () => {
             effects: expect.any(EffectQueue),
           },
           {
-            type: 'commit-phase-end',
+            type: 'commit-end',
             id: 0,
             mutationEffects: expect.any(EffectQueue),
             layoutEffects: expect.any(EffectQueue),
@@ -379,15 +379,15 @@ describe('Runtime', () => {
               Lane.ViewTransitionLane,
           },
           {
-            type: 'render-phase-start',
+            type: 'render-start',
             id: 0,
           },
           {
-            type: 'render-phase-end',
+            type: 'render-end',
             id: 0,
           },
           {
-            type: 'commit-phase-start',
+            type: 'commit-start',
             id: 0,
             mutationEffects: expect.any(EffectQueue),
             layoutEffects: expect.any(EffectQueue),
@@ -418,7 +418,7 @@ describe('Runtime', () => {
             effects: expect.any(EffectQueue),
           },
           {
-            type: 'commit-phase-end',
+            type: 'commit-end',
             id: 0,
             mutationEffects: expect.any(EffectQueue),
             layoutEffects: expect.any(EffectQueue),
@@ -470,7 +470,7 @@ describe('Runtime', () => {
             lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           },
           {
-            type: 'render-phase-start',
+            type: 'render-start',
             id: 0,
           },
           {
@@ -480,7 +480,7 @@ describe('Runtime', () => {
             captured: false,
           },
           {
-            type: 'render-phase-end',
+            type: 'render-end',
             id: 0,
           },
           {
@@ -541,7 +541,7 @@ describe('Runtime', () => {
             lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           },
           {
-            type: 'render-phase-start',
+            type: 'render-start',
             id: 0,
           },
           {
@@ -551,7 +551,7 @@ describe('Runtime', () => {
             captured: true,
           },
           {
-            type: 'render-phase-end',
+            type: 'render-end',
             id: 0,
           },
           {
@@ -630,15 +630,15 @@ describe('Runtime', () => {
             lanes: Lane.DefaultLane | Lane.UserBlockingLane | Lane.SyncLane,
           },
           {
-            type: 'render-phase-start',
+            type: 'render-start',
             id: 0,
           },
           {
-            type: 'render-phase-end',
+            type: 'render-end',
             id: 0,
           },
           {
-            type: 'commit-phase-start',
+            type: 'commit-start',
             id: 0,
             mutationEffects: expect.any(EffectQueue),
             layoutEffects: expect.any(EffectQueue),
@@ -681,7 +681,7 @@ describe('Runtime', () => {
             effects: expect.any(EffectQueue),
           },
           {
-            type: 'commit-phase-end',
+            type: 'commit-end',
             id: 0,
             mutationEffects: expect.any(EffectQueue),
             layoutEffects: expect.any(EffectQueue),
@@ -723,7 +723,7 @@ describe('Runtime', () => {
             lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           },
           {
-            type: 'render-phase-start',
+            type: 'render-start',
             id: 0,
           },
           {
@@ -733,7 +733,7 @@ describe('Runtime', () => {
             captured: false,
           },
           {
-            type: 'render-phase-end',
+            type: 'render-end',
             id: 0,
           },
           {
@@ -798,7 +798,7 @@ describe('Runtime', () => {
             lanes: Lane.DefaultLane | Lane.UserBlockingLane,
           },
           {
-            type: 'render-phase-start',
+            type: 'render-start',
             id: 0,
           },
           {
@@ -808,7 +808,7 @@ describe('Runtime', () => {
             captured: true,
           },
           {
-            type: 'render-phase-end',
+            type: 'render-end',
             id: 0,
           },
           {

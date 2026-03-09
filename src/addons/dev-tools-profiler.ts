@@ -38,14 +38,14 @@ export class DevToolsProfiler implements SessionObserver {
         this._measure(`Barebind - Update failure #${id}`, startMark, endMark);
         break;
       }
-      case 'render-phase-start': {
-        const startMark = `barebind:render-phase-start:${id}`;
+      case 'render-start': {
+        const startMark = `barebind:render-start:${id}`;
         this._mark(startMark);
         break;
       }
-      case 'render-phase-end': {
-        const startMark = `barebind:render-phase-start:${id}`;
-        const endMark = `barebind:render-phase-end:${id}`;
+      case 'render-end': {
+        const startMark = `barebind:render-start:${id}`;
+        const endMark = `barebind:render-end:${id}`;
         this._mark(endMark);
         this._measure(`Barebind - Render phase #${id}`, startMark, endMark);
         break;
@@ -66,14 +66,14 @@ export class DevToolsProfiler implements SessionObserver {
         this._measure(`Barebind - Render ${name} #${id}`, startMark, endMark);
         break;
       }
-      case 'commit-phase-start': {
-        const startMark = `barebind:commit-phase-start:${id}`;
+      case 'commit-start': {
+        const startMark = `barebind:commit-start:${id}`;
         this._mark(startMark);
         break;
       }
-      case 'commit-phase-end': {
-        const startMark = `barebind:commit-phase-start:${id}`;
-        const endMark = `barebind:commit-phase-end:${id}`;
+      case 'commit-end': {
+        const startMark = `barebind:commit-start:${id}`;
+        const endMark = `barebind:commit-end:${id}`;
         this._mark(endMark);
         this._measure(`Barebind - Commit phase #${id}`, startMark, endMark);
         break;

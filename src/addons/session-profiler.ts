@@ -130,14 +130,14 @@ export class SessionProfiler implements SessionObserver {
         this._flushProfile(profile);
         break;
       }
-      case 'render-phase-start':
+      case 'render-start':
         profile.renderMeasurement = {
           startTime: performance.now(),
           duration: 0,
         };
         profile.phase = 'render';
         break;
-      case 'render-phase-end': {
+      case 'render-end': {
         const measurement = profile.renderMeasurement;
         if (measurement !== null) {
           measurement.duration = performance.now() - measurement.startTime;
@@ -167,7 +167,7 @@ export class SessionProfiler implements SessionObserver {
         }
         break;
       }
-      case 'commit-phase-start':
+      case 'commit-start':
         profile.commitMeasurement = {
           startTime: performance.now(),
           duration: 0,
@@ -179,7 +179,7 @@ export class SessionProfiler implements SessionObserver {
         };
         profile.phase = 'commit';
         break;
-      case 'commit-phase-end': {
+      case 'commit-end': {
         const measurement = profile.commitMeasurement;
         if (measurement !== null) {
           const pendingEffects =

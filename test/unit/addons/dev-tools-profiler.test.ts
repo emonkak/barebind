@@ -65,20 +65,20 @@ describe('DevToolsProfiler', () => {
     });
   });
 
-  describe('render-phase-start / render-phase-end', () => {
+  describe('render-start / render-end', () => {
     it('records marks and a measure', () => {
-      profiler.onSessionEvent({ type: 'render-phase-start', id: 0 });
-      profiler.onSessionEvent({ type: 'render-phase-end', id: 0 });
+      profiler.onSessionEvent({ type: 'render-start', id: 0 });
+      profiler.onSessionEvent({ type: 'render-end', id: 0 });
 
       expect(marksOf(performance)).toStrictEqual([
-        'barebind:render-phase-start:0',
-        'barebind:render-phase-end:0',
+        'barebind:render-start:0',
+        'barebind:render-end:0',
       ]);
       expect(measuresOf(performance)).toStrictEqual([
         {
           name: 'Barebind - Render phase #0',
-          start: 'barebind:render-phase-start:0',
-          end: 'barebind:render-phase-end:0',
+          start: 'barebind:render-start:0',
+          end: 'barebind:render-end:0',
         },
       ]);
     });
@@ -243,17 +243,17 @@ describe('DevToolsProfiler', () => {
     });
   });
 
-  describe('commit-phase-start / commit-phase-end', () => {
+  describe('commit-start / commit-end', () => {
     it('records marks and a measure', () => {
       profiler.onSessionEvent({
-        type: 'commit-phase-start',
+        type: 'commit-start',
         id: 0,
         mutationEffects: new EffectQueue(),
         layoutEffects: new EffectQueue(),
         passiveEffects: new EffectQueue(),
       });
       profiler.onSessionEvent({
-        type: 'commit-phase-end',
+        type: 'commit-end',
         id: 0,
         mutationEffects: new EffectQueue(),
         layoutEffects: new EffectQueue(),
@@ -261,14 +261,14 @@ describe('DevToolsProfiler', () => {
       });
 
       expect(marksOf(performance)).toStrictEqual([
-        'barebind:commit-phase-start:0',
-        'barebind:commit-phase-end:0',
+        'barebind:commit-start:0',
+        'barebind:commit-end:0',
       ]);
       expect(measuresOf(performance)).toStrictEqual([
         {
           name: 'Barebind - Commit phase #0',
-          start: 'barebind:commit-phase-start:0',
-          end: 'barebind:commit-phase-end:0',
+          start: 'barebind:commit-start:0',
+          end: 'barebind:commit-end:0',
         },
       ]);
     });

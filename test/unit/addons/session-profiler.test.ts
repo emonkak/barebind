@@ -40,7 +40,7 @@ describe('SessionProfiler', () => {
           lanes: Lane.UserBlockingLane,
         },
         {
-          type: 'render-phase-start',
+          type: 'render-start',
           id: 0,
         },
         {
@@ -58,11 +58,11 @@ describe('SessionProfiler', () => {
           context: {} as RenderContext,
         },
         {
-          type: 'render-phase-end',
+          type: 'render-end',
           id: 0,
         },
         {
-          type: 'commit-phase-start',
+          type: 'commit-start',
           id: 0,
           mutationEffects,
           layoutEffects,
@@ -105,7 +105,7 @@ describe('SessionProfiler', () => {
           effects: emptyEffects,
         },
         {
-          type: 'commit-phase-end',
+          type: 'commit-end',
           id: 0,
           mutationEffects: emptyEffects,
           layoutEffects: emptyEffects,
@@ -188,7 +188,7 @@ describe('SessionProfiler', () => {
           lanes: Lane.UserBlockingLane,
         },
         {
-          type: 'render-phase-start',
+          type: 'render-start',
           id: 0,
         },
         {
@@ -273,7 +273,7 @@ describe('SessionProfiler', () => {
           lanes: Lane.UserBlockingLane,
         },
         {
-          type: 'render-phase-start',
+          type: 'render-start',
           id: 0,
         },
         {
@@ -291,11 +291,11 @@ describe('SessionProfiler', () => {
           context: {} as RenderContext,
         },
         {
-          type: 'render-phase-end',
+          type: 'render-end',
           id: 0,
         },
         {
-          type: 'commit-phase-start',
+          type: 'commit-start',
           id: 0,
           mutationEffects,
           layoutEffects,
@@ -331,7 +331,7 @@ describe('SessionProfiler', () => {
           effects: emptyEffects,
         },
         {
-          type: 'commit-phase-end',
+          type: 'commit-end',
           id: 0,
           mutationEffects: emptyEffects,
           layoutEffects: emptyEffects,

@@ -473,7 +473,7 @@ export type SessionEvent =
       error: unknown;
     }
   | {
-      type: 'render-phase-start' | 'render-phase-end';
+      type: 'render-start' | 'render-end';
       id: number;
     }
   | {
@@ -490,7 +490,7 @@ export type SessionEvent =
       context: RenderContext;
     }
   | {
-      type: 'commit-phase-start' | 'commit-phase-end';
+      type: 'commit-start' | 'commit-end';
       id: number;
       mutationEffects: EffectQueue;
       layoutEffects: EffectQueue;

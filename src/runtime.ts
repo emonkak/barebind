@@ -321,7 +321,7 @@ export class Runtime implements SessionContext {
     const { id, lanes, layoutEffects, mutationEffects, passiveEffects } = frame;
 
     notifyObservers(this._observers, {
-      type: 'render-phase-start',
+      type: 'render-start',
       id,
     });
 
@@ -348,13 +348,13 @@ export class Runtime implements SessionContext {
       frame.lanes = Lane.NoLane;
 
       notifyObservers(this._observers, {
-        type: 'render-phase-end',
+        type: 'render-end',
         id,
       });
     }
 
     notifyObservers(this._observers, {
-      type: 'commit-phase-start',
+      type: 'commit-start',
       id,
       mutationEffects,
       layoutEffects,
@@ -392,7 +392,7 @@ export class Runtime implements SessionContext {
           )
           .finally(() => {
             notifyObservers(this._observers, {
-              type: 'commit-phase-end',
+              type: 'commit-end',
               id,
               mutationEffects,
               layoutEffects,
@@ -409,7 +409,7 @@ export class Runtime implements SessionContext {
         passiveEffects.size === 0
       ) {
         notifyObservers(this._observers, {
-          type: 'commit-phase-end',
+          type: 'commit-end',
           id,
           mutationEffects,
           layoutEffects,
@@ -424,7 +424,7 @@ export class Runtime implements SessionContext {
     const { id, layoutEffects, mutationEffects, passiveEffects } = frame;
 
     notifyObservers(this._observers, {
-      type: 'render-phase-start',
+      type: 'render-start',
       id,
     });
 
@@ -442,13 +442,13 @@ export class Runtime implements SessionContext {
       frame.lanes = Lane.NoLane;
 
       notifyObservers(this._observers, {
-        type: 'render-phase-end',
+        type: 'render-end',
         id,
       });
     }
 
     notifyObservers(this._observers, {
-      type: 'commit-phase-start',
+      type: 'commit-start',
       id,
       mutationEffects,
       layoutEffects,
@@ -469,7 +469,7 @@ export class Runtime implements SessionContext {
       }
     } finally {
       notifyObservers(this._observers, {
-        type: 'commit-phase-end',
+        type: 'commit-end',
         id,
         mutationEffects,
         layoutEffects,
