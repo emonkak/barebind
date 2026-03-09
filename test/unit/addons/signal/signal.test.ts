@@ -31,7 +31,7 @@ describe('SignalDirective', () => {
       ) as SignalBinding<unknown>;
 
       expect(binding).toBeInstanceOf(SignalBinding);
-      expect(binding.name).toBe('SignalDirective');
+      expect(binding.name).toBe('Signal');
       expect(binding.type).toBe(SignalDirective);
       expect(binding.value).toBe(signal);
       expect(binding.part).toBe(part);

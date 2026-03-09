@@ -90,7 +90,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   }
 
   get name(): string {
-    return SignalDirective.name;
+    return Signal.name;
   }
 
   get pendingLanes(): Lanes {
