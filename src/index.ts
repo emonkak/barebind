@@ -7,7 +7,6 @@ export {
   type Backend,
   type Bindable,
   type Component,
-  ExecutionMode,
   type HookFunction,
   type HookObject,
   type Ref,

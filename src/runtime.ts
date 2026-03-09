@@ -8,7 +8,6 @@ import {
   createUpdateSession,
   type Directive,
   EffectQueue,
-  ExecutionMode,
   getLanesFromOptions,
   Lane,
   type Lanes,
@@ -79,9 +78,6 @@ export class Runtime implements SessionContext {
   }
 
   async flushUpdates(): Promise<void> {
-    const isConcurrentMode =
-      (this._backend.getExecutionModes() & ExecutionMode.ConcurrentMode) !== 0;
-
     for (
       let pendingUpdate: UpdateTask | undefined;
       (pendingUpdate = this._pendingUpdates.front()?.value) !== undefined;
@@ -110,7 +106,7 @@ export class Runtime implements SessionContext {
       });
 
       try {
-        if (!isConcurrentMode || pendingUpdate.lanes & Lane.SyncLane) {
+        if (pendingUpdate.lanes & Lane.SyncLane) {
           this._runUpdateSync(session);
         } else {
           await this._runUpdateAsync(session);
@@ -249,7 +245,8 @@ export class Runtime implements SessionContext {
     >;
 
     const id = this._updateCount++;
-    const lanes = getLanesFromOptions(options);
+    const lanes =
+      this._backend.getDefaultLanes() | getLanesFromOptions(options);
     const continuation = Promise.withResolvers<UpdateResult>();
     const pendingUpdate: UpdateTask = {
       id,

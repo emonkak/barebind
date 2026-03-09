@@ -161,7 +161,7 @@ describe('ComponentBinding', () => {
         );
 
         expect(binding.pendingLanes).toBe(
-          Lane.DefaultLane | Lane.UserBlockingLane,
+          Lane.DefaultLane | Lane.SyncLane | Lane.UserBlockingLane,
         );
         expect(part.node.nodeValue).toBe('100');
       }

@@ -4,8 +4,8 @@ import {
   type Backend,
   type CommitPhase,
   type EffectQueue,
-  ExecutionMode,
-  type ExecutionModes,
+  Lane,
+  type Lanes,
   type Layout,
   type Part,
   PartType,
@@ -34,8 +34,8 @@ export class BrowserBackend implements Backend {
     effects.flush();
   }
 
-  getExecutionModes(): ExecutionModes {
-    return ExecutionMode.ConcurrentMode;
+  getDefaultLanes(): Lanes {
+    return Lane.DefaultLane;
   }
 
   getUpdatePriority(): TaskPriority {

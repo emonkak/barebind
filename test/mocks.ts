@@ -13,8 +13,7 @@ import {
   type DirectiveType,
   type Effect,
   EffectQueue,
-  ExecutionMode,
-  type ExecutionModes,
+  Lane,
   type Lanes,
   type Layout,
   type Part,
@@ -37,18 +36,18 @@ import { Runtime, type RuntimeOptions } from '@/runtime.js';
 import { AbstractTemplate } from '@/template/template.js';
 
 export class MockBackend implements Backend {
-  readonly mode: ExecutionModes;
+  readonly defaultLanes: Lanes;
 
-  constructor(mode: ExecutionModes = ExecutionMode.NoMode) {
-    this.mode = mode;
+  constructor(defaultLanes: Lanes = Lane.DefaultLane | Lane.SyncLane) {
+    this.defaultLanes = defaultLanes;
   }
 
   flushEffects(effects: EffectQueue, _phase: CommitPhase): void {
     effects.flush();
   }
 
-  getExecutionModes(): ExecutionModes {
-    return this.mode;
+  getDefaultLanes(): Lanes {
+    return this.defaultLanes;
   }
 
   getUpdatePriority(): TaskPriority {
@@ -460,11 +459,11 @@ export function createRenderFrame(id: number, lanes: Lanes): RenderFrame {
   };
 }
 
-export function createRuntime(
-  mode?: ExecutionModes,
-  options?: RuntimeOptions,
-): Runtime {
-  return new Runtime(new MockBackend(mode), options);
+export function createRuntime({
+  defaultLanes,
+  ...options
+}: RuntimeOptions & { defaultLanes?: Lanes } = {}): Runtime {
+  return new Runtime(new MockBackend(defaultLanes), options);
 }
 
 function stringify(value: unknown): string {

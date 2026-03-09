@@ -10,7 +10,7 @@ export const DETACHED_SCOPE: Scope = Object.freeze(createScope());
 
 export interface Backend {
   flushEffects(effects: EffectQueue, phase: CommitPhase): void;
-  getExecutionModes(): ExecutionModes;
+  getDefaultLanes(): Lanes;
   getUpdatePriority(): TaskPriority;
   parseTemplate(
     strings: readonly string[],
@@ -194,14 +194,6 @@ export type ErrorHandler = (
   handleError: (error: unknown) => void,
 ) => void;
 
-// biome-ignore format: Align ExecutionMode flags
-export const ExecutionMode = {
-  NoMode:         0,
-  ConcurrentMode: 0b1,
-} as const satisfies Record<string, ExecutionModes>;
-
-export type ExecutionModes = number;
-
 export type Hook =
   | Hook.FinalizerHook
   | Hook.EffectHook
@@ -281,12 +273,12 @@ export type InitialState<T> = (T extends Function ? never : T) | (() => T);
 export const Lane = {
   NoLane:             0,
   DefaultLane:        0b1,
-  UserBlockingLane:   0b10,
-  UserVisibleLane:    0b100,
-  BackgroundLane:     0b1000,
-  SyncLane:           0b10000,
-  ViewTransitionLane: 0b100000,
-  TransitionLane:     0b1000000,
+  SyncLane:           0b10,
+  UserBlockingLane:   0b100,
+  UserVisibleLane:    0b1000,
+  BackgroundLane:     0b10000,
+  TransitionLane:     0b100000,
+  ViewTransitionLane: 0b1000000,
 } as const satisfies Record<string, Lanes>;
 
 export type Lanes = number;
@@ -655,7 +647,11 @@ export function createUpdateSession(
  * @internal
  */
 export function getLanesFromOptions(options: UpdateOptions): Lanes {
-  let lanes = Lane.DefaultLane;
+  let lanes = Lane.NoLane;
+
+  if (options.flushSync) {
+    lanes |= Lane.SyncLane;
+  }
 
   switch (options.priority) {
     case 'user-blocking':
@@ -669,16 +665,12 @@ export function getLanesFromOptions(options: UpdateOptions): Lanes {
       break;
   }
 
-  if (options.flushSync) {
-    lanes |= Lane.SyncLane;
+  if (options.signal !== undefined) {
+    lanes |= Lane.TransitionLane;
   }
 
   if (options.viewTransition) {
     lanes |= Lane.ViewTransitionLane;
-  }
-
-  if (options.signal !== undefined) {
-    lanes |= Lane.TransitionLane;
   }
 
   return lanes;

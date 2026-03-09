@@ -262,16 +262,13 @@ describe('EffectQueue', () => {
 
 describe('getLanesFromOptions()', () => {
   it.each([
-    [{}, Lane.DefaultLane],
-    [{ priority: 'user-blocking' }, Lane.DefaultLane | Lane.UserBlockingLane],
-    [{ priority: 'user-visible' }, Lane.DefaultLane | Lane.UserVisibleLane],
-    [{ priority: 'background' }, Lane.DefaultLane | Lane.BackgroundLane],
-    [{ flushSync: true }, Lane.DefaultLane | Lane.SyncLane],
-    [{ viewTransition: true }, Lane.DefaultLane | Lane.ViewTransitionLane],
-    [
-      { signal: new AbortController().signal },
-      Lane.DefaultLane | Lane.TransitionLane,
-    ],
+    [{}, Lane.NoLane],
+    [{ flushSync: true }, Lane.SyncLane],
+    [{ priority: 'user-blocking' }, Lane.UserBlockingLane],
+    [{ priority: 'user-visible' }, Lane.UserVisibleLane],
+    [{ priority: 'background' }, Lane.BackgroundLane],
+    [{ signal: new AbortController().signal }, Lane.TransitionLane],
+    [{ viewTransition: true }, Lane.ViewTransitionLane],
   ] as [
     UpdateOptions,
     Lanes,

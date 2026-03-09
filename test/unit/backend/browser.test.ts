@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BrowserBackend } from '@/backend/browser.js';
-import { type Effect, EffectQueue, ExecutionMode, PartType } from '@/core.js';
+import { type Effect, EffectQueue, Lane, PartType } from '@/core.js';
 import { LooseLayout } from '@/layout/loose.js';
 import { StrictLayout } from '@/layout/strict.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
@@ -76,13 +76,11 @@ describe('BrowserBackend', () => {
     });
   });
 
-  describe('getExecutionModes()', () => {
-    it('returns flags containing ConcurrentMode', () => {
+  describe('getDefaultLanes()', () => {
+    it('returns Lane.DefaultLane', () => {
       const backend = new BrowserBackend();
 
-      expect(backend.getExecutionModes() & ExecutionMode.ConcurrentMode).toBe(
-        ExecutionMode.ConcurrentMode,
-      );
+      expect(backend.getDefaultLanes()).toBe(Lane.DefaultLane);
     });
   });
 

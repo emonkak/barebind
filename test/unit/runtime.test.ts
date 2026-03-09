@@ -7,7 +7,6 @@ import {
   type ComponentState,
   createScope,
   EffectQueue,
-  ExecutionMode,
   Lane,
   PartType,
 } from '@/core.js';
@@ -31,7 +30,7 @@ import { waitForTimeout } from '../test-helpers.js';
 describe('Runtime', () => {
   describe('addObserver()', () => {
     it('does not deliver events to observer after unsubscribe', async () => {
-      const runtime = createRuntime(ExecutionMode.ConcurrentMode);
+      const runtime = createRuntime();
       const observer = new MockObserver();
 
       const removeObserver = runtime.addObserver(observer);
@@ -46,7 +45,7 @@ describe('Runtime', () => {
   describe('flushUpdates()', () => {
     describe('in concurrent mode', () => {
       it('commits effects asynchronously', async () => {
-        const runtime = createRuntime(ExecutionMode.ConcurrentMode);
+        const runtime = createRuntime({ defaultLanes: Lane.DefaultLane });
         const observer = new MockObserver();
         const mutationEffect = {
           commit: vi.fn(),
@@ -183,7 +182,7 @@ describe('Runtime', () => {
       });
 
       it('commits effects synchronously if flushSync option is true', async () => {
-        const runtime = createRuntime(ExecutionMode.ConcurrentMode);
+        const runtime = createRuntime({ defaultLanes: Lane.DefaultLane });
         const observer = new MockObserver();
         const mutationEffect = {
           commit: vi.fn(),
@@ -313,7 +312,7 @@ describe('Runtime', () => {
       });
 
       it('commits mutation and layout effects in view transition if viewTransition option is true', async () => {
-        const runtime = createRuntime(ExecutionMode.ConcurrentMode);
+        const runtime = createRuntime({ defaultLanes: Lane.DefaultLane });
         const observer = new MockObserver();
         const mutationEffect = {
           commit: vi.fn(),
@@ -435,7 +434,7 @@ describe('Runtime', () => {
       });
 
       it('handles an error that occurs during rendering', async () => {
-        const runtime = createRuntime(ExecutionMode.ConcurrentMode);
+        const runtime = createRuntime({ defaultLanes: Lane.DefaultLane });
         const observer = new MockObserver();
         const error = new Error('fail');
 
@@ -492,7 +491,7 @@ describe('Runtime', () => {
       });
 
       it('aborts rendering when error is captured outside the root', async () => {
-        const runtime = createRuntime(ExecutionMode.ConcurrentMode);
+        const runtime = createRuntime({ defaultLanes: Lane.DefaultLane });
         const observer = new MockObserver();
         const errorHandler = vi.fn();
         const error = new Error('fail');
@@ -563,7 +562,7 @@ describe('Runtime', () => {
       });
     });
 
-    describe('not in concurrent mode', () => {
+    describe('in sync mode', () => {
       it('commits effects synchronously', async () => {
         const runtime = createRuntime();
         const observer = new MockObserver();
@@ -719,7 +718,7 @@ describe('Runtime', () => {
           {
             type: 'update-start',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            lanes: Lane.DefaultLane | Lane.SyncLane | Lane.UserBlockingLane,
           },
           {
             type: 'render-start',
@@ -738,7 +737,7 @@ describe('Runtime', () => {
           {
             type: 'update-failure',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            lanes: Lane.DefaultLane | Lane.SyncLane | Lane.UserBlockingLane,
             error: expect.objectContaining({ cause: error }),
           },
         ]);
@@ -794,7 +793,7 @@ describe('Runtime', () => {
           {
             type: 'update-start',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            lanes: Lane.DefaultLane | Lane.SyncLane | Lane.UserBlockingLane,
           },
           {
             type: 'render-start',
@@ -813,7 +812,7 @@ describe('Runtime', () => {
           {
             type: 'update-failure',
             id: 0,
-            lanes: Lane.DefaultLane | Lane.UserBlockingLane,
+            lanes: Lane.DefaultLane | Lane.SyncLane | Lane.UserBlockingLane,
             error: expect.objectContaining({ cause: error }),
           },
         ]);

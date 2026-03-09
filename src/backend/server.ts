@@ -4,8 +4,8 @@ import {
   type Backend,
   type CommitPhase,
   type EffectQueue,
-  ExecutionMode,
-  type ExecutionModes,
+  Lane,
+  type Lanes,
   type Layout,
   type Part,
   PartType,
@@ -40,8 +40,8 @@ export class ServerBackend implements Backend {
     }
   }
 
-  getExecutionModes(): ExecutionModes {
-    return ExecutionMode.NoMode;
+  getDefaultLanes(): Lanes {
+    return Lane.DefaultLane | Lane.SyncLane;
   }
 
   getUpdatePriority(): TaskPriority {
