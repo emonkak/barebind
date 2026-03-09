@@ -147,26 +147,26 @@ describe('SessionProfiler', () => {
         commitMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
-          pendingEffects: 0,
-          committedEffects: 4,
+          pendingCount: 0,
+          commitCount: 4,
         },
         mutationMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
-          pendingEffects: 0,
-          committedEffects: 2,
+          pendingCount: 0,
+          commitCount: 2,
         },
         layoutMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
-          pendingEffects: 0,
-          committedEffects: 1,
+          pendingCount: 0,
+          commitCount: 1,
         },
         passiveMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
-          pendingEffects: 0,
-          committedEffects: 1,
+          pendingCount: 0,
+          commitCount: 1,
         },
       } satisfies SessionProfile);
     });
@@ -372,21 +372,21 @@ describe('SessionProfiler', () => {
         commitMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
-          pendingEffects: 0,
-          committedEffects: 3,
+          pendingCount: 0,
+          commitCount: 3,
         },
         mutationMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
-          pendingEffects: 0,
-          committedEffects: 2,
+          pendingCount: 0,
+          commitCount: 2,
         },
         layoutMeasurement: null,
         passiveMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
-          pendingEffects: 0,
-          committedEffects: 1,
+          pendingCount: 0,
+          commitCount: 1,
         },
       } satisfies SessionProfile);
     });
@@ -486,26 +486,26 @@ describe('ConsoleReporter', () => {
           commitMeasurement: {
             startTime: 4,
             duration: 6,
-            pendingEffects: 0,
-            committedEffects: 6,
+            pendingCount: 0,
+            commitCount: 6,
           },
           mutationMeasurement: {
             startTime: 4,
             duration: 3,
-            pendingEffects: 0,
-            committedEffects: 3,
+            pendingCount: 0,
+            commitCount: 3,
           },
           layoutMeasurement: {
             startTime: 7,
             duration: 2,
-            pendingEffects: 0,
-            committedEffects: 2,
+            pendingCount: 0,
+            commitCount: 2,
           },
           passiveMeasurement: {
             startTime: 9,
             duration: 1,
-            pendingEffects: 0,
-            committedEffects: 1,
+            pendingCount: 0,
+            commitCount: 1,
           },
         },
         [

@@ -32,8 +32,8 @@ const DEFAULT_STYLE = 'font-weight: normal';
 export interface CommitMeasurement {
   startTime: number;
   duration: number;
-  pendingEffects: number;
-  committedEffects: number;
+  pendingCount: number;
+  commitCount: number;
 }
 
 export interface ComponentRenderMeasurement {
@@ -167,25 +167,24 @@ export class SessionProfiler implements SessionObserver {
         profile.commitMeasurement = {
           startTime: performance.now(),
           duration: 0,
-          pendingEffects:
+          pendingCount:
             event.mutationEffects.size +
             event.layoutEffects.size +
             event.passiveEffects.size,
-          committedEffects: 0,
+          commitCount: 0,
         };
         profile.phase = 'commit';
         break;
       case 'commit-end': {
         const measurement = profile.commitMeasurement;
         if (measurement !== null) {
-          const pendingEffects =
+          const pendingCount =
             event.mutationEffects.size +
             event.layoutEffects.size +
             event.passiveEffects.size;
           measurement.duration = performance.now() - measurement.startTime;
-          measurement.committedEffects =
-            measurement.pendingEffects - pendingEffects;
-          measurement.pendingEffects = pendingEffects;
+          measurement.commitCount = measurement.pendingCount - pendingCount;
+          measurement.pendingCount = pendingCount;
         }
         profile.phase = 'idle';
         break;
@@ -194,8 +193,8 @@ export class SessionProfiler implements SessionObserver {
         const measurement = {
           startTime: performance.now(),
           duration: 0,
-          pendingEffects: event.effects.size,
-          committedEffects: 0,
+          pendingCount: event.effects.size,
+          commitCount: 0,
         };
         switch (event.phase) {
           case CommitPhase.Mutation:
@@ -224,11 +223,10 @@ export class SessionProfiler implements SessionObserver {
             break;
         }
         if (measurement !== null) {
-          const pendingEffects = event.effects.size;
+          const pendingCount = event.effects.size;
           measurement.duration = performance.now() - measurement.startTime;
-          measurement.committedEffects =
-            measurement.pendingEffects - pendingEffects;
-          measurement.pendingEffects = pendingEffects;
+          measurement.commitCount = measurement.pendingCount - pendingCount;
+          measurement.pendingCount = pendingCount;
         }
         break;
       }
@@ -294,7 +292,7 @@ export class ConsoleReporter implements SessionProfileReporter {
 
     if (commitMeasurement !== null) {
       this._logger.log(
-        `%cCOMMIT PHASE:%c ${commitMeasurement.committedEffects} effect(s) committed in %c${commitMeasurement.duration}ms`,
+        `%cCOMMIT PHASE:%c ${commitMeasurement.commitCount} effect(s) committed in %c${commitMeasurement.duration}ms`,
         COMMIT_PHASE_STYLE,
         DEFAULT_STYLE,
         DURATION_STYLE,
@@ -303,7 +301,7 @@ export class ConsoleReporter implements SessionProfileReporter {
 
     if (mutationMeasurement !== null) {
       this._logger.log(
-        `%cMUTATION PHASE:%c ${mutationMeasurement.committedEffects} effect(s) committed in %c${mutationMeasurement.duration}ms`,
+        `%cMUTATION PHASE:%c ${mutationMeasurement.commitCount} effect(s) committed in %c${mutationMeasurement.duration}ms`,
         MUTATION_PHASE_STYLE,
         DEFAULT_STYLE,
         DURATION_STYLE,
@@ -312,7 +310,7 @@ export class ConsoleReporter implements SessionProfileReporter {
 
     if (layoutMeasurement !== null) {
       this._logger.log(
-        `%cLAYOUT PHASE:%c ${layoutMeasurement.committedEffects} effect(s) committed in %c${layoutMeasurement.duration}ms`,
+        `%cLAYOUT PHASE:%c ${layoutMeasurement.commitCount} effect(s) committed in %c${layoutMeasurement.duration}ms`,
         LAYOUT_PHASE_STYLE,
         DEFAULT_STYLE,
         DURATION_STYLE,
@@ -321,7 +319,7 @@ export class ConsoleReporter implements SessionProfileReporter {
 
     if (passiveMeasurement !== null) {
       this._logger.log(
-        `%cPASSIVE PHASE:%c ${passiveMeasurement.committedEffects} effect(s) committed in %c${passiveMeasurement.duration}ms`,
+        `%cPASSIVE PHASE:%c ${passiveMeasurement.commitCount} effect(s) committed in %c${passiveMeasurement.duration}ms`,
         PASSIVE_PHASE_STYLE,
         DEFAULT_STYLE,
         DURATION_STYLE,
