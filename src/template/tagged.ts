@@ -573,6 +573,7 @@ function parseChildren(
   if (values.length !== holes.length) {
     throw new Error(
       `The number of holes must be ${values.length}, but got ${holes.length}. There may be multiple holes indicating the same attribute:\n` +
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: "${...}" represents a template literal hole
         strings.join('${...}').trim(),
     );
   }

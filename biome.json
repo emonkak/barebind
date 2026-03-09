@@ -21,8 +21,7 @@
     "rules": {
       "complexity": {
         "noBannedTypes": "off",
-        "noThisInStatic": "off",
-        "useLiteralKeys": "off"
+        "noThisInStatic": "off"
       },
       "correctness": {
         "noEmptyPattern": "off",
@@ -39,7 +38,6 @@
         "noEmptyInterface": "off",
         "noExplicitAny": "off",
         "noNonNullAssertedOptionalChain": "off",
-        "noTemplateCurlyInString": "off",
         "noThenProperty": "off"
       }
     }
@@ -71,6 +69,9 @@
       "includes": ["test/**"],
       "linter": {
         "rules": {
+          "complexity": {
+            "useLiteralKeys": "off"
+          },
           "correctness": {
             "noSelfAssign": "off"
           }
