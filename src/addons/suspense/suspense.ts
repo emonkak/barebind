@@ -48,20 +48,20 @@ export const Suspense = createComponent(function Suspense(
         $.getSessionContext().getPendingUpdates()[0]?.lanes ?? Lane.NoLane;
 
       if (!(renderLanes & Lane.TransitionLane)) {
-        const updateWhenSettled = () => {
+        const forceUpdateWhenSettled = () => {
           if (areAllSuspendsSettled()) {
             $.forceUpdate();
           }
         };
 
-        errorOrSuspend.then(updateWhenSettled, (error) => {
-          updateWhenSettled();
+        errorOrSuspend.then(forceUpdateWhenSettled, (error) => {
+          forceUpdateWhenSettled();
           if (errorOrSuspend.status !== 'aborted') {
             $.throwError(error);
           }
         });
 
-        updateWhenSettled();
+        forceUpdateWhenSettled();
       }
 
       trackedSuspends.add(errorOrSuspend);
