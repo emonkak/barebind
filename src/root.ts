@@ -83,10 +83,7 @@ export class Root<T> {
     return this._beginUpdate((session) => {
       const { frame, scope } = session;
       this._slot.detach(session);
-      frame.mutationEffects.push(
-        new UnmountSlot(this._slot, this._container),
-        scope.level,
-      );
+      frame.mutationEffects.push(new UnmountSlot(this._slot), scope.level);
     }, options);
   }
 
@@ -143,15 +140,12 @@ class MountSlot<T> implements Effect {
 class UnmountSlot<T> implements Effect {
   private readonly _slot: Slot<T>;
 
-  private readonly _container: Element;
-
-  constructor(slot: Slot<T>, container: Element) {
+  constructor(slot: Slot<T>) {
     this._slot = slot;
-    this._container = container;
   }
 
   commit(): void {
     this._slot.rollback();
-    this._container.removeChild(this._slot.part.node);
+    this._slot.part.node.remove();
   }
 }
