@@ -40,6 +40,7 @@ class SuspendInternal<T> implements PromiseLike<T> {
     controller: AbortController,
   ): Suspend<T> {
     const suspend = new SuspendInternal(promise, controller);
+    const { signal } = controller;
 
     promise.then(
       (value) => {
@@ -47,16 +48,18 @@ class SuspendInternal<T> implements PromiseLike<T> {
           suspend._status = STATUS_FULFILLED;
           suspend._value = value;
         }
+        signal.dispatchEvent(new Event('fulfill'));
       },
       (reason) => {
         if (suspend._status === STATUS_PENDING) {
           suspend._status = STATUS_REJECTED;
           suspend._reason = reason;
         }
+        signal.dispatchEvent(new Event('reject'));
       },
     );
 
-    controller.signal.addEventListener(
+    signal.addEventListener(
       'abort',
       () => {
         if (suspend._status === STATUS_PENDING) {

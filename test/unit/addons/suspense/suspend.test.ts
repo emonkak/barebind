@@ -42,13 +42,45 @@ describe('Suspend', () => {
       expect(suspend.reason).toBe(error);
     });
 
+    it('emits "fulfill" event on signal when the promise resolves', async () => {
+      const listener = vi.fn();
+      const promise = Promise.resolve('ok');
+      const controller = new AbortController();
+
+      Suspend.await(promise, controller);
+      controller.signal.addEventListener('fulfill', listener);
+
+      await promise;
+
+      expect(listener).toHaveBeenCalledOnce();
+      expect(listener).toHaveBeenCalledWith(expect.any(Event));
+    });
+
+    it('emits "reject" event on signal when the promise rejects', async () => {
+      const listener = vi.fn();
+      const promise = Promise.reject('fail');
+      const controller = new AbortController();
+
+      Suspend.await(promise, controller);
+      controller.signal.addEventListener('reject', listener);
+
+      try {
+        await promise;
+      } catch {
+        // intentionally ignored
+      }
+
+      expect(listener).toHaveBeenCalledOnce();
+      expect(listener).toHaveBeenCalledWith(expect.any(Event));
+    });
+
     it('becomes rejected when aborted while pending', () => {
       const promise = new Promise(() => {});
       const controller = new AbortController();
       const suspend = Suspend.await(promise, controller);
       const error = new Error('abort');
 
-      suspend.abort(error);
+      controller.abort(error);
 
       expect(suspend.status).toBe('aborted');
       expect(suspend.reason).toBe(error);
@@ -69,7 +101,7 @@ describe('Suspend', () => {
     });
   });
 
-  describe('finally', () => {
+  describe('finally()', () => {
     it('should call the callback regardless of fulfillment', async () => {
       const suspend = Suspend.await(
         Promise.resolve('ok'),
