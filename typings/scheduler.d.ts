@@ -42,14 +42,24 @@ interface TaskSignal extends AbortSignal {
     listener: (this: TaskSignal, ev: TaskSignalEventMap[K]) => void,
     options?: boolean | AddEventListenerOptions,
   ): void;
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
   removeEventListener<K extends keyof TaskSignalEventMap>(
     type: K,
     listener: (this: TaskSignal, ev: TaskSignalEventMap[K]) => void,
     options?: boolean | EventListenerOptions,
   ): void;
+  removeEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | EventListenerOptions,
+  ): void;
 }
 
-interface TaskSignalEventMap {
+interface TaskSignalEventMap extends AbortSignalEventMap {
   prioritychange: TaskPriorityChangeEvent;
 }
 
