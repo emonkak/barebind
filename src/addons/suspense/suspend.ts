@@ -3,15 +3,11 @@ const STATUS_FULFILLED = 'fulfilled';
 const STATUS_REJECTED = 'rejected';
 const STATUS_ABORTED = 'aborted';
 
+export type Suspend<T> = SuspendInternal<T> & SuspendInvariant<T>;
+
 type SuspendClass = typeof SuspendInternal & {
   [Symbol.hasInstance](value: any): value is Suspend<any>;
 };
-
-type SuspendStatus =
-  | typeof STATUS_PENDING
-  | typeof STATUS_FULFILLED
-  | typeof STATUS_REJECTED
-  | typeof STATUS_ABORTED;
 
 type SuspendInvariant<T> = Readonly<
   | { status: typeof STATUS_PENDING; value: never; reason: never }
@@ -22,6 +18,12 @@ type SuspendInvariant<T> = Readonly<
       reason: unknown;
     }
 >;
+
+type SuspendStatus =
+  | typeof STATUS_PENDING
+  | typeof STATUS_FULFILLED
+  | typeof STATUS_REJECTED
+  | typeof STATUS_ABORTED;
 
 // biome-ignore lint/suspicious/noUnsafeDeclarationMerging: catch/finally are safely assigned via prototype
 class SuspendInternal<T> implements PromiseLike<T> {
@@ -140,8 +142,6 @@ interface SuspendInternal<T> extends Promise<T> {}
 
 SuspendInternal.prototype.catch = Promise.prototype.catch;
 SuspendInternal.prototype.finally = Promise.prototype.finally;
-
-export type Suspend<T> = SuspendInternal<T> & SuspendInvariant<T>;
 
 export const Suspend: SuspendClass = SuspendInternal as SuspendClass;
 
