@@ -45,7 +45,7 @@ export const Suspense = createComponent(function Suspense(
       }
 
       const renderLanes =
-        $.getSessionContext().getPendingUpdates()[0]?.lanes ?? Lane.NoLane;
+        $.getSessionContext().getScheduledUpdates()[0]?.lanes ?? Lane.NoLane;
 
       if (!(renderLanes & Lane.TransitionLane)) {
         const forceUpdateWhenSettled = () => {

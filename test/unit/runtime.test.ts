@@ -87,7 +87,7 @@ describe('Runtime', () => {
             done: true,
           });
 
-          expect(runtime.getPendingUpdates()).toStrictEqual([
+          expect(runtime.getScheduledUpdates()).toStrictEqual([
             expect.objectContaining({
               coroutine,
               lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
@@ -106,7 +106,7 @@ describe('Runtime', () => {
           expect(mutationEffect.commit).toHaveBeenCalledOnce();
           expect(layoutEffect.commit).toHaveBeenCalledOnce();
           expect(passiveEffect.commit).toHaveBeenCalledOnce();
-          expect(runtime.getPendingUpdates()).toStrictEqual([]);
+          expect(runtime.getScheduledUpdates()).toStrictEqual([]);
         }
 
         expect(observer.flushEvents()).toStrictEqual([
@@ -221,7 +221,7 @@ describe('Runtime', () => {
             done: true,
           });
 
-          expect(runtime.getPendingUpdates()).toStrictEqual([
+          expect(runtime.getScheduledUpdates()).toStrictEqual([
             expect.objectContaining({
               coroutine,
               lanes:
@@ -237,7 +237,7 @@ describe('Runtime', () => {
           expect(mutationEffect.commit).toHaveBeenCalledOnce();
           expect(layoutEffect.commit).toHaveBeenCalledOnce();
           expect(passiveEffect.commit).toHaveBeenCalledOnce();
-          expect(runtime.getPendingUpdates()).toStrictEqual([]);
+          expect(runtime.getScheduledUpdates()).toStrictEqual([]);
         }
 
         expect(observer.flushEvents()).toStrictEqual([
@@ -347,7 +347,7 @@ describe('Runtime', () => {
             done: true,
           });
 
-          expect(runtime.getPendingUpdates()).toStrictEqual([
+          expect(runtime.getScheduledUpdates()).toStrictEqual([
             expect.objectContaining({
               coroutine,
               lanes:
@@ -365,7 +365,7 @@ describe('Runtime', () => {
           expect(startViewTransitionSpy).toHaveBeenCalledOnce();
           expect(mutationEffect.commit).toHaveBeenCalledOnce();
           expect(layoutEffect.commit).toHaveBeenCalledOnce();
-          expect(runtime.getPendingUpdates()).toStrictEqual([]);
+          expect(runtime.getScheduledUpdates()).toStrictEqual([]);
         }
 
         expect(observer.flushEvents()).toStrictEqual([
@@ -604,7 +604,7 @@ describe('Runtime', () => {
             done: true,
           });
 
-          expect(runtime.getPendingUpdates()).toStrictEqual([
+          expect(runtime.getScheduledUpdates()).toStrictEqual([
             expect.objectContaining({
               coroutine,
               lanes: Lane.SyncLane | Lane.UserBlockingLane,
@@ -619,7 +619,7 @@ describe('Runtime', () => {
           expect(mutationEffect.commit).toHaveBeenCalledOnce();
           expect(layoutEffect.commit).toHaveBeenCalledOnce();
           expect(passiveEffect.commit).toHaveBeenCalledOnce();
-          expect(runtime.getPendingUpdates()).toStrictEqual([]);
+          expect(runtime.getScheduledUpdates()).toStrictEqual([]);
         }
 
         expect(observer.flushEvents()).toStrictEqual([

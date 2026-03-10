@@ -47,11 +47,11 @@ export class Runtime implements SessionContext {
 
   private readonly _observers: LinkedList<SessionObserver> = new LinkedList();
 
-  private readonly _pendingUpdates: LinkedList<UpdateTask> = new LinkedList();
-
   private _identifierCount: number = 0;
 
   private readonly _maxCoroutinesPerYield: number;
+
+  private readonly _scheduledUpdates: LinkedList<UpdateTask> = new LinkedList();
 
   private readonly _uniqueIdentifier: string;
 
@@ -79,11 +79,11 @@ export class Runtime implements SessionContext {
 
   async flushUpdates(): Promise<void> {
     for (
-      let pendingUpdate: UpdateTask | undefined;
-      (pendingUpdate = this._pendingUpdates.front()?.value) !== undefined;
-      this._pendingUpdates.popFront()
+      let scheduledUpdate: UpdateTask | undefined;
+      (scheduledUpdate = this._scheduledUpdates.front()?.value) !== undefined;
+      this._scheduledUpdates.popFront()
     ) {
-      const { id, coroutine, lanes, continuation } = pendingUpdate;
+      const { id, coroutine, lanes, continuation } = scheduledUpdate;
 
       if ((coroutine.pendingLanes & lanes) === Lane.NoLane) {
         continuation.resolve({ canceled: true, done: true });
@@ -106,7 +106,7 @@ export class Runtime implements SessionContext {
       });
 
       try {
-        if (pendingUpdate.lanes & Lane.SyncLane) {
+        if (scheduledUpdate.lanes & Lane.SyncLane) {
           this._runUpdateSync(session);
         } else {
           await this._runUpdateAsync(session);
@@ -138,8 +138,8 @@ export class Runtime implements SessionContext {
     }
   }
 
-  getPendingUpdates(): UpdateTask[] {
-    return Array.from(this._pendingUpdates);
+  getScheduledUpdates(): UpdateTask[] {
+    return Array.from(this._scheduledUpdates);
   }
 
   nextIdentifier(): string {
@@ -259,9 +259,9 @@ export class Runtime implements SessionContext {
 
     const callback = () => {
       const shouldTriggerFlush =
-        options.triggerFlush && this._pendingUpdates.isEmpty();
+        options.triggerFlush && this._scheduledUpdates.isEmpty();
 
-      this._pendingUpdates.pushBack(pendingUpdate);
+      this._scheduledUpdates.pushBack(pendingUpdate);
 
       if (shouldTriggerFlush) {
         scheduled.then(() => {

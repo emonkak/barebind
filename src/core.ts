@@ -454,7 +454,7 @@ export interface ReversibleEffect extends Effect {
 
 export interface SessionContext extends DirectiveContext {
   addObserver(observer: SessionObserver): Cleanup;
-  getPendingUpdates(): UpdateTask[];
+  getScheduledUpdates(): UpdateTask[];
   nextIdentifier(): string;
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,
