@@ -21,6 +21,8 @@ export default defineConfig({
       exclude: [
         'src/addons/jsx-dev-runtime.ts',
         'src/addons/router.ts',
+        'src/addons/signal.ts',
+        'src/addons/suspense.ts',
         'src/index.ts',
       ],
     },
