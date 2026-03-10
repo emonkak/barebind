@@ -147,12 +147,23 @@ export const Suspend: SuspendClass = SuspendInternal as SuspendClass;
 
 function waitForAbort<T>(signal: AbortSignal): Promise<T> {
   return new Promise<T>((_resolve, reject) => {
+    const controller = new AbortController();
+    const abortEventListening = () => {
+      controller.abort();
+    };
+    signal.addEventListener('fulfill', abortEventListening, {
+      signal: controller.signal,
+    });
+    signal.addEventListener('reject', abortEventListening, {
+      signal: controller.signal,
+    });
     signal.addEventListener(
       'abort',
       () => {
+        abortEventListening();
         reject(signal.reason);
       },
-      { once: true },
+      { signal: controller.signal },
     );
   });
 }
