@@ -27,21 +27,24 @@ type SuspendStatus =
 
 // biome-ignore lint/suspicious/noUnsafeDeclarationMerging: catch/finally are safely assigned via prototype
 class SuspendInternal<T> implements PromiseLike<T> {
-  private readonly _promise: PromiseLike<T>;
-
-  private readonly _controller: AbortController;
-
-  private _status: SuspendStatus = STATUS_PENDING;
+  private _status: SuspendStatus;
 
   private _value: T | undefined;
 
   private _reason: unknown;
 
+  private readonly _controller: AbortController;
+
   static await<T>(
     promise: PromiseLike<T>,
     controller: AbortController,
   ): Suspend<T> {
-    const suspend = new SuspendInternal(promise, controller);
+    const suspend = new SuspendInternal<T>(
+      STATUS_PENDING,
+      undefined,
+      undefined,
+      controller,
+    );
     const { signal } = controller;
 
     promise.then(
@@ -75,8 +78,33 @@ class SuspendInternal<T> implements PromiseLike<T> {
     return suspend as Suspend<T>;
   }
 
-  private constructor(promise: PromiseLike<T>, controller: AbortController) {
-    this._promise = promise;
+  static reject<T>(reason: unknown, controller: AbortController): Suspend<T> {
+    return new SuspendInternal(
+      STATUS_REJECTED,
+      undefined,
+      reason,
+      controller,
+    ) as Suspend<T>;
+  }
+
+  static resolve<T>(value: T, controller: AbortController): Suspend<T> {
+    return new SuspendInternal(
+      STATUS_FULFILLED,
+      value,
+      undefined,
+      controller,
+    ) as Suspend<T>;
+  }
+
+  private constructor(
+    status: SuspendStatus,
+    value: T | undefined,
+    reason: unknown,
+    controller: AbortController,
+  ) {
+    this._status = status;
+    this._value = value;
+    this._reason = reason;
     this._controller = controller;
   }
 
@@ -109,10 +137,39 @@ class SuspendInternal<T> implements PromiseLike<T> {
     let promise: Promise<T>;
     switch (this._status) {
       case STATUS_PENDING:
-        promise = Promise.race([
-          this._promise,
-          waitForAbort<T>(this._controller.signal),
-        ]);
+        promise = new Promise<T>((resolve, reject) => {
+          const signal = this._controller.signal;
+          const eventController = new AbortController();
+          const eventSignal = eventController.signal;
+          signal.addEventListener(
+            'fulfill',
+            () => {
+              resolve(this._value!);
+              eventController.abort();
+            },
+            {
+              signal: eventSignal,
+            },
+          );
+          signal.addEventListener(
+            'reject',
+            () => {
+              reject(this._reason);
+              eventController.abort();
+            },
+            {
+              signal: eventSignal,
+            },
+          );
+          signal.addEventListener(
+            'abort',
+            () => {
+              reject(this._controller.signal.reason);
+              eventController.abort();
+            },
+            { signal: eventSignal },
+          );
+        });
         break;
       case STATUS_FULFILLED:
         promise = Promise.resolve(this._value!);
@@ -144,26 +201,3 @@ SuspendInternal.prototype.catch = Promise.prototype.catch;
 SuspendInternal.prototype.finally = Promise.prototype.finally;
 
 export const Suspend: SuspendClass = SuspendInternal as SuspendClass;
-
-function waitForAbort<T>(signal: AbortSignal): Promise<T> {
-  return new Promise<T>((_resolve, reject) => {
-    const controller = new AbortController();
-    const abortEventListening = () => {
-      controller.abort();
-    };
-    signal.addEventListener('fulfill', abortEventListening, {
-      signal: controller.signal,
-    });
-    signal.addEventListener('reject', abortEventListening, {
-      signal: controller.signal,
-    });
-    signal.addEventListener(
-      'abort',
-      () => {
-        abortEventListening();
-        reject(signal.reason);
-      },
-      { signal: controller.signal },
-    );
-  });
-}

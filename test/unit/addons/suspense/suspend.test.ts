@@ -39,7 +39,81 @@ describe('Suspend', () => {
       }
 
       expect(suspend.status).toBe('rejected');
+      expect(suspend.value).toBe(undefined);
       expect(suspend.reason).toBe(error);
+    });
+
+    it('transitions to rejected when aborted while pending', () => {
+      const controller = new AbortController();
+      const suspend = Suspend.await(new Promise(() => {}), controller);
+      const error = new Error('abort');
+
+      controller.abort(error);
+
+      expect(suspend.status).toBe('aborted');
+      expect(suspend.value).toBe(undefined);
+      expect(suspend.reason).toBe(error);
+    });
+
+    it('does not transition to fulfilled after abort', async () => {
+      const error = new Error('abort');
+      const promise = Promise.resolve('ok');
+      const controller = new AbortController();
+      const suspend = Suspend.await(promise, controller);
+
+      controller.abort(error);
+
+      await expect(promise).resolves.toBe('ok');
+
+      expect(suspend.status).toBe('aborted');
+      expect(suspend.reason).toBe(error);
+    });
+
+    it('does not transition to rejected after abort', async () => {
+      const error = new Error('fail');
+      const promise = Promise.reject(error);
+      const controller = new AbortController();
+      const suspend = Suspend.await(promise, controller);
+
+      controller.abort();
+
+      await expect(promise).rejects.toThrow(error);
+
+      expect(suspend.status).toBe('aborted');
+      expect(suspend.reason).toBe(controller.signal.reason);
+    });
+
+    it('does not transition to aborted after fulfilled', async () => {
+      const promise = Promise.resolve('ok');
+      const controller = new AbortController();
+      const suspend = Suspend.await(promise, controller);
+
+      await promise;
+
+      suspend.abort();
+
+      expect(suspend.status).toBe('fulfilled');
+      expect(suspend.reason).toBe(undefined);
+      expect(suspend.value).toBe('ok');
+    });
+
+    it('does not transition to aborted after rejected', async () => {
+      const error = new Error('fail');
+      const promise = Promise.reject(error);
+      const controller = new AbortController();
+      const suspend = Suspend.await(promise, controller);
+
+      try {
+        await promise;
+      } catch {
+        // intentionally ignored
+      }
+
+      suspend.abort();
+
+      expect(suspend.status).toBe('rejected');
+      expect(suspend.reason).toBe(error);
+      expect(suspend.value).toBe(undefined);
     });
 
     it('emits "fulfill" event on signal when the promise resolves', async () => {
@@ -47,8 +121,8 @@ describe('Suspend', () => {
       const promise = Promise.resolve('ok');
       const controller = new AbortController();
 
-      Suspend.await(promise, controller);
       controller.signal.addEventListener('fulfill', listener);
+      Suspend.await(promise, controller);
 
       await promise;
 
@@ -61,8 +135,8 @@ describe('Suspend', () => {
       const promise = Promise.reject('fail');
       const controller = new AbortController();
 
-      Suspend.await(promise, controller);
       controller.signal.addEventListener('reject', listener);
+      Suspend.await(promise, controller);
 
       try {
         await promise;
@@ -73,63 +147,67 @@ describe('Suspend', () => {
       expect(listener).toHaveBeenCalledOnce();
       expect(listener).toHaveBeenCalledWith(expect.any(Event));
     });
+  });
 
-    it('becomes rejected when aborted while pending', () => {
-      const promise = new Promise(() => {});
-      const controller = new AbortController();
-      const suspend = Suspend.await(promise, controller);
-      const error = new Error('abort');
+  describe('resolve()', () => {
+    it('returns a Suspend with fulfilled sttus', () => {
+      const suspend = Suspend.resolve('ok', new AbortController());
+      expect(suspend.status).toBe('fulfilled');
+      expect(suspend.value).toBe('ok');
+      expect(suspend.reason).toBe(undefined);
+    });
+  });
 
-      controller.abort(error);
-
-      expect(suspend.status).toBe('aborted');
+  describe('reject()', () => {
+    it('returns a Suspend with fulfilled sttus', () => {
+      const error = new Error('fail');
+      const suspend = Suspend.reject(error, new AbortController());
+      expect(suspend.status).toBe('rejected');
+      expect(suspend.value).toBe(undefined);
       expect(suspend.reason).toBe(error);
-      expect(controller.signal.aborted).toBe(true);
     });
   });
 
   describe('catch()', () => {
     it('should handle rejection and return the fallback value', async () => {
       const error = new Error('fail');
-      const suspend = Suspend.await(
-        Promise.reject(error),
-        new AbortController(),
-      );
-      const result = await suspend.catch(() => 'fallback');
+      const suspend = Suspend.reject(error, new AbortController());
 
-      expect(result).toBe('fallback');
+      expect(await suspend.catch(() => 'fallback')).toBe('fallback');
     });
   });
 
   describe('finally()', () => {
     it('should call the callback regardless of fulfillment', async () => {
-      const suspend = Suspend.await(
-        Promise.resolve('ok'),
-        new AbortController(),
-      );
+      const error = new Error();
+      const suspend = Suspend.reject(error, new AbortController());
       const callback = vi.fn();
-      const result = await suspend.finally(callback);
 
+      await expect(suspend.finally(callback)).rejects.toBe(error);
       expect(callback).toHaveBeenCalledOnce();
-      expect(result).toBe('ok');
     });
   });
 
   describe('then()', () => {
-    it('resolves like a Promise via then()', async () => {
+    it('resolves with the value when the awaited promise fulfills', async () => {
       const suspend = Suspend.await(Promise.resolve(10), new AbortController());
 
-      expect(await suspend.then((x) => x)).toBe(10);
+      expect(await suspend).toBe(10);
       expect(await suspend.then((x) => x * 2)).toBe(20);
     });
 
-    it('rejects like a Promise via then()', async () => {
-      const error = new Error('fail');
-      const suspend = Suspend.await(
-        Promise.reject(error),
-        new AbortController(),
-      );
+    it('resolves with the value when already fulfilled', async () => {
+      const suspend = Suspend.resolve(10, new AbortController());
 
+      expect(await suspend).toBe(10);
+      expect(await suspend.then((x) => x * 2)).toBe(20);
+    });
+
+    it('rejects with the reason when the awaited promise rejects', async () => {
+      const error = new Error('fail');
+      const suspend = Suspend.reject(error, new AbortController());
+
+      await expect(suspend).rejects.toBe(error);
       await expect(
         suspend.then(
           () => {},
@@ -138,28 +216,33 @@ describe('Suspend', () => {
       ).rejects.toBe(error);
     });
 
-    it('rejects when aborted while pending', async () => {
-      const controller = new AbortController();
-      const suspend = Suspend.await(new Promise(() => {}), controller);
-      const derivedPromise = suspend.then(
-        () => {},
-        (reason) => Promise.reject(reason),
-      );
+    it('rejects with the reason when already rejected', async () => {
+      const error = new Error('fail');
+      const suspend = Suspend.reject(error, new AbortController());
 
-      suspend.abort();
-
-      await expect(derivedPromise).rejects.toBe(controller.signal.reason);
-      expect(controller.signal.aborted).toBe(true);
+      await expect(suspend).rejects.toBe(error);
+      await expect(
+        suspend.then(
+          () => {},
+          (error) => Promise.reject(error),
+        ),
+      ).rejects.toBe(error);
     });
 
-    it('rejects when aborted', async () => {
+    it('rejects with the reason when aborted while pending', async () => {
+      const error = new Error('abort');
       const controller = new AbortController();
-      const suspend = Suspend.await(Promise.resolve(), controller);
+      const suspend = Suspend.await(new Promise(() => {}), controller);
 
-      suspend.abort();
+      controller.abort(error);
 
-      await expect(suspend).rejects.toBe(controller.signal.reason);
-      expect(controller.signal.aborted).toBe(true);
+      await expect(suspend).rejects.toBe(error);
+      await expect(
+        suspend.then(
+          () => {},
+          (error) => Promise.reject(error),
+        ),
+      ).rejects.toBe(error);
     });
   });
 
@@ -173,72 +256,30 @@ describe('Suspend', () => {
       expect(() => suspend.unwrap()).toThrow(expect.exact(suspend) as any);
     });
 
-    it('throws the rejection reason when rejected', async () => {
+    it('throws the rejection reason when rejected', () => {
       const error = new Error('fail');
-      const promise = Promise.reject(error);
-      const suspend = Suspend.await(promise, new AbortController());
-
-      try {
-        await promise;
-      } catch {
-        // intentionally ignored
-      }
+      const suspend = Suspend.reject(error, new AbortController());
 
       expect(() => suspend.unwrap()).toThrow(error);
     });
 
-    it('returns the value when fulfilled', async () => {
-      const promise = Promise.resolve('ok');
-      const suspend = Suspend.await(promise, new AbortController());
-
-      await promise;
+    it('returns the value when fulfilled', () => {
+      const suspend = Suspend.resolve('ok', new AbortController());
 
       expect(suspend.unwrap()).toBe('ok');
     });
   });
 
   describe('abort()', () => {
-    it('does not affect when not pending', async () => {
-      const promise = Promise.resolve('ok');
+    it('aborts the signal', () => {
+      const error = new Error('abort');
       const controller = new AbortController();
-      const suspend = Suspend.await(promise, controller);
+      const suspend = Suspend.await(new Promise(() => {}), controller);
 
-      await promise;
+      suspend.abort(error);
 
-      suspend.abort();
-
-      expect(suspend.status).toBe('fulfilled');
-      expect(suspend.value).toBe('ok');
       expect(controller.signal.aborted).toBe(true);
-    });
-
-    it('does not affect when transitioned to fulfilled after abort', async () => {
-      const promise = Promise.resolve('ok');
-      const controller = new AbortController();
-      const suspend = Suspend.await(promise, controller);
-
-      suspend.abort();
-
-      await expect(promise).resolves.toBe('ok');
-      await expect(suspend).rejects.toThrow(controller.signal.reason);
-
-      expect(suspend.status).toBe('aborted');
-      expect(controller.signal.aborted).toBe(true);
-    });
-
-    it('does not affect when transitioned to rejected after abort', async () => {
-      const error = new Error('fail');
-      const promise = Promise.reject(error);
-      const controller = new AbortController();
-      const suspend = Suspend.await(promise, controller);
-
-      suspend.abort();
-
-      await expect(promise).rejects.toThrow(error);
-      await expect(suspend).rejects.toThrow(controller.signal.reason);
-
-      expect(suspend.status).toBe('aborted');
-      expect(controller.signal.aborted).toBe(true);
+      expect(controller.signal.reason).toBe(error);
     });
   });
 });
