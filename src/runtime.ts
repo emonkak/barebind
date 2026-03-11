@@ -437,7 +437,7 @@ export class Runtime implements SessionContext {
 
   private async _runRenderAsync(session: UpdateSession): Promise<void> {
     const { frame } = session;
-    const { id } = frame;
+    const { id, pendingCoroutines } = frame;
 
     notifyObservers(this._observers, {
       type: 'render-start',
@@ -446,8 +446,8 @@ export class Runtime implements SessionContext {
 
     try {
       while (true) {
-        for (const coroutine of consumeCoroutines(
-          frame,
+        for (const coroutine of takeCoroutines(
+          pendingCoroutines,
           this._maxCoroutinesPerYield,
         )) {
           try {
@@ -457,7 +457,7 @@ export class Runtime implements SessionContext {
           }
         }
 
-        if (frame.pendingCoroutines.length === 0) {
+        if (pendingCoroutines.length === 0) {
           break;
         }
 
@@ -475,7 +475,7 @@ export class Runtime implements SessionContext {
 
   private _runRenderSync(session: UpdateSession): void {
     const { frame } = session;
-    const { id } = frame;
+    const { id, pendingCoroutines } = frame;
 
     notifyObservers(this._observers, {
       type: 'render-start',
@@ -484,14 +484,14 @@ export class Runtime implements SessionContext {
 
     try {
       do {
-        for (const coroutine of consumeCoroutines(frame)) {
+        for (const coroutine of takeCoroutines(pendingCoroutines)) {
           try {
             coroutine.resume(session);
           } catch (error) {
             processError(error, coroutine, session, this._observers);
           }
         }
-      } while (frame.pendingCoroutines.length > 0);
+      } while (pendingCoroutines.length > 0);
     } finally {
       frame.lanes = Lane.NoLane;
 
@@ -501,13 +501,6 @@ export class Runtime implements SessionContext {
       });
     }
   }
-}
-
-function consumeCoroutines(
-  frame: RenderFrame,
-  maxCoroutines: number = Infinity,
-): Coroutine[] {
-  return frame.pendingCoroutines.splice(0, maxCoroutines);
 }
 
 function createRenderFrame(
@@ -578,4 +571,11 @@ function resetRenderFrame(frame: RenderFrame): void {
   frame.mutationEffects.clear();
   frame.layoutEffects.clear();
   frame.passiveEffects.clear();
+}
+
+function takeCoroutines(
+  coroutines: Coroutine[],
+  maxCoroutines: number = Infinity,
+): Coroutine[] {
+  return coroutines.splice(0, maxCoroutines);
 }
