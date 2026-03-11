@@ -592,8 +592,8 @@ export interface UpdateOptions extends SchedulerPostTaskOptions {
 }
 
 export interface UpdateResult {
-  canceled: boolean;
   done: boolean;
+  canceled: boolean;
 }
 
 export interface UpdateSession {

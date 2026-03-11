@@ -89,8 +89,8 @@ export class RenderSession implements RenderContext {
       return {
         id: this._frame.id,
         lanes: Lane.NoLane,
-        scheduled: Promise.resolve({ canceled: true, done: false }),
-        finished: Promise.resolve({ canceled: true, done: false }),
+        scheduled: Promise.resolve({ done: false, canceled: true }),
+        finished: Promise.resolve({ done: false, canceled: true }),
       };
     }
 
@@ -110,7 +110,7 @@ export class RenderSession implements RenderContext {
           return {
             id: this._frame.id,
             lanes: renderLanes,
-            scheduled: Promise.resolve({ canceled: true, done: true }),
+            scheduled: Promise.resolve({ done: true, canceled: true }),
             finished: continuation.promise,
           };
         }
@@ -340,8 +340,8 @@ export class RenderSession implements RenderContext {
             return {
               id: this._frame.id,
               lanes: Lane.NoLane,
-              scheduled: Promise.resolve({ canceled: true, done: true }),
-              finished: Promise.resolve({ canceled: true, done: true }),
+              scheduled: Promise.resolve({ done: true, canceled: true }),
+              finished: Promise.resolve({ done: true, canceled: true }),
             };
           } else {
             const handle = context.forceUpdate(options);

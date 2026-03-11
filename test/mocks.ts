@@ -68,17 +68,25 @@ export class MockBackend implements Backend {
     options: RequestCallbackOptions = {},
   ): Promise<T> {
     let promise: Promise<T>;
+
+    const runCallbackIfNotCancel = () => {
+      options.signal?.throwIfAborted();
+      return callback();
+    };
+
     switch (options?.priority) {
       case 'user-visible':
-        promise = new Promise((resolve) => setTimeout(resolve)).then(callback);
+        promise = new Promise((resolve) => setTimeout(resolve)).then(
+          runCallbackIfNotCancel,
+        );
         break;
       case 'background':
         promise = new Promise((resolve) => setTimeout(resolve, 1)).then(
-          callback,
+          runCallbackIfNotCancel,
         );
         break;
       default:
-        promise = Promise.resolve().then(callback);
+        promise = Promise.resolve().then(runCallbackIfNotCancel);
         break;
     }
     return options.signal !== undefined

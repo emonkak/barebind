@@ -87,7 +87,7 @@ export class Runtime implements SessionContext {
         scheduledUpdate;
 
       if ((coroutine.pendingLanes & lanes) === Lane.NoLane) {
-        continuation.resolve({ canceled: true, done: true });
+        continuation.resolve({ done: true, canceled: true });
         continue;
       }
 
@@ -129,7 +129,7 @@ export class Runtime implements SessionContext {
           lanes,
         });
 
-        continuation.resolve({ canceled: false, done: true });
+        continuation.resolve({ done: true, canceled: false });
       } catch (error) {
         resetRenderFrame(frame);
 
@@ -141,7 +141,7 @@ export class Runtime implements SessionContext {
         });
 
         if (error instanceof InterruptError) {
-          continuation.resolve({ canceled: true, done: false });
+          continuation.resolve({ done: false, canceled: true });
         } else {
           continuation.reject(error);
         }
@@ -280,7 +280,7 @@ export class Runtime implements SessionContext {
         });
       }
 
-      return { canceled: false, done: true };
+      return { done: true, canceled: false };
     };
 
     if (options.immediate) {
@@ -291,7 +291,9 @@ export class Runtime implements SessionContext {
       scheduled = this._backend.requestCallback(callback, options).catch(() => {
         // callback() is guaranteed not to throw anything; rejection here only
         // indicates AbortSignal cancellation.
-        return { canceled: true, done: false };
+        const result = { done: false, canceled: true };
+        continuation.resolve(result);
+        return result;
       });
     }
 

@@ -25,11 +25,7 @@ import {
   MockSlot,
   MockTemplate,
 } from '../mocks.js';
-import {
-  waitForMicrotasks,
-  waitForTimeout,
-  waitUntil,
-} from '../test-helpers.js';
+import { waitForMicrotasks, waitForTimeout } from '../test-helpers.js';
 
 describe('Runtime', () => {
   describe('addObserver()', () => {
@@ -84,33 +80,13 @@ describe('Runtime', () => {
             );
           });
 
-          const handle = runtime.scheduleUpdate(coroutine);
-
-          expect(await handle.scheduled).toStrictEqual({
-            canceled: false,
-            done: true,
-          });
-
-          expect(runtime.getScheduledUpdates()).toStrictEqual([
-            expect.objectContaining({
-              coroutine,
-              lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
-            }),
-          ]);
-
-          expect(await handle.finished).toStrictEqual({
-            canceled: false,
-            done: true,
-          });
-
-          // Wait for passive effects.
-          await waitForTimeout(1);
+          await runtime.scheduleUpdate(coroutine).finished;
+          await waitForTimeout(1); // Wait for passive effects
 
           expect(requestCallbackSpy).toHaveBeenCalledTimes(3);
           expect(mutationEffect.commit).toHaveBeenCalledOnce();
           expect(layoutEffect.commit).toHaveBeenCalledOnce();
           expect(passiveEffect.commit).toHaveBeenCalledOnce();
-          expect(runtime.getScheduledUpdates()).toStrictEqual([]);
         }
 
         expect(observer.flushEvents()).toStrictEqual([
@@ -216,32 +192,13 @@ describe('Runtime', () => {
             );
           });
 
-          const handle = runtime.scheduleUpdate(coroutine, {
+          await runtime.scheduleUpdate(coroutine, {
             flushSync: true,
-          });
-
-          expect(await handle.scheduled).toStrictEqual({
-            canceled: false,
-            done: true,
-          });
-
-          expect(runtime.getScheduledUpdates()).toStrictEqual([
-            expect.objectContaining({
-              coroutine,
-              lanes:
-                Lane.ConcurrentLane | Lane.SyncLane | Lane.UserBlockingLane,
-            }),
-          ]);
-
-          expect(await handle.finished).toStrictEqual({
-            canceled: false,
-            done: true,
-          });
+          }).finished;
 
           expect(mutationEffect.commit).toHaveBeenCalledOnce();
           expect(layoutEffect.commit).toHaveBeenCalledOnce();
           expect(passiveEffect.commit).toHaveBeenCalledOnce();
-          expect(runtime.getScheduledUpdates()).toStrictEqual([]);
         }
 
         expect(observer.flushEvents()).toStrictEqual([
@@ -342,34 +299,13 @@ describe('Runtime', () => {
             session.frame.layoutEffects.push(layoutEffect, session.scope.level);
           });
 
-          const handle = runtime.scheduleUpdate(coroutine, {
+          await runtime.scheduleUpdate(coroutine, {
             viewTransition: true,
-          });
-
-          expect(await handle.scheduled).toStrictEqual({
-            canceled: false,
-            done: true,
-          });
-
-          expect(runtime.getScheduledUpdates()).toStrictEqual([
-            expect.objectContaining({
-              coroutine,
-              lanes:
-                Lane.ConcurrentLane |
-                Lane.UserBlockingLane |
-                Lane.ViewTransitionLane,
-            }),
-          ]);
-
-          expect(await handle.finished).toStrictEqual({
-            canceled: false,
-            done: true,
-          });
+          }).finished;
 
           expect(startViewTransitionSpy).toHaveBeenCalledOnce();
           expect(mutationEffect.commit).toHaveBeenCalledOnce();
           expect(layoutEffect.commit).toHaveBeenCalledOnce();
-          expect(runtime.getScheduledUpdates()).toStrictEqual([]);
         }
 
         expect(observer.flushEvents()).toStrictEqual([
@@ -452,11 +388,6 @@ describe('Runtime', () => {
 
           const handle = runtime.scheduleUpdate(coroutine);
 
-          expect(await handle.scheduled).toStrictEqual({
-            canceled: false,
-            done: true,
-          });
-
           try {
             await handle.finished;
             expect.unreachable();
@@ -521,14 +452,9 @@ describe('Runtime', () => {
 
           const handle = runtime.scheduleUpdate(coroutine);
 
-          expect(await handle.scheduled).toStrictEqual({
-            canceled: false,
-            done: true,
-          });
-
           expect(await handle.finished).toStrictEqual({
-            canceled: true,
             done: false,
+            canceled: true,
           });
           expect(errorHandler).toHaveBeenCalledOnce();
           expect(errorHandler).toHaveBeenCalledWith(
@@ -601,30 +527,13 @@ describe('Runtime', () => {
           );
 
           expect(await handle1.scheduled).toStrictEqual({
-            canceled: false,
             done: true,
+            canceled: false,
           });
           expect(await handle2.scheduled).toStrictEqual({
-            canceled: false,
             done: true,
+            canceled: false,
           });
-
-          expect(runtime.getScheduledUpdates()).toStrictEqual([
-            expect.objectContaining({
-              coroutine: expect.exact(coroutine1),
-              lanes:
-                Lane.ConcurrentLane |
-                Lane.UserBlockingLane |
-                Lane.TransitionLane,
-            }),
-            expect.objectContaining({
-              coroutine: expect.exact(coroutine2),
-              lanes:
-                Lane.ConcurrentLane |
-                Lane.UserBlockingLane |
-                Lane.TransitionLane,
-            }),
-          ]);
 
           await waitForMicrotasks();
 
@@ -680,18 +589,18 @@ describe('Runtime', () => {
           ]);
 
           expect(await handle1.finished).toStrictEqual({
-            canceled: false,
             done: true,
+            canceled: false,
           });
           expect(await handle2.finished).toStrictEqual({
-            canceled: false,
             done: true,
+            canceled: false,
           });
         }
 
         resolve();
 
-        await waitUntil('user-blocking');
+        await waitForTimeout(0); // Wait for mutation effects
 
         expect(observer.flushEvents()).toStrictEqual([
           {
@@ -782,31 +691,13 @@ describe('Runtime', () => {
             );
           });
 
-          const handle = runtime.scheduleUpdate(coroutine, {
+          await runtime.scheduleUpdate(coroutine, {
             flushSync: true,
-          });
-
-          expect(await handle.scheduled).toStrictEqual({
-            canceled: false,
-            done: true,
-          });
-
-          expect(runtime.getScheduledUpdates()).toStrictEqual([
-            expect.objectContaining({
-              coroutine,
-              lanes: Lane.SyncLane | Lane.UserBlockingLane,
-            }),
-          ]);
-
-          expect(await handle.finished).toStrictEqual({
-            canceled: false,
-            done: true,
-          });
+          }).finished;
 
           expect(mutationEffect.commit).toHaveBeenCalledOnce();
           expect(layoutEffect.commit).toHaveBeenCalledOnce();
           expect(passiveEffect.commit).toHaveBeenCalledOnce();
-          expect(runtime.getScheduledUpdates()).toStrictEqual([]);
         }
 
         expect(observer.flushEvents()).toStrictEqual([
@@ -955,20 +846,11 @@ describe('Runtime', () => {
             childScope,
           );
 
-          const handle = runtime.scheduleUpdate(coroutine, {
-            triggerFlush: false,
-          });
-
-          expect(await handle.scheduled).toStrictEqual({
-            canceled: false,
-            done: true,
-          });
-
-          runtime.flushUpdates();
+          const handle = runtime.scheduleUpdate(coroutine, {});
 
           expect(await handle.finished).toStrictEqual({
-            canceled: true,
             done: false,
+            canceled: true,
           });
           expect(errorHandler).toHaveBeenCalledOnce();
           expect(errorHandler).toHaveBeenCalledWith(
@@ -1004,23 +886,6 @@ describe('Runtime', () => {
             error: expect.objectContaining({ cause: error }),
           },
         ]);
-      });
-    });
-
-    it('cancels the update if the signal is aborted', async () => {
-      const runtime = createRuntime();
-      const coroutine = new MockCoroutine();
-      const controller = new AbortController();
-
-      const handle = runtime.scheduleUpdate(coroutine, {
-        signal: controller.signal,
-      });
-
-      controller.abort();
-
-      expect(await handle.scheduled).toStrictEqual({
-        canceled: true,
-        done: false,
       });
     });
   });
@@ -1210,6 +1075,55 @@ describe('Runtime', () => {
       );
 
       expect(runtime.resolveTemplate(strings, values, mode)).toBe(template);
+    });
+  });
+
+  describe('scheduleUpdate()', () => {
+    it('registers new a update task', async () => {
+      const runtime = createRuntime();
+      const coroutine = new MockCoroutine();
+      const handle = runtime.scheduleUpdate(coroutine);
+
+      expect(runtime.getScheduledUpdates()).toStrictEqual([]);
+
+      expect(await handle.scheduled).toStrictEqual({
+        done: true,
+        canceled: false,
+      });
+      expect(runtime.getScheduledUpdates()).toStrictEqual([
+        expect.objectContaining({
+          id: handle.id,
+          lanes: handle.lanes,
+          coroutine: expect.exact(coroutine),
+        }),
+      ]);
+
+      expect(await handle.finished).toStrictEqual({
+        done: true,
+        canceled: false,
+      });
+      expect(runtime.getScheduledUpdates()).toStrictEqual([]);
+    });
+
+    it('cancels the update when the signal aborts', async () => {
+      const runtime = createRuntime();
+      const coroutine = new MockCoroutine();
+      const controller = new AbortController();
+      const handle = runtime.scheduleUpdate(coroutine, {
+        signal: controller.signal,
+      });
+
+      controller.abort();
+
+      expect(await handle.scheduled).toStrictEqual({
+        done: false,
+        canceled: true,
+      });
+      expect(await handle.finished).toStrictEqual({
+        done: false,
+        canceled: true,
+      });
+      expect(runtime.getScheduledUpdates()).toStrictEqual([]);
     });
   });
 });

@@ -145,12 +145,12 @@ describe('RenderSession', () => {
       });
 
       expect(await handle?.scheduled).toStrictEqual({
-        canceled: false,
         done: true,
+        canceled: false,
       });
       expect(await handle?.finished).toStrictEqual({
-        canceled: false,
         done: true,
+        canceled: false,
       });
     });
 
@@ -173,12 +173,12 @@ describe('RenderSession', () => {
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
       expect(count).toBe(1);
       expect(await handle?.scheduled).toStrictEqual({
-        canceled: true,
         done: true,
+        canceled: true,
       });
       expect(await handle?.finished).toStrictEqual({
-        canceled: false,
         done: true,
+        canceled: false,
       });
     });
 
@@ -200,12 +200,12 @@ describe('RenderSession', () => {
       expect(count).toBe(0);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
       expect(await handle?.scheduled).toStrictEqual({
-        canceled: true,
         done: false,
+        canceled: true,
       });
       expect(await handle?.finished).toStrictEqual({
-        canceled: true,
         done: false,
+        canceled: true,
       });
     });
   });
