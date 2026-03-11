@@ -8,6 +8,7 @@ import {
   getStartNode,
   Lane,
   type Lanes,
+  type Part,
   PartType,
   type UpdateOptions,
 } from '@/core.js';
@@ -261,25 +262,22 @@ describe('EffectQueue', () => {
 });
 
 describe('getLanesFromOptions()', () => {
-  it.each([
+  it.each<[UpdateOptions, Lanes]>([
     [{}, Lane.NoLane],
     [{ flushSync: true }, Lane.SyncLane],
     [{ priority: 'user-blocking' }, Lane.UserBlockingLane],
     [{ priority: 'user-visible' }, Lane.UserVisibleLane],
     [{ priority: 'background' }, Lane.BackgroundLane],
-    [{ signal: new AbortController().signal }, Lane.TransitionLane],
+    [{ transition: Promise.resolve() }, Lane.TransitionLane],
     [{ viewTransition: true }, Lane.ViewTransitionLane],
-  ] as [
-    UpdateOptions,
-    Lanes,
-  ][])('returns lanes for options', (options, lanes) => {
+  ])('returns lanes for options', (options, lanes) => {
     expect(getLanesFromOptions(options)).toBe(lanes);
     expect(getPriorityFromLanes(lanes)).toBe(options.priority ?? null);
   });
 });
 
 describe('getStartNode()', () => {
-  it.each([
+  it.each<[Part]>([
     [
       {
         type: PartType.Attribute,

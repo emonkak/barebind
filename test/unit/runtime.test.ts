@@ -25,7 +25,11 @@ import {
   MockSlot,
   MockTemplate,
 } from '../mocks.js';
-import { waitForTimeout } from '../test-helpers.js';
+import {
+  waitForMicrotasks,
+  waitForTimeout,
+  waitUntil,
+} from '../test-helpers.js';
 
 describe('Runtime', () => {
   describe('addObserver()', () => {
@@ -558,6 +562,189 @@ describe('Runtime', () => {
             id: 0,
             lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
             error: expect.objectContaining({ cause: error }),
+          },
+        ]);
+      });
+
+      it('defer commit phase until transition settles', async () => {
+        const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
+        const observer = new MockObserver();
+        const { promise: transition, resolve } = Promise.withResolvers<void>();
+        const effect1 = {
+          commit: vi.fn(),
+        };
+        const effect2 = {
+          commit: vi.fn(),
+        };
+
+        runtime.addObserver(observer);
+
+        SESSION: {
+          const coroutine1 = new MockCoroutine((session) => {
+            session.frame.mutationEffects.push(effect1, session.scope.level);
+          });
+          const coroutine2 = new MockCoroutine((session) => {
+            session.frame.mutationEffects.push(effect2, session.scope.level);
+          });
+          const handle1 = runtime.scheduleUpdate(coroutine1, {
+            transition,
+          });
+          const handle2 = runtime.scheduleUpdate(coroutine2, {
+            transition,
+          });
+
+          expect(handle1.lanes).toBe(
+            Lane.ConcurrentLane | Lane.UserBlockingLane | Lane.TransitionLane,
+          );
+          expect(handle2.lanes).toBe(
+            Lane.ConcurrentLane | Lane.UserBlockingLane | Lane.TransitionLane,
+          );
+
+          expect(await handle1.scheduled).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+          expect(await handle2.scheduled).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+
+          expect(runtime.getScheduledUpdates()).toStrictEqual([
+            expect.objectContaining({
+              coroutine: expect.exact(coroutine1),
+              lanes:
+                Lane.ConcurrentLane |
+                Lane.UserBlockingLane |
+                Lane.TransitionLane,
+            }),
+            expect.objectContaining({
+              coroutine: expect.exact(coroutine2),
+              lanes:
+                Lane.ConcurrentLane |
+                Lane.UserBlockingLane |
+                Lane.TransitionLane,
+            }),
+          ]);
+
+          await waitForMicrotasks();
+
+          expect(observer.flushEvents()).toStrictEqual([
+            {
+              type: 'update-start',
+              id: 0,
+              lanes:
+                Lane.ConcurrentLane |
+                Lane.UserBlockingLane |
+                Lane.TransitionLane,
+            },
+            {
+              type: 'render-start',
+              id: 0,
+            },
+            {
+              type: 'render-end',
+              id: 0,
+            },
+            {
+              type: 'update-success',
+              id: 0,
+              lanes:
+                Lane.ConcurrentLane |
+                Lane.UserBlockingLane |
+                Lane.TransitionLane,
+            },
+            {
+              type: 'update-start',
+              id: 1,
+              lanes:
+                Lane.ConcurrentLane |
+                Lane.UserBlockingLane |
+                Lane.TransitionLane,
+            },
+            {
+              type: 'render-start',
+              id: 1,
+            },
+            {
+              type: 'render-end',
+              id: 1,
+            },
+            {
+              type: 'update-success',
+              id: 1,
+              lanes:
+                Lane.ConcurrentLane |
+                Lane.UserBlockingLane |
+                Lane.TransitionLane,
+            },
+          ]);
+
+          expect(await handle1.finished).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+          expect(await handle2.finished).toStrictEqual({
+            canceled: false,
+            done: true,
+          });
+        }
+
+        resolve();
+
+        await waitUntil('user-blocking');
+
+        expect(observer.flushEvents()).toStrictEqual([
+          {
+            type: 'commit-start',
+            id: 0,
+            mutationEffects: expect.any(EffectQueue),
+            layoutEffects: expect.any(EffectQueue),
+            passiveEffects: expect.any(EffectQueue),
+          },
+          {
+            type: 'commit-start',
+            id: 1,
+            mutationEffects: expect.any(EffectQueue),
+            layoutEffects: expect.any(EffectQueue),
+            passiveEffects: expect.any(EffectQueue),
+          },
+          {
+            type: 'effect-commit-start',
+            id: 0,
+            phase: 'mutation',
+            effects: expect.any(EffectQueue),
+          },
+          {
+            type: 'effect-commit-end',
+            id: 0,
+            phase: 'mutation',
+            effects: expect.any(EffectQueue),
+          },
+          {
+            type: 'effect-commit-start',
+            id: 1,
+            phase: 'mutation',
+            effects: expect.any(EffectQueue),
+          },
+          {
+            type: 'effect-commit-end',
+            id: 1,
+            phase: 'mutation',
+            effects: expect.any(EffectQueue),
+          },
+          {
+            type: 'commit-end',
+            id: 0,
+            mutationEffects: expect.any(EffectQueue),
+            layoutEffects: expect.any(EffectQueue),
+            passiveEffects: expect.any(EffectQueue),
+          },
+          {
+            type: 'commit-end',
+            id: 1,
+            mutationEffects: expect.any(EffectQueue),
+            layoutEffects: expect.any(EffectQueue),
+            passiveEffects: expect.any(EffectQueue),
           },
         ]);
       });

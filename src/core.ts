@@ -586,6 +586,7 @@ export interface UpdateHandle {
 export interface UpdateOptions extends SchedulerPostTaskOptions {
   flushSync?: boolean;
   immediate?: boolean;
+  transition?: Promise<void>;
   triggerFlush?: boolean;
   viewTransition?: boolean;
 }
@@ -605,8 +606,9 @@ export interface UpdateSession {
 export interface UpdateTask {
   id: number;
   lanes: Lanes;
-  continuation: PromiseWithResolvers<UpdateResult>;
   coroutine: Coroutine;
+  continuation: PromiseWithResolvers<UpdateResult>;
+  transition: Promise<void> | null;
 }
 
 export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;
@@ -665,7 +667,7 @@ export function getLanesFromOptions(options: UpdateOptions): Lanes {
       break;
   }
 
-  if (options.signal !== undefined) {
+  if (options.transition !== undefined) {
     lanes |= Lane.TransitionLane;
   }
 

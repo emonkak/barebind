@@ -83,7 +83,8 @@ export class Runtime implements SessionContext {
       (scheduledUpdate = this._scheduledUpdates.front()?.value) !== undefined;
       this._scheduledUpdates.popFront()
     ) {
-      const { id, coroutine, lanes, continuation } = scheduledUpdate;
+      const { continuation, coroutine, id, lanes, transition } =
+        scheduledUpdate;
 
       if ((coroutine.pendingLanes & lanes) === Lane.NoLane) {
         continuation.resolve({ canceled: true, done: true });
@@ -107,9 +108,19 @@ export class Runtime implements SessionContext {
 
       try {
         if (scheduledUpdate.lanes & Lane.SyncLane) {
-          this._runUpdateSync(session);
+          this._runRenderSync(session);
+          this._runCommitSync(session);
         } else {
-          await this._runUpdateAsync(session);
+          await this._runRenderAsync(session);
+
+          if (transition !== null) {
+            transition.then(
+              () => this._runCommitAsync(session, lanes),
+              () => {},
+            );
+          } else {
+            await this._runCommitAsync(session, lanes);
+          }
         }
 
         notifyObservers(this._observers, {
@@ -240,28 +251,28 @@ export class Runtime implements SessionContext {
       triggerFlush: true,
       viewTransition: false,
       ...options,
-    } satisfies Required<
-      Omit<UpdateOptions, Exclude<keyof SchedulerPostTaskOptions, 'priority'>>
+    } satisfies Omit<
+      Required<UpdateOptions>,
+      'delay' | 'signal' | 'transition'
     >;
 
     const id = this._updateCount++;
     const lanes =
       this._backend.getDefaultLanes() | getLanesFromOptions(options);
     const continuation = Promise.withResolvers<UpdateResult>();
-    const pendingUpdate: UpdateTask = {
-      id,
-      lanes,
-      continuation,
-      coroutine,
-    };
-
     let scheduled: Promise<UpdateResult>;
 
     const callback = () => {
       const shouldTriggerFlush =
         options.triggerFlush && this._scheduledUpdates.isEmpty();
 
-      this._scheduledUpdates.pushBack(pendingUpdate);
+      this._scheduledUpdates.pushBack({
+        id,
+        lanes,
+        continuation,
+        coroutine,
+        transition: options.transition ?? null,
+      });
 
       if (shouldTriggerFlush) {
         scheduled.then(() => {
@@ -314,42 +325,12 @@ export class Runtime implements SessionContext {
     });
   }
 
-  private async _runUpdateAsync(session: UpdateSession): Promise<void> {
+  private async _runCommitAsync(
+    session: UpdateSession,
+    lanes: Lanes,
+  ): Promise<void> {
     const { frame } = session;
-    const { id, lanes, layoutEffects, mutationEffects, passiveEffects } = frame;
-
-    notifyObservers(this._observers, {
-      type: 'render-start',
-      id,
-    });
-
-    try {
-      while (true) {
-        for (const coroutine of consumeCoroutines(
-          frame,
-          this._maxCoroutinesPerYield,
-        )) {
-          try {
-            coroutine.resume(session);
-          } catch (error) {
-            processError(error, coroutine, session, this._observers);
-          }
-        }
-
-        if (frame.pendingCoroutines.length === 0) {
-          break;
-        }
-
-        await this._backend.yieldToMain();
-      }
-    } finally {
-      frame.lanes = Lane.NoLane;
-
-      notifyObservers(this._observers, {
-        type: 'render-end',
-        id,
-      });
-    }
+    const { id, layoutEffects, mutationEffects, passiveEffects } = frame;
 
     notifyObservers(this._observers, {
       type: 'commit-start',
@@ -417,33 +398,9 @@ export class Runtime implements SessionContext {
     }
   }
 
-  private _runUpdateSync(session: UpdateSession): void {
+  private _runCommitSync(session: UpdateSession): void {
     const { frame } = session;
     const { id, layoutEffects, mutationEffects, passiveEffects } = frame;
-
-    notifyObservers(this._observers, {
-      type: 'render-start',
-      id,
-    });
-
-    try {
-      do {
-        for (const coroutine of consumeCoroutines(frame)) {
-          try {
-            coroutine.resume(session);
-          } catch (error) {
-            processError(error, coroutine, session, this._observers);
-          }
-        }
-      } while (frame.pendingCoroutines.length > 0);
-    } finally {
-      frame.lanes = Lane.NoLane;
-
-      notifyObservers(this._observers, {
-        type: 'render-end',
-        id,
-      });
-    }
 
     notifyObservers(this._observers, {
       type: 'commit-start',
@@ -472,6 +429,73 @@ export class Runtime implements SessionContext {
         mutationEffects,
         layoutEffects,
         passiveEffects,
+      });
+    }
+  }
+
+  private async _runRenderAsync(session: UpdateSession): Promise<void> {
+    const { frame } = session;
+    const { id } = frame;
+
+    notifyObservers(this._observers, {
+      type: 'render-start',
+      id,
+    });
+
+    try {
+      while (true) {
+        for (const coroutine of consumeCoroutines(
+          frame,
+          this._maxCoroutinesPerYield,
+        )) {
+          try {
+            coroutine.resume(session);
+          } catch (error) {
+            processError(error, coroutine, session, this._observers);
+          }
+        }
+
+        if (frame.pendingCoroutines.length === 0) {
+          break;
+        }
+
+        await this._backend.yieldToMain();
+      }
+    } finally {
+      frame.lanes = Lane.NoLane;
+
+      notifyObservers(this._observers, {
+        type: 'render-end',
+        id,
+      });
+    }
+  }
+
+  private _runRenderSync(session: UpdateSession): void {
+    const { frame } = session;
+    const { id } = frame;
+
+    notifyObservers(this._observers, {
+      type: 'render-start',
+      id,
+    });
+
+    try {
+      do {
+        for (const coroutine of consumeCoroutines(frame)) {
+          try {
+            coroutine.resume(session);
+          } catch (error) {
+            processError(error, coroutine, session, this._observers);
+          }
+        }
+      } while (frame.pendingCoroutines.length > 0);
+    } finally {
+      frame.lanes = Lane.NoLane;
+
+      notifyObservers(this._observers, {
+        type: 'render-end',
+        id,
       });
     }
   }
