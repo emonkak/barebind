@@ -444,8 +444,8 @@ export class Runtime implements SessionContext {
 
     try {
       while (true) {
-        for (const coroutine of takeCoroutines(
-          pendingCoroutines,
+        for (const coroutine of pendingCoroutines.splice(
+          0,
           this._maxCoroutinesPerYield,
         )) {
           try {
@@ -482,7 +482,7 @@ export class Runtime implements SessionContext {
 
     try {
       do {
-        for (const coroutine of takeCoroutines(pendingCoroutines)) {
+        for (const coroutine of pendingCoroutines.splice(0)) {
           try {
             coroutine.resume(session);
           } catch (error) {
@@ -564,11 +564,4 @@ function resetRenderFrame(frame: RenderFrame): void {
   frame.mutationEffects.clear();
   frame.layoutEffects.clear();
   frame.passiveEffects.clear();
-}
-
-function takeCoroutines(
-  coroutines: Coroutine[],
-  maxCoroutines: number = Infinity,
-): Coroutine[] {
-  return coroutines.splice(0, maxCoroutines);
 }
