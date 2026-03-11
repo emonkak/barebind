@@ -97,7 +97,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> implements Coroutine {
       pendingLanes: Lane.NoLane,
       scope,
       resume({ frame, scope, context }: UpdateSession): void {
-        state.scope = createScope(scope);
+        state.scope = createScope(scope, this);
 
         const session = new RenderSession(state, that, frame, context);
 

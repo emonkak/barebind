@@ -31,7 +31,7 @@ import {
   type Usable,
 } from './core.js';
 import { DirectiveSpecifier } from './directive.js';
-import { handleError, RenderError } from './error.js';
+import { handleError } from './error.js';
 
 export class RenderSession implements RenderContext {
   private readonly _state: ComponentState;
@@ -195,11 +195,7 @@ export class RenderSession implements RenderContext {
   }
 
   throwError(error: unknown): void {
-    try {
-      handleError(error, this._state.scope);
-    } catch (cause) {
-      throw new RenderError(this._coroutine, { cause });
-    }
+    handleError(error, this._state.scope, this._coroutine);
   }
 
   use<T>(usable: HookClass<T>): T;

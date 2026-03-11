@@ -1,4 +1,4 @@
-import { BoundaryType, type Coroutine, type Scope } from './core.js';
+import { BoundaryType, type Coroutine, Lane, type Scope } from './core.js';
 import { getOwnerStack } from './debug/scope.js';
 
 export class InterruptError extends Error {}
@@ -23,7 +23,11 @@ export class RenderError extends Error {
   }
 }
 
-export function handleError(error: unknown, scope: Scope): Scope {
+export function handleError(
+  error: unknown,
+  scope: Scope,
+  coroutine: Coroutine,
+): void {
   let currentScope = scope;
   let { parent: nextScope, boundary: nextBoundary } = currentScope;
 
@@ -50,7 +54,15 @@ export function handleError(error: unknown, scope: Scope): Scope {
     }
   };
 
-  handleError(error);
+  try {
+    handleError(error);
+  } catch (error) {
+    throw new RenderError(coroutine, { cause: error });
+  }
 
-  return currentScope;
+  if ((currentScope.owner?.pendingLanes ?? Lane.NoLane) === Lane.NoLane) {
+    // The error was captured but no recovery render was scheduled.
+    // Detach the scope to stop further updates on this subtree.
+    throw new InterruptError(undefined, { cause: error });
+  }
 }

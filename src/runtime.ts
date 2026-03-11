@@ -14,7 +14,6 @@ import {
   type Part,
   type Primitive,
   type RenderFrame,
-  type Scope,
   type SessionContext,
   type SessionEvent,
   type SessionObserver,
@@ -29,7 +28,7 @@ import {
   type UpdateTask,
 } from './core.js';
 import { toDirective } from './directive.js';
-import { handleError, InterruptError, RenderError } from './error.js';
+import { handleError, InterruptError } from './error.js';
 import { RenderSession } from './render-session.js';
 
 export interface RuntimeOptions {
@@ -542,25 +541,21 @@ function processError(
   coroutine: Coroutine,
   observers: LinkedList<SessionObserver>,
 ): void {
-  let handlingScope: Scope | null = null;
+  let captured = false;
 
   try {
-    handlingScope = handleError(error, coroutine.scope);
-  } catch (cause) {
-    throw new RenderError(coroutine, { cause });
+    handleError(error, coroutine.scope, coroutine);
+    captured = true;
+  } catch (error) {
+    captured = error instanceof InterruptError;
+    throw error;
   } finally {
     notifyObservers(observers, {
       type: 'render-error',
       id,
       error,
-      captured: handlingScope !== null,
+      captured,
     });
-  }
-
-  if ((handlingScope.owner?.pendingLanes ?? Lane.NoLane) === Lane.NoLane) {
-    // The error was captured but no recovery render was scheduled.
-    // Detach the scope to stop further updates on this subtree.
-    throw new InterruptError(undefined, { cause: error });
   }
 }
 

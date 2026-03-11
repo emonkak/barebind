@@ -18,23 +18,30 @@ import { TestRenderer } from '../test-renderer.js';
 describe('RenderSession', () => {
   describe('catchError()', () => {
     it('propagates the error to error boundaries when handleError is invoked', () => {
-      const handler = vi.fn();
-      const error = new Error('fail');
-      const renderer = new TestRenderer((_props, session) => {
-        session.catchError(handler);
+      const renderer = new TestRenderer(
+        ({ error }: { error: unknown }, session) => {
+          const [capturedError, setCapturedError] =
+            session.useState<unknown>(null);
 
-        session.catchError((error, handleError) => {
-          handleError(error);
-        });
+          session.catchError((error) => {
+            setCapturedError(error);
+          });
 
-        session.throwError(error);
-      });
+          session.catchError((error, handleError) => {
+            handleError(error);
+          });
+
+          if (capturedError === null) {
+            session.throwError(error);
+          }
+
+          return capturedError;
+        },
+      );
 
       SESSION: {
-        renderer.render({});
-
-        expect(handler).toHaveBeenCalledOnce();
-        expect(handler).toHaveBeenCalledWith(error, expect.any(Function));
+        const error = new Error('fail');
+        expect(renderer.render({ error })).toBe(error);
       }
     });
 
