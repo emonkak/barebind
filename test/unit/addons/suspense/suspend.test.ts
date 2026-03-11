@@ -12,6 +12,7 @@ describe('Suspend', () => {
       expect(suspend.status).toBe('pending');
       expect(suspend.value).toBe(undefined);
       expect(suspend.reason).toBe(undefined);
+      expect(suspend.signal).toBe(controller.signal);
     });
 
     it('transitions to fulfilled when the promise resolves', async () => {
@@ -151,20 +152,24 @@ describe('Suspend', () => {
 
   describe('resolve()', () => {
     it('returns a Suspend with fulfilled sttus', () => {
-      const suspend = Suspend.resolve('ok', new AbortController());
+      const controller = new AbortController();
+      const suspend = Suspend.resolve('ok', controller);
       expect(suspend.status).toBe('fulfilled');
       expect(suspend.value).toBe('ok');
       expect(suspend.reason).toBe(undefined);
+      expect(suspend.signal).toBe(controller.signal);
     });
   });
 
   describe('reject()', () => {
     it('returns a Suspend with fulfilled sttus', () => {
       const error = new Error('fail');
-      const suspend = Suspend.reject(error, new AbortController());
+      const controller = new AbortController();
+      const suspend = Suspend.reject(error, controller);
       expect(suspend.status).toBe('rejected');
       expect(suspend.value).toBe(undefined);
       expect(suspend.reason).toBe(error);
+      expect(suspend.signal).toBe(controller.signal);
     });
   });
 

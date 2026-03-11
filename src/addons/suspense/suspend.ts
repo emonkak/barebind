@@ -120,6 +120,10 @@ class SuspendInternal<T> implements PromiseLike<T> {
     return this._reason;
   }
 
+  get signal(): AbortSignal {
+    return this._controller.signal;
+  }
+
   abort(reason?: unknown): void {
     this._controller.abort(reason);
   }
