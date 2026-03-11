@@ -86,11 +86,12 @@ export class RenderSession implements RenderContext {
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
     if (this._coroutine.scope === DETACHED_SCOPE) {
+      const resolved = Promise.resolve({ done: false, canceled: true });
       return {
         id: this._frame.id,
         lanes: Lane.NoLane,
-        scheduled: Promise.resolve({ done: false, canceled: true }),
-        finished: Promise.resolve({ done: false, canceled: true }),
+        scheduled: resolved,
+        finished: resolved,
       };
     }
 
@@ -335,11 +336,12 @@ export class RenderSession implements RenderContext {
           const nextState = reducer(prevState, action);
 
           if (areStatesEqual(nextState, prevState)) {
+            const resolved = Promise.resolve({ done: true, canceled: true });
             return {
               id: this._frame.id,
               lanes: Lane.NoLane,
-              scheduled: Promise.resolve({ done: true, canceled: true }),
-              finished: Promise.resolve({ done: true, canceled: true }),
+              scheduled: resolved,
+              finished: resolved,
             };
           } else {
             const handle = context.forceUpdate(options);
