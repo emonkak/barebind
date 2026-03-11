@@ -104,10 +104,7 @@ export class RenderSession implements RenderContext {
       const requestLanes = getLanesFromOptions(options ?? {});
 
       if ((renderLanes & requestLanes) === requestLanes) {
-        for (const {
-          id,
-          continuation,
-        } of this._context.getScheduledUpdates()) {
+        for (const { id, controller } of this._context.getScheduledUpdates()) {
           if (id === this._frame.id) {
             this._frame.pendingCoroutines.push(this._coroutine);
             this._state.pendingLanes |= renderLanes;
@@ -115,7 +112,7 @@ export class RenderSession implements RenderContext {
               id: this._frame.id,
               lanes: renderLanes,
               scheduled: Promise.resolve({ done: true, canceled: true }),
-              finished: continuation.promise,
+              finished: controller.promise,
             };
           }
         }
@@ -391,7 +388,7 @@ export class RenderSession implements RenderContext {
     const promises = this._context
       .getScheduledUpdates()
       .filter((pendingUpdate) => pendingUpdate.coroutine === this._coroutine)
-      .map((pendingUpdate) => pendingUpdate.continuation.promise);
+      .map((pendingUpdate) => pendingUpdate.controller.promise);
     return (await Promise.allSettled(promises)).length;
   }
 

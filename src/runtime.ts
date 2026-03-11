@@ -83,11 +83,10 @@ export class Runtime implements SessionContext {
       (scheduledUpdate = this._scheduledUpdates.front()?.value) !== undefined;
       this._scheduledUpdates.popFront()
     ) {
-      const { continuation, coroutine, id, lanes, transition } =
-        scheduledUpdate;
+      const { controller, coroutine, id, lanes, transition } = scheduledUpdate;
 
       if ((coroutine.pendingLanes & lanes) === Lane.NoLane) {
-        continuation.resolve({ done: true, canceled: true });
+        controller.resolve({ done: true, canceled: true });
         continue;
       }
 
@@ -129,7 +128,7 @@ export class Runtime implements SessionContext {
           lanes,
         });
 
-        continuation.resolve({ done: true, canceled: false });
+        controller.resolve({ done: true, canceled: false });
       } catch (error) {
         resetRenderFrame(frame);
 
@@ -141,9 +140,9 @@ export class Runtime implements SessionContext {
         });
 
         if (error instanceof InterruptError) {
-          continuation.resolve({ done: false, canceled: true });
+          controller.resolve({ done: false, canceled: true });
         } else {
-          continuation.reject(error);
+          controller.reject(error);
         }
       }
     }
@@ -259,7 +258,7 @@ export class Runtime implements SessionContext {
     const id = this._updateCount++;
     const lanes =
       this._backend.getDefaultLanes() | getLanesFromOptions(options);
-    const continuation = Promise.withResolvers<UpdateResult>();
+    const controller = Promise.withResolvers<UpdateResult>();
     let scheduled: Promise<UpdateResult>;
 
     const callback = () => {
@@ -269,7 +268,7 @@ export class Runtime implements SessionContext {
       this._scheduledUpdates.pushBack({
         id,
         lanes,
-        continuation,
+        controller,
         coroutine,
         transition: options.transition ?? null,
       });
@@ -292,7 +291,7 @@ export class Runtime implements SessionContext {
         // callback() is guaranteed not to throw anything; rejection here only
         // indicates AbortSignal cancellation.
         const result = { done: false, canceled: true };
-        continuation.resolve(result);
+        controller.resolve(result);
         return result;
       });
     }
@@ -301,7 +300,7 @@ export class Runtime implements SessionContext {
       id,
       lanes,
       scheduled,
-      finished: continuation.promise,
+      finished: controller.promise,
     };
   }
 

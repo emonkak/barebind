@@ -607,7 +607,7 @@ export interface UpdateTask {
   id: number;
   lanes: Lanes;
   coroutine: Coroutine;
-  continuation: PromiseWithResolvers<UpdateResult>;
+  controller: PromiseWithResolvers<UpdateResult>;
   transition: Promise<void> | null;
 }
 
