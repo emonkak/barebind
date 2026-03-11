@@ -452,7 +452,7 @@ export class Runtime implements SessionContext {
           try {
             coroutine.resume(session);
           } catch (error) {
-            processError(error, coroutine, session, this._observers);
+            processError(id, error, coroutine, this._observers);
           }
         }
 
@@ -487,7 +487,7 @@ export class Runtime implements SessionContext {
           try {
             coroutine.resume(session);
           } catch (error) {
-            processError(error, coroutine, session, this._observers);
+            processError(id, error, coroutine, this._observers);
           }
         }
       } while (pendingCoroutines.length > 0);
@@ -537,12 +537,11 @@ function notifyObservers(
 }
 
 function processError(
+  id: number,
   error: unknown,
   coroutine: Coroutine,
-  session: UpdateSession,
   observers: LinkedList<SessionObserver>,
 ): void {
-  const { frame } = session;
   let handlingScope: Scope | null = null;
 
   try {
@@ -552,7 +551,7 @@ function processError(
   } finally {
     notifyObservers(observers, {
       type: 'render-error',
-      id: frame.id,
+      id,
       error,
       captured: handlingScope !== null,
     });
