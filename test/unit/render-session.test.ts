@@ -644,15 +644,13 @@ describe('RenderSession', () => {
     });
 
     it('returns an initial state by the function', () => {
-      const renderer = new TestRenderer(
-        vi.fn((_props, session: RenderContext) => {
-          const [count] = session.useReducer<number, number>(
-            (count, delta) => count + delta,
-            0,
-          );
-          return count;
-        }),
-      );
+      const renderer = new TestRenderer((_props, session) => {
+        const [count] = session.useReducer<number, number>(
+          (count, delta) => count + delta,
+          0,
+        );
+        return count;
+      });
 
       SESSION: {
         const count = renderer.render({});
@@ -703,17 +701,15 @@ describe('RenderSession', () => {
 
   describe('useState()', () => {
     it('schedules the update when the state is changed', async () => {
-      const renderer = new TestRenderer(
-        vi.fn((_props, session: RenderContext) => {
-          const [count, setCount] = session.useState(0);
+      const renderer = new TestRenderer((_props, session) => {
+        const [count, setCount] = session.useState(0);
 
-          session.useEffect(() => {
-            setCount(1);
-          });
+        session.useEffect(() => {
+          setCount(1);
+        });
 
-          return count;
-        }),
-      );
+        return count;
+      });
 
       SESSION1: {
         renderer.render({});
@@ -729,17 +725,15 @@ describe('RenderSession', () => {
     });
 
     it('compares each state with a custom equality', async () => {
-      const renderer = new TestRenderer(
-        vi.fn((_props, session: RenderContext) => {
-          const [range, setRange] = session.useState({ start: 0, end: 1 });
+      const renderer = new TestRenderer((_props, session) => {
+        const [range, setRange] = session.useState({ start: 0, end: 1 });
 
-          session.useEffect(() => {
-            setRange({ start: 0, end: 1 }, { areStatesEqual: shallowEqual });
-          });
+        session.useEffect(() => {
+          setRange({ start: 0, end: 1 }, { areStatesEqual: shallowEqual });
+        });
 
-          return range;
-        }),
-      );
+        return range;
+      });
 
       SESSION1: {
         renderer.render({});
@@ -750,18 +744,16 @@ describe('RenderSession', () => {
     });
 
     it('calculates a new state from the previous state', async () => {
-      const renderer = new TestRenderer(
-        vi.fn((_props, session: RenderContext) => {
-          const [count, setCount] = session.useState(() => 0);
+      const renderer = new TestRenderer((_props, session) => {
+        const [count, setCount] = session.useState(() => 0);
 
-          session.useEffect(() => {
-            setCount((count) => count + 1);
-            setCount((count) => count + 1);
-          }, []);
+        session.useEffect(() => {
+          setCount((count) => count + 1);
+          setCount((count) => count + 1);
+        }, []);
 
-          return count;
-        }),
-      );
+        return count;
+      });
 
       SESSION: {
         renderer.render({});
@@ -777,17 +769,15 @@ describe('RenderSession', () => {
     });
 
     it('should not return the pending state', async () => {
-      const renderer = new TestRenderer(
-        vi.fn((_props, session: RenderContext) => {
-          const [count, setCount, isPending] = session.useState(() => 0);
+      const renderer = new TestRenderer((_props, session) => {
+        const [count, setCount, isPending] = session.useState(() => 0);
 
-          session.useEffect(() => {
-            setCount(1, { priority: 'background' });
-          }, []);
+        session.useEffect(() => {
+          setCount(1, { priority: 'background' });
+        }, []);
 
-          return [count, isPending];
-        }),
-      );
+        return [count, isPending];
+      });
 
       SESSION1: {
         renderer.render({});

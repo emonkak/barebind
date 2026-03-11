@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import {
   BoundaryType,
   type ComponentState,
@@ -33,7 +34,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> implements Coroutine {
     callback: (props: TProps, session: RenderSession) => TResult,
     scope: Scope = createScope(),
   ) {
-    this.callback = callback;
+    this.callback = vi.fn(callback);
     this.scope = scope;
   }
 

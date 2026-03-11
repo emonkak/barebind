@@ -8,16 +8,15 @@ import {
 } from '@/addons/hooks.js';
 import { LinkedList } from '@/collections/linked-list.js';
 import type { Cleanup, RefCallback } from '@/core.js';
-import type { RenderSession } from '@/render-session.js';
 import { waitForMicrotasks, waitForTimeout } from '../../test-helpers.js';
 import { TestRenderer } from '../../test-renderer.js';
 
 describe('DeferredValue()', () => {
   it('returns the value deferred until next rendering', async () => {
     const renderer = new TestRenderer(
-      vi.fn(({ value }: { value: string }, session: RenderSession) => {
+      ({ value }: { value: string }, session) => {
         return session.use(DeferredValue(value));
-      }),
+      },
     );
 
     SESSION1: {
@@ -49,14 +48,12 @@ describe('DeferredValue()', () => {
 
   it('returns the initial value if it is given', async () => {
     const renderer = new TestRenderer(
-      vi.fn(
-        (
-          { value, initialValue }: { value: string; initialValue: string },
-          session: RenderSession,
-        ) => {
-          return session.use(DeferredValue(value, initialValue));
-        },
-      ),
+      (
+        { value, initialValue }: { value: string; initialValue: string },
+        session,
+      ) => {
+        return session.use(DeferredValue(value, initialValue));
+      },
     );
 
     SESSION1: {
@@ -182,17 +179,15 @@ describe('SyncExternalStore()', () => {
     const subscribe = vi.fn().mockReturnValue(unsubscribe);
     const getSnapshot = () => count;
 
-    const renderer = new TestRenderer(
-      vi.fn((_props: {}, session: RenderSession) => {
-        const snapshot = session.use(SyncEnternalStore(subscribe, getSnapshot));
+    const renderer = new TestRenderer((_props, session) => {
+      const snapshot = session.use(SyncEnternalStore(subscribe, getSnapshot));
 
-        session.useInsertionEffect(() => {
-          count++;
-        }, []);
+      session.useInsertionEffect(() => {
+        count++;
+      }, []);
 
-        return snapshot;
-      }),
-    );
+      return snapshot;
+    });
 
     SESSION1: {
       renderer.render({});
@@ -243,15 +238,13 @@ describe('SyncExternalStore()', () => {
       }
     };
 
-    const renderer = new TestRenderer(
-      vi.fn((_props: {}, session: RenderSession) => {
-        const snapshot = session.use(SyncEnternalStore(subscribe, getSnapshot));
+    const renderer = new TestRenderer((_props, session) => {
+      const snapshot = session.use(SyncEnternalStore(subscribe, getSnapshot));
 
-        session.useEffect(notifySubscribers, []);
+      session.useEffect(notifySubscribers, []);
 
-        return snapshot;
-      }),
-    );
+      return snapshot;
+    });
 
     SESSION1: {
       renderer.render({});

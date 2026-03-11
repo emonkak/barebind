@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { LocalAtom, LocalComputed } from '@/addons/signal/hooks.js';
 import { Atom, type Signal } from '@/addons/signal/signal.js';
-import type { RenderSession } from '@/render-session.js';
 import { TestRenderer } from '../../../test-renderer.js';
 
 describe('LocalAtom()', () => {
@@ -37,7 +36,7 @@ describe('LocalComputed()', () => {
     const foo = new Atom(1);
     const bar = new Atom(2);
     const baz = new Atom(3);
-    const renderer = new TestRenderer((_props, session: RenderSession) => {
+    const renderer = new TestRenderer((_props, session) => {
       const signal = session.use(
         LocalComputed((foo, bar, baz) => foo + bar + baz, [foo, bar, baz]),
       );

@@ -7,7 +7,7 @@ import {
   SignalBinding,
   SignalDirective,
 } from '@/addons/signal/signal.js';
-import { $directive, Lane, PartType, type RenderContext } from '@/core.js';
+import { $directive, Lane, PartType } from '@/core.js';
 import { createRuntime } from '../../../mocks.js';
 import { waitForMicrotasks } from '../../../test-helpers.js';
 import { TestRenderer } from '../../../test-renderer.js';
@@ -213,18 +213,16 @@ describe('Signal', () => {
   describe('[$hook]()', async () => {
     it('request an update if the signal value has been changed', async () => {
       const signal = new Atom('foo');
-      const renderer = new TestRenderer(
-        vi.fn((_props: {}, session: RenderContext) => {
-          const value = session.use(signal);
+      const renderer = new TestRenderer((_props, session) => {
+        const value = session.use(signal);
 
-          session.useEffect(() => {
-            signal.value = 'bar';
-            signal.value = 'baz';
-          }, []);
+        session.useEffect(() => {
+          signal.value = 'bar';
+          signal.value = 'baz';
+        }, []);
 
-          return value;
-        }),
-      );
+        return value;
+      });
 
       SESSION: {
         renderer.render({});
