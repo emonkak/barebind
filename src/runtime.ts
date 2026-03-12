@@ -23,6 +23,7 @@ import {
   type Transition,
   type TransitionAction,
   type TransitionHandle,
+  type TransitionResult,
   type UnwrapBindable,
   type UpdateHandle,
   type UpdateOptions,
@@ -111,8 +112,9 @@ export class Runtime implements SessionContext {
 
           if (transition !== null) {
             const { resumes } = transition;
-            const resume = waitForAll(transition.suspends).then(() =>
-              this._runCommitAsync(session, lanes),
+            const resume = waitForAll(transition.suspends).then(
+              () => this._runCommitAsync(session, lanes),
+              () => {},
             );
             resumes.push(resume);
           } else {
@@ -244,23 +246,37 @@ export class Runtime implements SessionContext {
     options = {
       flushSync: false,
       immediate: false,
-      priority: this._backend.getUpdatePriority(),
       triggerFlush: true,
       viewTransition: false,
       ...options,
     } satisfies Omit<
       Required<UpdateOptions>,
-      'delay' | 'signal' | 'transition'
+      'delay' | 'signal' | 'priority' | 'transition'
     >;
+
+    const controller = Promise.withResolvers<UpdateResult>();
+    const transition = options?.transition ?? null;
+
+    if (transition !== null) {
+      // Register this update's completion promise with the transition, so it
+      // can track all pending updates before considering the transition
+      // complete.
+      transition.suspends.push(controller.promise);
+
+      // Inherit the transition's abort signal if none is set, so this update
+      // is canceled when the transition fails.
+      options.signal ??= transition.signal;
+
+      // Use background priority by default to match React's transition
+      // behavior.
+      options.priority ??= 'background';
+    } else {
+      options.priority ??= this._backend.getUpdatePriority();
+    }
 
     const id = this._updateCount++;
     const lanes =
       this._backend.getDefaultLanes() | getLanesFromOptions(options);
-    const controller = Promise.withResolvers<UpdateResult>();
-    let scheduled: Promise<UpdateResult>;
-
-    options.transition?.suspends.push(controller.promise);
-
     const callback = (): UpdateResult => {
       const shouldTriggerFlush =
         options.triggerFlush && this._scheduledUpdates.isEmpty();
@@ -270,7 +286,7 @@ export class Runtime implements SessionContext {
         lanes,
         coroutine,
         controller,
-        transition: options.transition ?? null,
+        transition,
       });
 
       if (shouldTriggerFlush) {
@@ -281,6 +297,7 @@ export class Runtime implements SessionContext {
 
       return { status: 'done' };
     };
+    let scheduled: Promise<UpdateResult>;
 
     if (options.immediate) {
       const { promise, resolve } = Promise.withResolvers<UpdateResult>();
@@ -307,20 +324,34 @@ export class Runtime implements SessionContext {
   }
 
   startTransition(action: TransitionAction): TransitionHandle {
-    const transition: Transition = { suspends: [], resumes: [] };
+    const controller = new AbortController();
+    const transition: Transition = {
+      signal: controller.signal,
+      suspends: [],
+      resumes: [],
+    };
     const result = action(transition);
 
     if (result !== undefined) {
+      result.catch((error) => {
+        controller.abort(error);
+      });
       transition.suspends.push(result);
     }
 
     const ready = waitForAll(transition.suspends);
-    const finished = ready.then(
-      () => waitForAll(transition.resumes),
-      () => {},
+    const finished = ready.then<TransitionResult, TransitionResult>(
+      async () => {
+        await waitForAll(transition.resumes);
+        return { status: 'done' };
+      },
+      (reason) => {
+        return { status: 'canceled', reason };
+      },
     );
 
     return {
+      signal: controller.signal,
       ready,
       finished,
     };

@@ -268,7 +268,12 @@ describe('getLanesFromOptions()', () => {
     [{ priority: 'user-blocking' }, Lane.UserBlockingLane],
     [{ priority: 'user-visible' }, Lane.UserVisibleLane],
     [{ priority: 'background' }, Lane.BackgroundLane],
-    [{ transition: { suspends: [], resumes: [] } }, Lane.TransitionLane],
+    [
+      {
+        transition: { signal: AbortSignal.abort(), suspends: [], resumes: [] },
+      },
+      Lane.TransitionLane,
+    ],
     [{ viewTransition: true }, Lane.ViewTransitionLane],
   ])('returns lanes for options', (options, lanes) => {
     expect(getLanesFromOptions(options)).toBe(lanes);

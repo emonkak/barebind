@@ -9,6 +9,7 @@ import {
   EffectQueue,
   Lane,
   PartType,
+  type UpdateHandle,
 } from '@/core.js';
 import { RenderError } from '@/error.js';
 import { RenderSession } from '@/render-session.js';
@@ -520,10 +521,10 @@ describe('Runtime', () => {
               transition,
             });
             expect(handle1.lanes).toBe(
-              Lane.ConcurrentLane | Lane.UserBlockingLane | Lane.TransitionLane,
+              Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
             );
             expect(handle2.lanes).toBe(
-              Lane.ConcurrentLane | Lane.UserBlockingLane | Lane.TransitionLane,
+              Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
             );
           });
 
@@ -534,9 +535,7 @@ describe('Runtime', () => {
               type: 'update-start',
               id: 0,
               lanes:
-                Lane.ConcurrentLane |
-                Lane.UserBlockingLane |
-                Lane.TransitionLane,
+                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
             },
             {
               type: 'render-start',
@@ -550,17 +549,13 @@ describe('Runtime', () => {
               type: 'update-success',
               id: 0,
               lanes:
-                Lane.ConcurrentLane |
-                Lane.UserBlockingLane |
-                Lane.TransitionLane,
+                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
             },
             {
               type: 'update-start',
               id: 1,
               lanes:
-                Lane.ConcurrentLane |
-                Lane.UserBlockingLane |
-                Lane.TransitionLane,
+                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
             },
             {
               type: 'render-start',
@@ -574,9 +569,7 @@ describe('Runtime', () => {
               type: 'update-success',
               id: 1,
               lanes:
-                Lane.ConcurrentLane |
-                Lane.UserBlockingLane |
-                Lane.TransitionLane,
+                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
             },
           ]);
 
@@ -1095,14 +1088,45 @@ describe('Runtime', () => {
       controller.abort();
 
       expect(await handle.scheduled).toStrictEqual({
-        status: 'aborted',
+        status: 'canceled',
         reason: controller.signal.reason,
       });
       expect(await handle.finished).toStrictEqual({
-        status: 'aborted',
+        status: 'canceled',
         reason: controller.signal.reason,
       });
       expect(runtime.getScheduledUpdates()).toStrictEqual([]);
+    });
+
+    it('cancels the update when the transition fails', async () => {
+      const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
+
+      SESSION: {
+        let handle: UpdateHandle | undefined;
+        const coroutine = new MockCoroutine();
+        const error = new Error('fail');
+        const transition = runtime.startTransition(async (transition) => {
+          handle = runtime.scheduleUpdate(coroutine, {
+            transition,
+          });
+          throw error;
+        });
+
+        await expect(transition.ready).rejects.toThrow(error);
+        expect(await transition.finished).toStrictEqual({
+          status: 'canceled',
+          reason: error,
+        });
+
+        expect(await handle?.scheduled).toStrictEqual({
+          status: 'canceled',
+          reason: error,
+        });
+        expect(await handle?.finished).toStrictEqual({
+          status: 'canceled',
+          reason: error,
+        });
+      }
     });
   });
 });

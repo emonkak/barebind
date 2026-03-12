@@ -577,6 +577,7 @@ export interface TemplateResult {
 }
 
 export interface Transition {
+  signal: AbortSignal;
   suspends: Promise<unknown>[];
   resumes: Promise<unknown>[];
 }
@@ -584,9 +585,14 @@ export interface Transition {
 export type TransitionAction = (transition: Transition) => Promise<void> | void;
 
 export interface TransitionHandle {
+  signal: AbortSignal;
   ready: Promise<void>;
-  finished: Promise<void>;
+  finished: Promise<TransitionResult>;
 }
+
+export type TransitionResult =
+  | { status: 'done' }
+  | { status: 'canceled'; reason: unknown };
 
 export type UnwrapBindable<T> = T extends Bindable<infer Value> ? Value : T;
 
