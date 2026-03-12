@@ -95,7 +95,7 @@ export class Runtime implements SessionContext {
 
       const frame = createRenderFrame(id, lanes, coroutine);
       const { scope } = coroutine;
-      const session = createUpdateSession(frame, scope, scope, this);
+      const session = createUpdateSession(frame, scope, coroutine, this);
 
       notifyObservers(this._observers, {
         type: 'update-start',

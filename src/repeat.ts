@@ -104,9 +104,9 @@ export class RepeatBinding<TSource, TKey, TElement>
   }
 
   attach(session: UpdateSession): void {
-    const { context, originScope } = session;
+    const { context, coroutine } = session;
     const document = this._part.node.ownerDocument;
-    const targetTree = getHydrationTargetTree(originScope);
+    const targetTree = getHydrationTargetTree(coroutine.scope);
 
     const {
       source,

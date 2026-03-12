@@ -108,7 +108,7 @@ export class ComponentBinding<TProps, TResult>
   }
 
   resume(session: UpdateSession): void {
-    const { frame, originScope, context } = session;
+    const { frame, coroutine, context } = session;
     const scope = createScope(this._scope, this);
 
     this._state.scope = scope;
@@ -121,12 +121,7 @@ export class ComponentBinding<TProps, TResult>
       frame,
     );
 
-    const childSession = createUpdateSession(
-      frame,
-      scope,
-      originScope,
-      context,
-    );
+    const childSession = createUpdateSession(frame, scope, coroutine, context);
     let dirty: boolean;
 
     if (this._slot !== null) {
@@ -139,8 +134,9 @@ export class ComponentBinding<TProps, TResult>
 
     if (
       dirty &&
-      originScope === this._scope &&
-      this._state.pendingLanes !== Lane.NoLane
+      coroutine === this &&
+      (this._state.pendingLanes !== Lane.NoLane ||
+        (frame.lanes & Lane.RetryLane) !== Lane.NoLane)
     ) {
       frame.mutationEffects.push(this._slot, scope.level);
     }

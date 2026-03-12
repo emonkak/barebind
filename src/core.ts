@@ -619,7 +619,7 @@ export type UpdateResult =
 export interface UpdateSession {
   readonly frame: RenderFrame;
   readonly scope: Scope;
-  readonly originScope: Scope;
+  readonly coroutine: Coroutine;
   readonly context: SessionContext;
 }
 
@@ -654,13 +654,13 @@ export function createScope(
 export function createUpdateSession(
   frame: RenderFrame,
   scope: Scope,
-  originScope: Scope,
+  coroutine: Coroutine,
   context: SessionContext,
 ): UpdateSession {
   return {
     frame,
     scope,
-    originScope,
+    coroutine,
     context,
   };
 }
