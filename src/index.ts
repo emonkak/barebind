@@ -15,7 +15,6 @@ export {
   type RenderContext,
   type SessionEvent,
   type SessionObserver,
-  type UpdateOptions,
 } from './core.js';
 export { DirectiveError } from './directive.js';
 export { InterruptError, RenderError } from './error.js';
