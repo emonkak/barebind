@@ -608,7 +608,7 @@ export interface UpdateOptions extends SchedulerPostTaskOptions {
 export type UpdateResult =
   | { status: 'done' }
   | { status: 'skipped' }
-  | { status: 'aborted'; reason: unknown };
+  | { status: 'canceled'; reason: unknown };
 
 export interface UpdateSession {
   readonly frame: RenderFrame;

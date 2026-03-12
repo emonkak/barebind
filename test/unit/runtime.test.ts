@@ -453,7 +453,7 @@ describe('Runtime', () => {
           const handle = runtime.scheduleUpdate(coroutine);
 
           expect(await handle.finished).toStrictEqual({
-            status: 'aborted',
+            status: 'canceled',
             reason: error,
           });
           expect(errorHandler).toHaveBeenCalledOnce();
@@ -830,7 +830,7 @@ describe('Runtime', () => {
           const handle = runtime.scheduleUpdate(coroutine, {});
 
           expect(await handle.finished).toStrictEqual({
-            status: 'aborted',
+            status: 'canceled',
             reason: error,
           });
           expect(errorHandler).toHaveBeenCalledOnce();

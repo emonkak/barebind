@@ -138,7 +138,7 @@ export class Runtime implements SessionContext {
         });
 
         if (error instanceof InterruptError) {
-          controller.resolve({ status: 'aborted', reason: error.cause });
+          controller.resolve({ status: 'canceled', reason: error.cause });
         } else {
           controller.reject(error);
         }
@@ -292,7 +292,7 @@ export class Runtime implements SessionContext {
         .catch((error) => {
           // callback() is guaranteed not to throw anything; rejection here only
           // indicates AbortSignal cancellation.
-          const aborted: UpdateResult = { status: 'aborted', reason: error };
+          const aborted: UpdateResult = { status: 'canceled', reason: error };
           controller.resolve(aborted);
           return aborted;
         });
