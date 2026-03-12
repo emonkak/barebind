@@ -20,6 +20,9 @@ import {
   type Slot,
   type Template,
   type TemplateMode,
+  type Transition,
+  type TransitionAction,
+  type TransitionHandle,
   type UnwrapBindable,
   type UpdateHandle,
   type UpdateOptions,
@@ -107,10 +110,11 @@ export class Runtime implements SessionContext {
           await this._runRenderAsync(session);
 
           if (transition !== null) {
-            transition.then(
-              () => this._runCommitAsync(session, lanes),
-              () => {},
+            const { resumes } = transition;
+            const resume = waitForAll(transition.suspends).then(() =>
+              this._runCommitAsync(session, lanes),
             );
+            resumes.push(resume);
           } else {
             await this._runCommitAsync(session, lanes);
           }
@@ -255,6 +259,8 @@ export class Runtime implements SessionContext {
     const controller = Promise.withResolvers<UpdateResult>();
     let scheduled: Promise<UpdateResult>;
 
+    options.transition?.suspends.push(controller.promise);
+
     const callback = (): UpdateResult => {
       const shouldTriggerFlush =
         options.triggerFlush && this._scheduledUpdates.isEmpty();
@@ -262,8 +268,8 @@ export class Runtime implements SessionContext {
       this._scheduledUpdates.pushBack({
         id,
         lanes,
-        controller,
         coroutine,
+        controller,
         transition: options.transition ?? null,
       });
 
@@ -297,6 +303,26 @@ export class Runtime implements SessionContext {
       lanes,
       scheduled,
       finished: controller.promise,
+    };
+  }
+
+  startTransition(action: TransitionAction): TransitionHandle {
+    const transition: Transition = { suspends: [], resumes: [] };
+    const result = action(transition);
+
+    if (result !== undefined) {
+      transition.suspends.push(result);
+    }
+
+    const ready = waitForAll(transition.suspends);
+    const finished = ready.then(
+      () => waitForAll(transition.resumes),
+      () => {},
+    );
+
+    return {
+      ready,
+      finished,
     };
   }
 
@@ -561,4 +587,11 @@ function resetRenderFrame(frame: RenderFrame): void {
   frame.mutationEffects.clear();
   frame.layoutEffects.clear();
   frame.passiveEffects.clear();
+}
+
+async function waitForAll(promises: Iterable<Promise<unknown>>): Promise<void> {
+  // Awaits promises in iterable, including any added during execution.
+  for (const promise of promises) {
+    await promise;
+  }
 }

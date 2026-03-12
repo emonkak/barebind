@@ -398,6 +398,7 @@ export interface RenderContext {
     ...values: readonly unknown[]
   ): Bindable<readonly unknown[]>;
   setSharedContext<T>(key: unknown, value: T): void;
+  startTransition(action: TransitionAction): TransitionHandle;
   svg(
     strings: readonly string[],
     ...values: readonly unknown[]
@@ -469,6 +470,7 @@ export interface SessionContext extends DirectiveContext {
     mode: TemplateMode,
   ): Template<readonly unknown[]>;
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateHandle;
+  startTransition(action: TransitionAction): TransitionHandle;
 }
 
 export type SessionEvent =
@@ -574,6 +576,18 @@ export interface TemplateResult {
   slots: Slot<unknown>[];
 }
 
+export interface Transition {
+  suspends: Promise<unknown>[];
+  resumes: Promise<unknown>[];
+}
+
+export type TransitionAction = (transition: Transition) => Promise<void> | void;
+
+export interface TransitionHandle {
+  ready: Promise<void>;
+  finished: Promise<void>;
+}
+
 export type UnwrapBindable<T> = T extends Bindable<infer Value> ? Value : T;
 
 export interface UpdateHandle {
@@ -586,7 +600,7 @@ export interface UpdateHandle {
 export interface UpdateOptions extends SchedulerPostTaskOptions {
   flushSync?: boolean;
   immediate?: boolean;
-  transition?: Promise<void>;
+  transition?: Transition;
   triggerFlush?: boolean;
   viewTransition?: boolean;
 }
@@ -608,7 +622,7 @@ export interface UpdateTask {
   lanes: Lanes;
   coroutine: Coroutine;
   controller: PromiseWithResolvers<UpdateResult>;
-  transition: Promise<void> | null;
+  transition: Transition | null;
 }
 
 export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;

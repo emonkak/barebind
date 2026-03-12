@@ -25,7 +25,7 @@ import {
   MockSlot,
   MockTemplate,
 } from '../mocks.js';
-import { waitForMicrotasks, waitForTimeout } from '../test-helpers.js';
+import { waitForTimeout } from '../test-helpers.js';
 
 describe('Runtime', () => {
   describe('addObserver()', () => {
@@ -492,10 +492,9 @@ describe('Runtime', () => {
         ]);
       });
 
-      it('defer commit phase until transition settles', async () => {
+      it('defer commit phase until transition ready', async () => {
         const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
         const observer = new MockObserver();
-        const { promise: transition, resolve } = Promise.withResolvers<void>();
         const effect1 = {
           commit: vi.fn(),
         };
@@ -512,30 +511,23 @@ describe('Runtime', () => {
           const coroutine2 = new MockCoroutine((session) => {
             session.frame.mutationEffects.push(effect2, session.scope.level);
           });
-          const handle1 = runtime.scheduleUpdate(coroutine1, {
-            transition,
-          });
-          const handle2 = runtime.scheduleUpdate(coroutine2, {
-            transition,
+
+          const transition = runtime.startTransition((transition) => {
+            const handle1 = runtime.scheduleUpdate(coroutine1, {
+              transition,
+            });
+            const handle2 = runtime.scheduleUpdate(coroutine2, {
+              transition,
+            });
+            expect(handle1.lanes).toBe(
+              Lane.ConcurrentLane | Lane.UserBlockingLane | Lane.TransitionLane,
+            );
+            expect(handle2.lanes).toBe(
+              Lane.ConcurrentLane | Lane.UserBlockingLane | Lane.TransitionLane,
+            );
           });
 
-          expect(handle1.lanes).toBe(
-            Lane.ConcurrentLane | Lane.UserBlockingLane | Lane.TransitionLane,
-          );
-          expect(handle2.lanes).toBe(
-            Lane.ConcurrentLane | Lane.UserBlockingLane | Lane.TransitionLane,
-          );
-
-          expect(await handle1.scheduled).toStrictEqual({
-            done: true,
-            canceled: false,
-          });
-          expect(await handle2.scheduled).toStrictEqual({
-            done: true,
-            canceled: false,
-          });
-
-          await waitForMicrotasks();
+          await transition.ready;
 
           expect(observer.flushEvents()).toStrictEqual([
             {
@@ -588,74 +580,63 @@ describe('Runtime', () => {
             },
           ]);
 
-          expect(await handle1.finished).toStrictEqual({
-            done: true,
-            canceled: false,
-          });
-          expect(await handle2.finished).toStrictEqual({
-            done: true,
-            canceled: false,
-          });
+          await transition.finished;
+
+          expect(observer.flushEvents()).toStrictEqual([
+            {
+              type: 'commit-start',
+              id: 0,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
+            },
+            {
+              type: 'commit-start',
+              id: 1,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-start',
+              id: 0,
+              phase: 'mutation',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-end',
+              id: 0,
+              phase: 'mutation',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-start',
+              id: 1,
+              phase: 'mutation',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-end',
+              id: 1,
+              phase: 'mutation',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'commit-end',
+              id: 0,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
+            },
+            {
+              type: 'commit-end',
+              id: 1,
+              mutationEffects: expect.any(EffectQueue),
+              layoutEffects: expect.any(EffectQueue),
+              passiveEffects: expect.any(EffectQueue),
+            },
+          ]);
         }
-
-        resolve();
-
-        await waitForTimeout(0); // Wait for mutation effects
-
-        expect(observer.flushEvents()).toStrictEqual([
-          {
-            type: 'commit-start',
-            id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
-          },
-          {
-            type: 'commit-start',
-            id: 1,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-start',
-            id: 0,
-            phase: 'mutation',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-end',
-            id: 0,
-            phase: 'mutation',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-start',
-            id: 1,
-            phase: 'mutation',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-end',
-            id: 1,
-            phase: 'mutation',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'commit-end',
-            id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
-          },
-          {
-            type: 'commit-end',
-            id: 1,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
-          },
-        ]);
       });
     });
 

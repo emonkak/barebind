@@ -17,7 +17,7 @@ import { TestRenderer } from '../test-renderer.js';
 
 describe('RenderSession', () => {
   describe('catchError()', () => {
-    it('propagates the error to error boundaries when handleError is invoked', () => {
+    it('propagates the error to error boundaries when handleError() is invoked', () => {
       const renderer = new TestRenderer(
         ({ error }: { error: unknown }, session) => {
           const [capturedError, setCapturedError] =
@@ -45,7 +45,7 @@ describe('RenderSession', () => {
       }
     });
 
-    it('throws an error after the session has ended', () => {
+    it('throws an error when called outside of the render session', () => {
       const renderer = new TestRenderer((_props, session) => session);
 
       expect(() => {
@@ -265,6 +265,34 @@ describe('RenderSession', () => {
         }),
       );
       expect(directive.value).toStrictEqual(['World']);
+    });
+  });
+
+  describe('startTransition()', () => {
+    it('propagate the error that occur during action execution to error boundaries', () => {
+      const renderer = new TestRenderer(
+        ({ error }: { error: unknown }, session) => {
+          const [capturedError, setCapturedError] =
+            session.useState<unknown>(null);
+
+          session.catchError((error) => {
+            setCapturedError(error);
+          });
+
+          if (capturedError === null) {
+            session.startTransition(() => {
+              throw error;
+            });
+          }
+
+          return capturedError;
+        },
+      );
+
+      SESSION: {
+        const error = new Error('fail');
+        expect(renderer.render({ error })).toBe(error);
+      }
     });
   });
 

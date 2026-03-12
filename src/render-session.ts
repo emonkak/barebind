@@ -26,6 +26,8 @@ import {
   type SessionContext,
   type StateHandle,
   type TemplateMode,
+  type TransitionAction,
+  type TransitionHandle,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
@@ -180,6 +182,16 @@ export class RenderSession implements RenderContext {
       key,
       value,
     };
+  }
+
+  startTransition(action: TransitionAction): TransitionHandle {
+    return this._context.startTransition(async (transition) => {
+      try {
+        await action(transition);
+      } catch (error) {
+        handleError(error, this._state.scope, this._coroutine);
+      }
+    });
   }
 
   svg(

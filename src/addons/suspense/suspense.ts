@@ -1,7 +1,7 @@
 /// <reference path="../../../typings/upsert.d.ts" />
 
 import { createComponent } from '../../component.js';
-import { Lane, type RenderContext } from '../../core.js';
+import type { RenderContext } from '../../core.js';
 import { Flexible } from '../../layout/flexible.js';
 import { Fragment } from '../../template.js';
 import { Suspend } from './suspend.js';
@@ -44,10 +44,12 @@ export const Suspense = createComponent(function Suspense(
         return;
       }
 
-      const renderLanes =
-        $.getSessionContext().getScheduledUpdates()[0]?.lanes ?? Lane.NoLane;
+      const transition =
+        $.getSessionContext().getScheduledUpdates()[0]?.transition;
 
-      if (!(renderLanes & Lane.TransitionLane)) {
+      if (transition != null) {
+        transition.suspends.push(errorOrSuspend);
+      } else {
         const forceUpdateWhenSettled = () => {
           if (areAllSuspendsSettled()) {
             $.forceUpdate();
