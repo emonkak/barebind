@@ -44,11 +44,22 @@ export const Suspense = createComponent(function Suspense(
         return;
       }
 
-      const transition =
-        $.getSessionContext().getScheduledUpdates()[0]?.transition;
+      const insideUpdate = $.getInsideUpdate();
 
-      if (transition != null) {
-        transition.suspends.push(errorOrSuspend);
+      // If the current update is a transition originating from within this
+      // scope, prevent the fallback and retry the update after the suspend
+      // resolves.
+      // Note: Unlike React, whether to show the fallback depends on whether
+      // the update originates inside or outside the scope. This is more
+      // intuitive and simpler to implement.
+      if (insideUpdate?.transition != null) {
+        const { coroutine, transition } = insideUpdate;
+        const retry = errorOrSuspend.then(
+          () =>
+            $.getSessionContext().scheduleUpdate(coroutine, { transition })
+              .finished,
+        );
+        transition.suspends.push(retry);
       } else {
         const forceUpdateWhenSettled = () => {
           if (areAllSuspendsSettled()) {
