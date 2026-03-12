@@ -22,7 +22,10 @@ describe('RenderError', () => {
       scope,
       resume() {},
     };
-    const error = new RenderError(coroutine);
+    const error = new RenderError(
+      'An error occurred while rendering.',
+      coroutine,
+    );
 
     expect(error.message).toBe(`An error occurred while rendering.
 ${Parent.name}

@@ -4,9 +4,7 @@ import { getOwnerStack } from './debug/scope.js';
 export class InterruptError extends Error {}
 
 export class RenderError extends Error {
-  constructor(coroutine: Coroutine, options?: ErrorOptions) {
-    let message = 'An error occurred while rendering.';
-
+  constructor(message: string, coroutine: Coroutine, options?: ErrorOptions) {
     DEBUG: {
       message += getOwnerStack(coroutine)
         .reverse()
@@ -18,7 +16,6 @@ export class RenderError extends Error {
         })
         .join('');
     }
-
     super(message, options);
   }
 }
@@ -57,7 +54,9 @@ export function handleError(
   try {
     handleError(error);
   } catch (error) {
-    throw new RenderError(coroutine, { cause: error });
+    throw new RenderError('An error occurred while rendering.', coroutine, {
+      cause: error,
+    });
   }
 
   if ((currentScope.owner?.pendingLanes ?? Lane.NoLane) === Lane.NoLane) {
