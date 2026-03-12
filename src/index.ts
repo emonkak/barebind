@@ -18,7 +18,7 @@ export {
   type UpdateOptions,
 } from './core.js';
 export { DirectiveError } from './directive.js';
-export { RenderError } from './error.js';
+export { InterruptError, RenderError } from './error.js';
 export { HydrationError } from './hydration.js';
 export { Cached } from './layout/cached.js';
 export { Flexible } from './layout/flexible.js';
