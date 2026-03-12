@@ -277,7 +277,7 @@ describe('RepeatBinding', () => {
       );
       const scope = createScope();
       const targetTree = createTreeWalker(container);
-      const updater = new TestUpdater();
+      const updater = new TestUpdater(scope);
 
       scope.boundary = {
         type: BoundaryType.Hydration,
@@ -285,12 +285,9 @@ describe('RepeatBinding', () => {
         targetTree,
       };
 
-      updater.startUpdate(
-        (session) => {
-          binding.attach(session);
-        },
-        { scope },
-      );
+      updater.startUpdate((session) => {
+        binding.attach(session);
+      });
 
       expect(part.anchorNode).toBe(container.firstChild);
       expect(container.innerHTML).toBe(

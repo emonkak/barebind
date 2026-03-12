@@ -435,7 +435,7 @@ describe('TemplateBinding', () => {
       const container = createElement('div', {}, 'foo', part.node);
       const scope = createScope();
       const targetTree = createTreeWalker(container);
-      const updater = new TestUpdater();
+      const updater = new TestUpdater(scope);
 
       const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
         children: [container.firstChild!],
@@ -448,13 +448,10 @@ describe('TemplateBinding', () => {
         targetTree,
       };
 
-      updater.startUpdate(
-        (session) => {
-          binding.attach(session);
-          binding.commit();
-        },
-        { scope },
-      );
+      updater.startUpdate((session) => {
+        binding.attach(session);
+        binding.commit();
+      });
 
       expect(hydrateSpy).toHaveBeenCalledOnce();
       expect(hydrateSpy).toHaveBeenCalledWith(

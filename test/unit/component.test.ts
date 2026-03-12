@@ -137,47 +137,6 @@ describe('ComponentBinding', () => {
     });
   });
 
-  describe('resume()', () => {
-    it('clears pending lanes', async () => {
-      const props = {
-        initialCount: 100,
-      };
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new ComponentBinding(Increment, props, part);
-      const updater = new TestUpdater();
-
-      SESSION1: {
-        updater.startUpdate(
-          (session) => {
-            binding.attach(session);
-            session.frame.mutationEffects.push(binding, session.scope.level);
-          },
-          { priority: 'user-blocking' },
-        );
-
-        expect(binding.pendingLanes).toBe(
-          Lane.SyncLane | Lane.UserBlockingLane,
-        );
-        expect(part.node.nodeValue).toBe('100');
-      }
-
-      SESSION2: {
-        updater.startUpdate((session) => {
-          binding.attach(session);
-          session.frame.mutationEffects.push(binding, session.scope.level);
-        });
-
-        expect(binding.pendingLanes).toBe(Lane.NoLane);
-        expect(part.node.nodeValue).toBe('101');
-      }
-    });
-  });
-
   describe('attach()', () => {
     it('renders the component', () => {
       const props1 = {
@@ -361,23 +320,6 @@ const Memo = createComponent(
     arePropsEqual: (nextProps, prevProps) => nextProps.key === prevProps.key,
   },
 );
-
-interface IncrementProps {
-  initialCount: number;
-}
-
-const Increment = createComponent(function Increment(
-  { initialCount }: IncrementProps,
-  context: RenderContext,
-): unknown {
-  const [count, setCount] = context.useState(initialCount);
-
-  context.useEffect(() => {
-    setCount((count) => count + 1);
-  }, []);
-
-  return count;
-});
 
 interface EnqueueEffectProps {
   callback: (phase: CommitPhase) => void;

@@ -39,9 +39,11 @@ import { handleError } from './error.js';
 export class RenderSession implements RenderContext {
   private readonly _state: ComponentState;
 
-  private readonly _coroutine: Coroutine;
-
   private readonly _frame: RenderFrame;
+
+  private readonly _scope: Scope;
+
+  private readonly _coroutine: Coroutine;
 
   private readonly _context: SessionContext;
 
@@ -49,27 +51,28 @@ export class RenderSession implements RenderContext {
 
   constructor(
     state: ComponentState,
-    coroutine: Coroutine,
     frame: RenderFrame,
+    scope: Scope,
+    coroutine: Coroutine,
     context: SessionContext,
   ) {
     this._state = state;
-    this._coroutine = coroutine;
     this._frame = frame;
+    this._scope = scope;
+    this._coroutine = coroutine;
     this._context = context;
   }
 
   catchError(handler: ErrorHandler): void {
-    const { scope } = this._state;
-    scope.boundary = {
+    this._scope.boundary = {
       type: BoundaryType.Error,
-      next: scope.boundary,
+      next: this._scope.boundary,
       handler,
     };
   }
 
   finalize(): void {
-    const { hooks, scope } = this._state;
+    const { hooks } = this._state;
     const currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
@@ -82,7 +85,7 @@ export class RenderSession implements RenderContext {
     }
 
     // Refuse to mutate scope after finalization.
-    Object.freeze(scope);
+    Object.freeze(this._scope);
 
     this._hookIndex++;
   }
@@ -111,7 +114,7 @@ export class RenderSession implements RenderContext {
         for (const { id, controller } of this._context.getScheduledUpdates()) {
           if (id === this._frame.id) {
             this._frame.pendingCoroutines.push(this._coroutine);
-            this._state.pendingLanes |= renderLanes;
+            this._coroutine.pendingLanes |= renderLanes;
             return {
               id: this._frame.id,
               lanes: renderLanes,
@@ -123,11 +126,7 @@ export class RenderSession implements RenderContext {
       }
     }
 
-    const handle = this._context.scheduleUpdate(this._coroutine, options);
-
-    this._state.pendingLanes |= handle.lanes;
-
-    return handle;
+    return this._context.scheduleUpdate(this._coroutine, options);
   }
 
   getSessionContext(): SessionContext {
@@ -135,7 +134,7 @@ export class RenderSession implements RenderContext {
   }
 
   getSharedContext<T>(key: unknown): T | undefined {
-    let currentScope: Scope | null = this._state.scope;
+    let currentScope: Scope | null = this._scope;
     do {
       for (
         let boundary = currentScope.boundary;
@@ -175,10 +174,9 @@ export class RenderSession implements RenderContext {
   }
 
   setSharedContext<T>(key: unknown, value: T): void {
-    const { scope } = this._state;
-    scope.boundary = {
+    this._scope.boundary = {
       type: BoundaryType.SharedContext,
-      next: scope.boundary,
+      next: this._scope.boundary,
       key,
       value,
     };
@@ -189,7 +187,7 @@ export class RenderSession implements RenderContext {
       try {
         await action(transition);
       } catch (error) {
-        handleError(error, this._state.scope, this._coroutine);
+        handleError(error, this._scope, this._coroutine);
       }
     });
   }
@@ -209,7 +207,7 @@ export class RenderSession implements RenderContext {
   }
 
   throwError(error: unknown): void {
-    handleError(error, this._state.scope, this._coroutine);
+    handleError(error, this._scope, this._coroutine);
   }
 
   use<T>(usable: HookClass<T>): T;
@@ -413,7 +411,7 @@ export class RenderSession implements RenderContext {
     type: Hook.EffectHook['type'],
     effects: EffectQueue,
   ): void {
-    const { hooks, scope } = this._state;
+    const { hooks } = this._state;
     let currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
@@ -424,7 +422,7 @@ export class RenderSession implements RenderContext {
         areDependenciesChanged(dependencies, currentHook.memoizedDependencies)
       ) {
         currentHook.epoch++;
-        effects.push(new InvokeEffectHook(currentHook), scope.level);
+        effects.push(new InvokeEffectHook(currentHook), this._scope.level);
       }
     } else {
       currentHook = {
@@ -436,7 +434,7 @@ export class RenderSession implements RenderContext {
         pendingDependencies: dependencies,
       };
       hooks.push(currentHook);
-      effects.push(new InvokeEffectHook(currentHook), scope.level);
+      effects.push(new InvokeEffectHook(currentHook), this._scope.level);
     }
 
     this._hookIndex++;

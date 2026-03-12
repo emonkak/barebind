@@ -53,6 +53,8 @@ export function createComponent<TProps = {}, TResult = unknown>(
 export class ComponentBinding<TProps, TResult>
   implements Binding<TProps>, Coroutine
 {
+  pendingLanes: Lanes = Lane.NoLane;
+
   private readonly _component: Component<TProps, TResult>;
 
   private _props: TProps;
@@ -65,8 +67,6 @@ export class ComponentBinding<TProps, TResult>
 
   private readonly _state: ComponentState = {
     hooks: [],
-    pendingLanes: Lane.NoLane,
-    scope: DETACHED_SCOPE,
   };
 
   constructor(
@@ -99,10 +99,6 @@ export class ComponentBinding<TProps, TResult>
     return this._component.name;
   }
 
-  get pendingLanes(): Lanes {
-    return this._state.pendingLanes;
-  }
-
   get scope(): Scope {
     return this._scope;
   }
@@ -111,14 +107,13 @@ export class ComponentBinding<TProps, TResult>
     const { frame, coroutine, context } = session;
     const scope = createScope(this._scope, this);
 
-    this._state.scope = scope;
-
     const result = context.renderComponent(
       this._component,
       this._props,
       this._state,
-      this,
       frame,
+      scope,
+      this,
     );
 
     const childSession = createUpdateSession(frame, scope, coroutine, context);
@@ -132,16 +127,9 @@ export class ComponentBinding<TProps, TResult>
       dirty = true;
     }
 
-    if (
-      dirty &&
-      coroutine === this &&
-      (this._state.pendingLanes !== Lane.NoLane ||
-        (frame.lanes & Lane.RetryLane) !== Lane.NoLane)
-    ) {
+    if (dirty && coroutine === this) {
       frame.mutationEffects.push(this._slot, scope.level);
     }
-
-    this._state.pendingLanes &= ~frame.lanes;
   }
 
   shouldUpdate(props: TProps): boolean {
@@ -180,8 +168,6 @@ export class ComponentBinding<TProps, TResult>
     this._slot?.detach(session);
 
     this._scope = DETACHED_SCOPE;
-    this._state.pendingLanes = Lane.NoLane;
-    this._state.scope = DETACHED_SCOPE;
   }
 
   commit(): void {

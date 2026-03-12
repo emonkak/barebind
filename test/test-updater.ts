@@ -9,50 +9,53 @@ import {
 import type { Runtime } from '@/runtime.js';
 import { createRuntime } from './mocks.js';
 
-interface TestUpdateOptions extends UpdateOptions {
-  scope?: Scope;
-}
-
 export class TestUpdater {
+  readonly scope;
+
   readonly runtime;
 
-  constructor(runtime: Runtime = createRuntime()) {
+  constructor(
+    scope: Scope = createScope(),
+    runtime: Runtime = createRuntime(),
+  ) {
+    this.scope = scope;
     this.runtime = runtime;
   }
 
   startUpdate<T>(
     callback: (session: UpdateSession) => T,
-    options: TestUpdateOptions = {},
+    options?: UpdateOptions,
   ): T {
+    const previousBoundary = this.scope.boundary;
     let returnValue: T;
     let thrownError: unknown;
+
+    this.scope.boundary = {
+      type: BoundaryType.Error,
+      next: previousBoundary,
+      handler: (error) => {
+        thrownError = error;
+      },
+    };
 
     const coroutine = {
       name: callback.name,
       pendingLanes: Lane.NoLane,
-      scope: options.scope ?? createScope(),
+      scope: this.scope,
       resume(session: UpdateSession): void {
-        this.scope.boundary = {
-          type: BoundaryType.Error,
-          next: this.scope.boundary,
-          handler: (error) => {
-            thrownError = error;
-          },
-        };
         returnValue = callback(session);
-        this.pendingLanes &= ~session.frame.lanes;
       },
     };
 
-    const { lanes } = this.runtime.scheduleUpdate(coroutine, {
+    this.runtime.scheduleUpdate(coroutine, {
       triggerFlush: false,
       immediate: true,
       ...options,
     });
 
-    coroutine.pendingLanes |= lanes;
-
     this.runtime.flushUpdates();
+
+    this.scope.boundary = previousBoundary;
 
     if (thrownError !== undefined) {
       throw thrownError;

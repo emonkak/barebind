@@ -2,12 +2,10 @@ import { vi } from 'vitest';
 import {
   BoundaryType,
   type ComponentState,
-  type Coroutine,
   createScope,
   DETACHED_SCOPE,
   HookType,
   Lane,
-  type Lanes,
   type Scope,
   type UpdateSession,
 } from '@/core.js';
@@ -15,20 +13,16 @@ import { RenderSession } from '@/render-session.js';
 import type { Runtime } from '@/runtime.js';
 import { createRuntime } from './mocks.js';
 
-export class TestRenderer<TProps = {}, TResult = unknown> implements Coroutine {
+export class TestRenderer<TProps = {}, TResult = unknown> {
   readonly callback: (props: TProps, session: RenderSession) => TResult;
+
+  readonly runtime: Runtime = createRuntime();
 
   scope: Scope;
 
   state: ComponentState = {
     hooks: [],
-    pendingLanes: Lane.NoLane,
-    scope: DETACHED_SCOPE,
   };
-
-  coroutine: Coroutine | null = null;
-
-  readonly runtime: Runtime = createRuntime();
 
   constructor(
     callback: (props: TProps, session: RenderSession) => TResult,
@@ -36,19 +30,6 @@ export class TestRenderer<TProps = {}, TResult = unknown> implements Coroutine {
   ) {
     this.callback = vi.fn(callback);
     this.scope = scope;
-  }
-
-  get name(): string {
-    return TestRenderer.name;
-  }
-
-  get pendingLanes(): Lanes {
-    return this.state.pendingLanes;
-  }
-
-  resume(session: UpdateSession): void {
-    this.coroutine?.resume(session);
-    this.state.pendingLanes &= ~session.frame.lanes;
   }
 
   finalize(): void {
@@ -62,64 +43,64 @@ export class TestRenderer<TProps = {}, TResult = unknown> implements Coroutine {
         hook.cleanup = undefined;
       }
     }
-    this.state.scope = DETACHED_SCOPE;
   }
 
   reset(): void {
     this.state = {
       hooks: [],
-      pendingLanes: Lane.NoLane,
-      scope: createScope(),
     };
   }
 
   render(props: TProps): TResult {
-    const { state, callback } = this;
-    const scope = createScope(this.scope);
-    const that = this;
-
+    const { callback, state } = this;
+    const previousBoundary = this.scope.boundary;
     let returnValue: TResult;
     let thrownError: unknown;
 
-    scope.boundary = {
-      type: BoundaryType.Error,
-      next: scope.boundary,
-      handler: (error, handleError) => {
-        try {
-          handleError(error);
-        } catch (error) {
-          thrownError = error;
-        }
-      },
-    };
+    if (this.scope !== DETACHED_SCOPE) {
+      this.scope.boundary = {
+        type: BoundaryType.Error,
+        next: previousBoundary,
+        handler: (error, handleError) => {
+          try {
+            handleError(error);
+          } catch (error) {
+            thrownError = error;
+          }
+        },
+      };
+    }
 
     const coroutine = {
       name: this.callback.name,
       pendingLanes: Lane.NoLane,
-      scope,
-      resume({ frame, scope, context }: UpdateSession): void {
-        state.scope = createScope(scope, this);
-
-        const session = new RenderSession(state, that, frame, context);
+      scope: this.scope,
+      resume: ({ frame, context }: UpdateSession): void => {
+        const scope = createScope(this.scope, coroutine);
+        const session = new RenderSession(
+          state,
+          frame,
+          scope,
+          coroutine,
+          context,
+        );
 
         returnValue = callback(props, session);
 
         session.finalize();
-
-        this.pendingLanes &= ~frame.lanes;
       },
     };
 
-    this.coroutine = coroutine;
-
-    const { lanes } = this.runtime.scheduleUpdate(this.coroutine, {
+    this.runtime.scheduleUpdate(coroutine, {
       triggerFlush: false,
       immediate: true,
     });
 
-    coroutine.pendingLanes |= lanes;
-
     this.runtime.flushUpdates();
+
+    if (this.scope !== DETACHED_SCOPE) {
+      this.scope.boundary = previousBoundary;
+    }
 
     if (thrownError !== undefined) {
       throw thrownError;

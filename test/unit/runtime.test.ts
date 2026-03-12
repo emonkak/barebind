@@ -874,20 +874,17 @@ describe('Runtime', () => {
   });
 
   describe('renderComponent()', () => {
-    it('renders a component with the new render session', () => {
-      const component = createComponent(() => null);
+    it('renders the component with a new render session', () => {
+      const component = createComponent(vi.fn(() => null));
       const props = {};
       const state: ComponentState = {
         hooks: [],
-        pendingLanes: Lane.NoLane,
-        scope: createScope(),
       };
-      const coroutine = new MockCoroutine();
       const frame = createRenderFrame(1, -1);
+      const scope = createScope();
+      const coroutine = new MockCoroutine();
       const runtime = createRuntime();
       const observer = new MockObserver();
-
-      const renderSpy = vi.spyOn(component, 'render');
 
       runtime.addObserver(observer);
 
@@ -895,12 +892,16 @@ describe('Runtime', () => {
         component,
         props,
         state,
-        coroutine,
         frame,
+        scope,
+        coroutine,
       );
 
-      expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(props, expect.any(RenderSession));
+      expect(component.render).toHaveBeenCalledOnce();
+      expect(component.render).toHaveBeenCalledWith(
+        props,
+        expect.any(RenderSession),
+      );
       expect(observer.flushEvents()).toStrictEqual([
         {
           type: 'component-render-start',

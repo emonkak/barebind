@@ -84,14 +84,12 @@ export interface Component<TProps = {}, TResult = unknown>
 
 export interface ComponentState {
   hooks: Hook[];
-  pendingLanes: Lanes;
-  scope: Scope;
 }
 
 export interface Coroutine {
   readonly name: string;
-  readonly pendingLanes: Lanes;
   readonly scope: Scope;
+  pendingLanes: Lanes;
   resume(session: UpdateSession): void;
 }
 
@@ -461,8 +459,9 @@ export interface SessionContext extends DirectiveContext {
     component: Component<TProps, TResult>,
     props: TProps,
     state: ComponentState,
-    coroutine: Coroutine,
     frame: RenderFrame,
+    scope: Scope,
+    coroutine: Coroutine,
   ): TResult;
   resolveTemplate(
     strings: readonly string[],

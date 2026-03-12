@@ -52,13 +52,13 @@ export const SignalDirective: DirectiveType<Signal<any>> = {
 };
 
 export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
+  pendingLanes: Lanes = Lane.NoLane;
+
   private _signal: Signal<T>;
 
   private readonly _slot: Slot<T>;
 
   private _memoizedVersion: number;
-
-  private _pendingLanes: Lanes = Lane.NoLane;
 
   private _scope: Scope = DETACHED_SCOPE;
 
@@ -93,10 +93,6 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     return Signal.name;
   }
 
-  get pendingLanes(): Lanes {
-    return this._pendingLanes;
-  }
-
   get scope(): Scope {
     return this._scope;
   }
@@ -105,7 +101,6 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     if (this._slot.reconcile(this._signal.value, session)) {
       session.frame.mutationEffects.push(this._slot, this._scope.level);
     }
-    this._pendingLanes = Lane.NoLane;
   }
 
   shouldUpdate(signal: Signal<T>): boolean {
@@ -118,8 +113,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
     frame.layoutEffects.push(
       new SubscribeSignal(this._signal, this._subscription, () => {
-        const { lanes } = context.scheduleUpdate(this);
-        this._pendingLanes |= lanes;
+        context.scheduleUpdate(this);
       }),
       scope.level,
     );
@@ -141,7 +135,6 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
     this._slot.detach(session);
 
-    this._pendingLanes = Lane.NoLane;
     this._scope = DETACHED_SCOPE;
   }
 

@@ -194,13 +194,12 @@ describe('RenderSession', () => {
         session.useEffect(() => {
           handle = setCount(1);
         }, []);
+
         return count;
       }, DETACHED_SCOPE);
       const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
 
-      const count = renderer.render({});
-
-      expect(count).toBe(0);
+      expect(renderer.render({})).toBe(0);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
       expect(await handle?.scheduled).toStrictEqual({
         status: 'skipped',

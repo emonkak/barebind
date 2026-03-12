@@ -14,6 +14,7 @@ import {
   type Part,
   type Primitive,
   type RenderFrame,
+  type Scope,
   type SessionContext,
   type SessionEvent,
   type SessionObserver,
@@ -161,12 +162,13 @@ export class Runtime implements SessionContext {
     component: Component<TProps, TResult>,
     props: TProps,
     state: ComponentState,
-    coroutine: Coroutine,
     frame: RenderFrame,
+    scope: Scope,
+    coroutine: Coroutine,
   ): TResult {
     const { id } = frame;
 
-    const context = new RenderSession(state, coroutine, frame, this);
+    const context = new RenderSession(state, frame, scope, coroutine, this);
 
     notifyObservers(this._observers, {
       type: 'component-render-start',
@@ -243,19 +245,11 @@ export class Runtime implements SessionContext {
     coroutine: Coroutine,
     options: UpdateOptions = {},
   ): UpdateHandle {
-    options = {
-      flushSync: false,
-      immediate: false,
-      triggerFlush: true,
-      viewTransition: false,
-      ...options,
-    } satisfies Omit<
-      Required<UpdateOptions>,
-      'delay' | 'signal' | 'priority' | 'transition'
-    >;
-
     const controller = Promise.withResolvers<UpdateResult>();
     const transition = options?.transition ?? null;
+
+    // Clone options for mutations.
+    options = { ...options };
 
     if (transition !== null) {
       // Register this update's completion promise with the transition, so it
@@ -263,13 +257,12 @@ export class Runtime implements SessionContext {
       // complete.
       transition.suspends.push(controller.promise);
 
-      // Inherit the transition's abort signal if none is set, so this update
-      // is canceled when the transition fails.
-      options.signal ??= transition.signal;
-
       // Use background priority by default to match React's transition
       // behavior.
       options.priority ??= 'background';
+      // Inherit the transition's abort signal if none is set, so this update
+      // is canceled when the transition fails.
+      options.signal ??= transition.signal;
     } else {
       options.priority ??= this._backend.getUpdatePriority();
     }
@@ -279,7 +272,7 @@ export class Runtime implements SessionContext {
       this._backend.getDefaultLanes() | getLanesFromOptions(options);
     const callback = (): UpdateResult => {
       const shouldTriggerFlush =
-        options.triggerFlush && this._scheduledUpdates.isEmpty();
+        (options.triggerFlush ?? true) && this._scheduledUpdates.isEmpty();
 
       this._scheduledUpdates.pushBack({
         id,
@@ -314,6 +307,8 @@ export class Runtime implements SessionContext {
           return aborted;
         });
     }
+
+    coroutine.pendingLanes |= lanes;
 
     return {
       id,
@@ -486,7 +481,7 @@ export class Runtime implements SessionContext {
   }
 
   private async _runRenderAsync(session: UpdateSession): Promise<void> {
-    const { frame } = session;
+    const { coroutine, frame } = session;
     const { id, pendingCoroutines } = frame;
 
     notifyObservers(this._observers, {
@@ -514,6 +509,7 @@ export class Runtime implements SessionContext {
         await this._backend.yieldToMain();
       }
     } finally {
+      coroutine.pendingLanes &= ~frame.lanes;
       frame.lanes = Lane.NoLane;
 
       notifyObservers(this._observers, {
@@ -524,7 +520,7 @@ export class Runtime implements SessionContext {
   }
 
   private _runRenderSync(session: UpdateSession): void {
-    const { frame } = session;
+    const { coroutine, frame } = session;
     const { id, pendingCoroutines } = frame;
 
     notifyObservers(this._observers, {
@@ -543,6 +539,7 @@ export class Runtime implements SessionContext {
         }
       } while (pendingCoroutines.length > 0);
     } finally {
+      coroutine.pendingLanes &= ~frame.lanes;
       frame.lanes = Lane.NoLane;
 
       notifyObservers(this._observers, {

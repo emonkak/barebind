@@ -311,6 +311,10 @@ describe('HashHistory()', () => {
       immediate: true,
       viewTransition: true,
     });
+    expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(expect.any(Object), {
+      immediate: true,
+      viewTransition: true,
+    });
 
     SESSION2: {
       const { location } = renderer.render({ viewTransition: true });
