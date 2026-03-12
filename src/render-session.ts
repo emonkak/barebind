@@ -158,7 +158,7 @@ export class RenderSession implements RenderContext {
     return this._createTemplate(strings, values, 'html');
   }
 
-  isUpdatePending(): boolean {
+  isUpdateRunning(): boolean {
     return this._context
       .getScheduledUpdates()
       .some((pendingUpdate) => pendingUpdate.coroutine === this._coroutine);

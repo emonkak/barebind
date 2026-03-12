@@ -23,7 +23,7 @@ export function BrowserHistory(
     const navigator = context.useMemo<HistoryNavigator>(
       () => ({
         getCurrentURL: () => RelativeURL.fromURL(window.location),
-        isTransitionPending: () => context.isUpdatePending(),
+        isTransitionRunning: () => context.isUpdateRunning(),
         navigate: (url, { replace = false, state = null } = {}) => {
           setLocation(
             {

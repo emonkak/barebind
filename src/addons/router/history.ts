@@ -9,7 +9,7 @@ export interface HistoryLocation {
 
 export interface HistoryNavigator {
   getCurrentURL(): RelativeURL;
-  isTransitionPending(): boolean;
+  isTransitionRunning(): boolean;
   navigate(url: string | RelativeURL, options?: NavigateOptions): void;
   waitForTransition(): Promise<number>;
 }

@@ -140,11 +140,11 @@ describe('HashHistory()', () => {
 
       navigator.navigate('/articles/foo%2Fbar');
 
-      expect(navigator.isTransitionPending()).toBe(true);
+      expect(navigator.isTransitionRunning()).toBe(true);
 
       expect(await navigator.waitForTransition()).toBe(1);
 
-      expect(navigator.isTransitionPending()).toBe(false);
+      expect(navigator.isTransitionRunning()).toBe(false);
 
       expect(await navigator.waitForTransition()).toBe(0);
     });

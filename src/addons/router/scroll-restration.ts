@@ -12,7 +12,7 @@ export function ScrollRestration(): HookFunction<void> {
 
       if (typeof navigation === 'object') {
         const handleNavigate = (event: NavigateEvent) => {
-          if (!event.canIntercept || !navigator.isTransitionPending()) {
+          if (!event.canIntercept || !navigator.isTransitionRunning()) {
             return;
           }
 

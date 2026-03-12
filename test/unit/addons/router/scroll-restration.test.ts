@@ -176,13 +176,13 @@ describe('ScrollRestration()', () => {
     [true, 0],
   ])(
     'not intercepts navigation if the event is not interceptable',
-    async (canIntercept, pendingTransitions) => {
+    async (canIntercept, transitionRunningCount) => {
       const location: HistoryLocation = {
         url: new RelativeURL('/'),
         state: null,
         navigationType: 'push',
       };
-      const navigator = createMockNavigator(pendingTransitions);
+      const navigator = createMockNavigator(transitionRunningCount);
       const event = Object.assign(new Event('navigate'), {
         canIntercept,
         intercept: ({ handler }: NavigationInterceptOptions) => {
@@ -220,11 +220,13 @@ describe('ScrollRestration()', () => {
   });
 });
 
-function createMockNavigator(pendingTransitions: number = 0): HistoryNavigator {
+function createMockNavigator(
+  transitionRunningCount: number = 0,
+): HistoryNavigator {
   return {
     navigate: vi.fn(),
     getCurrentURL: vi.fn(() => new RelativeURL('/')),
-    isTransitionPending: vi.fn(() => pendingTransitions > 0),
-    waitForTransition: vi.fn(() => Promise.resolve(pendingTransitions)),
+    isTransitionRunning: vi.fn(() => transitionRunningCount > 0),
+    waitForTransition: vi.fn(() => Promise.resolve(transitionRunningCount)),
   };
 }

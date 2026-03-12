@@ -25,7 +25,7 @@ export function HashHistory(
       () => ({
         getCurrentURL: () =>
           RelativeURL.fromString(trimHashMark(window.location.hash)),
-        isTransitionPending: () => context.isUpdatePending(),
+        isTransitionRunning: () => context.isUpdateRunning(),
         navigate: (url, { replace = false, state = null } = {}) => {
           setLocation(
             {

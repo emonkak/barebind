@@ -392,7 +392,7 @@ export interface RenderContext {
     strings: readonly string[],
     ...values: readonly unknown[]
   ): Bindable<readonly unknown[]>;
-  isUpdatePending(): boolean;
+  isUpdateRunning(): boolean;
   math(
     strings: readonly string[],
     ...values: readonly unknown[]
