@@ -333,9 +333,6 @@ export class Runtime implements SessionContext {
     const result = action(transition);
 
     if (result !== undefined) {
-      result.catch((error) => {
-        controller.abort(error);
-      });
       transition.suspends.push(result);
     }
 
@@ -346,6 +343,7 @@ export class Runtime implements SessionContext {
         return { status: 'done' };
       },
       (reason) => {
+        controller.abort(reason);
         return { status: 'canceled', reason };
       },
     );
@@ -620,9 +618,9 @@ function resetRenderFrame(frame: RenderFrame): void {
   frame.passiveEffects.clear();
 }
 
-async function waitForAll(promises: Iterable<Promise<unknown>>): Promise<void> {
-  // Awaits promises in iterable, including any added during execution.
-  for (const promise of promises) {
-    await promise;
+async function waitForAll(promises: Promise<unknown>[]): Promise<void> {
+  // Awaits promises in array, including any added during execution.
+  for (let i = 0; i < promises.length; i = promises.length) {
+    await Promise.all(promises.slice(i));
   }
 }
