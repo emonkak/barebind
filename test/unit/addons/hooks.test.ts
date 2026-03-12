@@ -47,12 +47,9 @@ describe('DeferredValue()', () => {
   });
 
   it('returns the initial value if it is given', async () => {
-    const renderer = new TestRenderer(
-      (
-        { value, initialValue }: { value: string; initialValue: string },
-        session,
-      ) => {
-        return session.use(DeferredValue(value, initialValue));
+    const renderer = new TestRenderer<{ value: string; initialValue: string }>(
+      ({ value, initialValue }, session) => {
+        return session.use(DeferredValue(value, { initialValue }));
       },
     );
 
