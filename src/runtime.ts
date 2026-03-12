@@ -90,13 +90,8 @@ export class Runtime implements SessionContext {
       }
 
       const frame = createRenderFrame(id, lanes, coroutine);
-      const originScope = coroutine.scope;
-      const session = createUpdateSession(
-        frame,
-        originScope,
-        originScope,
-        this,
-      );
+      const { scope } = coroutine;
+      const session = createUpdateSession(frame, scope, scope, this);
 
       notifyObservers(this._observers, {
         type: 'update-start',
