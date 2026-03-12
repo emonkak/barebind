@@ -85,7 +85,7 @@ export class Runtime implements SessionContext {
       const { controller, coroutine, id, lanes, transition } = scheduledUpdate;
 
       if ((coroutine.pendingLanes & lanes) === Lane.NoLane) {
-        controller.resolve({ done: true, canceled: true });
+        controller.resolve({ status: 'skipped' });
         continue;
       }
 
@@ -122,7 +122,7 @@ export class Runtime implements SessionContext {
           lanes,
         });
 
-        controller.resolve({ done: true, canceled: false });
+        controller.resolve({ status: 'done' });
       } catch (error) {
         resetRenderFrame(frame);
 
@@ -134,7 +134,7 @@ export class Runtime implements SessionContext {
         });
 
         if (error instanceof InterruptError) {
-          controller.resolve({ done: false, canceled: true });
+          controller.resolve({ status: 'aborted', reason: error.cause });
         } else {
           controller.reject(error);
         }
@@ -255,7 +255,7 @@ export class Runtime implements SessionContext {
     const controller = Promise.withResolvers<UpdateResult>();
     let scheduled: Promise<UpdateResult>;
 
-    const callback = () => {
+    const callback = (): UpdateResult => {
       const shouldTriggerFlush =
         options.triggerFlush && this._scheduledUpdates.isEmpty();
 
@@ -273,7 +273,7 @@ export class Runtime implements SessionContext {
         });
       }
 
-      return { done: true, canceled: false };
+      return { status: 'done' };
     };
 
     if (options.immediate) {
@@ -281,13 +281,15 @@ export class Runtime implements SessionContext {
       scheduled = promise;
       resolve(callback());
     } else {
-      scheduled = this._backend.requestCallback(callback, options).catch(() => {
-        // callback() is guaranteed not to throw anything; rejection here only
-        // indicates AbortSignal cancellation.
-        const result = { done: false, canceled: true };
-        controller.resolve(result);
-        return result;
-      });
+      scheduled = this._backend
+        .requestCallback(callback, options)
+        .catch((error) => {
+          // callback() is guaranteed not to throw anything; rejection here only
+          // indicates AbortSignal cancellation.
+          const aborted: UpdateResult = { status: 'aborted', reason: error };
+          controller.resolve(aborted);
+          return aborted;
+        });
     }
 
     return {

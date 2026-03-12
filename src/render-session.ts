@@ -28,6 +28,7 @@ import {
   type TemplateMode,
   type UpdateHandle,
   type UpdateOptions,
+  type UpdateResult,
   type Usable,
 } from './core.js';
 import { DirectiveSpecifier } from './directive.js';
@@ -86,12 +87,12 @@ export class RenderSession implements RenderContext {
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
     if (this._coroutine.scope === DETACHED_SCOPE) {
-      const resolved = Promise.resolve({ done: false, canceled: true });
+      const skipped = Promise.resolve<UpdateResult>({ status: 'skipped' });
       return {
         id: this._frame.id,
         lanes: Lane.NoLane,
-        scheduled: resolved,
-        finished: resolved,
+        scheduled: skipped,
+        finished: skipped,
       };
     }
 
@@ -112,7 +113,7 @@ export class RenderSession implements RenderContext {
             return {
               id: this._frame.id,
               lanes: renderLanes,
-              scheduled: Promise.resolve({ done: true, canceled: true }),
+              scheduled: Promise.resolve({ status: 'skipped' }),
               finished: controller.promise,
             };
           }
@@ -336,12 +337,14 @@ export class RenderSession implements RenderContext {
           const nextState = reducer(prevState, action);
 
           if (areStatesEqual(nextState, prevState)) {
-            const resolved = Promise.resolve({ done: true, canceled: true });
+            const skipped = Promise.resolve<UpdateResult>({
+              status: 'skipped',
+            });
             return {
               id: this._frame.id,
               lanes: Lane.NoLane,
-              scheduled: resolved,
-              finished: resolved,
+              scheduled: skipped,
+              finished: skipped,
             };
           } else {
             const handle = context.forceUpdate(options);

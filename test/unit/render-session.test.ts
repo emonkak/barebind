@@ -134,7 +134,7 @@ describe('RenderSession', () => {
   });
 
   describe('forceUpdate()', () => {
-    it('schedules an update with the current coroutine', async () => {
+    it('schedules update with the current coroutine', async () => {
       let handle: UpdateHandle | undefined;
 
       const renderer = new TestRenderer((_props, session) => {
@@ -152,16 +152,14 @@ describe('RenderSession', () => {
       });
 
       expect(await handle?.scheduled).toStrictEqual({
-        done: true,
-        canceled: false,
+        status: 'done',
       });
       expect(await handle?.finished).toStrictEqual({
-        done: true,
-        canceled: false,
+        status: 'done',
       });
     });
 
-    it('renders the session again if rendering is running', async () => {
+    it('retries the current session again if rendering is running', async () => {
       let handle: UpdateHandle | undefined;
 
       const renderer = new TestRenderer((_props, session) => {
@@ -180,16 +178,14 @@ describe('RenderSession', () => {
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
       expect(count).toBe(1);
       expect(await handle?.scheduled).toStrictEqual({
-        done: true,
-        canceled: true,
+        status: 'skipped',
       });
       expect(await handle?.finished).toStrictEqual({
-        done: true,
-        canceled: false,
+        status: 'done',
       });
     });
 
-    it('should do nothing if the coroutine is detached', async () => {
+    it('skips update if the coroutine is detached', async () => {
       let handle: UpdateHandle | undefined;
 
       const renderer = new TestRenderer((_props, session) => {
@@ -207,12 +203,10 @@ describe('RenderSession', () => {
       expect(count).toBe(0);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
       expect(await handle?.scheduled).toStrictEqual({
-        done: false,
-        canceled: true,
+        status: 'skipped',
       });
       expect(await handle?.finished).toStrictEqual({
-        done: false,
-        canceled: true,
+        status: 'skipped',
       });
     });
   });

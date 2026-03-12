@@ -591,10 +591,10 @@ export interface UpdateOptions extends SchedulerPostTaskOptions {
   viewTransition?: boolean;
 }
 
-export interface UpdateResult {
-  done: boolean;
-  canceled: boolean;
-}
+export type UpdateResult =
+  | { status: 'done' }
+  | { status: 'skipped' }
+  | { status: 'aborted'; reason: unknown };
 
 export interface UpdateSession {
   readonly frame: RenderFrame;

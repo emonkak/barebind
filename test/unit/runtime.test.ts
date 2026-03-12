@@ -453,8 +453,8 @@ describe('Runtime', () => {
           const handle = runtime.scheduleUpdate(coroutine);
 
           expect(await handle.finished).toStrictEqual({
-            done: false,
-            canceled: true,
+            status: 'aborted',
+            reason: error,
           });
           expect(errorHandler).toHaveBeenCalledOnce();
           expect(errorHandler).toHaveBeenCalledWith(
@@ -849,8 +849,8 @@ describe('Runtime', () => {
           const handle = runtime.scheduleUpdate(coroutine, {});
 
           expect(await handle.finished).toStrictEqual({
-            done: false,
-            canceled: true,
+            status: 'aborted',
+            reason: error,
           });
           expect(errorHandler).toHaveBeenCalledOnce();
           expect(errorHandler).toHaveBeenCalledWith(
@@ -1087,8 +1087,7 @@ describe('Runtime', () => {
       expect(runtime.getScheduledUpdates()).toStrictEqual([]);
 
       expect(await handle.scheduled).toStrictEqual({
-        done: true,
-        canceled: false,
+        status: 'done',
       });
       expect(runtime.getScheduledUpdates()).toStrictEqual([
         expect.objectContaining({
@@ -1099,8 +1098,7 @@ describe('Runtime', () => {
       ]);
 
       expect(await handle.finished).toStrictEqual({
-        done: true,
-        canceled: false,
+        status: 'done',
       });
       expect(runtime.getScheduledUpdates()).toStrictEqual([]);
     });
@@ -1116,12 +1114,12 @@ describe('Runtime', () => {
       controller.abort();
 
       expect(await handle.scheduled).toStrictEqual({
-        done: false,
-        canceled: true,
+        status: 'aborted',
+        reason: controller.signal.reason,
       });
       expect(await handle.finished).toStrictEqual({
-        done: false,
-        canceled: true,
+        status: 'aborted',
+        reason: controller.signal.reason,
       });
       expect(runtime.getScheduledUpdates()).toStrictEqual([]);
     });
