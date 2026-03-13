@@ -10,16 +10,12 @@ import type { Runtime } from '@/runtime.js';
 import { createRuntime } from './mocks.js';
 
 export class TestUpdater {
-  readonly scope;
+  readonly scope: Scope;
 
-  readonly runtime;
+  readonly runtime: Runtime = createRuntime();
 
-  constructor(
-    scope: Scope = createScope(),
-    runtime: Runtime = createRuntime(),
-  ) {
+  constructor(scope: Scope = createScope()) {
     this.scope = scope;
-    this.runtime = runtime;
   }
 
   startUpdate<T>(
