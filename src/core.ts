@@ -528,7 +528,6 @@ export interface SessionObserver {
 }
 
 export interface Scope {
-  parent: Scope | null;
   owner: Coroutine | null;
   level: number;
   boundary: Boundary | null;
@@ -628,14 +627,10 @@ export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;
 /**
  * @internal
  */
-export function createScope(
-  parent: Scope | null = null,
-  owner: Coroutine | null = null,
-): Scope {
+export function createScope(owner: Coroutine | null = null): Scope {
   return {
-    parent,
     owner,
-    level: parent !== null ? parent.level + 1 : 0,
+    level: owner !== null ? owner.scope.level + 1 : 0,
     boundary: null,
   };
 }

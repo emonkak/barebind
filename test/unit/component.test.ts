@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { ComponentBinding, createComponent } from '@/component.js';
 import {
   type CommitPhase,
-  createScope,
   Lane,
   PartType,
   type RenderContext,
@@ -272,7 +271,7 @@ describe('ComponentBinding', () => {
           session.frame.pendingCoroutines.push({
             name: '',
             pendingLanes: Lane.ConcurrentLane,
-            scope: createScope(session.scope),
+            scope: session.scope,
             resume(session) {
               binding.detach(session);
             },

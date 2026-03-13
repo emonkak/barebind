@@ -77,7 +77,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
       pendingLanes: Lane.NoLane,
       scope: this.scope,
       resume: ({ frame, context }: UpdateSession): void => {
-        const scope = createScope(this.scope, coroutine);
+        const scope = createScope(coroutine);
         const session = new RenderSession(
           state,
           frame,

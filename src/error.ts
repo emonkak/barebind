@@ -22,7 +22,7 @@ export class RenderError extends Error {
 
 export function handleError(error: unknown, scope: Scope): Scope {
   let currentScope = scope;
-  let { parent: nextScope, boundary: nextBoundary } = currentScope;
+  let { owner: nextOwner, boundary: nextBoundary } = currentScope;
 
   const handleError = (error: unknown) => {
     while (true) {
@@ -36,10 +36,10 @@ export function handleError(error: unknown, scope: Scope): Scope {
         }
       }
 
-      if (nextScope !== null) {
-        const { parent, boundary } = nextScope;
-        currentScope = nextScope;
-        nextScope = parent;
+      if (nextOwner !== null) {
+        const { owner, boundary } = nextOwner.scope;
+        currentScope = nextOwner.scope;
+        nextOwner = owner;
         nextBoundary = boundary;
       } else {
         throw error;

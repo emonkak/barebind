@@ -136,7 +136,7 @@ export class RenderSession implements RenderContext {
 
   getSharedContext<T>(key: unknown): T | undefined {
     let currentScope: Scope | null = this._scope;
-    do {
+    while (true) {
       for (
         let boundary = currentScope.boundary;
         boundary !== null;
@@ -149,8 +149,11 @@ export class RenderSession implements RenderContext {
           return boundary.value as T;
         }
       }
-      currentScope = currentScope.parent;
-    } while (currentScope !== null);
+      if (currentScope.owner === null) {
+        break;
+      }
+      currentScope = currentScope.owner.scope;
+    }
     return undefined;
   }
 

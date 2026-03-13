@@ -442,16 +442,13 @@ describe('Runtime', () => {
             next: null,
             handler: errorHandler,
           };
-          const childScope = createScope(parentScope);
-          const coroutine = new MockCoroutine(
-            () => {
-              throw error;
-            },
-            -1,
-            childScope,
-          );
+          const parentCoroutine = new MockCoroutine(() => {}, parentScope);
+          const childScope = createScope(parentCoroutine);
+          const childCoroutine = new MockCoroutine(() => {
+            throw error;
+          }, childScope);
 
-          const handle = runtime.scheduleUpdate(coroutine);
+          const handle = runtime.scheduleUpdate(childCoroutine);
 
           expect(await handle.finished).toStrictEqual({
             status: 'canceled',
@@ -806,16 +803,13 @@ describe('Runtime', () => {
             next: null,
             handler: errorHandler,
           };
-          const childScope = createScope(parentScope);
-          const coroutine = new MockCoroutine(
-            () => {
-              throw error;
-            },
-            -1,
-            childScope,
-          );
+          const parentCoroutine = new MockCoroutine(() => {}, parentScope);
+          const childScope = createScope(parentCoroutine);
+          const childCoroutine = new MockCoroutine(() => {
+            throw error;
+          }, childScope);
 
-          const handle = runtime.scheduleUpdate(coroutine, {});
+          const handle = runtime.scheduleUpdate(childCoroutine, {});
 
           expect(await handle.finished).toStrictEqual({
             status: 'canceled',

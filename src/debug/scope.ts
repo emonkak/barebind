@@ -4,12 +4,10 @@ export function getOwnerStack(coroutine: Coroutine): Coroutine[] {
   const stack: Coroutine[] = [coroutine];
   let current: Scope | null = coroutine.scope;
 
-  do {
-    if (current.owner !== null) {
-      stack.push(current.owner);
-    }
-    current = current.parent;
-  } while (current !== null);
+  while (current.owner !== null) {
+    stack.push(current.owner);
+    current = current.owner.scope;
+  }
 
   return stack;
 }
