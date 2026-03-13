@@ -528,54 +528,49 @@ describe('Runtime', () => {
             );
           });
 
-          await transition.ready;
-
-          expect(observer.flushEvents()).toStrictEqual([
-            {
-              type: 'update-start',
-              id: 0,
-              lanes:
-                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
-            },
-            {
-              type: 'render-start',
-              id: 0,
-            },
-            {
-              type: 'render-end',
-              id: 0,
-            },
-            {
-              type: 'update-success',
-              id: 0,
-              lanes:
-                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
-            },
-            {
-              type: 'update-start',
-              id: 1,
-              lanes:
-                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
-            },
-            {
-              type: 'render-start',
-              id: 1,
-            },
-            {
-              type: 'render-end',
-              id: 1,
-            },
-            {
-              type: 'update-success',
-              id: 1,
-              lanes:
-                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
-            },
-          ]);
-
           await transition.finished;
 
           expect(observer.flushEvents()).toStrictEqual([
+            {
+              type: 'update-start',
+              id: 0,
+              lanes:
+                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
+            },
+            {
+              type: 'render-start',
+              id: 0,
+            },
+            {
+              type: 'render-end',
+              id: 0,
+            },
+            {
+              type: 'update-success',
+              id: 0,
+              lanes:
+                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
+            },
+            {
+              type: 'update-start',
+              id: 1,
+              lanes:
+                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
+            },
+            {
+              type: 'render-start',
+              id: 1,
+            },
+            {
+              type: 'render-end',
+              id: 1,
+            },
+            {
+              type: 'update-success',
+              id: 1,
+              lanes:
+                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
+            },
             {
               type: 'commit-start',
               id: 0,
@@ -1113,11 +1108,7 @@ describe('Runtime', () => {
           throw error;
         });
 
-        await expect(transition.ready).rejects.toThrow(error);
-        expect(await transition.finished).toStrictEqual({
-          status: 'canceled',
-          reason: error,
-        });
+        await expect(transition.finished).rejects.toThrow(error);
 
         expect(await handle?.scheduled).toStrictEqual({
           status: 'canceled',

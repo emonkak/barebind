@@ -24,7 +24,6 @@ import {
   type Transition,
   type TransitionAction,
   type TransitionHandle,
-  type TransitionResult,
   type UnwrapBindable,
   type Update,
   type UpdateHandle,
@@ -320,32 +319,9 @@ export class Runtime implements SessionContext {
 
   startTransition(action: TransitionAction): TransitionHandle {
     const controller = new AbortController();
-    const transition: Transition = {
-      signal: controller.signal,
-      suspends: [],
-      resumes: [],
-    };
-    const result = action(transition);
-
-    if (result !== undefined) {
-      transition.suspends.push(result);
-    }
-
-    const ready = waitForAll(transition.suspends);
-    const finished = ready.then<TransitionResult, TransitionResult>(
-      async () => {
-        await waitForAll(transition.resumes);
-        return { status: 'done' };
-      },
-      (reason) => {
-        controller.abort(reason);
-        return { status: 'canceled', reason };
-      },
-    );
-
+    const finished = startTransitionAction(action, controller);
     return {
       signal: controller.signal,
-      ready,
       finished,
     };
   }
@@ -613,6 +589,28 @@ function resetRenderFrame(frame: RenderFrame): void {
   frame.mutationEffects.clear();
   frame.layoutEffects.clear();
   frame.passiveEffects.clear();
+}
+
+async function startTransitionAction(
+  action: TransitionAction,
+  controller: AbortController,
+): Promise<void> {
+  const transition: Transition = {
+    signal: controller.signal,
+    suspends: [],
+    resumes: [],
+  };
+  try {
+    const suspend = action(transition);
+    if (suspend !== undefined) {
+      transition.suspends.push(suspend);
+    }
+    await waitForAll(transition.suspends);
+    await waitForAll(transition.resumes);
+  } catch (error) {
+    controller.abort(error);
+    throw error;
+  }
 }
 
 async function waitForAll(promises: Promise<unknown>[]): Promise<void> {

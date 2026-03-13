@@ -584,13 +584,8 @@ export type TransitionAction = (transition: Transition) => Promise<void> | void;
 
 export interface TransitionHandle {
   signal: AbortSignal;
-  ready: Promise<void>;
-  finished: Promise<TransitionResult>;
+  finished: Promise<void>;
 }
-
-export type TransitionResult =
-  | { status: 'done' }
-  | { status: 'canceled'; reason: unknown };
 
 export type UnwrapBindable<T> = T extends Bindable<infer Value> ? Value : T;
 
