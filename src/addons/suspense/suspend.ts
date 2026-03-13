@@ -123,10 +123,6 @@ class SuspendInternal<T> implements Promise<T> {
     return this._reason;
   }
 
-  get signal(): AbortSignal {
-    return this._controller.signal;
-  }
-
   abort(reason?: unknown): void {
     if (this._status === 'pending') {
       this._controller.abort(reason);

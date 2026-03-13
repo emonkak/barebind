@@ -12,7 +12,6 @@ describe('Suspend', () => {
       expect(suspend.status).toBe('pending');
       expect(suspend.value).toBe(undefined);
       expect(suspend.reason).toBe(undefined);
-      expect(suspend.signal).toBe(controller.signal);
     });
 
     it('starts in aborted state when the signal was already aborted', () => {
@@ -25,18 +24,6 @@ describe('Suspend', () => {
 
       expect(suspend.status).toBe('aborted');
       expect(suspend.reason).toBe(controller.signal.reason);
-      expect(suspend.signal).toBe(controller.signal);
-    });
-
-    it('starts aborted if the signal is already aborted', () => {
-      const controller = new AbortController();
-      const promise = new Promise(() => {});
-      const suspend = Suspend.await(promise, controller);
-
-      expect(suspend.status).toBe('pending');
-      expect(suspend.value).toBe(undefined);
-      expect(suspend.reason).toBe(undefined);
-      expect(suspend.signal).toBe(controller.signal);
     });
 
     it('transitions to fulfilled when the promise resolves', async () => {
