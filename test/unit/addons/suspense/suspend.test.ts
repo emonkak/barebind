@@ -317,6 +317,14 @@ describe('Suspend', () => {
     });
   });
 
+  describe('toString()', () => {
+    it('reflects the constructor name', () => {
+      const suspend = Suspend.resolve('ok');
+
+      expect(suspend.toString()).toBe('[object Suspend]');
+    });
+  });
+
   describe('unwrap()', () => {
     it('throws the suspend itself when pending', () => {
       const suspend = Suspend.await(

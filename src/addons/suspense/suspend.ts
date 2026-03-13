@@ -25,8 +25,7 @@ type SuspendStatus =
   | typeof STATUS_REJECTED
   | typeof STATUS_ABORTED;
 
-// biome-ignore lint/suspicious/noUnsafeDeclarationMerging: catch/finally are safely assigned via prototype
-class SuspendInternal<T> implements PromiseLike<T> {
+class SuspendInternal<T> implements Promise<T> {
   private _status: SuspendStatus;
 
   private _value: T | undefined;
@@ -108,6 +107,10 @@ class SuspendInternal<T> implements PromiseLike<T> {
     this._controller = controller;
   }
 
+  get [Symbol.toStringTag](): string {
+    return 'Suspend';
+  }
+
   get status(): SuspendStatus {
     return this._status;
   }
@@ -128,6 +131,19 @@ class SuspendInternal<T> implements PromiseLike<T> {
     if (this._status === 'pending') {
       this._controller.abort(reason);
     }
+  }
+
+  catch<TResult = never>(
+    onRejected?:
+      | ((reason: any) => TResult | PromiseLike<TResult>)
+      | undefined
+      | null,
+  ): Promise<T | TResult> {
+    return Promise.prototype.catch.call(this, onRejected);
+  }
+
+  finally(onFinally?: (() => void) | null | undefined): Promise<T> {
+    return Promise.prototype.finally.call(this, onFinally);
   }
 
   then<TFulfilled = T, TRejected = never>(
@@ -200,10 +216,5 @@ class SuspendInternal<T> implements PromiseLike<T> {
     }
   }
 }
-
-interface SuspendInternal<T> extends Promise<T> {}
-
-SuspendInternal.prototype.catch = Promise.prototype.catch;
-SuspendInternal.prototype.finally = Promise.prototype.finally;
 
 export const Suspend: SuspendClass = SuspendInternal as SuspendClass;
