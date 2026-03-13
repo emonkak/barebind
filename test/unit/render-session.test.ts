@@ -5,7 +5,6 @@ import {
   $hook,
   DETACHED_SCOPE,
   EffectQueue,
-  Lane,
   type RefObject,
   type RenderContext,
   type UpdateHandle,
@@ -16,40 +15,6 @@ import { waitForMicrotasks, waitForTimeout } from '../test-helpers.js';
 import { TestRenderer } from '../test-renderer.js';
 
 describe('RenderSession', () => {
-  describe('getAncestorUpdate()', () => {
-    it('returns the running update outside the scope', () => {
-      const renderer = new TestRenderer((_props, session) => {
-        return session.getAncestorUpdate();
-      });
-
-      SESSION: {
-        const transition = {
-          signal: AbortSignal.abort(),
-          suspends: [],
-          resumes: [],
-        };
-        const update = renderer.render({}, { transition });
-
-        expect(update?.lanes).toBe(
-          Lane.SyncLane | Lane.BackgroundLane | Lane.TransitionLane,
-        );
-        expect(update?.transition).toBe(transition);
-      }
-    });
-
-    it('returns null when no running update outside the scope', () => {
-      const renderer = new TestRenderer((_props, session) => {
-        return session;
-      });
-
-      SESSION: {
-        const session = renderer.render({});
-
-        expect(session.getAncestorUpdate()).toBe(null);
-      }
-    });
-  });
-
   describe('getSessionContext()', () => {
     it('returns the runtime as a SessionContext', () => {
       const renderer = new TestRenderer((_props, session) => {

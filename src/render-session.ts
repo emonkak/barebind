@@ -28,7 +28,6 @@ import {
   type TemplateMode,
   type TransitionAction,
   type TransitionHandle,
-  type Update,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
@@ -129,17 +128,6 @@ export class RenderSession implements RenderContext {
     }
 
     return this._context.scheduleUpdate(this._coroutine, options);
-  }
-
-  getAncestorUpdate(): Update | null {
-    return (
-      this._context
-        .getScheduledUpdates()
-        .find(
-          ({ coroutine }) =>
-            coroutine.scope.level <= this._coroutine.scope.level,
-        ) ?? null
-    );
   }
 
   getSessionContext(): SessionContext {

@@ -23,7 +23,7 @@ export function BrowserHistory(
     const navigator = context.useMemo<HistoryNavigator>(
       () => ({
         getCurrentURL: () => RelativeURL.fromURL(window.location),
-        isTransitionRunning: () => context.getAncestorUpdate() !== null,
+        isTransitionRunning: () => context.getRunningUpdate() !== null,
         navigate: (url, { replace = false, state = null } = {}) => {
           setLocation(
             {
@@ -42,8 +42,7 @@ export function BrowserHistory(
         },
         async waitForTransition(): Promise<boolean> {
           return (
-            (await context.getAncestorUpdate()?.controller.promise) !==
-            undefined
+            (await context.getRunningUpdate()?.controller.promise) !== undefined
           );
         },
       }),

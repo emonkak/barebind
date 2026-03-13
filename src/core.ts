@@ -384,7 +384,6 @@ export interface RefObject<T> {
 export interface RenderContext {
   catchError(handler: ErrorHandler): void;
   forceUpdate(options?: UpdateOptions): UpdateHandle;
-  getAncestorUpdate(): Update | null;
   getSessionContext(): SessionContext;
   getSharedContext<T>(key: unknown): T | undefined;
   html(
