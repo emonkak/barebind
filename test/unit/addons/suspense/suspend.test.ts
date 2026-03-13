@@ -266,7 +266,7 @@ describe('Suspend', () => {
 
   describe('then()', () => {
     it('resolves with the value when the awaited promise fulfills', async () => {
-      const suspend = Suspend.await(Promise.resolve(10), new AbortController());
+      const suspend = Suspend.await(Promise.resolve(10));
 
       expect(await suspend).toBe(10);
       expect(await suspend.then((x) => x * 2)).toBe(20);
@@ -332,10 +332,7 @@ describe('Suspend', () => {
 
   describe('unwrap()', () => {
     it('throws the suspend itself when pending', () => {
-      const suspend = Suspend.await(
-        new Promise(() => {}),
-        new AbortController(),
-      );
+      const suspend = Suspend.await(new Promise(() => {}));
 
       expect(() => suspend.unwrap()).toThrow(expect.exact(suspend) as any);
     });

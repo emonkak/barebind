@@ -36,7 +36,7 @@ class SuspendInternal<T> implements Promise<T> {
 
   static await<T>(
     promise: PromiseLike<T>,
-    controller: AbortController,
+    controller?: AbortController,
   ): Suspend<T> {
     const suspend = new SuspendInternal<T>(
       STATUS_PENDING,
@@ -44,7 +44,7 @@ class SuspendInternal<T> implements Promise<T> {
       undefined,
       controller,
     );
-    const { signal } = controller;
+    const { signal } = suspend._controller;
 
     promise.then(
       (value) => {
