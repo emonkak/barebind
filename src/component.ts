@@ -193,6 +193,7 @@ class CleanupEffectHook implements Effect {
     if (this._hook.epoch === this._epoch) {
       this._hook.cleanup?.();
       this._hook.cleanup = undefined;
+      this._hook.memoizedDependencies = null;
     }
   }
 }
