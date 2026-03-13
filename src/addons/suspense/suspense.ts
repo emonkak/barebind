@@ -19,13 +19,16 @@ export const Suspense = createComponent(function Suspense(
   { children, fallback }: SuspenseProps,
   $: RenderContext,
 ): unknown {
-  const trackedSuspends = $.useMemo<Set<Suspend<unknown>>>(
-    () => new Set(),
-    [children],
-  );
-  const suspendRefCounts = $.useMemo<WeakMap<Suspend<unknown>, RefCount>>(
-    () => new Map(),
+  const store = $.useMemo(
+    () => ({
+      isMounted: false,
+      suspendRefCounts: new WeakMap<Suspend<unknown>, RefCount>(),
+    }),
     [],
+  );
+  const trackedSuspends = $.useMemo(
+    () => new Set<Suspend<unknown>>(),
+    [children],
   );
 
   const areAllSuspendsSettled = () =>
@@ -33,7 +36,7 @@ export const Suspense = createComponent(function Suspense(
 
   $.catchError((errorOrSuspend, handleError) => {
     if (errorOrSuspend instanceof Suspend) {
-      const refCount = suspendRefCounts.getOrInsertComputed(
+      const refCount = store.suspendRefCounts.getOrInsertComputed(
         errorOrSuspend,
         () => ({
           count: 0,
@@ -44,16 +47,15 @@ export const Suspense = createComponent(function Suspense(
         return;
       }
 
-      const insideUpdate = $.getInsideUpdate();
+      const subsequentUpdate = store.isMounted
+        ? $.getSessionContext().getScheduledUpdates()[0]
+        : undefined;
 
-      // If the current update is a transition originating from within this
-      // scope, prevent the fallback and retry the update after the suspend
-      // resolves.
-      // Note: Unlike React, whether to show the fallback depends on whether
-      // the update originates inside or outside the scope. This is more
-      // intuitive and simpler to implement.
-      if (insideUpdate?.transition != null) {
-        const { coroutine, transition } = insideUpdate;
+      // If the boundary is already mounted and the update is a transition,
+      // suppress the fallback and retry once the suspend resolves. Otherwise,
+      // show the fallback immediately. This matches React's behavior.
+      if (subsequentUpdate?.transition != null) {
+        const { coroutine, transition } = subsequentUpdate;
         const retry = errorOrSuspend.then(
           () =>
             $.getSessionContext().scheduleUpdate(coroutine, { transition })
@@ -84,9 +86,16 @@ export const Suspense = createComponent(function Suspense(
   });
 
   $.useLayoutEffect(() => {
+    store.isMounted = true;
+    return () => {
+      store.isMounted = false;
+    };
+  }, []);
+
+  $.useLayoutEffect(() => {
     return () => {
       for (const suspend of trackedSuspends) {
-        const refCount = suspendRefCounts.get(suspend);
+        const refCount = store.suspendRefCounts.get(suspend);
         if (refCount !== undefined && --refCount.count === 0) {
           suspend.abort();
         }
