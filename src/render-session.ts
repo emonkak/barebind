@@ -164,7 +164,7 @@ export class RenderSession implements RenderContext {
   isUpdateRunning(): boolean {
     return this._context
       .getScheduledUpdates()
-      .some((pendingUpdate) => pendingUpdate.coroutine === this._coroutine);
+      .some(({ coroutine }) => coroutine.scope.level < this._scope.level);
   }
 
   math(
@@ -402,7 +402,7 @@ export class RenderSession implements RenderContext {
   async waitForUpdate(): Promise<number> {
     const promises = this._context
       .getScheduledUpdates()
-      .filter((pendingUpdate) => pendingUpdate.coroutine === this._coroutine)
+      .filter(({ coroutine }) => coroutine.scope.level < this._scope.level)
       .map((pendingUpdate) => pendingUpdate.controller.promise);
     return (await Promise.allSettled(promises)).length;
   }
