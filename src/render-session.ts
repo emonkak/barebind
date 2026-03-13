@@ -130,16 +130,7 @@ export class RenderSession implements RenderContext {
     return this._context.scheduleUpdate(this._coroutine, options);
   }
 
-  getInsideUpdate(): Update | null {
-    return (
-      this._context
-        .getScheduledUpdates()
-        .find(({ coroutine }) => coroutine.scope.level >= this._scope.level) ??
-      null
-    );
-  }
-
-  getOutsideUpdate(): Update | null {
+  getAncestorUpdate(): Update | null {
     return (
       this._context
         .getScheduledUpdates()

@@ -56,24 +56,10 @@ describe('RenderSession', () => {
     });
   });
 
-  describe('getInsideUpdate()', () => {
-    it('returns null when no running update inside the scope', () => {
-      const renderer = new TestRenderer((_props, session) => {
-        return session.getInsideUpdate();
-      });
-
-      SESSION: {
-        const update = renderer.render({});
-
-        expect(update).toBe(null);
-      }
-    });
-  });
-
-  describe('getOutsideUpdate()', () => {
+  describe('getAncestorUpdate()', () => {
     it('returns the running update outside the scope', () => {
       const renderer = new TestRenderer((_props, session) => {
-        return session.getOutsideUpdate();
+        return session.getAncestorUpdate();
       });
 
       SESSION: {
@@ -99,7 +85,7 @@ describe('RenderSession', () => {
       SESSION: {
         const session = renderer.render({});
 
-        expect(session.getOutsideUpdate()).toBe(null);
+        expect(session.getAncestorUpdate()).toBe(null);
       }
     });
   });

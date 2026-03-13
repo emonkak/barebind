@@ -25,7 +25,7 @@ export function HashHistory(
       () => ({
         getCurrentURL: () =>
           RelativeURL.fromString(trimHashMark(window.location.hash)),
-        isTransitionRunning: () => context.getOutsideUpdate() !== null,
+        isTransitionRunning: () => context.getAncestorUpdate() !== null,
         navigate: (url, { replace = false, state = null } = {}) => {
           setLocation(
             {
@@ -44,7 +44,8 @@ export function HashHistory(
         },
         async waitForTransition(): Promise<boolean> {
           return (
-            (await context.getOutsideUpdate()?.controller.promise) !== undefined
+            (await context.getAncestorUpdate()?.controller.promise) !==
+            undefined
           );
         },
       }),
