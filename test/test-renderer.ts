@@ -7,6 +7,7 @@ import {
   HookType,
   Lane,
   type Scope,
+  type UpdateOptions,
   type UpdateSession,
 } from '@/core.js';
 import { RenderSession } from '@/render-session.js';
@@ -51,7 +52,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
     };
   }
 
-  render(props: TProps): TResult {
+  render(props: TProps, options?: UpdateOptions): TResult {
     const { callback, state } = this;
     const previousBoundary = this.scope.boundary;
     let returnValue: TResult;
@@ -92,6 +93,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
     };
 
     this.runtime.scheduleUpdate(coroutine, {
+      ...options,
       triggerFlush: false,
       immediate: true,
     });

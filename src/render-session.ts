@@ -32,7 +32,6 @@ import {
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
-  type UpdateTask,
   type Usable,
 } from './core.js';
 import { DirectiveSpecifier } from './directive.js';
