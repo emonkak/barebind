@@ -52,14 +52,14 @@ class SuspendInternal<T> implements Promise<T> {
           suspend._status = STATUS_FULFILLED;
           suspend._value = value;
         }
-        signal.dispatchEvent(new Event('fulfill'));
+        signal.dispatchEvent(new CustomEvent('fulfill', { detail: value }));
       },
       (reason) => {
         if (suspend._status === STATUS_PENDING) {
           suspend._status = STATUS_REJECTED;
           suspend._reason = reason;
         }
-        signal.dispatchEvent(new Event('reject'));
+        signal.dispatchEvent(new CustomEvent('reject', { detail: reason }));
       },
     );
 
@@ -159,39 +159,7 @@ class SuspendInternal<T> implements Promise<T> {
     let promise: Promise<T>;
     switch (this._status) {
       case STATUS_PENDING:
-        promise = new Promise<T>((resolve, reject) => {
-          const signal = this._controller.signal;
-          const eventController = new AbortController();
-          const eventSignal = eventController.signal;
-          signal.addEventListener(
-            'fulfill',
-            () => {
-              resolve(this._value!);
-              eventController.abort();
-            },
-            {
-              signal: eventSignal,
-            },
-          );
-          signal.addEventListener(
-            'reject',
-            () => {
-              reject(this._reason);
-              eventController.abort();
-            },
-            {
-              signal: eventSignal,
-            },
-          );
-          signal.addEventListener(
-            'abort',
-            () => {
-              reject(this._controller.signal.reason);
-              eventController.abort();
-            },
-            { signal: eventSignal },
-          );
-        });
+        promise = waitUntilSettled(this._controller.signal);
         break;
       case STATUS_FULFILLED:
         promise = Promise.resolve(this._value!);
@@ -218,3 +186,37 @@ class SuspendInternal<T> implements Promise<T> {
 }
 
 export const Suspend: SuspendClass = SuspendInternal as SuspendClass;
+
+function waitUntilSettled<T>(signal: AbortSignal): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const controller = new AbortController();
+    signal.addEventListener(
+      'fulfill',
+      (event) => {
+        resolve((event as CustomEvent<T>).detail);
+        controller.abort();
+      },
+      {
+        signal: controller.signal,
+      },
+    );
+    signal.addEventListener(
+      'reject',
+      (event) => {
+        reject((event as CustomEvent).detail);
+        controller.abort();
+      },
+      {
+        signal: controller.signal,
+      },
+    );
+    signal.addEventListener(
+      'abort',
+      () => {
+        reject(signal.reason);
+        controller.abort();
+      },
+      { signal: controller.signal },
+    );
+  });
+}

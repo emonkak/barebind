@@ -152,12 +152,15 @@ describe('Suspend', () => {
       await promise;
 
       expect(listener).toHaveBeenCalledOnce();
-      expect(listener).toHaveBeenCalledWith(expect.any(Event));
+      expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({ detail: 'ok' }),
+      );
     });
 
     it('emits "reject" event on signal when the promise rejects', async () => {
       const listener = vi.fn();
-      const promise = Promise.reject('fail');
+      const error = new Error('fail');
+      const promise = Promise.reject(error);
       const controller = new AbortController();
 
       controller.signal.addEventListener('reject', listener);
@@ -170,7 +173,9 @@ describe('Suspend', () => {
       }
 
       expect(listener).toHaveBeenCalledOnce();
-      expect(listener).toHaveBeenCalledWith(expect.any(Event));
+      expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({ detail: error }),
+      );
     });
   });
 
