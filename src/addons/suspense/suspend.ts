@@ -125,7 +125,9 @@ class SuspendInternal<T> implements PromiseLike<T> {
   }
 
   abort(reason?: unknown): void {
-    this._controller.abort(reason);
+    if (this._status === 'pending') {
+      this._controller.abort(reason);
+    }
   }
 
   then<TFulfilled = T, TRejected = never>(

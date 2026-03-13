@@ -44,7 +44,7 @@ describe('Suspend', () => {
       expect(suspend.reason).toBe(error);
     });
 
-    it('transitions to rejected when aborted while pending', () => {
+    it('transitions to rejected when the signal aborts while pending', () => {
       const controller = new AbortController();
       const suspend = Suspend.await(new Promise(() => {}), controller);
       const error = new Error('abort');
@@ -276,7 +276,7 @@ describe('Suspend', () => {
   });
 
   describe('abort()', () => {
-    it('aborts the signal', () => {
+    it('aborts the signal when pending', () => {
       const error = new Error('abort');
       const controller = new AbortController();
       const suspend = Suspend.await(new Promise(() => {}), controller);
@@ -285,6 +285,27 @@ describe('Suspend', () => {
 
       expect(controller.signal.aborted).toBe(true);
       expect(controller.signal.reason).toBe(error);
+    });
+
+    it('does not abort the signal when fulfilled', () => {
+      const controller = new AbortController();
+      const suspend = Suspend.resolve('ok', controller);
+
+      suspend.abort();
+
+      expect(controller.signal.aborted).toBe(false);
+      expect(controller.signal.reason).toBe(undefined);
+    });
+
+    it('does not abort the signal when rejected', () => {
+      const controller = new AbortController();
+      const error = new Error('fail');
+      const suspend = Suspend.reject(error, controller);
+
+      suspend.abort();
+
+      expect(controller.signal.aborted).toBe(false);
+      expect(controller.signal.reason).toBe(undefined);
     });
   });
 });
