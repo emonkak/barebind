@@ -64,35 +64,35 @@ class SuspendInternal<T> implements PromiseLike<T> {
       },
     );
 
-    signal.addEventListener(
-      'abort',
-      () => {
-        if (suspend._status === STATUS_PENDING) {
-          suspend._status = STATUS_ABORTED;
-          suspend._reason = controller.signal.reason;
-        }
-      },
-      { once: true },
-    );
+    const abortWhenPending = () => {
+      if (suspend._status === STATUS_PENDING) {
+        suspend._status = STATUS_ABORTED;
+        suspend._reason = signal.reason;
+      }
+    };
+
+    if (signal.aborted) {
+      abortWhenPending();
+    } else {
+      signal.addEventListener('abort', abortWhenPending, { once: true });
+    }
 
     return suspend as Suspend<T>;
   }
 
-  static reject<T>(reason: unknown, controller: AbortController): Suspend<T> {
+  static reject<T>(reason: unknown): Suspend<T> {
     return new SuspendInternal(
       STATUS_REJECTED,
       undefined,
       reason,
-      controller,
     ) as Suspend<T>;
   }
 
-  static resolve<T>(value: T, controller: AbortController): Suspend<T> {
+  static resolve<T>(value: T): Suspend<T> {
     return new SuspendInternal(
       STATUS_FULFILLED,
       value,
       undefined,
-      controller,
     ) as Suspend<T>;
   }
 
@@ -100,7 +100,7 @@ class SuspendInternal<T> implements PromiseLike<T> {
     status: SuspendStatus,
     value: T | undefined,
     reason: unknown,
-    controller: AbortController,
+    controller: AbortController = new AbortController(),
   ) {
     this._status = status;
     this._value = value;
