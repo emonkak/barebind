@@ -185,34 +185,34 @@ export const Suspend: SuspendClass = SuspendInternal as SuspendClass;
 
 function waitUntilSettled<T>(signal: AbortSignal): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const controller = new AbortController();
+    const eventController = new AbortController();
     signal.addEventListener(
       'fulfill',
       (event) => {
         resolve((event as CustomEvent<T>).detail);
-        controller.abort();
+        eventController.abort();
       },
       {
-        signal: controller.signal,
+        signal: eventController.signal,
       },
     );
     signal.addEventListener(
       'reject',
       (event) => {
         reject((event as CustomEvent).detail);
-        controller.abort();
+        eventController.abort();
       },
       {
-        signal: controller.signal,
+        signal: eventController.signal,
       },
     );
     signal.addEventListener(
       'abort',
       () => {
         reject(signal.reason);
-        controller.abort();
+        eventController.abort();
       },
-      { signal: controller.signal },
+      { signal: eventController.signal },
     );
   });
 }
