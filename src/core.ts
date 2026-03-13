@@ -618,10 +618,10 @@ export type UpdateResult =
   | { status: 'canceled'; reason: unknown };
 
 export interface UpdateSession {
-  readonly frame: RenderFrame;
-  readonly scope: Scope;
-  readonly coroutine: Coroutine;
-  readonly context: SessionContext;
+  frame: RenderFrame;
+  scope: Scope;
+  coroutine: Coroutine;
+  context: SessionContext;
 }
 
 export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;
