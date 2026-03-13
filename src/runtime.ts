@@ -26,11 +26,11 @@ import {
   type TransitionHandle,
   type TransitionResult,
   type UnwrapBindable,
+  type Update,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
   type UpdateSession,
-  type UpdateTask,
 } from './core.js';
 import { toDirective } from './directive.js';
 import { handleError, InterruptError } from './error.js';
@@ -55,7 +55,7 @@ export class Runtime implements SessionContext {
 
   private readonly _maxCoroutinesPerYield: number;
 
-  private readonly _scheduledUpdates: LinkedList<UpdateTask> = new LinkedList();
+  private readonly _scheduledUpdates: LinkedList<Update> = new LinkedList();
 
   private readonly _uniqueIdentifier: string;
 
@@ -83,11 +83,11 @@ export class Runtime implements SessionContext {
 
   async flushUpdates(): Promise<void> {
     for (
-      let scheduledUpdate: UpdateTask | undefined;
-      (scheduledUpdate = this._scheduledUpdates.front()?.value) !== undefined;
+      let udpate: Update | undefined;
+      (udpate = this._scheduledUpdates.front()?.value) !== undefined;
       this._scheduledUpdates.popFront()
     ) {
-      const { controller, coroutine, id, lanes, transition } = scheduledUpdate;
+      const { controller, coroutine, id, lanes, transition } = udpate;
 
       if ((coroutine.pendingLanes & lanes) === Lane.NoLane) {
         controller.resolve({ status: 'skipped' });
@@ -105,7 +105,7 @@ export class Runtime implements SessionContext {
       });
 
       try {
-        if (scheduledUpdate.lanes & Lane.SyncLane) {
+        if (lanes & Lane.SyncLane) {
           this._runRenderSync(session);
           this._runCommitSync(session);
         } else {
@@ -149,7 +149,7 @@ export class Runtime implements SessionContext {
     }
   }
 
-  getScheduledUpdates(): UpdateTask[] {
+  getScheduledUpdates(): Update[] {
     return Array.from(this._scheduledUpdates);
   }
 

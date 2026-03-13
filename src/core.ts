@@ -453,7 +453,7 @@ export interface ReversibleEffect extends Effect {
 
 export interface SessionContext extends DirectiveContext {
   addObserver(observer: SessionObserver): Cleanup;
-  getScheduledUpdates(): UpdateTask[];
+  getScheduledUpdates(): Update[];
   nextIdentifier(): string;
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,
@@ -595,6 +595,14 @@ export type TransitionResult =
 
 export type UnwrapBindable<T> = T extends Bindable<infer Value> ? Value : T;
 
+export interface Update {
+  id: number;
+  lanes: Lanes;
+  coroutine: Coroutine;
+  controller: PromiseWithResolvers<UpdateResult>;
+  transition: Transition | null;
+}
+
 export interface UpdateHandle {
   id: number;
   lanes: Lanes;
@@ -620,14 +628,6 @@ export interface UpdateSession {
   readonly scope: Scope;
   readonly coroutine: Coroutine;
   readonly context: SessionContext;
-}
-
-export interface UpdateTask {
-  id: number;
-  lanes: Lanes;
-  coroutine: Coroutine;
-  controller: PromiseWithResolvers<UpdateResult>;
-  transition: Transition | null;
 }
 
 export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;

@@ -28,6 +28,7 @@ import {
   type TemplateMode,
   type TransitionAction,
   type TransitionHandle,
+  type Update,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,

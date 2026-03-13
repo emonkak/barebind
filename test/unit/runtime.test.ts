@@ -1054,7 +1054,7 @@ describe('Runtime', () => {
   });
 
   describe('scheduleUpdate()', () => {
-    it('registers new a update task', async () => {
+    it('registers new a update', async () => {
       const runtime = createRuntime();
       const coroutine = new MockCoroutine();
       const handle = runtime.scheduleUpdate(coroutine);
