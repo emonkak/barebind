@@ -42,7 +42,7 @@ export class RenderSession implements RenderContext {
 
   private readonly _frame: RenderFrame;
 
-  private readonly _scope: Scope;
+  private _scope: Scope;
 
   private readonly _coroutine: Coroutine;
 
@@ -88,6 +88,7 @@ export class RenderSession implements RenderContext {
     // Refuse to mutate scope after finalization.
     Object.freeze(this._scope);
 
+    this._scope = DETACHED_SCOPE;
     this._hookIndex++;
   }
 
@@ -134,8 +135,10 @@ export class RenderSession implements RenderContext {
     return (
       this._context
         .getScheduledUpdates()
-        .find(({ coroutine }) => coroutine.scope.level < this._scope.level) ??
-      null
+        .find(
+          ({ coroutine }) =>
+            coroutine.scope.level <= this._coroutine.scope.level,
+        ) ?? null
     );
   }
 
@@ -191,7 +194,7 @@ export class RenderSession implements RenderContext {
       try {
         await action(transition);
       } catch (error) {
-        handleError(error, this._scope, this._coroutine);
+        handleError(error, this._coroutine.scope);
       }
     });
   }
@@ -211,7 +214,7 @@ export class RenderSession implements RenderContext {
   }
 
   throwError(error: unknown): void {
-    handleError(error, this._scope, this._coroutine);
+    handleError(error, this._coroutine.scope);
   }
 
   use<T>(usable: HookClass<T>): T;

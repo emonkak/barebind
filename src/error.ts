@@ -1,4 +1,4 @@
-import { BoundaryType, type Coroutine, Lane, type Scope } from './core.js';
+import { BoundaryType, type Coroutine, type Scope } from './core.js';
 import { getOwnerStack } from './debug/scope.js';
 
 export class InterruptError extends Error {}
@@ -20,11 +20,7 @@ export class RenderError extends Error {
   }
 }
 
-export function handleError(
-  error: unknown,
-  scope: Scope,
-  coroutine: Coroutine,
-): void {
+export function handleError(error: unknown, scope: Scope): Scope {
   let currentScope = scope;
   let { parent: nextScope, boundary: nextBoundary } = currentScope;
 
@@ -51,17 +47,7 @@ export function handleError(
     }
   };
 
-  try {
-    handleError(error);
-  } catch (error) {
-    throw new RenderError('An error occurred while rendering.', coroutine, {
-      cause: error,
-    });
-  }
+  handleError(error);
 
-  if ((currentScope.owner?.pendingLanes ?? Lane.NoLane) === Lane.NoLane) {
-    // The error was captured but no recovery render was scheduled.
-    // Detach the scope to stop further updates on this subtree.
-    throw new InterruptError(undefined, { cause: error });
-  }
+  return currentScope;
 }

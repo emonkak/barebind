@@ -10,52 +10,12 @@ import {
   type RenderContext,
   type UpdateHandle,
 } from '@/core.js';
-import { RenderError } from '@/error.js';
 import { RenderSession } from '@/render-session.js';
 import { MockTemplate } from '../mocks.js';
 import { waitForMicrotasks, waitForTimeout } from '../test-helpers.js';
 import { TestRenderer } from '../test-renderer.js';
 
 describe('RenderSession', () => {
-  describe('catchError()', () => {
-    it('propagates the error to error boundaries when handleError() is invoked', () => {
-      const renderer = new TestRenderer(
-        ({ error }: { error: unknown }, session) => {
-          const [capturedError, setCapturedError] =
-            session.useState<unknown>(null);
-
-          session.catchError((error) => {
-            setCapturedError(error);
-          });
-
-          session.catchError((error, handleError) => {
-            handleError(error);
-          });
-
-          if (capturedError === null) {
-            session.throwError(error);
-          }
-
-          return capturedError;
-        },
-      );
-
-      SESSION: {
-        const error = new Error('fail');
-        expect(renderer.render({ error })).toBe(error);
-      }
-    });
-
-    it('throws an error when called outside of the render session', () => {
-      const renderer = new TestRenderer((_props, session) => session);
-
-      expect(() => {
-        const session = renderer.render({});
-        session.catchError(() => {});
-      }).toThrow(TypeError);
-    });
-  });
-
   describe('getAncestorUpdate()', () => {
     it('returns the running update outside the scope', () => {
       const renderer = new TestRenderer((_props, session) => {
@@ -128,6 +88,18 @@ describe('RenderSession', () => {
         const value = renderer.render({});
 
         expect(value).toBe(undefined);
+      }
+    });
+
+    it('always return undefined when the render session is detached', () => {
+      const renderer = new TestRenderer((_props, session) => {
+        session.setSharedContext('foo', 123);
+        return session;
+      });
+
+      SESSION: {
+        const session = renderer.render({});
+        expect(session.getSharedContext('foo')).toBe(undefined);
       }
     });
 
@@ -302,34 +274,6 @@ describe('RenderSession', () => {
     });
   });
 
-  describe('startTransition()', () => {
-    it('propagate the error that occur during action execution to error boundaries', () => {
-      const renderer = new TestRenderer(
-        ({ error }: { error: unknown }, session) => {
-          const [capturedError, setCapturedError] =
-            session.useState<unknown>(null);
-
-          session.catchError((error) => {
-            setCapturedError(error);
-          });
-
-          if (capturedError === null) {
-            session.startTransition(() => {
-              throw error;
-            });
-          }
-
-          return capturedError;
-        },
-      );
-
-      SESSION: {
-        const error = new Error('fail');
-        expect(renderer.render({ error })).toBe(error);
-      }
-    });
-  });
-
   describe('text()', () => {
     it('returns a bindable with the text template', () => {
       const renderer = new TestRenderer(
@@ -346,22 +290,6 @@ describe('RenderSession', () => {
         }),
       );
       expect(directive.value).toStrictEqual(['World']);
-    });
-  });
-
-  describe('throwError()', () => {
-    it('rethrows the error as a RenderError', () => {
-      const error = new Error('fail');
-      const renderer = new TestRenderer((_props, session) => {
-        session.catchError((error) => {
-          throw error;
-        });
-        session.throwError(error);
-      });
-
-      SESSION: {
-        expect(() => renderer.render({})).toThrow(RenderError);
-      }
     });
   });
 

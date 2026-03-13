@@ -32,7 +32,7 @@ import {
   type UpdateSession,
 } from './core.js';
 import { toDirective } from './directive.js';
-import { handleError, InterruptError } from './error.js';
+import { handleError, InterruptError, RenderError } from './error.js';
 import { RenderSession } from './render-session.js';
 
 export interface RuntimeOptions {
@@ -566,21 +566,27 @@ function processError(
   coroutine: Coroutine,
   observers: LinkedList<SessionObserver>,
 ): void {
-  let captured = false;
+  let handlingScope: Scope | null = null;
 
   try {
-    handleError(error, coroutine.scope, coroutine);
-    captured = true;
+    handlingScope = handleError(error, coroutine.scope);
   } catch (error) {
-    captured = error instanceof InterruptError;
-    throw error;
+    throw new RenderError('An error occurred while rendering.', coroutine, {
+      cause: error,
+    });
   } finally {
     notifyObservers(observers, {
       type: 'render-error',
       id,
       error,
-      captured,
+      captured: handlingScope !== null,
     });
+  }
+
+  if ((handlingScope.owner?.pendingLanes ?? Lane.NoLane) === Lane.NoLane) {
+    // The error was captured but no recovery render was scheduled.
+    // Detach the scope to stop further updates on this subtree.
+    throw new InterruptError(undefined, { cause: error });
   }
 }
 

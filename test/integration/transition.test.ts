@@ -29,7 +29,7 @@ const App = createComponent<AppProps>(function App({ tracker }, $): unknown {
   `;
 });
 
-test('defer commit until transition settles', async () => {
+test('defers commit until the transition settles', async () => {
   const tracker: AppTrakcer = { transition: null };
   const source = App({ tracker });
   const container = document.createElement('div');
