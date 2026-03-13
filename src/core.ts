@@ -384,13 +384,14 @@ export interface RefObject<T> {
 export interface RenderContext {
   catchError(handler: ErrorHandler): void;
   forceUpdate(options?: UpdateOptions): UpdateHandle;
+  getInsideUpdate(): Update | null;
+  getOutsideUpdate(): Update | null;
   getSessionContext(): SessionContext;
   getSharedContext<T>(key: unknown): T | undefined;
   html(
     strings: readonly string[],
     ...values: readonly unknown[]
   ): Bindable<readonly unknown[]>;
-  isUpdateRunning(): boolean;
   math(
     strings: readonly string[],
     ...values: readonly unknown[]
@@ -433,7 +434,6 @@ export interface RenderContext {
   ): ReducerController<TState, TAction>;
   useRef<T>(initialValue: T): RefObject<T>;
   useState<TState>(initialState: InitialState<TState>): StateController<TState>;
-  waitForUpdate(): Promise<number>;
 }
 
 export interface RenderFrame {

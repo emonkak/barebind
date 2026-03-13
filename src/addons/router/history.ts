@@ -11,7 +11,7 @@ export interface HistoryNavigator {
   getCurrentURL(): RelativeURL;
   isTransitionRunning(): boolean;
   navigate(url: string | RelativeURL, options?: NavigateOptions): void;
-  waitForTransition(): Promise<number>;
+  waitForTransition(): Promise<boolean>;
 }
 
 export interface NavigateOptions {

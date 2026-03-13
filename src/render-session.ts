@@ -32,6 +32,7 @@ import {
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
+  type UpdateTask,
   type Usable,
 } from './core.js';
 import { DirectiveSpecifier } from './directive.js';
@@ -130,6 +131,24 @@ export class RenderSession implements RenderContext {
     return this._context.scheduleUpdate(this._coroutine, options);
   }
 
+  getInsideUpdate(): Update | null {
+    return (
+      this._context
+        .getScheduledUpdates()
+        .find(({ coroutine }) => coroutine.scope.level >= this._scope.level) ??
+      null
+    );
+  }
+
+  getOutsideUpdate(): Update | null {
+    return (
+      this._context
+        .getScheduledUpdates()
+        .find(({ coroutine }) => coroutine.scope.level < this._scope.level) ??
+      null
+    );
+  }
+
   getSessionContext(): SessionContext {
     return this._context;
   }
@@ -159,12 +178,6 @@ export class RenderSession implements RenderContext {
     ...values: readonly unknown[]
   ): DirectiveSpecifier<readonly unknown[]> {
     return this._createTemplate(strings, values, 'html');
-  }
-
-  isUpdateRunning(): boolean {
-    return this._context
-      .getScheduledUpdates()
-      .some(({ coroutine }) => coroutine.scope.level < this._scope.level);
   }
 
   math(
@@ -396,14 +409,6 @@ export class RenderSession implements RenderContext {
           : action,
       initialState,
     );
-  }
-
-  async waitForUpdate(): Promise<number> {
-    const promises = this._context
-      .getScheduledUpdates()
-      .filter(({ coroutine }) => coroutine.scope.level < this._scope.level)
-      .map((pendingUpdate) => pendingUpdate.controller.promise);
-    return (await Promise.allSettled(promises)).length;
   }
 
   private _createEffect(

@@ -5,6 +5,7 @@ import {
   $hook,
   DETACHED_SCOPE,
   EffectQueue,
+  Lane,
   type RefObject,
   type RenderContext,
   type UpdateHandle,
@@ -52,6 +53,54 @@ describe('RenderSession', () => {
         const session = renderer.render({});
         session.catchError(() => {});
       }).toThrow(TypeError);
+    });
+  });
+
+  describe('getInsideUpdate()', () => {
+    it('returns null when no running update inside the scope', () => {
+      const renderer = new TestRenderer((_props, session) => {
+        return session.getInsideUpdate();
+      });
+
+      SESSION: {
+        const update = renderer.render({});
+
+        expect(update).toBe(null);
+      }
+    });
+  });
+
+  describe('getOutsideUpdate()', () => {
+    it('returns the running update outside the scope', () => {
+      const renderer = new TestRenderer((_props, session) => {
+        return session.getOutsideUpdate();
+      });
+
+      SESSION: {
+        const transition = {
+          signal: AbortSignal.abort(),
+          suspends: [],
+          resumes: [],
+        };
+        const update = renderer.render({}, { transition });
+
+        expect(update?.lanes).toBe(
+          Lane.SyncLane | Lane.BackgroundLane | Lane.TransitionLane,
+        );
+        expect(update?.transition).toBe(transition);
+      }
+    });
+
+    it('returns null when no running update outside the scope', () => {
+      const renderer = new TestRenderer((_props, session) => {
+        return session;
+      });
+
+      SESSION: {
+        const session = renderer.render({});
+
+        expect(session.getOutsideUpdate()).toBe(null);
+      }
     });
   });
 

@@ -40,7 +40,7 @@ describe('ScrollRestration()', () => {
       state: null,
       navigationType,
     };
-    const navigator = createMockNavigator();
+    const navigator = createMockNavigator(false);
 
     const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
@@ -60,7 +60,7 @@ describe('ScrollRestration()', () => {
       state: null,
       navigationType,
     };
-    const navigator = createMockNavigator();
+    const navigator = createMockNavigator(false);
 
     const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
@@ -75,7 +75,7 @@ describe('ScrollRestration()', () => {
       state: null,
       navigationType: 'push',
     };
-    const navigator = createMockNavigator();
+    const navigator = createMockNavigator(false);
     const element = createElement('div', {
       id: 'foo',
     });
@@ -97,7 +97,7 @@ describe('ScrollRestration()', () => {
       state: null,
       navigationType: 'push',
     };
-    const navigator = createMockNavigator();
+    const navigator = createMockNavigator(false);
 
     const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
@@ -115,7 +115,7 @@ describe('ScrollRestration()', () => {
         state: null,
         navigationType: 'push',
       };
-      const navigator = createMockNavigator(1);
+      const navigator = createMockNavigator(true);
 
       const addEventListenerSpy = vi.spyOn(navigation!, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(
@@ -148,7 +148,7 @@ describe('ScrollRestration()', () => {
         state: null,
         navigationType: 'push',
       };
-      const navigator = createMockNavigator(1);
+      const navigator = createMockNavigator(true);
 
       const event = Object.assign(new Event('navigate'), {
         canIntercept: true,
@@ -172,17 +172,17 @@ describe('ScrollRestration()', () => {
   );
 
   it.runIf(typeof navigation === 'object').each([
-    [false, 1],
-    [true, 0],
+    [false, true],
+    [true, false],
   ])(
     'not intercepts navigation if the event is not interceptable',
-    async (canIntercept, transitionRunningCount) => {
+    async (canIntercept, isTransitionRunning) => {
       const location: HistoryLocation = {
         url: new RelativeURL('/'),
         state: null,
         navigationType: 'push',
       };
-      const navigator = createMockNavigator(transitionRunningCount);
+      const navigator = createMockNavigator(isTransitionRunning);
       const event = Object.assign(new Event('navigate'), {
         canIntercept,
         intercept: ({ handler }: NavigationInterceptOptions) => {
@@ -210,7 +210,7 @@ describe('ScrollRestration()', () => {
       state: null,
       navigationType: 'push',
     };
-    const navigator = createMockNavigator();
+    const navigator = createMockNavigator(false);
 
     vi.stubGlobal('navigation', undefined);
 
@@ -220,13 +220,11 @@ describe('ScrollRestration()', () => {
   });
 });
 
-function createMockNavigator(
-  transitionRunningCount: number = 0,
-): HistoryNavigator {
+function createMockNavigator(isTransitionRunning: boolean): HistoryNavigator {
   return {
     navigate: vi.fn(),
     getCurrentURL: vi.fn(() => new RelativeURL('/')),
-    isTransitionRunning: vi.fn(() => transitionRunningCount > 0),
-    waitForTransition: vi.fn(() => Promise.resolve(transitionRunningCount)),
+    isTransitionRunning: vi.fn(() => isTransitionRunning),
+    waitForTransition: vi.fn(() => Promise.resolve(isTransitionRunning)),
   };
 }

@@ -151,11 +151,11 @@ describe('BrowserHistory()', () => {
 
       expect(navigator.isTransitionRunning()).toBe(true);
 
-      expect(await navigator.waitForTransition()).toBe(1);
+      expect(await navigator.waitForTransition()).toBe(true);
 
       expect(navigator.isTransitionRunning()).toBe(false);
 
-      expect(await navigator.waitForTransition()).toBe(0);
+      expect(await navigator.waitForTransition()).toBe(false);
     });
   });
 
