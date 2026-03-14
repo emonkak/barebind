@@ -45,7 +45,7 @@ const ErrorBoundary = createComponent<{
 
 const FailOnEffect = createComponent(function FailOnEffect(_props, $) {
   $.useLayoutEffect(() => {
-    $.throwError(new Error('fail on effect'));
+    $.interrupt(new Error('fail on effect'));
   }, []);
 });
 
@@ -165,7 +165,7 @@ test('throws uncaught errors during rendering as InterruptError', async () => {
   }
 });
 
-test('throws uncaught errors thrown by throwError() as InterruptError', async () => {
+test('throws uncaught errors thrown by interrupt() as InterruptError', async () => {
   const source = App({ children: FailOnEffect({}) });
   const container = document.createElement('div');
   const root = Root.create(

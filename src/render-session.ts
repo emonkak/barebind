@@ -164,6 +164,18 @@ export class RenderSession implements RenderContext {
     return this._createTemplate(strings, values, 'html');
   }
 
+  interrupt(error: unknown): void {
+    try {
+      handleError(error, this._coroutine.scope);
+    } catch (error) {
+      throw new InterruptError(
+        this._coroutine,
+        'An error was thrown from the component.',
+        { cause: error },
+      );
+    }
+  }
+
   math(
     strings: readonly string[],
     ...values: readonly unknown[]
@@ -210,18 +222,6 @@ export class RenderSession implements RenderContext {
     ...values: readonly unknown[]
   ): DirectiveSpecifier<readonly unknown[]> {
     return this._createTemplate(strings, values, 'textarea');
-  }
-
-  throwError(error: unknown): void {
-    try {
-      handleError(error, this._coroutine.scope);
-    } catch (error) {
-      throw new InterruptError(
-        this._coroutine,
-        'An error was thrown from the component.',
-        { cause: error },
-      );
-    }
   }
 
   use<T>(usable: HookClass<T>): T;

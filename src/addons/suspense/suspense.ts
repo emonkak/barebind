@@ -72,7 +72,7 @@ export const Suspense = createComponent(function Suspense(
         errorOrSuspend.then(forceUpdateWhenSettled, (error) => {
           forceUpdateWhenSettled();
           if (errorOrSuspend.status !== 'aborted') {
-            $.throwError(error);
+            $.interrupt(error);
           }
         });
 
