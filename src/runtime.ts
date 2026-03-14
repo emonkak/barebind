@@ -112,12 +112,12 @@ export class Runtime implements SessionContext {
 
           if (transition !== null) {
             const { suspends, resumes } = transition;
-            const resume = waitForAll(suspends).then(
-              () => this._runCommitAsync(frame, lanes),
-              () => {
+            const resume = waitForAll(suspends)
+              .catch(() => {
+                resetRenderFrame(frame);
                 // Ignore rejection; it is handled by the TransitionHandle.
-              },
-            );
+              })
+              .then(() => this._runCommitAsync(frame, lanes));
             resumes.push(resume);
           } else {
             await this._runCommitAsync(frame, lanes);
