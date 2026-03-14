@@ -334,7 +334,7 @@ describe('Runtime', () => {
         ] satisfies SessionEvent[]);
       });
 
-      it('handles an error that occurs during rendering', async () => {
+      it('handles errors that occurs during rendering', async () => {
         const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
         const observer = new MockObserver();
         const error = new Error('fail');
@@ -378,6 +378,45 @@ describe('Runtime', () => {
             type: 'commit-abort',
             id: 0,
             reason: expect.any(ComponentError),
+          },
+        ] satisfies SessionEvent[]);
+      });
+
+      it('handles errors that occurs during transitions', async () => {
+        const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
+        const observer = new MockObserver();
+        const error = new Error('fail');
+
+        runtime.addObserver(observer);
+
+        SESSION: {
+          const coroutine = new MockCoroutine();
+
+          const handle = runtime.startTransition(async (transition) => {
+            await runtime.scheduleUpdate(coroutine, { transition }).scheduled;
+            throw error;
+          });
+
+          await expect(handle.finished).rejects.toThrow(error);
+        }
+
+        expect(observer.flushEvents()).toStrictEqual([
+          {
+            type: 'render-start',
+            id: 0,
+            lanes:
+              Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
+          },
+          {
+            type: 'render-end',
+            id: 0,
+            lanes:
+              Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
+          },
+          {
+            type: 'commit-abort',
+            id: 0,
+            reason: error,
           },
         ] satisfies SessionEvent[]);
       });
@@ -944,7 +983,7 @@ describe('Runtime', () => {
   });
 
   describe('scheduleUpdate()', () => {
-    it('registers new a update', async () => {
+    it('registers new update', async () => {
       const runtime = createRuntime();
       const coroutine = new MockCoroutine();
       const handle = runtime.scheduleUpdate(coroutine);
@@ -968,7 +1007,7 @@ describe('Runtime', () => {
       expect(runtime.getScheduledUpdates()).toStrictEqual([]);
     });
 
-    it('cancels the update when the signal aborts', async () => {
+    it('cancels update when the signal aborts', async () => {
       const runtime = createRuntime();
       const coroutine = new MockCoroutine();
       const controller = new AbortController();
@@ -989,7 +1028,7 @@ describe('Runtime', () => {
       expect(runtime.getScheduledUpdates()).toStrictEqual([]);
     });
 
-    it('cancels the update when the transition fails', async () => {
+    it('cancels update when the transition fails', async () => {
       const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
 
       SESSION: {
