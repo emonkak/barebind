@@ -28,7 +28,6 @@ describe('SessionProfiler', () => {
       ]);
       const layoutEffects = createEffectQueue([new MockEffect()]);
       const passiveEffects = createEffectQueue([new MockEffect()]);
-      const emptyEffects = createEffectQueue([]);
       const events: SessionEvent[] = [
         {
           type: 'render-start',
@@ -68,7 +67,7 @@ describe('SessionProfiler', () => {
           type: 'effect-commit-end',
           id: 0,
           phase: 'mutation',
-          effects: emptyEffects,
+          effects: mutationEffects,
         },
         {
           type: 'effect-commit-start',
@@ -80,7 +79,7 @@ describe('SessionProfiler', () => {
           type: 'effect-commit-end',
           id: 0,
           phase: 'layout',
-          effects: emptyEffects,
+          effects: layoutEffects,
         },
         {
           type: 'effect-commit-start',
@@ -92,7 +91,7 @@ describe('SessionProfiler', () => {
           type: 'effect-commit-end',
           id: 0,
           phase: 'passive',
-          effects: emptyEffects,
+          effects: passiveEffects,
         },
         {
           type: 'commit-end',
@@ -111,42 +110,39 @@ describe('SessionProfiler', () => {
         phase: 'postcommit',
         renderMeasurement: {
           startTime: expect.any(Number),
-          duration: expect.any(Number),
+          endTime: expect.any(Number),
           lanes: Lane.ConcurrentLane,
         },
         commitMeasurement: {
           startTime: expect.any(Number),
-          duration: expect.any(Number),
+          endTime: expect.any(Number),
         },
         errorRecords: [],
         componentRecords: [
           {
             name: 'MyComponent',
             startTime: expect.any(Number),
-            duration: expect.any(Number),
+            endTime: expect.any(Number),
           },
         ],
         effectRecords: [
           {
             phase: 'mutation',
             startTime: expect.any(Number),
-            duration: expect.any(Number),
-            pendingCount: 0,
-            commitCount: 2,
+            endTime: expect.any(Number),
+            effectCount: 2,
           },
           {
             phase: 'layout',
             startTime: expect.any(Number),
-            duration: expect.any(Number),
-            pendingCount: 0,
-            commitCount: 1,
+            endTime: expect.any(Number),
+            effectCount: 1,
           },
           {
             phase: 'passive',
             startTime: expect.any(Number),
-            duration: expect.any(Number),
-            pendingCount: 0,
-            commitCount: 1,
+            endTime: expect.any(Number),
+            effectCount: 1,
           },
         ],
       } satisfies SessionProfile);
@@ -188,7 +184,7 @@ describe('SessionProfiler', () => {
         phase: 'postcommit',
         renderMeasurement: {
           startTime: expect.any(Number),
-          duration: expect.any(Number),
+          endTime: expect.any(Number),
           lanes: Lane.ConcurrentLane,
         },
         commitMeasurement: null,
@@ -250,7 +246,7 @@ describe('SessionProfiler', () => {
         phase: 'postcommit',
         renderMeasurement: {
           startTime: expect.any(Number),
-          duration: expect.any(Number),
+          endTime: expect.any(Number),
           lanes: Lane.UserBlockingLane,
         },
         commitMeasurement: null,
@@ -264,7 +260,7 @@ describe('SessionProfiler', () => {
           {
             name: 'MyComponent',
             startTime: expect.any(Number),
-            duration: expect.any(Number),
+            endTime: expect.any(Number),
           },
         ],
         effectRecords: [],
@@ -323,7 +319,7 @@ describe('SessionProfiler', () => {
         phase: 'postcommit',
         renderMeasurement: {
           startTime: expect.any(Number),
-          duration: expect.any(Number),
+          endTime: expect.any(Number),
           lanes: Lane.ConcurrentLane,
         },
         commitMeasurement: null,
@@ -337,7 +333,7 @@ describe('SessionProfiler', () => {
           {
             name: 'MyComponent',
             startTime: expect.any(Number),
-            duration: expect.any(Number),
+            endTime: expect.any(Number),
           },
         ],
         effectRecords: [],
@@ -358,7 +354,6 @@ describe('SessionProfiler', () => {
         new MockEffect(),
       ]);
       const passiveEffects = createEffectQueue([new MockEffect()]);
-      const emptyEffects = createEffectQueue([]);
       const events: SessionEvent[] = [
         {
           type: 'render-start',
@@ -398,7 +393,7 @@ describe('SessionProfiler', () => {
           type: 'effect-commit-end',
           id: 0,
           phase: 'mutation',
-          effects: emptyEffects,
+          effects: mutationEffects,
         },
         {
           type: 'effect-commit-start',
@@ -410,7 +405,7 @@ describe('SessionProfiler', () => {
           type: 'effect-commit-end',
           id: 0,
           phase: 'passive',
-          effects: emptyEffects,
+          effects: passiveEffects,
         },
         {
           type: 'commit-end',
@@ -429,35 +424,33 @@ describe('SessionProfiler', () => {
         phase: 'postcommit',
         renderMeasurement: {
           startTime: expect.any(Number),
-          duration: expect.any(Number),
+          endTime: expect.any(Number),
           lanes: Lane.ConcurrentLane,
         },
         commitMeasurement: {
           startTime: expect.any(Number),
-          duration: expect.any(Number),
+          endTime: expect.any(Number),
         },
         errorRecords: [],
         componentRecords: [
           {
             name: 'MyComponent',
             startTime: expect.any(Number),
-            duration: expect.any(Number),
+            endTime: expect.any(Number),
           },
         ],
         effectRecords: [
           {
             phase: 'mutation',
-            pendingCount: 0,
-            commitCount: 2,
             startTime: expect.any(Number),
-            duration: expect.any(Number),
+            endTime: expect.any(Number),
+            effectCount: 2,
           },
           {
             phase: 'passive',
-            pendingCount: 0,
-            commitCount: 1,
             startTime: expect.any(Number),
-            duration: expect.any(Number),
+            endTime: expect.any(Number),
+            effectCount: 1,
           },
         ],
       } satisfies SessionProfile);
@@ -477,7 +470,6 @@ describe('SessionProfiler', () => {
         new MockEffect(),
       ]);
       const passiveEffects = createEffectQueue([new MockEffect()]);
-      const emptyEffects = createEffectQueue([]);
       const events: SessionEvent[] = [
         {
           type: 'render-start',
@@ -517,7 +509,7 @@ describe('SessionProfiler', () => {
           type: 'effect-commit-end',
           id: 0,
           phase: 'mutation',
-          effects: emptyEffects,
+          effects: mutationEffects,
         },
         {
           type: 'effect-commit-start',
@@ -529,7 +521,7 @@ describe('SessionProfiler', () => {
           type: 'effect-commit-end',
           id: 0,
           phase: 'passive',
-          effects: emptyEffects,
+          effects: passiveEffects,
         },
         {
           type: 'commit-end',
@@ -548,35 +540,33 @@ describe('SessionProfiler', () => {
         phase: 'postcommit',
         renderMeasurement: {
           startTime: expect.any(Number),
-          duration: expect.any(Number),
+          endTime: expect.any(Number),
           lanes: Lane.ConcurrentLane,
         },
         commitMeasurement: {
           startTime: expect.any(Number),
-          duration: expect.any(Number),
+          endTime: expect.any(Number),
         },
         errorRecords: [],
         componentRecords: [
           {
             name: 'MyComponent',
             startTime: expect.any(Number),
-            duration: expect.any(Number),
+            endTime: expect.any(Number),
           },
         ],
         effectRecords: [
           {
             phase: 'mutation',
-            pendingCount: 0,
-            commitCount: 2,
             startTime: expect.any(Number),
-            duration: expect.any(Number),
+            endTime: expect.any(Number),
+            effectCount: 2,
           },
           {
             phase: 'passive',
-            pendingCount: 0,
-            commitCount: 1,
             startTime: expect.any(Number),
-            duration: expect.any(Number),
+            endTime: expect.any(Number),
+            effectCount: 1,
           },
         ],
       } satisfies SessionProfile);
@@ -638,7 +628,7 @@ describe('ConsoleReporter', () => {
         status: 'succeeded',
         renderMeasurement: {
           startTime: 0,
-          duration: 10,
+          endTime: 10,
           lanes:
             Lane.ConcurrentLane | Lane.TransitionLane | Lane.ViewTransitionLane,
         },
@@ -670,7 +660,7 @@ describe('ConsoleReporter', () => {
         status: 'succeeded',
         renderMeasurement: {
           startTime: 0,
-          duration: 10,
+          endTime: 10,
           lanes,
         },
         commitMeasurement: null,
@@ -701,7 +691,7 @@ describe('ConsoleReporter', () => {
         status: 'succeeded',
         renderMeasurement: {
           startTime: 0,
-          duration: 10,
+          endTime: 10,
           lanes,
         },
         commitMeasurement: null,
@@ -728,7 +718,7 @@ describe('ConsoleReporter', () => {
         status: 'succeeded',
         renderMeasurement: {
           startTime: 0,
-          duration: 10,
+          endTime: 10,
           lanes: Lane.ConcurrentLane,
         },
         commitMeasurement: null,
@@ -737,12 +727,12 @@ describe('ConsoleReporter', () => {
           {
             name: 'Foo',
             startTime: 0,
-            duration: 1,
+            endTime: 1,
           },
           {
             name: 'Bar',
             startTime: 1,
-            duration: 2,
+            endTime: 2,
           },
         ],
         effectRecords: [],
@@ -756,7 +746,13 @@ describe('ConsoleReporter', () => {
           `#0 Update SUCCEEDED without priority in concurrent mode after %c10ms`,
         ],
         ['group', '%cRENDER PHASE:%c 2 component(s) rendered after %c10ms'],
-        ['table', profile.componentRecords],
+        [
+          'table',
+          profile.componentRecords.map(({ name, startTime, endTime }) => ({
+            name,
+            duration: Math.max(0, endTime - startTime),
+          })),
+        ],
         ['groupEnd'],
         ['groupEnd'],
       ]);
@@ -770,7 +766,7 @@ describe('ConsoleReporter', () => {
         status: 'failed',
         renderMeasurement: {
           startTime: 0,
-          duration: 10,
+          endTime: 10,
           lanes: Lane.ConcurrentLane,
         },
         commitMeasurement: null,
@@ -806,31 +802,28 @@ describe('ConsoleReporter', () => {
         renderMeasurement: null,
         commitMeasurement: {
           startTime: 0,
-          duration: 3,
+          endTime: 3,
         },
         errorRecords: [],
         componentRecords: [],
         effectRecords: [
           {
             phase: 'mutation',
-            pendingCount: 0,
-            commitCount: 3,
-            startTime: 4,
-            duration: 3,
+            startTime: 3,
+            endTime: 6,
+            effectCount: 3,
           },
           {
             phase: 'layout',
-            pendingCount: 0,
-            commitCount: 2,
-            startTime: 7,
-            duration: 2,
+            startTime: 6,
+            endTime: 8,
+            effectCount: 2,
           },
           {
             phase: 'passive',
-            pendingCount: 0,
-            commitCount: 1,
-            startTime: 9,
-            duration: 1,
+            startTime: 8,
+            endTime: 9,
+            effectCount: 1,
           },
         ],
       };

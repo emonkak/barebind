@@ -36,21 +36,20 @@ export type ConsoleLogger = Pick<
 
 export interface CommitMeasurement {
   startTime: number;
-  duration: number;
+  endTime: number;
 }
 
 export interface ComponentRecord {
   name: string;
   startTime: number;
-  duration: number;
+  endTime: number;
 }
 
 export interface EffectRecord {
   phase: CommitPhase;
   startTime: number;
-  duration: number;
-  pendingCount: number;
-  commitCount: number;
+  endTime: number;
+  effectCount: number;
 }
 
 export interface ErrorRecord {
@@ -60,7 +59,7 @@ export interface ErrorRecord {
 
 export interface RenderMeasurement {
   startTime: number;
-  duration: number;
+  endTime: number;
   lanes: Lanes;
 }
 
@@ -81,7 +80,7 @@ export interface SessionProfileReporter {
 
 export interface UpdateMeasurement {
   startTime: number;
-  duration: number;
+  endTime: number;
   lanes: Lanes;
 }
 
@@ -106,7 +105,7 @@ export class SessionProfiler implements SessionObserver {
       case 'render-start':
         profile.renderMeasurement = {
           startTime: performance.now(),
-          duration: 0,
+          endTime: 0,
           lanes: event.lanes,
         };
         profile.phase = 'prerender';
@@ -114,7 +113,7 @@ export class SessionProfiler implements SessionObserver {
       case 'render-end': {
         const measurement = profile.renderMeasurement;
         if (measurement !== null) {
-          measurement.duration = performance.now() - measurement.startTime;
+          measurement.endTime = performance.now();
         }
         profile.phase = 'postrender';
         break;
@@ -131,27 +130,27 @@ export class SessionProfiler implements SessionObserver {
         profile.componentRecords.push({
           name: event.component.name,
           startTime: performance.now(),
-          duration: 0,
+          endTime: 0,
         });
         break;
       case 'component-render-end': {
         const record = profile.componentRecords.at(-1);
         if (record !== undefined) {
-          record.duration = performance.now() - record.startTime;
+          record.endTime = performance.now();
         }
         break;
       }
       case 'commit-start':
         profile.commitMeasurement = {
           startTime: performance.now(),
-          duration: 0,
+          endTime: 0,
         };
         profile.phase = 'precommit';
         break;
       case 'commit-end': {
         const measurement = profile.commitMeasurement;
         if (measurement !== null) {
-          measurement.duration = performance.now() - measurement.startTime;
+          measurement.endTime = performance.now();
         }
         profile.phase = 'postcommit';
         profile.status = 'succeeded';
@@ -166,18 +165,15 @@ export class SessionProfiler implements SessionObserver {
         profile.effectRecords.push({
           phase: event.phase,
           startTime: performance.now(),
-          duration: 0,
-          pendingCount: event.effects.size,
-          commitCount: 0,
+          endTime: 0,
+          effectCount: event.effects.size,
         });
         break;
       }
       case 'effect-commit-end': {
         const record = profile.effectRecords.at(-1);
         if (record !== undefined) {
-          record.duration = performance.now() - record.startTime;
-          record.commitCount = record.pendingCount - event.effects.size;
-          record.pendingCount = event.effects.size;
+          record.endTime = performance.now();
         }
         break;
       }
@@ -215,8 +211,10 @@ export class ConsoleReporter implements SessionProfileReporter {
       priority !== null ? `with ${priority} priority` : 'without priority';
     const mode = getUpdateMode(lanes);
     const modeLabel = `in ${mode} mode`;
-    const totalDuration =
-      (renderMeasurement?.duration ?? 0) + (commitMeasurement?.duration ?? 0);
+    const totalDuration = getDuration(
+      renderMeasurement?.startTime ?? 0,
+      (commitMeasurement ?? renderMeasurement)?.endTime ?? 0,
+    );
 
     this._logger.groupCollapsed(
       `#${profile.id} ${kindLabel} ${statusLabel} ${priorityLabel} ${modeLabel} after %c${totalDuration}ms`,
@@ -224,8 +222,10 @@ export class ConsoleReporter implements SessionProfileReporter {
     );
 
     if (renderMeasurement !== null) {
+      const { startTime, endTime } = renderMeasurement;
+      const renderDuration = getDuration(startTime, endTime);
       this._logger.group(
-        `%cRENDER PHASE:%c ${componentRecords.length} component(s) rendered after %c${renderMeasurement.duration}ms`,
+        `%cRENDER PHASE:%c ${componentRecords.length} component(s) rendered after %c${renderDuration}ms`,
         RENDER_PHASE_STYLE,
         DEFAULT_STYLE,
         DURATION_STYLE,
@@ -234,25 +234,33 @@ export class ConsoleReporter implements SessionProfileReporter {
         this._logger.table(errorRecords, ['error', 'captured']);
       }
       if (componentRecords.length > 0) {
-        this._logger.table(componentRecords, ['name', 'duration']);
+        this._logger.table(
+          componentRecords.map(({ name, startTime, endTime }) => ({
+            name,
+            duration: getDuration(startTime, endTime),
+          })),
+        );
       }
       this._logger.groupEnd();
     }
 
     if (commitMeasurement !== null) {
-      const totalCommits = effectRecords.reduce(
-        (totalCommits, { commitCount }) => totalCommits + commitCount,
+      const { startTime, endTime } = commitMeasurement;
+      const commitDuration = getDuration(startTime, endTime);
+      const totalEffects = effectRecords.reduce(
+        (totalCommits, { effectCount }) => totalCommits + effectCount,
         0,
       );
       this._logger.group(
-        `%cCOMMIT PHASE:%c ${totalCommits} effect(s) committed after %c${commitMeasurement.duration}ms`,
+        `%cCOMMIT PHASE:%c ${totalEffects} effect(s) committed after %c${commitDuration}ms`,
         COMMIT_PHASE_STYLE,
         DEFAULT_STYLE,
         DURATION_STYLE,
       );
-      for (const { phase, commitCount, duration } of effectRecords) {
+      for (const { phase, effectCount, startTime, endTime } of effectRecords) {
+        const effectDuration = getDuration(startTime, endTime);
         this._logger.log(
-          `%c${phase.toUpperCase()} PHASE:%c ${commitCount} effect(s) committed in %c${duration}ms`,
+          `%c${phase.toUpperCase()} PHASE:%c ${effectCount} effect(s) committed in %c${effectDuration}ms`,
           EFFECT_STYLES[phase],
           DEFAULT_STYLE,
           DURATION_STYLE,
@@ -276,6 +284,10 @@ function createProfile(id: number): SessionProfile {
     componentRecords: [],
     effectRecords: [],
   };
+}
+
+function getDuration(startTime: number, endTime: number): number {
+  return Math.max(0, endTime - startTime);
 }
 
 function getUpdateKind(lanes: Lanes): string {
