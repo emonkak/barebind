@@ -65,7 +65,7 @@ export interface RenderMeasurement {
 export interface SessionProfile {
   id: number;
   phase: 'idle' | 'prerender' | 'postrender' | 'precommit' | 'postcommit';
-  status: 'pending' | 'finished' | 'interrupted';
+  status: 'pending' | 'completed' | 'interrupted';
   renderMeasurement: RenderMeasurement | null;
   commitMeasurement: CommitMeasurement | null;
   errorRecords: ErrorRecord[];
@@ -152,7 +152,7 @@ export class SessionProfiler implements SessionObserver {
           measurement.endTime = performance.now();
         }
         profile.phase = 'postcommit';
-        profile.status = 'finished';
+        profile.status = 'completed';
         break;
       }
       case 'commit-cancel':

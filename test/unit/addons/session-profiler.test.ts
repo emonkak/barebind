@@ -13,7 +13,7 @@ import { createEffectQueue, MockCoroutine, MockEffect } from '../../mocks.js';
 
 describe('SessionProfiler', () => {
   describe('onSessionEvent()', () => {
-    it('reports profiles with finished status when update succeeds', () => {
+    it('reports profiles with completed status when update succeeds', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
@@ -106,7 +106,7 @@ describe('SessionProfiler', () => {
       expect(reporter.reportProfile).toHaveBeenCalledOnce();
       expect(reporter.reportProfile).toHaveBeenCalledWith({
         id: 0,
-        status: 'finished',
+        status: 'completed',
         phase: 'postcommit',
         renderMeasurement: {
           startTime: expect.any(Number),
@@ -148,7 +148,7 @@ describe('SessionProfiler', () => {
       } satisfies SessionProfile);
     });
 
-    it('reports profiles with finished status when transition fails', () => {
+    it('reports profiles with completed status when transition fails', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
@@ -420,7 +420,7 @@ describe('SessionProfiler', () => {
       expect(reporter.reportProfile).toHaveBeenCalledOnce();
       expect(reporter.reportProfile).toHaveBeenCalledWith({
         id: 0,
-        status: 'finished',
+        status: 'completed',
         phase: 'postcommit',
         renderMeasurement: {
           startTime: expect.any(Number),
@@ -536,7 +536,7 @@ describe('SessionProfiler', () => {
       expect(reporter.reportProfile).toHaveBeenCalledOnce();
       expect(reporter.reportProfile).toHaveBeenCalledWith({
         id: 0,
-        status: 'finished',
+        status: 'completed',
         phase: 'postcommit',
         renderMeasurement: {
           startTime: expect.any(Number),
@@ -625,7 +625,7 @@ describe('ConsoleReporter', () => {
       reporter.reportProfile({
         id: 0,
         phase: 'prerender',
-        status: 'finished',
+        status: 'completed',
         renderMeasurement: {
           startTime: 0,
           endTime: 10,
@@ -641,7 +641,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          '#0 Transition/ViewTransition FINISHED without priority in concurrent mode after %c10ms',
+          '#0 Transition/ViewTransition COMPLETED without priority in concurrent mode after %c10ms',
         ],
         ['group', '%cRENDER PHASE:%c 0 component(s) rendered after %c10ms'],
         ['groupEnd'],
@@ -657,7 +657,7 @@ describe('ConsoleReporter', () => {
       reporter.reportProfile({
         id: 0,
         phase: 'prerender',
-        status: 'finished',
+        status: 'completed',
         renderMeasurement: {
           startTime: 0,
           endTime: 10,
@@ -672,7 +672,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          `#0 Update FINISHED with ${expectedPriority} priority in concurrent mode after %c10ms`,
+          `#0 Update COMPLETED with ${expectedPriority} priority in concurrent mode after %c10ms`,
         ],
         ['group', '%cRENDER PHASE:%c 0 component(s) rendered after %c10ms'],
         ['groupEnd'],
@@ -688,7 +688,7 @@ describe('ConsoleReporter', () => {
       reporter.reportProfile({
         id: 0,
         phase: 'prerender',
-        status: 'finished',
+        status: 'completed',
         renderMeasurement: {
           startTime: 0,
           endTime: 10,
@@ -703,7 +703,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          `#0 Update FINISHED without priority in ${expectedMode} mode after %c10ms`,
+          `#0 Update COMPLETED without priority in ${expectedMode} mode after %c10ms`,
         ],
         ['group', '%cRENDER PHASE:%c 0 component(s) rendered after %c10ms'],
         ['groupEnd'],
@@ -715,7 +715,7 @@ describe('ConsoleReporter', () => {
       const profile: SessionProfile = {
         id: 0,
         phase: 'prerender',
-        status: 'finished',
+        status: 'completed',
         renderMeasurement: {
           startTime: 0,
           endTime: 10,
@@ -743,7 +743,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          `#0 Update FINISHED without priority in concurrent mode after %c10ms`,
+          `#0 Update COMPLETED without priority in concurrent mode after %c10ms`,
         ],
         ['group', '%cRENDER PHASE:%c 2 component(s) rendered after %c10ms'],
         [
@@ -798,7 +798,7 @@ describe('ConsoleReporter', () => {
       const profile: SessionProfile = {
         id: 0,
         phase: 'prerender',
-        status: 'finished',
+        status: 'completed',
         renderMeasurement: null,
         commitMeasurement: {
           startTime: 0,
@@ -833,7 +833,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          `#0 Update FINISHED without priority in no mode after %c3ms`,
+          `#0 Update COMPLETED without priority in no mode after %c3ms`,
         ],
         ['group', '%cCOMMIT PHASE:%c 6 effect(s) committed after %c3ms'],
         ['log', '%cMUTATION PHASE:%c 3 effect(s) committed in %c3ms'],
