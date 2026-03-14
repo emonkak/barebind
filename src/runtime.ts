@@ -350,6 +350,31 @@ export class Runtime implements SessionContext {
     });
   }
 
+  private _handleError(id: number, error: unknown, coroutine: Coroutine): void {
+    let handlingScope: Scope | null = null;
+
+    try {
+      handlingScope = handleError(error, coroutine.scope);
+    } catch (error) {
+      throw new RenderError('An error occurred while rendering.', coroutine, {
+        cause: error,
+      });
+    } finally {
+      notifyObservers(this._observers, {
+        type: 'render-error',
+        id,
+        error,
+        captured: handlingScope !== null,
+      });
+    }
+
+    if ((handlingScope.owner?.pendingLanes ?? Lane.NoLane) === Lane.NoLane) {
+      // The error was captured but no recovery render was scheduled.
+      // Detach the scope to stop further updates on this subtree.
+      throw new InterruptError(undefined, { cause: error });
+    }
+  }
+
   private async _runCommitAsync(
     session: UpdateSession,
     lanes: Lanes,
@@ -477,7 +502,7 @@ export class Runtime implements SessionContext {
             coroutine.resume(session);
             coroutine.pendingLanes &= ~frame.lanes;
           } catch (error) {
-            processError(id, error, coroutine, this._observers);
+            this._handleError(id, error, coroutine);
           }
         }
 
@@ -513,7 +538,7 @@ export class Runtime implements SessionContext {
             coroutine.resume(session);
             coroutine.pendingLanes &= ~frame.lanes;
           } catch (error) {
-            processError(id, error, coroutine, this._observers);
+            this._handleError(id, error, coroutine);
           }
         }
       } while (pendingCoroutines.length > 0);
@@ -559,36 +584,6 @@ function notifyObservers(
 ): void {
   for (let node = observers.front(); node !== null; node = node.next) {
     node.value.onSessionEvent(event);
-  }
-}
-
-function processError(
-  id: number,
-  error: unknown,
-  coroutine: Coroutine,
-  observers: LinkedList<SessionObserver>,
-): void {
-  let handlingScope: Scope | null = null;
-
-  try {
-    handlingScope = handleError(error, coroutine.scope);
-  } catch (error) {
-    throw new RenderError('An error occurred while rendering.', coroutine, {
-      cause: error,
-    });
-  } finally {
-    notifyObservers(observers, {
-      type: 'render-error',
-      id,
-      error,
-      captured: handlingScope !== null,
-    });
-  }
-
-  if ((handlingScope.owner?.pendingLanes ?? Lane.NoLane) === Lane.NoLane) {
-    // The error was captured but no recovery render was scheduled.
-    // Detach the scope to stop further updates on this subtree.
-    throw new InterruptError(undefined, { cause: error });
   }
 }
 
