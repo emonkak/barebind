@@ -415,19 +415,19 @@ export class Runtime implements SessionContext {
       }
 
       if (passiveEffects.size > 0) {
-        this._backend
-          .requestCallback(
-            () => {
+        this._backend.requestCallback(
+          () => {
+            try {
               this._flushEffects(id, passiveEffects, 'passive');
-            },
-            { priority: 'background' },
-          )
-          .finally(() => {
-            notifyObservers(this._observers, {
-              type: 'commit-end',
-              id,
-            });
-          });
+            } finally {
+              notifyObservers(this._observers, {
+                type: 'commit-end',
+                id,
+              });
+            }
+          },
+          { priority: 'background' },
+        );
       }
     } finally {
       // Commit Phase ends when effects indicate failure to flush
