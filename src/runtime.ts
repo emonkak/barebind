@@ -63,7 +63,7 @@ export class Runtime implements SessionContext {
   constructor(
     backend: Backend,
     {
-      maxCoroutinesPerYield = 100,
+      maxCoroutinesPerYield = 64,
       uniqueIdentifier = generateUniqueIdentifier(8),
     }: RuntimeOptions = {},
   ) {
