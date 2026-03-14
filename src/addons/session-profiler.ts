@@ -65,7 +65,7 @@ export interface RenderMeasurement {
 export interface SessionProfile {
   id: number;
   phase: 'prerender' | 'postrender' | 'precommit' | 'postcommit';
-  status: 'pending' | 'success' | 'failure';
+  status: 'pending' | 'succeeded' | 'failed';
   updateMeasurement: UpdateMeasurement | null;
   renderMeasurement: RenderMeasurement | null;
   commitMeasurement: CommitMeasurement | null;
@@ -118,7 +118,7 @@ export class SessionProfiler implements SessionObserver {
         if (measurement !== null) {
           measurement.duration = performance.now() - measurement.startTime;
         }
-        profile.status = event.aborted ? 'failure' : 'success';
+        profile.status = event.aborted ? 'failed' : 'succeeded';
         break;
       }
       case 'render-start':
@@ -195,8 +195,8 @@ export class SessionProfiler implements SessionObserver {
     }
 
     if (
-      (profile.phase === 'postrender' && profile.status === 'failure') ||
-      (profile.phase === 'postcommit' && profile.status === 'success')
+      (profile.phase === 'postrender' && profile.status === 'failed') ||
+      (profile.phase === 'postcommit' && profile.status === 'succeeded')
     ) {
       this._reporter.reportProfile(profile);
       this._pendingProfiles.delete(profile.id);

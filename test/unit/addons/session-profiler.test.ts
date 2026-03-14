@@ -121,7 +121,7 @@ describe('SessionProfiler', () => {
       expect(reporter.reportProfile).toHaveBeenCalledOnce();
       expect(reporter.reportProfile).toHaveBeenCalledWith({
         id: 0,
-        status: 'success',
+        status: 'succeeded',
         phase: 'postcommit',
         updateMeasurement: {
           startTime: expect.any(Number),
@@ -223,7 +223,7 @@ describe('SessionProfiler', () => {
       expect(reporter.reportProfile).toHaveBeenCalledOnce();
       expect(reporter.reportProfile).toHaveBeenCalledWith({
         id: 0,
-        status: 'failure',
+        status: 'failed',
         phase: 'postrender',
         updateMeasurement: {
           startTime: expect.any(Number),
@@ -349,7 +349,7 @@ describe('SessionProfiler', () => {
       expect(reporter.reportProfile).toHaveBeenCalledOnce();
       expect(reporter.reportProfile).toHaveBeenCalledWith({
         id: 0,
-        status: 'success',
+        status: 'succeeded',
         phase: 'postcommit',
         updateMeasurement: {
           startTime: expect.any(Number),
@@ -488,7 +488,7 @@ describe('SessionProfiler', () => {
       expect(reporter.reportProfile).toHaveBeenCalledOnce();
       expect(reporter.reportProfile).toHaveBeenCalledWith({
         id: 0,
-        status: 'success',
+        status: 'succeeded',
         phase: 'postcommit',
         updateMeasurement: {
           startTime: expect.any(Number),
@@ -579,7 +579,7 @@ describe('ConsoleReporter', () => {
       reporter.reportProfile({
         id: 0,
         phase: 'prerender',
-        status: 'success',
+        status: 'succeeded',
         updateMeasurement: {
           startTime: 0,
           duration: 10,
@@ -596,7 +596,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          '#0 Transition/ViewTransition SUCCESS without priority in concurrent mode after %c10ms',
+          '#0 Transition/ViewTransition SUCCEEDED without priority in concurrent mode after %c10ms',
         ],
         ['groupEnd'],
       ]);
@@ -610,7 +610,7 @@ describe('ConsoleReporter', () => {
       reporter.reportProfile({
         id: 0,
         phase: 'prerender',
-        status: 'success',
+        status: 'succeeded',
         updateMeasurement: {
           startTime: 0,
           duration: 10,
@@ -626,7 +626,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          `#0 Update SUCCESS with ${expectedPriority} priority in concurrent mode after %c10ms`,
+          `#0 Update SUCCEEDED with ${expectedPriority} priority in concurrent mode after %c10ms`,
         ],
         ['groupEnd'],
       ]);
@@ -636,7 +636,7 @@ describe('ConsoleReporter', () => {
       reporter.reportProfile({
         id: 0,
         phase: 'prerender',
-        status: 'success',
+        status: 'succeeded',
         updateMeasurement: {
           startTime: 0,
           duration: 10,
@@ -652,7 +652,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          `#0 Update SUCCESS without priority in sync mode after %c10ms`,
+          `#0 Update SUCCEEDED without priority in sync mode after %c10ms`,
         ],
         ['groupEnd'],
       ]);
@@ -662,7 +662,7 @@ describe('ConsoleReporter', () => {
       const profile: SessionProfile = {
         id: 0,
         phase: 'prerender',
-        status: 'success',
+        status: 'succeeded',
         updateMeasurement: {
           startTime: 0,
           duration: 10,
@@ -694,7 +694,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          `#0 Update SUCCESS without priority in concurrent mode after %c10ms`,
+          `#0 Update SUCCEEDED without priority in concurrent mode after %c10ms`,
         ],
         ['group', '%cRENDER PHASE:%c 2 component(s) rendered after %c3ms'],
         ['table', profile.componentRecords],
@@ -708,7 +708,7 @@ describe('ConsoleReporter', () => {
       const profile: SessionProfile = {
         id: 0,
         phase: 'prerender',
-        status: 'failure',
+        status: 'failed',
         updateMeasurement: {
           startTime: 0,
           duration: 10,
@@ -734,7 +734,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          `#0 Update FAILURE without priority in concurrent mode after %c10ms`,
+          `#0 Update FAILED without priority in concurrent mode after %c10ms`,
         ],
         ['group', '%cRENDER PHASE:%c 0 component(s) rendered after %c3ms'],
         ['table', profile.errorRecords],
@@ -747,7 +747,7 @@ describe('ConsoleReporter', () => {
       const profile: SessionProfile = {
         id: 0,
         phase: 'prerender',
-        status: 'success',
+        status: 'succeeded',
         updateMeasurement: {
           startTime: 0,
           duration: 10,
@@ -790,7 +790,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          `#0 Update SUCCESS without priority in concurrent mode after %c10ms`,
+          `#0 Update SUCCEEDED without priority in concurrent mode after %c10ms`,
         ],
         ['group', '%cCOMMIT PHASE:%c 6 effect(s) committed after %c3ms'],
         ['log', '%cMUTATION PHASE:%c 3 effect(s) committed in %c3ms'],
