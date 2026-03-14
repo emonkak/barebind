@@ -8,8 +8,8 @@ import {
 } from '@/addons/session-profiler.js';
 import { createComponent } from '@/component.js';
 import { Lane, type RenderContext, type SessionEvent } from '@/core.js';
-import { InterruptError } from '@/error.js';
-import { createEffectQueue, MockEffect } from '../../mocks.js';
+import { RecoverableError } from '@/error.js';
+import { createEffectQueue, MockCoroutine, MockEffect } from '../../mocks.js';
 
 describe('SessionProfiler', () => {
   describe('onSessionEvent()', () => {
@@ -154,7 +154,7 @@ describe('SessionProfiler', () => {
       };
       const profiler = new SessionProfiler(reporter);
 
-      const error = new InterruptError();
+      const error = new RecoverableError(new MockCoroutine());
       const events: SessionEvent[] = [
         {
           type: 'render-start',
@@ -276,7 +276,7 @@ describe('SessionProfiler', () => {
       const component = createComponent(function MyComponent(_props: {}) {
         return null;
       });
-      const error = new InterruptError();
+      const error = new RecoverableError(new MockCoroutine());
       const events: SessionEvent[] = [
         {
           type: 'render-start',

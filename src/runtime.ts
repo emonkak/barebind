@@ -32,7 +32,11 @@ import {
   type UpdateSession,
 } from './core.js';
 import { toDirective } from './directive.js';
-import { ComponentError, handleError, InterruptError } from './error.js';
+import {
+  handleError,
+  InterruptError,
+  RecoverableInterruptError,
+} from './error.js';
 import { RenderSession } from './render-session.js';
 
 export interface RuntimeOptions {
@@ -123,7 +127,7 @@ export class Runtime implements SessionContext {
       } catch (error) {
         this._abortCommit(frame, error);
 
-        if (error instanceof InterruptError) {
+        if (error instanceof RecoverableError) {
           controller.resolve({ status: 'canceled', reason: error.cause });
         } else {
           controller.reject(error);
@@ -353,9 +357,9 @@ export class Runtime implements SessionContext {
     try {
       handlingScope = handleError(error, coroutine.scope);
     } catch (error) {
-      throw new ComponentError(
-        'An error occurred during rendering.',
+      throw new InterruptError(
         coroutine,
+        'An error occurred during rendering.',
         {
           cause: error,
         },
@@ -370,9 +374,11 @@ export class Runtime implements SessionContext {
     }
 
     if ((handlingScope.owner?.pendingLanes ?? Lane.NoLane) === Lane.NoLane) {
-      // The error was captured but no recovery render was scheduled.
-      // Detach the scope to stop further updates on this subtree.
-      throw new InterruptError(undefined, { cause: error });
+      throw new RecoverableError(
+        coroutine,
+        'An error occurred during rendering, but no recovery was scheduled.',
+        { cause: error },
+      );
     }
   }
 

@@ -8,7 +8,7 @@ import {
   type SessionEvent,
   type SessionObserver,
 } from '../core.js';
-import { InterruptError } from '../error.js';
+import { RecoverableError } from '../error.js';
 
 // Blue
 const RENDER_PHASE_STYLE =
@@ -159,7 +159,7 @@ export class SessionProfiler implements SessionObserver {
       case 'commit-abort':
         profile.phase = 'postcommit';
         profile.status =
-          event.reason instanceof InterruptError ? 'interrupted' : 'failed';
+          event.reason instanceof RecoverableError ? 'interrupted' : 'failed';
         break;
       case 'effect-commit-start': {
         profile.effectRecords.push({

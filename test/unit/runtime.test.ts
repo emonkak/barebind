@@ -12,7 +12,7 @@ import {
   type SessionEvent,
   type UpdateHandle,
 } from '@/core.js';
-import { ComponentError, InterruptError } from '@/error.js';
+import { InterruptError, RecoverableInterruptError } from '@/error.js';
 import { RenderSession } from '@/render-session.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
@@ -352,8 +352,8 @@ describe('Runtime', () => {
             await handle.finished;
             expect.unreachable();
           } catch (caughtError) {
-            expect(caughtError).toBeInstanceOf(ComponentError);
-            expect((caughtError as ComponentError).cause).toBe(error);
+            expect(caughtError).toBeInstanceOf(InterruptError);
+            expect((caughtError as InterruptError).cause).toBe(error);
           }
         }
 
@@ -377,7 +377,7 @@ describe('Runtime', () => {
           {
             type: 'commit-abort',
             id: 0,
-            reason: expect.any(ComponentError),
+            reason: expect.any(InterruptError),
           },
         ] satisfies SessionEvent[]);
       });
@@ -475,7 +475,7 @@ describe('Runtime', () => {
           {
             type: 'commit-abort',
             id: 0,
-            reason: expect.any(InterruptError),
+            reason: expect.any(RecoverableError),
           },
         ] satisfies SessionEvent[]);
       });
@@ -702,8 +702,8 @@ describe('Runtime', () => {
             await runtime.scheduleUpdate(coroutine).finished;
             expect.unreachable();
           } catch (caughtError) {
-            expect(caughtError).toBeInstanceOf(ComponentError);
-            expect((caughtError as ComponentError).cause).toBe(error);
+            expect(caughtError).toBeInstanceOf(InterruptError);
+            expect((caughtError as InterruptError).cause).toBe(error);
           }
         }
 
@@ -727,7 +727,7 @@ describe('Runtime', () => {
           {
             type: 'commit-abort',
             id: 0,
-            reason: expect.any(ComponentError),
+            reason: expect.any(InterruptError),
           },
         ] satisfies SessionEvent[]);
       });
@@ -786,7 +786,7 @@ describe('Runtime', () => {
           {
             type: 'commit-abort',
             id: 0,
-            reason: expect.any(InterruptError),
+            reason: expect.any(RecoverableError),
           },
         ] satisfies SessionEvent[]);
       });

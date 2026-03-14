@@ -1,7 +1,7 @@
 import {
   BrowserBackend,
-  ComponentError,
   createComponent,
+  InterruptError,
   type RenderContext,
   Root,
   Runtime,
@@ -140,7 +140,7 @@ test('treates errors as interrupts when there is no fallback', async () => {
   });
 });
 
-test('throws uncaught errors during rendering as ComponentError', async () => {
+test('throws uncaught errors during rendering as InterruptError', async () => {
   const source = App({ children: FailOnRender({}) });
   const container = document.createElement('div');
   const root = Root.create(
@@ -153,11 +153,11 @@ test('throws uncaught errors during rendering as ComponentError', async () => {
     await root.mount().finished;
     expect.unreachable();
   } catch (error) {
-    expect(error).toBeInstanceOf(ComponentError);
-    expect((error as ComponentError).message).toContain(
+    expect(error).toBeInstanceOf(InterruptError);
+    expect((error as InterruptError).message).toContain(
       'An error occurred during rendering.',
     );
-    expect((error as ComponentError).cause).toStrictEqual(
+    expect((error as InterruptError).cause).toStrictEqual(
       expect.objectContaining({
         message: 'fail',
       }),
@@ -165,7 +165,7 @@ test('throws uncaught errors during rendering as ComponentError', async () => {
   }
 });
 
-test('throws uncaught errors thrown by throwError() as ComponentError', async () => {
+test('throws uncaught errors thrown by throwError() as InterruptError', async () => {
   const source = App({ children: FailOnEffect({}) });
   const container = document.createElement('div');
   const root = Root.create(
@@ -178,11 +178,11 @@ test('throws uncaught errors thrown by throwError() as ComponentError', async ()
     await root.mount().finished;
     expect.unreachable();
   } catch (error) {
-    expect(error).toBeInstanceOf(ComponentError);
-    expect((error as ComponentError).message).toContain(
+    expect(error).toBeInstanceOf(InterruptError);
+    expect((error as InterruptError).message).toContain(
       'An error was thrown from the component.',
     );
-    expect((error as ComponentError).cause).toStrictEqual(
+    expect((error as InterruptError).cause).toStrictEqual(
       expect.objectContaining({
         message: 'fail on effect',
       }),

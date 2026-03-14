@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { type Coroutine, createScope, Lane } from '@/core.js';
 import { formatOwnerStack, getOwnerStack } from '@/debug/coroutine.js';
 
-describe('ComponentError', () => {
+describe('InterruptError', () => {
   it('contains the coroutine stack in the message', () => {
     const coroutine = createCoroutine(
       'Child',
