@@ -327,6 +327,7 @@ export class RenderSession implements RenderContext {
     initialState: InitialState<TState>,
   ): ReducerController<TState, TAction> {
     const { hooks } = this._state;
+    const renderLanes = this._frame.lanes;
     let currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
@@ -335,7 +336,7 @@ export class RenderSession implements RenderContext {
         currentHook,
       );
       if (
-        (currentHook.pendingLanes & this._frame.lanes) ===
+        (currentHook.pendingLanes & renderLanes) ===
         currentHook.pendingLanes
       ) {
         currentHook.pendingLanes = Lane.NoLane;
@@ -355,11 +356,15 @@ export class RenderSession implements RenderContext {
           action: TAction,
           options: DispatchOptions<TState> = {},
         ): UpdateHandle => {
-          const { reducer, pendingState, context } = hook;
+          const { context, pendingLanes, pendingState, reducer } = hook;
           const areStatesEqual = options.areStatesEqual ?? Object.is;
           const nextState = reducer(pendingState, action);
 
-          if (areStatesEqual(nextState, pendingState)) {
+          // Skip render only if same state is set in the same lanes.
+          if (
+            areStatesEqual(nextState, pendingState) &&
+            (pendingLanes & renderLanes) === pendingLanes
+          ) {
             const skipped = Promise.resolve<UpdateResult>({
               status: 'skipped',
             });
