@@ -8,7 +8,6 @@ import {
   type SessionEvent,
   type SessionObserver,
 } from '../core.js';
-import { RecoverableError } from '../error.js';
 
 // Blue
 const RENDER_PHASE_STYLE =
@@ -66,7 +65,7 @@ export interface RenderMeasurement {
 export interface SessionProfile {
   id: number;
   phase: 'idle' | 'prerender' | 'postrender' | 'precommit' | 'postcommit';
-  status: 'pending' | 'succeeded' | 'failed' | 'interrupted';
+  status: 'pending' | 'finished' | 'interrupted';
   renderMeasurement: RenderMeasurement | null;
   commitMeasurement: CommitMeasurement | null;
   errorRecords: ErrorRecord[];
@@ -153,13 +152,12 @@ export class SessionProfiler implements SessionObserver {
           measurement.endTime = performance.now();
         }
         profile.phase = 'postcommit';
-        profile.status = 'succeeded';
+        profile.status = 'finished';
         break;
       }
-      case 'commit-abort':
+      case 'commit-cancel':
         profile.phase = 'postcommit';
-        profile.status =
-          event.reason instanceof RecoverableError ? 'interrupted' : 'failed';
+        profile.status = 'interrupted';
         break;
       case 'effect-commit-start': {
         profile.effectRecords.push({

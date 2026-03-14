@@ -113,7 +113,12 @@ export class Runtime implements SessionContext {
             const resume = waitForAll(suspends).then(
               () => this._runCommitAsync(frame, lanes),
               (error) => {
-                this._abortCommit(frame, error);
+                resetRenderFrame(frame);
+                notifyObservers(this._observers, {
+                  type: 'commit-cancel',
+                  id,
+                  reason: error,
+                });
                 // Ignore rejection; it is handled by the TransitionHandle.
               },
             );
@@ -125,9 +130,17 @@ export class Runtime implements SessionContext {
 
         controller.resolve({ status: 'done' });
       } catch (error) {
-        this._abortCommit(frame, error);
+        resetRenderFrame(frame);
 
-        if (error instanceof RecoverableError) {
+        if (error instanceof InterruptError) {
+          notifyObservers(this._observers, {
+            type: 'commit-cancel',
+            id,
+            reason: error,
+          });
+        }
+
+        if (error instanceof RecoverableInterruptError) {
           controller.resolve({ status: 'canceled', reason: error.cause });
         } else {
           controller.reject(error);
@@ -314,21 +327,6 @@ export class Runtime implements SessionContext {
     };
   }
 
-  private _abortCommit(frame: RenderFrame, reason: unknown): void {
-    const { id } = frame;
-
-    notifyObservers(this._observers, {
-      type: 'commit-abort',
-      id,
-      reason,
-    });
-
-    frame.pendingCoroutines.length = 0;
-    frame.mutationEffects.clear();
-    frame.layoutEffects.clear();
-    frame.passiveEffects.clear();
-  }
-
   private _flushEffects(
     id: number,
     effects: EffectQueue,
@@ -374,9 +372,9 @@ export class Runtime implements SessionContext {
     }
 
     if ((handlingScope.owner?.pendingLanes ?? Lane.NoLane) === Lane.NoLane) {
-      throw new RecoverableError(
+      throw new RecoverableInterruptError(
         coroutine,
-        'An error occurred during rendering, but no recovery was scheduled.',
+        'An error was captured by an error boundary, but no recovery was scheduled.',
         { cause: error },
       );
     }
@@ -430,8 +428,8 @@ export class Runtime implements SessionContext {
         );
       }
     } finally {
-      // Commit Phase ends when effects indicate failure to flush
-      // or when no passive effects were scheduled.
+      // Commit Phase ends when effects indicate failure to flush or when no
+      // passive effects were scheduled.
       if (
         mutationEffects.size > 0 ||
         layoutEffects.size > 0 ||
@@ -579,6 +577,13 @@ function notifyObservers(
   for (let node = observers.front(); node !== null; node = node.next) {
     node.value.onSessionEvent(event);
   }
+}
+
+function resetRenderFrame(frame: RenderFrame): void {
+  frame.pendingCoroutines.length = 0;
+  frame.mutationEffects.clear();
+  frame.layoutEffects.clear();
+  frame.passiveEffects.clear();
 }
 
 async function startTransitionAction(

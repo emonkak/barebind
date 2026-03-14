@@ -375,7 +375,7 @@ describe('Runtime', () => {
             lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
           },
           {
-            type: 'commit-abort',
+            type: 'commit-cancel',
             id: 0,
             reason: expect.any(InterruptError),
           },
@@ -414,7 +414,7 @@ describe('Runtime', () => {
               Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
           },
           {
-            type: 'commit-abort',
+            type: 'commit-cancel',
             id: 0,
             reason: error,
           },
@@ -473,9 +473,9 @@ describe('Runtime', () => {
             lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
           },
           {
-            type: 'commit-abort',
+            type: 'commit-cancel',
             id: 0,
-            reason: expect.any(RecoverableError),
+            reason: expect.any(RecoverableInterruptError),
           },
         ] satisfies SessionEvent[]);
       });
@@ -725,7 +725,7 @@ describe('Runtime', () => {
             lanes: Lane.SyncLane | Lane.UserBlockingLane,
           },
           {
-            type: 'commit-abort',
+            type: 'commit-cancel',
             id: 0,
             reason: expect.any(InterruptError),
           },
@@ -784,9 +784,9 @@ describe('Runtime', () => {
             lanes: Lane.SyncLane | Lane.UserBlockingLane,
           },
           {
-            type: 'commit-abort',
+            type: 'commit-cancel',
             id: 0,
-            reason: expect.any(RecoverableError),
+            reason: expect.any(RecoverableInterruptError),
           },
         ] satisfies SessionEvent[]);
       });

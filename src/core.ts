@@ -497,7 +497,7 @@ export type SessionEvent =
       id: number;
     }
   | {
-      type: 'commit-abort';
+      type: 'commit-cancel';
       id: number;
       reason: unknown;
     }
