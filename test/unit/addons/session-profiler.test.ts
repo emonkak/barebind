@@ -12,7 +12,7 @@ import { createEffectQueue, MockEffect } from '../../mocks.js';
 
 describe('SessionProfiler', () => {
   describe('onSessionEvent()', () => {
-    it('flushs the profile when update is success', () => {
+    it('flushs profiles when update is success', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
@@ -122,7 +122,7 @@ describe('SessionProfiler', () => {
       expect(reporter.reportProfile).toHaveBeenCalledWith({
         id: 0,
         status: 'success',
-        phase: 'idle',
+        phase: 'postcommit',
         updateMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
@@ -170,7 +170,7 @@ describe('SessionProfiler', () => {
       } satisfies SessionProfile);
     });
 
-    it('reports the profile when update is failure', () => {
+    it('reports profiles when update is failure', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
@@ -224,7 +224,7 @@ describe('SessionProfiler', () => {
       expect(reporter.reportProfile).toHaveBeenCalledWith({
         id: 0,
         status: 'failure',
-        phase: 'idle',
+        phase: 'postrender',
         updateMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
@@ -252,7 +252,146 @@ describe('SessionProfiler', () => {
       } satisfies SessionProfile);
     });
 
-    it('reports the profile after commit phase ends when passive effects are scheduled', () => {
+    it('reports profiles after deferred commit phase ends', () => {
+      const reporter = {
+        reportProfile: vi.fn(),
+      };
+      const profiler = new SessionProfiler(reporter);
+
+      const component = createComponent(function MyComponent(_props: {}) {
+        return null;
+      });
+      const mutationEffects = createEffectQueue([
+        new MockEffect(),
+        new MockEffect(),
+      ]);
+      const layoutEffects = createEffectQueue([]);
+      const passiveEffects = createEffectQueue([new MockEffect()]);
+      const emptyEffects = createEffectQueue([]);
+      const events: SessionEvent[] = [
+        {
+          type: 'update-start',
+          id: 0,
+          lanes: Lane.UserBlockingLane,
+        },
+        {
+          type: 'render-start',
+          id: 0,
+        },
+        {
+          type: 'component-render-start',
+          id: 0,
+          component,
+          props: {},
+          context: {} as RenderContext,
+        },
+        {
+          type: 'component-render-end',
+          id: 0,
+          component,
+          props: {},
+          context: {} as RenderContext,
+        },
+        {
+          type: 'render-end',
+          id: 0,
+        },
+        {
+          type: 'update-end',
+          id: 0,
+          lanes: Lane.UserBlockingLane,
+          aborted: false,
+        },
+        {
+          type: 'commit-start',
+          id: 0,
+          mutationEffects,
+          layoutEffects,
+          passiveEffects,
+        },
+        {
+          type: 'effect-commit-start',
+          id: 0,
+          phase: 'mutation',
+          effects: mutationEffects,
+        },
+        {
+          type: 'effect-commit-end',
+          id: 0,
+          phase: 'mutation',
+          effects: emptyEffects,
+        },
+        {
+          type: 'effect-commit-start',
+          id: 0,
+          phase: 'passive',
+          effects: passiveEffects,
+        },
+        {
+          type: 'effect-commit-end',
+          id: 0,
+          phase: 'passive',
+          effects: emptyEffects,
+        },
+        {
+          type: 'commit-end',
+          id: 0,
+          mutationEffects: emptyEffects,
+          layoutEffects: emptyEffects,
+          passiveEffects: emptyEffects,
+        },
+      ];
+
+      for (const event of events) {
+        profiler.onSessionEvent(event);
+      }
+
+      expect(reporter.reportProfile).toHaveBeenCalledOnce();
+      expect(reporter.reportProfile).toHaveBeenCalledWith({
+        id: 0,
+        status: 'success',
+        phase: 'postcommit',
+        updateMeasurement: {
+          startTime: expect.any(Number),
+          duration: expect.any(Number),
+          lanes: Lane.UserBlockingLane,
+        },
+        renderMeasurement: {
+          startTime: expect.any(Number),
+          duration: expect.any(Number),
+        },
+        commitMeasurement: {
+          startTime: expect.any(Number),
+          duration: expect.any(Number),
+        },
+        errorRecords: [],
+        componentRecords: [
+          {
+            name: 'MyComponent',
+            startTime: expect.any(Number),
+            duration: expect.any(Number),
+          },
+        ],
+        effectRecords: [
+          {
+            phase: 'mutation',
+            pendingCount: 0,
+            commitCount: 2,
+            startTime: expect.any(Number),
+            duration: expect.any(Number),
+          },
+          {
+            phase: 'passive',
+            pendingCount: 0,
+            commitCount: 1,
+            startTime: expect.any(Number),
+            duration: expect.any(Number),
+          },
+        ],
+      } satisfies SessionProfile);
+    });
+
+    it('reports profiles after deferred passive effects commit', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
@@ -350,7 +489,7 @@ describe('SessionProfiler', () => {
       expect(reporter.reportProfile).toHaveBeenCalledWith({
         id: 0,
         status: 'success',
-        phase: 'idle',
+        phase: 'postcommit',
         updateMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
@@ -423,7 +562,7 @@ describe('ConsoleReporter', () => {
     it('reports nothing when update has not started', () => {
       reporter.reportProfile({
         id: 0,
-        phase: 'idle',
+        phase: 'prerender',
         status: 'pending',
         updateMeasurement: null,
         renderMeasurement: null,
@@ -439,7 +578,7 @@ describe('ConsoleReporter', () => {
     it('reports the update as a transition and a view transition when lanes contains TransitionLane and ViewTransitionLane', () => {
       reporter.reportProfile({
         id: 0,
-        phase: 'idle',
+        phase: 'prerender',
         status: 'success',
         updateMeasurement: {
           startTime: 0,
@@ -470,7 +609,7 @@ describe('ConsoleReporter', () => {
     ])('reports the priority when lanes contains a priority lane', (lanes, expectedPriority) => {
       reporter.reportProfile({
         id: 0,
-        phase: 'idle',
+        phase: 'prerender',
         status: 'success',
         updateMeasurement: {
           startTime: 0,
@@ -496,7 +635,7 @@ describe('ConsoleReporter', () => {
     it('reports the mode as sync mode when lanes contains SyncLane', () => {
       reporter.reportProfile({
         id: 0,
-        phase: 'idle',
+        phase: 'prerender',
         status: 'success',
         updateMeasurement: {
           startTime: 0,
@@ -522,7 +661,7 @@ describe('ConsoleReporter', () => {
     it('reports component records when render is measured', () => {
       const profile: SessionProfile = {
         id: 0,
-        phase: 'idle',
+        phase: 'prerender',
         status: 'success',
         updateMeasurement: {
           startTime: 0,
@@ -568,7 +707,7 @@ describe('ConsoleReporter', () => {
       const error = new Error('fail');
       const profile: SessionProfile = {
         id: 0,
-        phase: 'idle',
+        phase: 'prerender',
         status: 'failure',
         updateMeasurement: {
           startTime: 0,
@@ -607,7 +746,7 @@ describe('ConsoleReporter', () => {
     it('reports effect records when commit is measured', () => {
       const profile: SessionProfile = {
         id: 0,
-        phase: 'idle',
+        phase: 'prerender',
         status: 'success',
         updateMeasurement: {
           startTime: 0,

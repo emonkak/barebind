@@ -64,7 +64,7 @@ export interface RenderMeasurement {
 
 export interface SessionProfile {
   id: number;
-  phase: 'idle' | 'render' | 'commit';
+  phase: 'prerender' | 'postrender' | 'precommit' | 'postcommit';
   status: 'pending' | 'success' | 'failure';
   updateMeasurement: UpdateMeasurement | null;
   renderMeasurement: RenderMeasurement | null;
@@ -126,14 +126,14 @@ export class SessionProfiler implements SessionObserver {
           startTime: performance.now(),
           duration: 0,
         };
-        profile.phase = 'render';
+        profile.phase = 'prerender';
         break;
       case 'render-end': {
         const measurement = profile.renderMeasurement;
         if (measurement !== null) {
           measurement.duration = performance.now() - measurement.startTime;
         }
-        profile.phase = 'idle';
+        profile.phase = 'postrender';
         break;
       }
       case 'render-error': {
@@ -163,14 +163,14 @@ export class SessionProfiler implements SessionObserver {
           startTime: performance.now(),
           duration: 0,
         };
-        profile.phase = 'commit';
+        profile.phase = 'precommit';
         break;
       case 'commit-end': {
         const measurement = profile.commitMeasurement;
         if (measurement !== null) {
           measurement.duration = performance.now() - measurement.startTime;
         }
-        profile.phase = 'idle';
+        profile.phase = 'postcommit';
         break;
       }
       case 'effect-commit-start': {
@@ -194,7 +194,10 @@ export class SessionProfiler implements SessionObserver {
       }
     }
 
-    if (profile.phase === 'idle' && profile.status !== 'pending') {
+    if (
+      (profile.phase === 'postrender' && profile.status === 'failure') ||
+      (profile.phase === 'postcommit' && profile.status === 'success')
+    ) {
       this._reporter.reportProfile(profile);
       this._pendingProfiles.delete(profile.id);
     }
@@ -282,7 +285,7 @@ export class ConsoleReporter implements SessionProfileReporter {
 function createProfile(id: number): SessionProfile {
   return {
     id,
-    phase: 'idle',
+    phase: 'prerender',
     status: 'pending',
     updateMeasurement: null,
     renderMeasurement: null,
