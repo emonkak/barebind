@@ -349,7 +349,11 @@ export class Runtime implements SessionContext {
     });
   }
 
-  private _handleError(id: number, error: unknown, coroutine: Coroutine): void {
+  private _handleRenderError(
+    id: number,
+    error: unknown,
+    coroutine: Coroutine,
+  ): void {
     let handlingScope: Scope | null = null;
 
     try {
@@ -491,7 +495,7 @@ export class Runtime implements SessionContext {
             coroutine.resume(session);
             coroutine.pendingLanes &= ~frame.lanes;
           } catch (error) {
-            this._handleError(id, error, coroutine);
+            this._handleRenderError(id, error, coroutine);
           }
         }
 
@@ -529,7 +533,7 @@ export class Runtime implements SessionContext {
             coroutine.resume(session);
             coroutine.pendingLanes &= ~frame.lanes;
           } catch (error) {
-            this._handleError(id, error, coroutine);
+            this._handleRenderError(id, error, coroutine);
           }
         }
       } while (pendingCoroutines.length > 0);
