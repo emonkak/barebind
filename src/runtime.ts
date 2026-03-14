@@ -106,21 +106,21 @@ export class Runtime implements SessionContext {
       try {
         if (lanes & Lane.SyncLane) {
           this._runRenderSync(session);
-          this._runCommitSync(session);
+          this._runCommitSync(frame);
         } else {
           await this._runRenderAsync(session);
 
           if (transition !== null) {
             const { suspends, resumes } = transition;
             const resume = waitForAll(suspends).then(
-              () => this._runCommitAsync(session, lanes),
+              () => this._runCommitAsync(frame, lanes),
               () => {
                 // Ignore rejection; it is handled by the TransitionHandle.
               },
             );
             resumes.push(resume);
           } else {
-            await this._runCommitAsync(session, lanes);
+            await this._runCommitAsync(frame, lanes);
           }
         }
 
@@ -382,10 +382,9 @@ export class Runtime implements SessionContext {
   }
 
   private async _runCommitAsync(
-    session: UpdateSession,
+    frame: RenderFrame,
     lanes: Lanes,
   ): Promise<void> {
-    const { frame } = session;
     const { id, layoutEffects, mutationEffects, passiveEffects } = frame;
 
     notifyObservers(this._observers, {
@@ -454,8 +453,7 @@ export class Runtime implements SessionContext {
     }
   }
 
-  private _runCommitSync(session: UpdateSession): void {
-    const { frame } = session;
+  private _runCommitSync(frame: RenderFrame): void {
     const { id, layoutEffects, mutationEffects, passiveEffects } = frame;
 
     notifyObservers(this._observers, {
