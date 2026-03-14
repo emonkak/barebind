@@ -119,11 +119,6 @@ export class SessionProfiler implements SessionObserver {
         if (measurement !== null) {
           measurement.duration = performance.now() - measurement.startTime;
         }
-        profile.status = event.aborted
-          ? event.reason instanceof InterruptError
-            ? 'interrupted'
-            : 'failed'
-          : 'succeeded';
         break;
       }
       case 'render-start':
@@ -176,8 +171,14 @@ export class SessionProfiler implements SessionObserver {
           measurement.duration = performance.now() - measurement.startTime;
         }
         profile.phase = 'postcommit';
+        profile.status = 'succeeded';
         break;
       }
+      case 'commit-abort':
+        profile.phase = 'postcommit';
+        profile.status =
+          event.reason instanceof InterruptError ? 'interrupted' : 'failed';
+        break;
       case 'effect-commit-start': {
         profile.effectRecords.push({
           phase: event.phase,
@@ -199,11 +200,7 @@ export class SessionProfiler implements SessionObserver {
       }
     }
 
-    if (
-      (profile.phase === 'postrender' &&
-        (profile.status === 'failed' || profile.status === 'interrupted')) ||
-      (profile.phase === 'postcommit' && profile.status === 'succeeded')
-    ) {
+    if (profile.phase === 'postcommit' && profile.status !== 'pending') {
       this._reporter.reportProfile(profile);
       this._pendingProfiles.delete(profile.id);
     }
@@ -314,5 +311,9 @@ function getUpdateKind(lanes: Lanes): string {
 }
 
 function getUpdateMode(lanes: Lanes): string {
-  return lanes & Lane.SyncLane ? 'sync' : 'concurrent';
+  return lanes & Lane.SyncLane
+    ? 'sync'
+    : lanes & Lane.ConcurrentLane
+      ? 'concurrent'
+      : 'no';
 }

@@ -472,16 +472,9 @@ export interface SessionContext extends DirectiveContext {
 
 export type SessionEvent =
   | {
-      type: 'update-start';
+      type: 'update-start' | 'update-end';
       id: number;
       lanes: Lanes;
-    }
-  | {
-      type: 'update-end';
-      id: number;
-      lanes: Lanes;
-      aborted: boolean;
-      reason?: unknown;
     }
   | {
       type: 'render-start' | 'render-end';
@@ -503,9 +496,11 @@ export type SessionEvent =
   | {
       type: 'commit-start' | 'commit-end';
       id: number;
-      mutationEffects: EffectQueue;
-      layoutEffects: EffectQueue;
-      passiveEffects: EffectQueue;
+    }
+  | {
+      type: 'commit-abort';
+      id: number;
+      reason: unknown;
     }
   | {
       type: 'effect-commit-start' | 'effect-commit-end';

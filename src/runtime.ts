@@ -112,42 +112,34 @@ export class Runtime implements SessionContext {
 
           if (transition !== null) {
             const { suspends, resumes } = transition;
-            const resume = waitForAll(suspends)
-              .catch(() => {
-                resetRenderFrame(frame);
+            const resume = waitForAll(suspends).then(
+              () => this._runCommitAsync(frame, lanes),
+              (error) => {
+                this._abortCommit(frame, error);
                 // Ignore rejection; it is handled by the TransitionHandle.
-              })
-              .then(() => this._runCommitAsync(frame, lanes));
+              },
+            );
             resumes.push(resume);
           } else {
             await this._runCommitAsync(frame, lanes);
           }
         }
 
-        notifyObservers(this._observers, {
-          type: 'update-end',
-          id,
-          lanes,
-          aborted: false,
-        });
-
         controller.resolve({ status: 'done' });
       } catch (error) {
-        resetRenderFrame(frame);
-
-        notifyObservers(this._observers, {
-          type: 'update-end',
-          id,
-          lanes,
-          aborted: true,
-          reason: error,
-        });
+        this._abortCommit(frame, error);
 
         if (error instanceof InterruptError) {
           controller.resolve({ status: 'canceled', reason: error.cause });
         } else {
           controller.reject(error);
         }
+      } finally {
+        notifyObservers(this._observers, {
+          type: 'update-end',
+          id,
+          lanes,
+        });
       }
     }
   }
@@ -330,6 +322,21 @@ export class Runtime implements SessionContext {
     };
   }
 
+  private _abortCommit(frame: RenderFrame, reason: unknown): void {
+    const { id } = frame;
+
+    notifyObservers(this._observers, {
+      type: 'commit-abort',
+      id,
+      reason,
+    });
+
+    frame.pendingCoroutines.length = 0;
+    frame.mutationEffects.clear();
+    frame.layoutEffects.clear();
+    frame.passiveEffects.clear();
+  }
+
   private _flushEffects(
     id: number,
     effects: EffectQueue,
@@ -390,9 +397,6 @@ export class Runtime implements SessionContext {
     notifyObservers(this._observers, {
       type: 'commit-start',
       id,
-      mutationEffects,
-      layoutEffects,
-      passiveEffects,
     });
 
     try {
@@ -428,9 +432,6 @@ export class Runtime implements SessionContext {
             notifyObservers(this._observers, {
               type: 'commit-end',
               id,
-              mutationEffects,
-              layoutEffects,
-              passiveEffects,
             });
           });
       }
@@ -445,9 +446,6 @@ export class Runtime implements SessionContext {
         notifyObservers(this._observers, {
           type: 'commit-end',
           id,
-          mutationEffects,
-          layoutEffects,
-          passiveEffects,
         });
       }
     }
@@ -459,9 +457,6 @@ export class Runtime implements SessionContext {
     notifyObservers(this._observers, {
       type: 'commit-start',
       id,
-      mutationEffects,
-      layoutEffects,
-      passiveEffects,
     });
 
     try {
@@ -480,9 +475,6 @@ export class Runtime implements SessionContext {
       notifyObservers(this._observers, {
         type: 'commit-end',
         id,
-        mutationEffects,
-        layoutEffects,
-        passiveEffects,
       });
     }
   }
@@ -589,13 +581,6 @@ function notifyObservers(
   for (let node = observers.front(); node !== null; node = node.next) {
     node.value.onSessionEvent(event);
   }
-}
-
-function resetRenderFrame(frame: RenderFrame): void {
-  frame.pendingCoroutines.length = 0;
-  frame.mutationEffects.clear();
-  frame.layoutEffects.clear();
-  frame.passiveEffects.clear();
 }
 
 async function startTransitionAction(

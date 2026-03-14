@@ -60,9 +60,6 @@ describe('SessionProfiler', () => {
         {
           type: 'commit-start',
           id: 0,
-          mutationEffects,
-          layoutEffects,
-          passiveEffects,
         },
         {
           type: 'effect-commit-start',
@@ -103,15 +100,11 @@ describe('SessionProfiler', () => {
         {
           type: 'commit-end',
           id: 0,
-          mutationEffects: emptyEffects,
-          layoutEffects: emptyEffects,
-          passiveEffects: emptyEffects,
         },
         {
           type: 'update-end',
           id: 0,
           lanes: Lane.UserBlockingLane,
-          aborted: false,
         },
       ];
 
@@ -171,6 +164,64 @@ describe('SessionProfiler', () => {
       } satisfies SessionProfile);
     });
 
+    it('reports profiles with succeeded status when transition fails', () => {
+      const reporter = {
+        reportProfile: vi.fn(),
+      };
+      const profiler = new SessionProfiler(reporter);
+
+      const error = new InterruptError();
+      const events: SessionEvent[] = [
+        {
+          type: 'update-start',
+          id: 0,
+          lanes: Lane.UserBlockingLane,
+        },
+        {
+          type: 'render-start',
+          id: 0,
+        },
+        {
+          type: 'render-end',
+          id: 0,
+        },
+        {
+          type: 'update-end',
+          id: 0,
+          lanes: Lane.UserBlockingLane,
+        },
+        {
+          type: 'commit-abort',
+          id: 0,
+          reason: error,
+        },
+      ];
+
+      for (const event of events) {
+        profiler.onSessionEvent(event);
+      }
+
+      expect(reporter.reportProfile).toHaveBeenCalledOnce();
+      expect(reporter.reportProfile).toHaveBeenCalledWith({
+        id: 0,
+        status: 'interrupted',
+        phase: 'postcommit',
+        updateMeasurement: {
+          startTime: expect.any(Number),
+          duration: expect.any(Number),
+          lanes: Lane.UserBlockingLane,
+        },
+        renderMeasurement: {
+          startTime: expect.any(Number),
+          duration: expect.any(Number),
+        },
+        commitMeasurement: null,
+        errorRecords: [],
+        componentRecords: [],
+        effectRecords: [],
+      } satisfies SessionProfile);
+    });
+
     it('reports profiles with failed status when update fails', () => {
       const reporter = {
         reportProfile: vi.fn(),
@@ -209,11 +260,14 @@ describe('SessionProfiler', () => {
           id: 0,
         },
         {
+          type: 'commit-abort',
+          id: 0,
+          reason: error,
+        },
+        {
           type: 'update-end',
           id: 0,
           lanes: Lane.UserBlockingLane,
-          aborted: true,
-          reason: error,
         },
       ];
 
@@ -225,7 +279,7 @@ describe('SessionProfiler', () => {
       expect(reporter.reportProfile).toHaveBeenCalledWith({
         id: 0,
         status: 'failed',
-        phase: 'postrender',
+        phase: 'postcommit',
         updateMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
@@ -291,11 +345,14 @@ describe('SessionProfiler', () => {
           id: 0,
         },
         {
+          type: 'commit-abort',
+          id: 0,
+          reason: error,
+        },
+        {
           type: 'update-end',
           id: 0,
           lanes: Lane.UserBlockingLane,
-          aborted: true,
-          reason: error,
         },
       ];
 
@@ -307,7 +364,7 @@ describe('SessionProfiler', () => {
       expect(reporter.reportProfile).toHaveBeenCalledWith({
         id: 0,
         status: 'interrupted',
-        phase: 'postrender',
+        phase: 'postcommit',
         updateMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
@@ -348,7 +405,6 @@ describe('SessionProfiler', () => {
         new MockEffect(),
         new MockEffect(),
       ]);
-      const layoutEffects = createEffectQueue([]);
       const passiveEffects = createEffectQueue([new MockEffect()]);
       const emptyEffects = createEffectQueue([]);
       const events: SessionEvent[] = [
@@ -383,14 +439,10 @@ describe('SessionProfiler', () => {
           type: 'update-end',
           id: 0,
           lanes: Lane.UserBlockingLane,
-          aborted: false,
         },
         {
           type: 'commit-start',
           id: 0,
-          mutationEffects,
-          layoutEffects,
-          passiveEffects,
         },
         {
           type: 'effect-commit-start',
@@ -419,9 +471,6 @@ describe('SessionProfiler', () => {
         {
           type: 'commit-end',
           id: 0,
-          mutationEffects: emptyEffects,
-          layoutEffects: emptyEffects,
-          passiveEffects: emptyEffects,
         },
       ];
 
@@ -487,7 +536,6 @@ describe('SessionProfiler', () => {
         new MockEffect(),
         new MockEffect(),
       ]);
-      const layoutEffects = createEffectQueue([]);
       const passiveEffects = createEffectQueue([new MockEffect()]);
       const emptyEffects = createEffectQueue([]);
       const events: SessionEvent[] = [
@@ -521,9 +569,6 @@ describe('SessionProfiler', () => {
         {
           type: 'commit-start',
           id: 0,
-          mutationEffects,
-          layoutEffects,
-          passiveEffects,
         },
         {
           type: 'effect-commit-start',
@@ -541,7 +586,6 @@ describe('SessionProfiler', () => {
           type: 'update-end',
           id: 0,
           lanes: Lane.UserBlockingLane,
-          aborted: false,
         },
         {
           type: 'effect-commit-start',
@@ -558,9 +602,6 @@ describe('SessionProfiler', () => {
         {
           type: 'commit-end',
           id: 0,
-          mutationEffects: emptyEffects,
-          layoutEffects: emptyEffects,
-          passiveEffects: emptyEffects,
         },
       ];
 
@@ -624,7 +665,6 @@ describe('SessionProfiler', () => {
           type: 'update-end',
           id: 0,
           lanes: Lane.UserBlockingLane,
-          aborted: false,
         },
       ];
 
@@ -715,7 +755,11 @@ describe('ConsoleReporter', () => {
       ]);
     });
 
-    it('reports the mode as sync mode when lanes contains SyncLane', () => {
+    it.each([
+      [Lane.ConcurrentLane, 'concurrent'],
+      [Lane.SyncLane, 'sync'],
+      [Lane.NoLane, 'no'],
+    ])('reports the mode when lanes contains a mode lane', (lanes, expectedMode) => {
       reporter.reportProfile({
         id: 0,
         phase: 'prerender',
@@ -723,7 +767,7 @@ describe('ConsoleReporter', () => {
         updateMeasurement: {
           startTime: 0,
           duration: 10,
-          lanes: Lane.ConcurrentLane | Lane.SyncLane,
+          lanes,
         },
         renderMeasurement: null,
         commitMeasurement: null,
@@ -735,7 +779,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          `#0 Update SUCCEEDED without priority in sync mode after %c10ms`,
+          `#0 Update SUCCEEDED without priority in ${expectedMode} mode after %c10ms`,
         ],
         ['groupEnd'],
       ]);

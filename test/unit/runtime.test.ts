@@ -12,7 +12,7 @@ import {
   type SessionEvent,
   type UpdateHandle,
 } from '@/core.js';
-import { ComponentError } from '@/error.js';
+import { ComponentError, InterruptError } from '@/error.js';
 import { RenderSession } from '@/render-session.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
@@ -108,9 +108,6 @@ describe('Runtime', () => {
           {
             type: 'commit-start',
             id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
           },
           {
             type: 'effect-commit-start',
@@ -140,7 +137,6 @@ describe('Runtime', () => {
             type: 'update-end',
             id: 0,
             lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
-            aborted: false,
           },
           {
             type: 'effect-commit-start',
@@ -157,9 +153,6 @@ describe('Runtime', () => {
           {
             type: 'commit-end',
             id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
           },
         ] satisfies SessionEvent[]);
       });
@@ -221,9 +214,6 @@ describe('Runtime', () => {
           {
             type: 'commit-start',
             id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
           },
           {
             type: 'effect-commit-start',
@@ -264,15 +254,11 @@ describe('Runtime', () => {
           {
             type: 'commit-end',
             id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
           },
           {
             type: 'update-end',
             id: 0,
             lanes: Lane.ConcurrentLane | Lane.SyncLane | Lane.UserBlockingLane,
-            aborted: false,
           },
         ] satisfies SessionEvent[]);
       });
@@ -332,9 +318,6 @@ describe('Runtime', () => {
           {
             type: 'commit-start',
             id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
           },
           {
             type: 'effect-commit-start',
@@ -363,9 +346,6 @@ describe('Runtime', () => {
           {
             type: 'commit-end',
             id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
           },
           {
             type: 'update-end',
@@ -374,7 +354,6 @@ describe('Runtime', () => {
               Lane.ConcurrentLane |
               Lane.UserBlockingLane |
               Lane.ViewTransitionLane,
-            aborted: false,
           },
         ] satisfies SessionEvent[]);
       });
@@ -423,11 +402,14 @@ describe('Runtime', () => {
             id: 0,
           },
           {
+            type: 'commit-abort',
+            id: 0,
+            reason: expect.any(ComponentError),
+          },
+          {
             type: 'update-end',
             id: 0,
             lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
-            aborted: true,
-            reason: expect.objectContaining({ cause: error }),
           },
         ] satisfies SessionEvent[]);
       });
@@ -487,11 +469,14 @@ describe('Runtime', () => {
             id: 0,
           },
           {
+            type: 'commit-abort',
+            id: 0,
+            reason: expect.any(InterruptError),
+          },
+          {
             type: 'update-end',
             id: 0,
             lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
-            aborted: true,
-            reason: expect.objectContaining({ cause: error }),
           },
         ] satisfies SessionEvent[]);
       });
@@ -553,7 +538,6 @@ describe('Runtime', () => {
               id: 0,
               lanes:
                 Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
-              aborted: false,
             },
             {
               type: 'update-start',
@@ -574,21 +558,14 @@ describe('Runtime', () => {
               id: 1,
               lanes:
                 Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
-              aborted: false,
             },
             {
               type: 'commit-start',
               id: 0,
-              mutationEffects: expect.any(EffectQueue),
-              layoutEffects: expect.any(EffectQueue),
-              passiveEffects: expect.any(EffectQueue),
             },
             {
               type: 'commit-start',
               id: 1,
-              mutationEffects: expect.any(EffectQueue),
-              layoutEffects: expect.any(EffectQueue),
-              passiveEffects: expect.any(EffectQueue),
             },
             {
               type: 'effect-commit-start',
@@ -617,16 +594,10 @@ describe('Runtime', () => {
             {
               type: 'commit-end',
               id: 0,
-              mutationEffects: expect.any(EffectQueue),
-              layoutEffects: expect.any(EffectQueue),
-              passiveEffects: expect.any(EffectQueue),
             },
             {
               type: 'commit-end',
               id: 1,
-              mutationEffects: expect.any(EffectQueue),
-              layoutEffects: expect.any(EffectQueue),
-              passiveEffects: expect.any(EffectQueue),
             },
           ] satisfies SessionEvent[]);
         }
@@ -691,9 +662,6 @@ describe('Runtime', () => {
           {
             type: 'commit-start',
             id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
           },
           {
             type: 'effect-commit-start',
@@ -734,15 +702,11 @@ describe('Runtime', () => {
           {
             type: 'commit-end',
             id: 0,
-            mutationEffects: expect.any(EffectQueue),
-            layoutEffects: expect.any(EffectQueue),
-            passiveEffects: expect.any(EffectQueue),
           },
           {
             type: 'update-end',
             id: 0,
             lanes: Lane.SyncLane | Lane.UserBlockingLane,
-            aborted: false,
           },
         ] satisfies SessionEvent[]);
       });
@@ -789,11 +753,14 @@ describe('Runtime', () => {
             id: 0,
           },
           {
+            type: 'commit-abort',
+            id: 0,
+            reason: expect.any(ComponentError),
+          },
+          {
             type: 'update-end',
             id: 0,
             lanes: Lane.SyncLane | Lane.UserBlockingLane,
-            aborted: true,
-            reason: expect.objectContaining({ cause: error }),
           },
         ] satisfies SessionEvent[]);
       });
@@ -853,11 +820,14 @@ describe('Runtime', () => {
             id: 0,
           },
           {
+            type: 'commit-abort',
+            id: 0,
+            reason: expect.any(InterruptError),
+          },
+          {
             type: 'update-end',
             id: 0,
             lanes: Lane.SyncLane | Lane.UserBlockingLane,
-            aborted: true,
-            reason: expect.objectContaining({ cause: error }),
           },
         ] satisfies SessionEvent[]);
       });

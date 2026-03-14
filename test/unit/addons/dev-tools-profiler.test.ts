@@ -29,7 +29,6 @@ describe('DevToolsProfiler', () => {
         type: 'update-end',
         id: 0,
         lanes: 0,
-        aborted: false,
       });
 
       expect(marksOf(performance)).toStrictEqual([
@@ -229,16 +228,10 @@ describe('DevToolsProfiler', () => {
       profiler.onSessionEvent({
         type: 'commit-start',
         id: 0,
-        mutationEffects: new EffectQueue(),
-        layoutEffects: new EffectQueue(),
-        passiveEffects: new EffectQueue(),
       });
       profiler.onSessionEvent({
         type: 'commit-end',
         id: 0,
-        mutationEffects: new EffectQueue(),
-        layoutEffects: new EffectQueue(),
-        passiveEffects: new EffectQueue(),
       });
 
       expect(marksOf(performance)).toStrictEqual([
@@ -299,7 +292,6 @@ describe('DevToolsProfiler', () => {
           type: 'update-end',
           id: 99,
           lanes: 0,
-          aborted: false,
         });
       }).not.toThrow();
     });
