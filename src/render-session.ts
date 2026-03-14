@@ -357,10 +357,9 @@ export class RenderSession implements RenderContext {
         ): UpdateHandle => {
           const { reducer, pendingState, context } = hook;
           const areStatesEqual = options.areStatesEqual ?? Object.is;
-          const prevState = pendingState;
-          const nextState = reducer(prevState, action);
+          const nextState = reducer(pendingState, action);
 
-          if (areStatesEqual(nextState, prevState)) {
+          if (areStatesEqual(nextState, pendingState)) {
             const skipped = Promise.resolve<UpdateResult>({
               status: 'skipped',
             });
