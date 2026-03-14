@@ -1,8 +1,8 @@
 import {
   BrowserBackend,
+  ComponentError,
   createComponent,
   type RenderContext,
-  RenderError,
   Root,
   Runtime,
 } from 'barebind';
@@ -12,26 +12,6 @@ import { stripComments } from '../test-helpers.js';
 
 const App = createComponent<{ children: unknown }>(function App({ children }) {
   return children;
-});
-
-const Fail = createComponent(function Fail() {
-  throw new Error('fail');
-});
-
-const RecoverOnTransaction = createComponent(function Fail(_props, $) {
-  const [capturedError, setCapturedError] = $.useState<unknown>(null);
-
-  $.useLayoutEffect(() => {
-    $.startTransition(() => {
-      throw new Error('fail in transition');
-    }).finished.catch((error) => {
-      setCapturedError(error, { flushSync: true, immediate: true });
-    });
-  }, []);
-
-  return capturedError !== null
-    ? $.html`<p>${String(capturedError)}</p>`
-    : null;
 });
 
 const ErrorBoundary = createComponent<{
@@ -45,10 +25,16 @@ const ErrorBoundary = createComponent<{
 
   $.catchError((error) => {
     if (getFallback !== undefined) {
-      setErrorCapture({
-        fallback: getFallback(error, $),
-        children,
-      });
+      setErrorCapture(
+        {
+          fallback: getFallback(error, $),
+          children,
+        },
+        {
+          flushSync: true,
+          immediate: true,
+        },
+      );
     }
   });
 
@@ -57,10 +43,40 @@ const ErrorBoundary = createComponent<{
     : children;
 });
 
+const FailOnEffect = createComponent(function FailOnEffect(_props, $) {
+  $.useLayoutEffect(() => {
+    $.throwError(new Error('fail on effect'));
+  }, []);
+});
+
+const FailOnRender = createComponent(function FailOnRender() {
+  throw new Error('fail');
+});
+
+const RecoverOnTransaction = createComponent(
+  function RecoverOnTransaction(_props, $) {
+    const [capturedError, setCapturedError] = $.useState<unknown>(null);
+
+    $.useLayoutEffect(() => {
+      $.startTransition(() => {
+        throw new Error('fail on transition');
+      }).finished.catch((error) => {
+        setCapturedError(error, { flushSync: true, immediate: true });
+      });
+    }, []);
+
+    return capturedError !== null
+      ? $.html`<p>${String(capturedError)}</p>`
+      : null;
+  },
+);
+
 test('renders the fallback when an error occurs during rendering', async () => {
-  const source = ErrorBoundary({
-    children: App({ children: Fail({}) }),
-    getFallback: (error, $) => $.html`<p>${String(error)}</p>`,
+  const source = App({
+    children: ErrorBoundary({
+      children: FailOnRender({}),
+      getFallback: (error, $) => $.html`<p>${String(error)}</p>`,
+    }),
   });
   const container = document.createElement('div');
   const root = Root.create(
@@ -78,10 +94,35 @@ test('renders the fallback when an error occurs during rendering', async () => {
   expect(container.innerHTML).toBe('');
 });
 
+test('renders the fallback when an error occurs on effect', async () => {
+  const source = App({
+    children: ErrorBoundary({
+      children: FailOnEffect({}),
+      getFallback: (error, $) => $.html`<p>${String(error)}</p>`,
+    }),
+  });
+  const container = document.createElement('div');
+  const root = Root.create(
+    source,
+    container,
+    new Runtime(new BrowserBackend()),
+  );
+
+  await root.mount().finished;
+
+  expect(stripComments(container).innerHTML).toBe(
+    '<p>Error: fail on effect</p>',
+  );
+
+  await root.unmount().finished;
+
+  expect(container.innerHTML).toBe('');
+});
+
 test('treates errors as interrupts when there is no fallback', async () => {
   const source = App({
     children: ErrorBoundary({
-      children: Fail({}),
+      children: FailOnRender({}),
     }),
   });
   const container = document.createElement('div');
@@ -99,8 +140,8 @@ test('treates errors as interrupts when there is no fallback', async () => {
   });
 });
 
-test('throws uncaught errors as RenderError', async () => {
-  const source = App({ children: Fail({}) });
+test('throws uncaught errors during rendering as ComponentError', async () => {
+  const source = App({ children: FailOnRender({}) });
   const container = document.createElement('div');
   const root = Root.create(
     source,
@@ -112,10 +153,38 @@ test('throws uncaught errors as RenderError', async () => {
     await root.mount().finished;
     expect.unreachable();
   } catch (error) {
-    expect(error).toBeInstanceOf(RenderError);
-    expect((error as RenderError).cause).toStrictEqual(
+    expect(error).toBeInstanceOf(ComponentError);
+    expect((error as ComponentError).message).toContain(
+      'An error occurred during rendering.',
+    );
+    expect((error as ComponentError).cause).toStrictEqual(
       expect.objectContaining({
         message: 'fail',
+      }),
+    );
+  }
+});
+
+test('throws uncaught errors thrown by throwError() as ComponentError', async () => {
+  const source = App({ children: FailOnEffect({}) });
+  const container = document.createElement('div');
+  const root = Root.create(
+    source,
+    container,
+    new Runtime(new BrowserBackend()),
+  );
+
+  try {
+    await root.mount().finished;
+    expect.unreachable();
+  } catch (error) {
+    expect(error).toBeInstanceOf(ComponentError);
+    expect((error as ComponentError).message).toContain(
+      'An error was thrown from the component.',
+    );
+    expect((error as ComponentError).cause).toStrictEqual(
+      expect.objectContaining({
+        message: 'fail on effect',
       }),
     );
   }
@@ -133,6 +202,8 @@ test('captures errors that occur during the transition', async () => {
   await root.mount().finished;
 
   expect(stripComments(container).innerHTML).toBe(
-    '<p>Error: fail in transition</p>',
+    `<p>Error: An error occurred during a transition.
+${App.name}
+\`- ${RecoverOnTransaction.name} &lt;- ERROR occurred here!</p>`,
   );
 });

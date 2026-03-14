@@ -34,7 +34,7 @@ import {
   type Usable,
 } from './core.js';
 import { DirectiveSpecifier } from './directive.js';
-import { handleError } from './error.js';
+import { ComponentError, handleError } from './error.js';
 
 export class RenderSession implements RenderContext {
   private readonly _state: ComponentState;
@@ -185,7 +185,15 @@ export class RenderSession implements RenderContext {
       try {
         await action(transition);
       } catch (error) {
-        handleError(error, this._coroutine.scope);
+        try {
+          handleError(error, this._coroutine.scope);
+        } catch (error) {
+          throw new ComponentError(
+            'An error occurred during a transition.',
+            this._coroutine,
+            { cause: error },
+          );
+        }
       }
     });
   }
@@ -205,7 +213,15 @@ export class RenderSession implements RenderContext {
   }
 
   throwError(error: unknown): void {
-    handleError(error, this._coroutine.scope);
+    try {
+      handleError(error, this._coroutine.scope);
+    } catch (error) {
+      throw new ComponentError(
+        'An error was thrown from the component.',
+        this._coroutine,
+        { cause: error },
+      );
+    }
   }
 
   use<T>(usable: HookClass<T>): T;

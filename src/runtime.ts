@@ -32,7 +32,7 @@ import {
   type UpdateSession,
 } from './core.js';
 import { toDirective } from './directive.js';
-import { handleError, InterruptError, RenderError } from './error.js';
+import { ComponentError, handleError, InterruptError } from './error.js';
 import { RenderSession } from './render-session.js';
 
 export interface RuntimeOptions {
@@ -356,9 +356,13 @@ export class Runtime implements SessionContext {
     try {
       handlingScope = handleError(error, coroutine.scope);
     } catch (error) {
-      throw new RenderError('An error occurred while rendering.', coroutine, {
-        cause: error,
-      });
+      throw new ComponentError(
+        'An error occurred during rendering.',
+        coroutine,
+        {
+          cause: error,
+        },
+      );
     } finally {
       notifyObservers(this._observers, {
         type: 'render-error',

@@ -11,7 +11,7 @@ import {
   PartType,
   type UpdateHandle,
 } from '@/core.js';
-import { RenderError } from '@/error.js';
+import { ComponentError } from '@/error.js';
 import { RenderSession } from '@/render-session.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
@@ -393,8 +393,8 @@ describe('Runtime', () => {
             await handle.finished;
             expect.unreachable();
           } catch (caughtError) {
-            expect(caughtError).toBeInstanceOf(RenderError);
-            expect((caughtError as RenderError).cause).toBe(error);
+            expect(caughtError).toBeInstanceOf(ComponentError);
+            expect((caughtError as ComponentError).cause).toBe(error);
           }
         }
 
@@ -754,8 +754,8 @@ describe('Runtime', () => {
             await runtime.scheduleUpdate(coroutine).finished;
             expect.unreachable();
           } catch (caughtError) {
-            expect(caughtError).toBeInstanceOf(RenderError);
-            expect((caughtError as RenderError).cause).toBe(error);
+            expect(caughtError).toBeInstanceOf(ComponentError);
+            expect((caughtError as ComponentError).cause).toBe(error);
           }
         }
 

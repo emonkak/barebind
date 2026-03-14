@@ -17,7 +17,7 @@ export {
   type SessionObserver,
 } from './core.js';
 export { DirectiveError } from './directive.js';
-export { InterruptError, RenderError } from './error.js';
+export { ComponentError, InterruptError } from './error.js';
 export { HydrationError } from './hydration.js';
 export { Cached } from './layout/cached.js';
 export { Flexible } from './layout/flexible.js';

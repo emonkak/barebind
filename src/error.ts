@@ -1,24 +1,16 @@
 import { BoundaryType, type Coroutine, type Scope } from './core.js';
-import { getOwnerStack } from './debug/scope.js';
+import { formatOwnerStack, getOwnerStack } from './debug/coroutine.js';
 
-export class InterruptError extends Error {}
-
-export class RenderError extends Error {
+export class ComponentError extends Error {
   constructor(message: string, coroutine: Coroutine, options?: ErrorOptions) {
     DEBUG: {
-      message += getOwnerStack(coroutine)
-        .reverse()
-        .map((coroutine, i, stack) => {
-          const prefix = i > 0 ? '   '.repeat(i - 1) + '`- ' : '';
-          const suffix =
-            i === stack.length - 1 ? ' <- ERROR occurred here!' : '';
-          return '\n' + prefix + coroutine.name + suffix;
-        })
-        .join('');
+      message += '\n' + formatOwnerStack(getOwnerStack(coroutine));
     }
     super(message, options);
   }
 }
+
+export class InterruptError extends Error {}
 
 export function handleError(error: unknown, scope: Scope): Scope {
   let currentScope = scope;
