@@ -432,7 +432,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([]);
     });
 
-    it('reports the update as a view transition when lanes contains ViewTransitionLane', () => {
+    it('reports the update as a transition and a view transition when lanes contains TransitionLane and ViewTransitionLane', () => {
       reporter.reportProfile({
         id: 0,
         phase: 'idle',
@@ -440,7 +440,8 @@ describe('ConsoleReporter', () => {
         updateMeasurement: {
           startTime: 0,
           duration: 10,
-          lanes: Lane.ConcurrentLane | Lane.ViewTransitionLane,
+          lanes:
+            Lane.ConcurrentLane | Lane.TransitionLane | Lane.ViewTransitionLane,
         },
         renderMeasurement: null,
         commitMeasurement: null,
@@ -452,33 +453,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          '#0 ViewTransition SUCCESS without priority in concurrent mode %c(10ms)',
-        ],
-        ['groupEnd'],
-      ]);
-    });
-
-    it('reports the update as a transition when lanes contains TransitionLane', () => {
-      reporter.reportProfile({
-        id: 0,
-        phase: 'idle',
-        status: 'success',
-        updateMeasurement: {
-          startTime: 0,
-          duration: 10,
-          lanes: Lane.ConcurrentLane | Lane.TransitionLane,
-        },
-        renderMeasurement: null,
-        commitMeasurement: null,
-        errorRecords: [],
-        componentRecords: [],
-        effectRecords: [],
-      });
-
-      expect(logger.flush()).toStrictEqual([
-        [
-          'groupCollapsed',
-          '#0 Transition SUCCESS without priority in concurrent mode %c(10ms)',
+          '#0 Transition/ViewTransition SUCCESS without priority in concurrent mode after %c10ms',
         ],
         ['groupEnd'],
       ]);
@@ -508,7 +483,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          `#0 Update SUCCESS with ${expectedPriority} priority in concurrent mode %c(10ms)`,
+          `#0 Update SUCCESS with ${expectedPriority} priority in concurrent mode after %c10ms`,
         ],
         ['groupEnd'],
       ]);
@@ -534,7 +509,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          `#0 Update SUCCESS without priority in sync mode %c(10ms)`,
+          `#0 Update SUCCESS without priority in sync mode after %c10ms`,
         ],
         ['groupEnd'],
       ]);
@@ -576,9 +551,9 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          `#0 Update SUCCESS without priority in concurrent mode %c(10ms)`,
+          `#0 Update SUCCESS without priority in concurrent mode after %c10ms`,
         ],
-        ['group', '%cRENDER PHASE:%c 2 component(s) rendered in %c3ms'],
+        ['group', '%cRENDER PHASE:%c 2 component(s) rendered after %c3ms'],
         ['table', profile.componentRecords],
         ['groupEnd'],
         ['groupEnd'],
@@ -616,9 +591,9 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          `#0 Update FAILURE without priority in concurrent mode %c(10ms)`,
+          `#0 Update FAILURE without priority in concurrent mode after %c10ms`,
         ],
-        ['group', '%cRENDER PHASE:%c 0 component(s) rendered in %c3ms'],
+        ['group', '%cRENDER PHASE:%c 0 component(s) rendered after %c3ms'],
         ['table', profile.errorRecords],
         ['groupEnd'],
         ['groupEnd'],
@@ -672,9 +647,9 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          `#0 Update SUCCESS without priority in concurrent mode %c(10ms)`,
+          `#0 Update SUCCESS without priority in concurrent mode after %c10ms`,
         ],
-        ['group', '%cCOMMIT PHASE:%c 6 effect(s) committed in %c3ms'],
+        ['group', '%cCOMMIT PHASE:%c 6 effect(s) committed after %c3ms'],
         ['log', '%cMUTATION PHASE:%c 3 effect(s) committed in %c3ms'],
         ['log', '%cLAYOUT PHASE:%c 2 effect(s) committed in %c2ms'],
         ['log', '%cPASSIVE PHASE:%c 1 effect(s) committed in %c1ms'],

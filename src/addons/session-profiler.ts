@@ -241,13 +241,13 @@ export class ConsoleReporter implements SessionProfileReporter {
     const modeLabel = `in ${mode} mode`;
 
     this._logger.groupCollapsed(
-      `#${profile.id} ${kindLabel} ${statusLabel} ${priorityLabel} ${modeLabel} %c(${updateMeasurement.duration}ms)`,
+      `#${profile.id} ${kindLabel} ${statusLabel} ${priorityLabel} ${modeLabel} after %c${updateMeasurement.duration}ms`,
       DURATION_STYLE,
     );
 
     if (renderMeasurement !== null) {
       this._logger.group(
-        `%cRENDER PHASE:%c ${componentRecords.length} component(s) rendered in %c${renderMeasurement.duration}ms`,
+        `%cRENDER PHASE:%c ${componentRecords.length} component(s) rendered after %c${renderMeasurement.duration}ms`,
         RENDER_PHASE_STYLE,
         DEFAULT_STYLE,
         DURATION_STYLE,
@@ -267,7 +267,7 @@ export class ConsoleReporter implements SessionProfileReporter {
         0,
       );
       this._logger.group(
-        `%cCOMMIT PHASE:%c ${totalCommits} effect(s) committed in %c${commitMeasurement.duration}ms`,
+        `%cCOMMIT PHASE:%c ${totalCommits} effect(s) committed after %c${commitMeasurement.duration}ms`,
         COMMIT_PHASE_STYLE,
         DEFAULT_STYLE,
         DURATION_STYLE,
@@ -303,11 +303,11 @@ function createProfile(id: number): SessionProfile {
 
 function getUpdateKind(lanes: Lanes): string {
   const tags = [];
-  if (lanes & Lane.ViewTransitionLane) {
-    tags.push('ViewTransition');
-  }
   if (lanes & Lane.TransitionLane) {
     tags.push('Transition');
+  }
+  if (lanes & Lane.ViewTransitionLane) {
+    tags.push('ViewTransition');
   }
   return tags.length > 0 ? tags.join('/') : 'Update';
 }
