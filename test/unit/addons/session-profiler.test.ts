@@ -8,11 +8,12 @@ import {
 } from '@/addons/session-profiler.js';
 import { createComponent } from '@/component.js';
 import { Lane, type RenderContext, type SessionEvent } from '@/core.js';
+import { InterruptError } from '@/error.js';
 import { createEffectQueue, MockEffect } from '../../mocks.js';
 
 describe('SessionProfiler', () => {
   describe('onSessionEvent()', () => {
-    it('flushs profiles when update is success', () => {
+    it('reports profiles with succeeded status when update succeeds', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
@@ -170,7 +171,7 @@ describe('SessionProfiler', () => {
       } satisfies SessionProfile);
     });
 
-    it('reports profiles when update is failure', () => {
+    it('reports profiles with failed status when update fails', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
@@ -224,6 +225,88 @@ describe('SessionProfiler', () => {
       expect(reporter.reportProfile).toHaveBeenCalledWith({
         id: 0,
         status: 'failed',
+        phase: 'postrender',
+        updateMeasurement: {
+          startTime: expect.any(Number),
+          duration: expect.any(Number),
+          lanes: Lane.UserBlockingLane,
+        },
+        renderMeasurement: {
+          startTime: expect.any(Number),
+          duration: expect.any(Number),
+        },
+        commitMeasurement: null,
+        errorRecords: [
+          {
+            error,
+            captured: false,
+          },
+        ],
+        componentRecords: [
+          {
+            name: 'MyComponent',
+            startTime: expect.any(Number),
+            duration: expect.any(Number),
+          },
+        ],
+        effectRecords: [],
+      } satisfies SessionProfile);
+    });
+
+    it('reports profiles with interrupted status when update interrupts', () => {
+      const reporter = {
+        reportProfile: vi.fn(),
+      };
+      const profiler = new SessionProfiler(reporter);
+
+      const component = createComponent(function MyComponent(_props: {}) {
+        return null;
+      });
+      const error = new InterruptError();
+      const events: SessionEvent[] = [
+        {
+          type: 'update-start',
+          id: 0,
+          lanes: Lane.UserBlockingLane,
+        },
+        {
+          type: 'render-start',
+          id: 0,
+        },
+        {
+          type: 'component-render-start',
+          id: 0,
+          component,
+          props: {},
+          context: {} as RenderContext,
+        },
+        {
+          type: 'render-error',
+          id: 0,
+          error,
+          captured: false,
+        },
+        {
+          type: 'render-end',
+          id: 0,
+        },
+        {
+          type: 'update-end',
+          id: 0,
+          lanes: Lane.UserBlockingLane,
+          aborted: true,
+          reason: error,
+        },
+      ];
+
+      for (const event of events) {
+        profiler.onSessionEvent(event);
+      }
+
+      expect(reporter.reportProfile).toHaveBeenCalledOnce();
+      expect(reporter.reportProfile).toHaveBeenCalledWith({
+        id: 0,
+        status: 'interrupted',
         phase: 'postrender',
         updateMeasurement: {
           startTime: expect.any(Number),

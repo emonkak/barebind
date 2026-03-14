@@ -8,6 +8,7 @@ import {
   type SessionEvent,
   type SessionObserver,
 } from '../core.js';
+import { InterruptError } from '../error.js';
 
 // Blue
 const RENDER_PHASE_STYLE =
@@ -65,7 +66,7 @@ export interface RenderMeasurement {
 export interface SessionProfile {
   id: number;
   phase: 'prerender' | 'postrender' | 'precommit' | 'postcommit';
-  status: 'pending' | 'succeeded' | 'failed';
+  status: 'pending' | 'succeeded' | 'failed' | 'interrupted';
   updateMeasurement: UpdateMeasurement | null;
   renderMeasurement: RenderMeasurement | null;
   commitMeasurement: CommitMeasurement | null;
@@ -118,7 +119,11 @@ export class SessionProfiler implements SessionObserver {
         if (measurement !== null) {
           measurement.duration = performance.now() - measurement.startTime;
         }
-        profile.status = event.aborted ? 'failed' : 'succeeded';
+        profile.status = event.aborted
+          ? event.reason instanceof InterruptError
+            ? 'interrupted'
+            : 'failed'
+          : 'succeeded';
         break;
       }
       case 'render-start':
@@ -195,7 +200,8 @@ export class SessionProfiler implements SessionObserver {
     }
 
     if (
-      (profile.phase === 'postrender' && profile.status === 'failed') ||
+      (profile.phase === 'postrender' &&
+        (profile.status === 'failed' || profile.status === 'interrupted')) ||
       (profile.phase === 'postcommit' && profile.status === 'succeeded')
     ) {
       this._reporter.reportProfile(profile);
