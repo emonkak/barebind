@@ -333,8 +333,8 @@ export class Runtime implements SessionContext {
     notifyObservers(this._observers, {
       type: 'effect-commit-start',
       id,
-      effects,
       phase,
+      effects,
     });
 
     this._backend.flushEffects(effects, phase);
@@ -342,8 +342,8 @@ export class Runtime implements SessionContext {
     notifyObservers(this._observers, {
       type: 'effect-commit-end',
       id,
-      effects,
       phase,
+      effects,
     });
   }
 

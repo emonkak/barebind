@@ -501,8 +501,8 @@ export type SessionEvent =
   | {
       type: 'effect-commit-start' | 'effect-commit-end';
       id: number;
-      effects: EffectQueue;
       phase: CommitPhase;
+      effects: EffectQueue;
     };
 
 export interface SessionLifecycle {
