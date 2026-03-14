@@ -146,16 +146,19 @@ export class EffectQueue {
   }
 
   flush(): void {
-    for (const effect of this._headEffects) {
-      effect.commit();
+    try {
+      for (const effect of this._headEffects) {
+        effect.commit();
+      }
+      for (const effect of this._middleEffects) {
+        effect.commit();
+      }
+      for (const effect of this._tailEffects) {
+        effect.commit();
+      }
+    } finally {
+      this.clear();
     }
-    for (const effect of this._middleEffects) {
-      effect.commit();
-    }
-    for (const effect of this._tailEffects) {
-      effect.commit();
-    }
-    this.clear();
   }
 
   push(effect: Effect, level: number): void {
