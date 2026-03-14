@@ -303,9 +303,9 @@ export class Runtime implements SessionContext {
         .catch((error) => {
           // callback() is guaranteed not to throw anything; rejection here only
           // indicates AbortSignal cancellation.
-          const aborted: UpdateResult = { status: 'canceled', reason: error };
-          controller.resolve(aborted);
-          return aborted;
+          const canceled: UpdateResult = { status: 'canceled', reason: error };
+          controller.resolve(canceled);
+          return canceled;
         });
     }
 
