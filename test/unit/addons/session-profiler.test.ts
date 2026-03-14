@@ -675,7 +675,9 @@ describe('ConsoleReporter', () => {
           `#0 Update SUCCESS without priority in concurrent mode %c(10ms)`,
         ],
         ['group', '%cCOMMIT PHASE:%c 6 effect(s) committed in %c3ms'],
-        ['table', profile.effectRecords],
+        ['log', '%cMUTATION PHASE:%c 3 effect(s) committed in %c3ms'],
+        ['log', '%cLAYOUT PHASE:%c 2 effect(s) committed in %c2ms'],
+        ['log', '%cPASSIVE PHASE:%c 1 effect(s) committed in %c1ms'],
         ['groupEnd'],
         ['groupEnd'],
       ]);

@@ -15,6 +15,14 @@ const RENDER_PHASE_STYLE =
 // Pink
 const COMMIT_PHASE_STYLE =
   'color: light-dark(#b90063, #ff4896); font-weight: bold';
+const EFFECT_STYLES: Record<CommitPhase, string> = {
+  // Orange
+  mutation: 'color: light-dark(#9f4312, #e96725); font-weight: bold',
+  // Purple
+  layout: 'color: light-dark(#8c1ed3, #bf67ff); font-weight: bold',
+  // Green
+  passive: 'color: light-dark(#146c2e, #1ea446); font-weight: bold',
+};
 // Gray
 const DURATION_STYLE =
   'color: light-dark(#5e5d67, #918f9a); font-weight: normal';
@@ -264,8 +272,13 @@ export class ConsoleReporter implements SessionProfileReporter {
         DEFAULT_STYLE,
         DURATION_STYLE,
       );
-      if (effectRecords.length > 0) {
-        this._logger.table(effectRecords, ['phase', 'commitCount', 'duration']);
+      for (const { phase, commitCount, duration } of effectRecords) {
+        this._logger.log(
+          `%c${phase.toUpperCase()} PHASE:%c ${commitCount} effect(s) committed in %c${duration}ms`,
+          EFFECT_STYLES[phase],
+          DEFAULT_STYLE,
+          DURATION_STYLE,
+        );
       }
       this._logger.groupEnd();
     }
