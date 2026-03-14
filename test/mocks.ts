@@ -258,7 +258,6 @@ export class MockCoroutine implements Coroutine {
 
   resume(session: UpdateSession): void {
     this.callback(session);
-    this.pendingLanes &= ~session.frame.lanes;
   }
 }
 

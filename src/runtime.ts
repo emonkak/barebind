@@ -459,7 +459,7 @@ export class Runtime implements SessionContext {
   }
 
   private async _runRenderAsync(session: UpdateSession): Promise<void> {
-    const { coroutine, frame } = session;
+    const { frame } = session;
     const { id, pendingCoroutines } = frame;
 
     notifyObservers(this._observers, {
@@ -475,6 +475,7 @@ export class Runtime implements SessionContext {
         )) {
           try {
             coroutine.resume(session);
+            coroutine.pendingLanes &= ~frame.lanes;
           } catch (error) {
             processError(id, error, coroutine, this._observers);
           }
@@ -487,7 +488,6 @@ export class Runtime implements SessionContext {
         await this._backend.yieldToMain();
       }
     } finally {
-      coroutine.pendingLanes &= ~frame.lanes;
       frame.lanes = Lane.NoLane;
 
       notifyObservers(this._observers, {
@@ -498,7 +498,7 @@ export class Runtime implements SessionContext {
   }
 
   private _runRenderSync(session: UpdateSession): void {
-    const { coroutine, frame } = session;
+    const { frame } = session;
     const { id, pendingCoroutines } = frame;
 
     notifyObservers(this._observers, {
@@ -511,13 +511,13 @@ export class Runtime implements SessionContext {
         for (const coroutine of pendingCoroutines.splice(0)) {
           try {
             coroutine.resume(session);
+            coroutine.pendingLanes &= ~frame.lanes;
           } catch (error) {
             processError(id, error, coroutine, this._observers);
           }
         }
       } while (pendingCoroutines.length > 0);
     } finally {
-      coroutine.pendingLanes &= ~frame.lanes;
       frame.lanes = Lane.NoLane;
 
       notifyObservers(this._observers, {
