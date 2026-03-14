@@ -93,17 +93,14 @@ describe('Runtime', () => {
 
         expect(observer.flushEvents()).toStrictEqual([
           {
-            type: 'update-start',
+            type: 'render-start',
             id: 0,
             lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
           },
           {
-            type: 'render-start',
-            id: 0,
-          },
-          {
             type: 'render-end',
             id: 0,
+            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
           },
           {
             type: 'commit-start',
@@ -132,11 +129,6 @@ describe('Runtime', () => {
             id: 0,
             phase: 'layout',
             effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'update-end',
-            id: 0,
-            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
           },
           {
             type: 'effect-commit-start',
@@ -199,17 +191,14 @@ describe('Runtime', () => {
 
         expect(observer.flushEvents()).toStrictEqual([
           {
-            type: 'update-start',
+            type: 'render-start',
             id: 0,
             lanes: Lane.ConcurrentLane | Lane.SyncLane | Lane.UserBlockingLane,
           },
           {
-            type: 'render-start',
-            id: 0,
-          },
-          {
             type: 'render-end',
             id: 0,
+            lanes: Lane.ConcurrentLane | Lane.SyncLane | Lane.UserBlockingLane,
           },
           {
             type: 'commit-start',
@@ -254,11 +243,6 @@ describe('Runtime', () => {
           {
             type: 'commit-end',
             id: 0,
-          },
-          {
-            type: 'update-end',
-            id: 0,
-            lanes: Lane.ConcurrentLane | Lane.SyncLane | Lane.UserBlockingLane,
           },
         ] satisfies SessionEvent[]);
       });
@@ -300,7 +284,7 @@ describe('Runtime', () => {
 
         expect(observer.flushEvents()).toStrictEqual([
           {
-            type: 'update-start',
+            type: 'render-start',
             id: 0,
             lanes:
               Lane.ConcurrentLane |
@@ -308,12 +292,12 @@ describe('Runtime', () => {
               Lane.ViewTransitionLane,
           },
           {
-            type: 'render-start',
-            id: 0,
-          },
-          {
             type: 'render-end',
             id: 0,
+            lanes:
+              Lane.ConcurrentLane |
+              Lane.UserBlockingLane |
+              Lane.ViewTransitionLane,
           },
           {
             type: 'commit-start',
@@ -347,14 +331,6 @@ describe('Runtime', () => {
             type: 'commit-end',
             id: 0,
           },
-          {
-            type: 'update-end',
-            id: 0,
-            lanes:
-              Lane.ConcurrentLane |
-              Lane.UserBlockingLane |
-              Lane.ViewTransitionLane,
-          },
         ] satisfies SessionEvent[]);
       });
 
@@ -383,13 +359,9 @@ describe('Runtime', () => {
 
         expect(observer.flushEvents()).toStrictEqual([
           {
-            type: 'update-start',
-            id: 0,
-            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
-          },
-          {
             type: 'render-start',
             id: 0,
+            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
           },
           {
             type: 'render-error',
@@ -400,16 +372,12 @@ describe('Runtime', () => {
           {
             type: 'render-end',
             id: 0,
+            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
           },
           {
             type: 'commit-abort',
             id: 0,
             reason: expect.any(ComponentError),
-          },
-          {
-            type: 'update-end',
-            id: 0,
-            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
           },
         ] satisfies SessionEvent[]);
       });
@@ -450,13 +418,9 @@ describe('Runtime', () => {
 
         expect(observer.flushEvents()).toStrictEqual([
           {
-            type: 'update-start',
-            id: 0,
-            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
-          },
-          {
             type: 'render-start',
             id: 0,
+            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
           },
           {
             type: 'render-error',
@@ -467,16 +431,12 @@ describe('Runtime', () => {
           {
             type: 'render-end',
             id: 0,
+            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
           },
           {
             type: 'commit-abort',
             id: 0,
             reason: expect.any(InterruptError),
-          },
-          {
-            type: 'update-end',
-            id: 0,
-            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
           },
         ] satisfies SessionEvent[]);
       });
@@ -520,41 +480,25 @@ describe('Runtime', () => {
 
           expect(observer.flushEvents()).toStrictEqual([
             {
-              type: 'update-start',
+              type: 'render-start',
+              id: 0,
+              lanes:
+                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
+            },
+            {
+              type: 'render-end',
               id: 0,
               lanes:
                 Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
             },
             {
               type: 'render-start',
-              id: 0,
-            },
-            {
-              type: 'render-end',
-              id: 0,
-            },
-            {
-              type: 'update-end',
-              id: 0,
-              lanes:
-                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
-            },
-            {
-              type: 'update-start',
               id: 1,
               lanes:
                 Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
             },
             {
-              type: 'render-start',
-              id: 1,
-            },
-            {
               type: 'render-end',
-              id: 1,
-            },
-            {
-              type: 'update-end',
               id: 1,
               lanes:
                 Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
@@ -647,17 +591,14 @@ describe('Runtime', () => {
 
         expect(observer.flushEvents()).toStrictEqual([
           {
-            type: 'update-start',
+            type: 'render-start',
             id: 0,
             lanes: Lane.SyncLane | Lane.UserBlockingLane,
           },
           {
-            type: 'render-start',
-            id: 0,
-          },
-          {
             type: 'render-end',
             id: 0,
+            lanes: Lane.SyncLane | Lane.UserBlockingLane,
           },
           {
             type: 'commit-start',
@@ -703,11 +644,6 @@ describe('Runtime', () => {
             type: 'commit-end',
             id: 0,
           },
-          {
-            type: 'update-end',
-            id: 0,
-            lanes: Lane.SyncLane | Lane.UserBlockingLane,
-          },
         ] satisfies SessionEvent[]);
       });
 
@@ -734,13 +670,9 @@ describe('Runtime', () => {
 
         expect(observer.flushEvents()).toStrictEqual([
           {
-            type: 'update-start',
-            id: 0,
-            lanes: Lane.SyncLane | Lane.UserBlockingLane,
-          },
-          {
             type: 'render-start',
             id: 0,
+            lanes: Lane.SyncLane | Lane.UserBlockingLane,
           },
           {
             type: 'render-error',
@@ -751,16 +683,12 @@ describe('Runtime', () => {
           {
             type: 'render-end',
             id: 0,
+            lanes: Lane.SyncLane | Lane.UserBlockingLane,
           },
           {
             type: 'commit-abort',
             id: 0,
             reason: expect.any(ComponentError),
-          },
-          {
-            type: 'update-end',
-            id: 0,
-            lanes: Lane.SyncLane | Lane.UserBlockingLane,
           },
         ] satisfies SessionEvent[]);
       });
@@ -801,13 +729,9 @@ describe('Runtime', () => {
 
         expect(observer.flushEvents()).toStrictEqual([
           {
-            type: 'update-start',
-            id: 0,
-            lanes: Lane.SyncLane | Lane.UserBlockingLane,
-          },
-          {
             type: 'render-start',
             id: 0,
+            lanes: Lane.SyncLane | Lane.UserBlockingLane,
           },
           {
             type: 'render-error',
@@ -818,16 +742,12 @@ describe('Runtime', () => {
           {
             type: 'render-end',
             id: 0,
+            lanes: Lane.SyncLane | Lane.UserBlockingLane,
           },
           {
             type: 'commit-abort',
             id: 0,
             reason: expect.any(InterruptError),
-          },
-          {
-            type: 'update-end',
-            id: 0,
-            lanes: Lane.SyncLane | Lane.UserBlockingLane,
           },
         ] satisfies SessionEvent[]);
       });

@@ -61,13 +61,13 @@ export interface ErrorRecord {
 export interface RenderMeasurement {
   startTime: number;
   duration: number;
+  lanes: Lanes;
 }
 
 export interface SessionProfile {
   id: number;
-  phase: 'prerender' | 'postrender' | 'precommit' | 'postcommit';
+  phase: 'idle' | 'prerender' | 'postrender' | 'precommit' | 'postcommit';
   status: 'pending' | 'succeeded' | 'failed' | 'interrupted';
-  updateMeasurement: UpdateMeasurement | null;
   renderMeasurement: RenderMeasurement | null;
   commitMeasurement: CommitMeasurement | null;
   errorRecords: ErrorRecord[];
@@ -98,33 +98,16 @@ export class SessionProfiler implements SessionObserver {
     let profile = this._pendingProfiles.get(event.id);
 
     if (profile === undefined) {
-      if (event.type === 'update-start') {
-        profile = createProfile(event.id);
-        this._pendingProfiles.set(event.id, profile);
-      } else {
-        return;
-      }
+      profile = createProfile(event.id);
+      this._pendingProfiles.set(event.id, profile);
     }
 
     switch (event.type) {
-      case 'update-start':
-        profile.updateMeasurement = {
-          startTime: performance.now(),
-          duration: 0,
-          lanes: event.lanes,
-        };
-        break;
-      case 'update-end': {
-        const measurement = profile.updateMeasurement;
-        if (measurement !== null) {
-          measurement.duration = performance.now() - measurement.startTime;
-        }
-        break;
-      }
       case 'render-start':
         profile.renderMeasurement = {
           startTime: performance.now(),
           duration: 0,
+          lanes: event.lanes,
         };
         profile.phase = 'prerender';
         break;
@@ -217,7 +200,6 @@ export class ConsoleReporter implements SessionProfileReporter {
   reportProfile(profile: SessionProfile): void {
     const {
       status,
-      updateMeasurement,
       renderMeasurement,
       errorRecords,
       componentRecords,
@@ -225,11 +207,7 @@ export class ConsoleReporter implements SessionProfileReporter {
       commitMeasurement,
     } = profile;
 
-    if (updateMeasurement === null) {
-      return;
-    }
-
-    const { lanes } = updateMeasurement;
+    const lanes = renderMeasurement?.lanes ?? Lane.NoLane;
     const kindLabel = getUpdateKind(lanes);
     const statusLabel = status.toUpperCase();
     const priority = getPriorityFromLanes(lanes);
@@ -237,9 +215,11 @@ export class ConsoleReporter implements SessionProfileReporter {
       priority !== null ? `with ${priority} priority` : 'without priority';
     const mode = getUpdateMode(lanes);
     const modeLabel = `in ${mode} mode`;
+    const totalDuration =
+      (renderMeasurement?.duration ?? 0) + (commitMeasurement?.duration ?? 0);
 
     this._logger.groupCollapsed(
-      `#${profile.id} ${kindLabel} ${statusLabel} ${priorityLabel} ${modeLabel} after %c${updateMeasurement.duration}ms`,
+      `#${profile.id} ${kindLabel} ${statusLabel} ${priorityLabel} ${modeLabel} after %c${totalDuration}ms`,
       DURATION_STYLE,
     );
 
@@ -288,9 +268,8 @@ export class ConsoleReporter implements SessionProfileReporter {
 function createProfile(id: number): SessionProfile {
   return {
     id,
-    phase: 'prerender',
+    phase: 'idle',
     status: 'pending',
-    updateMeasurement: null,
     renderMeasurement: null,
     commitMeasurement: null,
     errorRecords: [],

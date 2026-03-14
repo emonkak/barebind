@@ -22,33 +22,10 @@ describe('DevToolsProfiler', () => {
     profiler = new DevToolsProfiler(performance);
   });
 
-  describe('update-start / update-end', () => {
-    it('records an end mark and a measure', () => {
-      profiler.onSessionEvent({ type: 'update-start', id: 0, lanes: 0 });
-      profiler.onSessionEvent({
-        type: 'update-end',
-        id: 0,
-        lanes: 0,
-      });
-
-      expect(marksOf(performance)).toStrictEqual([
-        'barebind:update-start:0',
-        'barebind:update-end:0',
-      ]);
-      expect(measuresOf(performance)).toStrictEqual([
-        {
-          name: 'Barebind - Update #0',
-          start: 'barebind:update-start:0',
-          end: 'barebind:update-end:0',
-        },
-      ]);
-    });
-  });
-
   describe('render-start / render-end', () => {
     it('records marks and a measure', () => {
-      profiler.onSessionEvent({ type: 'render-start', id: 0 });
-      profiler.onSessionEvent({ type: 'render-end', id: 0 });
+      profiler.onSessionEvent({ type: 'render-start', id: 0, lanes: 0 });
+      profiler.onSessionEvent({ type: 'render-end', id: 0, lanes: 0 });
 
       expect(marksOf(performance)).toStrictEqual([
         'barebind:render-start:0',
@@ -66,7 +43,7 @@ describe('DevToolsProfiler', () => {
 
   describe('component-render-start / component-render-end', () => {
     it('records marks and a measure for a single component', () => {
-      profiler.onSessionEvent({ type: 'update-start', id: 0, lanes: 0 });
+      profiler.onSessionEvent({ type: 'render-start', id: 0, lanes: 0 });
       profiler.onSessionEvent({
         type: 'component-render-start',
         id: 0,
@@ -83,7 +60,7 @@ describe('DevToolsProfiler', () => {
       });
 
       expect(marksOf(performance)).toStrictEqual([
-        'barebind:update-start:0',
+        'barebind:render-start:0',
         `barebind:component-render-start:0:${Foo.name}:0`,
         `barebind:component-render-end:0:${Foo.name}:0`,
       ]);
@@ -97,7 +74,7 @@ describe('DevToolsProfiler', () => {
     });
 
     it('disambiguates multiple renders of the same component', () => {
-      profiler.onSessionEvent({ type: 'update-start', id: 0, lanes: 0 });
+      profiler.onSessionEvent({ type: 'render-start', id: 0, lanes: 0 });
 
       for (let i = 0; i < 3; i++) {
         profiler.onSessionEvent({
@@ -117,7 +94,7 @@ describe('DevToolsProfiler', () => {
       }
 
       expect(marksOf(performance)).toStrictEqual([
-        `barebind:update-start:0`,
+        `barebind:render-start:0`,
         `barebind:component-render-start:0:${Foo.name}:0`,
         `barebind:component-render-end:0:${Foo.name}:0`,
         `barebind:component-render-start:0:${Foo.name}:1`,
@@ -145,7 +122,7 @@ describe('DevToolsProfiler', () => {
     });
 
     it('disambiguates different components within the same update', () => {
-      profiler.onSessionEvent({ type: 'update-start', id: 0, lanes: 0 });
+      profiler.onSessionEvent({ type: 'render-start', id: 0, lanes: 0 });
       profiler.onSessionEvent({
         type: 'component-render-start',
         id: 0,
@@ -191,7 +168,7 @@ describe('DevToolsProfiler', () => {
 
     it('resets component index on each update-start', () => {
       for (const id of [0, 1]) {
-        profiler.onSessionEvent({ type: 'update-start', id, lanes: 0 });
+        profiler.onSessionEvent({ type: 'render-start', id, lanes: 0 });
         profiler.onSessionEvent({
           type: 'component-render-start',
           id,
@@ -289,7 +266,7 @@ describe('DevToolsProfiler', () => {
 
       expect(() => {
         profiler.onSessionEvent({
-          type: 'update-end',
+          type: 'render-end',
           id: 99,
           lanes: 0,
         });

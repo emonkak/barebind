@@ -31,13 +31,9 @@ describe('SessionProfiler', () => {
       const emptyEffects = createEffectQueue([]);
       const events: SessionEvent[] = [
         {
-          type: 'update-start',
-          id: 0,
-          lanes: Lane.UserBlockingLane,
-        },
-        {
           type: 'render-start',
           id: 0,
+          lanes: Lane.ConcurrentLane,
         },
         {
           type: 'component-render-start',
@@ -56,6 +52,7 @@ describe('SessionProfiler', () => {
         {
           type: 'render-end',
           id: 0,
+          lanes: Lane.ConcurrentLane,
         },
         {
           type: 'commit-start',
@@ -101,11 +98,6 @@ describe('SessionProfiler', () => {
           type: 'commit-end',
           id: 0,
         },
-        {
-          type: 'update-end',
-          id: 0,
-          lanes: Lane.UserBlockingLane,
-        },
       ];
 
       for (const event of events) {
@@ -117,14 +109,10 @@ describe('SessionProfiler', () => {
         id: 0,
         status: 'succeeded',
         phase: 'postcommit',
-        updateMeasurement: {
-          startTime: expect.any(Number),
-          duration: expect.any(Number),
-          lanes: Lane.UserBlockingLane,
-        },
         renderMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
+          lanes: Lane.ConcurrentLane,
         },
         commitMeasurement: {
           startTime: expect.any(Number),
@@ -173,22 +161,14 @@ describe('SessionProfiler', () => {
       const error = new InterruptError();
       const events: SessionEvent[] = [
         {
-          type: 'update-start',
-          id: 0,
-          lanes: Lane.UserBlockingLane,
-        },
-        {
           type: 'render-start',
           id: 0,
+          lanes: Lane.ConcurrentLane,
         },
         {
           type: 'render-end',
           id: 0,
-        },
-        {
-          type: 'update-end',
-          id: 0,
-          lanes: Lane.UserBlockingLane,
+          lanes: Lane.ConcurrentLane,
         },
         {
           type: 'commit-abort',
@@ -206,14 +186,10 @@ describe('SessionProfiler', () => {
         id: 0,
         status: 'interrupted',
         phase: 'postcommit',
-        updateMeasurement: {
-          startTime: expect.any(Number),
-          duration: expect.any(Number),
-          lanes: Lane.UserBlockingLane,
-        },
         renderMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
+          lanes: Lane.ConcurrentLane,
         },
         commitMeasurement: null,
         errorRecords: [],
@@ -234,13 +210,9 @@ describe('SessionProfiler', () => {
       const error = new Error('fail');
       const events: SessionEvent[] = [
         {
-          type: 'update-start',
-          id: 0,
-          lanes: Lane.UserBlockingLane,
-        },
-        {
           type: 'render-start',
           id: 0,
+          lanes: Lane.UserBlockingLane,
         },
         {
           type: 'component-render-start',
@@ -258,16 +230,12 @@ describe('SessionProfiler', () => {
         {
           type: 'render-end',
           id: 0,
+          lanes: Lane.UserBlockingLane,
         },
         {
           type: 'commit-abort',
           id: 0,
           reason: error,
-        },
-        {
-          type: 'update-end',
-          id: 0,
-          lanes: Lane.UserBlockingLane,
         },
       ];
 
@@ -280,14 +248,10 @@ describe('SessionProfiler', () => {
         id: 0,
         status: 'failed',
         phase: 'postcommit',
-        updateMeasurement: {
-          startTime: expect.any(Number),
-          duration: expect.any(Number),
-          lanes: Lane.UserBlockingLane,
-        },
         renderMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
+          lanes: Lane.UserBlockingLane,
         },
         commitMeasurement: null,
         errorRecords: [
@@ -319,13 +283,9 @@ describe('SessionProfiler', () => {
       const error = new InterruptError();
       const events: SessionEvent[] = [
         {
-          type: 'update-start',
-          id: 0,
-          lanes: Lane.UserBlockingLane,
-        },
-        {
           type: 'render-start',
           id: 0,
+          lanes: Lane.ConcurrentLane,
         },
         {
           type: 'component-render-start',
@@ -343,16 +303,12 @@ describe('SessionProfiler', () => {
         {
           type: 'render-end',
           id: 0,
+          lanes: Lane.ConcurrentLane,
         },
         {
           type: 'commit-abort',
           id: 0,
           reason: error,
-        },
-        {
-          type: 'update-end',
-          id: 0,
-          lanes: Lane.UserBlockingLane,
         },
       ];
 
@@ -365,14 +321,10 @@ describe('SessionProfiler', () => {
         id: 0,
         status: 'interrupted',
         phase: 'postcommit',
-        updateMeasurement: {
-          startTime: expect.any(Number),
-          duration: expect.any(Number),
-          lanes: Lane.UserBlockingLane,
-        },
         renderMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
+          lanes: Lane.ConcurrentLane,
         },
         commitMeasurement: null,
         errorRecords: [
@@ -409,13 +361,9 @@ describe('SessionProfiler', () => {
       const emptyEffects = createEffectQueue([]);
       const events: SessionEvent[] = [
         {
-          type: 'update-start',
-          id: 0,
-          lanes: Lane.UserBlockingLane,
-        },
-        {
           type: 'render-start',
           id: 0,
+          lanes: Lane.ConcurrentLane,
         },
         {
           type: 'component-render-start',
@@ -433,10 +381,6 @@ describe('SessionProfiler', () => {
         },
         {
           type: 'render-end',
-          id: 0,
-        },
-        {
-          type: 'update-end',
           id: 0,
           lanes: Lane.UserBlockingLane,
         },
@@ -483,14 +427,10 @@ describe('SessionProfiler', () => {
         id: 0,
         status: 'succeeded',
         phase: 'postcommit',
-        updateMeasurement: {
-          startTime: expect.any(Number),
-          duration: expect.any(Number),
-          lanes: Lane.UserBlockingLane,
-        },
         renderMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
+          lanes: Lane.ConcurrentLane,
         },
         commitMeasurement: {
           startTime: expect.any(Number),
@@ -540,13 +480,9 @@ describe('SessionProfiler', () => {
       const emptyEffects = createEffectQueue([]);
       const events: SessionEvent[] = [
         {
-          type: 'update-start',
-          id: 0,
-          lanes: Lane.UserBlockingLane,
-        },
-        {
           type: 'render-start',
           id: 0,
+          lanes: Lane.ConcurrentLane,
         },
         {
           type: 'component-render-start',
@@ -565,6 +501,7 @@ describe('SessionProfiler', () => {
         {
           type: 'render-end',
           id: 0,
+          lanes: Lane.ConcurrentLane,
         },
         {
           type: 'commit-start',
@@ -581,11 +518,6 @@ describe('SessionProfiler', () => {
           id: 0,
           phase: 'mutation',
           effects: emptyEffects,
-        },
-        {
-          type: 'update-end',
-          id: 0,
-          lanes: Lane.UserBlockingLane,
         },
         {
           type: 'effect-commit-start',
@@ -614,14 +546,10 @@ describe('SessionProfiler', () => {
         id: 0,
         status: 'succeeded',
         phase: 'postcommit',
-        updateMeasurement: {
-          startTime: expect.any(Number),
-          duration: expect.any(Number),
-          lanes: Lane.UserBlockingLane,
-        },
         renderMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
+          lanes: Lane.ConcurrentLane,
         },
         commitMeasurement: {
           startTime: expect.any(Number),
@@ -662,9 +590,9 @@ describe('SessionProfiler', () => {
 
       const events: SessionEvent[] = [
         {
-          type: 'update-end',
+          type: 'render-end',
           id: 0,
-          lanes: Lane.UserBlockingLane,
+          lanes: Lane.ConcurrentLane,
         },
       ];
 
@@ -685,9 +613,8 @@ describe('ConsoleReporter', () => {
     it('reports nothing when update has not started', () => {
       reporter.reportProfile({
         id: 0,
-        phase: 'prerender',
+        phase: 'idle',
         status: 'pending',
-        updateMeasurement: null,
         renderMeasurement: null,
         commitMeasurement: null,
         errorRecords: [],
@@ -695,7 +622,13 @@ describe('ConsoleReporter', () => {
         effectRecords: [],
       });
 
-      expect(logger.flush()).toStrictEqual([]);
+      expect(logger.flush()).toStrictEqual([
+        [
+          'groupCollapsed',
+          '#0 Update PENDING without priority in no mode after %c0ms',
+        ],
+        ['groupEnd'],
+      ]);
     });
 
     it('reports the update as a transition and a view transition when lanes contains TransitionLane and ViewTransitionLane', () => {
@@ -703,13 +636,12 @@ describe('ConsoleReporter', () => {
         id: 0,
         phase: 'prerender',
         status: 'succeeded',
-        updateMeasurement: {
+        renderMeasurement: {
           startTime: 0,
           duration: 10,
           lanes:
             Lane.ConcurrentLane | Lane.TransitionLane | Lane.ViewTransitionLane,
         },
-        renderMeasurement: null,
         commitMeasurement: null,
         errorRecords: [],
         componentRecords: [],
@@ -721,6 +653,8 @@ describe('ConsoleReporter', () => {
           'groupCollapsed',
           '#0 Transition/ViewTransition SUCCEEDED without priority in concurrent mode after %c10ms',
         ],
+        ['group', '%cRENDER PHASE:%c 0 component(s) rendered after %c10ms'],
+        ['groupEnd'],
         ['groupEnd'],
       ]);
     });
@@ -734,12 +668,11 @@ describe('ConsoleReporter', () => {
         id: 0,
         phase: 'prerender',
         status: 'succeeded',
-        updateMeasurement: {
+        renderMeasurement: {
           startTime: 0,
           duration: 10,
           lanes,
         },
-        renderMeasurement: null,
         commitMeasurement: null,
         errorRecords: [],
         componentRecords: [],
@@ -751,6 +684,8 @@ describe('ConsoleReporter', () => {
           'groupCollapsed',
           `#0 Update SUCCEEDED with ${expectedPriority} priority in concurrent mode after %c10ms`,
         ],
+        ['group', '%cRENDER PHASE:%c 0 component(s) rendered after %c10ms'],
+        ['groupEnd'],
         ['groupEnd'],
       ]);
     });
@@ -764,12 +699,11 @@ describe('ConsoleReporter', () => {
         id: 0,
         phase: 'prerender',
         status: 'succeeded',
-        updateMeasurement: {
+        renderMeasurement: {
           startTime: 0,
           duration: 10,
           lanes,
         },
-        renderMeasurement: null,
         commitMeasurement: null,
         errorRecords: [],
         componentRecords: [],
@@ -781,6 +715,8 @@ describe('ConsoleReporter', () => {
           'groupCollapsed',
           `#0 Update SUCCEEDED without priority in ${expectedMode} mode after %c10ms`,
         ],
+        ['group', '%cRENDER PHASE:%c 0 component(s) rendered after %c10ms'],
+        ['groupEnd'],
         ['groupEnd'],
       ]);
     });
@@ -790,14 +726,10 @@ describe('ConsoleReporter', () => {
         id: 0,
         phase: 'prerender',
         status: 'succeeded',
-        updateMeasurement: {
+        renderMeasurement: {
           startTime: 0,
           duration: 10,
           lanes: Lane.ConcurrentLane,
-        },
-        renderMeasurement: {
-          startTime: 0,
-          duration: 3,
         },
         commitMeasurement: null,
         errorRecords: [],
@@ -823,7 +755,7 @@ describe('ConsoleReporter', () => {
           'groupCollapsed',
           `#0 Update SUCCEEDED without priority in concurrent mode after %c10ms`,
         ],
-        ['group', '%cRENDER PHASE:%c 2 component(s) rendered after %c3ms'],
+        ['group', '%cRENDER PHASE:%c 2 component(s) rendered after %c10ms'],
         ['table', profile.componentRecords],
         ['groupEnd'],
         ['groupEnd'],
@@ -836,14 +768,10 @@ describe('ConsoleReporter', () => {
         id: 0,
         phase: 'prerender',
         status: 'failed',
-        updateMeasurement: {
+        renderMeasurement: {
           startTime: 0,
           duration: 10,
           lanes: Lane.ConcurrentLane,
-        },
-        renderMeasurement: {
-          startTime: 0,
-          duration: 3,
         },
         commitMeasurement: null,
         errorRecords: [
@@ -863,7 +791,7 @@ describe('ConsoleReporter', () => {
           'groupCollapsed',
           `#0 Update FAILED without priority in concurrent mode after %c10ms`,
         ],
-        ['group', '%cRENDER PHASE:%c 0 component(s) rendered after %c3ms'],
+        ['group', '%cRENDER PHASE:%c 0 component(s) rendered after %c10ms'],
         ['table', profile.errorRecords],
         ['groupEnd'],
         ['groupEnd'],
@@ -875,11 +803,6 @@ describe('ConsoleReporter', () => {
         id: 0,
         phase: 'prerender',
         status: 'succeeded',
-        updateMeasurement: {
-          startTime: 0,
-          duration: 10,
-          lanes: Lane.ConcurrentLane,
-        },
         renderMeasurement: null,
         commitMeasurement: {
           startTime: 0,
@@ -917,7 +840,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          `#0 Update SUCCEEDED without priority in concurrent mode after %c10ms`,
+          `#0 Update SUCCEEDED without priority in no mode after %c3ms`,
         ],
         ['group', '%cCOMMIT PHASE:%c 6 effect(s) committed after %c3ms'],
         ['log', '%cMUTATION PHASE:%c 3 effect(s) committed in %c3ms'],

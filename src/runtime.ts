@@ -97,12 +97,6 @@ export class Runtime implements SessionContext {
       const { scope } = coroutine;
       const session = createUpdateSession(frame, scope, coroutine, this);
 
-      notifyObservers(this._observers, {
-        type: 'update-start',
-        id,
-        lanes,
-      });
-
       try {
         if (lanes & Lane.SyncLane) {
           this._runRenderSync(session);
@@ -134,12 +128,6 @@ export class Runtime implements SessionContext {
         } else {
           controller.reject(error);
         }
-      } finally {
-        notifyObservers(this._observers, {
-          type: 'update-end',
-          id,
-          lanes,
-        });
       }
     }
   }
@@ -481,11 +469,12 @@ export class Runtime implements SessionContext {
 
   private async _runRenderAsync(session: UpdateSession): Promise<void> {
     const { frame } = session;
-    const { id, pendingCoroutines } = frame;
+    const { id, lanes, pendingCoroutines } = frame;
 
     notifyObservers(this._observers, {
       type: 'render-start',
       id,
+      lanes,
     });
 
     try {
@@ -514,17 +503,19 @@ export class Runtime implements SessionContext {
       notifyObservers(this._observers, {
         type: 'render-end',
         id,
+        lanes,
       });
     }
   }
 
   private _runRenderSync(session: UpdateSession): void {
     const { frame } = session;
-    const { id, pendingCoroutines } = frame;
+    const { id, lanes, pendingCoroutines } = frame;
 
     notifyObservers(this._observers, {
       type: 'render-start',
       id,
+      lanes,
     });
 
     try {
@@ -544,6 +535,7 @@ export class Runtime implements SessionContext {
       notifyObservers(this._observers, {
         type: 'render-end',
         id,
+        lanes,
       });
     }
   }

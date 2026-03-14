@@ -14,22 +14,10 @@ export class DevToolsProfiler implements SessionObserver {
   onSessionEvent(event: SessionEvent): void {
     const { id, type } = event;
     switch (type) {
-      case 'update-start': {
-        const startMark = `barebind:update-start:${id}`;
-        this._mark(startMark);
-        this._componentIndex = 0;
-        break;
-      }
-      case 'update-end': {
-        const startMark = `barebind:update-start:${id}`;
-        const endMark = `barebind:update-end:${id}`;
-        this._mark(endMark);
-        this._measure(`Barebind - Update #${id}`, startMark, endMark);
-        break;
-      }
       case 'render-start': {
         const startMark = `barebind:render-start:${id}`;
         this._mark(startMark);
+        this._componentIndex = 0;
         break;
       }
       case 'render-end': {

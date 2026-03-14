@@ -472,13 +472,9 @@ export interface SessionContext extends DirectiveContext {
 
 export type SessionEvent =
   | {
-      type: 'update-start' | 'update-end';
-      id: number;
-      lanes: Lanes;
-    }
-  | {
       type: 'render-start' | 'render-end';
       id: number;
+      lanes: Lanes;
     }
   | {
       type: 'render-error';
