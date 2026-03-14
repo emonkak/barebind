@@ -22,33 +22,14 @@ describe('DevToolsProfiler', () => {
     profiler = new DevToolsProfiler(performance);
   });
 
-  describe('update-start / update-success', () => {
+  describe('update-start / update-end', () => {
     it('records an end mark and a measure', () => {
       profiler.onSessionEvent({ type: 'update-start', id: 0, lanes: 0 });
-      profiler.onSessionEvent({ type: 'update-success', id: 0, lanes: 0 });
-
-      expect(marksOf(performance)).toStrictEqual([
-        'barebind:update-start:0',
-        'barebind:update-end:0',
-      ]);
-      expect(measuresOf(performance)).toStrictEqual([
-        {
-          name: 'Barebind - Update success #0',
-          start: 'barebind:update-start:0',
-          end: 'barebind:update-end:0',
-        },
-      ]);
-    });
-  });
-
-  describe('update-start / update-failure', () => {
-    it('records an end mark and a failure measure', () => {
-      profiler.onSessionEvent({ type: 'update-start', id: 0, lanes: 0 });
       profiler.onSessionEvent({
-        type: 'update-failure',
+        type: 'update-end',
         id: 0,
         lanes: 0,
-        error: new Error('oops'),
+        aborted: false,
       });
 
       expect(marksOf(performance)).toStrictEqual([
@@ -57,7 +38,7 @@ describe('DevToolsProfiler', () => {
       ]);
       expect(measuresOf(performance)).toStrictEqual([
         {
-          name: 'Barebind - Update failure #0',
+          name: 'Barebind - Update #0',
           start: 'barebind:update-start:0',
           end: 'barebind:update-end:0',
         },
@@ -314,7 +295,12 @@ describe('DevToolsProfiler', () => {
       });
 
       expect(() => {
-        profiler.onSessionEvent({ type: 'update-success', id: 99, lanes: 0 });
+        profiler.onSessionEvent({
+          type: 'update-end',
+          id: 99,
+          lanes: 0,
+          aborted: false,
+        });
       }).not.toThrow();
     });
   });

@@ -9,6 +9,7 @@ import {
   EffectQueue,
   Lane,
   PartType,
+  type SessionEvent,
   type UpdateHandle,
 } from '@/core.js';
 import { ComponentError } from '@/error.js';
@@ -136,9 +137,10 @@ describe('Runtime', () => {
             effects: expect.any(EffectQueue),
           },
           {
-            type: 'update-success',
+            type: 'update-end',
             id: 0,
             lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
+            aborted: false,
           },
           {
             type: 'effect-commit-start',
@@ -159,7 +161,7 @@ describe('Runtime', () => {
             layoutEffects: expect.any(EffectQueue),
             passiveEffects: expect.any(EffectQueue),
           },
-        ]);
+        ] satisfies SessionEvent[]);
       });
 
       it('commits effects synchronously if flushSync option is true', async () => {
@@ -267,11 +269,12 @@ describe('Runtime', () => {
             passiveEffects: expect.any(EffectQueue),
           },
           {
-            type: 'update-success',
+            type: 'update-end',
             id: 0,
             lanes: Lane.ConcurrentLane | Lane.SyncLane | Lane.UserBlockingLane,
+            aborted: false,
           },
-        ]);
+        ] satisfies SessionEvent[]);
       });
 
       it('commits mutation and layout effects in view transition if viewTransition option is true', async () => {
@@ -365,14 +368,15 @@ describe('Runtime', () => {
             passiveEffects: expect.any(EffectQueue),
           },
           {
-            type: 'update-success',
+            type: 'update-end',
             id: 0,
             lanes:
               Lane.ConcurrentLane |
               Lane.UserBlockingLane |
               Lane.ViewTransitionLane,
+            aborted: false,
           },
-        ]);
+        ] satisfies SessionEvent[]);
       });
 
       it('handles an error that occurs during rendering', async () => {
@@ -419,12 +423,13 @@ describe('Runtime', () => {
             id: 0,
           },
           {
-            type: 'update-failure',
+            type: 'update-end',
             id: 0,
             lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
-            error: expect.objectContaining({ cause: error }),
+            aborted: true,
+            reason: expect.objectContaining({ cause: error }),
           },
-        ]);
+        ] satisfies SessionEvent[]);
       });
 
       it('aborts rendering when error is captured outside the root', async () => {
@@ -482,12 +487,13 @@ describe('Runtime', () => {
             id: 0,
           },
           {
-            type: 'update-failure',
+            type: 'update-end',
             id: 0,
             lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
-            error: expect.objectContaining({ cause: error }),
+            aborted: true,
+            reason: expect.objectContaining({ cause: error }),
           },
-        ]);
+        ] satisfies SessionEvent[]);
       });
 
       it('defer commit phase until transition ready', async () => {
@@ -543,10 +549,11 @@ describe('Runtime', () => {
               id: 0,
             },
             {
-              type: 'update-success',
+              type: 'update-end',
               id: 0,
               lanes:
                 Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
+              aborted: false,
             },
             {
               type: 'update-start',
@@ -563,10 +570,11 @@ describe('Runtime', () => {
               id: 1,
             },
             {
-              type: 'update-success',
+              type: 'update-end',
               id: 1,
               lanes:
                 Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
+              aborted: false,
             },
             {
               type: 'commit-start',
@@ -620,7 +628,7 @@ describe('Runtime', () => {
               layoutEffects: expect.any(EffectQueue),
               passiveEffects: expect.any(EffectQueue),
             },
-          ]);
+          ] satisfies SessionEvent[]);
         }
       });
     });
@@ -731,11 +739,12 @@ describe('Runtime', () => {
             passiveEffects: expect.any(EffectQueue),
           },
           {
-            type: 'update-success',
+            type: 'update-end',
             id: 0,
             lanes: Lane.SyncLane | Lane.UserBlockingLane,
+            aborted: false,
           },
-        ]);
+        ] satisfies SessionEvent[]);
       });
 
       it('handles an error that occurs during rendering', async () => {
@@ -780,12 +789,13 @@ describe('Runtime', () => {
             id: 0,
           },
           {
-            type: 'update-failure',
+            type: 'update-end',
             id: 0,
             lanes: Lane.SyncLane | Lane.UserBlockingLane,
-            error: expect.objectContaining({ cause: error }),
+            aborted: true,
+            reason: expect.objectContaining({ cause: error }),
           },
-        ]);
+        ] satisfies SessionEvent[]);
       });
 
       it('aborts rendering when error is captured outside the root', async () => {
@@ -843,12 +853,13 @@ describe('Runtime', () => {
             id: 0,
           },
           {
-            type: 'update-failure',
+            type: 'update-end',
             id: 0,
             lanes: Lane.SyncLane | Lane.UserBlockingLane,
-            error: expect.objectContaining({ cause: error }),
+            aborted: true,
+            reason: expect.objectContaining({ cause: error }),
           },
-        ]);
+        ] satisfies SessionEvent[]);
       });
     });
   });

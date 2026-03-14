@@ -113,20 +113,12 @@ export class SessionProfiler implements SessionObserver {
           lanes: event.lanes,
         };
         break;
-      case 'update-success': {
+      case 'update-end': {
         const measurement = profile.updateMeasurement;
         if (measurement !== null) {
           measurement.duration = performance.now() - measurement.startTime;
         }
-        profile.status = 'success';
-        break;
-      }
-      case 'update-failure': {
-        const measurement = profile.updateMeasurement;
-        if (measurement !== null) {
-          measurement.duration = performance.now() - measurement.startTime;
-        }
-        profile.status = 'failure';
+        profile.status = event.aborted ? 'failure' : 'success';
         break;
       }
       case 'render-start':

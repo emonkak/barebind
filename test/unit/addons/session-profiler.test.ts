@@ -107,9 +107,10 @@ describe('SessionProfiler', () => {
           passiveEffects: emptyEffects,
         },
         {
-          type: 'update-success',
+          type: 'update-end',
           id: 0,
           lanes: Lane.UserBlockingLane,
+          aborted: false,
         },
       ];
 
@@ -207,10 +208,11 @@ describe('SessionProfiler', () => {
           id: 0,
         },
         {
-          type: 'update-failure',
+          type: 'update-end',
           id: 0,
           lanes: Lane.UserBlockingLane,
-          error,
+          aborted: true,
+          reason: error,
         },
       ];
 
@@ -314,9 +316,10 @@ describe('SessionProfiler', () => {
           effects: emptyEffects,
         },
         {
-          type: 'update-success',
+          type: 'update-end',
           id: 0,
           lanes: Lane.UserBlockingLane,
+          aborted: false,
         },
         {
           type: 'effect-commit-start',
@@ -396,9 +399,10 @@ describe('SessionProfiler', () => {
 
       const events: SessionEvent[] = [
         {
-          type: 'update-success',
+          type: 'update-end',
           id: 0,
           lanes: Lane.UserBlockingLane,
+          aborted: false,
         },
       ];
 

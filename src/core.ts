@@ -477,15 +477,11 @@ export type SessionEvent =
       lanes: Lanes;
     }
   | {
-      type: 'update-success';
+      type: 'update-end';
       id: number;
       lanes: Lanes;
-    }
-  | {
-      type: 'update-failure';
-      id: number;
-      lanes: Lanes;
-      error: unknown;
+      aborted: boolean;
+      reason?: unknown;
     }
   | {
       type: 'render-start' | 'render-end';

@@ -20,18 +20,11 @@ export class DevToolsProfiler implements SessionObserver {
         this._componentIndex = 0;
         break;
       }
-      case 'update-success': {
+      case 'update-end': {
         const startMark = `barebind:update-start:${id}`;
         const endMark = `barebind:update-end:${id}`;
         this._mark(endMark);
-        this._measure(`Barebind - Update success #${id}`, startMark, endMark);
-        break;
-      }
-      case 'update-failure': {
-        const startMark = `barebind:update-start:${id}`;
-        const endMark = `barebind:update-end:${id}`;
-        this._mark(endMark);
-        this._measure(`Barebind - Update failure #${id}`, startMark, endMark);
+        this._measure(`Barebind - Update #${id}`, startMark, endMark);
         break;
       }
       case 'render-start': {

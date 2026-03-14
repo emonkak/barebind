@@ -125,9 +125,10 @@ export class Runtime implements SessionContext {
         }
 
         notifyObservers(this._observers, {
-          type: 'update-success',
+          type: 'update-end',
           id,
           lanes,
+          aborted: false,
         });
 
         controller.resolve({ status: 'done' });
@@ -135,10 +136,11 @@ export class Runtime implements SessionContext {
         resetRenderFrame(frame);
 
         notifyObservers(this._observers, {
-          type: 'update-failure',
+          type: 'update-end',
           id,
           lanes,
-          error,
+          aborted: true,
+          reason: error,
         });
 
         if (error instanceof InterruptError) {
