@@ -7,7 +7,6 @@ import {
   type Coroutine,
   DETACHED_SCOPE,
   type DispatchOptions,
-  type Effect,
   type EffectQueue,
   type ErrorHandler,
   getLanesFromOptions,
@@ -35,6 +34,7 @@ import {
 } from './core.js';
 import { DirectiveSpecifier } from './directive.js';
 import { handleError, InterruptError } from './error.js';
+import { InvokeEffectHook } from './hook.js';
 
 export class RenderSession implements RenderContext {
   private readonly _state: ComponentState;
@@ -457,27 +457,6 @@ export class RenderSession implements RenderContext {
     }
 
     this._hookIndex++;
-  }
-}
-
-class InvokeEffectHook implements Effect {
-  private readonly _hook: Hook.EffectHook;
-
-  private readonly _epoch: number;
-
-  constructor(hook: Hook.EffectHook) {
-    this._hook = hook;
-    this._epoch = hook.epoch;
-  }
-
-  commit(): void {
-    const { callback, cleanup, epoch } = this._hook;
-
-    if (epoch === this._epoch) {
-      cleanup?.();
-      this._hook.cleanup = callback();
-      this._hook.memoizedDependencies = this._hook.pendingDependencies;
-    }
   }
 }
 

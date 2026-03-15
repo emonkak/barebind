@@ -8,7 +8,6 @@ import {
   createUpdateSession,
   DETACHED_SCOPE,
   type DirectiveContext,
-  type Effect,
   type EffectQueue,
   type Hook,
   HookType,
@@ -21,6 +20,7 @@ import {
   type UpdateSession,
 } from './core.js';
 import { DirectiveSpecifier } from './directive.js';
+import { CleanupEffectHook } from './hook.js';
 
 export interface ComponentOptions<TProps> {
   arePropsEqual?: (nextProps: TProps, prevProps: TProps) => boolean;
@@ -176,25 +176,6 @@ export class ComponentBinding<TProps, TResult>
 
   rollback(): void {
     this._slot?.rollback();
-  }
-}
-
-class CleanupEffectHook implements Effect {
-  private readonly _hook: Hook.EffectHook;
-
-  private readonly _epoch: number;
-
-  constructor(hook: Hook.EffectHook) {
-    this._hook = hook;
-    this._epoch = hook.epoch;
-  }
-
-  commit(): void {
-    if (this._hook.epoch === this._epoch) {
-      this._hook.cleanup?.();
-      this._hook.cleanup = undefined;
-      this._hook.memoizedDependencies = null;
-    }
   }
 }
 
