@@ -215,8 +215,8 @@ export namespace Hook {
     callback: () => Cleanup | void;
     cleanup: Cleanup | void;
     epoch: number;
-    memoizedDependencies: readonly unknown[] | null;
     pendingDependencies: readonly unknown[] | null;
+    memoizedDependencies: readonly unknown[] | null;
   }
 
   export interface IdHook {

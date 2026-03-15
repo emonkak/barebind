@@ -246,7 +246,7 @@ export class RenderSession implements RenderContext {
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    this._createEffect(
+    this._useEffect(
       callback,
       dependencies,
       HookType.PassiveEffect,
@@ -277,7 +277,7 @@ export class RenderSession implements RenderContext {
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    this._createEffect(
+    this._useEffect(
       callback,
       dependencies,
       HookType.InsertionEffect,
@@ -289,7 +289,7 @@ export class RenderSession implements RenderContext {
     callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    this._createEffect(
+    this._useEffect(
       callback,
       dependencies,
       HookType.LayoutEffect,
@@ -415,41 +415,6 @@ export class RenderSession implements RenderContext {
     );
   }
 
-  private _createEffect(
-    callback: () => Cleanup | void,
-    dependencies: readonly unknown[] | null,
-    type: Hook.EffectHook['type'],
-    effects: EffectQueue,
-  ): void {
-    const { hooks } = this._state;
-    let currentHook = hooks[this._hookIndex];
-
-    if (currentHook !== undefined) {
-      ensureHookType<Hook.EffectHook>(type, currentHook);
-      currentHook.callback = callback;
-      currentHook.pendingDependencies = dependencies;
-      if (
-        areDependenciesChanged(dependencies, currentHook.memoizedDependencies)
-      ) {
-        currentHook.epoch++;
-        effects.push(new InvokeEffectHook(currentHook), this._scope.level);
-      }
-    } else {
-      currentHook = {
-        type,
-        callback,
-        cleanup: undefined,
-        epoch: 0,
-        memoizedDependencies: null,
-        pendingDependencies: dependencies,
-      };
-      hooks.push(currentHook);
-      effects.push(new InvokeEffectHook(currentHook), this._scope.level);
-    }
-
-    this._hookIndex++;
-  }
-
   private _createTemplate(
     strings: readonly string[],
     values: readonly unknown[],
@@ -457,6 +422,41 @@ export class RenderSession implements RenderContext {
   ): DirectiveSpecifier<readonly unknown[]> {
     const template = this._context.resolveTemplate(strings, values, mode);
     return new DirectiveSpecifier(template, values);
+  }
+
+  private _useEffect(
+    callback: () => Cleanup | void,
+    dependencies: readonly unknown[] | null,
+    type: Hook.EffectHook['type'],
+    queue: EffectQueue,
+  ): void {
+    const { hooks } = this._state;
+    let currentHook = hooks[this._hookIndex];
+
+    if (currentHook !== undefined) {
+      ensureHookType<Hook.EffectHook>(type, currentHook);
+      if (
+        areDependenciesChanged(dependencies, currentHook.memoizedDependencies)
+      ) {
+        currentHook.epoch++;
+        queue.push(new InvokeEffectHook(currentHook), this._scope.level);
+      }
+      currentHook.callback = callback;
+      currentHook.pendingDependencies = dependencies;
+    } else {
+      currentHook = {
+        type,
+        callback,
+        cleanup: undefined,
+        epoch: 0,
+        pendingDependencies: dependencies,
+        memoizedDependencies: null,
+      };
+      hooks.push(currentHook);
+      queue.push(new InvokeEffectHook(currentHook), this._scope.level);
+    }
+
+    this._hookIndex++;
   }
 }
 
