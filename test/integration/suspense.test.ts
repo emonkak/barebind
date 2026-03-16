@@ -1,28 +1,104 @@
 import type { RenderContext } from 'barebind';
 import {
-  BrowserBackend,
   createComponent,
   Repeat,
   Root,
   Runtime,
+  SharedContext,
 } from 'barebind';
-import { Resource, Suspense } from 'barebind/addons/suspense';
+import { Suspend, Suspense } from 'barebind/addons/suspense';
 import { expect, test } from 'vitest';
+import { TestBackend } from '../test-backend.js';
+import { stripComments, waitForTimeout } from '../test-helpers.js';
 
-import {
-  inspectPromise,
-  stripComments,
-  waitForMicrotasks,
-  waitForSignal,
-  waitUntil,
-} from '../test-helpers.js';
+interface AppProps {
+  itemIds: string[];
+  itemStorage: ItemStorage;
+}
 
-test('suspends on a single promise in a child component', async () => {
-  const foo = Promise.withResolvers();
+const App = createComponent<AppProps>(function App(
+  { itemIds, itemStorage },
+  $,
+): unknown {
+  const [error, setError] = $.useState<unknown>(null);
 
-  const value = App({ resources: [foo] });
+  $.use(itemStorage);
+
+  $.catchError((error) => {
+    setError(error);
+  });
+
+  if (error !== null) {
+    return $.html`<p>${error}</p>`;
+  }
+
+  return Suspense({
+    children: $.html`
+      <ul>
+        <${Repeat({
+          elementSelector: (itemId) => Item({ id: itemId }),
+          keySelector: (itemId) => itemId,
+          source: itemIds,
+        })}>
+      </ul>
+    `,
+    fallback: $.html`<p>Loading...</p>`,
+  });
+});
+
+const Item = createComponent<Item>(function Item(
+  { id },
+  $: RenderContext,
+): unknown {
+  const item = $.use(ItemStorage).loadItem(id).unwrap();
+
+  return $.html`<li>${item.id}</li>`;
+});
+
+class ItemStorage extends SharedContext {
+  cache: Map<string, Suspend<Item>> = new Map();
+
+  loadItem(id: string): Suspend<Item> {
+    let suspend = this.cache.get(id);
+
+    if (suspend === undefined) {
+      const controller = new AbortController();
+      const promise = new Promise<Item>((resolve, reject) => {
+        controller.signal.addEventListener(
+          'abort',
+          () => {
+            reject(controller.signal.reason);
+          },
+          { once: true },
+        );
+        setTimeout(() => {
+          if (id === '') {
+            reject(new Error('Item not found'));
+          } else {
+            resolve({ id });
+          }
+        });
+      });
+      suspend = Suspend.await(promise, controller);
+      this.cache.set(id, suspend);
+    }
+
+    return suspend;
+  }
+}
+
+interface Item {
+  id: string;
+}
+
+test('awaits a single promise in a child component', async () => {
+  const itemStorage = new ItemStorage();
+  const source = App({
+    itemIds: ['foo'],
+    itemStorage,
+  });
   const container = document.createElement('div');
-  const root = Root.create(value, container, new Runtime(new BrowserBackend()));
+  const root = Root.create(source, container, new Runtime(new TestBackend()));
 
   SESSION1: {
     await root.mount().finished;
@@ -30,11 +106,8 @@ test('suspends on a single promise in a child component', async () => {
     expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
   }
 
-  foo.resolve('foo');
-
   SESSION2: {
-    await waitForMicrotasks(2);
-    await waitUntil('background');
+    await waitForTimeout(1);
 
     expect(stripComments(container).innerHTML).toBe('<ul><li>foo</li></ul>');
   }
@@ -46,16 +119,14 @@ test('suspends on a single promise in a child component', async () => {
   }
 });
 
-test('loads resources in parallel across child components', async () => {
-  const foo = Promise.withResolvers();
-  const bar = Promise.withResolvers();
-  const baz = Promise.withResolvers();
-
-  const value = App({
-    resources: [foo, bar],
+test('awaits promises in parallel across child components', async () => {
+  const itemStorage = new ItemStorage();
+  const source = App({
+    itemIds: ['foo', 'bar'],
+    itemStorage,
   });
   const container = document.createElement('div');
-  const root = Root.create(value, container, new Runtime(new BrowserBackend()));
+  const root = Root.create(source, container, new Runtime(new TestBackend()));
 
   SESSION1: {
     await root.mount().finished;
@@ -63,12 +134,8 @@ test('loads resources in parallel across child components', async () => {
     expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
   }
 
-  foo.resolve('foo');
-  bar.resolve('bar');
-
   SESSION2: {
-    await waitForMicrotasks(2);
-    await waitUntil('background');
+    await waitForTimeout(1);
 
     expect(stripComments(container).innerHTML).toBe(
       '<ul><li>foo</li><li>bar</li></ul>',
@@ -78,18 +145,16 @@ test('loads resources in parallel across child components', async () => {
   SESSION3: {
     await root.update(
       App({
-        resources: [bar, baz],
+        itemIds: ['bar', 'baz'],
+        itemStorage,
       }),
     ).finished;
 
     expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
   }
 
-  baz.resolve('baz');
-
   SESSION4: {
-    await waitForMicrotasks(2);
-    await waitUntil('background');
+    await waitForTimeout(1);
 
     expect(stripComments(container).innerHTML).toBe(
       '<ul><li>bar</li><li>baz</li></ul>',
@@ -104,12 +169,13 @@ test('loads resources in parallel across child components', async () => {
 });
 
 test('throws the rejection reason when a suspended promise rejects', async () => {
-  const foo = Promise.withResolvers();
-  const bar = Promise.withResolvers();
-
-  const value = App({ resources: [foo, bar] });
+  const itemStorage = new ItemStorage();
+  const source = App({
+    itemIds: ['foo', ''],
+    itemStorage,
+  });
   const container = document.createElement('div');
-  const root = Root.create(value, container, new Runtime(new BrowserBackend()));
+  const root = Root.create(source, container, new Runtime(new TestBackend()));
 
   SESSION1: {
     await root.mount().finished;
@@ -117,19 +183,12 @@ test('throws the rejection reason when a suspended promise rejects', async () =>
     expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
   }
 
-  foo.resolve('foo');
-  bar.reject('fail');
-
   SESSION2: {
-    await waitUntil('background');
+    await waitForTimeout(1);
 
-    expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
-  }
-
-  SESSION3: {
-    await waitUntil('background');
-
-    expect(stripComments(container).innerHTML).toBe('<p>fail</p>');
+    expect(stripComments(container).innerHTML).toBe(
+      '<p>Error: Item not found</p>',
+    );
   }
 
   await root.unmount().finished;
@@ -137,87 +196,26 @@ test('throws the rejection reason when a suspended promise rejects', async () =>
   expect(stripComments(container).innerHTML).toBe('');
 });
 
-test('aborts pending resources on unmount', async () => {
-  const foo = Promise.withResolvers();
-
-  const value = App({ resources: [foo] });
+test('aborts pending items on unmount', async () => {
+  const itemStorage = new ItemStorage();
+  const source = App({
+    itemIds: ['foo'],
+    itemStorage,
+  });
   const container = document.createElement('div');
-  const root = Root.create(value, container, new Runtime(new BrowserBackend()));
+  const root = Root.create(source, container, new Runtime(new TestBackend()));
 
   SESSION1: {
     await root.mount().finished;
 
     expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
-    expect(await inspectPromise(foo.promise)).toStrictEqual({
-      status: 'pending',
-    });
   }
 
   SESSION2: {
     await root.unmount().finished;
 
     expect(stripComments(container).innerHTML).toBe('');
-    expect(await inspectPromise(foo.promise)).toStrictEqual({
-      status: 'rejected',
-      reason: 'abort',
-    });
-  }
-});
-
-const App = createComponent(function App(
-  {
-    resources,
-  }: {
-    resources: PromiseWithResolvers<unknown>[];
-  },
-  $: RenderContext,
-): unknown {
-  const [error, setError] = $.useState<unknown>(null);
-
-  $.catchError((error) => {
-    setError(error);
-  });
-
-  if (error !== null) {
-    return $.html`<p>${error}</p>`;
   }
 
-  return Suspense({
-    children: $.html`
-      <ul>
-        <${Repeat({
-          elementSelector: (resource) => Loader({ resource }),
-          keySelector: (resourceId) => resourceId,
-          source: resources,
-        })}>
-      </ul>
-    `,
-    fallback: Fallback({}),
-  });
-});
-
-const Loader = createComponent(function Loader(
-  { resource }: { resource: PromiseWithResolvers<unknown> },
-  $: RenderContext,
-): unknown {
-  const suspend = $.use(
-    Resource(
-      (signal) => {
-        signal.addEventListener('abort', () => {
-          resource.reject('abort');
-        });
-        return Promise.race([resource.promise, waitForSignal(signal)]);
-      },
-      [resource],
-    ),
-  );
-
-  return $.html`<li>${suspend.unwrap()}</li>`;
-});
-
-const Fallback = createComponent(function Fallback(
-  {}: {},
-  $: RenderContext,
-): unknown {
-  return $.html`<p>Loading...</p>`;
+  expect(itemStorage.cache.get('foo')?.status).toBe('aborted');
 });
