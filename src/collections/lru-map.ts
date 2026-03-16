@@ -1,24 +1,27 @@
 import { LinkedList } from './linked-list.js';
 
+export namespace LRUMap {
+  export type EvictCallback<K, V> = (key: K, value: V) => void;
+}
+
 interface Entry<K, V> {
   key: LinkedList.Node<K>;
   value: V;
 }
 
-export type EvictCallback<K, V> = (entry: EvictEntry<K, V>) => void;
-
-export type EvictEntry<K, V> = { key: K; value: V };
-
 export class LRUMap<K, V> implements Iterable<[K, V]> {
   private _capacity: number;
 
-  private readonly _callback: EvictCallback<K, V> | null;
+  private readonly _callback: LRUMap.EvictCallback<K, V> | null;
 
   private readonly _entries: Map<K, Entry<K, V>> = new Map();
 
   private readonly _recentKeys: LinkedList<K> = new LinkedList();
 
-  constructor(capacity: number, callback: EvictCallback<K, V> | null = null) {
+  constructor(
+    capacity: number,
+    callback: LRUMap.EvictCallback<K, V> | null = null,
+  ) {
     this._capacity = capacity;
     this._callback = callback;
   }
@@ -81,7 +84,7 @@ export class LRUMap<K, V> implements Iterable<[K, V]> {
     }
     const defaultValue = callback(key);
     this._insertEntry(key, defaultValue);
-    this._evictToCapacity();
+    this._evictStaleEntries();
     return defaultValue;
   }
 
@@ -97,22 +100,22 @@ export class LRUMap<K, V> implements Iterable<[K, V]> {
 
   resize(capacity: number): void {
     this._capacity = capacity;
-    this._evictToCapacity();
+    this._evictStaleEntries();
   }
 
   set(key: K, value: V): V | undefined {
-    const entry = this._entries.get(key);
+    const oldEntry = this._entries.get(key);
 
-    if (entry !== undefined) {
-      const oldValue = entry.value;
-      this._recentKeys.remove(entry.key);
-      entry.key = this._recentKeys.pushFront(key);
-      entry.value = value;
+    if (oldEntry !== undefined) {
+      const oldValue = oldEntry.value;
+      this._recentKeys.remove(oldEntry.key);
+      oldEntry.key = this._recentKeys.pushFront(key);
+      oldEntry.value = value;
       return oldValue;
     }
 
     this._insertEntry(key, value);
-    this._evictToCapacity();
+    this._evictStaleEntries();
 
     return undefined;
   }
@@ -123,14 +126,14 @@ export class LRUMap<K, V> implements Iterable<[K, V]> {
     }
   }
 
-  private _evictToCapacity(): void {
+  private _evictStaleEntries(): void {
     while (this._entries.size > this._capacity) {
-      const lruKey = this._recentKeys.popBack();
-      if (lruKey !== null) {
-        const key = lruKey.value;
+      const staleKey = this._recentKeys.popBack();
+      if (staleKey !== null) {
+        const key = staleKey.value;
         const { value } = this._entries.get(key)!;
         this._entries.delete(key);
-        this._callback?.({ key, value });
+        this._callback?.call(undefined, key, value);
       }
     }
   }

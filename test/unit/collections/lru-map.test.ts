@@ -6,13 +6,12 @@ describe('LRUMap', () => {
   describe('constructor()', () => {
     it('starts empty', () => {
       const map = new LRUMap<string, number>(3);
-      expect(map.capacity).toBe(3);
       expect(map.size).toBe(0);
     });
 
     it('reflects the initial capacity passed to the constructor', () => {
-      const map = new LRUMap<string, number>(5);
-      expect(map.capacity).toBe(5);
+      const map = new LRUMap<string, number>(3);
+      expect(map.capacity).toBe(3);
     });
   });
 
@@ -148,8 +147,8 @@ describe('LRUMap', () => {
     });
 
     it('promotes the key to most recently used on a hit', () => {
-      const evictListener = vi.fn();
-      const map = new LRUMap<string, number>(2, evictListener);
+      const callback = vi.fn();
+      const map = new LRUMap<string, number>(2, callback);
       map.set('a', 1);
       map.set('b', 2);
       map.getOrInsert('a', 99); // "a" becomes MRU; "b" becomes LRU
@@ -157,13 +156,13 @@ describe('LRUMap', () => {
       expect(map.has('a')).toBe(true);
       expect(map.has('b')).toBe(false);
       expect(map.has('c')).toBe(true);
-      expect(evictListener).toHaveBeenCalledTimes(1);
-      expect(evictListener).toHaveBeenNthCalledWith(1, { key: 'b', value: 2 });
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenNthCalledWith(1, 'b', 2);
     });
 
     it('promotes the newly inserted key to most recently used on a miss', () => {
-      const evictListener = vi.fn();
-      const map = new LRUMap<string, number>(2, evictListener);
+      const callback = vi.fn();
+      const map = new LRUMap<string, number>(2, callback);
       map.set('a', 1);
       map.set('b', 2);
       // Access "a" to make "b" the LRU
@@ -173,33 +172,33 @@ describe('LRUMap', () => {
       expect(map.has('a')).toBe(true);
       expect(map.has('b')).toBe(false);
       expect(map.has('c')).toBe(true);
-      expect(evictListener).toHaveBeenCalledTimes(1);
-      expect(evictListener).toHaveBeenNthCalledWith(1, { key: 'b', value: 2 });
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenNthCalledWith(1, 'b', 2);
     });
 
     it('evicts the LRU entry when capacity is exceeded on insert', () => {
-      const evictListener = vi.fn();
-      const map = new LRUMap<string, number>(2, evictListener);
+      const callback = vi.fn();
+      const map = new LRUMap<string, number>(2, callback);
       map.set('a', 1);
       map.set('b', 2);
       map.getOrInsert('c', 3); // "a" is LRU and should be evicted
       expect(map.has('a')).toBe(false);
       expect(map.has('b')).toBe(true);
       expect(map.has('c')).toBe(true);
-      expect(evictListener).toHaveBeenCalledTimes(1);
-      expect(evictListener).toHaveBeenNthCalledWith(1, { key: 'a', value: 1 });
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenNthCalledWith(1, 'a', 1);
     });
 
     it('does not evict when the key already exists', () => {
-      const evictListener = vi.fn();
-      const map = new LRUMap<string, number>(2, evictListener);
+      const callback = vi.fn();
+      const map = new LRUMap<string, number>(2, callback);
       map.set('a', 1);
       map.set('b', 2);
       map.getOrInsert('a', 99); // "a" already exists; it should not be evicted
       expect(map.has('a')).toBe(true);
       expect(map.has('b')).toBe(true);
       expect(map.size).toBe(2);
-      expect(evictListener).not.toHaveBeenCalled();
+      expect(callback).not.toHaveBeenCalled();
     });
   });
 
@@ -273,8 +272,8 @@ describe('LRUMap', () => {
 
   describe('resize()', () => {
     it('does not evict any entries when increasing capacity', () => {
-      const evictListener = vi.fn();
-      const map = new LRUMap<string, number>(3, evictListener);
+      const callback = vi.fn();
+      const map = new LRUMap<string, number>(3, callback);
       map.set('a', 1);
       map.set('b', 2);
       map.set('c', 3);
@@ -284,12 +283,12 @@ describe('LRUMap', () => {
       expect(map.has('a')).toBe(true);
       expect(map.has('b')).toBe(true);
       expect(map.has('c')).toBe(true);
-      expect(evictListener).not.toHaveBeenCalled();
+      expect(callback).not.toHaveBeenCalled();
     });
 
     it('allows new entries up to the new larger capacity', () => {
-      const evictListener = vi.fn();
-      const map = new LRUMap<string, number>(2, evictListener);
+      const callback = vi.fn();
+      const map = new LRUMap<string, number>(2, callback);
       map.set('a', 1);
       map.set('b', 2);
       map.resize(4);
@@ -297,12 +296,12 @@ describe('LRUMap', () => {
       map.set('c', 3);
       map.set('d', 4);
       expect(map.size).toBe(4);
-      expect(evictListener).not.toHaveBeenCalled();
+      expect(callback).not.toHaveBeenCalled();
     });
 
     it('preserves MRU order after enlarging', () => {
-      const evictListener = vi.fn();
-      const map = new LRUMap<string, number>(3, evictListener);
+      const callback = vi.fn();
+      const map = new LRUMap<string, number>(3, callback);
       map.set('a', 1);
       map.set('b', 2);
       map.set('c', 3);
@@ -310,12 +309,12 @@ describe('LRUMap', () => {
       map.resize(5);
       expect(map.capacity).toBe(5);
       expect([...map.keys()]).toStrictEqual(['a', 'c', 'b']);
-      expect(evictListener).not.toHaveBeenCalled();
+      expect(callback).not.toHaveBeenCalled();
     });
 
     it('evicts the correct number of LRU entries when shrinking', () => {
-      const evictListener = vi.fn();
-      const map = new LRUMap<string, number>(4, evictListener);
+      const callback = vi.fn();
+      const map = new LRUMap<string, number>(4, callback);
       map.set('a', 1);
       map.set('b', 2);
       map.set('c', 3);
@@ -326,14 +325,14 @@ describe('LRUMap', () => {
       expect(map.size).toBe(2);
       expect(map.has('c')).toBe(true);
       expect(map.has('d')).toBe(true);
-      expect(evictListener).toHaveBeenCalledTimes(2);
-      expect(evictListener).toHaveBeenNthCalledWith(1, { key: 'a', value: 1 });
-      expect(evictListener).toHaveBeenNthCalledWith(2, { key: 'b', value: 2 });
+      expect(callback).toHaveBeenCalledTimes(2);
+      expect(callback).toHaveBeenNthCalledWith(1, 'a', 1);
+      expect(callback).toHaveBeenNthCalledWith(2, 'b', 2);
     });
 
     it('evicts LRU entries respecting access history', () => {
-      const evictListener = vi.fn();
-      const map = new LRUMap<string, number>(4, evictListener);
+      const callback = vi.fn();
+      const map = new LRUMap<string, number>(4, callback);
       map.set('a', 1);
       map.set('b', 2);
       map.set('c', 3);
@@ -344,55 +343,55 @@ describe('LRUMap', () => {
       expect(map.has('c')).toBe(false);
       expect(map.has('d')).toBe(true);
       expect(map.has('a')).toBe(true);
-      expect(evictListener).toHaveBeenCalledTimes(2);
-      expect(evictListener).toHaveBeenNthCalledWith(1, { key: 'b', value: 2 });
-      expect(evictListener).toHaveBeenNthCalledWith(2, { key: 'c', value: 3 });
+      expect(callback).toHaveBeenCalledTimes(2);
+      expect(callback).toHaveBeenNthCalledWith(1, 'b', 2);
+      expect(callback).toHaveBeenNthCalledWith(2, 'c', 3);
     });
 
     it('preserves the MRU order of the surviving entries', () => {
-      const evictListener = vi.fn();
-      const map = new LRUMap<string, number>(4, evictListener);
+      const callback = vi.fn();
+      const map = new LRUMap<string, number>(4, callback);
       map.set('a', 1);
       map.set('b', 2);
       map.set('c', 3);
       map.set('d', 4);
       map.resize(2);
       expect([...map.keys()]).toStrictEqual(['d', 'c']);
-      expect(evictListener).toHaveBeenCalledTimes(2);
-      expect(evictListener).toHaveBeenNthCalledWith(1, { key: 'a', value: 1 });
-      expect(evictListener).toHaveBeenNthCalledWith(2, { key: 'b', value: 2 });
+      expect(callback).toHaveBeenCalledTimes(2);
+      expect(callback).toHaveBeenNthCalledWith(1, 'a', 1);
+      expect(callback).toHaveBeenNthCalledWith(2, 'b', 2);
     });
 
     it('shrinking to 0 removes all entries', () => {
-      const evictListener = vi.fn();
-      const map = new LRUMap<string, number>(3, evictListener);
+      const callback = vi.fn();
+      const map = new LRUMap<string, number>(3, callback);
       map.set('a', 1);
       map.set('b', 2);
       map.set('c', 3);
       map.resize(0);
       expect(map.capacity).toBe(0);
       expect(map.size).toBe(0);
-      expect(evictListener).toHaveBeenCalledTimes(3);
-      expect(evictListener).toHaveBeenNthCalledWith(1, { key: 'a', value: 1 });
-      expect(evictListener).toHaveBeenNthCalledWith(2, { key: 'b', value: 2 });
-      expect(evictListener).toHaveBeenNthCalledWith(3, { key: 'c', value: 3 });
+      expect(callback).toHaveBeenCalledTimes(3);
+      expect(callback).toHaveBeenNthCalledWith(1, 'a', 1);
+      expect(callback).toHaveBeenNthCalledWith(2, 'b', 2);
+      expect(callback).toHaveBeenNthCalledWith(3, 'c', 3);
     });
 
     it('does nothing when new capacity equals current size', () => {
-      const evictListener = vi.fn();
-      const map = new LRUMap<string, number>(3, evictListener);
+      const callback = vi.fn();
+      const map = new LRUMap<string, number>(3, callback);
       map.set('a', 1);
       map.set('b', 2);
       map.resize(2);
       expect(map.size).toBe(2);
       expect(map.has('a')).toBe(true);
       expect(map.has('b')).toBe(true);
-      expect(evictListener).not.toHaveBeenCalled();
+      expect(callback).not.toHaveBeenCalled();
     });
 
     it('does not evict any entries when capacity is unchanged', () => {
-      const evictListener = vi.fn();
-      const map = new LRUMap<string, number>(3, evictListener);
+      const callback = vi.fn();
+      const map = new LRUMap<string, number>(3, callback);
       map.set('a', 1);
       map.set('b', 2);
       map.set('c', 3);
@@ -400,7 +399,7 @@ describe('LRUMap', () => {
       expect(map.capacity).toBe(3);
       expect(map.size).toBe(3);
       expect([...map.keys()]).toStrictEqual(['c', 'b', 'a']);
-      expect(evictListener).not.toHaveBeenCalled();
+      expect(callback).not.toHaveBeenCalled();
     });
   });
 
@@ -431,28 +430,28 @@ describe('LRUMap', () => {
     });
 
     it('evicts the least recently used entry when capacity is exceeded', () => {
-      const evictListener = vi.fn();
-      const map = new LRUMap<string, number>(2, evictListener);
+      const callback = vi.fn();
+      const map = new LRUMap<string, number>(2, callback);
       map.set('a', 1);
       map.set('b', 2);
       map.set('c', 3); // "a" should be evicted
       expect(map.has('a')).toBe(false);
       expect(map.has('b')).toBe(true);
       expect(map.has('c')).toBe(true);
-      expect(evictListener).toHaveBeenCalledTimes(1);
-      expect(evictListener).toHaveBeenNthCalledWith(1, { key: 'a', value: 1 });
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenNthCalledWith(1, 'a', 1);
     });
 
     it('does not evict when updating a key that is already present', () => {
-      const evictListener = vi.fn();
-      const map = new LRUMap<string, number>(2, evictListener);
+      const callback = vi.fn();
+      const map = new LRUMap<string, number>(2, callback);
       map.set('a', 1);
       map.set('b', 2);
       map.set('a', 99); // "a" is updated, not insert; it should not be evicted
       expect(map.has('a')).toBe(true);
       expect(map.has('b')).toBe(true);
       expect(map.size).toBe(2);
-      expect(evictListener).not.toHaveBeenCalled();
+      expect(callback).not.toHaveBeenCalled();
     });
   });
 
