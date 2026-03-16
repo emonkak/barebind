@@ -367,7 +367,7 @@ export interface Primitive<T> extends DirectiveType<T> {
   ensureValue?(value: unknown, part: Part): asserts value is T;
 }
 
-export type ReducerController<TState, TAction> = [
+export type ReducerReturn<TState, TAction> = [
   state: TState,
   dispatch: (
     action: TAction,
@@ -432,9 +432,9 @@ export interface RenderContext {
   useReducer<TState, TAction>(
     reducer: (state: TState, action: TAction) => TState,
     initialState: InitialState<TState>,
-  ): ReducerController<TState, TAction>;
+  ): ReducerReturn<TState, TAction>;
   useRef<T>(initialValue: T): RefObject<T>;
-  useState<TState>(initialState: InitialState<TState>): StateController<TState>;
+  useState<TState>(initialState: InitialState<TState>): StateReturn<TState>;
 }
 
 export interface RenderFrame {
@@ -530,7 +530,7 @@ export interface Slot<T> extends ReversibleEffect, SessionLifecycle {
   reconcile(source: T, session: UpdateSession): boolean;
 }
 
-export type StateController<TState> = [
+export type StateReturn<TState> = [
   state: TState,
   setState: (
     nextState: NextState<TState>,
