@@ -9,9 +9,10 @@ import type {
 import {
   ConcurrentLane,
   getPriorityFromLanes,
+  getTranstionIndex,
   NoLanes,
   SyncLane,
-  TransitionLane,
+  TransitionLanes,
   ViewTransitionLane,
 } from '../lane.js';
 
@@ -296,8 +297,8 @@ function getDuration(startTime: number, endTime: number): number {
 
 function getUpdateKind(lanes: Lanes): string {
   const tags = [];
-  if (lanes & TransitionLane) {
-    tags.push('Transition');
+  if (lanes & TransitionLanes) {
+    tags.push('Transition' + (getTranstionIndex(lanes) + 1));
   }
   if (lanes & ViewTransitionLane) {
     tags.push('ViewTransition');

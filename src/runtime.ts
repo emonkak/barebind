@@ -19,9 +19,6 @@ import {
   type Slot,
   type Template,
   type TemplateMode,
-  type Transition,
-  type TransitionAction,
-  type TransitionHandle,
   type UnwrapBindable,
   type Update,
   type UpdateHandle,
@@ -64,6 +61,8 @@ export class Runtime implements SessionContext {
 
   private readonly _scheduledUpdates: LinkedList<Update> = new LinkedList();
 
+  private _transitionCount: number = 0;
+
   private readonly _uniqueIdentifier: string;
 
   private _updateCount: number = 0;
@@ -94,7 +93,7 @@ export class Runtime implements SessionContext {
       (udpate = this._scheduledUpdates.front()?.value) !== undefined;
       this._scheduledUpdates.popFront()
     ) {
-      const { controller, coroutine, id, lanes, transition } = udpate;
+      const { controller, coroutine, id, lanes } = udpate;
 
       if ((coroutine.pendingLanes & lanes) === NoLanes) {
         controller.resolve({ status: 'skipped' });
@@ -117,25 +116,7 @@ export class Runtime implements SessionContext {
           this._runCommitSync(frame);
         } else {
           await this._runRenderAsync(session);
-
-          if (transition !== null) {
-            const { suspends, resumes } = transition;
-            const resume = waitForAll(suspends).then(
-              () => this._runCommitAsync(frame, lanes),
-              (error) => {
-                resetRenderFrame(frame);
-                notifyObservers(this._observers, {
-                  type: 'commit-cancel',
-                  id,
-                  reason: error,
-                });
-                // Ignore rejection; it is handled by the TransitionHandle.
-              },
-            );
-            resumes.push(resume);
-          } else {
-            await this._runCommitAsync(frame, lanes);
-          }
+          await this._runCommitAsync(frame, lanes);
         }
 
         controller.resolve({ status: 'done' });
@@ -256,26 +237,12 @@ export class Runtime implements SessionContext {
     options: UpdateOptions = {},
   ): UpdateHandle {
     const controller = Promise.withResolvers<UpdateResult>();
-    const transition = options?.transition ?? null;
 
     // Clone options for mutations.
     options = { ...options };
-
-    if (transition !== null) {
-      // Register this update's completion promise with the transition, so it
-      // can track all pending updates before considering the transition
-      // complete.
-      transition.suspends.push(controller.promise);
-
-      // Use background priority by default to match React's transition
-      // behavior.
-      options.priority ??= 'background';
-      // Inherit the transition's abort signal if none is set, so this update
-      // is canceled when the transition fails.
-      options.signal ??= transition.signal;
-    } else {
-      options.priority ??= this._backend.getUpdatePriority();
-    }
+    options.priority ??= options.transition
+      ? 'background'
+      : this._backend.getUpdatePriority();
 
     const id = this._updateCount++;
     const lanes = this._backend.getDefaultLanes() | getSchedulingLanes(options);
@@ -288,7 +255,6 @@ export class Runtime implements SessionContext {
         lanes,
         coroutine,
         controller,
-        transition,
       });
 
       if (shouldTriggerFlush) {
@@ -327,13 +293,10 @@ export class Runtime implements SessionContext {
     };
   }
 
-  startTransition(action: TransitionAction): TransitionHandle {
-    const controller = new AbortController();
-    const finished = startTransitionAction(action, controller);
-    return {
-      signal: controller.signal,
-      finished,
-    };
+  startTransition(
+    action: (transition: number) => Promise<void> | void,
+  ): Promise<void> | void {
+    return action(this._transitionCount++);
   }
 
   private _flushEffects(
@@ -593,33 +556,4 @@ function resetRenderFrame(frame: RenderFrame): void {
   frame.mutationEffects.clear();
   frame.layoutEffects.clear();
   frame.passiveEffects.clear();
-}
-
-async function startTransitionAction(
-  action: TransitionAction,
-  controller: AbortController,
-): Promise<void> {
-  const transition: Transition = {
-    signal: controller.signal,
-    suspends: [],
-    resumes: [],
-  };
-  try {
-    const suspend = action(transition);
-    if (suspend !== undefined) {
-      transition.suspends.push(suspend);
-    }
-    await waitForAll(transition.suspends);
-    await waitForAll(transition.resumes);
-  } catch (error) {
-    controller.abort(error);
-    throw error;
-  }
-}
-
-async function waitForAll(promises: Promise<unknown>[]): Promise<void> {
-  // Awaits promises in array, including any added during execution.
-  for (let i = 0; i < promises.length; i = promises.length) {
-    await Promise.all(promises.slice(i));
-  }
 }

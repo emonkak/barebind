@@ -1,13 +1,16 @@
-import type { Lanes, UpdateOptions } from './core.js';
+import type { Lane, Lanes, UpdateOptions } from './core.js';
 
-export const NoLanes /*            */ = 0;
-export const ConcurrentLane /*     */ = 0b1;
-export const SyncLane /*           */ = 0b10;
-export const UserBlockingLane /*   */ = 0b100;
-export const UserVisibleLane /*    */ = 0b1000;
-export const BackgroundLane /*     */ = 0b10000;
-export const ViewTransitionLane /* */ = 0b100000;
-export const TransitionLane /*     */ = 0b1000000;
+export const NoLanes: Lanes /*           */ = 0;
+export const SyncLane: Lane /*           */ = 0b0000000000000001;
+export const ViewTransitionLane: Lane /* */ = 0b0000000000000010;
+export const ConcurrentLane: Lane /*     */ = 0b0000000000000100;
+export const UserBlockingLane: Lane /*   */ = 0b0000000000001000;
+export const UserVisibleLane: Lane /*    */ = 0b0000000000010000;
+export const BackgroundLane: Lane /*     */ = 0b0000000000100000;
+
+export const TransitionLanes: Lanes /*   */ = 0b11111111111111110000000000000000;
+export const TransitionLane1: Lane /*    */ = 0b00000000000000010000000000000000;
+export const TransitionLength: number /* */ = 16;
 
 export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
   if (lanes & BackgroundLane) {
@@ -28,6 +31,10 @@ export function getSchedulingLanes(options: UpdateOptions): Lanes {
     lanes |= SyncLane;
   }
 
+  if (options.viewTransition) {
+    lanes |= ViewTransitionLane;
+  }
+
   switch (options.priority) {
     case 'user-blocking':
       lanes |= UserBlockingLane;
@@ -41,12 +48,12 @@ export function getSchedulingLanes(options: UpdateOptions): Lanes {
   }
 
   if (options.transition !== undefined) {
-    lanes |= TransitionLane;
-  }
-
-  if (options.viewTransition) {
-    lanes |= ViewTransitionLane;
+    lanes |= TransitionLane1 << (options.transition % TransitionLength);
   }
 
   return lanes;
+}
+
+export function getTranstionIndex(lanes: Lanes): number {
+  return 31 - Math.clz32(lanes >>> TransitionLength);
 }

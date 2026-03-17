@@ -14,7 +14,7 @@ import {
   ConcurrentLane,
   NoLanes,
   SyncLane,
-  TransitionLane,
+  TransitionLane1,
   UserBlockingLane,
   UserVisibleLane,
   ViewTransitionLane,
@@ -639,7 +639,7 @@ describe('ConsoleReporter', () => {
         renderMeasurement: {
           startTime: 0,
           endTime: 10,
-          lanes: ConcurrentLane | TransitionLane | ViewTransitionLane,
+          lanes: ConcurrentLane | TransitionLane1 | ViewTransitionLane,
         },
         commitMeasurement: null,
         errorRecords: [],
@@ -650,7 +650,7 @@ describe('ConsoleReporter', () => {
       expect(logger.flush()).toStrictEqual([
         [
           'groupCollapsed',
-          '#0 Transition/ViewTransition COMPLETED without priority in concurrent mode after %c10ms',
+          '#0 Transition1/ViewTransition COMPLETED without priority in concurrent mode after %c10ms',
         ],
         ['group', '%cRENDER PHASE:%c 0 component(s) rendered after %c10ms'],
         ['groupEnd'],

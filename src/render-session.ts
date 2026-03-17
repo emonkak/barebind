@@ -24,8 +24,6 @@ import {
   type SessionContext,
   type StateReturn,
   type TemplateMode,
-  type TransitionAction,
-  type TransitionHandle,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
@@ -195,20 +193,14 @@ export class RenderSession implements RenderContext {
     };
   }
 
-  startTransition(action: TransitionAction): TransitionHandle {
+  startTransition(
+    action: (transition: number) => Promise<void> | void,
+  ): Promise<void> | void {
     return this._context.startTransition(async (transition) => {
       try {
-        await action(transition);
+        return await action(transition);
       } catch (error) {
-        try {
-          handleError(error, this._coroutine.scope);
-        } catch (error) {
-          throw new InterruptError(
-            this._coroutine,
-            'An error occurred during a transition.',
-            { cause: error },
-          );
-        }
+        this.interrupt(error);
       }
     });
   }

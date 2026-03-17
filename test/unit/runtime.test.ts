@@ -9,14 +9,11 @@ import {
   type Hook,
   PartType,
   type SessionEvent,
-  type UpdateHandle,
 } from '@/core.js';
 import { InterruptError, RecoverableInterruptError } from '@/error.js';
 import {
-  BackgroundLane,
   ConcurrentLane,
   SyncLane,
-  TransitionLane,
   UserBlockingLane,
   ViewTransitionLane,
 } from '@/lane.js';
@@ -383,43 +380,6 @@ describe('Runtime', () => {
         ] satisfies SessionEvent[]);
       });
 
-      it('handles errors that occurs during transitions', async () => {
-        const runtime = createRuntime({ defaultLanes: ConcurrentLane });
-        const observer = new MockObserver();
-        const error = new Error('fail');
-
-        runtime.addObserver(observer);
-
-        SESSION: {
-          const coroutine = new MockCoroutine();
-
-          const handle = runtime.startTransition(async (transition) => {
-            await runtime.scheduleUpdate(coroutine, { transition }).scheduled;
-            throw error;
-          });
-
-          await expect(handle.finished).rejects.toThrow(error);
-        }
-
-        expect(observer.flushEvents()).toStrictEqual([
-          {
-            type: 'render-start',
-            id: 0,
-            lanes: ConcurrentLane | BackgroundLane | TransitionLane,
-          },
-          {
-            type: 'render-end',
-            id: 0,
-            lanes: ConcurrentLane | BackgroundLane | TransitionLane,
-          },
-          {
-            type: 'commit-cancel',
-            id: 0,
-            reason: error,
-          },
-        ] satisfies SessionEvent[]);
-      });
-
       it('aborts rendering when error is captured outside the root', async () => {
         const runtime = createRuntime({ defaultLanes: ConcurrentLane });
         const observer = new MockObserver();
@@ -477,108 +437,6 @@ describe('Runtime', () => {
             reason: expect.any(RecoverableInterruptError),
           },
         ] satisfies SessionEvent[]);
-      });
-
-      it('defer commit phase until transition ready', async () => {
-        const runtime = createRuntime({ defaultLanes: ConcurrentLane });
-        const observer = new MockObserver();
-        const effect1 = {
-          commit: vi.fn(),
-        };
-        const effect2 = {
-          commit: vi.fn(),
-        };
-
-        runtime.addObserver(observer);
-
-        SESSION: {
-          const coroutine1 = new MockCoroutine((session) => {
-            session.frame.mutationEffects.push(effect1, session.scope.level);
-          });
-          const coroutine2 = new MockCoroutine((session) => {
-            session.frame.mutationEffects.push(effect2, session.scope.level);
-          });
-
-          const transition = runtime.startTransition((transition) => {
-            const handle1 = runtime.scheduleUpdate(coroutine1, {
-              transition,
-            });
-            const handle2 = runtime.scheduleUpdate(coroutine2, {
-              transition,
-            });
-            expect(handle1.lanes).toBe(
-              ConcurrentLane | BackgroundLane | TransitionLane,
-            );
-            expect(handle2.lanes).toBe(
-              ConcurrentLane | BackgroundLane | TransitionLane,
-            );
-          });
-
-          await transition.finished;
-
-          expect(observer.flushEvents()).toStrictEqual([
-            {
-              type: 'render-start',
-              id: 0,
-              lanes: ConcurrentLane | BackgroundLane | TransitionLane,
-            },
-            {
-              type: 'render-end',
-              id: 0,
-              lanes: ConcurrentLane | BackgroundLane | TransitionLane,
-            },
-            {
-              type: 'render-start',
-              id: 1,
-              lanes: ConcurrentLane | BackgroundLane | TransitionLane,
-            },
-            {
-              type: 'render-end',
-              id: 1,
-              lanes: ConcurrentLane | BackgroundLane | TransitionLane,
-            },
-            {
-              type: 'commit-start',
-              id: 0,
-            },
-            {
-              type: 'commit-start',
-              id: 1,
-            },
-            {
-              type: 'effect-commit-start',
-              id: 0,
-              phase: 'mutation',
-              effects: expect.any(EffectQueue),
-            },
-            {
-              type: 'effect-commit-end',
-              id: 0,
-              phase: 'mutation',
-              effects: expect.any(EffectQueue),
-            },
-            {
-              type: 'effect-commit-start',
-              id: 1,
-              phase: 'mutation',
-              effects: expect.any(EffectQueue),
-            },
-            {
-              type: 'effect-commit-end',
-              id: 1,
-              phase: 'mutation',
-              effects: expect.any(EffectQueue),
-            },
-            {
-              type: 'commit-end',
-              id: 0,
-            },
-            {
-              type: 'commit-end',
-              id: 1,
-            },
-          ] satisfies SessionEvent[]);
-        }
       });
     });
 
@@ -1019,33 +877,6 @@ describe('Runtime', () => {
         reason: controller.signal.reason,
       });
       expect(runtime.getScheduledUpdates()).toStrictEqual([]);
-    });
-
-    it('cancels update when the transition fails', async () => {
-      const runtime = createRuntime({ defaultLanes: ConcurrentLane });
-
-      SESSION: {
-        let handle: UpdateHandle | undefined;
-        const coroutine = new MockCoroutine();
-        const error = new Error('fail');
-        const transition = runtime.startTransition(async (transition) => {
-          handle = runtime.scheduleUpdate(coroutine, {
-            transition,
-          });
-          throw error;
-        });
-
-        await expect(transition.finished).rejects.toThrow(error);
-
-        expect(await handle?.scheduled).toStrictEqual({
-          status: 'canceled',
-          reason: error,
-        });
-        expect(await handle?.finished).toStrictEqual({
-          status: 'canceled',
-          reason: error,
-        });
-      }
     });
   });
 });

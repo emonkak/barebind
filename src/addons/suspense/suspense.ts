@@ -2,6 +2,7 @@
 
 import { createComponent } from '../../component.js';
 import type { RenderContext } from '../../core.js';
+import { getTranstionIndex, TransitionLanes } from '../../lane.js';
 import { Flexible } from '../../layout/flexible.js';
 import { Fragment } from '../../template.js';
 import { Suspend } from './suspend.js';
@@ -54,14 +55,17 @@ export const Suspense = createComponent(function Suspense(
       // If the boundary is already mounted and the update is a transition,
       // suppress the fallback and retry once the suspend resolves. Otherwise,
       // show the fallback immediately. This matches React's behavior.
-      if (subsequentUpdate?.transition != null) {
-        const { coroutine, transition } = subsequentUpdate;
-        const retry = errorOrSuspend.then(
-          () =>
-            $.getSessionContext().scheduleUpdate(coroutine, { transition })
-              .finished,
-        );
-        transition.suspends.push(retry);
+      if (
+        subsequentUpdate !== undefined &&
+        subsequentUpdate.lanes & TransitionLanes
+      ) {
+        const { coroutine, lanes } = subsequentUpdate;
+        const transition = getTranstionIndex(lanes);
+        const forceUpdate = () =>
+          $.getSessionContext().scheduleUpdate(coroutine, {
+            transition,
+          }).finished;
+        errorOrSuspend.then(forceUpdate, forceUpdate);
       } else {
         const forceUpdateWhenSettled = () => {
           if (areAllSuspendsSettled()) {
@@ -69,12 +73,7 @@ export const Suspense = createComponent(function Suspense(
           }
         };
 
-        errorOrSuspend.then(forceUpdateWhenSettled, (error) => {
-          forceUpdateWhenSettled();
-          if (errorOrSuspend.status !== 'aborted') {
-            $.interrupt(error);
-          }
-        });
+        errorOrSuspend.then(forceUpdateWhenSettled, forceUpdateWhenSettled);
 
         forceUpdateWhenSettled();
       }

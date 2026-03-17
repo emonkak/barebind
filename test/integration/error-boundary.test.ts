@@ -53,24 +53,6 @@ const FailOnRender = createComponent(function FailOnRender() {
   throw new Error('fail');
 });
 
-const RecoverOnTransaction = createComponent(
-  function RecoverOnTransaction(_props, $) {
-    const [capturedError, setCapturedError] = $.useState<unknown>(null);
-
-    $.useLayoutEffect(() => {
-      $.startTransition(() => {
-        throw new Error('fail on transition');
-      }).finished.catch((error) => {
-        setCapturedError(error, { flushSync: true, immediate: true });
-      });
-    }, []);
-
-    return capturedError !== null
-      ? $.html`<p>${String(capturedError)}</p>`
-      : null;
-  },
-);
-
 test('renders the fallback when an error occurs during rendering', async () => {
   const source = App({
     children: ErrorBoundary({
@@ -188,22 +170,4 @@ test('throws uncaught errors thrown by interrupt() as InterruptError', async () 
       }),
     );
   }
-});
-
-test('captures errors that occur during the transition', async () => {
-  const source = App({ children: RecoverOnTransaction({}) });
-  const container = document.createElement('div');
-  const root = Root.create(
-    source,
-    container,
-    new Runtime(new BrowserBackend()),
-  );
-
-  await root.mount().finished;
-
-  expect(stripComments(container).innerHTML).toBe(
-    `<p>Error: An error occurred during a transition.
-${App.name}
-\`- ${RecoverOnTransaction.name} &lt;- ERROR occurred here!</p>`,
-  );
 });
