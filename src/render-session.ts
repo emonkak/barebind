@@ -7,6 +7,8 @@ import {
   type ComponentState,
   type Coroutine,
   DETACHED_SCOPE,
+  type Effect,
+  type EffectHandler,
   type EffectQueue,
   type ErrorHandler,
   getLanesFromOptions,
@@ -34,7 +36,6 @@ import {
 } from './core.js';
 import { DirectiveSpecifier } from './directive.js';
 import { handleError, InterruptError } from './error.js';
-import { InvokeEffectHook } from './hook.js';
 
 export class RenderSession implements RenderContext {
   private readonly _state: ComponentState;
@@ -449,28 +450,49 @@ export class RenderSession implements RenderContext {
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.EffectHook>(type, currentHook);
-      if (
-        areDependenciesChanged(dependencies, currentHook.memoizedDependencies)
-      ) {
-        currentHook.epoch++;
-        queue.push(new InvokeEffectHook(currentHook), this._scope.level);
+      const { handler, memoizedDependencies } = currentHook;
+      if (areDependenciesChanged(dependencies, memoizedDependencies)) {
+        handler.epoch++;
+        queue.push(new InvokeEffect(handler), this._scope.level);
       }
-      currentHook.setup = setup;
-      currentHook.pendingDependencies = dependencies;
+      handler.setup = setup;
+      currentHook.memoizedDependencies = dependencies;
     } else {
-      currentHook = {
-        type,
+      const handler: EffectHandler = {
         setup,
         cleanup: undefined,
         epoch: 0,
-        pendingDependencies: dependencies,
-        memoizedDependencies: null,
+      };
+      currentHook = {
+        type,
+        handler,
+        memoizedDependencies: dependencies,
       };
       hooks.push(currentHook);
-      queue.push(new InvokeEffectHook(currentHook), this._scope.level);
+      queue.push(new InvokeEffect(handler), this._scope.level);
     }
 
     this._hookIndex++;
+  }
+}
+
+class InvokeEffect implements Effect {
+  private readonly _handler: EffectHandler;
+
+  private readonly _epoch: number;
+
+  constructor(handler: EffectHandler) {
+    this._handler = handler;
+    this._epoch = handler.epoch;
+  }
+
+  commit(): void {
+    const { cleanup, epoch, setup } = this._handler;
+
+    if (epoch === this._epoch) {
+      cleanup?.();
+      this._handler.cleanup = setup();
+    }
   }
 }
 

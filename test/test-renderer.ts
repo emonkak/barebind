@@ -40,8 +40,8 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
         hook.type === HookType.LayoutEffect ||
         hook.type === HookType.InsertionEffect
       ) {
-        hook.cleanup?.();
-        hook.cleanup = undefined;
+        hook.handler.cleanup?.();
+        hook.handler.cleanup = undefined;
       }
     }
   }

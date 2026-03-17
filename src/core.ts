@@ -138,6 +138,12 @@ export interface Effect {
   commit(): void;
 }
 
+export interface EffectHandler {
+  setup: () => Cleanup | void;
+  cleanup: Cleanup | void;
+  epoch: number;
+}
+
 export class EffectQueue {
   private _headEffects: LinkedList<Effect> = new LinkedList();
 
@@ -228,10 +234,7 @@ export namespace Hook {
       | typeof HookType.PassiveEffect
       | typeof HookType.LayoutEffect
       | typeof HookType.InsertionEffect;
-    setup: () => Cleanup | void;
-    cleanup: Cleanup | void;
-    epoch: number;
-    pendingDependencies: readonly unknown[] | null;
+    handler: EffectHandler;
     memoizedDependencies: readonly unknown[] | null;
   }
 

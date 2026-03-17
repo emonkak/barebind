@@ -8,8 +8,9 @@ import {
   createUpdateSession,
   DETACHED_SCOPE,
   type DirectiveContext,
+  type Effect,
+  type EffectHandler,
   type EffectQueue,
-  type Hook,
   HookType,
   Lane,
   type Lanes,
@@ -20,7 +21,6 @@ import {
   type UpdateSession,
 } from './core.js';
 import { DirectiveSpecifier } from './directive.js';
-import { CleanupEffectHook } from './hook.js';
 
 export interface ComponentOptions<TProps> {
   arePropsEqual?: (nextProps: TProps, prevProps: TProps) => boolean;
@@ -154,13 +154,13 @@ export class ComponentBinding<TProps, TResult>
     for (const hook of this._state.hooks) {
       switch (hook.type) {
         case HookType.PassiveEffect:
-          enqueueCleanupEffectHook(hook, frame.passiveEffects);
+          enqueueCleanupEffect(hook.handler, frame.passiveEffects);
           break;
         case HookType.LayoutEffect:
-          enqueueCleanupEffectHook(hook, frame.layoutEffects);
+          enqueueCleanupEffect(hook.handler, frame.layoutEffects);
           break;
         case HookType.InsertionEffect:
-          enqueueCleanupEffectHook(hook, frame.mutationEffects);
+          enqueueCleanupEffect(hook.handler, frame.mutationEffects);
           break;
       }
     }
@@ -179,12 +179,32 @@ export class ComponentBinding<TProps, TResult>
   }
 }
 
-function enqueueCleanupEffectHook(
-  hook: Hook.EffectHook,
+class CleanupEffect implements Effect {
+  private readonly _handler: EffectHandler;
+
+  private readonly _epoch: number;
+
+  constructor(handler: EffectHandler) {
+    this._handler = handler;
+    this._epoch = handler.epoch;
+  }
+
+  commit(): void {
+    const { cleanup, epoch } = this._handler;
+
+    if (epoch === this._epoch) {
+      cleanup?.();
+      this._handler.cleanup = undefined;
+    }
+  }
+}
+
+function enqueueCleanupEffect(
+  handler: EffectHandler,
   effects: EffectQueue,
 ): void {
-  hook.epoch++;
-  effects.pushBefore(new CleanupEffectHook(hook));
+  handler.epoch++;
+  effects.pushBefore(new CleanupEffect(handler));
 }
 
 function resolveBinding<TProps, TResult>(
