@@ -12,7 +12,6 @@ import {
   type EffectQueue,
   type Hook,
   HookType,
-  Lane,
   type Lanes,
   type Part,
   type RenderContext,
@@ -21,6 +20,7 @@ import {
   type UpdateSession,
 } from './core.js';
 import { DirectiveSpecifier } from './directive.js';
+import { NoLanes } from './lane.js';
 
 export interface ComponentOptions<TProps> {
   arePropsEqual?: (nextProps: TProps, prevProps: TProps) => boolean;
@@ -53,7 +53,7 @@ export function createComponent<TProps = {}, TResult = unknown>(
 export class ComponentBinding<TProps, TResult>
   implements Binding<TProps>, Coroutine
 {
-  pendingLanes: Lanes = Lane.NoLane;
+  pendingLanes: Lanes = NoLanes;
 
   private readonly _component: Component<TProps, TResult>;
 

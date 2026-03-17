@@ -7,7 +7,8 @@ import {
   SignalBinding,
   SignalDirective,
 } from '@/addons/signal/signal.js';
-import { $directive, Lane, PartType } from '@/core.js';
+import { $directive, PartType } from '@/core.js';
+import { NoLanes, SyncLane, UserBlockingLane } from '@/lane.js';
 import { createRuntime } from '../../../mocks.js';
 import { waitForMicrotasks } from '../../../test-helpers.js';
 import { TestRenderer } from '../../../test-renderer.js';
@@ -108,11 +109,11 @@ describe('SignalBinding', () => {
 
       signal.value = 'bar';
 
-      expect(binding.pendingLanes).toBe(Lane.SyncLane | Lane.UserBlockingLane);
+      expect(binding.pendingLanes).toBe(SyncLane | UserBlockingLane);
 
       await waitForMicrotasks(2);
 
-      expect(binding.pendingLanes).toBe(Lane.NoLane);
+      expect(binding.pendingLanes).toBe(NoLanes);
       expect(part.node.nodeValue).toBe(signal.value);
     });
 
@@ -154,12 +155,12 @@ describe('SignalBinding', () => {
       signal1.value = 'baz';
       signal2.value = 'qux';
 
-      expect(binding.pendingLanes).toBe(Lane.SyncLane | Lane.UserBlockingLane);
+      expect(binding.pendingLanes).toBe(SyncLane | UserBlockingLane);
 
       await waitForMicrotasks(2);
 
       expect(part.node.nodeValue).toBe('qux');
-      expect(binding.pendingLanes).toBe(Lane.NoLane);
+      expect(binding.pendingLanes).toBe(NoLanes);
     });
   });
 
@@ -199,12 +200,12 @@ describe('SignalBinding', () => {
 
       signal.value = 'bar';
 
-      expect(binding.pendingLanes).toBe(Lane.NoLane);
+      expect(binding.pendingLanes).toBe(NoLanes);
 
       await waitForMicrotasks(2);
 
       expect(part.node.nodeValue).toBe('');
-      expect(binding.pendingLanes).toBe(Lane.NoLane);
+      expect(binding.pendingLanes).toBe(NoLanes);
     });
   });
 });

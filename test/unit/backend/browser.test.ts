@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BrowserBackend } from '@/backend/browser.js';
-import { type Effect, EffectQueue, Lane, PartType } from '@/core.js';
+import { type Effect, EffectQueue, PartType } from '@/core.js';
+import { ConcurrentLane } from '@/lane.js';
 import { LooseLayout } from '@/layout/loose.js';
 import { StrictLayout } from '@/layout/strict.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
@@ -80,7 +81,7 @@ describe('BrowserBackend', () => {
     it('returns ConcurrentLane', () => {
       const backend = new BrowserBackend();
 
-      expect(backend.getDefaultLanes()).toBe(Lane.ConcurrentLane);
+      expect(backend.getDefaultLanes()).toBe(ConcurrentLane);
     });
   });
 

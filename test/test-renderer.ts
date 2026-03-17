@@ -6,10 +6,10 @@ import {
   DETACHED_SCOPE,
   type Hook,
   HookType,
-  Lane,
   type Scope,
   type UpdateOptions,
 } from '@/core.js';
+import { NoLanes } from '@/lane.js';
 import { RenderSession } from '@/render-session.js';
 import type { Runtime } from '@/runtime.js';
 import { createRuntime } from './mocks.js';
@@ -69,7 +69,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
 
     const coroutine: Coroutine = {
       name: this.callback.name,
-      pendingLanes: Lane.NoLane,
+      pendingLanes: NoLanes,
       scope: this.scope,
       start({ frame }) {
         frame.coroutines.push(this);

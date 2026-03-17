@@ -1,13 +1,19 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
-import {
-  type CommitPhase,
-  getPriorityFromLanes,
-  Lane,
-  type Lanes,
-  type SessionEvent,
-  type SessionObserver,
+import type {
+  CommitPhase,
+  Lanes,
+  SessionEvent,
+  SessionObserver,
 } from '../core.js';
+import {
+  ConcurrentLane,
+  getPriorityFromLanes,
+  NoLanes,
+  SyncLane,
+  TransitionLane,
+  ViewTransitionLane,
+} from '../lane.js';
 
 // Blue
 const RENDER_PHASE_STYLE =
@@ -201,7 +207,7 @@ export class ConsoleReporter implements SessionProfileReporter {
       commitMeasurement,
     } = profile;
 
-    const lanes = renderMeasurement?.lanes ?? Lane.NoLane;
+    const lanes = renderMeasurement?.lanes ?? NoLanes;
     const kindLabel = getUpdateKind(lanes);
     const statusLabel = status.toUpperCase();
     const priority = getPriorityFromLanes(lanes);
@@ -290,19 +296,19 @@ function getDuration(startTime: number, endTime: number): number {
 
 function getUpdateKind(lanes: Lanes): string {
   const tags = [];
-  if (lanes & Lane.TransitionLane) {
+  if (lanes & TransitionLane) {
     tags.push('Transition');
   }
-  if (lanes & Lane.ViewTransitionLane) {
+  if (lanes & ViewTransitionLane) {
     tags.push('ViewTransition');
   }
   return tags.length > 0 ? tags.join('/') : 'Update';
 }
 
 function getUpdateMode(lanes: Lanes): string {
-  return lanes & Lane.SyncLane
+  return lanes & SyncLane
     ? 'sync'
-    : lanes & Lane.ConcurrentLane
+    : lanes & ConcurrentLane
       ? 'concurrent'
       : 'no';
 }

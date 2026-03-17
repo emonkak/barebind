@@ -11,7 +11,6 @@ import {
   type DirectiveType,
   type Effect,
   type HookObject,
-  Lane,
   type Lanes,
   type Part,
   type RenderContext,
@@ -19,6 +18,7 @@ import {
   type Slot,
   type UpdateSession,
 } from '../../core.js';
+import { NoLanes } from '../../lane.js';
 
 export interface InvalidateEvent<T = unknown> {
   readonly source: Atom<T>;
@@ -52,7 +52,7 @@ export const SignalDirective: DirectiveType<Signal<any>> = {
 };
 
 export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
-  pendingLanes: Lanes = Lane.NoLane;
+  pendingLanes: Lanes = NoLanes;
 
   private _signal: Signal<T>;
 

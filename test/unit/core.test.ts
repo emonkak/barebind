@@ -3,14 +3,9 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   type Effect,
   EffectQueue,
-  getPriorityFromLanes,
-  getSchedulingLanes,
   getStartNode,
-  Lane,
-  type Lanes,
   type Part,
   PartType,
-  type UpdateOptions,
 } from '@/core.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 
@@ -258,26 +253,6 @@ describe('EffectQueue', () => {
       queue.flush();
       expect(order).toStrictEqual([1, 2]);
     });
-  });
-});
-
-describe('getSchedulingLanes()', () => {
-  it.each<[UpdateOptions, Lanes]>([
-    [{}, Lane.NoLane],
-    [{ flushSync: true }, Lane.SyncLane],
-    [{ priority: 'user-blocking' }, Lane.UserBlockingLane],
-    [{ priority: 'user-visible' }, Lane.UserVisibleLane],
-    [{ priority: 'background' }, Lane.BackgroundLane],
-    [
-      {
-        transition: true,
-      },
-      Lane.TransitionLane,
-    ],
-    [{ viewTransition: true }, Lane.ViewTransitionLane],
-  ])('returns lanes for options', (options, lanes) => {
-    expect(getSchedulingLanes(options)).toBe(lanes);
-    expect(getPriorityFromLanes(lanes)).toBe(options.priority ?? null);
   });
 });
 

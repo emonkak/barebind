@@ -3,7 +3,6 @@ import {
   type Coroutine,
   createScope,
   type Effect,
-  Lane,
   PartType,
   type SessionContext,
   type Slot,
@@ -12,6 +11,7 @@ import {
   type UpdateSession,
 } from './core.js';
 import { createTreeWalker, replaceMarkerNode } from './hydration.js';
+import { NoLanes } from './lane.js';
 
 export class Root<T> {
   private readonly _slot: Slot<T>;
@@ -94,7 +94,7 @@ export class Root<T> {
     const coroutine: Coroutine = {
       name: Root.name,
       scope: createScope(),
-      pendingLanes: Lane.NoLane,
+      pendingLanes: NoLanes,
       start(session) {
         session.frame.coroutines.push(this);
       },

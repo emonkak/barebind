@@ -2,11 +2,11 @@ import {
   BoundaryType,
   type Coroutine,
   createScope,
-  Lane,
   type Scope,
   type UpdateOptions,
   type UpdateSession,
 } from '@/core.js';
+import { NoLanes } from '@/lane.js';
 import type { Runtime } from '@/runtime.js';
 import { createRuntime } from './mocks.js';
 
@@ -37,7 +37,7 @@ export class TestUpdater {
 
     const coroutine: Coroutine = {
       name: callback.name,
-      pendingLanes: Lane.NoLane,
+      pendingLanes: NoLanes,
       scope: this.scope,
       start(session) {
         session.frame.coroutines.push(this);

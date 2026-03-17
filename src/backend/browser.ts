@@ -4,7 +4,6 @@ import {
   type Backend,
   type CommitPhase,
   type EffectQueue,
-  Lane,
   type Lanes,
   type Layout,
   type Part,
@@ -14,6 +13,7 @@ import {
   type Template,
   type TemplateMode,
 } from '../core.js';
+import { ConcurrentLane } from '../lane.js';
 import { LooseLayout } from '../layout/loose.js';
 import { StrictLayout } from '../layout/strict.js';
 import { AttributePrimitive } from '../primitive/attribute.js';
@@ -35,7 +35,7 @@ export class BrowserBackend implements Backend {
   }
 
   getDefaultLanes(): Lanes {
-    return Lane.ConcurrentLane;
+    return ConcurrentLane;
   }
 
   getUpdatePriority(): TaskPriority {

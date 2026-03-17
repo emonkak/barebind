@@ -13,7 +13,6 @@ import {
   type DirectiveType,
   type Effect,
   EffectQueue,
-  Lane,
   type Lanes,
   type Layout,
   type Part,
@@ -32,13 +31,14 @@ import {
   type UpdateSession,
 } from '@/core.js';
 import { areDirectiveTypesEqual } from '@/directive.js';
+import { SyncLane } from '@/lane.js';
 import { Runtime, type RuntimeOptions } from '@/runtime.js';
 import { AbstractTemplate } from '@/template/template.js';
 
 export class MockBackend implements Backend {
   readonly defaultLanes: Lanes;
 
-  constructor(defaultLanes: Lanes = Lane.SyncLane) {
+  constructor(defaultLanes: Lanes = SyncLane) {
     this.defaultLanes = defaultLanes;
   }
 

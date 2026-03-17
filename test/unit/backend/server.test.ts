@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ServerBackend } from '@/backend/server.js';
-import { type Effect, EffectQueue, Lane, PartType } from '@/core.js';
+import { type Effect, EffectQueue, PartType } from '@/core.js';
+import { SyncLane } from '@/lane.js';
 import { LooseLayout } from '@/layout/loose.js';
 import { StrictLayout } from '@/layout/strict.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
@@ -58,7 +59,7 @@ describe('ServerBackend', () => {
     it('returns SyncLane', () => {
       const backend = new ServerBackend(document);
 
-      expect(backend.getDefaultLanes()).toBe(Lane.SyncLane);
+      expect(backend.getDefaultLanes()).toBe(SyncLane);
     });
   });
 

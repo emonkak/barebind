@@ -1,13 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ComponentBinding, createComponent } from '@/component.js';
-import {
-  type CommitPhase,
-  Lane,
-  PartType,
-  type RenderContext,
-} from '@/core.js';
+import { type CommitPhase, PartType, type RenderContext } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
+import { ConcurrentLane } from '@/lane.js';
 import { RenderSession } from '@/render-session.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { createRuntime, MockSlot } from '../mocks.js';
@@ -270,7 +266,7 @@ describe('ComponentBinding', () => {
 
           session.frame.coroutines.push({
             name: '',
-            pendingLanes: Lane.ConcurrentLane,
+            pendingLanes: ConcurrentLane,
             scope: session.scope,
             start() {
               session.frame.coroutines.push(this);

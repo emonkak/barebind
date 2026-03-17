@@ -10,14 +10,12 @@ import {
   type EffectHandler,
   type EffectQueue,
   type ErrorHandler,
-  getSchedulingLanes,
   type Hook,
   type HookClass,
   type HookFunction,
   type HookObject,
   HookType,
   type InitialState,
-  Lane,
   type ReducerReturn,
   type RefObject,
   type RenderContext,
@@ -35,6 +33,7 @@ import {
 } from './core.js';
 import { DirectiveSpecifier } from './directive.js';
 import { handleError, InterruptError } from './error.js';
+import { getSchedulingLanes, NoLanes } from './lane.js';
 
 const DETACHED_HOOKS = Object.freeze([] as Hook[]) as Hook[];
 
@@ -100,7 +99,7 @@ export class RenderSession implements RenderContext {
       const skipped = Promise.resolve<UpdateResult>({ status: 'skipped' });
       return {
         id: -1,
-        lanes: Lane.NoLane,
+        lanes: NoLanes,
         scheduled: skipped,
         finished: skipped,
       };
@@ -108,7 +107,7 @@ export class RenderSession implements RenderContext {
 
     const renderLanes = this._frame.lanes;
 
-    if (renderLanes !== Lane.NoLane) {
+    if (renderLanes !== NoLanes) {
       // We reuse the frame only for updates within the same lanes, which
       // avoids scheduling a new update during rendering. This is generally
       // undesirable, but necessary when an ErrorBoundary catches an error and
@@ -347,7 +346,7 @@ export class RenderSession implements RenderContext {
       const { dispatcher, memoizedState, memoizedProposals } = currentHook;
       const renderLanes = this._frame.lanes;
       let newState = memoizedState;
-      let skipLanes = Lane.NoLane;
+      let skipLanes = NoLanes;
 
       memoizedProposals.push(...dispatcher.pendingProposals);
 
@@ -355,13 +354,13 @@ export class RenderSession implements RenderContext {
         const { action, lanes } = proposal;
         if ((lanes & renderLanes) === lanes) {
           newState = reducer(newState, action);
-          proposal.lanes = Lane.NoLane;
+          proposal.lanes = NoLanes;
         } else {
           skipLanes |= lanes;
         }
       }
 
-      if (skipLanes === Lane.NoLane) {
+      if (skipLanes === NoLanes) {
         currentHook = {
           type: HookType.Reducer,
           dispatcher,
@@ -391,7 +390,7 @@ export class RenderSession implements RenderContext {
             });
             return {
               id: -1,
-              lanes: Lane.NoLane,
+              lanes: NoLanes,
               scheduled: skipped,
               finished: skipped,
             };

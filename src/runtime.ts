@@ -7,9 +7,7 @@ import {
   createUpdateSession,
   type Directive,
   EffectQueue,
-  getSchedulingLanes,
   type Hook,
-  Lane,
   type Lanes,
   type Part,
   type Primitive,
@@ -37,6 +35,12 @@ import {
   InterruptError,
   RecoverableInterruptError,
 } from './error.js';
+import {
+  getSchedulingLanes,
+  NoLanes,
+  SyncLane,
+  ViewTransitionLane,
+} from './lane.js';
 import { RenderSession } from './render-session.js';
 
 export interface RuntimeOptions {
@@ -92,7 +96,7 @@ export class Runtime implements SessionContext {
     ) {
       const { controller, coroutine, id, lanes, transition } = udpate;
 
-      if ((coroutine.pendingLanes & lanes) === Lane.NoLane) {
+      if ((coroutine.pendingLanes & lanes) === NoLanes) {
         controller.resolve({ status: 'skipped' });
         continue;
       }
@@ -108,7 +112,7 @@ export class Runtime implements SessionContext {
       try {
         coroutine.start(session);
 
-        if (lanes & Lane.SyncLane) {
+        if (lanes & SyncLane) {
           this._runRenderSync(session);
           this._runCommitSync(frame);
         } else {
@@ -380,7 +384,7 @@ export class Runtime implements SessionContext {
       });
     }
 
-    if ((handlingScope.owner?.pendingLanes ?? Lane.NoLane) === Lane.NoLane) {
+    if ((handlingScope.owner?.pendingLanes ?? NoLanes) === NoLanes) {
       throw new RecoverableInterruptError(
         coroutine,
         'An error was captured by an error boundary, but no recovery was scheduled.',
@@ -412,7 +416,7 @@ export class Runtime implements SessionContext {
           }
         };
 
-        if (lanes & Lane.ViewTransitionLane) {
+        if (lanes & ViewTransitionLane) {
           await this._backend.startViewTransition(callback);
         } else {
           await this._backend.requestCallback(callback, {
@@ -511,7 +515,7 @@ export class Runtime implements SessionContext {
         await this._backend.yieldToMain();
       }
     } finally {
-      frame.lanes = Lane.NoLane;
+      frame.lanes = NoLanes;
 
       notifyObservers(this._observers, {
         type: 'render-end',
@@ -543,7 +547,7 @@ export class Runtime implements SessionContext {
         }
       } while (coroutines.length > 0);
     } finally {
-      frame.lanes = Lane.NoLane;
+      frame.lanes = NoLanes;
 
       notifyObservers(this._observers, {
         type: 'render-end',

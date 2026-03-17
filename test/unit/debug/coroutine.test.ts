@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { type Coroutine, createScope, Lane } from '@/core.js';
+import { type Coroutine, createScope } from '@/core.js';
 import { formatOwnerStack, getOwnerStack } from '@/debug/coroutine.js';
+import { NoLanes } from '@/lane.js';
 
 describe('InterruptError', () => {
   it('contains the coroutine stack in the message', () => {
@@ -23,7 +24,7 @@ function createCoroutine(
   return {
     name,
     scope: createScope(owner),
-    pendingLanes: Lane.NoLane,
+    pendingLanes: NoLanes,
     start: () => {},
     resume: () => {},
   };

@@ -7,12 +7,19 @@ import {
   createScope,
   EffectQueue,
   type Hook,
-  Lane,
   PartType,
   type SessionEvent,
   type UpdateHandle,
 } from '@/core.js';
 import { InterruptError, RecoverableInterruptError } from '@/error.js';
+import {
+  BackgroundLane,
+  ConcurrentLane,
+  SyncLane,
+  TransitionLane,
+  UserBlockingLane,
+  ViewTransitionLane,
+} from '@/lane.js';
 import { RenderSession } from '@/render-session.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
@@ -47,7 +54,7 @@ describe('Runtime', () => {
   describe('flushUpdates()', () => {
     describe('in concurrent mode', () => {
       it('commits effects asynchronously', async () => {
-        const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
+        const runtime = createRuntime({ defaultLanes: ConcurrentLane });
         const observer = new MockObserver();
         const mutationEffect = {
           commit: vi.fn(),
@@ -95,12 +102,12 @@ describe('Runtime', () => {
           {
             type: 'render-start',
             id: 0,
-            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
+            lanes: ConcurrentLane | UserBlockingLane,
           },
           {
             type: 'render-end',
             id: 0,
-            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
+            lanes: ConcurrentLane | UserBlockingLane,
           },
           {
             type: 'commit-start',
@@ -150,7 +157,7 @@ describe('Runtime', () => {
       });
 
       it('commits effects synchronously if flushSync option is true', async () => {
-        const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
+        const runtime = createRuntime({ defaultLanes: ConcurrentLane });
         const observer = new MockObserver();
         const mutationEffect = {
           commit: vi.fn(),
@@ -193,12 +200,12 @@ describe('Runtime', () => {
           {
             type: 'render-start',
             id: 0,
-            lanes: Lane.ConcurrentLane | Lane.SyncLane | Lane.UserBlockingLane,
+            lanes: ConcurrentLane | SyncLane | UserBlockingLane,
           },
           {
             type: 'render-end',
             id: 0,
-            lanes: Lane.ConcurrentLane | Lane.SyncLane | Lane.UserBlockingLane,
+            lanes: ConcurrentLane | SyncLane | UserBlockingLane,
           },
           {
             type: 'commit-start',
@@ -248,7 +255,7 @@ describe('Runtime', () => {
       });
 
       it('commits mutation and layout effects in view transition if viewTransition option is true', async () => {
-        const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
+        const runtime = createRuntime({ defaultLanes: ConcurrentLane });
         const observer = new MockObserver();
         const mutationEffect = {
           commit: vi.fn(),
@@ -286,18 +293,12 @@ describe('Runtime', () => {
           {
             type: 'render-start',
             id: 0,
-            lanes:
-              Lane.ConcurrentLane |
-              Lane.UserBlockingLane |
-              Lane.ViewTransitionLane,
+            lanes: ConcurrentLane | UserBlockingLane | ViewTransitionLane,
           },
           {
             type: 'render-end',
             id: 0,
-            lanes:
-              Lane.ConcurrentLane |
-              Lane.UserBlockingLane |
-              Lane.ViewTransitionLane,
+            lanes: ConcurrentLane | UserBlockingLane | ViewTransitionLane,
           },
           {
             type: 'commit-start',
@@ -335,7 +336,7 @@ describe('Runtime', () => {
       });
 
       it('handles errors that occurs during rendering', async () => {
-        const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
+        const runtime = createRuntime({ defaultLanes: ConcurrentLane });
         const observer = new MockObserver();
         const error = new Error('fail');
 
@@ -361,7 +362,7 @@ describe('Runtime', () => {
           {
             type: 'render-start',
             id: 0,
-            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
+            lanes: ConcurrentLane | UserBlockingLane,
           },
           {
             type: 'render-error',
@@ -372,7 +373,7 @@ describe('Runtime', () => {
           {
             type: 'render-end',
             id: 0,
-            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
+            lanes: ConcurrentLane | UserBlockingLane,
           },
           {
             type: 'commit-cancel',
@@ -383,7 +384,7 @@ describe('Runtime', () => {
       });
 
       it('handles errors that occurs during transitions', async () => {
-        const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
+        const runtime = createRuntime({ defaultLanes: ConcurrentLane });
         const observer = new MockObserver();
         const error = new Error('fail');
 
@@ -404,14 +405,12 @@ describe('Runtime', () => {
           {
             type: 'render-start',
             id: 0,
-            lanes:
-              Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
+            lanes: ConcurrentLane | BackgroundLane | TransitionLane,
           },
           {
             type: 'render-end',
             id: 0,
-            lanes:
-              Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
+            lanes: ConcurrentLane | BackgroundLane | TransitionLane,
           },
           {
             type: 'commit-cancel',
@@ -422,7 +421,7 @@ describe('Runtime', () => {
       });
 
       it('aborts rendering when error is captured outside the root', async () => {
-        const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
+        const runtime = createRuntime({ defaultLanes: ConcurrentLane });
         const observer = new MockObserver();
         const errorHandler = vi.fn();
         const error = new Error('fail');
@@ -459,7 +458,7 @@ describe('Runtime', () => {
           {
             type: 'render-start',
             id: 0,
-            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
+            lanes: ConcurrentLane | UserBlockingLane,
           },
           {
             type: 'render-error',
@@ -470,7 +469,7 @@ describe('Runtime', () => {
           {
             type: 'render-end',
             id: 0,
-            lanes: Lane.ConcurrentLane | Lane.UserBlockingLane,
+            lanes: ConcurrentLane | UserBlockingLane,
           },
           {
             type: 'commit-cancel',
@@ -481,7 +480,7 @@ describe('Runtime', () => {
       });
 
       it('defer commit phase until transition ready', async () => {
-        const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
+        const runtime = createRuntime({ defaultLanes: ConcurrentLane });
         const observer = new MockObserver();
         const effect1 = {
           commit: vi.fn(),
@@ -508,10 +507,10 @@ describe('Runtime', () => {
               transition,
             });
             expect(handle1.lanes).toBe(
-              Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
+              ConcurrentLane | BackgroundLane | TransitionLane,
             );
             expect(handle2.lanes).toBe(
-              Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
+              ConcurrentLane | BackgroundLane | TransitionLane,
             );
           });
 
@@ -521,26 +520,22 @@ describe('Runtime', () => {
             {
               type: 'render-start',
               id: 0,
-              lanes:
-                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
+              lanes: ConcurrentLane | BackgroundLane | TransitionLane,
             },
             {
               type: 'render-end',
               id: 0,
-              lanes:
-                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
+              lanes: ConcurrentLane | BackgroundLane | TransitionLane,
             },
             {
               type: 'render-start',
               id: 1,
-              lanes:
-                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
+              lanes: ConcurrentLane | BackgroundLane | TransitionLane,
             },
             {
               type: 'render-end',
               id: 1,
-              lanes:
-                Lane.ConcurrentLane | Lane.BackgroundLane | Lane.TransitionLane,
+              lanes: ConcurrentLane | BackgroundLane | TransitionLane,
             },
             {
               type: 'commit-start',
@@ -632,12 +627,12 @@ describe('Runtime', () => {
           {
             type: 'render-start',
             id: 0,
-            lanes: Lane.SyncLane | Lane.UserBlockingLane,
+            lanes: SyncLane | UserBlockingLane,
           },
           {
             type: 'render-end',
             id: 0,
-            lanes: Lane.SyncLane | Lane.UserBlockingLane,
+            lanes: SyncLane | UserBlockingLane,
           },
           {
             type: 'commit-start',
@@ -711,7 +706,7 @@ describe('Runtime', () => {
           {
             type: 'render-start',
             id: 0,
-            lanes: Lane.SyncLane | Lane.UserBlockingLane,
+            lanes: SyncLane | UserBlockingLane,
           },
           {
             type: 'render-error',
@@ -722,7 +717,7 @@ describe('Runtime', () => {
           {
             type: 'render-end',
             id: 0,
-            lanes: Lane.SyncLane | Lane.UserBlockingLane,
+            lanes: SyncLane | UserBlockingLane,
           },
           {
             type: 'commit-cancel',
@@ -770,7 +765,7 @@ describe('Runtime', () => {
           {
             type: 'render-start',
             id: 0,
-            lanes: Lane.SyncLane | Lane.UserBlockingLane,
+            lanes: SyncLane | UserBlockingLane,
           },
           {
             type: 'render-error',
@@ -781,7 +776,7 @@ describe('Runtime', () => {
           {
             type: 'render-end',
             id: 0,
-            lanes: Lane.SyncLane | Lane.UserBlockingLane,
+            lanes: SyncLane | UserBlockingLane,
           },
           {
             type: 'commit-cancel',
@@ -1027,7 +1022,7 @@ describe('Runtime', () => {
     });
 
     it('cancels update when the transition fails', async () => {
-      const runtime = createRuntime({ defaultLanes: Lane.ConcurrentLane });
+      const runtime = createRuntime({ defaultLanes: ConcurrentLane });
 
       SESSION: {
         let handle: UpdateHandle | undefined;

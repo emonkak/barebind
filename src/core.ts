@@ -287,18 +287,6 @@ export type HookType = (typeof HookType)[keyof typeof HookType];
 
 export type InitialState<T> = (T extends Function ? never : T) | (() => T);
 
-// biome-ignore format: Align Lane flags
-export const Lane = {
-  NoLane:             0,
-  ConcurrentLane:     0b1,
-  SyncLane:           0b10,
-  UserBlockingLane:   0b100,
-  UserVisibleLane:    0b1000,
-  BackgroundLane:     0b10000,
-  ViewTransitionLane: 0b100000,
-  TransitionLane:     0b1000000,
-} as const satisfies Record<string, Lanes>;
-
 export type Lanes = number;
 
 export interface Layout {
@@ -660,54 +648,6 @@ export function createUpdateSession(
     coroutine,
     context,
   };
-}
-
-/**
- * @internal
- */
-export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
-  if (lanes & Lane.BackgroundLane) {
-    return 'background';
-  } else if (lanes & Lane.UserVisibleLane) {
-    return 'user-visible';
-  } else if (lanes & Lane.UserBlockingLane) {
-    return 'user-blocking';
-  } else {
-    return null;
-  }
-}
-
-/**
- * @internal
- */
-export function getSchedulingLanes(options: UpdateOptions): Lanes {
-  let lanes = Lane.NoLane;
-
-  if (options.flushSync) {
-    lanes |= Lane.SyncLane;
-  }
-
-  switch (options.priority) {
-    case 'user-blocking':
-      lanes |= Lane.UserBlockingLane;
-      break;
-    case 'user-visible':
-      lanes |= Lane.UserVisibleLane;
-      break;
-    case 'background':
-      lanes |= Lane.BackgroundLane;
-      break;
-  }
-
-  if (options.transition !== undefined) {
-    lanes |= Lane.TransitionLane;
-  }
-
-  if (options.viewTransition) {
-    lanes |= Lane.ViewTransitionLane;
-  }
-
-  return lanes;
 }
 
 /**

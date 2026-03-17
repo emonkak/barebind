@@ -7,8 +7,18 @@ import {
   SessionProfiler,
 } from '@/addons/session-profiler.js';
 import { createComponent } from '@/component.js';
-import { Lane, type RenderContext, type SessionEvent } from '@/core.js';
+import type { RenderContext, SessionEvent } from '@/core.js';
 import { RecoverableInterruptError } from '@/error.js';
+import {
+  BackgroundLane,
+  ConcurrentLane,
+  NoLanes,
+  SyncLane,
+  TransitionLane,
+  UserBlockingLane,
+  UserVisibleLane,
+  ViewTransitionLane,
+} from '@/lane.js';
 import { createEffectQueue, MockCoroutine, MockEffect } from '../../mocks.js';
 
 describe('SessionProfiler', () => {
@@ -32,7 +42,7 @@ describe('SessionProfiler', () => {
         {
           type: 'render-start',
           id: 0,
-          lanes: Lane.ConcurrentLane,
+          lanes: ConcurrentLane,
         },
         {
           type: 'component-render-start',
@@ -51,7 +61,7 @@ describe('SessionProfiler', () => {
         {
           type: 'render-end',
           id: 0,
-          lanes: Lane.ConcurrentLane,
+          lanes: ConcurrentLane,
         },
         {
           type: 'commit-start',
@@ -111,7 +121,7 @@ describe('SessionProfiler', () => {
         renderMeasurement: {
           startTime: expect.any(Number),
           endTime: expect.any(Number),
-          lanes: Lane.ConcurrentLane,
+          lanes: ConcurrentLane,
         },
         commitMeasurement: {
           startTime: expect.any(Number),
@@ -159,12 +169,12 @@ describe('SessionProfiler', () => {
         {
           type: 'render-start',
           id: 0,
-          lanes: Lane.ConcurrentLane,
+          lanes: ConcurrentLane,
         },
         {
           type: 'render-end',
           id: 0,
-          lanes: Lane.ConcurrentLane,
+          lanes: ConcurrentLane,
         },
         {
           type: 'commit-cancel',
@@ -185,7 +195,7 @@ describe('SessionProfiler', () => {
         renderMeasurement: {
           startTime: expect.any(Number),
           endTime: expect.any(Number),
-          lanes: Lane.ConcurrentLane,
+          lanes: ConcurrentLane,
         },
         commitMeasurement: null,
         errorRecords: [],
@@ -208,7 +218,7 @@ describe('SessionProfiler', () => {
         {
           type: 'render-start',
           id: 0,
-          lanes: Lane.UserBlockingLane,
+          lanes: UserBlockingLane,
         },
         {
           type: 'component-render-start',
@@ -226,7 +236,7 @@ describe('SessionProfiler', () => {
         {
           type: 'render-end',
           id: 0,
-          lanes: Lane.UserBlockingLane,
+          lanes: UserBlockingLane,
         },
         {
           type: 'commit-cancel',
@@ -247,7 +257,7 @@ describe('SessionProfiler', () => {
         renderMeasurement: {
           startTime: expect.any(Number),
           endTime: expect.any(Number),
-          lanes: Lane.UserBlockingLane,
+          lanes: UserBlockingLane,
         },
         commitMeasurement: null,
         errorRecords: [
@@ -281,7 +291,7 @@ describe('SessionProfiler', () => {
         {
           type: 'render-start',
           id: 0,
-          lanes: Lane.ConcurrentLane,
+          lanes: ConcurrentLane,
         },
         {
           type: 'component-render-start',
@@ -299,7 +309,7 @@ describe('SessionProfiler', () => {
         {
           type: 'render-end',
           id: 0,
-          lanes: Lane.ConcurrentLane,
+          lanes: ConcurrentLane,
         },
         {
           type: 'commit-cancel',
@@ -320,7 +330,7 @@ describe('SessionProfiler', () => {
         renderMeasurement: {
           startTime: expect.any(Number),
           endTime: expect.any(Number),
-          lanes: Lane.ConcurrentLane,
+          lanes: ConcurrentLane,
         },
         commitMeasurement: null,
         errorRecords: [
@@ -358,7 +368,7 @@ describe('SessionProfiler', () => {
         {
           type: 'render-start',
           id: 0,
-          lanes: Lane.ConcurrentLane,
+          lanes: ConcurrentLane,
         },
         {
           type: 'component-render-start',
@@ -377,7 +387,7 @@ describe('SessionProfiler', () => {
         {
           type: 'render-end',
           id: 0,
-          lanes: Lane.UserBlockingLane,
+          lanes: UserBlockingLane,
         },
         {
           type: 'commit-start',
@@ -425,7 +435,7 @@ describe('SessionProfiler', () => {
         renderMeasurement: {
           startTime: expect.any(Number),
           endTime: expect.any(Number),
-          lanes: Lane.ConcurrentLane,
+          lanes: ConcurrentLane,
         },
         commitMeasurement: {
           startTime: expect.any(Number),
@@ -474,7 +484,7 @@ describe('SessionProfiler', () => {
         {
           type: 'render-start',
           id: 0,
-          lanes: Lane.ConcurrentLane,
+          lanes: ConcurrentLane,
         },
         {
           type: 'component-render-start',
@@ -493,7 +503,7 @@ describe('SessionProfiler', () => {
         {
           type: 'render-end',
           id: 0,
-          lanes: Lane.ConcurrentLane,
+          lanes: ConcurrentLane,
         },
         {
           type: 'commit-start',
@@ -541,7 +551,7 @@ describe('SessionProfiler', () => {
         renderMeasurement: {
           startTime: expect.any(Number),
           endTime: expect.any(Number),
-          lanes: Lane.ConcurrentLane,
+          lanes: ConcurrentLane,
         },
         commitMeasurement: {
           startTime: expect.any(Number),
@@ -582,7 +592,7 @@ describe('SessionProfiler', () => {
         {
           type: 'render-end',
           id: 0,
-          lanes: Lane.ConcurrentLane,
+          lanes: ConcurrentLane,
         },
       ];
 
@@ -629,8 +639,7 @@ describe('ConsoleReporter', () => {
         renderMeasurement: {
           startTime: 0,
           endTime: 10,
-          lanes:
-            Lane.ConcurrentLane | Lane.TransitionLane | Lane.ViewTransitionLane,
+          lanes: ConcurrentLane | TransitionLane | ViewTransitionLane,
         },
         commitMeasurement: null,
         errorRecords: [],
@@ -650,9 +659,9 @@ describe('ConsoleReporter', () => {
     });
 
     it.each([
-      [Lane.ConcurrentLane | Lane.UserBlockingLane, 'user-blocking'],
-      [Lane.ConcurrentLane | Lane.UserVisibleLane, 'user-visible'],
-      [Lane.ConcurrentLane | Lane.BackgroundLane, 'background'],
+      [ConcurrentLane | UserBlockingLane, 'user-blocking'],
+      [ConcurrentLane | UserVisibleLane, 'user-visible'],
+      [ConcurrentLane | BackgroundLane, 'background'],
     ])('reports the priority when lanes contains a priority lane', (lanes, expectedPriority) => {
       reporter.reportProfile({
         id: 0,
@@ -681,9 +690,9 @@ describe('ConsoleReporter', () => {
     });
 
     it.each([
-      [Lane.ConcurrentLane, 'concurrent'],
-      [Lane.SyncLane, 'sync'],
-      [Lane.NoLane, 'no'],
+      [ConcurrentLane, 'concurrent'],
+      [SyncLane, 'sync'],
+      [NoLanes, 'no'],
     ])('reports the mode when lanes contains a mode lane', (lanes, expectedMode) => {
       reporter.reportProfile({
         id: 0,
@@ -719,7 +728,7 @@ describe('ConsoleReporter', () => {
         renderMeasurement: {
           startTime: 0,
           endTime: 10,
-          lanes: Lane.ConcurrentLane,
+          lanes: ConcurrentLane,
         },
         commitMeasurement: null,
         errorRecords: [],
@@ -767,7 +776,7 @@ describe('ConsoleReporter', () => {
         renderMeasurement: {
           startTime: 0,
           endTime: 10,
-          lanes: Lane.ConcurrentLane,
+          lanes: ConcurrentLane,
         },
         commitMeasurement: null,
         errorRecords: [
