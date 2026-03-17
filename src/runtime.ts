@@ -7,7 +7,7 @@ import {
   createUpdateSession,
   type Directive,
   EffectQueue,
-  getLanesFromOptions,
+  getSchedulingLanes,
   type Hook,
   Lane,
   type Lanes,
@@ -274,8 +274,7 @@ export class Runtime implements SessionContext {
     }
 
     const id = this._updateCount++;
-    const lanes =
-      this._backend.getDefaultLanes() | getLanesFromOptions(options);
+    const lanes = this._backend.getDefaultLanes() | getSchedulingLanes(options);
     const callback = (): UpdateResult => {
       const shouldTriggerFlush =
         (options.triggerFlush ?? true) && this._scheduledUpdates.isEmpty();

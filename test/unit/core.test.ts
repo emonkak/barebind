@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   type Effect,
   EffectQueue,
-  getLanesFromOptions,
   getPriorityFromLanes,
+  getSchedulingLanes,
   getStartNode,
   Lane,
   type Lanes,
@@ -261,7 +261,7 @@ describe('EffectQueue', () => {
   });
 });
 
-describe('getLanesFromOptions()', () => {
+describe('getSchedulingLanes()', () => {
   it.each<[UpdateOptions, Lanes]>([
     [{}, Lane.NoLane],
     [{ flushSync: true }, Lane.SyncLane],
@@ -270,13 +270,13 @@ describe('getLanesFromOptions()', () => {
     [{ priority: 'background' }, Lane.BackgroundLane],
     [
       {
-        transition: { signal: AbortSignal.abort(), suspends: [], resumes: [] },
+        transition: true,
       },
       Lane.TransitionLane,
     ],
     [{ viewTransition: true }, Lane.ViewTransitionLane],
   ])('returns lanes for options', (options, lanes) => {
-    expect(getLanesFromOptions(options)).toBe(lanes);
+    expect(getSchedulingLanes(options)).toBe(lanes);
     expect(getPriorityFromLanes(lanes)).toBe(options.priority ?? null);
   });
 });

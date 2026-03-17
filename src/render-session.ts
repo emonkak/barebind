@@ -10,7 +10,7 @@ import {
   type EffectHandler,
   type EffectQueue,
   type ErrorHandler,
-  getLanesFromOptions,
+  getSchedulingLanes,
   type Hook,
   type HookClass,
   type HookFunction,
@@ -113,7 +113,7 @@ export class RenderSession implements RenderContext {
       // avoids scheduling a new update during rendering. This is generally
       // undesirable, but necessary when an ErrorBoundary catches an error and
       // sets new state.
-      const requestLanes = getLanesFromOptions(options ?? {});
+      const requestLanes = getSchedulingLanes(options ?? {});
 
       if ((renderLanes & requestLanes) === requestLanes) {
         for (const { id, controller } of this._context.getScheduledUpdates()) {

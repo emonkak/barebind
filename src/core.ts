@@ -665,7 +665,22 @@ export function createUpdateSession(
 /**
  * @internal
  */
-export function getLanesFromOptions(options: UpdateOptions): Lanes {
+export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
+  if (lanes & Lane.BackgroundLane) {
+    return 'background';
+  } else if (lanes & Lane.UserVisibleLane) {
+    return 'user-visible';
+  } else if (lanes & Lane.UserBlockingLane) {
+    return 'user-blocking';
+  } else {
+    return null;
+  }
+}
+
+/**
+ * @internal
+ */
+export function getSchedulingLanes(options: UpdateOptions): Lanes {
   let lanes = Lane.NoLane;
 
   if (options.flushSync) {
@@ -693,21 +708,6 @@ export function getLanesFromOptions(options: UpdateOptions): Lanes {
   }
 
   return lanes;
-}
-
-/**
- * @internal
- */
-export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
-  if (lanes & Lane.BackgroundLane) {
-    return 'background';
-  } else if (lanes & Lane.UserVisibleLane) {
-    return 'user-visible';
-  } else if (lanes & Lane.UserBlockingLane) {
-    return 'user-blocking';
-  } else {
-    return null;
-  }
 }
 
 /**
