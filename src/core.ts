@@ -242,8 +242,8 @@ export namespace Hook {
 
   export interface MemoHook<TResult> {
     type: typeof HookType.Memo;
-    value: TResult;
-    dependencies: readonly unknown[] | null;
+    memoizedResult: TResult;
+    memoizedDependencies: readonly unknown[] | null;
   }
 
   export interface ReducerHook<TState, TAction> {
@@ -440,7 +440,10 @@ export interface RenderContext {
     setup: () => Cleanup | void,
     dependencies?: readonly unknown[] | null,
   ): void;
-  useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;
+  useMemo<TResult>(
+    computation: () => TResult,
+    dependencies: readonly unknown[],
+  ): TResult;
   useReducer<TState, TAction>(
     reducer: (state: TState, action: TAction) => TState,
     initialState: InitialState<TState>,

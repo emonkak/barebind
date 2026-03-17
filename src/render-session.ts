@@ -286,40 +286,45 @@ export class RenderSession implements RenderContext {
   }
 
   useLayoutEffect(
-    callback: () => Cleanup | void,
+    setup: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
     this._useEffect(
-      callback,
+      setup,
       dependencies,
       HookType.LayoutEffect,
       this._frame.layoutEffects,
     );
   }
 
-  useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T {
+  useMemo<TResult>(
+    computation: () => TResult,
+    dependencies: readonly unknown[],
+  ): TResult {
     const { hooks } = this._state;
     let currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
-      ensureHookType<Hook.MemoHook<T>>(HookType.Memo, currentHook);
+      ensureHookType<Hook.MemoHook<TResult>>(HookType.Memo, currentHook);
 
-      if (areDependenciesChanged(dependencies, currentHook.dependencies)) {
-        currentHook.value = factory();
-        currentHook.dependencies = dependencies;
+      if (
+        areDependenciesChanged(dependencies, currentHook.memoizedDependencies)
+      ) {
+        currentHook.memoizedResult = computation();
+        currentHook.memoizedDependencies = dependencies;
       }
     } else {
       currentHook = {
         type: HookType.Memo,
-        value: factory(),
-        dependencies,
+        memoizedResult: computation(),
+        memoizedDependencies: dependencies,
       };
       hooks.push(currentHook);
     }
 
     this._hookIndex++;
 
-    return currentHook.value as T;
+    return currentHook.memoizedResult as TResult;
   }
 
   useReducer<TState, TAction>(
