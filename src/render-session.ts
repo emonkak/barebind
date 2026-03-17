@@ -96,7 +96,7 @@ export class RenderSession implements RenderContext {
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    if (this._coroutine.scope === DETACHED_SCOPE) {
+    if (isDetachedScope(this._coroutine.scope)) {
       const skipped = Promise.resolve<UpdateResult>({ status: 'skipped' });
       return {
         id: -1,
@@ -523,4 +523,15 @@ function ensureHookType<TExpectedHook extends Hook>(
       `Unexpected hook type. Expected "${expectedType}" but got "${hook.type}".`,
     );
   }
+}
+
+function isDetachedScope(scope: Scope): boolean {
+  let currentScope: Scope | undefined = scope;
+  do {
+    if (currentScope === DETACHED_SCOPE) {
+      return true;
+    }
+    currentScope = currentScope.owner?.scope;
+  } while (currentScope !== undefined);
+  return false;
 }
