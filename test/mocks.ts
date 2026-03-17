@@ -256,6 +256,10 @@ export class MockCoroutine implements Coroutine {
     return MockCoroutine.name;
   }
 
+  start(session: UpdateSession): void {
+    session.frame.coroutines.push(this);
+  }
+
   resume(session: UpdateSession): void {
     this.callback(session);
   }
@@ -459,7 +463,7 @@ export function createRenderFrame(id: number, lanes: Lanes): RenderFrame {
   return {
     id,
     lanes,
-    pendingCoroutines: [],
+    coroutines: [],
     mutationEffects: new EffectQueue(),
     layoutEffects: new EffectQueue(),
     passiveEffects: new EffectQueue(),

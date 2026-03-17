@@ -24,6 +24,7 @@ function createCoroutine(
     name,
     scope: createScope(owner),
     pendingLanes: Lane.NoLane,
+    start: () => {},
     resume: () => {},
   };
 }

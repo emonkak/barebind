@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 import {
   BoundaryType,
+  type Coroutine,
   createScope,
   DETACHED_SCOPE,
   type Hook,
@@ -8,7 +9,6 @@ import {
   Lane,
   type Scope,
   type UpdateOptions,
-  type UpdateSession,
 } from '@/core.js';
 import { RenderSession } from '@/render-session.js';
 import type { Runtime } from '@/runtime.js';
@@ -67,11 +67,14 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
       };
     }
 
-    const coroutine = {
+    const coroutine: Coroutine = {
       name: this.callback.name,
       pendingLanes: Lane.NoLane,
       scope: this.scope,
-      resume: ({ frame, context }: UpdateSession): void => {
+      start({ frame }) {
+        frame.coroutines.push(this);
+      },
+      resume: ({ frame, context }) => {
         const scope = createScope(coroutine);
         const hooks = this.hooks.slice();
         const session = new RenderSession(

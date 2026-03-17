@@ -1,5 +1,6 @@
 import {
   BoundaryType,
+  type Coroutine,
   createScope,
   Lane,
   type Scope,
@@ -34,11 +35,14 @@ export class TestUpdater {
       },
     };
 
-    const coroutine = {
+    const coroutine: Coroutine = {
       name: callback.name,
       pendingLanes: Lane.NoLane,
       scope: this.scope,
-      resume(session: UpdateSession): void {
+      start(session) {
+        session.frame.coroutines.push(this);
+      },
+      resume(session) {
         returnValue = callback(session);
       },
     };

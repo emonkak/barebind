@@ -127,7 +127,7 @@ describe('ComponentBinding', () => {
       SESSION1: {
         updater.startUpdate((session) => {
           binding.attach(session);
-          session.frame.pendingCoroutines.push(binding);
+          session.frame.coroutines.push(binding);
         });
 
         expect(binding.shouldUpdate(props1)).toBe(false);
@@ -268,10 +268,13 @@ describe('ComponentBinding', () => {
         updater.startUpdate((session) => {
           binding.attach(session);
 
-          session.frame.pendingCoroutines.push({
+          session.frame.coroutines.push({
             name: '',
             pendingLanes: Lane.ConcurrentLane,
             scope: session.scope,
+            start() {
+              session.frame.coroutines.push(this);
+            },
             resume(session) {
               binding.detach(session);
             },

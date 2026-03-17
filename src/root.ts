@@ -88,14 +88,17 @@ export class Root<T> {
   }
 
   private _startSession(
-    callback: (session: UpdateSession) => void,
+    resume: (session: UpdateSession) => void,
     options?: UpdateOptions,
   ): UpdateHandle {
     const coroutine: Coroutine = {
       name: Root.name,
       scope: createScope(),
       pendingLanes: Lane.NoLane,
-      resume: callback,
+      start(session) {
+        session.frame.coroutines.push(this);
+      },
+      resume,
     };
     return this._context.scheduleUpdate(coroutine, {
       immediate: true,

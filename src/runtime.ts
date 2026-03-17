@@ -97,11 +97,17 @@ export class Runtime implements SessionContext {
         continue;
       }
 
-      const frame = createRenderFrame(id, lanes, coroutine);
-      const { scope } = coroutine;
-      const session = createUpdateSession(frame, scope, coroutine, this);
+      const frame = createRenderFrame(id, lanes);
+      const session = createUpdateSession(
+        frame,
+        coroutine.scope,
+        coroutine,
+        this,
+      );
 
       try {
+        coroutine.start(session);
+
         if (lanes & Lane.SyncLane) {
           this._runRenderSync(session);
           this._runCommitSync(frame);
@@ -477,7 +483,7 @@ export class Runtime implements SessionContext {
 
   private async _runRenderAsync(session: UpdateSession): Promise<void> {
     const { frame } = session;
-    const { id, lanes, pendingCoroutines } = frame;
+    const { id, lanes, coroutines } = frame;
 
     notifyObservers(this._observers, {
       type: 'render-start',
@@ -487,19 +493,19 @@ export class Runtime implements SessionContext {
 
     try {
       while (true) {
-        for (const coroutine of pendingCoroutines.splice(
+        for (const coroutine of coroutines.splice(
           0,
           this._maxCoroutinesPerYield,
         )) {
           try {
             coroutine.resume(session);
-            coroutine.pendingLanes &= ~(frame.lanes | Lane.RetryLane);
+            coroutine.pendingLanes &= ~frame.lanes;
           } catch (error) {
             this._handleRenderError(id, error, coroutine);
           }
         }
 
-        if (pendingCoroutines.length === 0) {
+        if (coroutines.length === 0) {
           break;
         }
 
@@ -518,7 +524,7 @@ export class Runtime implements SessionContext {
 
   private _runRenderSync(session: UpdateSession): void {
     const { frame } = session;
-    const { id, lanes, pendingCoroutines } = frame;
+    const { id, lanes, coroutines } = frame;
 
     notifyObservers(this._observers, {
       type: 'render-start',
@@ -528,15 +534,15 @@ export class Runtime implements SessionContext {
 
     try {
       do {
-        for (const coroutine of pendingCoroutines.splice(0)) {
+        for (const coroutine of coroutines.splice(0)) {
           try {
             coroutine.resume(session);
-            coroutine.pendingLanes &= ~(frame.lanes | Lane.RetryLane);
+            coroutine.pendingLanes &= ~frame.lanes;
           } catch (error) {
             this._handleRenderError(id, error, coroutine);
           }
         }
-      } while (pendingCoroutines.length > 0);
+      } while (coroutines.length > 0);
     } finally {
       frame.lanes = Lane.NoLane;
 
@@ -549,15 +555,11 @@ export class Runtime implements SessionContext {
   }
 }
 
-function createRenderFrame(
-  id: number,
-  lanes: Lanes,
-  coroutine: Coroutine,
-): RenderFrame {
+function createRenderFrame(id: number, lanes: Lanes): RenderFrame {
   return {
     id,
     lanes,
-    pendingCoroutines: [coroutine],
+    coroutines: [],
     mutationEffects: new EffectQueue(),
     layoutEffects: new EffectQueue(),
     passiveEffects: new EffectQueue(),
@@ -584,7 +586,7 @@ function notifyObservers(
 }
 
 function resetRenderFrame(frame: RenderFrame): void {
-  frame.pendingCoroutines.length = 0;
+  frame.coroutines.length = 0;
   frame.mutationEffects.clear();
   frame.layoutEffects.clear();
   frame.passiveEffects.clear();

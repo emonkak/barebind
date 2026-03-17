@@ -118,8 +118,8 @@ export class RenderSession implements RenderContext {
       if ((renderLanes & requestLanes) === requestLanes) {
         for (const { id, controller } of this._context.getScheduledUpdates()) {
           if (id === this._frame.id) {
-            this._frame.pendingCoroutines.push(this._coroutine);
-            this._coroutine.pendingLanes |= renderLanes | Lane.RetryLane;
+            this._frame.coroutines.push(this._coroutine);
+            this._coroutine.pendingLanes |= renderLanes;
             return {
               id,
               lanes: renderLanes,

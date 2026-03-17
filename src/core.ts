@@ -106,6 +106,7 @@ export interface Coroutine {
   readonly name: string;
   readonly scope: Scope;
   pendingLanes: Lanes;
+  start(session: UpdateSession): void;
   resume(session: UpdateSession): void;
 }
 
@@ -296,7 +297,6 @@ export const Lane = {
   BackgroundLane:     0b10000,
   ViewTransitionLane: 0b100000,
   TransitionLane:     0b1000000,
-  RetryLane:          0b10000000,
 } as const satisfies Record<string, Lanes>;
 
 export type Lanes = number;
@@ -460,7 +460,7 @@ export interface RenderContext {
 export interface RenderFrame {
   id: number;
   lanes: Lanes;
-  pendingCoroutines: Coroutine[];
+  coroutines: Coroutine[];
   mutationEffects: EffectQueue;
   layoutEffects: EffectQueue;
   passiveEffects: EffectQueue;

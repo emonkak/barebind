@@ -68,7 +68,7 @@ describe('Runtime', () => {
 
         SESSION: {
           const coroutine = new MockCoroutine((session) => {
-            session.frame.pendingCoroutines.push(subcoroutine);
+            session.frame.coroutines.push(subcoroutine);
           });
           const subcoroutine = new MockCoroutine((session) => {
             session.frame.mutationEffects.push(
@@ -166,7 +166,7 @@ describe('Runtime', () => {
 
         SESSION: {
           const coroutine = new MockCoroutine((session) => {
-            session.frame.pendingCoroutines.push(subcoroutine);
+            session.frame.coroutines.push(subcoroutine);
           });
           const subcoroutine = new MockCoroutine((session) => {
             session.frame.mutationEffects.push(
@@ -605,7 +605,7 @@ describe('Runtime', () => {
 
         SESSION: {
           const coroutine = new MockCoroutine((session) => {
-            session.frame.pendingCoroutines.push(subcoroutine);
+            session.frame.coroutines.push(subcoroutine);
           });
           const subcoroutine = new MockCoroutine((session) => {
             session.frame.mutationEffects.push(

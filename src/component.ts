@@ -103,12 +103,23 @@ export class ComponentBinding<TProps, TResult>
     return this._scope;
   }
 
+  shouldUpdate(props: TProps): boolean {
+    return (
+      this._scope === DETACHED_SCOPE ||
+      !this._component.arePropsEqual(props, this._props)
+    );
+  }
+
+  start(session: UpdateSession): void {
+    const { frame, scope } = session;
+    frame.coroutines.push(this);
+    frame.mutationEffects.push(this, scope.level);
+    this._pendingHooks = this._memoizedHooks;
+  }
+
   resume(session: UpdateSession): void {
     const { frame, coroutine, context } = session;
-    const isRetrying = (this.pendingLanes & Lane.RetryLane) !== Lane.NoLane;
-    const hooks = isRetrying
-      ? this._pendingHooks.slice()
-      : this._memoizedHooks.slice();
+    const hooks = this._pendingHooks.slice();
     const scope = createScope(this);
 
     const result = context.renderComponent(
@@ -129,23 +140,12 @@ export class ComponentBinding<TProps, TResult>
       this._slot.attach(childSession);
     }
 
-    if (coroutine === this && !isRetrying) {
-      frame.mutationEffects.push(this, scope.level);
-    }
-
     this._pendingHooks = hooks;
-  }
-
-  shouldUpdate(props: TProps): boolean {
-    return (
-      this._scope === DETACHED_SCOPE ||
-      !this._component.arePropsEqual(props, this._props)
-    );
   }
 
   attach(session: UpdateSession): void {
     const { frame, scope } = session;
-    frame.pendingCoroutines.push(this);
+    frame.coroutines.push(this);
     this._scope = scope;
   }
 

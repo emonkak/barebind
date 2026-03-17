@@ -97,14 +97,18 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     return this._scope;
   }
 
+  shouldUpdate(signal: Signal<T>): boolean {
+    return this._subscription.unsubscribe === null || signal !== this._signal;
+  }
+
+  start(session: UpdateSession): void {
+    session.frame.coroutines.push(this);
+  }
+
   resume(session: UpdateSession): void {
     if (this._slot.reconcile(this._signal.value, session)) {
       session.frame.mutationEffects.push(this._slot, this._scope.level);
     }
-  }
-
-  shouldUpdate(signal: Signal<T>): boolean {
-    return this._subscription.unsubscribe === null || signal !== this._signal;
   }
 
   attach(session: UpdateSession): void {
