@@ -8,6 +8,22 @@ export const $hook: unique symbol = Symbol('$hook');
 
 export const DETACHED_SCOPE: Scope = Object.freeze(createScope());
 
+export interface ActionDispatcher<TState, TAction> {
+  context: RenderContext;
+  dispatch: (
+    action: TAction,
+    options?: DispatchOptions<TState>,
+  ) => UpdateHandle;
+  pendingProposals: ActionProposal<TAction>[];
+  pendingState: TState;
+  reducer: (state: TState, action: TAction) => TState;
+}
+
+export interface ActionProposal<TAction> {
+  action: TAction;
+  lanes: Lanes;
+}
+
 export interface Backend {
   flushEffects(effects: EffectQueue, phase: CommitPhase): void;
   getDefaultLanes(): Lanes;
@@ -114,8 +130,8 @@ export interface DirectiveType<T> {
   resolveBinding(value: T, part: Part, context: DirectiveContext): Binding<T>;
 }
 
-export interface DispatchOptions<T> extends UpdateOptions {
-  areStatesEqual?: (nextState: T, prevState: T) => boolean;
+export interface DispatchOptions<TState> extends UpdateOptions {
+  areStatesEqual?: (nextState: TState, prevState: TState) => boolean;
 }
 
 export interface Effect {
@@ -232,12 +248,8 @@ export namespace Hook {
 
   export interface ReducerHook<TState, TAction> {
     type: typeof HookType.Reducer;
-    reducer: (state: TState, action: TAction) => TState;
-    dispatch: (action: TAction) => UpdateHandle;
-    pendingLanes: Lanes;
-    pendingState: TState;
+    dispatcher: ActionDispatcher<TState, TAction>;
     memoizedState: TState;
-    context: RenderContext;
   }
 }
 
