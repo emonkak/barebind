@@ -170,8 +170,6 @@ export class ComponentBinding<TProps, TResult>
     }
 
     this._slot?.detach(session);
-
-    this._scope = DETACHED_SCOPE;
   }
 
   commit(): void {
@@ -181,6 +179,7 @@ export class ComponentBinding<TProps, TResult>
 
   rollback(): void {
     this._slot?.rollback();
+    this._scope = DETACHED_SCOPE;
     this._memoizedHooks = [];
   }
 }

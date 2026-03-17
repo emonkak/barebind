@@ -134,8 +134,6 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     frame.layoutEffects.pushBefore(new UnsubscribeSignal(this._subscription));
 
     this._slot.detach(session);
-
-    this._scope = DETACHED_SCOPE;
   }
 
   commit(): void {
@@ -144,6 +142,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   rollback(): void {
     this._slot.rollback();
+    this._scope = DETACHED_SCOPE;
   }
 }
 
