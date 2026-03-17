@@ -4,9 +4,9 @@ import {
   $directive,
   type Bindable,
   BoundaryType,
-  type ComponentState,
   createScope,
   EffectQueue,
+  type Hook,
   Lane,
   PartType,
   type SessionEvent,
@@ -806,9 +806,7 @@ describe('Runtime', () => {
     it('renders the component with a new render session', () => {
       const component = createComponent(vi.fn(() => null));
       const props = {};
-      const state: ComponentState = {
-        hooks: [],
-      };
+      const hooks: Hook[] = [];
       const frame = createRenderFrame(1, -1);
       const scope = createScope();
       const coroutine = new MockCoroutine();
@@ -820,7 +818,7 @@ describe('Runtime', () => {
       const result = runtime.renderComponent(
         component,
         props,
-        state,
+        hooks,
         frame,
         scope,
         coroutine,

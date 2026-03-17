@@ -253,6 +253,7 @@ export namespace Hook {
     type: typeof HookType.Reducer;
     dispatcher: ActionDispatcher<TState, TAction>;
     memoizedState: TState;
+    memoizedProposals: ActionProposal<TAction>[];
   }
 }
 
@@ -293,8 +294,9 @@ export const Lane = {
   UserBlockingLane:   0b100,
   UserVisibleLane:    0b1000,
   BackgroundLane:     0b10000,
-  TransitionLane:     0b100000,
-  ViewTransitionLane: 0b1000000,
+  ViewTransitionLane: 0b100000,
+  TransitionLane:     0b1000000,
+  RetryLane:          0b10000000,
 } as const satisfies Record<string, Lanes>;
 
 export type Lanes = number;
@@ -477,7 +479,7 @@ export interface SessionContext extends DirectiveContext {
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,
     props: TProps,
-    state: ComponentState,
+    hooks: Hook[],
     frame: RenderFrame,
     scope: Scope,
     coroutine: Coroutine,

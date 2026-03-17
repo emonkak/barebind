@@ -2,7 +2,6 @@ import {
   type Bindable,
   type Binding,
   type Component,
-  type ComponentState,
   type Coroutine,
   createScope,
   createUpdateSession,
@@ -11,6 +10,7 @@ import {
   type Effect,
   type EffectHandler,
   type EffectQueue,
+  type Hook,
   HookType,
   Lane,
   type Lanes,
@@ -65,9 +65,9 @@ export class ComponentBinding<TProps, TResult>
 
   private _scope: Scope = DETACHED_SCOPE;
 
-  private readonly _state: ComponentState = {
-    hooks: [],
-  };
+  private _pendingHooks: Hook[] = [];
+
+  private _memoizedHooks: Hook[] = [];
 
   constructor(
     component: Component<TProps, TResult>,
@@ -105,31 +105,35 @@ export class ComponentBinding<TProps, TResult>
 
   resume(session: UpdateSession): void {
     const { frame, coroutine, context } = session;
+    const isRetrying = (this.pendingLanes & Lane.RetryLane) !== Lane.NoLane;
+    const hooks = isRetrying
+      ? this._pendingHooks.slice()
+      : this._memoizedHooks.slice();
     const scope = createScope(this);
 
     const result = context.renderComponent(
       this._component,
       this._props,
-      this._state,
+      hooks,
       frame,
       scope,
       this,
     );
 
     const childSession = createUpdateSession(frame, scope, coroutine, context);
-    let dirty: boolean;
 
     if (this._slot !== null) {
-      dirty = this._slot.reconcile(result, childSession);
+      this._slot.reconcile(result, childSession);
     } else {
       this._slot = context.resolveSlot(result, this._part);
       this._slot.attach(childSession);
-      dirty = true;
     }
 
-    if (dirty && coroutine === this) {
-      frame.mutationEffects.push(this._slot, scope.level);
+    if (coroutine === this && !isRetrying) {
+      frame.mutationEffects.push(this, scope.level);
     }
+
+    this._pendingHooks = hooks;
   }
 
   shouldUpdate(props: TProps): boolean {
@@ -151,7 +155,7 @@ export class ComponentBinding<TProps, TResult>
     // Cleanup effects follow the same declaration order within a component,
     // but must run from parent to child. Therefore, we collect cleanup effects
     // before all children are detached and then register them.
-    for (const hook of this._state.hooks) {
+    for (const hook of this._pendingHooks) {
       switch (hook.type) {
         case HookType.PassiveEffect:
           enqueueCleanupEffect(hook.handler, frame.passiveEffects);
@@ -172,10 +176,12 @@ export class ComponentBinding<TProps, TResult>
 
   commit(): void {
     this._slot?.commit();
+    this._memoizedHooks = this._pendingHooks;
   }
 
   rollback(): void {
     this._slot?.rollback();
+    this._memoizedHooks = [];
   }
 }
 

@@ -3,12 +3,12 @@ import {
   type Backend,
   type CommitPhase,
   type Component,
-  type ComponentState,
   type Coroutine,
   createUpdateSession,
   type Directive,
   EffectQueue,
   getLanesFromOptions,
+  type Hook,
   Lane,
   type Lanes,
   type Part,
@@ -161,14 +161,14 @@ export class Runtime implements SessionContext {
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,
     props: TProps,
-    state: ComponentState,
+    hooks: Hook[],
     frame: RenderFrame,
     scope: Scope,
     coroutine: Coroutine,
   ): TResult {
     const { id } = frame;
 
-    const context = new RenderSession(state, frame, scope, coroutine, this);
+    const context = new RenderSession(hooks, frame, scope, coroutine, this);
 
     notifyObservers(this._observers, {
       type: 'component-render-start',
@@ -493,7 +493,7 @@ export class Runtime implements SessionContext {
         )) {
           try {
             coroutine.resume(session);
-            coroutine.pendingLanes &= ~frame.lanes;
+            coroutine.pendingLanes &= ~(frame.lanes | Lane.RetryLane);
           } catch (error) {
             this._handleRenderError(id, error, coroutine);
           }
@@ -531,7 +531,7 @@ export class Runtime implements SessionContext {
         for (const coroutine of pendingCoroutines.splice(0)) {
           try {
             coroutine.resume(session);
-            coroutine.pendingLanes &= ~frame.lanes;
+            coroutine.pendingLanes &= ~(frame.lanes | Lane.RetryLane);
           } catch (error) {
             this._handleRenderError(id, error, coroutine);
           }

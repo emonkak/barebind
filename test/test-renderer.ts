@@ -1,9 +1,9 @@
 import { vi } from 'vitest';
 import {
   BoundaryType,
-  type ComponentState,
   createScope,
   DETACHED_SCOPE,
+  type Hook,
   HookType,
   Lane,
   type Scope,
@@ -21,9 +21,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
 
   scope: Scope;
 
-  state: ComponentState = {
-    hooks: [],
-  };
+  hooks: Hook[] = [];
 
   constructor(
     callback: (props: TProps, session: RenderSession) => TResult,
@@ -34,7 +32,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
   }
 
   finalize(): void {
-    for (const hook of this.state.hooks) {
+    for (const hook of this.hooks) {
       if (
         hook.type === HookType.PassiveEffect ||
         hook.type === HookType.LayoutEffect ||
@@ -47,13 +45,10 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
   }
 
   reset(): void {
-    this.state = {
-      hooks: [],
-    };
+    this.hooks = [];
   }
 
   render(props: TProps, options?: UpdateOptions): TResult {
-    const { callback, state } = this;
     const previousBoundary = this.scope.boundary;
     let returnValue: TResult;
     let thrownError: unknown;
@@ -78,17 +73,20 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
       scope: this.scope,
       resume: ({ frame, context }: UpdateSession): void => {
         const scope = createScope(coroutine);
+        const hooks = this.hooks.slice();
         const session = new RenderSession(
-          state,
+          hooks,
           frame,
           scope,
           coroutine,
           context,
         );
 
-        returnValue = callback(props, session);
+        returnValue = this.callback.call(undefined, props, session);
 
         session.finalize();
+
+        this.hooks = hooks;
       },
     };
 
