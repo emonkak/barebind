@@ -228,7 +228,7 @@ export namespace Hook {
       | typeof HookType.PassiveEffect
       | typeof HookType.LayoutEffect
       | typeof HookType.InsertionEffect;
-    callback: () => Cleanup | void;
+    setup: () => Cleanup | void;
     cleanup: Cleanup | void;
     epoch: number;
     pendingDependencies: readonly unknown[] | null;
@@ -428,16 +428,16 @@ export interface RenderContext {
     dependencies: readonly unknown[],
   ): TCallback;
   useEffect(
-    callback: () => Cleanup | void,
+    setup: () => Cleanup | void,
     dependencies?: readonly unknown[] | null,
   ): void;
   useId(): string;
   useInsertionEffect(
-    callback: () => Cleanup | void,
+    setup: () => Cleanup | void,
     dependencies?: readonly unknown[] | null,
   ): void;
   useLayoutEffect(
-    callback: () => Cleanup | void,
+    setup: () => Cleanup | void,
     dependencies?: readonly unknown[] | null,
   ): void;
   useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;

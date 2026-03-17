@@ -243,11 +243,11 @@ export class RenderSession implements RenderContext {
   }
 
   useEffect(
-    callback: () => Cleanup | void,
+    setup: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
     this._useEffect(
-      callback,
+      setup,
       dependencies,
       HookType.PassiveEffect,
       this._frame.passiveEffects,
@@ -274,11 +274,11 @@ export class RenderSession implements RenderContext {
   }
 
   useInsertionEffect(
-    callback: () => Cleanup | void,
+    setup: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
     this._useEffect(
-      callback,
+      setup,
       dependencies,
       HookType.InsertionEffect,
       this._frame.mutationEffects,
@@ -434,7 +434,7 @@ export class RenderSession implements RenderContext {
   }
 
   private _useEffect(
-    callback: () => Cleanup | void,
+    setup: () => Cleanup | void,
     dependencies: readonly unknown[] | null,
     type: Hook.EffectHook['type'],
     queue: EffectQueue,
@@ -450,12 +450,12 @@ export class RenderSession implements RenderContext {
         currentHook.epoch++;
         queue.push(new InvokeEffectHook(currentHook), this._scope.level);
       }
-      currentHook.callback = callback;
+      currentHook.setup = setup;
       currentHook.pendingDependencies = dependencies;
     } else {
       currentHook = {
         type,
-        callback,
+        setup,
         cleanup: undefined,
         epoch: 0,
         pendingDependencies: dependencies,

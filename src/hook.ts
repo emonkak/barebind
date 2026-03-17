@@ -32,11 +32,11 @@ export class InvokeEffectHook implements Effect {
   }
 
   commit(): void {
-    const { callback, cleanup, epoch, pendingDependencies } = this._hook;
+    const { cleanup, epoch, pendingDependencies, setup } = this._hook;
 
     if (epoch === this._epoch) {
       cleanup?.();
-      this._hook.cleanup = callback();
+      this._hook.cleanup = setup();
       this._hook.memoizedDependencies = pendingDependencies;
     }
   }
