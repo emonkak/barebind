@@ -1,7 +1,7 @@
 import { BoundaryType, type Coroutine, type Scope } from './core.js';
 import { formatOwnerStack, getOwnerStack } from './debug/coroutine.js';
 
-export class InterruptError extends Error {
+export class CoroutineError extends Error {
   constructor(coroutine: Coroutine, message?: string, options?: ErrorOptions) {
     DEBUG: {
       message += '\n' + formatOwnerStack(getOwnerStack(coroutine));
@@ -10,7 +10,9 @@ export class InterruptError extends Error {
   }
 }
 
-export class RecoverableInterruptError extends InterruptError {}
+export class AbortError extends CoroutineError {}
+
+export class InterruptError extends CoroutineError {}
 
 export function handleError(error: unknown, scope: Scope): Scope {
   let currentScope = scope;

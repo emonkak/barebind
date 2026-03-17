@@ -4,7 +4,7 @@ import { type Coroutine, createScope } from '@/core.js';
 import { formatOwnerStack, getOwnerStack } from '@/debug/coroutine.js';
 import { NoLanes } from '@/lane.js';
 
-describe('InterruptError', () => {
+describe('AbortError', () => {
   it('contains the coroutine stack in the message', () => {
     const coroutine = createCoroutine(
       'Child',

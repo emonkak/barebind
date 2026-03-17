@@ -10,7 +10,7 @@ import {
   PartType,
   type SessionEvent,
 } from '@/core.js';
-import { InterruptError, RecoverableInterruptError } from '@/error.js';
+import { AbortError, InterruptError } from '@/error.js';
 import {
   ConcurrentLane,
   SyncLane,
@@ -350,8 +350,8 @@ describe('Runtime', () => {
             await handle.finished;
             expect.unreachable();
           } catch (caughtError) {
-            expect(caughtError).toBeInstanceOf(InterruptError);
-            expect((caughtError as InterruptError).cause).toBe(error);
+            expect(caughtError).toBeInstanceOf(AbortError);
+            expect((caughtError as AbortError).cause).toBe(error);
           }
         }
 
@@ -375,7 +375,7 @@ describe('Runtime', () => {
           {
             type: 'commit-cancel',
             id: 0,
-            reason: expect.any(InterruptError),
+            reason: expect.any(AbortError),
           },
         ] satisfies SessionEvent[]);
       });
@@ -434,7 +434,7 @@ describe('Runtime', () => {
           {
             type: 'commit-cancel',
             id: 0,
-            reason: expect.any(RecoverableInterruptError),
+            reason: expect.any(InterruptError),
           },
         ] satisfies SessionEvent[]);
       });
@@ -555,8 +555,8 @@ describe('Runtime', () => {
             await runtime.scheduleUpdate(coroutine).finished;
             expect.unreachable();
           } catch (caughtError) {
-            expect(caughtError).toBeInstanceOf(InterruptError);
-            expect((caughtError as InterruptError).cause).toBe(error);
+            expect(caughtError).toBeInstanceOf(AbortError);
+            expect((caughtError as AbortError).cause).toBe(error);
           }
         }
 
@@ -580,7 +580,7 @@ describe('Runtime', () => {
           {
             type: 'commit-cancel',
             id: 0,
-            reason: expect.any(InterruptError),
+            reason: expect.any(AbortError),
           },
         ] satisfies SessionEvent[]);
       });
@@ -639,7 +639,7 @@ describe('Runtime', () => {
           {
             type: 'commit-cancel',
             id: 0,
-            reason: expect.any(RecoverableInterruptError),
+            reason: expect.any(InterruptError),
           },
         ] satisfies SessionEvent[]);
       });

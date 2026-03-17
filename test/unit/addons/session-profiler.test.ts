@@ -8,7 +8,7 @@ import {
 } from '@/addons/session-profiler.js';
 import { createComponent } from '@/component.js';
 import type { RenderContext, SessionEvent } from '@/core.js';
-import { RecoverableInterruptError } from '@/error.js';
+import { InterruptError } from '@/error.js';
 import {
   BackgroundLane,
   ConcurrentLane,
@@ -164,7 +164,7 @@ describe('SessionProfiler', () => {
       };
       const profiler = new SessionProfiler(reporter);
 
-      const error = new RecoverableInterruptError(new MockCoroutine());
+      const error = new InterruptError(new MockCoroutine());
       const events: SessionEvent[] = [
         {
           type: 'render-start',
@@ -286,7 +286,7 @@ describe('SessionProfiler', () => {
       const component = createComponent(function MyComponent(_props: {}) {
         return null;
       });
-      const error = new RecoverableInterruptError(new MockCoroutine());
+      const error = new InterruptError(new MockCoroutine());
       const events: SessionEvent[] = [
         {
           type: 'render-start',

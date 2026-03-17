@@ -28,9 +28,10 @@ import {
 } from './core.js';
 import { toDirective } from './directive.js';
 import {
+  AbortError,
+  CoroutineError,
   handleError,
   InterruptError,
-  RecoverableInterruptError,
 } from './error.js';
 import {
   getSchedulingLanes,
@@ -123,7 +124,7 @@ export class Runtime implements SessionContext {
       } catch (error) {
         resetRenderFrame(frame);
 
-        if (error instanceof InterruptError) {
+        if (error instanceof CoroutineError) {
           notifyObservers(this._observers, {
             type: 'commit-cancel',
             id,
@@ -131,7 +132,7 @@ export class Runtime implements SessionContext {
           });
         }
 
-        if (error instanceof RecoverableInterruptError) {
+        if (error instanceof InterruptError) {
           controller.resolve({ status: 'canceled', reason: error.cause });
         } else {
           controller.reject(error);
@@ -331,13 +332,9 @@ export class Runtime implements SessionContext {
     try {
       handlingScope = handleError(error, coroutine.scope);
     } catch (error) {
-      throw new InterruptError(
-        coroutine,
-        'An error occurred during rendering.',
-        {
-          cause: error,
-        },
-      );
+      throw new AbortError(coroutine, 'An error occurred during rendering.', {
+        cause: error,
+      });
     } finally {
       notifyObservers(this._observers, {
         type: 'render-error',
@@ -348,7 +345,7 @@ export class Runtime implements SessionContext {
     }
 
     if ((handlingScope.owner?.pendingLanes ?? NoLanes) === NoLanes) {
-      throw new RecoverableInterruptError(
+      throw new InterruptError(
         coroutine,
         'An error was captured by an error boundary, but no recovery was scheduled.',
         { cause: error },

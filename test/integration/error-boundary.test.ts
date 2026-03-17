@@ -1,7 +1,7 @@
 import {
+  AbortError,
   BrowserBackend,
   createComponent,
-  InterruptError,
   type RenderContext,
   Root,
   Runtime,
@@ -122,7 +122,7 @@ test('treates errors as interrupts when there is no fallback', async () => {
   });
 });
 
-test('throws uncaught errors during rendering as InterruptError', async () => {
+test('throws uncaught errors during rendering as AbortError', async () => {
   const source = App({ children: FailOnRender({}) });
   const container = document.createElement('div');
   const root = Root.create(
@@ -135,11 +135,11 @@ test('throws uncaught errors during rendering as InterruptError', async () => {
     await root.mount().finished;
     expect.unreachable();
   } catch (error) {
-    expect(error).toBeInstanceOf(InterruptError);
-    expect((error as InterruptError).message).toContain(
+    expect(error).toBeInstanceOf(AbortError);
+    expect((error as AbortError).message).toContain(
       'An error occurred during rendering.',
     );
-    expect((error as InterruptError).cause).toStrictEqual(
+    expect((error as AbortError).cause).toStrictEqual(
       expect.objectContaining({
         message: 'fail',
       }),
@@ -147,7 +147,7 @@ test('throws uncaught errors during rendering as InterruptError', async () => {
   }
 });
 
-test('throws uncaught errors thrown by interrupt() as InterruptError', async () => {
+test('treates errors thrown by interrupt() as InterruptError', async () => {
   const source = App({ children: FailOnEffect({}) });
   const container = document.createElement('div');
   const root = Root.create(
@@ -156,18 +156,10 @@ test('throws uncaught errors thrown by interrupt() as InterruptError', async () 
     new Runtime(new BrowserBackend()),
   );
 
-  try {
-    await root.mount().finished;
-    expect.unreachable();
-  } catch (error) {
-    expect(error).toBeInstanceOf(InterruptError);
-    expect((error as InterruptError).message).toContain(
-      'An error was thrown from the component.',
-    );
-    expect((error as InterruptError).cause).toStrictEqual(
-      expect.objectContaining({
-        message: 'fail on effect',
-      }),
-    );
-  }
+  expect(await root.mount().finished).toStrictEqual({
+    status: 'canceled',
+    reason: expect.objectContaining({
+      message: 'fail on effect',
+    }),
+  });
 });
