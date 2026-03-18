@@ -100,20 +100,26 @@ export function SyncEnternalStore<T>(
 
 export type TransitionReturn = [
   isPending: boolean,
-  startTransition: (
-    action: (transition: number) => Promise<void> | void,
-  ) => Promise<void>,
+  startTransition: <T>(action: (transition: number) => T) => T,
 ];
 
 export function Transition(): HookFunction<TransitionReturn> {
   return (context) => {
     const [isPending, setIsPending] = context.useState(false);
 
-    const startTransition: TransitionReturn[1] = async (action) => {
-      context.startTransition(async (transition) => {
-        await setIsPending(true).scheduled;
-        await action(transition);
-        setIsPending(false, { transition });
+    const startTransition: TransitionReturn[1] = (action) => {
+      return context.startTransition((transition) => {
+        const complete = () => {
+          setIsPending(false, { transition });
+        };
+        setIsPending(true, { immediate: true });
+        const result = action(transition);
+        if (result instanceof Promise) {
+          result.then(complete, complete);
+        } else {
+          complete();
+        }
+        return result;
       });
     };
 

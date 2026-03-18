@@ -294,9 +294,7 @@ export class Runtime implements SessionContext {
     };
   }
 
-  startTransition(
-    action: (transition: number) => Promise<void> | void,
-  ): Promise<void> | void {
+  startTransition<T>(action: (transition: number) => T): T {
     return action(this._transitionCount++);
   }
 

@@ -408,9 +408,7 @@ export interface RenderContext {
     ...values: readonly unknown[]
   ): Bindable<readonly unknown[]>;
   setSharedContext<T>(key: unknown, value: T): void;
-  startTransition(
-    action: (transition: number) => Promise<void> | void,
-  ): Promise<void> | void;
+  startTransition<T>(action: (transition: number) => T): T;
   svg(
     strings: readonly string[],
     ...values: readonly unknown[]
@@ -469,9 +467,7 @@ export interface ReversibleEffect extends Effect {
 export interface SessionContext extends DirectiveContext {
   addObserver(observer: SessionObserver): Cleanup;
   getScheduledUpdates(): Update[];
-  startTransition(
-    action: (transition: number) => Promise<void> | void,
-  ): Promise<void> | void;
+  startTransition<T>(action: (transition: number) => T): T;
   nextIdentifier(): string;
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,

@@ -200,15 +200,15 @@ export class RenderSession implements RenderContext {
     };
   }
 
-  startTransition(
-    action: (transition: number) => Promise<void> | void,
-  ): Promise<void> | void {
-    return this._context.startTransition(async (transition) => {
-      try {
-        return await action(transition);
-      } catch (error) {
-        this.interrupt(error);
+  startTransition<T>(action: (transition: number) => T): T {
+    return this._context.startTransition((transition) => {
+      const result = action(transition);
+      if (result instanceof Promise) {
+        result.catch((error) => {
+          this.interrupt(error);
+        });
       }
+      return result;
     });
   }
 
