@@ -40,11 +40,9 @@ export class BrowserBackend implements Backend {
 
   getUpdatePriority(): TaskPriority {
     const { event } = window;
-    if (event !== undefined) {
-      return isContinuousEvent(event) ? 'user-visible' : 'user-blocking';
-    } else {
-      return 'user-visible';
-    }
+    return event !== undefined && !isContinuousEvent(event)
+      ? 'user-blocking'
+      : 'user-visible';
   }
 
   parseTemplate(
