@@ -16,12 +16,14 @@ import {
   type HookObject,
   HookType,
   type InitialState,
+  type NextState,
   type ReducerReturn,
   type RefObject,
   type RenderContext,
   type RenderFrame,
   type Scope,
   type SessionContext,
+  type StateOptions,
   type StateReturn,
   type TemplateMode,
   type UpdateHandle,
@@ -246,7 +248,7 @@ export class RenderSession implements RenderContext {
     setup: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    this._useEffect(
+    this._useEffectHook(
       setup,
       dependencies,
       HookType.PassiveEffect,
@@ -276,7 +278,7 @@ export class RenderSession implements RenderContext {
     setup: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    this._useEffect(
+    this._useEffectHook(
       setup,
       dependencies,
       HookType.InsertionEffect,
@@ -288,7 +290,7 @@ export class RenderSession implements RenderContext {
     setup: () => Cleanup | void,
     dependencies: readonly unknown[] | null = null,
   ): void {
-    this._useEffect(
+    this._useEffectHook(
       setup,
       dependencies,
       HookType.LayoutEffect,
@@ -331,7 +333,99 @@ export class RenderSession implements RenderContext {
   useReducer<TState, TAction>(
     reducer: (state: TState, action: TAction) => TState,
     initialState: InitialState<TState>,
+    options?: StateOptions,
   ): ReducerReturn<TState, TAction> {
+    const { memoizedProposals, dispatcher } = this._useReducerHook(
+      reducer,
+      initialState,
+      options,
+    );
+    return [
+      dispatcher.pendingState,
+      dispatcher.dispatch,
+      memoizedProposals.length > 0,
+    ];
+  }
+
+  useRef<T>(initialValue: T): RefObject<T> {
+    return this.useMemo(() => Object.seal({ current: initialValue }), []);
+  }
+
+  useState<TState>(
+    initialState: InitialState<TState>,
+    options?: StateOptions,
+  ): StateReturn<TState> {
+    const { memoizedProposals, dispatcher } = this._useReducerHook<
+      TState,
+      NextState<TState>
+    >(
+      (state, action) =>
+        typeof action === 'function'
+          ? (action as (prevState: TState) => TState)(state)
+          : action,
+      initialState,
+      options,
+    );
+    return [
+      dispatcher.pendingState,
+      dispatcher.dispatch,
+      memoizedProposals.length > 0,
+    ];
+  }
+
+  private _createTemplate(
+    strings: readonly string[],
+    values: readonly unknown[],
+    mode: TemplateMode,
+  ): DirectiveSpecifier<readonly unknown[]> {
+    const template = this._context.resolveTemplate(strings, values, mode);
+    return new DirectiveSpecifier(template, values);
+  }
+
+  private _useEffectHook(
+    setup: () => Cleanup | void,
+    dependencies: readonly unknown[] | null,
+    type: Hook.EffectHook['type'],
+    queue: EffectQueue,
+  ): void {
+    let currentHook = this._hooks[this._hookIndex];
+
+    if (currentHook !== undefined) {
+      ensureHookType<Hook.EffectHook>(type, currentHook);
+      const { handler, memoizedDependencies } = currentHook;
+      if (areDependenciesChanged(dependencies, memoizedDependencies)) {
+        handler.epoch++;
+        queue.push(new InvokeEffect(handler), this._scope.level);
+        currentHook = {
+          type,
+          handler,
+          memoizedDependencies: dependencies,
+        };
+      }
+      handler.setup = setup;
+    } else {
+      const handler: EffectHandler = {
+        setup,
+        cleanup: undefined,
+        epoch: 0,
+      };
+      currentHook = {
+        type,
+        handler,
+        memoizedDependencies: dependencies,
+      };
+      queue.push(new InvokeEffect(handler), this._scope.level);
+    }
+
+    this._hooks[this._hookIndex] = currentHook;
+    this._hookIndex++;
+  }
+
+  private _useReducerHook<TState, TAction>(
+    reducer: (state: TState, action: TAction) => TState,
+    initialState: InitialState<TState>,
+    options: StateOptions = {},
+  ): Hook.ReducerHook<TState, TAction> {
     let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
@@ -342,17 +436,19 @@ export class RenderSession implements RenderContext {
 
       const { dispatcher, memoizedState, memoizedProposals } = currentHook;
       const renderLanes = this._frame.lanes;
-      let newState = memoizedState;
+      let newState = options.passthrough
+        ? getInitialState(initialState)
+        : memoizedState;
       let skipLanes = NoLanes;
 
       memoizedProposals.push(...dispatcher.pendingProposals);
 
       for (const proposal of memoizedProposals) {
-        const { action, lanes } = proposal;
+        const { action, lanes, revertLanes } = proposal;
         if ((lanes & renderLanes) === lanes) {
           newState = reducer(newState, action);
           proposal.lanes = NoLanes;
-        } else {
+        } else if ((revertLanes & renderLanes) === revertLanes) {
           skipLanes |= lanes;
         }
       }
@@ -397,14 +493,12 @@ export class RenderSession implements RenderContext {
           pendingProposals.push({
             action,
             lanes: handle.lanes,
+            revertLanes: options.transient ? handle.lanes : NoLanes,
           });
           return handle;
         },
         pendingProposals: [],
-        pendingState:
-          typeof initialState === 'function'
-            ? (initialState as () => TState)()
-            : initialState,
+        pendingState: getInitialState(initialState),
         reducer,
       };
       dispatcher.dispatch = dispatcher.dispatch.bind(dispatcher);
@@ -419,74 +513,7 @@ export class RenderSession implements RenderContext {
     this._hooks[this._hookIndex] = currentHook;
     this._hookIndex++;
 
-    const { dispatcher, memoizedProposals } = currentHook;
-    return [
-      dispatcher.pendingState,
-      dispatcher.dispatch,
-      memoizedProposals.length > 0,
-    ];
-  }
-
-  useRef<T>(initialValue: T): RefObject<T> {
-    return this.useMemo(() => Object.seal({ current: initialValue }), []);
-  }
-
-  useState<TState>(initialState: InitialState<TState>): StateReturn<TState> {
-    return this.useReducer(
-      (state, action) =>
-        typeof action === 'function'
-          ? (action as (prevState: TState) => TState)(state)
-          : action,
-      initialState,
-    );
-  }
-
-  private _createTemplate(
-    strings: readonly string[],
-    values: readonly unknown[],
-    mode: TemplateMode,
-  ): DirectiveSpecifier<readonly unknown[]> {
-    const template = this._context.resolveTemplate(strings, values, mode);
-    return new DirectiveSpecifier(template, values);
-  }
-
-  private _useEffect(
-    setup: () => Cleanup | void,
-    dependencies: readonly unknown[] | null,
-    type: Hook.EffectHook['type'],
-    queue: EffectQueue,
-  ): void {
-    let currentHook = this._hooks[this._hookIndex];
-
-    if (currentHook !== undefined) {
-      ensureHookType<Hook.EffectHook>(type, currentHook);
-      const { handler, memoizedDependencies } = currentHook;
-      if (areDependenciesChanged(dependencies, memoizedDependencies)) {
-        handler.epoch++;
-        queue.push(new InvokeEffect(handler), this._scope.level);
-        currentHook = {
-          type,
-          handler,
-          memoizedDependencies: dependencies,
-        };
-      }
-      handler.setup = setup;
-    } else {
-      const handler: EffectHandler = {
-        setup,
-        cleanup: undefined,
-        epoch: 0,
-      };
-      currentHook = {
-        type,
-        handler,
-        memoizedDependencies: dependencies,
-      };
-      queue.push(new InvokeEffect(handler), this._scope.level);
-    }
-
-    this._hooks[this._hookIndex] = currentHook;
-    this._hookIndex++;
+    return currentHook;
   }
 }
 
@@ -519,6 +546,12 @@ function ensureHookType<TExpectedHook extends Hook>(
       `Unexpected hook type. Expected "${expectedType}" but got "${hook.type}".`,
     );
   }
+}
+
+function getInitialState<TState>(initialState: InitialState<TState>): TState {
+  return typeof initialState === 'function'
+    ? (initialState as () => TState)()
+    : initialState;
 }
 
 function isDetachedScope(scope: Scope): boolean {

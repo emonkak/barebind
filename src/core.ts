@@ -22,6 +22,7 @@ export interface ActionDispatcher<TState, TAction> {
 export interface ActionProposal<TAction> {
   action: TAction;
   lanes: Lanes;
+  revertLanes: Lanes;
 }
 
 export interface Backend {
@@ -133,6 +134,7 @@ export interface DirectiveType<T> {
 
 export interface DispatchOptions<TState> extends UpdateOptions {
   areStatesEqual?: (nextState: TState, prevState: TState) => boolean;
+  transient?: boolean;
 }
 
 export interface Effect {
@@ -542,6 +544,10 @@ export interface Slot<T> extends ReversibleEffect, SessionLifecycle {
   readonly value: UnwrapBindable<T>;
   readonly part: Part;
   reconcile(source: T, session: UpdateSession): boolean;
+}
+
+export interface StateOptions {
+  passthrough?: boolean;
 }
 
 export type StateReturn<TState> = [
