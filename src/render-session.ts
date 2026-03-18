@@ -375,30 +375,30 @@ export class RenderSession implements RenderContext {
         context: this,
         dispatch(action, options = {}) {
           const { context, pendingProposals, pendingState, reducer } = this;
-          const areStatesEqual = options.areStatesEqual ?? Object.is;
-          const nextState = reducer(pendingState, action);
 
-          if (
-            pendingProposals.length === 0 &&
-            areStatesEqual(nextState, pendingState)
-          ) {
-            const skipped = Promise.resolve<UpdateResult>({
-              status: 'skipped',
-            });
-            return {
-              id: -1,
-              lanes: NoLanes,
-              scheduled: skipped,
-              finished: skipped,
-            };
-          } else {
-            const handle = context.forceUpdate(options);
-            pendingProposals.push({
-              action,
-              lanes: handle.lanes,
-            });
-            return handle;
+          if (pendingProposals.length === 0) {
+            const areStatesEqual = options.areStatesEqual ?? Object.is;
+            const newState = reducer(pendingState, action);
+
+            if (areStatesEqual(newState, pendingState)) {
+              const skipped = Promise.resolve<UpdateResult>({
+                status: 'skipped',
+              });
+              return {
+                id: -1,
+                lanes: NoLanes,
+                scheduled: skipped,
+                finished: skipped,
+              };
+            }
           }
+
+          const handle = context.forceUpdate(options);
+          pendingProposals.push({
+            action,
+            lanes: handle.lanes,
+          });
+          return handle;
         },
         pendingProposals: [],
         pendingState:
