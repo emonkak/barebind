@@ -241,9 +241,10 @@ export class Runtime implements SessionContext {
 
     // Clone options for mutations.
     options = { ...options };
-    options.priority ??= options.transition
-      ? 'background'
-      : this._backend.getUpdatePriority();
+    options.priority ??=
+      options.transition !== undefined
+        ? 'background'
+        : this._backend.getUpdatePriority();
 
     const id = this._updateCount++;
     const lanes = this._backend.getDefaultLanes() | getSchedulingLanes(options);
