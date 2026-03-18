@@ -20,12 +20,17 @@ export function DeferredValue<T>(
     );
 
     context.useEffect(() => {
+      const controller = new AbortController();
       context.startTransition((transition) => {
         setDeferredValue(() => value, {
           ...dispatchOptions,
+          signal: controller.signal,
           transition,
         });
       });
+      return () => {
+        controller.abort();
+      };
     }, [value]);
 
     return deferredValue;
