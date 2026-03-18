@@ -1,18 +1,18 @@
 import type {
   Cleanup,
+  DispatchOptions,
   HookFunction,
   InitialState,
   Ref,
-  UpdateOptions,
 } from '../core.js';
 
-export interface DeferredValueOptions<T> extends UpdateOptions {
+export interface DeferredValueOptions<T> extends DispatchOptions<T> {
   initialValue?: InitialState<T>;
 }
 
 export function DeferredValue<T>(
   value: T,
-  { initialValue, ...updateOptions }: DeferredValueOptions<T> = {},
+  { initialValue, ...dispatchOptions }: DeferredValueOptions<T> = {},
 ): HookFunction<T> {
   return (context) => {
     const [deferredValue, setDeferredValue] = context.useState(
@@ -22,7 +22,7 @@ export function DeferredValue<T>(
     context.useEffect(() => {
       context.startTransition((transition) => {
         setDeferredValue(() => value, {
-          ...updateOptions,
+          ...dispatchOptions,
           transition,
         });
       });
