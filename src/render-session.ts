@@ -450,6 +450,7 @@ export class RenderSession implements RenderContext {
           proposal.lanes = NoLanes;
         } else if ((revertLanes & renderLanes) === revertLanes) {
           skipLanes |= lanes;
+          proposal.revertLanes = NoLanes;
         }
       }
 
