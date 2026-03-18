@@ -43,9 +43,7 @@ export class BrowserBackend implements Backend {
     if (event !== undefined) {
       return isContinuousEvent(event) ? 'user-visible' : 'user-blocking';
     } else {
-      return document.readyState === 'complete'
-        ? 'background'
-        : 'user-blocking';
+      return 'user-visible';
     }
   }
 

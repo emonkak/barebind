@@ -45,7 +45,7 @@ export class ServerBackend implements Backend {
   }
 
   getUpdatePriority(): TaskPriority {
-    return 'user-blocking';
+    return 'user-visible';
   }
 
   parseTemplate(

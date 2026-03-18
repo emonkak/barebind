@@ -92,7 +92,7 @@ describe('BrowserBackend', () => {
 
     it.for(
       CONTINUOUS_EVENT_TYPES,
-    )('returns "user-visible" if the current event is "%s"', (eventType) => {
+    )('returns "user-visible" when the current event is "%s"', (eventType) => {
       const backend = new BrowserBackend();
       const getEventSpy = vi
         .spyOn(window, 'event', 'get')
@@ -102,7 +102,7 @@ describe('BrowserBackend', () => {
       expect(getEventSpy).toHaveBeenCalled();
     });
 
-    it('returns "user-blocking" if the current event is not continuous', () => {
+    it('returns "user-blocking" when the current event is not continuous', () => {
       const backend = new BrowserBackend();
       const getEventSpy = vi
         .spyOn(window, 'event', 'get')
@@ -112,34 +112,15 @@ describe('BrowserBackend', () => {
       expect(getEventSpy).toHaveBeenCalled();
     });
 
-    it('returns "background" if the document loading state is "complete"', () => {
+    it('otherwise returns "user-visible"', () => {
       const backend = new BrowserBackend();
 
       const getEventSpy = vi
         .spyOn(window, 'event', 'get')
         .mockReturnValue(undefined);
-      const getDocumentReadyState = vi
-        .spyOn(document, 'readyState', 'get')
-        .mockReturnValue('complete');
 
-      expect(backend.getUpdatePriority()).toBe('background');
+      expect(backend.getUpdatePriority()).toBe('user-visible');
       expect(getEventSpy).toHaveBeenCalledOnce();
-      expect(getDocumentReadyState).toHaveBeenCalledOnce();
-    });
-
-    it('otherwise returns "user-blocking"', () => {
-      const backend = new BrowserBackend();
-
-      const getEventSpy = vi
-        .spyOn(window, 'event', 'get')
-        .mockReturnValue(undefined);
-      const getDocumentReadyState = vi
-        .spyOn(document, 'readyState', 'get')
-        .mockReturnValue('interactive');
-
-      expect(backend.getUpdatePriority()).toBe('user-blocking');
-      expect(getEventSpy).toHaveBeenCalledOnce();
-      expect(getDocumentReadyState).toHaveBeenCalledOnce();
     });
   });
 

@@ -64,9 +64,9 @@ describe('ServerBackend', () => {
   });
 
   describe('getUpdatePriority()', () => {
-    it('always returns "user-blocking"', () => {
+    it('returns "user-visible"', () => {
       const backend = new ServerBackend(document);
-      expect(backend.getUpdatePriority()).toBe('user-blocking');
+      expect(backend.getUpdatePriority()).toBe('user-visible');
     });
   });
 
