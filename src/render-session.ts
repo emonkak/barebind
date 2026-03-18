@@ -30,7 +30,7 @@ import {
   type Usable,
 } from './core.js';
 import { DirectiveSpecifier } from './directive.js';
-import { handleError, InterruptError } from './error.js';
+import { AbortError, handleError, InterruptError } from './error.js';
 import { getSchedulingLanes, NoLanes } from './lane.js';
 
 const DETACHED_HOOKS = Object.freeze([] as Hook[]) as Hook[];
@@ -165,16 +165,21 @@ export class RenderSession implements RenderContext {
     return this._createTemplate(strings, values, 'html');
   }
 
-  interrupt(error: unknown): void {
+  interrupt(error: unknown): never {
     try {
       handleError(error, this._coroutine.scope);
     } catch (error) {
-      throw new InterruptError(
+      throw new AbortError(
         this._coroutine,
-        'An error was thrown from the component.',
+        'No error boundary captured the error.',
         { cause: error },
       );
     }
+    throw new InterruptError(
+      this._coroutine,
+      'The error was captured by an error boundary.',
+      { cause: error },
+    );
   }
 
   math(

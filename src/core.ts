@@ -400,7 +400,7 @@ export interface RenderContext {
     strings: readonly string[],
     ...values: readonly unknown[]
   ): Bindable<readonly unknown[]>;
-  interrupt(error: unknown): void;
+  interrupt(error: unknown): never;
   math(
     strings: readonly string[],
     ...values: readonly unknown[]

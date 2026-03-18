@@ -147,8 +147,10 @@ test('throws uncaught errors during rendering as AbortError', async () => {
   }
 });
 
-test('treates errors thrown by interrupt() as InterruptError', async () => {
-  const source = App({ children: FailOnEffect({}) });
+test('treates errors thrown by interrupt() as InterruptError when captured', async () => {
+  const source = App({
+    children: ErrorBoundary({ children: FailOnEffect({}) }),
+  });
   const container = document.createElement('div');
   const root = Root.create(
     source,
@@ -162,4 +164,18 @@ test('treates errors thrown by interrupt() as InterruptError', async () => {
       message: 'fail on effect',
     }),
   });
+});
+
+test('treates errors thrown by interrupt() as AbortError when not captured', async () => {
+  const source = App({
+    children: FailOnEffect({}),
+  });
+  const container = document.createElement('div');
+  const root = Root.create(
+    source,
+    container,
+    new Runtime(new BrowserBackend()),
+  );
+
+  await expect(root.mount().finished).rejects.toThrow(AbortError);
 });
