@@ -69,7 +69,7 @@ export class MockBackend implements Backend {
   ): Promise<T> {
     let promise: Promise<T>;
 
-    const runCallbackIfNotCancel = () => {
+    const runCallbackIfNotCanceled = () => {
       options.signal?.throwIfAborted();
       return callback();
     };
@@ -77,16 +77,16 @@ export class MockBackend implements Backend {
     switch (options?.priority) {
       case 'user-visible':
         promise = new Promise((resolve) => setTimeout(resolve)).then(
-          runCallbackIfNotCancel,
+          runCallbackIfNotCanceled,
         );
         break;
       case 'background':
         promise = new Promise((resolve) => setTimeout(resolve, 1)).then(
-          runCallbackIfNotCancel,
+          runCallbackIfNotCanceled,
         );
         break;
       default:
-        promise = Promise.resolve().then(runCallbackIfNotCancel);
+        promise = Promise.resolve().then(runCallbackIfNotCanceled);
         break;
     }
     return options.signal !== undefined
