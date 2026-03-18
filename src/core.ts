@@ -382,7 +382,7 @@ export type ReducerReturn<TState, TAction> = [
     action: TAction,
     options?: DispatchOptions<TState>,
   ) => UpdateHandle,
-  isPending: boolean,
+  isStale: boolean,
 ];
 
 export type Ref<T> = RefCallback<T> | RefObject<T | null> | null | undefined;
@@ -552,7 +552,7 @@ export type StateReturn<TState> = [
     nextState: NextState<TState>,
     options?: DispatchOptions<TState>,
   ) => UpdateHandle,
-  isPending: boolean,
+  isStale: boolean,
 ];
 
 export interface Template<TValues extends readonly unknown[]>

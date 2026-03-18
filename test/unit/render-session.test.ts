@@ -719,13 +719,13 @@ describe('RenderSession', () => {
 
     it('should not return the pending state', async () => {
       const renderer = new TestRenderer((_props, session) => {
-        const [count, setCount, isPending] = session.useState(() => 0);
+        const [count, setCount, isStale] = session.useState(() => 0);
 
         session.useEffect(() => {
           setCount(1, { priority: 'background' });
         }, []);
 
-        return [count, isPending];
+        return [count, isStale];
       });
 
       SESSION1: {
