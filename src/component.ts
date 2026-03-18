@@ -147,6 +147,7 @@ export class ComponentBinding<TProps, TResult>
     const { frame, scope } = session;
     frame.coroutines.push(this);
     this._scope = scope;
+    this._pendingHooks = this._memoizedHooks;
   }
 
   detach(session: UpdateSession): void {
