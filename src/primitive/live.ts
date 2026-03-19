@@ -1,7 +1,7 @@
 import {
   type DirectiveContext,
+  PART_TYPE_LIVE,
   type Part,
-  PartType,
   type Primitive,
 } from '../core.js';
 import { ensurePartType } from '../directive.js';
@@ -14,7 +14,7 @@ export const LivePrimitive: Primitive<any> = {
     part: Part,
     _context: DirectiveContext,
   ): LiveBinding<unknown> {
-    ensurePartType<Part.LivePart>(PartType.Live, this, value, part);
+    ensurePartType<Part.LivePart>(PART_TYPE_LIVE, this, value, part);
     return new LiveBinding(value, part);
   },
 };

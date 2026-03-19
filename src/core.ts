@@ -6,7 +6,41 @@ export const $directive: unique symbol = Symbol('$directive');
 
 export const $hook: unique symbol = Symbol('$hook');
 
+export const BOUNDARY_TYPE_ERROR = 0;
+export const BOUNDARY_TYPE_HYDRATION = 1;
+export const BOUNDARY_TYPE_SHARED_CONTEXT = 2;
+
 export const DETACHED_SCOPE: Scope = Object.freeze(createScope());
+
+export const HOOK_TYPE_FINALIZER = 0;
+export const HOOK_TYPE_PASSIVE_EFFECT = 1;
+export const HOOK_TYPE_LAYOUT_EFFECT = 2;
+export const HOOK_TYPE_INSERTION_EFFECT = 3;
+export const HOOK_TYPE_ID = 4;
+export const HOOK_TYPE_MEMO = 5;
+export const HOOK_TYPE_REDUCER = 6;
+
+export const PART_TYPE_NAMES = [
+  'Attribute',
+  'ChildNode',
+  'Element',
+  'Event',
+  'Live',
+  'Property',
+  'Text',
+] as const;
+
+export const PART_TYPE_ATTRIBUTE = 0;
+export const PART_TYPE_CHILD_NODE = 1;
+export const PART_TYPE_ELEMENT = 2;
+export const PART_TYPE_EVENT = 3;
+export const PART_TYPE_LIVE = 4;
+export const PART_TYPE_PROPERTY = 5;
+export const PART_TYPE_TEXT = 6;
+
+export const SLOT_STATUS_IDLE = 0;
+export const SLOT_STATUS_ATTACHED = 1;
+export const SLOT_STATUS_DETACHED = 2;
 
 export interface ActionDispatcher<TState, TAction> {
   context: RenderContext;
@@ -63,30 +97,24 @@ export type Boundary =
 
 export namespace Boundary {
   export interface ErrorBoundary {
-    type: typeof BoundaryType.Error;
+    type: typeof BOUNDARY_TYPE_ERROR;
     next: Boundary | null;
     handler: ErrorHandler;
   }
 
   export interface HydrationBoundary {
-    type: typeof BoundaryType.Hydration;
+    type: typeof BOUNDARY_TYPE_HYDRATION;
     next: Boundary | null;
     targetTree: TreeWalker;
   }
 
   export interface SharedContextBoundary {
-    type: typeof BoundaryType.SharedContext;
+    type: typeof BOUNDARY_TYPE_SHARED_CONTEXT;
     next: Boundary | null;
     key: unknown;
     value: unknown;
   }
 }
-
-export const BoundaryType = {
-  Error: 0,
-  Hydration: 1,
-  SharedContext: 2,
-} as const;
 
 export type Cleanup = () => void;
 
@@ -229,31 +257,31 @@ export type Hook =
 
 export namespace Hook {
   export interface FinalizerHook {
-    type: typeof HookType.Finalizer;
+    type: typeof HOOK_TYPE_FINALIZER;
   }
 
   export interface EffectHook {
     type:
-      | typeof HookType.PassiveEffect
-      | typeof HookType.LayoutEffect
-      | typeof HookType.InsertionEffect;
+      | typeof HOOK_TYPE_PASSIVE_EFFECT
+      | typeof HOOK_TYPE_LAYOUT_EFFECT
+      | typeof HOOK_TYPE_INSERTION_EFFECT;
     handler: EffectHandler;
     memoizedDependencies: readonly unknown[] | null;
   }
 
   export interface IdHook {
-    type: typeof HookType.Id;
+    type: typeof HOOK_TYPE_ID;
     id: string;
   }
 
   export interface MemoHook<TResult> {
-    type: typeof HookType.Memo;
+    type: typeof HOOK_TYPE_MEMO;
     memoizedResult: TResult;
     memoizedDependencies: readonly unknown[] | null;
   }
 
   export interface ReducerHook<TState, TAction> {
-    type: typeof HookType.Reducer;
+    type: typeof HOOK_TYPE_REDUCER;
     dispatcher: ActionDispatcher<TState, TAction>;
     memoizedState: TState;
     memoizedProposals: ActionProposal<TAction>[];
@@ -274,18 +302,6 @@ export type HookFunction<T> = (context: RenderContext) => T;
 export interface HookObject<T> {
   [$hook](context: RenderContext): T;
 }
-
-export const HookType = {
-  Finalizer: 0,
-  PassiveEffect: 1,
-  LayoutEffect: 2,
-  InsertionEffect: 3,
-  Id: 4,
-  Memo: 5,
-  Reducer: 6,
-} as const;
-
-export type HookType = (typeof HookType)[keyof typeof HookType];
 
 export type InitialState<T> = (T extends Function ? never : T) | (() => T);
 
@@ -315,62 +331,50 @@ export type Part =
 
 export namespace Part {
   export interface AttributePart {
-    type: typeof PartType.Attribute;
+    type: typeof PART_TYPE_ATTRIBUTE;
     node: Element;
     name: string;
   }
 
   export interface ChildNodePart {
-    type: typeof PartType.ChildNode;
+    type: typeof PART_TYPE_CHILD_NODE;
     node: Comment;
     anchorNode: ChildNode | null;
     namespaceURI: string | null;
   }
 
   export interface ElementPart {
-    type: typeof PartType.Element;
+    type: typeof PART_TYPE_ELEMENT;
     node: Element;
   }
 
   export interface EventPart {
-    type: typeof PartType.Event;
+    type: typeof PART_TYPE_EVENT;
     node: Element;
     name: string;
   }
 
   export interface LivePart {
-    type: typeof PartType.Live;
+    type: typeof PART_TYPE_LIVE;
     node: Element;
     name: string;
     defaultValue: unknown;
   }
 
   export interface PropertyPart {
-    type: typeof PartType.Property;
+    type: typeof PART_TYPE_PROPERTY;
     node: Element;
     name: string;
     defaultValue: unknown;
   }
 
   export interface TextPart {
-    type: typeof PartType.Text;
+    type: typeof PART_TYPE_TEXT;
     node: Text;
     precedingText: string;
     followingText: string;
   }
 }
-
-export const PartType = {
-  Attribute: 0,
-  ChildNode: 1,
-  Element: 2,
-  Event: 3,
-  Live: 4,
-  Property: 5,
-  Text: 6,
-} as const;
-
-export type PartType = (typeof PartType)[keyof typeof PartType];
 
 export interface Primitive<T> extends DirectiveType<T> {
   ensureValue?(value: unknown, part: Part): asserts value is T;
@@ -539,8 +543,14 @@ export interface Slot<T> extends ReversibleEffect, SessionLifecycle {
   readonly type: DirectiveType<UnwrapBindable<T>>;
   readonly value: UnwrapBindable<T>;
   readonly part: Part;
+  readonly status: SlotStatus;
   reconcile(source: T, session: UpdateSession): boolean;
 }
+
+export type SlotStatus =
+  | typeof SLOT_STATUS_IDLE
+  | typeof SLOT_STATUS_ATTACHED
+  | typeof SLOT_STATUS_DETACHED;
 
 export interface StateOptions {
   passthrough?: boolean;
@@ -648,7 +658,7 @@ export function createUpdateSession(
  * @internal
  */
 export function getStartNode(part: Part): ChildNode {
-  return part.type === PartType.ChildNode
+  return part.type === PART_TYPE_CHILD_NODE
     ? (part.anchorNode ?? part.node)
     : part.node;
 }

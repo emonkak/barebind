@@ -3,8 +3,9 @@ import {
   type DirectiveContext,
   type Effect,
   getStartNode,
+  PART_TYPE_CHILD_NODE,
+  PART_TYPE_TEXT,
   type Part,
-  PartType,
   type Template,
   type TemplateResult,
   type UpdateSession,
@@ -43,7 +44,12 @@ export abstract class AbstractTemplate<TValues extends readonly unknown[]>
     part: Part,
     _context: DirectiveContext,
   ): Binding<TValues> {
-    ensurePartType<Part.ChildNodePart>(PartType.ChildNode, this, values, part);
+    ensurePartType<Part.ChildNodePart>(
+      PART_TYPE_CHILD_NODE,
+      this,
+      values,
+      part,
+    );
     return new TemplateBinding(this, values, part);
   }
 }
@@ -154,8 +160,8 @@ export class TemplateBinding<TValues extends readonly unknown[]>
 
       for (const slot of slots) {
         if (
-          (slot.part.type === PartType.ChildNode ||
-            slot.part.type === PartType.Text) &&
+          (slot.part.type === PART_TYPE_CHILD_NODE ||
+            slot.part.type === PART_TYPE_TEXT) &&
           children.includes(slot.part.node)
         ) {
           // This binding is mounted as a child of the root, so we must rollback it.

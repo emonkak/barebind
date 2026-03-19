@@ -1,6 +1,19 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ServerBackend } from '@/backend/server.js';
-import { type Effect, EffectQueue, PartType } from '@/core.js';
+import {
+  type Effect,
+  EffectQueue,
+  type Layout,
+  PART_TYPE_ATTRIBUTE,
+  PART_TYPE_CHILD_NODE,
+  PART_TYPE_ELEMENT,
+  PART_TYPE_EVENT,
+  PART_TYPE_LIVE,
+  PART_TYPE_PROPERTY,
+  PART_TYPE_TEXT,
+  type Part,
+  type Primitive,
+} from '@/core.js';
 import { SyncLane } from '@/lane.js';
 import { LooseLayout } from '@/layout/loose.js';
 import { StrictLayout } from '@/layout/strict.js';
@@ -88,13 +101,13 @@ describe('ServerBackend', () => {
       );
       expect((template as TaggedTemplate)['_holes']).toStrictEqual([
         {
-          type: PartType.Text,
+          type: PART_TYPE_TEXT,
           index: 1,
           precedingText: '',
           followingText: '',
         },
         {
-          type: PartType.Text,
+          type: PART_TYPE_TEXT,
           index: 2,
           precedingText: ', ',
           followingText: '!',
@@ -138,11 +151,11 @@ describe('ServerBackend', () => {
   });
 
   describe('resolvePrimitive()', () => {
-    it.each([
+    it.each<[unknown, Part, Primitive<unknown>]>([
       [
         'foo',
         {
-          type: PartType.Attribute,
+          type: PART_TYPE_ATTRIBUTE,
           node: document.createElement('div'),
           name: 'class',
         },
@@ -151,7 +164,7 @@ describe('ServerBackend', () => {
       [
         null,
         {
-          type: PartType.ChildNode,
+          type: PART_TYPE_CHILD_NODE,
           node: document.createComment(''),
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
@@ -161,7 +174,7 @@ describe('ServerBackend', () => {
       [
         undefined,
         {
-          type: PartType.ChildNode,
+          type: PART_TYPE_CHILD_NODE,
           node: document.createComment(''),
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
@@ -171,7 +184,7 @@ describe('ServerBackend', () => {
       [
         'foo',
         {
-          type: PartType.ChildNode,
+          type: PART_TYPE_CHILD_NODE,
           node: document.createComment(''),
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
@@ -181,7 +194,7 @@ describe('ServerBackend', () => {
       [
         {},
         {
-          type: PartType.Element,
+          type: PART_TYPE_ELEMENT,
           node: document.createElement('div'),
         },
         SpreadPrimitive,
@@ -189,7 +202,7 @@ describe('ServerBackend', () => {
       [
         () => {},
         {
-          type: PartType.Event,
+          type: PART_TYPE_EVENT,
           node: document.createElement('div'),
           name: 'click',
         },
@@ -198,7 +211,7 @@ describe('ServerBackend', () => {
       [
         'foo',
         {
-          type: PartType.Live,
+          type: PART_TYPE_LIVE,
           node: document.createElement('textarea'),
           name: 'value',
           defaultValue: '',
@@ -208,7 +221,7 @@ describe('ServerBackend', () => {
       [
         'foo',
         {
-          type: PartType.Property,
+          type: PART_TYPE_PROPERTY,
           node: document.createElement('textarea'),
           name: 'value',
           defaultValue: '',
@@ -218,26 +231,26 @@ describe('ServerBackend', () => {
       [
         'foo',
         {
-          type: PartType.Text,
+          type: PART_TYPE_TEXT,
           node: document.createTextNode(''),
           precedingText: '',
           followingText: '',
         },
         TextPrimitive,
       ],
-    ] as const)('resolves the Primitive from an arbitrary part', (value, part, expectedPrimitive) => {
+    ])('resolves primitives from any parts', (source, part, expectedPrimitive) => {
       const backend = new ServerBackend(document);
 
-      expect(backend.resolvePrimitive(value, part)).toStrictEqual(
+      expect(backend.resolvePrimitive(source, part)).toStrictEqual(
         expectedPrimitive,
       );
     });
 
-    it.each([
+    it.each<[unknown, Part.AttributePart, Primitive<unknown>]>([
       [
         [],
         {
-          type: PartType.Attribute,
+          type: PART_TYPE_ATTRIBUTE,
           node: document.createElement('div'),
           name: ':class',
         },
@@ -246,7 +259,7 @@ describe('ServerBackend', () => {
       [
         'foo',
         {
-          type: PartType.Attribute,
+          type: PART_TYPE_ATTRIBUTE,
           node: document.createElement('div'),
           name: ':ref',
         },
@@ -255,7 +268,7 @@ describe('ServerBackend', () => {
       [
         {},
         {
-          type: PartType.Attribute,
+          type: PART_TYPE_ATTRIBUTE,
           node: document.createElement('div'),
           name: ':style',
         },
@@ -264,31 +277,28 @@ describe('ServerBackend', () => {
       [
         null,
         {
-          type: PartType.Attribute,
+          type: PART_TYPE_ATTRIBUTE,
           node: document.createElement('div'),
           name: ':',
         },
         BlackholePrimitive,
       ],
-    ] as const)('resolves the Primitive from special attribute parts', (value, part, expectedPrimitive) => {
+    ])('resolves primitives from attribute parts starting with ":"', (source, part, expectedPrimitive) => {
       const backend = new ServerBackend(document);
 
-      expect(backend.resolvePrimitive(value, part)).toBe(expectedPrimitive);
+      expect(backend.resolvePrimitive(source, part)).toBe(expectedPrimitive);
       expect(
-        backend.resolvePrimitive(value, {
-          ...part,
-          name: part.name.toUpperCase(),
-        }),
+        backend.resolvePrimitive(source, { ...part, name: part.name }),
       ).toBe(expectedPrimitive);
     });
   });
 
   describe('resolveLayout()', () => {
-    it.each([
+    it.each<[unknown, Part, Layout]>([
       [
         'foo',
         {
-          type: PartType.Attribute,
+          type: PART_TYPE_ATTRIBUTE,
           node: document.createElement('div'),
           name: 'class',
         },
@@ -297,7 +307,7 @@ describe('ServerBackend', () => {
       [
         'foo',
         {
-          type: PartType.ChildNode,
+          type: PART_TYPE_CHILD_NODE,
           node: document.createComment(''),
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
@@ -307,7 +317,7 @@ describe('ServerBackend', () => {
       [
         'foo',
         {
-          type: PartType.Element,
+          type: PART_TYPE_ELEMENT,
           node: document.createElement('div'),
         },
         StrictLayout,
@@ -315,7 +325,7 @@ describe('ServerBackend', () => {
       [
         'foo',
         {
-          type: PartType.Event,
+          type: PART_TYPE_EVENT,
           node: document.createElement('div'),
           name: 'click',
         },
@@ -324,7 +334,7 @@ describe('ServerBackend', () => {
       [
         'foo',
         {
-          type: PartType.Live,
+          type: PART_TYPE_LIVE,
           node: document.createElement('textarea'),
           name: 'value',
           defaultValue: '',
@@ -334,7 +344,7 @@ describe('ServerBackend', () => {
       [
         'foo',
         {
-          type: PartType.Property,
+          type: PART_TYPE_PROPERTY,
           node: document.createElement('textarea'),
           name: 'value',
           defaultValue: '',
@@ -344,17 +354,17 @@ describe('ServerBackend', () => {
       [
         'foo',
         {
-          type: PartType.Text,
+          type: PART_TYPE_TEXT,
           node: document.createTextNode(''),
           precedingText: '',
           followingText: '',
         },
         StrictLayout,
       ],
-    ] as const)('resolves the Layout from an arbitrary part', (value, part, expectedLayout) => {
+    ])('resolves the Layout from an arbitrary part', (source, part, expectedLayout) => {
       const backend = new ServerBackend(document);
 
-      expect(backend.resolveLayout(value, part)).toBe(expectedLayout);
+      expect(backend.resolveLayout(source, part)).toBe(expectedLayout);
     });
   });
 

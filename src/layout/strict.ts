@@ -7,13 +7,18 @@ import type {
   UnwrapBindable,
   UpdateSession,
 } from '../core.js';
+import {
+  SLOT_STATUS_ATTACHED,
+  SLOT_STATUS_DETACHED,
+  SLOT_STATUS_IDLE,
+  type SlotStatus,
+} from '../core.js';
 import { debugPart, undebugPart } from '../debug/part.js';
 import {
   areDirectiveTypesEqual,
   DirectiveError,
   LayoutModifier,
 } from '../directive.js';
-import { SlotStatus } from './layout.js';
 
 export function Strict<T>(source: T): LayoutModifier<T> {
   return new LayoutModifier(source, StrictLayout);
@@ -32,7 +37,7 @@ export const StrictLayout: Layout = {
 export class StrictSlot<T> implements Slot<T> {
   private readonly _binding: Binding<UnwrapBindable<T>>;
 
-  private _status: SlotStatus = SlotStatus.Idle;
+  private _status: SlotStatus = SLOT_STATUS_IDLE;
 
   constructor(binding: Binding<UnwrapBindable<T>>) {
     this._binding = binding;
@@ -50,14 +55,18 @@ export class StrictSlot<T> implements Slot<T> {
     return this._binding.part;
   }
 
+  get status(): SlotStatus {
+    return this._status;
+  }
+
   attach(session: UpdateSession): void {
     this._binding.attach(session);
-    this._status = SlotStatus.Attached;
+    this._status = SLOT_STATUS_ATTACHED;
   }
 
   detach(session: UpdateSession): void {
     this._binding.detach(session);
-    this._status = SlotStatus.Detached;
+    this._status = SLOT_STATUS_DETACHED;
   }
 
   reconcile(source: T, session: UpdateSession): boolean {
@@ -76,17 +85,20 @@ export class StrictSlot<T> implements Slot<T> {
       );
     }
 
-    if (this._status !== SlotStatus.Idle || this._binding.shouldUpdate(value)) {
+    const dirty =
+      this._status !== SLOT_STATUS_IDLE || this._binding.shouldUpdate(value);
+
+    if (dirty) {
       this._binding.value = value;
       this._binding.attach(session);
-      this._status = SlotStatus.Attached;
+      this._status = SLOT_STATUS_ATTACHED;
     }
 
-    return this._status === SlotStatus.Attached;
+    return dirty;
   }
 
   commit(): void {
-    if (this._status !== SlotStatus.Attached) {
+    if (this._status !== SLOT_STATUS_ATTACHED) {
       return;
     }
 
@@ -96,11 +108,11 @@ export class StrictSlot<T> implements Slot<T> {
 
     this._binding.commit();
 
-    this._status = SlotStatus.Idle;
+    this._status = SLOT_STATUS_IDLE;
   }
 
   rollback(): void {
-    if (this._status !== SlotStatus.Detached) {
+    if (this._status !== SLOT_STATUS_DETACHED) {
       return;
     }
 
@@ -110,6 +122,6 @@ export class StrictSlot<T> implements Slot<T> {
       undebugPart(this._binding.part, this._binding.type);
     }
 
-    this._status = SlotStatus.Idle;
+    this._status = SLOT_STATUS_IDLE;
   }
 }

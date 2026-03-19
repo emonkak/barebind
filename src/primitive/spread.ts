@@ -1,7 +1,11 @@
 import {
   type DirectiveContext,
+  PART_TYPE_ATTRIBUTE,
+  PART_TYPE_ELEMENT,
+  PART_TYPE_EVENT,
+  PART_TYPE_LIVE,
+  PART_TYPE_PROPERTY,
   type Part,
-  PartType,
   type Primitive,
   type Slot,
   type UpdateSession,
@@ -28,7 +32,7 @@ export const SpreadPrimitive: Primitive<SpreadProps> = {
     part: Part,
     _context: DirectiveContext,
   ): SpreadBinding {
-    ensurePartType<Part.ElementPart>(PartType.Element, this, value, part);
+    ensurePartType<Part.ElementPart>(PART_TYPE_ELEMENT, this, value, part);
     return new SpreadBinding(value, part);
   },
 };
@@ -123,7 +127,7 @@ function resolveNamedPart(key: string, node: Element): Part {
     case '$': {
       const name = key.slice(1);
       return {
-        type: PartType.Live,
+        type: PART_TYPE_LIVE,
         node,
         name,
         defaultValue: node[name as keyof Element],
@@ -132,7 +136,7 @@ function resolveNamedPart(key: string, node: Element): Part {
     case '.': {
       const name = key.slice(1);
       return {
-        type: PartType.Property,
+        type: PART_TYPE_PROPERTY,
         node,
         name,
         defaultValue: node[name as keyof Element],
@@ -140,13 +144,13 @@ function resolveNamedPart(key: string, node: Element): Part {
     }
     case '@':
       return {
-        type: PartType.Event,
+        type: PART_TYPE_EVENT,
         node,
         name: key.slice(1),
       };
     default:
       return {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node,
         name: key,
       };

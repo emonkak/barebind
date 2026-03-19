@@ -1,7 +1,7 @@
 import {
   type DirectiveContext,
+  PART_TYPE_TEXT,
   type Part,
-  PartType,
   type Primitive,
 } from '../core.js';
 import { ensurePartType } from '../directive.js';
@@ -14,7 +14,7 @@ export const TextPrimitive: Primitive<any> = {
     part: Part,
     _context: DirectiveContext,
   ): TextBinding<unknown> {
-    ensurePartType<Part.TextPart>(PartType.Text, this, value, part);
+    ensurePartType<Part.TextPart>(PART_TYPE_TEXT, this, value, part);
     return new TextBinding(value, part);
   },
 };

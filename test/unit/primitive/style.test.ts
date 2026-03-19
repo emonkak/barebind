@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-
-import { PartType } from '@/core.js';
+import { PART_TYPE_ATTRIBUTE, PART_TYPE_ELEMENT } from '@/core.js';
 import { StyleBinding, StylePrimitive } from '@/primitive/style.js';
 import { createRuntime } from '../../mocks.js';
 import { createElement } from '../../test-helpers.js';
@@ -10,10 +9,10 @@ describe('StylePrimitive', () => {
   describe('ensureValue()', () => {
     it('asserts the value is a object', () => {
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':style',
-      };
+      } as const;
 
       expect(() => {
         StylePrimitive.ensureValue!.call(
@@ -30,10 +29,10 @@ describe('StylePrimitive', () => {
       'foo',
     ])('throws an error if the value is not object', (value) => {
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':style',
-      };
+      } as const;
 
       expect(() => {
         StylePrimitive.ensureValue!.call(StylePrimitive, value, part);
@@ -48,10 +47,10 @@ describe('StylePrimitive', () => {
     ])('constructs a new StyleBinding in "%s" attribute', (attributeName) => {
       const style = { color: 'red' };
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: attributeName,
-      };
+      } as const;
       const runtime = createRuntime();
       const binding = StylePrimitive.resolveBinding(style, part, runtime);
 
@@ -64,9 +63,9 @@ describe('StylePrimitive', () => {
     it('should throw the error if the part is not an attribute part', () => {
       const style = { color: 'red' };
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('div'),
-      };
+      } as const;
       const runtime = createRuntime();
 
       expect(() => StylePrimitive.resolveBinding(style, part, runtime)).toThrow(
@@ -81,10 +80,10 @@ describe('StyleBinding', () => {
     it('returns true if the committed value does not exist', () => {
       const style = { color: 'red' };
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':style',
-      };
+      } as const;
       const binding = new StyleBinding(style, part);
 
       expect(binding.shouldUpdate(style)).toBe(true);
@@ -94,10 +93,10 @@ describe('StyleBinding', () => {
       const style1 = { margin: '2px' };
       const style2 = { padding: '2px' };
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':style',
-      };
+      } as const;
       const binding = new StyleBinding(style1, part);
       const updater = new TestUpdater();
 
@@ -127,10 +126,10 @@ describe('StyleBinding', () => {
         backgroundColor: undefined,
       };
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':style',
-      };
+      } as const;
       const binding = new StyleBinding(style1, part);
       const updater = new TestUpdater();
 
@@ -161,10 +160,10 @@ describe('StyleBinding', () => {
         color: 'red',
       };
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: createElement('div', { style: 'background-color: blue' }),
         name: ':style',
-      };
+      } as const;
       const binding = new StyleBinding(style, part);
       const updater = new TestUpdater();
 
@@ -186,10 +185,10 @@ describe('StyleBinding', () => {
       };
       const style2 = {};
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: createElement('div', { style: 'background-color: blue' }),
         name: ':style',
-      };
+      } as const;
       const binding = new StyleBinding(style1, part);
       const updater = new TestUpdater();
 
@@ -223,10 +222,10 @@ describe('StyleBinding', () => {
         marginInline: undefined,
       };
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':class',
-      };
+      } as const;
       const binding = new StyleBinding(style, part);
       const updater = new TestUpdater();
 

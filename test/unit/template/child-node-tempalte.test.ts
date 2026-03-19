@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PartType } from '@/core.js';
+import { PART_TYPE_CHILD_NODE, SLOT_STATUS_ATTACHED } from '@/core.js';
 import { createTreeWalker, HydrationError } from '@/hydration.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -30,11 +30,11 @@ describe('ChildNodeTemplate', () => {
       const template = new ChildNodeTemplate();
       const values = ['foo'] as const;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const container = createElement('div', {}, document.createComment(''));
       const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
@@ -49,13 +49,12 @@ describe('ChildNodeTemplate', () => {
         expect.objectContaining({
           value: values[0],
           part: {
-            type: PartType.ChildNode,
+            type: PART_TYPE_CHILD_NODE,
             node: expect.exact(container.firstChild),
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          dirty: true,
-          committed: false,
+          status: SLOT_STATUS_ATTACHED,
         }),
       ]);
     });
@@ -64,11 +63,11 @@ describe('ChildNodeTemplate', () => {
       const template = new ChildNodeTemplate();
       const values = ['foo'] as const;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const container = createElement('div', {});
       const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
@@ -86,11 +85,11 @@ describe('ChildNodeTemplate', () => {
       const template = new ChildNodeTemplate();
       const values = ['foo'] as const;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
@@ -103,13 +102,12 @@ describe('ChildNodeTemplate', () => {
         expect.objectContaining({
           value: values[0],
           part: {
-            type: PartType.ChildNode,
+            type: PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          dirty: true,
-          committed: false,
+          status: SLOT_STATUS_ATTACHED,
         }),
       ]);
     });

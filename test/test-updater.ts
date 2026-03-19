@@ -1,5 +1,5 @@
 import {
-  BoundaryType,
+  BOUNDARY_TYPE_ERROR,
   type Coroutine,
   createScope,
   type Scope,
@@ -28,7 +28,7 @@ export class TestUpdater {
     let thrownError: unknown;
 
     this.scope.boundary = {
-      type: BoundaryType.Error,
+      type: BOUNDARY_TYPE_ERROR,
       next: previousBoundary,
       handler: (error) => {
         thrownError = error;

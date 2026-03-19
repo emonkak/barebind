@@ -2,8 +2,8 @@ import {
   type Cleanup,
   type DirectiveContext,
   type Effect,
+  PART_TYPE_ATTRIBUTE,
   type Part,
-  PartType,
   type Primitive,
   type Ref,
   type RefObject,
@@ -29,7 +29,7 @@ export const RefPrimitive: Primitive<Ref<Element>> = {
     part: Part,
     _context: DirectiveContext,
   ): RefBinding {
-    ensurePartType<Part.AttributePart>(PartType.Attribute, this, value, part);
+    ensurePartType<Part.AttributePart>(PART_TYPE_ATTRIBUTE, this, value, part);
     return new RefBinding(value, part);
   },
 };

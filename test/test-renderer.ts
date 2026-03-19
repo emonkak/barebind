@@ -1,11 +1,13 @@
 import { vi } from 'vitest';
 import {
-  BoundaryType,
+  BOUNDARY_TYPE_ERROR,
   type Coroutine,
   createScope,
   DETACHED_SCOPE,
+  HOOK_TYPE_INSERTION_EFFECT,
+  HOOK_TYPE_LAYOUT_EFFECT,
+  HOOK_TYPE_PASSIVE_EFFECT,
   type Hook,
-  HookType,
   type Scope,
   type UpdateOptions,
 } from '@/core.js';
@@ -34,9 +36,9 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
   finalize(): void {
     for (const hook of this.hooks) {
       if (
-        hook.type === HookType.PassiveEffect ||
-        hook.type === HookType.LayoutEffect ||
-        hook.type === HookType.InsertionEffect
+        hook.type === HOOK_TYPE_PASSIVE_EFFECT ||
+        hook.type === HOOK_TYPE_LAYOUT_EFFECT ||
+        hook.type === HOOK_TYPE_INSERTION_EFFECT
       ) {
         hook.handler.cleanup?.();
         hook.handler.cleanup = undefined;
@@ -55,7 +57,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
 
     if (this.scope !== DETACHED_SCOPE) {
       this.scope.boundary = {
-        type: BoundaryType.Error,
+        type: BOUNDARY_TYPE_ERROR,
         next: previousBoundary,
         handler: (error, handleError) => {
           try {

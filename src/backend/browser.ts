@@ -6,8 +6,14 @@ import {
   type EffectQueue,
   type Lanes,
   type Layout,
+  PART_TYPE_ATTRIBUTE,
+  PART_TYPE_CHILD_NODE,
+  PART_TYPE_ELEMENT,
+  PART_TYPE_EVENT,
+  PART_TYPE_LIVE,
+  PART_TYPE_PROPERTY,
+  PART_TYPE_TEXT,
   type Part,
-  PartType,
   type Primitive,
   type RequestCallbackOptions,
   type Template,
@@ -91,12 +97,12 @@ export class BrowserBackend implements Backend {
   }
 
   resolveLayout(_source: unknown, part: Part): Layout {
-    return part.type === PartType.ChildNode ? LooseLayout : StrictLayout;
+    return part.type === PART_TYPE_CHILD_NODE ? LooseLayout : StrictLayout;
   }
 
   resolvePrimitive(source: unknown, part: Part): Primitive<unknown> {
     switch (part.type) {
-      case PartType.Attribute:
+      case PART_TYPE_ATTRIBUTE:
         if (part.name[0] === ':') {
           switch (part.name.slice(1).toLowerCase()) {
             case 'class':
@@ -110,17 +116,17 @@ export class BrowserBackend implements Backend {
           }
         }
         return AttributePrimitive;
-      case PartType.ChildNode:
+      case PART_TYPE_CHILD_NODE:
         return source != null ? CommentPrimitive : BlackholePrimitive;
-      case PartType.Element:
+      case PART_TYPE_ELEMENT:
         return SpreadPrimitive;
-      case PartType.Event:
+      case PART_TYPE_EVENT:
         return EventPrimitive;
-      case PartType.Live:
+      case PART_TYPE_LIVE:
         return LivePrimitive;
-      case PartType.Property:
+      case PART_TYPE_PROPERTY:
         return PropertyPrimitive;
-      case PartType.Text:
+      case PART_TYPE_TEXT:
         return TextPrimitive;
     }
   }

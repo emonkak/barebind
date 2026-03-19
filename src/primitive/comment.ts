@@ -1,7 +1,7 @@
 import {
   type DirectiveContext,
+  PART_TYPE_CHILD_NODE,
   type Part,
-  PartType,
   type Primitive,
 } from '../core.js';
 import { ensurePartType } from '../directive.js';
@@ -14,7 +14,7 @@ export const CommentPrimitive: Primitive<any> = {
     part: Part,
     _context: DirectiveContext,
   ): CommentBinding<unknown> {
-    ensurePartType<Part.ChildNodePart>(PartType.ChildNode, this, value, part);
+    ensurePartType<Part.ChildNodePart>(PART_TYPE_CHILD_NODE, this, value, part);
     return new CommentBinding(value, part);
   },
 };

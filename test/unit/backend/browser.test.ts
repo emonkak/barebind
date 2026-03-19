@@ -1,6 +1,19 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BrowserBackend } from '@/backend/browser.js';
-import { type Effect, EffectQueue, PartType } from '@/core.js';
+import {
+  type Effect,
+  EffectQueue,
+  type Layout,
+  PART_TYPE_ATTRIBUTE,
+  PART_TYPE_CHILD_NODE,
+  PART_TYPE_ELEMENT,
+  PART_TYPE_EVENT,
+  PART_TYPE_LIVE,
+  PART_TYPE_PROPERTY,
+  PART_TYPE_TEXT,
+  type Part,
+  type Primitive,
+} from '@/core.js';
 import { ConcurrentLane } from '@/lane.js';
 import { LooseLayout } from '@/layout/loose.js';
 import { StrictLayout } from '@/layout/strict.js';
@@ -142,13 +155,13 @@ describe('BrowserBackend', () => {
       );
       expect((template as TaggedTemplate)['_holes']).toStrictEqual([
         {
-          type: PartType.Text,
+          type: PART_TYPE_TEXT,
           index: 1,
           precedingText: '',
           followingText: '',
         },
         {
-          type: PartType.Text,
+          type: PART_TYPE_TEXT,
           index: 2,
           precedingText: ', ',
           followingText: '!',
@@ -262,11 +275,11 @@ describe('BrowserBackend', () => {
   });
 
   describe('resolvePrimitive()', () => {
-    it.each([
+    it.each<[unknown, Part, Primitive<unknown>]>([
       [
         'foo',
         {
-          type: PartType.Attribute,
+          type: PART_TYPE_ATTRIBUTE,
           node: document.createElement('div'),
           name: 'class',
         },
@@ -275,7 +288,7 @@ describe('BrowserBackend', () => {
       [
         null,
         {
-          type: PartType.ChildNode,
+          type: PART_TYPE_CHILD_NODE,
           node: document.createComment(''),
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
@@ -285,7 +298,7 @@ describe('BrowserBackend', () => {
       [
         undefined,
         {
-          type: PartType.ChildNode,
+          type: PART_TYPE_CHILD_NODE,
           node: document.createComment(''),
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
@@ -295,7 +308,7 @@ describe('BrowserBackend', () => {
       [
         'foo',
         {
-          type: PartType.ChildNode,
+          type: PART_TYPE_CHILD_NODE,
           node: document.createComment(''),
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
@@ -305,7 +318,7 @@ describe('BrowserBackend', () => {
       [
         () => {},
         {
-          type: PartType.Element,
+          type: PART_TYPE_ELEMENT,
           node: document.createElement('div'),
         },
         SpreadPrimitive,
@@ -313,7 +326,7 @@ describe('BrowserBackend', () => {
       [
         'foo',
         {
-          type: PartType.Event,
+          type: PART_TYPE_EVENT,
           node: document.createElement('div'),
           name: 'click',
         },
@@ -322,7 +335,7 @@ describe('BrowserBackend', () => {
       [
         'foo',
         {
-          type: PartType.Live,
+          type: PART_TYPE_LIVE,
           node: document.createElement('textarea'),
           name: 'value',
           defaultValue: '',
@@ -332,7 +345,7 @@ describe('BrowserBackend', () => {
       [
         'foo',
         {
-          type: PartType.Property,
+          type: PART_TYPE_PROPERTY,
           node: document.createElement('textarea'),
           name: 'value',
           defaultValue: '',
@@ -342,26 +355,26 @@ describe('BrowserBackend', () => {
       [
         'foo',
         {
-          type: PartType.Text,
+          type: PART_TYPE_TEXT,
           node: document.createTextNode(''),
           precedingText: '',
           followingText: '',
         },
         TextPrimitive,
       ],
-    ] as const)('resolves the Primitive from an arbitrary part', (value, part, expectedPrimitive) => {
+    ])('resolves primitives from any parts', (source, part, expectedPrimitive) => {
       const backend = new BrowserBackend();
 
-      expect(backend.resolvePrimitive(value, part)).toStrictEqual(
+      expect(backend.resolvePrimitive(source, part)).toStrictEqual(
         expectedPrimitive,
       );
     });
 
-    it.each([
+    it.each<[unknown, Part.AttributePart, Primitive<unknown>]>([
       [
         [],
         {
-          type: PartType.Attribute,
+          type: PART_TYPE_ATTRIBUTE,
           node: document.createElement('div'),
           name: ':class',
         },
@@ -370,7 +383,7 @@ describe('BrowserBackend', () => {
       [
         { current: null },
         {
-          type: PartType.Attribute,
+          type: PART_TYPE_ATTRIBUTE,
           node: document.createElement('div'),
           name: ':ref',
         },
@@ -379,7 +392,7 @@ describe('BrowserBackend', () => {
       [
         {},
         {
-          type: PartType.Attribute,
+          type: PART_TYPE_ATTRIBUTE,
           node: document.createElement('div'),
           name: ':style',
         },
@@ -388,18 +401,18 @@ describe('BrowserBackend', () => {
       [
         null,
         {
-          type: PartType.Attribute,
+          type: PART_TYPE_ATTRIBUTE,
           node: document.createElement('div'),
           name: ':',
         },
         BlackholePrimitive,
       ],
-    ] as const)('resolves the Primitive from special attribute parts', (value, part, expectedPrimitive) => {
+    ])('resolves primitives from attribute parts starting with ":"', (source, part, expectedPrimitive) => {
       const backend = new BrowserBackend();
 
-      expect(backend.resolvePrimitive(value, part)).toBe(expectedPrimitive);
+      expect(backend.resolvePrimitive(source, part)).toBe(expectedPrimitive);
       expect(
-        backend.resolvePrimitive(value, {
+        backend.resolvePrimitive(source, {
           ...part,
           name: part.name.toUpperCase(),
         }),
@@ -408,11 +421,11 @@ describe('BrowserBackend', () => {
   });
 
   describe('resolveLayout()', () => {
-    it.each([
+    it.each<[unknown, Part, Layout]>([
       [
         'foo',
         {
-          type: PartType.Attribute,
+          type: PART_TYPE_ATTRIBUTE,
           node: document.createElement('div'),
           name: 'class',
         },
@@ -421,7 +434,7 @@ describe('BrowserBackend', () => {
       [
         'foo',
         {
-          type: PartType.ChildNode,
+          type: PART_TYPE_CHILD_NODE,
           node: document.createComment(''),
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
@@ -431,7 +444,7 @@ describe('BrowserBackend', () => {
       [
         'foo',
         {
-          type: PartType.Element,
+          type: PART_TYPE_ELEMENT,
           node: document.createElement('div'),
         },
         StrictLayout,
@@ -439,7 +452,7 @@ describe('BrowserBackend', () => {
       [
         'foo',
         {
-          type: PartType.Event,
+          type: PART_TYPE_EVENT,
           node: document.createElement('div'),
           name: 'click',
         },
@@ -448,7 +461,7 @@ describe('BrowserBackend', () => {
       [
         'foo',
         {
-          type: PartType.Live,
+          type: PART_TYPE_LIVE,
           node: document.createElement('textarea'),
           name: 'value',
           defaultValue: '',
@@ -458,7 +471,7 @@ describe('BrowserBackend', () => {
       [
         'foo',
         {
-          type: PartType.Property,
+          type: PART_TYPE_PROPERTY,
           node: document.createElement('textarea'),
           name: 'value',
           defaultValue: '',
@@ -468,14 +481,14 @@ describe('BrowserBackend', () => {
       [
         'foo',
         {
-          type: PartType.Text,
+          type: PART_TYPE_TEXT,
           node: document.createTextNode(''),
           precedingText: '',
           followingText: '',
         },
         StrictLayout,
       ],
-    ] as const)('resolves the Layout from an arbitrary part', (value, part, expectedLayout) => {
+    ])('resolves the Layout from an arbitrary part', (value, part, expectedLayout) => {
       const backend = new BrowserBackend();
 
       expect(backend.resolveLayout(value, part)).toBe(expectedLayout);

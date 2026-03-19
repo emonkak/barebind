@@ -10,8 +10,10 @@ import {
   type Effect,
   type EffectHandler,
   type EffectQueue,
+  HOOK_TYPE_INSERTION_EFFECT,
+  HOOK_TYPE_LAYOUT_EFFECT,
+  HOOK_TYPE_PASSIVE_EFFECT,
   type Hook,
-  HookType,
   type Lanes,
   type Part,
   type RenderContext,
@@ -158,13 +160,13 @@ export class ComponentBinding<TProps, TResult>
     // before all children are detached and then register them.
     for (const hook of this._pendingHooks) {
       switch (hook.type) {
-        case HookType.PassiveEffect:
+        case HOOK_TYPE_PASSIVE_EFFECT:
           enqueueCleanupEffect(hook.handler, frame.passiveEffects);
           break;
-        case HookType.LayoutEffect:
+        case HOOK_TYPE_LAYOUT_EFFECT:
           enqueueCleanupEffect(hook.handler, frame.layoutEffects);
           break;
-        case HookType.InsertionEffect:
+        case HOOK_TYPE_INSERTION_EFFECT:
           enqueueCleanupEffect(hook.handler, frame.mutationEffects);
           break;
       }

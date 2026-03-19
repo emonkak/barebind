@@ -1,7 +1,8 @@
 import {
   type DirectiveType,
+  PART_TYPE_CHILD_NODE,
+  PART_TYPE_ELEMENT,
   type Part,
-  PartType,
   type TemplateResult,
   type UpdateSession,
 } from '../core.js';
@@ -41,19 +42,19 @@ export class ElementTemplate<
     const namespaceURI =
       getNamespaceURIByTagName(this._tagName) ?? part.namespaceURI;
     const elementPart = {
-      type: PartType.Element,
+      type: PART_TYPE_ELEMENT,
       node: treatNodeName(
         this._tagName.toUpperCase(),
         targetTree.nextNode(),
         targetTree,
       ) as Element,
-    };
+    } as const;
     const childrenPart = {
-      type: PartType.ChildNode,
+      type: PART_TYPE_CHILD_NODE,
       node: document.createComment(''),
       anchorNode: null,
       namespaceURI,
-    };
+    } as const;
     const elementSlot = context.resolveSlot(values[0], elementPart);
     const childrenSlot = context.resolveSlot(values[1], childrenPart);
 
@@ -78,15 +79,15 @@ export class ElementTemplate<
     const namespaceURI =
       getNamespaceURIByTagName(this._tagName) ?? part.namespaceURI;
     const elementPart = {
-      type: PartType.Element,
+      type: PART_TYPE_ELEMENT,
       node: document.createElementNS(namespaceURI, this._tagName),
-    };
+    } as const;
     const childrenPart = {
-      type: PartType.ChildNode,
+      type: PART_TYPE_CHILD_NODE,
       node: document.createComment(''),
       anchorNode: null,
       namespaceURI,
-    };
+    } as const;
     const elementSlot = context.resolveSlot(values[0], elementPart);
     const childrenSlot = context.resolveSlot(values[1], childrenPart);
 

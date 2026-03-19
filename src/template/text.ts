@@ -1,6 +1,6 @@
 import {
+  PART_TYPE_TEXT,
   type Part,
-  PartType,
   type TemplateResult,
   type UpdateSession,
 } from '../core.js';
@@ -40,11 +40,11 @@ export class TextTemplate<T> extends AbstractTemplate<readonly [T]> {
   ): TemplateResult {
     const { context } = session;
     const textPart = {
-      type: PartType.Text,
+      type: PART_TYPE_TEXT,
       node: splitText(targetTree),
       precedingText: this._precedingText,
       followingText: this._followingText,
-    };
+    } as const;
     const textSlot = context.resolveSlot(values[0], textPart);
 
     textSlot.attach(session);
@@ -60,11 +60,11 @@ export class TextTemplate<T> extends AbstractTemplate<readonly [T]> {
     const { context } = session;
     const document = part.node.ownerDocument;
     const textPart = {
-      type: PartType.Text,
+      type: PART_TYPE_TEXT,
       node: document.createTextNode(''),
       precedingText: this._precedingText,
       followingText: this._followingText,
-    };
+    } as const;
     const textSlot = context.resolveSlot(values[0], textPart);
 
     textSlot.attach(session);

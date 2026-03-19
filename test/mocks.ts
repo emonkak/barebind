@@ -15,15 +15,25 @@ import {
   EffectQueue,
   type Lanes,
   type Layout,
+  PART_TYPE_ATTRIBUTE,
+  PART_TYPE_CHILD_NODE,
+  PART_TYPE_ELEMENT,
+  PART_TYPE_EVENT,
+  PART_TYPE_LIVE,
+  PART_TYPE_PROPERTY,
+  PART_TYPE_TEXT,
   type Part,
-  PartType,
   type Primitive,
   type RenderFrame,
   type RequestCallbackOptions,
   type Scope,
   type SessionEvent,
   type SessionObserver,
+  SLOT_STATUS_ATTACHED,
+  SLOT_STATUS_DETACHED,
+  SLOT_STATUS_IDLE,
   type Slot,
+  type SlotStatus,
   type Template,
   type TemplateMode,
   type TemplateResult,
@@ -156,13 +166,13 @@ export class MockBinding<T> implements Binding<T> {
 
   commit(): void {
     switch (this.part.type) {
-      case PartType.Attribute:
+      case PART_TYPE_ATTRIBUTE:
         this.part.node.setAttribute(
           this.part.name,
           this.value?.toString() ?? '',
         );
         break;
-      case PartType.ChildNode:
+      case PART_TYPE_CHILD_NODE:
         // For part debugging, update comments only if the data is empty.
         if (
           this.part.node.data === '' ||
@@ -171,22 +181,22 @@ export class MockBinding<T> implements Binding<T> {
           this.part.node.data = stringify(this.value);
         }
         break;
-      case PartType.Element:
+      case PART_TYPE_ELEMENT:
         for (const name in this.value) {
           this.part.node.setAttribute(name, stringify(this.value[name]));
         }
         break;
-      case PartType.Live:
-      case PartType.Property:
+      case PART_TYPE_LIVE:
+      case PART_TYPE_PROPERTY:
         (this.part.node as any)[this.part.name] = this.value;
         break;
-      case PartType.Event:
+      case PART_TYPE_EVENT:
         this.part.node.addEventListener(
           this.part.name,
           this.value as EventListenerOrEventListenerObject,
         );
         break;
-      case PartType.Text:
+      case PART_TYPE_TEXT:
         this.part.node.data =
           this.part.precedingText +
           stringify(this.value) +
@@ -201,30 +211,30 @@ export class MockBinding<T> implements Binding<T> {
 
   rollback(): void {
     switch (this.part.type) {
-      case PartType.Attribute:
+      case PART_TYPE_ATTRIBUTE:
         this.part.node.removeAttribute(this.part.name);
         break;
-      case PartType.Element:
+      case PART_TYPE_ELEMENT:
         for (const name in this.value) {
           this.part.node.removeAttribute(name);
         }
         break;
-      case PartType.Live:
-      case PartType.Property:
+      case PART_TYPE_LIVE:
+      case PART_TYPE_PROPERTY:
         (this.part.node as any)[this.part.name] = this.part.defaultValue;
         break;
-      case PartType.Event:
+      case PART_TYPE_EVENT:
         this.part.node.removeEventListener(
           this.part.name,
           this.value as EventListenerOrEventListenerObject,
         );
         break;
-      case PartType.ChildNode:
+      case PART_TYPE_CHILD_NODE:
         if (this.part.node.data === this.memoizedValue) {
           this.part.node.data = '';
         }
         break;
-      case PartType.Text:
+      case PART_TYPE_TEXT:
         this.part.node.data = '';
         break;
     }
@@ -338,9 +348,7 @@ export class MockObserver implements SessionObserver {
 export class MockSlot<T> implements Slot<T> {
   readonly binding: Binding<UnwrapBindable<T>>;
 
-  dirty = false;
-
-  committed = false;
+  status: SlotStatus = SLOT_STATUS_IDLE;
 
   constructor(binding: Binding<UnwrapBindable<T>>) {
     this.binding = binding;
@@ -360,12 +368,12 @@ export class MockSlot<T> implements Slot<T> {
 
   attach(session: UpdateSession): void {
     this.binding.attach(session);
-    this.dirty = true;
+    this.status = SLOT_STATUS_ATTACHED;
   }
 
   detach(session: UpdateSession): void {
     this.binding.detach(session);
-    this.dirty = true;
+    this.status = SLOT_STATUS_DETACHED;
   }
 
   reconcile(source: T, session: UpdateSession): boolean {
@@ -383,7 +391,7 @@ export class MockSlot<T> implements Slot<T> {
     if (dirty) {
       this.binding.value = value;
       this.binding.attach(session);
-      this.dirty = true;
+      this.status = SLOT_STATUS_ATTACHED;
     }
 
     return dirty;
@@ -391,14 +399,12 @@ export class MockSlot<T> implements Slot<T> {
 
   commit(): void {
     this.binding.commit();
-    this.dirty = false;
-    this.committed = true;
+    this.status = SLOT_STATUS_IDLE;
   }
 
   rollback(): void {
     this.binding.rollback();
-    this.dirty = false;
-    this.committed = false;
+    this.status = SLOT_STATUS_IDLE;
   }
 }
 

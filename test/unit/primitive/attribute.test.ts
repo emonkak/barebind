@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-
-import { PartType } from '@/core.js';
+import { PART_TYPE_ATTRIBUTE, PART_TYPE_ELEMENT } from '@/core.js';
 import { AttributeBinding, AttributePrimitive } from '@/primitive/attribute.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -10,10 +9,10 @@ describe('AttributePrimitive', () => {
     it('constructs a new AttributeBinding', () => {
       const value = 'foo';
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: 'class',
-      };
+      } as const;
       const runtime = createRuntime();
       const binding = AttributePrimitive.resolveBinding(value, part, runtime);
 
@@ -26,9 +25,9 @@ describe('AttributePrimitive', () => {
     it('should throw the error if the part is not an attribute part', () => {
       const value = 'foo';
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('div'),
-      };
+      } as const;
       const runtime = createRuntime();
 
       expect(() =>
@@ -43,10 +42,10 @@ describe('AttributeBinding', () => {
     it('returns true if the committed value does not exist', () => {
       const value = 'foo';
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: 'class',
-      };
+      } as const;
       const binding = new AttributeBinding(value, part);
 
       expect(binding.shouldUpdate(value)).toBe(true);
@@ -56,10 +55,10 @@ describe('AttributeBinding', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: 'class',
-      };
+      } as const;
       const binding = new AttributeBinding(value1, part);
       const updater = new TestUpdater();
 
@@ -82,10 +81,10 @@ describe('AttributeBinding', () => {
     ])('removes the attribute when the value is null or undefined', (value2) => {
       const value = 'foo';
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: 'class',
-      };
+      } as const;
       const binding = new AttributeBinding<unknown>(value, part);
       const updater = new TestUpdater();
 
@@ -122,10 +121,10 @@ describe('AttributeBinding', () => {
       ],
     ])('sets the attribute with the string representation of the value', (value, expectedValue) => {
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: 'class',
-      };
+      } as const;
       const binding = new AttributeBinding(value, part);
       const updater = new TestUpdater();
 
@@ -144,10 +143,10 @@ describe('AttributeBinding', () => {
       [false, null],
     ])('toggles the attribute according to the boolean value', (value, expectedValue) => {
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: 'class',
-      };
+      } as const;
       const binding = new AttributeBinding(value, part);
       const updater = new TestUpdater();
 
@@ -166,10 +165,10 @@ describe('AttributeBinding', () => {
     it('removes the committed value from the attribute', () => {
       const value = 'foo';
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: 'class',
-      };
+      } as const;
       const binding = new AttributeBinding<unknown>(value, part);
       const updater = new TestUpdater();
 
@@ -195,10 +194,10 @@ describe('AttributeBinding', () => {
     it('should do nothing if the committed value does not exist', () => {
       const value = 'foo';
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: 'class',
-      };
+      } as const;
       const binding = new AttributeBinding<unknown>(value, part);
       const updater = new TestUpdater();
 

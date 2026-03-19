@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { PartType } from '@/core.js';
+import {
+  PART_TYPE_CHILD_NODE,
+  PART_TYPE_ELEMENT,
+  SLOT_STATUS_ATTACHED,
+} from '@/core.js';
 import { createTreeWalker } from '@/hydration.js';
 import { ElementTemplate } from '@/template/element.js';
 import { HTML_NAMESPACE_URI, SVG_NAMESPACE_URI } from '@/template/template.js';
@@ -30,11 +34,11 @@ describe('ElementTemplate', () => {
       const template = new ElementTemplate('div');
       const values = [{ class: 'foo' }, 'bar'] as const;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const container = createElement(
         'div',
         {},
@@ -52,22 +56,20 @@ describe('ElementTemplate', () => {
         expect.objectContaining({
           value: values[0],
           part: {
-            type: PartType.Element,
+            type: PART_TYPE_ELEMENT,
             node: expect.exact(container.firstChild),
           },
-          dirty: true,
-          committed: false,
+          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           value: values[1],
           part: {
-            type: PartType.ChildNode,
+            type: PART_TYPE_CHILD_NODE,
             node: expect.exact(container.firstChild!.firstChild),
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          dirty: true,
-          committed: false,
+          status: SLOT_STATUS_ATTACHED,
         }),
       ]);
     });
@@ -78,11 +80,11 @@ describe('ElementTemplate', () => {
       const template = new ElementTemplate('div');
       const values = [{ class: 'foo' }, 'bar'] as const;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
@@ -94,22 +96,20 @@ describe('ElementTemplate', () => {
         expect.objectContaining({
           value: values[0],
           part: {
-            type: PartType.Element,
+            type: PART_TYPE_ELEMENT,
             node: expect.any(window.Element),
           },
-          dirty: true,
-          committed: false,
+          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           value: values[1],
           part: {
-            type: PartType.ChildNode,
+            type: PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          dirty: true,
-          committed: false,
+          status: SLOT_STATUS_ATTACHED,
         }),
       ]);
       expect((slots[0]!.part.node as Element).namespaceURI).toBe(
@@ -121,11 +121,11 @@ describe('ElementTemplate', () => {
       const template = new ElementTemplate('svg');
       const values = [{ class: 'foo' }, 'bar'] as const;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
@@ -137,22 +137,20 @@ describe('ElementTemplate', () => {
         expect.objectContaining({
           value: values[0],
           part: {
-            type: PartType.Element,
+            type: PART_TYPE_ELEMENT,
             node: expect.any(window.Element),
           },
-          dirty: true,
-          committed: false,
+          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           value: values[1],
           part: {
-            type: PartType.ChildNode,
+            type: PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             anchorNode: null,
             namespaceURI: SVG_NAMESPACE_URI,
           },
-          dirty: true,
-          committed: false,
+          status: SLOT_STATUS_ATTACHED,
         }),
       ]);
       expect((slots[0]!.part.node as Element).namespaceURI).toBe(

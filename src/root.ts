@@ -1,9 +1,9 @@
 import {
-  BoundaryType,
+  BOUNDARY_TYPE_HYDRATION,
   type Coroutine,
   createScope,
   type Effect,
-  PartType,
+  PART_TYPE_CHILD_NODE,
   type SessionContext,
   type Slot,
   type UpdateHandle,
@@ -26,11 +26,11 @@ export class Root<T> {
     context: SessionContext,
   ): Root<T> {
     const part = {
-      type: PartType.ChildNode,
+      type: PART_TYPE_CHILD_NODE,
       node: container.ownerDocument.createComment(''),
       anchorNode: null,
       namespaceURI: container.namespaceURI,
-    };
+    } as const;
     const slot = context.resolveSlot(source, part);
     return new Root(slot, container, context);
   }
@@ -50,7 +50,7 @@ export class Root<T> {
       const { frame, scope } = session;
       const targetTree = createTreeWalker(this._container);
       scope.boundary = {
-        type: BoundaryType.Hydration,
+        type: BOUNDARY_TYPE_HYDRATION,
         next: scope.boundary,
         targetTree,
       };

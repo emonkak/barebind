@@ -1,7 +1,7 @@
 import {
   type DirectiveContext,
+  PART_TYPE_EVENT,
   type Part,
-  PartType,
   type Primitive,
 } from '../core.js';
 import { DirectiveError, ensurePartType } from '../directive.js';
@@ -36,7 +36,7 @@ export const EventPrimitive: Primitive<EventHandler> = {
     part: Part,
     _context: DirectiveContext,
   ): EventBinding {
-    ensurePartType<Part.EventPart>(PartType.Event, this, value, part);
+    ensurePartType<Part.EventPart>(PART_TYPE_EVENT, this, value, part);
     return new EventBinding(value, part);
   },
 };

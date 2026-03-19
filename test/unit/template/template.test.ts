@@ -1,5 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
-import { BoundaryType, createScope, PartType } from '@/core.js';
+import {
+  BOUNDARY_TYPE_HYDRATION,
+  createScope,
+  PART_TYPE_ATTRIBUTE,
+  PART_TYPE_CHILD_NODE,
+  PART_TYPE_ELEMENT,
+  PART_TYPE_TEXT,
+  SLOT_STATUS_DETACHED,
+  SLOT_STATUS_IDLE,
+} from '@/core.js';
 import { createTreeWalker } from '@/hydration.js';
 import {
   getNamespaceURIByTagName,
@@ -31,11 +40,11 @@ describe('AbstractTemplate', () => {
       const template = new MockTemplate();
       const values = ['foo'] as const;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const runtime = createRuntime();
       const binding = template.resolveBinding(values, part, runtime);
 
@@ -49,9 +58,9 @@ describe('AbstractTemplate', () => {
       const template = new MockTemplate();
       const values = ['foo'] as const;
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('div'),
-      };
+      } as const;
       const runtime = createRuntime();
 
       expect(() => template.resolveBinding(values, part, runtime)).toThrow(
@@ -67,11 +76,11 @@ describe('TemplateBinding', () => {
       const template = new MockTemplate();
       const values = [] as const;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new TemplateBinding(template, values, part);
 
       expect(binding.shouldUpdate(values)).toBe(true);
@@ -82,11 +91,11 @@ describe('TemplateBinding', () => {
       const args1 = ['foo'];
       const args2 = ['bar'];
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new TemplateBinding(template, args1, part);
       const updater = new TestUpdater();
 
@@ -108,11 +117,11 @@ describe('TemplateBinding', () => {
       const args1 = ['foo', 'bar', 'baz'];
       const args2 = ['qux', 'quux', 'corge'];
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new TemplateBinding(template, args1, part);
       const updater = new TestUpdater();
 
@@ -131,14 +140,14 @@ describe('TemplateBinding', () => {
           const slots = [
             new MockSlot(
               new MockBinding(MockPrimitive, values[0], {
-                type: PartType.Attribute,
+                type: PART_TYPE_ATTRIBUTE,
                 node: fragment.firstChild as Element,
                 name: 'class',
               }),
             ),
             new MockSlot(
               new MockBinding(MockPrimitive, values[1], {
-                type: PartType.Text,
+                type: PART_TYPE_TEXT,
                 node: fragment.firstChild!.nextSibling as Text,
                 precedingText: '',
                 followingText: '',
@@ -146,7 +155,7 @@ describe('TemplateBinding', () => {
             ),
             new MockSlot(
               new MockBinding(MockPrimitive, values[2], {
-                type: PartType.ChildNode,
+                type: PART_TYPE_CHILD_NODE,
                 node: fragment.firstChild!.nextSibling!.nextSibling as Comment,
                 anchorNode: null,
                 namespaceURI: HTML_NAMESPACE_URI,
@@ -176,18 +185,15 @@ describe('TemplateBinding', () => {
           slots: [
             expect.objectContaining({
               value: args1[0],
-              dirty: false,
-              committed: true,
+              status: SLOT_STATUS_IDLE,
             }),
             expect.objectContaining({
               value: args1[1],
-              dirty: false,
-              committed: true,
+              status: SLOT_STATUS_IDLE,
             }),
             expect.objectContaining({
               value: args1[2],
-              dirty: false,
-              committed: true,
+              status: SLOT_STATUS_IDLE,
             }),
           ],
         });
@@ -211,18 +217,15 @@ describe('TemplateBinding', () => {
           slots: [
             expect.objectContaining({
               value: args2[0],
-              dirty: false,
-              committed: true,
+              status: SLOT_STATUS_IDLE,
             }),
             expect.objectContaining({
               value: args2[1],
-              dirty: false,
-              committed: true,
+              status: SLOT_STATUS_IDLE,
             }),
             expect.objectContaining({
               value: args2[2],
-              dirty: false,
-              committed: true,
+              status: SLOT_STATUS_IDLE,
             }),
           ],
         });
@@ -243,18 +246,15 @@ describe('TemplateBinding', () => {
           slots: [
             expect.objectContaining({
               value: args2[0],
-              dirty: true,
-              committed: true,
+              status: SLOT_STATUS_DETACHED,
             }),
             expect.objectContaining({
               value: args2[1],
-              dirty: true,
-              committed: true,
+              status: SLOT_STATUS_DETACHED,
             }),
             expect.objectContaining({
               value: args2[2],
-              dirty: true,
-              committed: true,
+              status: SLOT_STATUS_DETACHED,
             }),
           ],
         });
@@ -267,11 +267,11 @@ describe('TemplateBinding', () => {
       const args1 = ['foo', 'bar', 'baz'];
       const args2 = ['qux', 'quux', 'corge'];
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new TemplateBinding(template, args1, part);
       const updater = new TestUpdater();
 
@@ -288,7 +288,7 @@ describe('TemplateBinding', () => {
           const slots = [
             new MockSlot(
               new MockBinding(MockPrimitive, values[0], {
-                type: PartType.ChildNode,
+                type: PART_TYPE_CHILD_NODE,
                 node: fragment[0],
                 anchorNode: null,
                 namespaceURI: HTML_NAMESPACE_URI,
@@ -296,7 +296,7 @@ describe('TemplateBinding', () => {
             ),
             new MockSlot(
               new MockBinding(MockPrimitive, values[1], {
-                type: PartType.Text,
+                type: PART_TYPE_TEXT,
                 node: fragment[1],
                 precedingText: '',
                 followingText: '',
@@ -304,7 +304,7 @@ describe('TemplateBinding', () => {
             ),
             new MockSlot(
               new MockBinding(MockPrimitive, values[2], {
-                type: PartType.Attribute,
+                type: PART_TYPE_ATTRIBUTE,
                 node: fragment[2],
                 name: 'class',
               }),
@@ -336,18 +336,15 @@ describe('TemplateBinding', () => {
           slots: [
             expect.objectContaining({
               value: args1[0],
-              dirty: false,
-              committed: true,
+              status: SLOT_STATUS_IDLE,
             }),
             expect.objectContaining({
               value: args1[1],
-              dirty: false,
-              committed: true,
+              status: SLOT_STATUS_IDLE,
             }),
             expect.objectContaining({
               value: args1[2],
-              dirty: false,
-              committed: true,
+              status: SLOT_STATUS_IDLE,
             }),
           ],
         });
@@ -371,18 +368,15 @@ describe('TemplateBinding', () => {
           slots: [
             expect.objectContaining({
               value: args2[0],
-              dirty: false,
-              committed: true,
+              status: SLOT_STATUS_IDLE,
             }),
             expect.objectContaining({
               value: args2[1],
-              dirty: false,
-              committed: true,
+              status: SLOT_STATUS_IDLE,
             }),
             expect.objectContaining({
               value: args2[2],
-              dirty: false,
-              committed: true,
+              status: SLOT_STATUS_IDLE,
             }),
           ],
         });
@@ -403,18 +397,15 @@ describe('TemplateBinding', () => {
           slots: [
             expect.objectContaining({
               value: args2[0],
-              dirty: false,
-              committed: false,
+              status: SLOT_STATUS_IDLE,
             }),
             expect.objectContaining({
               value: args2[1],
-              dirty: false,
-              committed: false,
+              status: SLOT_STATUS_IDLE,
             }),
             expect.objectContaining({
               value: args2[2],
-              dirty: true,
-              committed: true,
+              status: SLOT_STATUS_DETACHED,
             }),
           ],
         });
@@ -426,11 +417,11 @@ describe('TemplateBinding', () => {
       const template = new MockTemplate();
       const values = [] as const;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new TemplateBinding(template, values, part);
       const container = createElement('div', {}, 'foo', part.node);
       const scope = createScope();
@@ -443,7 +434,7 @@ describe('TemplateBinding', () => {
       });
 
       scope.boundary = {
-        type: BoundaryType.Hydration,
+        type: BOUNDARY_TYPE_HYDRATION,
         next: scope.boundary,
         targetTree,
       };

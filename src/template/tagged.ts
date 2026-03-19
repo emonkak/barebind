@@ -1,6 +1,12 @@
 import {
+  PART_TYPE_ATTRIBUTE,
+  PART_TYPE_CHILD_NODE,
+  PART_TYPE_ELEMENT,
+  PART_TYPE_EVENT,
+  PART_TYPE_LIVE,
+  PART_TYPE_PROPERTY,
+  PART_TYPE_TEXT,
   type Part,
-  PartType,
   type Slot,
   type TemplateMode,
   type TemplateResult,
@@ -28,41 +34,41 @@ export type Hole =
 
 export namespace Hole {
   export interface AttributeHole {
-    type: typeof PartType.Attribute;
+    type: typeof PART_TYPE_ATTRIBUTE;
     index: number;
     name: string;
   }
 
   export interface ChildNodeHole {
-    type: typeof PartType.ChildNode;
+    type: typeof PART_TYPE_CHILD_NODE;
     index: number;
   }
 
   export interface ElementHole {
-    type: typeof PartType.Element;
+    type: typeof PART_TYPE_ELEMENT;
     index: number;
   }
 
   export interface EventHole {
-    type: typeof PartType.Event;
+    type: typeof PART_TYPE_EVENT;
     index: number;
     name: string;
   }
 
   export interface LiveHole {
-    type: typeof PartType.Live;
+    type: typeof PART_TYPE_LIVE;
     index: number;
     name: string;
   }
 
   export interface PropertyHole {
-    type: typeof PartType.Property;
+    type: typeof PART_TYPE_PROPERTY;
     index: number;
     name: string;
   }
 
   export interface TextHole {
-    type: typeof PartType.Text;
+    type: typeof PART_TYPE_TEXT;
     index: number;
     precedingText: string;
     followingText: string;
@@ -170,8 +176,8 @@ export class TaggedTemplate<
         const continuous = hole.index === lastHoleIndex;
 
         switch (hole.type) {
-          case PartType.Attribute:
-          case PartType.Event:
+          case PART_TYPE_ATTRIBUTE:
+          case PART_TYPE_EVENT:
             currentPart = {
               type: hole.type,
               node: treatNodeType(
@@ -182,7 +188,7 @@ export class TaggedTemplate<
               name: hole.name,
             };
             break;
-          case PartType.ChildNode:
+          case PART_TYPE_CHILD_NODE:
             currentPart = {
               type: hole.type,
               node: document.createComment(''),
@@ -190,7 +196,7 @@ export class TaggedTemplate<
               namespaceURI: getNamespaceURI(targetTree.currentNode, this._mode),
             };
             break;
-          case PartType.Element:
+          case PART_TYPE_ELEMENT:
             currentPart = {
               type: hole.type,
               node: treatNodeType(
@@ -200,8 +206,8 @@ export class TaggedTemplate<
               ),
             };
             break;
-          case PartType.Live:
-          case PartType.Property: {
+          case PART_TYPE_LIVE:
+          case PART_TYPE_PROPERTY: {
             const node = treatNodeType(
               Node.ELEMENT_NODE,
               continuous ? targetTree.currentNode : targetTree.nextNode(),
@@ -215,7 +221,7 @@ export class TaggedTemplate<
             };
             break;
           }
-          case PartType.Text:
+          case PART_TYPE_TEXT:
             currentPart = {
               type: hole.type,
               node: splitText(targetTree),
@@ -228,7 +234,7 @@ export class TaggedTemplate<
         const slot = context.resolveSlot(values[holeIndex]!, currentPart!);
         slot.attach(session);
 
-        if (currentPart!.type === PartType.ChildNode) {
+        if (currentPart!.type === PART_TYPE_CHILD_NODE) {
           replaceMarkerNode(targetTree, currentPart!.node);
         }
 
@@ -288,15 +294,15 @@ export class TaggedTemplate<
         let currentPart: Part;
 
         switch (hole.type) {
-          case PartType.Attribute:
-          case PartType.Event:
+          case PART_TYPE_ATTRIBUTE:
+          case PART_TYPE_EVENT:
             currentPart = {
               type: hole.type,
               node: sourceTree.currentNode as Element,
               name: hole.name,
             };
             break;
-          case PartType.ChildNode:
+          case PART_TYPE_CHILD_NODE:
             currentPart = {
               type: hole.type,
               node: sourceTree.currentNode as Comment,
@@ -304,14 +310,14 @@ export class TaggedTemplate<
               namespaceURI: getNamespaceURI(sourceTree.currentNode, this._mode),
             };
             break;
-          case PartType.Element:
+          case PART_TYPE_ELEMENT:
             currentPart = {
               type: hole.type,
               node: sourceTree.currentNode as Element,
             };
             break;
-          case PartType.Live:
-          case PartType.Property:
+          case PART_TYPE_LIVE:
+          case PART_TYPE_PROPERTY:
             currentPart = {
               type: hole.type,
               node: sourceTree.currentNode as Element,
@@ -319,9 +325,9 @@ export class TaggedTemplate<
               defaultValue: (sourceTree.currentNode as any)[hole.name],
             };
             break;
-          case PartType.Text:
+          case PART_TYPE_TEXT:
             currentPart = {
-              type: PartType.Text,
+              type: hole.type,
               node: sourceTree.currentNode as Text,
               precedingText: hole.precedingText,
               followingText: hole.followingText,
@@ -379,7 +385,7 @@ function parseAttribtues(
 
     if (name === marker && value === '') {
       hole = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         index,
       };
     } else if (value === marker) {
@@ -392,7 +398,7 @@ function parseAttribtues(
           throw new Error(
             `The attribute name must be "${name}", but got "${caseSensitiveName}". There may be an unclosed tag or a duplicate attribute:\n` +
               formatPart(
-                { type: PartType.Attribute, name, node: element },
+                { type: PART_TYPE_ATTRIBUTE, name, node: element },
                 ERROR_MAKER,
               ),
           );
@@ -402,28 +408,28 @@ function parseAttribtues(
       switch (caseSensitiveName[0]) {
         case '@':
           hole = {
-            type: PartType.Event,
+            type: PART_TYPE_EVENT,
             index,
             name: caseSensitiveName.slice(1),
           };
           break;
         case '$':
           hole = {
-            type: PartType.Live,
+            type: PART_TYPE_LIVE,
             index,
             name: caseSensitiveName.slice(1),
           };
           break;
         case '.':
           hole = {
-            type: PartType.Property,
+            type: PART_TYPE_PROPERTY,
             index,
             name: caseSensitiveName.slice(1),
           };
           break;
         default:
           hole = {
-            type: PartType.Attribute,
+            type: PART_TYPE_ATTRIBUTE,
             index,
             name: caseSensitiveName,
           };
@@ -436,7 +442,7 @@ function parseAttribtues(
             'Expressions are not allowed as an attribute name:\n' +
               formatPart(
                 {
-                  type: PartType.Attribute,
+                  type: PART_TYPE_ATTRIBUTE,
                   name,
                   node: element,
                 },
@@ -450,7 +456,7 @@ function parseAttribtues(
             'Expressions inside an attribute must make up the entire attribute value:\n' +
               formatPart(
                 {
-                  type: PartType.Attribute,
+                  type: PART_TYPE_ATTRIBUTE,
                   name,
                   node: element,
                 },
@@ -488,7 +494,7 @@ function parseChildren(
             throw new Error(
               'Expressions are not allowed as a tag name:\n' +
                 formatPart(
-                  { type: PartType.Element, node: currentNode as Element },
+                  { type: PART_TYPE_ELEMENT, node: currentNode as Element },
                   ERROR_MAKER,
                 ),
             );
@@ -510,7 +516,7 @@ function parseChildren(
           stripTrailingSlash((currentNode as Comment).data).trim() === marker
         ) {
           holes.push({
-            type: PartType.ChildNode,
+            type: PART_TYPE_CHILD_NODE,
             index,
           });
           (currentNode as Comment).data = '';
@@ -541,7 +547,7 @@ function parseChildren(
 
           for (let i = 1; i < tail; i++) {
             holes.push({
-              type: PartType.Text,
+              type: PART_TYPE_TEXT,
               index,
               precedingText: stripWhitespaces(lastComponent),
               followingText: '',
@@ -552,7 +558,7 @@ function parseChildren(
           }
 
           holes.push({
-            type: PartType.Text,
+            type: PART_TYPE_TEXT,
             index,
             precedingText: stripWhitespaces(lastComponent),
             followingText: stripWhitespaces(components[tail]!),

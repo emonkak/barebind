@@ -1,4 +1,4 @@
-import { BoundaryType, type Scope } from './core.js';
+import { BOUNDARY_TYPE_HYDRATION, type Scope } from './core.js';
 import { emphasizeNode } from './debug/node.js';
 
 interface NodeTypeMap {
@@ -37,7 +37,7 @@ export function getHydrationTargetTree(scope: Scope): TreeWalker | null {
     boundary !== null;
     boundary = boundary.next
   ) {
-    if (boundary.type === BoundaryType.Hydration) {
+    if (boundary.type === BOUNDARY_TYPE_HYDRATION) {
       return boundary.targetTree;
     }
   }

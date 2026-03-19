@@ -1,8 +1,8 @@
 import { shallowEqual } from '../compare.js';
 import {
   type DirectiveContext,
+  PART_TYPE_ATTRIBUTE,
   type Part,
-  PartType,
   type Primitive,
 } from '../core.js';
 import { DirectiveError, ensurePartType } from '../directive.js';
@@ -37,7 +37,7 @@ export const ClassPrimitive: Primitive<ClassSpecifier> = {
     part: Part,
     _context: DirectiveContext,
   ): ClassBinding {
-    ensurePartType<Part.AttributePart>(PartType.Attribute, this, value, part);
+    ensurePartType<Part.AttributePart>(PART_TYPE_ATTRIBUTE, this, value, part);
     return new ClassBinding(value, part);
   },
 };

@@ -5,6 +5,7 @@ import type {
   Layout,
   Part,
   Slot,
+  SlotStatus,
   UnwrapBindable,
   UpdateSession,
 } from '../core.js';
@@ -86,6 +87,10 @@ export class CachedSlot<TSource, TKey> implements Slot<TSource> {
 
   get part(): Part {
     return this._pendingSlot.part;
+  }
+
+  get status(): SlotStatus {
+    return this._pendingSlot.status;
   }
 
   attach(session: UpdateSession): void {

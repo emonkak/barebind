@@ -1,4 +1,4 @@
-import { BoundaryType, type Coroutine, type Scope } from './core.js';
+import { BOUNDARY_TYPE_ERROR, type Coroutine, type Scope } from './core.js';
 import { formatOwnerStack, getOwnerStack } from './debug/coroutine.js';
 
 export class CoroutineError extends Error {
@@ -23,7 +23,7 @@ export function handleError(error: unknown, scope: Scope): Scope {
       while (nextBoundary !== null) {
         const boundary = nextBoundary;
         nextBoundary = nextBoundary.next;
-        if (boundary.type === BoundaryType.Error) {
+        if (boundary.type === BOUNDARY_TYPE_ERROR) {
           const { handler } = boundary;
           handler(error, handleError);
           return;

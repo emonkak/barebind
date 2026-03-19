@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { BoundaryType, createScope, type Part, PartType } from '@/core.js';
+import {
+  BOUNDARY_TYPE_HYDRATION,
+  createScope,
+  PART_TYPE_CHILD_NODE,
+  PART_TYPE_ELEMENT,
+  type Part,
+} from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import { createTreeWalker } from '@/hydration.js';
 import {
@@ -41,11 +47,11 @@ describe('RepeatDirective', () => {
     it('constructs a new RepeatBinding', () => {
       const props: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const runtime = createRuntime();
       const binding = RepeatDirective.resolveBinding(props, part, runtime);
 
@@ -58,9 +64,9 @@ describe('RepeatDirective', () => {
     it('should throw the error if the part is not a child node part', () => {
       const props: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('div'),
-      };
+      } as const;
       const runtime = createRuntime();
 
       expect(() =>
@@ -75,11 +81,11 @@ describe('RepeatBinding', () => {
     it('returns true if committed slots does not exist', () => {
       const props: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new RepeatBinding(props, part);
 
       expect(binding.shouldUpdate(props)).toBe(true);
@@ -89,11 +95,11 @@ describe('RepeatBinding', () => {
       const props1: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
       const props2: RepeatProps<string> = { source: ['baz', 'bar', 'foo'] };
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new RepeatBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -132,7 +138,7 @@ describe('RepeatBinding', () => {
             source: combinations2,
           };
           const part: Part.ChildNodePart = {
-            type: PartType.ChildNode,
+            type: PART_TYPE_CHILD_NODE,
             node: document.createComment(''),
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
@@ -198,7 +204,7 @@ describe('RepeatBinding', () => {
             source: permutation2,
           };
           const part: Part.ChildNodePart = {
-            type: PartType.ChildNode,
+            type: PART_TYPE_CHILD_NODE,
             node: document.createComment(''),
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
@@ -258,7 +264,7 @@ describe('RepeatBinding', () => {
         source,
       };
       const part: Part.ChildNodePart = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
@@ -280,7 +286,7 @@ describe('RepeatBinding', () => {
       const updater = new TestUpdater(scope);
 
       scope.boundary = {
-        type: BoundaryType.Hydration,
+        type: BOUNDARY_TYPE_HYDRATION,
         next: scope.boundary,
         targetTree,
       };
@@ -329,7 +335,7 @@ describe('RepeatBinding', () => {
             source: permutation2,
           };
           const part: Part.ChildNodePart = {
-            type: PartType.ChildNode,
+            type: PART_TYPE_CHILD_NODE,
             node: document.createComment(''),
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
@@ -400,7 +406,7 @@ describe('RepeatBinding', () => {
         source: { [Symbol.iterator]: () => Iterator.from(source2) },
       };
       const part: Part.ChildNodePart = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
@@ -456,7 +462,7 @@ describe('RepeatBinding', () => {
         source,
       };
       const part: Part.ChildNodePart = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,

@@ -4,8 +4,8 @@ import {
   type Directive,
   type DirectiveType,
   type Layout,
+  PART_TYPE_NAMES,
   type Part,
-  PartType,
   type UnwrapBindable,
 } from './core.js';
 import { formatPart } from './debug/part.js';
@@ -106,7 +106,7 @@ export function ensurePartType<TExpectedPart extends Part>(
       type,
       value,
       part,
-      `${type.name} must be used in ${Object.keys(PartType)[expectedPartType]}Part.`,
+      `${type.name} must be used in ${PART_TYPE_NAMES[expectedPartType]}Part.`,
     );
   }
 }

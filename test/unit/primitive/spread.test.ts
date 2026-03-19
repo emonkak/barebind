@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { PartType } from '@/core.js';
+import {
+  PART_TYPE_ATTRIBUTE,
+  PART_TYPE_ELEMENT,
+  PART_TYPE_EVENT,
+  PART_TYPE_LIVE,
+  PART_TYPE_PROPERTY,
+  PART_TYPE_TEXT,
+  SLOT_STATUS_IDLE,
+} from '@/core.js';
 import { SpreadBinding, SpreadPrimitive } from '@/primitive/spread.js';
 import { createRuntime, MockSlot } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -8,9 +16,9 @@ describe('SpreadPrimitive', () => {
   describe('ensureValue()', () => {
     it('asserts the value is a object', () => {
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('div'),
-      };
+      } as const;
 
       expect(() => {
         SpreadPrimitive.ensureValue!.call(
@@ -27,9 +35,9 @@ describe('SpreadPrimitive', () => {
       'foo',
     ])('throws an error if the value is not object', (value) => {
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('div'),
-      };
+      } as const;
 
       expect(() => {
         SpreadPrimitive.ensureValue!.call(SpreadPrimitive, value, part);
@@ -41,9 +49,9 @@ describe('SpreadPrimitive', () => {
     it('constructs a new SpreadBinding', () => {
       const props = { color: 'red' };
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('div'),
-      };
+      } as const;
       const runtime = createRuntime();
       const binding = SpreadPrimitive.resolveBinding(props, part, runtime);
 
@@ -56,11 +64,11 @@ describe('SpreadPrimitive', () => {
     it('should throw the error if the part is not a element part', () => {
       const props = { class: 'foo' };
       const part = {
-        type: PartType.Text,
+        type: PART_TYPE_TEXT,
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      };
+      } as const;
       const runtime = createRuntime();
 
       expect(() =>
@@ -75,9 +83,9 @@ describe('SpreadBinding', () => {
     it('returns true if the committed value does not exist', () => {
       const props = { class: 'foo' };
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('div'),
-      };
+      } as const;
       const binding = new SpreadBinding(props, part);
 
       expect(binding.shouldUpdate(props)).toBe(true);
@@ -87,9 +95,9 @@ describe('SpreadBinding', () => {
       const props1 = { class: 'foo' };
       const props2 = { id: 'bar' };
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('div'),
-      };
+      } as const;
       const binding = new SpreadBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -118,9 +126,9 @@ describe('SpreadBinding', () => {
         '@click': () => {},
       };
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('dialog'),
-      };
+      } as const;
       const binding = new SpreadBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -141,35 +149,32 @@ describe('SpreadBinding', () => {
         );
         expect(slots).toStrictEqual({
           id: expect.objectContaining({
-            dirty: false,
-            committed: true,
             part: {
-              type: PartType.Attribute,
+              type: PART_TYPE_ATTRIBUTE,
               name: 'id',
               node: expect.exact(part.node),
             },
             value: props1.id,
+            status: SLOT_STATUS_IDLE,
           }),
           class: expect.objectContaining({
-            dirty: false,
-            committed: true,
             part: {
-              type: PartType.Attribute,
+              type: PART_TYPE_ATTRIBUTE,
               name: 'class',
               node: expect.exact(part.node),
             },
             value: props1.class,
+            status: SLOT_STATUS_IDLE,
           }),
           $open: expect.objectContaining({
-            dirty: false,
-            committed: true,
             part: {
-              type: PartType.Live,
+              type: PART_TYPE_LIVE,
               name: 'open',
               node: expect.exact(part.node),
               defaultValue: false,
             },
             value: props1.$open,
+            status: SLOT_STATUS_IDLE,
           }),
         });
       }
@@ -187,22 +192,19 @@ describe('SpreadBinding', () => {
 
         expect(oldSlots).toStrictEqual({
           id: expect.objectContaining({
-            dirty: false,
-            committed: false,
+            status: SLOT_STATUS_IDLE,
           }),
           class: expect.objectContaining({
-            dirty: false,
-            committed: true,
             part: {
-              type: PartType.Attribute,
+              type: PART_TYPE_ATTRIBUTE,
               name: 'class',
               node: expect.exact(part.node),
             },
             value: props1.class,
+            status: SLOT_STATUS_IDLE,
           }),
           $open: expect.objectContaining({
-            dirty: false,
-            committed: false,
+            status: SLOT_STATUS_IDLE,
           }),
         });
         expect(newSlots).toStrictEqual(
@@ -214,35 +216,32 @@ describe('SpreadBinding', () => {
         );
         expect(newSlots).toStrictEqual({
           class: expect.objectContaining({
-            dirty: false,
-            committed: true,
             part: {
-              type: PartType.Attribute,
+              type: PART_TYPE_ATTRIBUTE,
               name: 'class',
               node: part.node,
             },
             value: props1.class,
+            status: SLOT_STATUS_IDLE,
           }),
           '.innerHTML': expect.objectContaining({
-            dirty: false,
-            committed: true,
             part: {
-              type: PartType.Property,
+              type: PART_TYPE_PROPERTY,
               name: 'innerHTML',
               node: expect.exact(part.node),
               defaultValue: '',
             },
             value: props2['.innerHTML'],
+            status: SLOT_STATUS_IDLE,
           }),
           '@click': expect.objectContaining({
-            dirty: false,
-            committed: true,
             part: {
-              type: PartType.Event,
+              type: PART_TYPE_EVENT,
               name: 'click',
               node: expect.exact(part.node),
             },
             value: props2['@click'],
+            status: SLOT_STATUS_IDLE,
           }),
         });
       }
@@ -253,9 +252,9 @@ describe('SpreadBinding', () => {
     it('should do nothing if the committed properties does not exist', () => {
       const props = {};
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('div'),
-      };
+      } as const;
       const binding = new SpreadBinding(props, part);
       const updater = new TestUpdater();
 
@@ -278,9 +277,9 @@ describe('SpreadBinding', () => {
         '@click': () => {},
       };
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('dialog'),
-      };
+      } as const;
       const binding = new SpreadBinding(props, part);
       const updater = new TestUpdater();
 
@@ -299,56 +298,51 @@ describe('SpreadBinding', () => {
         );
         expect(slots).toStrictEqual({
           id: expect.objectContaining({
-            dirty: false,
-            committed: true,
             part: {
-              type: PartType.Attribute,
+              type: PART_TYPE_ATTRIBUTE,
               name: 'id',
               node: expect.exact(part.node),
             },
             value: props.id,
+            status: SLOT_STATUS_IDLE,
           }),
           class: expect.objectContaining({
-            dirty: false,
-            committed: true,
             part: {
-              type: PartType.Attribute,
+              type: PART_TYPE_ATTRIBUTE,
               name: 'class',
               node: expect.exact(part.node),
             },
             value: props.class,
+            status: SLOT_STATUS_IDLE,
           }),
           $open: expect.objectContaining({
-            dirty: false,
-            committed: true,
             part: {
-              type: PartType.Live,
+              type: PART_TYPE_LIVE,
               name: 'open',
               node: expect.exact(part.node),
               defaultValue: false,
             },
             value: props.$open,
+            status: SLOT_STATUS_IDLE,
           }),
           '.innerHTML': expect.objectContaining({
-            dirty: false,
-            committed: true,
             part: {
-              type: PartType.Property,
+              type: PART_TYPE_PROPERTY,
               name: 'innerHTML',
               node: expect.exact(part.node),
               defaultValue: '',
             },
             value: props['.innerHTML'],
+            status: SLOT_STATUS_IDLE,
           }),
           '@click': expect.objectContaining({
-            dirty: false,
-            committed: true,
             part: {
-              type: PartType.Event,
+              type: PART_TYPE_EVENT,
               name: 'click',
               node: expect.exact(part.node),
             },
             value: props['@click'],
+            status: SLOT_STATUS_IDLE,
           }),
         });
       }
@@ -363,24 +357,19 @@ describe('SpreadBinding', () => {
 
         expect(slots).toStrictEqual({
           id: expect.objectContaining({
-            dirty: false,
-            committed: false,
+            status: SLOT_STATUS_IDLE,
           }),
           class: expect.objectContaining({
-            dirty: false,
-            committed: false,
+            status: SLOT_STATUS_IDLE,
           }),
           $open: expect.objectContaining({
-            dirty: false,
-            committed: false,
+            status: SLOT_STATUS_IDLE,
           }),
           '.innerHTML': expect.objectContaining({
-            dirty: false,
-            committed: false,
+            status: SLOT_STATUS_IDLE,
           }),
           '@click': expect.objectContaining({
-            dirty: false,
-            committed: false,
+            status: SLOT_STATUS_IDLE,
           }),
         });
         expect(binding['_memoizedSlots']).toBe(null);

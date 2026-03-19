@@ -1,7 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ComponentBinding, createComponent } from '@/component.js';
-import { type CommitPhase, PartType, type RenderContext } from '@/core.js';
+import {
+  type CommitPhase,
+  PART_TYPE_CHILD_NODE,
+  type RenderContext,
+  SLOT_STATUS_ATTACHED,
+  SLOT_STATUS_DETACHED,
+  SLOT_STATUS_IDLE,
+} from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import { ConcurrentLane } from '@/lane.js';
 import { RenderSession } from '@/render-session.js';
@@ -72,11 +79,11 @@ describe('createComponent()', () => {
     it('constructs a new ComponentBinding', () => {
       const props = { greet: 'Hello', name: 'foo' };
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const runtime = createRuntime();
       const binding = Greet.resolveBinding(
         props,
@@ -98,11 +105,11 @@ describe('ComponentBinding', () => {
     it('returns true if the committed value does not exist', () => {
       const props = { greet: 'Hello', name: 'foo' };
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new ComponentBinding(Greet, props, part);
 
       expect(binding.shouldUpdate(props)).toBe(true);
@@ -112,11 +119,11 @@ describe('ComponentBinding', () => {
       const props1 = { greet: 'Hello', name: 'foo' };
       const props2 = { greet: 'Chao', name: 'bar' };
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new ComponentBinding(Greet, props1, part);
       const updater = new TestUpdater();
 
@@ -143,11 +150,11 @@ describe('ComponentBinding', () => {
         greet: 'Chao',
       };
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new ComponentBinding(Greet, props1, part);
       const updater = new TestUpdater();
 
@@ -160,8 +167,7 @@ describe('ComponentBinding', () => {
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
           expect.objectContaining({
-            dirty: false,
-            committed: true,
+            status: SLOT_STATUS_IDLE,
           }),
         );
         expect(binding['_slot']?.part).toBe(part);
@@ -178,8 +184,7 @@ describe('ComponentBinding', () => {
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
           expect.objectContaining({
-            dirty: false,
-            committed: true,
+            status: SLOT_STATUS_IDLE,
           }),
         );
         expect(binding['_slot']?.part).toBe(part);
@@ -195,11 +200,11 @@ describe('ComponentBinding', () => {
         cleanup: vi.fn(),
       };
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new ComponentBinding(EnqueueEffect, props, part);
       const updater = new TestUpdater();
 
@@ -212,8 +217,7 @@ describe('ComponentBinding', () => {
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
           expect.objectContaining({
-            dirty: false,
-            committed: true,
+            status: SLOT_STATUS_IDLE,
           }),
         );
         expect(binding['_slot']?.part).toBe(part);
@@ -229,8 +233,7 @@ describe('ComponentBinding', () => {
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
           expect.objectContaining({
-            dirty: false,
-            committed: false,
+            status: SLOT_STATUS_IDLE,
           }),
         );
         expect(binding['_slot']?.part).toBe(part);
@@ -252,11 +255,11 @@ describe('ComponentBinding', () => {
         cleanup: vi.fn(),
       };
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new ComponentBinding(EnqueueEffect, props, part);
       const updater = new TestUpdater();
 
@@ -280,8 +283,7 @@ describe('ComponentBinding', () => {
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
           expect.objectContaining({
-            dirty: true,
-            committed: false,
+            status: SLOT_STATUS_DETACHED,
           }),
         );
         expect(binding['_slot']?.part).toBe(part);

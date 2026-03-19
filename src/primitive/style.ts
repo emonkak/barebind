@@ -1,8 +1,8 @@
 import { shallowEqual } from '../compare.js';
 import {
   type DirectiveContext,
+  PART_TYPE_ATTRIBUTE,
   type Part,
-  PartType,
   type Primitive,
 } from '../core.js';
 import { DirectiveError, ensurePartType } from '../directive.js';
@@ -42,7 +42,7 @@ export const StylePrimitive: Primitive<StyleProps> = {
     part: Part,
     _context: DirectiveContext,
   ): StyleBinding {
-    ensurePartType<Part.AttributePart>(PartType.Attribute, this, value, part);
+    ensurePartType<Part.AttributePart>(PART_TYPE_ATTRIBUTE, this, value, part);
     return new StyleBinding(value, part);
   },
 };

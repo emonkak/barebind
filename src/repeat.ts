@@ -5,8 +5,8 @@ import {
   type DirectiveContext,
   type DirectiveType,
   getStartNode,
+  PART_TYPE_CHILD_NODE,
   type Part,
-  PartType,
   type Slot,
   type UpdateSession,
 } from './core.js';
@@ -50,7 +50,7 @@ export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
     part: Part,
     _context: DirectiveContext,
   ): RepeatBinding<unknown, unknown, unknown> {
-    ensurePartType<Part.ChildNodePart>(PartType.ChildNode, this, props, part);
+    ensurePartType<Part.ChildNodePart>(PART_TYPE_CHILD_NODE, this, props, part);
     return new RepeatBinding(props, part);
   },
 };
@@ -128,11 +128,11 @@ export class RepeatBinding<TSource, TKey, TElement>
       {
         insert: (item, referenceSlot) => {
           const part = {
-            type: PartType.ChildNode,
+            type: PART_TYPE_CHILD_NODE,
             node: document.createComment(''),
             anchorNode: null,
             namespaceURI: this._part.namespaceURI,
-          };
+          } as const;
           const slot = context.resolveSlot(item, part);
           slot.attach(session);
           if (targetTree !== null) {

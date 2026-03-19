@@ -7,7 +7,7 @@ import {
   SignalBinding,
   SignalDirective,
 } from '@/addons/signal/signal.js';
-import { $directive, PartType } from '@/core.js';
+import { $directive, PART_TYPE_TEXT } from '@/core.js';
 import { NoLanes, SyncLane, UserBlockingLane } from '@/lane.js';
 import { createRuntime } from '../../../mocks.js';
 import { waitForMicrotasks } from '../../../test-helpers.js';
@@ -19,11 +19,11 @@ describe('SignalDirective', () => {
     it('constructs a new SignalBinding', () => {
       const signal = new Atom('foo');
       const part = {
-        type: PartType.Text,
+        type: PART_TYPE_TEXT,
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      };
+      } as const;
       const runtime = createRuntime();
       const binding = SignalDirective.resolveBinding(
         signal,
@@ -45,11 +45,11 @@ describe('SignalBinding', () => {
     it('returns true if the subscribed value does not exist', () => {
       const signal = new Atom('foo');
       const part = {
-        type: PartType.Text,
+        type: PART_TYPE_TEXT,
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      };
+      } as const;
       const runtime = createRuntime();
       const binding = SignalDirective.resolveBinding(signal, part, runtime);
 
@@ -60,11 +60,11 @@ describe('SignalBinding', () => {
       const signal1 = new Atom('foo');
       const signal2 = new Atom('bar');
       const part = {
-        type: PartType.Text,
+        type: PART_TYPE_TEXT,
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      };
+      } as const;
       const updater = new TestUpdater();
       const binding = SignalDirective.resolveBinding(
         signal1,
@@ -86,11 +86,11 @@ describe('SignalBinding', () => {
     it('schedule an update when the signal value has been changed', async () => {
       const signal = new Atom('foo');
       const part = {
-        type: PartType.Text,
+        type: PART_TYPE_TEXT,
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      };
+      } as const;
       const updater = new TestUpdater();
       const binding = SignalDirective.resolveBinding(
         signal,
@@ -121,11 +121,11 @@ describe('SignalBinding', () => {
       const signal1 = new Atom('foo');
       const signal2 = new Atom('bar');
       const part = {
-        type: PartType.Text,
+        type: PART_TYPE_TEXT,
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      };
+      } as const;
       const updater = new TestUpdater();
       const binding = SignalDirective.resolveBinding(
         signal1,
@@ -168,11 +168,11 @@ describe('SignalBinding', () => {
     it('unsubscribes the signal', async () => {
       const signal = new Atom('foo');
       const part = {
-        type: PartType.Text,
+        type: PART_TYPE_TEXT,
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      };
+      } as const;
       const updater = new TestUpdater();
       const binding = SignalDirective.resolveBinding(
         signal,

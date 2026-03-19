@@ -1,7 +1,7 @@
 import {
   type DirectiveType,
+  PART_TYPE_CHILD_NODE,
   type Part,
-  PartType,
   type TemplateResult,
   type UpdateSession,
 } from '../core.js';
@@ -28,11 +28,11 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
     const { context } = session;
     const document = part.node.ownerDocument;
     const childNodePart = {
-      type: PartType.ChildNode,
+      type: PART_TYPE_CHILD_NODE,
       node: document.createComment(''),
       anchorNode: null,
       namespaceURI: part.namespaceURI,
-    };
+    } as const;
     const childNodeSlot = context.resolveSlot(values[0], childNodePart);
 
     childNodeSlot.attach(session);
@@ -50,11 +50,11 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
     const { context } = session;
     const document = part.node.ownerDocument;
     const childNodePart = {
-      type: PartType.ChildNode,
+      type: PART_TYPE_CHILD_NODE,
       node: document.createComment(''),
       anchorNode: null,
       namespaceURI: part.namespaceURI,
-    };
+    } as const;
     const childNodeSlot = context.resolveSlot(values[0], childNodePart);
 
     childNodeSlot.attach(session);

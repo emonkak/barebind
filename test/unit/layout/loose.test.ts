@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PartType } from '@/core.js';
+import { PART_TYPE_CHILD_NODE } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import { Loose, LooseLayout, LooseSlot } from '@/layout/loose.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -33,11 +33,11 @@ describe('LooseLayout', () => {
     it('constructs a new LooseSlot', () => {
       const source = 'foo';
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new MockBinding(MockPrimitive, source, part);
       const slot = LooseLayout.placeBinding(binding, new MockLayout());
 
@@ -52,11 +52,11 @@ describe('LooseSlot', () => {
   it('can commit the binding after attaching', () => {
     const source = 'foo';
     const part = {
-      type: PartType.ChildNode,
+      type: PART_TYPE_CHILD_NODE,
       node: document.createComment(''),
       anchorNode: null,
       namespaceURI: HTML_NAMESPACE_URI,
-    };
+    } as const;
     const binding = new MockBinding(MockPrimitive, source, part);
     const slot = new LooseSlot(binding);
     const updater = new TestUpdater();
@@ -80,11 +80,11 @@ describe('LooseSlot', () => {
   it('can commit the binding it is dirty', () => {
     const source = 'foo';
     const part = {
-      type: PartType.ChildNode,
+      type: PART_TYPE_CHILD_NODE,
       node: document.createComment(''),
       anchorNode: null,
       namespaceURI: HTML_NAMESPACE_URI,
-    };
+    } as const;
     const binding = new MockBinding(MockPrimitive, source, part);
     const slot = new LooseSlot(binding);
     const updater = new TestUpdater();
@@ -118,11 +118,11 @@ describe('LooseSlot', () => {
   it('can rollback the binding after detaching', () => {
     const source = 'foo';
     const part = {
-      type: PartType.ChildNode,
+      type: PART_TYPE_CHILD_NODE,
       node: document.createComment(''),
       anchorNode: null,
       namespaceURI: HTML_NAMESPACE_URI,
-    };
+    } as const;
     const binding = new MockBinding(MockPrimitive, source, part);
     const slot = new LooseSlot(binding);
     const updater = new TestUpdater();
@@ -155,11 +155,11 @@ describe('LooseSlot', () => {
       const source1 = 'foo';
       const source2 = 'bar';
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new MockBinding(MockPrimitive, source1, part);
       const slot = new LooseSlot(binding);
       const updater = new TestUpdater();
@@ -198,11 +198,11 @@ describe('LooseSlot', () => {
       const source1 = 'foo';
       const source2 = new DirectiveSpecifier(new MockDirective(), 'bar');
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new MockBinding(MockPrimitive, source1, part);
       const slot = new LooseSlot(binding);
       const updater = new TestUpdater();

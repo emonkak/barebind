@@ -3,11 +3,11 @@ import { createComponent } from '@/component.js';
 import {
   $directive,
   type Bindable,
-  BoundaryType,
+  BOUNDARY_TYPE_ERROR,
   createScope,
   EffectQueue,
   type Hook,
-  PartType,
+  PART_TYPE_CHILD_NODE,
   type SessionEvent,
 } from '@/core.js';
 import { AbortError, InterruptError } from '@/error.js';
@@ -391,7 +391,7 @@ describe('Runtime', () => {
         SESSION: {
           const parentScope = createScope();
           parentScope.boundary = {
-            type: BoundaryType.Error,
+            type: BOUNDARY_TYPE_ERROR,
             next: null,
             handler: errorHandler,
           };
@@ -596,7 +596,7 @@ describe('Runtime', () => {
         SESSION: {
           const parentScope = createScope();
           parentScope.boundary = {
-            type: BoundaryType.Error,
+            type: BOUNDARY_TYPE_ERROR,
             next: null,
             handler: errorHandler,
           };
@@ -709,11 +709,11 @@ describe('Runtime', () => {
       undefined,
     ])('resolves primitive values as primitive directives', (source) => {
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const runtime = createRuntime();
 
       const resolvePrimitiveSpy = vi.spyOn(
@@ -737,11 +737,11 @@ describe('Runtime', () => {
         layout: new MockLayout(),
       });
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const runtime = createRuntime();
 
       const directive = runtime.resolveDirective(source, part);
@@ -757,11 +757,11 @@ describe('Runtime', () => {
     it('resolves the slot from the primitive source', () => {
       const source = 'foo';
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const runtime = createRuntime();
 
       const resolvePrimitiveSpy = vi.spyOn(
@@ -791,11 +791,11 @@ describe('Runtime', () => {
         },
       };
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const runtime = createRuntime();
 
       const resolveLayoutSpy = vi.spyOn(runtime['_backend'], 'resolveLayout');

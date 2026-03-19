@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-
-import { PartType } from '@/core.js';
+import { PART_TYPE_ATTRIBUTE, PART_TYPE_ELEMENT } from '@/core.js';
 import { ClassBinding, ClassPrimitive } from '@/primitive/class.js';
 import { createRuntime } from '../../mocks.js';
 import { createElement } from '../../test-helpers.js';
@@ -13,15 +12,15 @@ describe('ClassPrimitive', () => {
       ['foo'],
       {},
       [],
-    ])('asserts the value is a class specifier', (value) => {
+    ])('asserts the value is a class specifier', (source) => {
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':class',
-      };
+      } as const;
 
       expect(() => {
-        ClassPrimitive.ensureValue!.call(ClassPrimitive, value, part);
+        ClassPrimitive.ensureValue!.call(ClassPrimitive, source, part);
       }).not.toThrow();
     });
 
@@ -29,15 +28,15 @@ describe('ClassPrimitive', () => {
       'foo',
       null,
       undefined,
-    ])('throws an error if the value is not an object', (value) => {
+    ])('throws an error if the value is not an object', (source) => {
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':class',
-      };
+      } as const;
 
       expect(() => {
-        ClassPrimitive.ensureValue!.call(ClassPrimitive, value, part);
+        ClassPrimitive.ensureValue!.call(ClassPrimitive, source, part);
       }).toThrow('The value of ClassPrimitive must be an object.');
     });
   });
@@ -49,10 +48,10 @@ describe('ClassPrimitive', () => {
     ])('constructs a new AttributeBinding with "%s" attribute', (attributeName) => {
       const classes = { foo: true, bar: true, baz: false };
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: attributeName,
-      };
+      } as const;
       const runtime = createRuntime();
       const binding = ClassPrimitive.resolveBinding(classes, part, runtime);
 
@@ -65,9 +64,9 @@ describe('ClassPrimitive', () => {
     it('throws an error if the part is not an attribute part', () => {
       const classes = { foo: true, bar: true, baz: false };
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('div'),
-      };
+      } as const;
       const runtime = createRuntime();
 
       expect(() =>
@@ -82,10 +81,10 @@ describe('ClassBinding', () => {
     it('returns true if the committed classes does not exist', () => {
       const classes = { foo: true, bar: true, baz: false };
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':class',
-      };
+      } as const;
       const binding = new ClassBinding(classes, part);
 
       expect(binding.shouldUpdate(classes)).toBe(true);
@@ -94,10 +93,10 @@ describe('ClassBinding', () => {
     it('returns true if any classes are not the same in the class list', () => {
       const classes = ['foo', 'bar', null];
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':class',
-      };
+      } as const;
       const binding = new ClassBinding(classes, part);
       const updater = new TestUpdater();
 
@@ -122,10 +121,10 @@ describe('ClassBinding', () => {
     it('returns true if any classes are not the same in the class map', () => {
       const classes = { foo: true, bar: true, baz: false };
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':class',
-      };
+      } as const;
       const binding = new ClassBinding(classes, part);
       const updater = new TestUpdater();
 
@@ -163,10 +162,10 @@ describe('ClassBinding', () => {
         quux: true,
       };
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':class',
-      };
+      } as const;
       const binding = new ClassBinding(classes1, part);
       const updater = new TestUpdater();
 
@@ -204,10 +203,10 @@ describe('ClassBinding', () => {
       const classes1 = ['foo', 'bar baz', 'qux', undefined];
       const classes2 = ['foo', null, '', 'quux'];
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':class',
-      };
+      } as const;
       const binding = new ClassBinding(classes1, part);
       const updater = new TestUpdater();
 
@@ -245,10 +244,10 @@ describe('ClassBinding', () => {
       const classes1 = { _: 'foo bar', foo: true, bar: false };
       const classes2 = { _: 'foo', foo: false, bar: true };
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':class',
-      };
+      } as const;
       const binding = new ClassBinding(classes1, part);
       const updater = new TestUpdater();
 
@@ -285,10 +284,10 @@ describe('ClassBinding', () => {
     it('can preserve preset class names', () => {
       const classes = { foo: true, bar: true };
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: createElement('div', { class: 'baz' }),
         name: 'class',
-      };
+      } as const;
       const binding = new ClassBinding(classes, part);
       const updater = new TestUpdater();
 
@@ -307,10 +306,10 @@ describe('ClassBinding', () => {
     it('removes committed class names', () => {
       const classes = { foo: true, bar: true, baz: false };
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':class',
-      };
+      } as const;
       const binding = new ClassBinding(classes, part);
       const updater = new TestUpdater();
 

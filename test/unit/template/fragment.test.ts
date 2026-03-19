@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PartType } from '@/core.js';
+import { PART_TYPE_CHILD_NODE } from '@/core.js';
 import { createTreeWalker } from '@/hydration.js';
 import { FragmentTemplate } from '@/template/fragment.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -57,11 +57,11 @@ describe('FragmentTemplate', () => {
       const template = new FragmentTemplate(innerTemplates);
       const values = ['foo', 'bar', 'baz'];
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const container = document.createElement('div');
       const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
@@ -69,11 +69,11 @@ describe('FragmentTemplate', () => {
       const hydrationSpys = innerTemplates.map((template) =>
         vi.spyOn(template, 'hydrate').mockImplementation(() => {
           const part = {
-            type: PartType.ChildNode,
+            type: PART_TYPE_CHILD_NODE,
             node: document.createComment(template.values.join('')),
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
-          };
+          } as const;
           return {
             children: [part.node],
             slots: [
@@ -139,21 +139,21 @@ describe('FragmentTemplate', () => {
       const template = new FragmentTemplate(innerTemplates);
       const values = ['foo', 'bar', 'baz'];
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const updater = new TestUpdater();
 
       const renderSpys = innerTemplates.map((template) =>
         vi.spyOn(template, 'render').mockImplementation(() => {
           const part = {
-            type: PartType.ChildNode,
+            type: PART_TYPE_CHILD_NODE,
             node: document.createComment(template.values.join('')),
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
-          };
+          } as const;
           return {
             children: [part.node],
             slots: [

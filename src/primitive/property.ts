@@ -1,7 +1,7 @@
 import {
   type DirectiveContext,
+  PART_TYPE_PROPERTY,
   type Part,
-  PartType,
   type Primitive,
 } from '../core.js';
 import { ensurePartType } from '../directive.js';
@@ -16,7 +16,7 @@ export const PropertyPrimitive: Primitive<any> = {
     part: Part,
     _context: DirectiveContext,
   ): PropertyBinding<unknown> {
-    ensurePartType<Part.PropertyPart>(PartType.Property, this, value, part);
+    ensurePartType<Part.PropertyPart>(PART_TYPE_PROPERTY, this, value, part);
     return new PropertyBinding(value, part);
   },
 };

@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-
-import { PartType } from '@/core.js';
+import { PART_TYPE_ELEMENT, PART_TYPE_LIVE } from '@/core.js';
 import { LiveBinding, LivePrimitive } from '@/primitive/live.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -10,11 +9,11 @@ describe('LivePrimitive', () => {
     it('constructs a new LiveBinding', () => {
       const value = 'foo';
       const part = {
-        type: PartType.Live,
+        type: PART_TYPE_LIVE,
         node: document.createElement('textarea'),
         name: 'value',
         defaultValue: '',
-      };
+      } as const;
       const runtime = createRuntime();
       const binding = LivePrimitive.resolveBinding(value, part, runtime);
 
@@ -27,9 +26,9 @@ describe('LivePrimitive', () => {
     it('should throw the error if the part is not a live part', () => {
       const value = 'foo';
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('textarea'),
-      };
+      } as const;
       const runtime = createRuntime();
 
       expect(() => LivePrimitive.resolveBinding(value, part, runtime)).toThrow(
@@ -44,11 +43,11 @@ describe('LiveBinding', () => {
     it('returns always true', () => {
       const value = 'foo';
       const part = {
-        type: PartType.Live,
+        type: PART_TYPE_LIVE,
         node: document.createElement('textarea'),
         name: 'value',
         defaultValue: '',
-      };
+      } as const;
       const binding = new LiveBinding(value, part);
 
       expect(binding.shouldUpdate(value)).toBe(true);
@@ -59,11 +58,11 @@ describe('LiveBinding', () => {
     it('sets the value for the property if it is different from the current one', () => {
       const value = 'foo';
       const part = {
-        type: PartType.Live,
+        type: PART_TYPE_LIVE,
         node: document.createElement('textarea'),
         name: 'value',
         defaultValue: '',
-      };
+      } as const;
       const binding = new LiveBinding(value, part);
       const updater = new TestUpdater();
 
@@ -95,11 +94,11 @@ describe('LiveBinding', () => {
     it('restores the property to the initial value of the part', () => {
       const value = 'foo';
       const part = {
-        type: PartType.Live,
+        type: PART_TYPE_LIVE,
         node: document.createElement('textarea'),
         name: 'value',
         defaultValue: '',
-      };
+      } as const;
       const binding = new LiveBinding(value, part);
       const updater = new TestUpdater();
 

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-
-import { PartType } from '@/core.js';
+import { PART_TYPE_ELEMENT } from '@/core.js';
 import { BlackholeBinding, BlackholePrimitive } from '@/primitive/blackhole.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -10,9 +9,9 @@ describe('BlackholePrimitive', () => {
     it('constructs a new BlackholeBinding', () => {
       const value = 'foo';
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('div'),
-      };
+      } as const;
       const runtime = createRuntime();
       const binding = BlackholePrimitive.resolveBinding(value, part, runtime);
 
@@ -30,9 +29,9 @@ describe('BlackholeBinding', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('div'),
-      };
+      } as const;
       const binding = new BlackholeBinding(value1, part);
 
       expect(binding.shouldUpdate(value1)).toBe(false);
@@ -44,9 +43,9 @@ describe('BlackholeBinding', () => {
     it('should do nothing', () => {
       const value = 'foo';
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('div'),
-      };
+      } as const;
       const binding = new BlackholeBinding(value, part);
       const updater = new TestUpdater();
 
@@ -63,9 +62,9 @@ describe('BlackholeBinding', () => {
     it('should do nothing', () => {
       const value = 'foo';
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('div'),
-      };
+      } as const;
       const binding = new BlackholeBinding(value, part);
       const updater = new TestUpdater();
 

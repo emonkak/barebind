@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { PartType } from '@/core.js';
+import {
+  PART_TYPE_CHILD_NODE,
+  PART_TYPE_TEXT,
+  SLOT_STATUS_ATTACHED,
+} from '@/core.js';
 import { createTreeWalker, HydrationError } from '@/hydration.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
@@ -31,11 +35,11 @@ describe('TextTemplate', () => {
       const template = new TextTemplate('(', ')');
       const values = ['foo'] as const;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const container = createElement('div', {}, 'foo');
       const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
@@ -49,13 +53,12 @@ describe('TextTemplate', () => {
         expect.objectContaining({
           value: values[0],
           part: {
-            type: PartType.Text,
+            type: PART_TYPE_TEXT,
             node: expect.exact(container.firstChild),
             precedingText: '(',
             followingText: ')',
           },
-          dirty: true,
-          committed: false,
+          status: SLOT_STATUS_ATTACHED,
         }),
       ]);
     });
@@ -64,11 +67,11 @@ describe('TextTemplate', () => {
       const template = new TextTemplate('(', ')');
       const values = ['foo'] as const;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const container = createElement('div', {});
       const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
@@ -86,11 +89,11 @@ describe('TextTemplate', () => {
       const template = new TextTemplate('(', ')');
       const values = ['foo'] as const;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
@@ -102,13 +105,12 @@ describe('TextTemplate', () => {
         expect.objectContaining({
           value: values[0],
           part: {
-            type: PartType.Text,
+            type: PART_TYPE_TEXT,
             node: expect.any(Text),
             precedingText: '(',
             followingText: ')',
           },
-          dirty: true,
-          committed: false,
+          status: SLOT_STATUS_ATTACHED,
         }),
       ]);
     });

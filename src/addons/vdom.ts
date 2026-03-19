@@ -7,8 +7,8 @@ import {
   type Directive,
   type DirectiveContext,
   type DirectiveType,
+  PART_TYPE_ELEMENT,
   type Part,
-  PartType,
   type Template,
   type UpdateSession,
 } from '../core.js';
@@ -79,7 +79,7 @@ export const ElementDirective: DirectiveType<ElementProps> = {
     part: Part,
     _context: DirectiveContext,
   ): ElementBinding {
-    ensurePartType<Part.ElementPart>(PartType.Element, this, props, part);
+    ensurePartType<Part.ElementPart>(PART_TYPE_ELEMENT, this, props, part);
     return new ElementBinding(props, part);
   },
 };

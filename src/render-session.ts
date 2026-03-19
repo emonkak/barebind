@@ -2,7 +2,8 @@ import { areDependenciesChanged } from './compare.js';
 import {
   $hook,
   type ActionDispatcher,
-  BoundaryType,
+  BOUNDARY_TYPE_ERROR,
+  BOUNDARY_TYPE_SHARED_CONTEXT,
   type Cleanup,
   type Coroutine,
   DETACHED_SCOPE,
@@ -10,11 +11,17 @@ import {
   type EffectHandler,
   type EffectQueue,
   type ErrorHandler,
+  HOOK_TYPE_FINALIZER,
+  HOOK_TYPE_ID,
+  HOOK_TYPE_INSERTION_EFFECT,
+  HOOK_TYPE_LAYOUT_EFFECT,
+  HOOK_TYPE_MEMO,
+  HOOK_TYPE_PASSIVE_EFFECT,
+  HOOK_TYPE_REDUCER,
   type Hook,
   type HookClass,
   type HookFunction,
   type HookObject,
-  HookType,
   type InitialState,
   type NextState,
   type ReducerReturn,
@@ -66,7 +73,7 @@ export class RenderSession implements RenderContext {
 
   catchError(handler: ErrorHandler): void {
     this._scope.boundary = {
-      type: BoundaryType.Error,
+      type: BOUNDARY_TYPE_ERROR,
       next: this._scope.boundary,
       handler,
     };
@@ -76,9 +83,9 @@ export class RenderSession implements RenderContext {
     let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
-      ensureHookType<Hook.FinalizerHook>(HookType.Finalizer, currentHook);
+      ensureHookType<Hook.FinalizerHook>(HOOK_TYPE_FINALIZER, currentHook);
     } else {
-      currentHook = { type: HookType.Finalizer };
+      currentHook = { type: HOOK_TYPE_FINALIZER };
     }
 
     this._hooks[this._hookIndex] = currentHook;
@@ -146,7 +153,7 @@ export class RenderSession implements RenderContext {
         boundary = boundary.next
       ) {
         if (
-          boundary.type === BoundaryType.SharedContext &&
+          boundary.type === BOUNDARY_TYPE_SHARED_CONTEXT &&
           Object.is(boundary.key, key)
         ) {
           return boundary.value as T;
@@ -193,7 +200,7 @@ export class RenderSession implements RenderContext {
 
   setSharedContext<T>(key: unknown, value: T): void {
     this._scope.boundary = {
-      type: BoundaryType.SharedContext,
+      type: BOUNDARY_TYPE_SHARED_CONTEXT,
       next: this._scope.boundary,
       key,
       value,
@@ -251,7 +258,7 @@ export class RenderSession implements RenderContext {
     this._useEffectHook(
       setup,
       dependencies,
-      HookType.PassiveEffect,
+      HOOK_TYPE_PASSIVE_EFFECT,
       this._frame.passiveEffects,
     );
   }
@@ -260,10 +267,10 @@ export class RenderSession implements RenderContext {
     let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
-      ensureHookType<Hook.IdHook>(HookType.Id, currentHook);
+      ensureHookType<Hook.IdHook>(HOOK_TYPE_ID, currentHook);
     } else {
       currentHook = {
-        type: HookType.Id,
+        type: HOOK_TYPE_ID,
         id: this._context.nextIdentifier(),
       };
     }
@@ -281,7 +288,7 @@ export class RenderSession implements RenderContext {
     this._useEffectHook(
       setup,
       dependencies,
-      HookType.InsertionEffect,
+      HOOK_TYPE_INSERTION_EFFECT,
       this._frame.mutationEffects,
     );
   }
@@ -293,7 +300,7 @@ export class RenderSession implements RenderContext {
     this._useEffectHook(
       setup,
       dependencies,
-      HookType.LayoutEffect,
+      HOOK_TYPE_LAYOUT_EFFECT,
       this._frame.layoutEffects,
     );
   }
@@ -305,20 +312,20 @@ export class RenderSession implements RenderContext {
     let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
-      ensureHookType<Hook.MemoHook<TResult>>(HookType.Memo, currentHook);
+      ensureHookType<Hook.MemoHook<TResult>>(HOOK_TYPE_MEMO, currentHook);
 
       if (
         areDependenciesChanged(dependencies, currentHook.memoizedDependencies)
       ) {
         currentHook = {
-          type: HookType.Memo,
+          type: HOOK_TYPE_MEMO,
           memoizedResult: computation(),
           memoizedDependencies: dependencies,
         };
       }
     } else {
       currentHook = {
-        type: HookType.Memo,
+        type: HOOK_TYPE_MEMO,
         memoizedResult: computation(),
         memoizedDependencies: dependencies,
       };
@@ -430,7 +437,7 @@ export class RenderSession implements RenderContext {
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.ReducerHook<TState, TAction>>(
-        HookType.Reducer,
+        HOOK_TYPE_REDUCER,
         currentHook,
       );
 
@@ -456,7 +463,7 @@ export class RenderSession implements RenderContext {
 
       if (skipLanes === NoLanes) {
         currentHook = {
-          type: HookType.Reducer,
+          type: HOOK_TYPE_REDUCER,
           dispatcher,
           memoizedState: newState,
           memoizedProposals: [],
@@ -504,7 +511,7 @@ export class RenderSession implements RenderContext {
       };
       dispatcher.dispatch = dispatcher.dispatch.bind(dispatcher);
       currentHook = {
-        type: HookType.Reducer,
+        type: HOOK_TYPE_REDUCER,
         memoizedState: dispatcher.pendingState,
         memoizedProposals: [],
         dispatcher,

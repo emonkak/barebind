@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PartType } from '@/core.js';
+import { PART_TYPE_CHILD_NODE } from '@/core.js';
 import { createTreeWalker } from '@/hydration.js';
 import { EmptyTemplate } from '@/template/empty.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -29,11 +29,11 @@ describe('EmptyTemplate', () => {
       const template = new EmptyTemplate();
       const values = [] as const;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const targetTree = createTreeWalker(document.createElement('div'));
       const updater = new TestUpdater();
 
@@ -51,11 +51,11 @@ describe('EmptyTemplate', () => {
       const template = new EmptyTemplate();
       const values = [] as const;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {

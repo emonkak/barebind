@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PartType } from '@/core.js';
+import { PART_TYPE_CHILD_NODE } from '@/core.js';
 import { Keyed, KeyedLayout, KeyedSlot } from '@/layout/keyed.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
@@ -41,11 +41,11 @@ describe('KeyedLayout', () => {
       const value = 'foo';
       const key = 123;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new KeyedLayout(key, new MockLayout()).placeBinding(
         binding,
@@ -64,11 +64,11 @@ describe('KeyedSlot', () => {
     const source = 'foo';
     const key = 123;
     const part = {
-      type: PartType.ChildNode,
+      type: PART_TYPE_CHILD_NODE,
       node: document.createComment(''),
       anchorNode: null,
       namespaceURI: HTML_NAMESPACE_URI,
-    };
+    } as const;
     const binding = new MockBinding(MockPrimitive, source, part);
     const innerSlot = new MockSlot(binding);
     const slot = new KeyedSlot(innerSlot, key);
@@ -93,11 +93,11 @@ describe('KeyedSlot', () => {
     const source = 'foo';
     const key = 123;
     const part = {
-      type: PartType.ChildNode,
+      type: PART_TYPE_CHILD_NODE,
       node: document.createComment(''),
       anchorNode: null,
       namespaceURI: HTML_NAMESPACE_URI,
-    };
+    } as const;
     const binding = new MockBinding(MockPrimitive, source, part);
     const innerSlot = new MockSlot(binding);
     const slot = new KeyedSlot(innerSlot, key);
@@ -130,11 +130,11 @@ describe('KeyedSlot', () => {
       const source2 = 'bar';
       const key = 123;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new MockBinding(MockPrimitive, source1, part);
       const innerSlot = new MockSlot(binding);
       const slot = new KeyedSlot(innerSlot, key);
@@ -176,11 +176,11 @@ describe('KeyedSlot', () => {
       const key1 = 123;
       const key2 = 456;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new MockBinding(MockPrimitive, source1, part);
       const innerSlot = new MockSlot(binding);
       const slot = new KeyedSlot(innerSlot, key1);
@@ -221,11 +221,11 @@ describe('KeyedSlot', () => {
       const source2 = 'bar';
       const key = 123;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new MockBinding(MockPrimitive, source1, part);
       const innerSlot = new MockSlot(binding);
       const slot = new KeyedSlot(innerSlot, key);

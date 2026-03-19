@@ -7,9 +7,14 @@ import type {
   UnwrapBindable,
   UpdateSession,
 } from '../core.js';
+import {
+  SLOT_STATUS_ATTACHED,
+  SLOT_STATUS_DETACHED,
+  SLOT_STATUS_IDLE,
+  type SlotStatus,
+} from '../core.js';
 import { debugPart, undebugPart } from '../debug/part.js';
 import { areDirectiveTypesEqual, LayoutModifier } from '../directive.js';
-import { SlotStatus } from './layout.js';
 
 export function Loose<T>(source: T): LayoutModifier<T> {
   return new LayoutModifier(source, LooseLayout);
@@ -30,7 +35,7 @@ export class LooseSlot<T> implements Slot<T> {
 
   private _memoizedBinding: Binding<UnwrapBindable<T>> | null = null;
 
-  private _status: SlotStatus = SlotStatus.Idle;
+  private _status: SlotStatus = SLOT_STATUS_IDLE;
 
   constructor(binding: Binding<UnwrapBindable<T>>) {
     this._pendingBinding = binding;
@@ -48,14 +53,18 @@ export class LooseSlot<T> implements Slot<T> {
     return this._pendingBinding.part;
   }
 
+  get status(): SlotStatus {
+    return this._status;
+  }
+
   attach(session: UpdateSession): void {
     this._pendingBinding.attach(session);
-    this._status = SlotStatus.Attached;
+    this._status = SLOT_STATUS_ATTACHED;
   }
 
   detach(session: UpdateSession): void {
     this._pendingBinding.detach(session);
-    this._status = SlotStatus.Detached;
+    this._status = SLOT_STATUS_DETACHED;
   }
 
   reconcile(source: T, session: UpdateSession): boolean {
@@ -66,14 +75,15 @@ export class LooseSlot<T> implements Slot<T> {
     );
 
     if (areDirectiveTypesEqual(type, this._pendingBinding.type)) {
-      if (
-        this._status !== SlotStatus.Idle ||
-        this._pendingBinding.shouldUpdate(value)
-      ) {
+      const dirty =
+        this._status !== SLOT_STATUS_IDLE ||
+        this._pendingBinding.shouldUpdate(value);
+      if (dirty) {
         this._pendingBinding.value = value;
         this._pendingBinding.attach(session);
-        this._status = SlotStatus.Attached;
+        this._status = SLOT_STATUS_ATTACHED;
       }
+      return dirty;
     } else {
       this._pendingBinding.detach(session);
       this._pendingBinding = type.resolveBinding(
@@ -82,14 +92,13 @@ export class LooseSlot<T> implements Slot<T> {
         context,
       );
       this._pendingBinding.attach(session);
-      this._status = SlotStatus.Attached;
+      this._status = SLOT_STATUS_ATTACHED;
+      return true;
     }
-
-    return this._status === SlotStatus.Attached;
   }
 
   commit(): void {
-    if (this._status !== SlotStatus.Attached) {
+    if (this._status !== SLOT_STATUS_ATTACHED) {
       return;
     }
 
@@ -113,11 +122,11 @@ export class LooseSlot<T> implements Slot<T> {
     newBinding.commit();
 
     this._memoizedBinding = newBinding;
-    this._status = SlotStatus.Idle;
+    this._status = SLOT_STATUS_IDLE;
   }
 
   rollback(): void {
-    if (this._status !== SlotStatus.Detached) {
+    if (this._status !== SLOT_STATUS_DETACHED) {
       return;
     }
 
@@ -132,6 +141,6 @@ export class LooseSlot<T> implements Slot<T> {
     }
 
     this._memoizedBinding = null;
-    this._status = SlotStatus.Idle;
+    this._status = SLOT_STATUS_IDLE;
   }
 }

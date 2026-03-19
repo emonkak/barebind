@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-
-import { PartType } from '@/core.js';
+import { PART_TYPE_ATTRIBUTE, PART_TYPE_ELEMENT } from '@/core.js';
 import { RefBinding, RefPrimitive } from '@/primitive/ref.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -9,10 +8,10 @@ describe('RefPrimitive', () => {
   describe('ensureValue()', () => {
     it('asserts the value is a ref, null or undefined', () => {
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':ref',
-      };
+      } as const;
 
       expect(() => {
         RefPrimitive.ensureValue!.call(RefPrimitive, () => {}, part);
@@ -24,10 +23,10 @@ describe('RefPrimitive', () => {
 
     it('throws an error if the value is not valid', () => {
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':ref',
-      };
+      } as const;
 
       expect(() => {
         RefPrimitive.ensureValue!.call(RefPrimitive, {}, part);
@@ -44,10 +43,10 @@ describe('RefPrimitive', () => {
     ])('constructs a new RefBinding with "%s" attribute', (attributeName) => {
       const ref = { current: null };
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: attributeName,
-      };
+      } as const;
       const runtime = createRuntime();
       const binding = RefPrimitive.resolveBinding(ref, part, runtime);
 
@@ -60,9 +59,9 @@ describe('RefPrimitive', () => {
     it('should throw the error if the part is not a ":ref" attribute part', () => {
       const ref = { current: null };
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('div'),
-      };
+      } as const;
       const runtime = createRuntime();
 
       expect(() => RefPrimitive.resolveBinding(ref, part, runtime)).toThrow(
@@ -77,10 +76,10 @@ describe('RefBinding', () => {
     it('returns true if the committed value does not exist', () => {
       const ref = { current: null };
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':ref',
-      };
+      } as const;
       const binding = new RefBinding(ref, part);
 
       expect(binding.shouldUpdate(ref)).toBe(true);
@@ -90,10 +89,10 @@ describe('RefBinding', () => {
       const ref1 = { current: null };
       const ref2 = () => {};
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':ref',
-      };
+      } as const;
       const binding = new RefBinding(ref1, part);
       const updater = new TestUpdater();
 
@@ -114,10 +113,10 @@ describe('RefBinding', () => {
       const ref1 = { current: null };
       const ref2 = { current: null };
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':ref',
-      };
+      } as const;
       const binding = new RefBinding(ref1, part);
       const updater = new TestUpdater();
 
@@ -149,10 +148,10 @@ describe('RefBinding', () => {
       const ref1 = vi.fn(() => cleanup1);
       const ref2 = vi.fn(() => cleanup2);
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':ref',
-      };
+      } as const;
       const binding = new RefBinding(ref1, part);
       const updater = new TestUpdater();
 
@@ -201,10 +200,10 @@ describe('RefBinding', () => {
     it('should do nothing if the committed value does not exist', () => {
       const ref = vi.fn();
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':ref',
-      };
+      } as const;
       const binding = new RefBinding(ref, part);
       const updater = new TestUpdater();
 
@@ -221,10 +220,10 @@ describe('RefBinding', () => {
     it('sets null as the current value', () => {
       const ref = { current: null };
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':ref',
-      };
+      } as const;
       const binding = new RefBinding(ref, part);
       const updater = new TestUpdater();
 
@@ -251,10 +250,10 @@ describe('RefBinding', () => {
       const cleanup = vi.fn();
       const ref = vi.fn(() => cleanup);
       const part = {
-        type: PartType.Attribute,
+        type: PART_TYPE_ATTRIBUTE,
         node: document.createElement('div'),
         name: ':ref',
-      };
+      } as const;
       const binding = new RefBinding(ref, part);
       const updater = new TestUpdater();
 

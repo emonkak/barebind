@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PartType } from '@/core.js';
+import { PART_TYPE_CHILD_NODE, PART_TYPE_ELEMENT } from '@/core.js';
 import { CommentBinding, CommentPrimitive } from '@/primitive/comment.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { createRuntime } from '../../mocks.js';
@@ -11,11 +11,11 @@ describe('CommentPrimitive', () => {
     it('constructs a new CommentBinding', () => {
       const value = 'foo';
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const runtime = createRuntime();
       const binding = CommentPrimitive.resolveBinding(value, part, runtime);
 
@@ -28,9 +28,9 @@ describe('CommentPrimitive', () => {
     it('should throw the error if the part is not a child node part', () => {
       const value = '<div>foo</div>';
       const part = {
-        type: PartType.Element,
+        type: PART_TYPE_ELEMENT,
         node: document.createElement('div'),
-      };
+      } as const;
       const runtime = createRuntime();
 
       expect(() =>
@@ -45,11 +45,11 @@ describe('CommentBinding', () => {
     it('returns true if the committed value does not exist', () => {
       const value = '<div>foo</div>';
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new CommentBinding(value, part);
 
       expect(binding.shouldUpdate(value)).toBe(true);
@@ -59,11 +59,11 @@ describe('CommentBinding', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new CommentBinding(value1, part);
       const updater = new TestUpdater();
 
@@ -84,11 +84,11 @@ describe('CommentBinding', () => {
       const value1 = 'foo';
       const value2 = null;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new CommentBinding<string | null>(value1, part);
       const updater = new TestUpdater();
 
@@ -116,11 +116,11 @@ describe('CommentBinding', () => {
       const value1 = 123;
       const value2 = null;
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new CommentBinding<number | null>(value1, part);
       const updater = new TestUpdater();
 
@@ -149,11 +149,11 @@ describe('CommentBinding', () => {
     it('sets null as a node value if the committed value exists', () => {
       const value = 'foo';
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new CommentBinding(value, part);
       const updater = new TestUpdater();
 
@@ -179,11 +179,11 @@ describe('CommentBinding', () => {
     it('should do nothing if the committed value does not exist', () => {
       const value = 'foo';
       const part = {
-        type: PartType.ChildNode,
+        type: PART_TYPE_CHILD_NODE,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
-      };
+      } as const;
       const binding = new CommentBinding(value, part);
       const updater = new TestUpdater();
 
