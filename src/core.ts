@@ -41,7 +41,6 @@ export const SCOPE_DETACHED: Scope = Object.freeze({
   level: 0,
   boundary: null,
 });
-export const SCOPE_ROOT: Scope = Object.freeze({ ...SCOPE_DETACHED });
 
 export const SLOT_STATUS_IDLE = 0;
 export const SLOT_STATUS_ATTACHED = 1;
@@ -335,40 +334,40 @@ export type Part =
   | Part.TextPart;
 
 export namespace Part {
-  export interface AttributePart {
+  export interface AttributePart<TElement extends Element = Element> {
     type: typeof PART_TYPE_ATTRIBUTE;
-    node: Element;
+    node: TElement;
     name: string;
   }
 
   export interface ChildNodePart {
     type: typeof PART_TYPE_CHILD_NODE;
-    node: Comment;
-    anchorNode: ChildNode | null;
+    node: ChildNode;
+    sentinelNode: Comment;
     namespaceURI: string | null;
   }
 
-  export interface ElementPart {
+  export interface ElementPart<TElement extends Element = Element> {
     type: typeof PART_TYPE_ELEMENT;
-    node: Element;
+    node: TElement;
   }
 
-  export interface EventPart {
+  export interface EventPart<TElement extends Element = Element> {
     type: typeof PART_TYPE_EVENT;
-    node: Element;
+    node: TElement;
     name: string;
   }
 
-  export interface LivePart {
+  export interface LivePart<TElement extends Element = Element> {
     type: typeof PART_TYPE_LIVE;
-    node: Element;
+    node: TElement;
     name: string;
     defaultValue: unknown;
   }
 
-  export interface PropertyPart {
+  export interface PropertyPart<TElement extends Element = Element> {
     type: typeof PART_TYPE_PROPERTY;
-    node: Element;
+    node: TElement;
     name: string;
     defaultValue: unknown;
   }
@@ -630,12 +629,3 @@ export interface UpdateSession {
 }
 
 export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;
-
-/**
- * @internal
- */
-export function getStartNode(part: Part): ChildNode {
-  return part.type === PART_TYPE_CHILD_NODE
-    ? (part.anchorNode ?? part.node)
-    : part.node;
-}

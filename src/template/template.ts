@@ -2,20 +2,16 @@ import {
   type Binding,
   type DirectiveContext,
   type Effect,
-  getStartNode,
   PART_TYPE_CHILD_NODE,
   PART_TYPE_TEXT,
   type Part,
+  type Slot,
   type Template,
   type TemplateResult,
   type UpdateSession,
 } from '../core.js';
 import { ensurePartType } from '../directive.js';
 import { getHydrationTargetTree } from '../hydration.js';
-
-export const HTML_NAMESPACE_URI = 'http://www.w3.org/1999/xhtml';
-export const MATH_NAMESPACE_URI = 'http://www.w3.org/1998/Math/MathML';
-export const SVG_NAMESPACE_URI = 'http://www.w3.org/2000/svg';
 
 export abstract class AbstractTemplate<TValues extends readonly unknown[]>
   implements Template<TValues>
@@ -114,7 +110,6 @@ export class TemplateBinding<TValues extends readonly unknown[]>
           targetTree,
           session,
         );
-        this._part.anchorNode = getAnchorNode(this._pendingResult);
         this._memoizedResult = this._pendingResult;
       } else {
         this._pendingResult = this._template.render(
@@ -141,14 +136,15 @@ export class TemplateBinding<TValues extends readonly unknown[]>
       const { children, slots } = this._pendingResult;
 
       if (this._memoizedResult === null) {
-        this._part.node.before(...children);
+        this._part.sentinelNode.before(...children);
       }
 
       for (const slot of slots) {
         slot.commit();
       }
 
-      this._part.anchorNode = getAnchorNode(this._pendingResult);
+      this._part.node =
+        getStartNode(children, slots) ?? this._part.sentinelNode;
     }
 
     this._memoizedResult = this._pendingResult;
@@ -162,7 +158,7 @@ export class TemplateBinding<TValues extends readonly unknown[]>
         if (
           (slot.part.type === PART_TYPE_CHILD_NODE ||
             slot.part.type === PART_TYPE_TEXT) &&
-          children.includes(slot.part.node)
+          children.includes(getEndNode(slot.part))
         ) {
           // This binding is mounted as a child of the root, so we must rollback it.
           slot.rollback();
@@ -174,30 +170,24 @@ export class TemplateBinding<TValues extends readonly unknown[]>
       }
     }
 
-    this._part.anchorNode = null;
+    this._part.node = this._part.sentinelNode;
     this._memoizedResult = null;
   }
 }
 
-export function getNamespaceURIByTagName(tagName: string): string | null {
-  switch (tagName.toLowerCase()) {
-    case 'html':
-      return HTML_NAMESPACE_URI;
-    case 'math':
-      return MATH_NAMESPACE_URI;
-    case 'svg':
-      return SVG_NAMESPACE_URI;
-    default:
-      return null;
-  }
+function getStartNode(
+  children: readonly ChildNode[],
+  slots: Slot<unknown>[],
+): ChildNode | null {
+  const child = children[0];
+  const slot = slots[0];
+  return child !== undefined &&
+    slot !== undefined &&
+    child === getEndNode(slot.part)
+    ? slot.part.node
+    : (child ?? null);
 }
 
-function getAnchorNode({ children, slots }: TemplateResult): ChildNode | null {
-  if (children.length > 0) {
-    return children[0]! === slots[0]?.part.node
-      ? getStartNode(slots[0]!.part)
-      : children[0]!;
-  } else {
-    return null;
-  }
+function getEndNode(part: Part): ChildNode {
+  return part.type === PART_TYPE_CHILD_NODE ? part.sentinelNode : part.node;
 }

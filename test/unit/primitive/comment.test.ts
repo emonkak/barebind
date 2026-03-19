@@ -1,8 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PART_TYPE_CHILD_NODE, PART_TYPE_ELEMENT } from '@/core.js';
+import {
+  createChildNodePart,
+  createElementPart,
+  HTML_NAMESPACE_URI,
+} from '@/part.js';
 import { CommentBinding, CommentPrimitive } from '@/primitive/comment.js';
-import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
@@ -10,12 +13,10 @@ describe('CommentPrimitive', () => {
   describe('resolveBinding()', () => {
     it('constructs a new CommentBinding', () => {
       const value = 'foo';
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const runtime = createRuntime();
       const binding = CommentPrimitive.resolveBinding(value, part, runtime);
 
@@ -27,10 +28,7 @@ describe('CommentPrimitive', () => {
 
     it('should throw the error if the part is not a child node part', () => {
       const value = '<div>foo</div>';
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
 
       expect(() =>
@@ -44,12 +42,10 @@ describe('CommentBinding', () => {
   describe('shouldUpdate()', () => {
     it('returns true if the committed value does not exist', () => {
       const value = '<div>foo</div>';
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new CommentBinding(value, part);
 
       expect(binding.shouldUpdate(value)).toBe(true);
@@ -58,12 +54,10 @@ describe('CommentBinding', () => {
     it('returns true if the committed value is different from the new one', () => {
       const value1 = 'foo';
       const value2 = 'bar';
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new CommentBinding(value1, part);
       const updater = new TestUpdater();
 
@@ -83,12 +77,10 @@ describe('CommentBinding', () => {
     it('sets the string as a node value', () => {
       const value1 = 'foo';
       const value2 = null;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new CommentBinding<string | null>(value1, part);
       const updater = new TestUpdater();
 
@@ -115,12 +107,10 @@ describe('CommentBinding', () => {
     it('sets the string representation of the value as a node value', () => {
       const value1 = 123;
       const value2 = null;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new CommentBinding<number | null>(value1, part);
       const updater = new TestUpdater();
 
@@ -148,12 +138,10 @@ describe('CommentBinding', () => {
   describe('rollback()', () => {
     it('sets null as a node value if the committed value exists', () => {
       const value = 'foo';
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new CommentBinding(value, part);
       const updater = new TestUpdater();
 
@@ -178,12 +166,10 @@ describe('CommentBinding', () => {
 
     it('should do nothing if the committed value does not exist', () => {
       const value = 'foo';
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new CommentBinding(value, part);
       const updater = new TestUpdater();
 

@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { PART_TYPE_CHILD_NODE } from '@/core.js';
 import { createTreeWalker } from '@/hydration.js';
+import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
 import { EmptyTemplate } from '@/template/empty.js';
-import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockTemplate } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
@@ -28,12 +27,10 @@ describe('EmptyTemplate', () => {
     it('hydrates an empty tree', () => {
       const template = new EmptyTemplate();
       const values = [] as const;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const targetTree = createTreeWalker(document.createElement('div'));
       const updater = new TestUpdater();
 
@@ -50,12 +47,10 @@ describe('EmptyTemplate', () => {
     it('renders an empty tree', () => {
       const template = new EmptyTemplate();
       const values = [] as const;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {

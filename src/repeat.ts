@@ -4,7 +4,6 @@ import {
   type Binding,
   type DirectiveContext,
   type DirectiveType,
-  getStartNode,
   PART_TYPE_CHILD_NODE,
   type Part,
   type Slot,
@@ -12,6 +11,7 @@ import {
 } from './core.js';
 import { DirectiveSpecifier, ensurePartType } from './directive.js';
 import { getHydrationTargetTree, replaceMarkerNode } from './hydration.js';
+import { createChildNodePart } from './part.js';
 import { reconcileProjections } from './reconciliation.js';
 
 const MUTATION_TYPE_INSERT = 0;
@@ -105,7 +105,6 @@ export class RepeatBinding<TSource, TKey, TElement>
 
   attach(session: UpdateSession): void {
     const { context, coroutine } = session;
-    const document = this._part.node.ownerDocument;
     const targetTree = getHydrationTargetTree(coroutine.scope);
 
     const {
@@ -127,16 +126,15 @@ export class RepeatBinding<TSource, TKey, TElement>
       newElements,
       {
         insert: (item, referenceSlot) => {
-          const part = {
-            type: PART_TYPE_CHILD_NODE,
-            node: document.createComment(''),
-            anchorNode: null,
-            namespaceURI: this._part.namespaceURI,
-          } as const;
+          const { sentinelNode, namespaceURI } = this._part;
+          const part = createChildNodePart(
+            sentinelNode.ownerDocument.createComment(''),
+            namespaceURI,
+          );
           const slot = context.resolveSlot(item, part);
           slot.attach(session);
           if (targetTree !== null) {
-            replaceMarkerNode(targetTree, part.node);
+            replaceMarkerNode(targetTree, part.sentinelNode);
           }
           this._pendingMutations.push({
             type: MUTATION_TYPE_INSERT,
@@ -179,7 +177,7 @@ export class RepeatBinding<TSource, TKey, TElement>
     this._pendingSlots = newSlots;
 
     if (targetTree !== null) {
-      this._part.anchorNode = getAnchorNode(newSlots);
+      this._part.node = newSlots[0]?.part.node ?? this._part.sentinelNode;
       this._memoizedSlots = newSlots;
     }
   }
@@ -209,12 +207,13 @@ export class RepeatBinding<TSource, TKey, TElement>
           break;
         case MUTATION_TYPE_REMOVE:
           slot.rollback();
-          slot.part.node.remove();
+          (slot.part as Part.ChildNodePart).sentinelNode.remove();
           break;
       }
     }
 
-    this._part.anchorNode = getAnchorNode(this._pendingSlots);
+    this._part.node =
+      this._pendingSlots[0]?.part.node ?? this._part.sentinelNode;
     this._pendingMutations = [];
     this._memoizedSlots = this._pendingSlots;
   }
@@ -223,11 +222,11 @@ export class RepeatBinding<TSource, TKey, TElement>
     if (this._memoizedSlots !== null) {
       for (const slot of this._memoizedSlots) {
         slot.rollback();
-        slot.part.node.remove();
+        (slot.part as Part.ChildNodePart).sentinelNode.remove();
       }
     }
 
-    this._part.anchorNode = null;
+    this._part.node = this._part.sentinelNode;
     this._pendingMutations = this._pendingSlots.map((slot) => ({
       type: MUTATION_TYPE_INSERT,
       slot,
@@ -242,10 +241,6 @@ function defaultElementSelector<TElement>(item: unknown): TElement {
 
 function defaultKeySelector<TKey>(_item: unknown, index: number): TKey {
   return index as TKey;
-}
-
-function getAnchorNode<T>(slots: Slot<T>[]): ChildNode | null {
-  return slots.length > 0 ? getStartNode(slots[0]!.part) : null;
 }
 
 function getSiblings(startNode: ChildNode, endNode: ChildNode): ChildNode[] {
@@ -263,14 +258,23 @@ function getSiblings(startNode: ChildNode, endNode: ChildNode): ChildNode[] {
 function insertSlot<T>(
   slot: Slot<T>,
   referenceSlot: Slot<T> | undefined,
-  part: Part,
+  part: Part.ChildNodePart,
 ): void {
   const referenceNode =
-    referenceSlot !== undefined ? getStartNode(referenceSlot.part) : part.node;
-  referenceNode.before(slot.part.node);
+    referenceSlot !== undefined ? referenceSlot.part.node : part.sentinelNode;
+  referenceNode.before((slot.part as Part.ChildNodePart).sentinelNode);
 }
 
-function moveSiblings(siblings: ChildNode[], referenceNode: ChildNode): void {
+function moveSlot<T>(
+  slot: Slot<T>,
+  referenceSlot: Slot<T> | undefined,
+  part: Part.ChildNodePart,
+): void {
+  const startNode = slot.part.node;
+  const endNode = (slot.part as Part.ChildNodePart).sentinelNode;
+  const siblings = getSiblings(startNode, endNode);
+  const referenceNode =
+    referenceSlot !== undefined ? referenceSlot.part.node : part.sentinelNode;
   const { parentNode } = referenceNode;
 
   if (parentNode !== null) {
@@ -282,17 +286,4 @@ function moveSiblings(siblings: ChildNode[], referenceNode: ChildNode): void {
       insertOrMoveBefore.call(parentNode, sibling, referenceNode);
     }
   }
-}
-
-function moveSlot<T>(
-  slot: Slot<T>,
-  referenceSlot: Slot<T> | undefined,
-  part: Part,
-): void {
-  const startNode = getStartNode(slot.part);
-  const endNode = slot.part.node;
-  const siblings = getSiblings(startNode, endNode);
-  const referenceNode =
-    referenceSlot !== undefined ? getStartNode(referenceSlot.part) : part.node;
-  moveSiblings(siblings, referenceNode);
 }

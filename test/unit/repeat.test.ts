@@ -1,19 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import {
-  BOUNDARY_TYPE_HYDRATION,
-  PART_TYPE_CHILD_NODE,
-  PART_TYPE_ELEMENT,
-  type Part,
-} from '@/core.js';
+import { BOUNDARY_TYPE_HYDRATION } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import { createTreeWalker } from '@/hydration.js';
+import {
+  createChildNodePart,
+  createElementPart,
+  HTML_NAMESPACE_URI,
+} from '@/part.js';
 import {
   Repeat,
   RepeatBinding,
   RepeatDirective,
   type RepeatProps,
 } from '@/repeat.js';
-import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
 import { createRuntime, createScope } from '../mocks.js';
 import {
@@ -45,12 +44,10 @@ describe('RepeatDirective', () => {
   describe('resolveBinding()', () => {
     it('constructs a new RepeatBinding', () => {
       const props: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const runtime = createRuntime();
       const binding = RepeatDirective.resolveBinding(props, part, runtime);
 
@@ -62,10 +59,7 @@ describe('RepeatDirective', () => {
 
     it('should throw the error if the part is not a child node part', () => {
       const props: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
 
       expect(() =>
@@ -79,12 +73,10 @@ describe('RepeatBinding', () => {
   describe('shouldUpdate()', () => {
     it('returns true if committed slots does not exist', () => {
       const props: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new RepeatBinding(props, part);
 
       expect(binding.shouldUpdate(props)).toBe(true);
@@ -93,12 +85,10 @@ describe('RepeatBinding', () => {
     it('returns true if the props is different from the new one', () => {
       const props1: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
       const props2: RepeatProps<string> = { source: ['baz', 'bar', 'foo'] };
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new RepeatBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -136,12 +126,10 @@ describe('RepeatBinding', () => {
             keySelector: ({ key }) => key,
             source: combinations2,
           };
-          const part: Part.ChildNodePart = {
-            type: PART_TYPE_CHILD_NODE,
-            node: document.createComment(''),
-            anchorNode: null,
-            namespaceURI: HTML_NAMESPACE_URI,
-          };
+          const part = createChildNodePart(
+            document.createComment(''),
+            HTML_NAMESPACE_URI,
+          );
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
           const updater = new TestUpdater();
@@ -156,7 +144,7 @@ describe('RepeatBinding', () => {
               combinations1.map(({ value }) => value + EMPTY_COMMENT).join('') +
                 '<!---->',
             );
-            expect(part.anchorNode?.nodeValue).toBe(combinations1[0]?.value);
+            expect(part.node.nodeValue).toBe(combinations1[0]?.value);
           }
 
           SESSION2: {
@@ -170,7 +158,7 @@ describe('RepeatBinding', () => {
               combinations2.map(({ value }) => value + EMPTY_COMMENT).join('') +
                 EMPTY_COMMENT,
             );
-            expect(part.anchorNode?.nodeValue).toBe(combinations2[0]?.value);
+            expect(part.node.nodeValue).toBe(combinations2[0]?.value);
           }
         }
       }
@@ -202,12 +190,10 @@ describe('RepeatBinding', () => {
             keySelector: ({ key }) => key,
             source: permutation2,
           };
-          const part: Part.ChildNodePart = {
-            type: PART_TYPE_CHILD_NODE,
-            node: document.createComment(''),
-            anchorNode: null,
-            namespaceURI: HTML_NAMESPACE_URI,
-          };
+          const part = createChildNodePart(
+            document.createComment(''),
+            HTML_NAMESPACE_URI,
+          );
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
           const updater = new TestUpdater();
@@ -222,7 +208,7 @@ describe('RepeatBinding', () => {
               permutation1.map(({ value }) => value + EMPTY_COMMENT).join('') +
                 EMPTY_COMMENT,
             );
-            expect(part.anchorNode?.nodeValue).toBe(permutation1[0]?.value);
+            expect(part.node.nodeValue).toBe(permutation1[0]?.value);
           }
 
           SESSION2: {
@@ -236,7 +222,7 @@ describe('RepeatBinding', () => {
               permutation2.map(({ value }) => value + EMPTY_COMMENT).join('') +
                 EMPTY_COMMENT,
             );
-            expect(part.anchorNode?.nodeValue).toBe(permutation2[0]?.value);
+            expect(part.node.nodeValue).toBe(permutation2[0]?.value);
           }
 
           SESSION3: {
@@ -250,7 +236,7 @@ describe('RepeatBinding', () => {
               permutation1.map(({ value }) => value + EMPTY_COMMENT).join('') +
                 EMPTY_COMMENT,
             );
-            expect(part.anchorNode?.nodeValue).toBe(permutation1[0]?.value);
+            expect(part.node.nodeValue).toBe(permutation1[0]?.value);
           }
         }
       }
@@ -262,12 +248,10 @@ describe('RepeatBinding', () => {
         elementSelector: textTemplate,
         source,
       };
-      const part: Part.ChildNodePart = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new RepeatBinding(props, part);
       const container = createElement(
         'div',
@@ -294,7 +278,7 @@ describe('RepeatBinding', () => {
         binding.attach(session);
       });
 
-      expect(part.anchorNode).toBe(container.firstChild);
+      expect(part.node).not.toBe(part.sentinelNode);
       expect(container.innerHTML).toBe(
         source.map((element) => element + EMPTY_COMMENT).join('') +
           EMPTY_COMMENT,
@@ -302,7 +286,7 @@ describe('RepeatBinding', () => {
 
       binding.commit();
 
-      expect(part.anchorNode).toBe(container.firstChild);
+      expect(part.node).toBe(container.firstChild);
       expect(container.innerHTML).toBe(
         source.map((element) => element + EMPTY_COMMENT).join('') +
           EMPTY_COMMENT,
@@ -333,12 +317,10 @@ describe('RepeatBinding', () => {
             keySelector: ({ key }) => key,
             source: permutation2,
           };
-          const part: Part.ChildNodePart = {
-            type: PART_TYPE_CHILD_NODE,
-            node: document.createComment(''),
-            anchorNode: null,
-            namespaceURI: HTML_NAMESPACE_URI,
-          };
+          const part = createChildNodePart(
+            document.createComment(''),
+            HTML_NAMESPACE_URI,
+          );
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
           const updater = new TestUpdater();
@@ -353,7 +335,7 @@ describe('RepeatBinding', () => {
               permutation1.map(({ value }) => `<!--${value}-->`).join('') +
                 EMPTY_COMMENT,
             );
-            expect(part.anchorNode?.nodeValue).toBe(permutation1[0]?.value);
+            expect(part.node.nodeValue).toBe(permutation1[0]?.value);
           }
 
           SESSION2: {
@@ -367,7 +349,7 @@ describe('RepeatBinding', () => {
               permutation2.map(({ value }) => `<!--${value}-->`).join('') +
                 EMPTY_COMMENT,
             );
-            expect(part.anchorNode?.nodeValue).toBe(permutation2[0]?.value);
+            expect(part.node.nodeValue).toBe(permutation2[0]?.value);
           }
 
           SESSION3: {
@@ -381,7 +363,7 @@ describe('RepeatBinding', () => {
               permutation1.map(({ value }) => `<!--${value}-->`).join('') +
                 EMPTY_COMMENT,
             );
-            expect(part.anchorNode?.nodeValue).toBe(permutation1[0]?.value);
+            expect(part.node.nodeValue).toBe(permutation1[0]?.value);
           }
         }
       }
@@ -404,12 +386,10 @@ describe('RepeatBinding', () => {
       const props2: RepeatProps<string> = {
         source: { [Symbol.iterator]: () => Iterator.from(source2) },
       };
-      const part: Part.ChildNodePart = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const container = createElement('div', {}, part.node);
       const binding = new RepeatBinding(props1, part);
       const updater = new TestUpdater();
@@ -423,7 +403,7 @@ describe('RepeatBinding', () => {
         expect(container.innerHTML).toBe(
           source1.map(toCommentString).join('') + EMPTY_COMMENT,
         );
-        expect(part.anchorNode?.nodeValue).toBe(source1[0]);
+        expect(part.node.nodeValue).toBe(source1[0]);
       }
 
       SESSION2: {
@@ -436,7 +416,7 @@ describe('RepeatBinding', () => {
         expect(container.innerHTML).toBe(
           source2.map(toCommentString).join('') + EMPTY_COMMENT,
         );
-        expect(part.anchorNode?.nodeValue).toBe(source2[0]);
+        expect(part.node.nodeValue).toBe(source2[0] ?? '');
       }
 
       SESSION3: {
@@ -449,7 +429,7 @@ describe('RepeatBinding', () => {
         expect(container.innerHTML).toBe(
           source1.map(toCommentString).join('') + EMPTY_COMMENT,
         );
-        expect(part.anchorNode?.nodeValue).toBe(source1[0]);
+        expect(part.node.nodeValue).toBe(source1[0]);
       }
     });
   });
@@ -460,12 +440,10 @@ describe('RepeatBinding', () => {
       const props: RepeatProps<string> = {
         source,
       };
-      const part: Part.ChildNodePart = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const container = createElement('div', {}, part.node);
       const binding = new RepeatBinding(props, part);
       const updater = new TestUpdater();

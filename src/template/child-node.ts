@@ -1,11 +1,11 @@
-import {
-  type DirectiveType,
-  PART_TYPE_CHILD_NODE,
-  type Part,
-  type TemplateResult,
-  type UpdateSession,
+import type {
+  DirectiveType,
+  Part,
+  TemplateResult,
+  UpdateSession,
 } from '../core.js';
 import { replaceMarkerNode } from '../hydration.js';
+import { createChildNodePart } from '../part.js';
 import { AbstractTemplate } from './template.js';
 
 export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
@@ -26,20 +26,18 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;
-    const document = part.node.ownerDocument;
-    const childNodePart = {
-      type: PART_TYPE_CHILD_NODE,
-      node: document.createComment(''),
-      anchorNode: null,
-      namespaceURI: part.namespaceURI,
-    } as const;
+    const { sentinelNode, namespaceURI } = part;
+    const childNodePart = createChildNodePart(
+      sentinelNode.ownerDocument.createComment(''),
+      namespaceURI,
+    );
     const childNodeSlot = context.resolveSlot(values[0], childNodePart);
 
     childNodeSlot.attach(session);
 
-    replaceMarkerNode(targetTree, childNodePart.node);
+    replaceMarkerNode(targetTree, childNodePart.sentinelNode);
 
-    return { children: [childNodePart.node], slots: [childNodeSlot] };
+    return { children: [childNodePart.sentinelNode], slots: [childNodeSlot] };
   }
 
   render(
@@ -48,17 +46,15 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;
-    const document = part.node.ownerDocument;
-    const childNodePart = {
-      type: PART_TYPE_CHILD_NODE,
-      node: document.createComment(''),
-      anchorNode: null,
-      namespaceURI: part.namespaceURI,
-    } as const;
+    const { sentinelNode, namespaceURI } = part;
+    const childNodePart = createChildNodePart(
+      sentinelNode.ownerDocument.createComment(''),
+      namespaceURI,
+    );
     const childNodeSlot = context.resolveSlot(values[0], childNodePart);
 
     childNodeSlot.attach(session);
 
-    return { children: [childNodePart.node], slots: [childNodeSlot] };
+    return { children: [childNodePart.sentinelNode], slots: [childNodeSlot] };
   }
 }

@@ -10,17 +10,21 @@ import {
   VStaticFragment,
 } from '@/addons/vdom.js';
 import { createComponent } from '@/component.js';
-import { $directive, PART_TYPE_CHILD_NODE, PART_TYPE_ELEMENT } from '@/core.js';
+import { $directive } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import { KeyedLayout } from '@/layout/keyed.js';
 import { LooseLayout } from '@/layout/loose.js';
+import {
+  createChildNodePart,
+  createElementPart,
+  HTML_NAMESPACE_URI,
+} from '@/part.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
 import { RepeatDirective } from '@/repeat.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { ElementTemplate } from '@/template/element.js';
 import { EmptyTemplate } from '@/template/empty.js';
 import { FragmentTemplate } from '@/template/fragment.js';
-import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
 import { createRuntime, MockBindable, MockPrimitive } from '../../mocks.js';
 import { createElement as createDOMElement } from '../../test-helpers.js';
@@ -190,10 +194,7 @@ describe('ElementDirective', () => {
   describe('resolveBinding()', () => {
     it('constructs a new ElementBinding', () => {
       const props = { className: 'foo' };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
       const binding = ElementDirective.resolveBinding(props, part, runtime);
 
@@ -205,12 +206,10 @@ describe('ElementDirective', () => {
 
     it('should throw the error if the part is not an element part', () => {
       const props = { className: 'foo' };
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const runtime = createRuntime();
 
       expect(() =>
@@ -224,10 +223,7 @@ describe('ElementBinding', () => {
   describe('shouldUpdate()', () => {
     it('returns true if the committed value does not exist', () => {
       const props = { className: 'foo' };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const binding = new ElementBinding(props, part);
 
       expect(binding.shouldUpdate(props)).toBe(true);
@@ -236,10 +232,7 @@ describe('ElementBinding', () => {
     it('returns true if the committed value is different from the new one', () => {
       const props1 = { className: 'foo' };
       const props2 = { className: 'bar' };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const binding = new ElementBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -258,10 +251,7 @@ describe('ElementBinding', () => {
   describe('commit()', () => {
     it('ignores reserved properties', () => {
       const props = { key: 'foo', children: [] };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const binding = new ElementBinding(props, part);
       const updater = new TestUpdater();
 
@@ -287,10 +277,7 @@ describe('ElementBinding', () => {
     it('updates a boolean property', () => {
       const props1 = { type: 'button', disabled: true };
       const props2 = { type: 'button', disabled: false };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('button'),
-      } as const;
+      const part = createElementPart(document.createElement('button'));
       const binding = new ElementBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -328,10 +315,7 @@ describe('ElementBinding', () => {
     it('updates a number property', () => {
       const props1 = { tabIndex: -1 };
       const props2 = { tabIndex: 0 };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const binding = new ElementBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -367,10 +351,7 @@ describe('ElementBinding', () => {
     it('updates "className" property', () => {
       const props1 = { className: 'foo' };
       const props2 = { className: null };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const binding = new ElementBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -405,10 +386,7 @@ describe('ElementBinding', () => {
     it('updates "innerHTML" property', () => {
       const props1 = { innerHTML: '<span>foo</span>' };
       const props2 = { innerHTML: null };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const binding = new ElementBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -444,10 +422,7 @@ describe('ElementBinding', () => {
     it('updates "textContent" property', () => {
       const props1 = { textContent: '<span>foo</span>' };
       const props2 = { textContent: null };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const binding = new ElementBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -485,10 +460,7 @@ describe('ElementBinding', () => {
     it('updates "checked" property of the input element', () => {
       const props1 = { checked: true, defaultChecked: false };
       const props2 = { checked: null, defaultChecked: undefined };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('input'),
-      } as const;
+      const part = createElementPart(document.createElement('input'));
       const binding = new ElementBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -531,10 +503,7 @@ describe('ElementBinding', () => {
     ] as const)('updates "value" property of form control elements', (name) => {
       const props1 = { value: 'foo', defaultValue: 'bar' };
       const props2 = { value: null, defaultValue: undefined };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement(name),
-      } as const;
+      const part = createElementPart(document.createElement(name));
       const binding = new ElementBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -573,14 +542,13 @@ describe('ElementBinding', () => {
     it('updates "value" property of select element', () => {
       const props1 = { value: 'foo' };
       const props2 = { value: null };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: createDOMElement(
+      const part = createElementPart(
+        createDOMElement(
           'select',
           {},
           createDOMElement('option', { value: 'foo' }, 'foo'),
         ),
-      } as const;
+      );
       const binding = new ElementBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -616,10 +584,7 @@ describe('ElementBinding', () => {
     it('updates "htmlFor" property of the label element', () => {
       const props1 = { htmlFor: 'foo' };
       const props2 = { htmlFor: null };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('label'),
-      } as const;
+      const part = createElementPart(document.createElement('label'));
       const binding = new ElementBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -657,10 +622,7 @@ describe('ElementBinding', () => {
       const cleanup2 = vi.fn();
       const props1 = { ref: vi.fn(() => cleanup1) };
       const props2 = { ref: vi.fn(() => cleanup2) };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('label'),
-      } as const;
+      const part = createElementPart(document.createElement('label'));
       const binding = new ElementBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -717,10 +679,7 @@ describe('ElementBinding', () => {
     it('sets the current value to the ref object', () => {
       const props1 = { ref: { current: null } };
       const props2 = { ref: { current: null } };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('label'),
-      } as const;
+      const part = createElementPart(document.createElement('label'));
       const binding = new ElementBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -760,10 +719,7 @@ describe('ElementBinding', () => {
       const props1 = { style: { color: 'red', backgroundColor: 'white' } };
       const props2 = { style: { color: 'black', border: '1px solid black' } };
       const props3 = { style: null };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('label'),
-      } as const;
+      const part = createElementPart(document.createElement('label'));
       const binding = new ElementBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -812,10 +768,7 @@ describe('ElementBinding', () => {
 
     it('throws an error if "style" property is not an object', () => {
       const props = { style: 'color: red; background-color: white;' };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('label'),
-      } as const;
+      const part = createElementPart(document.createElement('label'));
       const binding = new ElementBinding(props, part);
       const updater = new TestUpdater();
 
@@ -832,10 +785,7 @@ describe('ElementBinding', () => {
       const props2 = { onClick: vi.fn() };
       const event1 = new MouseEvent('click');
       const event2 = new MouseEvent('click');
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('label'),
-      } as const;
+      const part = createElementPart(document.createElement('label'));
       const binding = new ElementBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -892,10 +842,7 @@ describe('ElementBinding', () => {
       const props2 = { onClick: { handleEvent: vi.fn() } };
       const event1 = new MouseEvent('click');
       const event2 = new MouseEvent('click');
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('label'),
-      } as const;
+      const part = createElementPart(document.createElement('label'));
       const binding = new ElementBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -983,10 +930,7 @@ describe('ElementBinding', () => {
         title: 'title',
         value: null,
       };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const binding = new ElementBinding(props1, part);
       const updater = new TestUpdater();
 

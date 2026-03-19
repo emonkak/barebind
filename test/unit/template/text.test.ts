@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import {
-  PART_TYPE_CHILD_NODE,
-  PART_TYPE_TEXT,
-  SLOT_STATUS_ATTACHED,
-} from '@/core.js';
+import { PART_TYPE_TEXT, SLOT_STATUS_ATTACHED } from '@/core.js';
 import { createTreeWalker, HydrationError } from '@/hydration.js';
-import { HTML_NAMESPACE_URI } from '@/template/template.js';
+import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
 import { TextTemplate } from '@/template/text.js';
 import { createElement } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -34,12 +30,10 @@ describe('TextTemplate', () => {
     it('hydrates a tree containing a text part', () => {
       const template = new TextTemplate('(', ')');
       const values = ['foo'] as const;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const container = createElement('div', {}, 'foo');
       const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
@@ -66,12 +60,10 @@ describe('TextTemplate', () => {
     it('should throw the error if there is a tree mismatch', () => {
       const template = new TextTemplate('(', ')');
       const values = ['foo'] as const;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const container = createElement('div', {});
       const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
@@ -88,12 +80,10 @@ describe('TextTemplate', () => {
     it('renders a template containing a text part', () => {
       const template = new TextTemplate('(', ')');
       const values = ['foo'] as const;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {

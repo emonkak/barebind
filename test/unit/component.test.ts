@@ -3,15 +3,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { ComponentBinding, createComponent } from '@/component.js';
 import {
   type CommitPhase,
-  PART_TYPE_CHILD_NODE,
   type RenderContext,
   SLOT_STATUS_DETACHED,
   SLOT_STATUS_IDLE,
 } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import { ConcurrentLane } from '@/lane.js';
+import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
 import { RenderSession } from '@/render-session.js';
-import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { createRuntime, MockSlot } from '../mocks.js';
 import { TestRenderer } from '../test-renderer.js';
 import { TestUpdater } from '../test-updater.js';
@@ -77,12 +76,10 @@ describe('createComponent()', () => {
   describe('resolveBinding()', () => {
     it('constructs a new ComponentBinding', () => {
       const props = { greet: 'Hello', name: 'foo' };
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const runtime = createRuntime();
       const binding = Greet.resolveBinding(
         props,
@@ -103,12 +100,10 @@ describe('ComponentBinding', () => {
   describe('shouldUpdate()', () => {
     it('returns true if the committed value does not exist', () => {
       const props = { greet: 'Hello', name: 'foo' };
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new ComponentBinding(Greet, props, part);
 
       expect(binding.shouldUpdate(props)).toBe(true);
@@ -117,12 +112,10 @@ describe('ComponentBinding', () => {
     it('returns true if the committed value is different from the new one', () => {
       const props1 = { greet: 'Hello', name: 'foo' };
       const props2 = { greet: 'Chao', name: 'bar' };
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new ComponentBinding(Greet, props1, part);
       const updater = new TestUpdater();
 
@@ -148,12 +141,10 @@ describe('ComponentBinding', () => {
         name: 'bar',
         greet: 'Chao',
       };
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new ComponentBinding(Greet, props1, part);
       const updater = new TestUpdater();
 
@@ -198,12 +189,10 @@ describe('ComponentBinding', () => {
         callback: vi.fn(),
         cleanup: vi.fn(),
       };
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new ComponentBinding(EnqueueEffect, props, part);
       const updater = new TestUpdater();
 
@@ -253,12 +242,10 @@ describe('ComponentBinding', () => {
         callback: vi.fn(),
         cleanup: vi.fn(),
       };
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new ComponentBinding(EnqueueEffect, props, part);
       const updater = new TestUpdater();
 

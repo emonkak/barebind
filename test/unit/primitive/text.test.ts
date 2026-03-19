@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PART_TYPE_ELEMENT, PART_TYPE_TEXT } from '@/core.js';
+import { createElementPart, createTextPart } from '@/part.js';
 import { TextBinding, TextPrimitive } from '@/primitive/text.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -8,12 +8,7 @@ describe('TextPrimitive', () => {
   describe('resolveBinding()', () => {
     it('constructs a new TextBinding', () => {
       const value = 'foo';
-      const part = {
-        type: PART_TYPE_TEXT,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      } as const;
+      const part = createTextPart(document.createTextNode(''), '', '');
       const runtime = createRuntime();
       const binding = TextPrimitive.resolveBinding(value, part, runtime);
 
@@ -25,10 +20,7 @@ describe('TextPrimitive', () => {
 
     it('should throw the error if the part is not a property part', () => {
       const value = '<div>foo</div>';
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
 
       expect(() => TextPrimitive.resolveBinding(value, part, runtime)).toThrow(
@@ -42,12 +34,7 @@ describe('TextBinding', () => {
   describe('shouldUpdate()', () => {
     it('returns true if the committed value does not exist', () => {
       const value = '<div>foo</div>';
-      const part = {
-        type: PART_TYPE_TEXT,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      } as const;
+      const part = createTextPart(document.createTextNode(''), '', '');
       const binding = new TextBinding(value, part);
 
       expect(binding.shouldUpdate(value)).toBe(true);
@@ -56,12 +43,7 @@ describe('TextBinding', () => {
     it('returns true if the committed value is different from the new one', () => {
       const value1 = 'foo';
       const value2 = 'bar';
-      const part = {
-        type: PART_TYPE_TEXT,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      } as const;
+      const part = createTextPart(document.createTextNode(''), '', '');
       const binding = new TextBinding(value1, part);
       const updater = new TestUpdater();
 
@@ -81,12 +63,7 @@ describe('TextBinding', () => {
     it('sets the string to the text node', () => {
       const value1 = 'foo';
       const value2 = null;
-      const part = {
-        type: PART_TYPE_TEXT,
-        node: document.createTextNode(''),
-        precedingText: '(',
-        followingText: ')',
-      } as const;
+      const part = createTextPart(document.createTextNode(''), '(', ')');
       const binding = new TextBinding<string | null>(value1, part);
       const updater = new TestUpdater();
 
@@ -113,12 +90,7 @@ describe('TextBinding', () => {
     it('sets the string representation of the value to the text node', () => {
       const value1 = 123;
       const value2 = null;
-      const part = {
-        type: PART_TYPE_TEXT,
-        node: document.createTextNode(''),
-        precedingText: '(',
-        followingText: ')',
-      } as const;
+      const part = createTextPart(document.createTextNode(''), '(', ')');
       const binding = new TextBinding<number | null>(value1, part);
       const updater = new TestUpdater();
 
@@ -146,12 +118,7 @@ describe('TextBinding', () => {
   describe('rollback()', () => {
     it('sets an empty string if the committed value exists', () => {
       const value = 'foo';
-      const part = {
-        type: PART_TYPE_TEXT,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      } as const;
+      const part = createTextPart(document.createTextNode(''), '', '');
       const binding = new TextBinding(value, part);
       const updater = new TestUpdater();
 
@@ -176,12 +143,7 @@ describe('TextBinding', () => {
 
     it('should do nothing if the committed value does not exist', () => {
       const value = 'foo';
-      const part = {
-        type: PART_TYPE_TEXT,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      } as const;
+      const part = createTextPart(document.createTextNode(''), '', '');
       const binding = new TextBinding(value, part);
       const updater = new TestUpdater();
 

@@ -5,8 +5,12 @@ import {
   SLOT_STATUS_ATTACHED,
 } from '@/core.js';
 import { createTreeWalker } from '@/hydration.js';
+import {
+  createChildNodePart,
+  HTML_NAMESPACE_URI,
+  SVG_NAMESPACE_URI,
+} from '@/part.js';
 import { ElementTemplate } from '@/template/element.js';
-import { HTML_NAMESPACE_URI, SVG_NAMESPACE_URI } from '@/template/template.js';
 import { createElement, serializeNode } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
 
@@ -33,12 +37,10 @@ describe('ElementTemplate', () => {
     it('hydrates a tree containing a element', () => {
       const template = new ElementTemplate('div');
       const values = [{ class: 'foo' }, 'bar'] as const;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const container = createElement(
         'div',
         {},
@@ -66,7 +68,7 @@ describe('ElementTemplate', () => {
           part: {
             type: PART_TYPE_CHILD_NODE,
             node: expect.exact(container.firstChild!.firstChild),
-            anchorNode: null,
+            sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
           },
           status: SLOT_STATUS_ATTACHED,
@@ -79,12 +81,10 @@ describe('ElementTemplate', () => {
     it('renders an HTML element', () => {
       const template = new ElementTemplate('div');
       const values = [{ class: 'foo' }, 'bar'] as const;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
@@ -106,7 +106,7 @@ describe('ElementTemplate', () => {
           part: {
             type: PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
-            anchorNode: null,
+            sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
           },
           status: SLOT_STATUS_ATTACHED,
@@ -120,12 +120,10 @@ describe('ElementTemplate', () => {
     it('renders an SVG element', () => {
       const template = new ElementTemplate('svg');
       const values = [{ class: 'foo' }, 'bar'] as const;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
@@ -147,7 +145,7 @@ describe('ElementTemplate', () => {
           part: {
             type: PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
-            anchorNode: null,
+            sentinelNode: expect.any(Comment),
             namespaceURI: SVG_NAMESPACE_URI,
           },
           status: SLOT_STATUS_ATTACHED,

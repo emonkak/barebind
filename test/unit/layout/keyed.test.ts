@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PART_TYPE_CHILD_NODE } from '@/core.js';
 import { Keyed, KeyedLayout, KeyedSlot } from '@/layout/keyed.js';
-import { HTML_NAMESPACE_URI } from '@/template/template.js';
+import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
 import {
   MockBinding,
   MockLayout,
@@ -40,12 +39,10 @@ describe('KeyedLayout', () => {
     it('constructs a new KeyedSlot', () => {
       const value = 'foo';
       const key = 123;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new KeyedLayout(key, new MockLayout()).placeBinding(
         binding,
@@ -63,12 +60,10 @@ describe('KeyedSlot', () => {
   it('can commit the binding after attaching', () => {
     const source = 'foo';
     const key = 123;
-    const part = {
-      type: PART_TYPE_CHILD_NODE,
-      node: document.createComment(''),
-      anchorNode: null,
-      namespaceURI: HTML_NAMESPACE_URI,
-    } as const;
+    const part = createChildNodePart(
+      document.createComment(''),
+      HTML_NAMESPACE_URI,
+    );
     const binding = new MockBinding(MockPrimitive, source, part);
     const innerSlot = new MockSlot(binding);
     const slot = new KeyedSlot(innerSlot, key);
@@ -92,12 +87,10 @@ describe('KeyedSlot', () => {
   it('can rollback the binding after detaching', () => {
     const source = 'foo';
     const key = 123;
-    const part = {
-      type: PART_TYPE_CHILD_NODE,
-      node: document.createComment(''),
-      anchorNode: null,
-      namespaceURI: HTML_NAMESPACE_URI,
-    } as const;
+    const part = createChildNodePart(
+      document.createComment(''),
+      HTML_NAMESPACE_URI,
+    );
     const binding = new MockBinding(MockPrimitive, source, part);
     const innerSlot = new MockSlot(binding);
     const slot = new KeyedSlot(innerSlot, key);
@@ -129,12 +122,10 @@ describe('KeyedSlot', () => {
       const source1 = 'foo';
       const source2 = 'bar';
       const key = 123;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new MockBinding(MockPrimitive, source1, part);
       const innerSlot = new MockSlot(binding);
       const slot = new KeyedSlot(innerSlot, key);
@@ -175,12 +166,10 @@ describe('KeyedSlot', () => {
       const source2 = 'bar';
       const key1 = 123;
       const key2 = 456;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new MockBinding(MockPrimitive, source1, part);
       const innerSlot = new MockSlot(binding);
       const slot = new KeyedSlot(innerSlot, key1);
@@ -220,12 +209,10 @@ describe('KeyedSlot', () => {
       const source1 = 'foo';
       const source2 = 'bar';
       const key = 123;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new MockBinding(MockPrimitive, source1, part);
       const innerSlot = new MockSlot(binding);
       const slot = new KeyedSlot(innerSlot, key);

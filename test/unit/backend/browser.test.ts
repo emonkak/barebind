@@ -4,12 +4,6 @@ import {
   type Effect,
   EffectQueue,
   type Layout,
-  PART_TYPE_ATTRIBUTE,
-  PART_TYPE_CHILD_NODE,
-  PART_TYPE_ELEMENT,
-  PART_TYPE_EVENT,
-  PART_TYPE_LIVE,
-  PART_TYPE_PROPERTY,
   PART_TYPE_TEXT,
   type Part,
   type Primitive,
@@ -17,6 +11,16 @@ import {
 import { ConcurrentLane } from '@/lane.js';
 import { LooseLayout } from '@/layout/loose.js';
 import { StrictLayout } from '@/layout/strict.js';
+import {
+  createAttributePart,
+  createChildNodePart,
+  createElementPart,
+  createEventPart,
+  createLivePart,
+  createPropertyPart,
+  createTextPart,
+  HTML_NAMESPACE_URI,
+} from '@/part.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
 import { ClassPrimitive } from '@/primitive/class.js';
@@ -29,7 +33,6 @@ import { SpreadPrimitive } from '@/primitive/spread.js';
 import { StylePrimitive } from '@/primitive/style.js';
 import { TextPrimitive } from '@/primitive/text.js';
 import { TaggedTemplate } from '@/template/tagged.js';
-import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { templateLiteral } from '../../test-helpers.js';
 
 const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
@@ -278,88 +281,47 @@ describe('BrowserBackend', () => {
     it.each<[unknown, Part, Primitive<unknown>]>([
       [
         'foo',
-        {
-          type: PART_TYPE_ATTRIBUTE,
-          node: document.createElement('div'),
-          name: 'class',
-        },
+        createAttributePart(document.createElement('div'), 'class'),
         AttributePrimitive,
       ],
       [
         null,
-        {
-          type: PART_TYPE_CHILD_NODE,
-          node: document.createComment(''),
-          anchorNode: null,
-          namespaceURI: HTML_NAMESPACE_URI,
-        },
+        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
         BlackholePrimitive,
       ],
       [
         undefined,
-        {
-          type: PART_TYPE_CHILD_NODE,
-          node: document.createComment(''),
-          anchorNode: null,
-          namespaceURI: HTML_NAMESPACE_URI,
-        },
+        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
         BlackholePrimitive,
       ],
       [
         'foo',
-        {
-          type: PART_TYPE_CHILD_NODE,
-          node: document.createComment(''),
-          anchorNode: null,
-          namespaceURI: HTML_NAMESPACE_URI,
-        },
+        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
         CommentPrimitive,
       ],
       [
         () => {},
-        {
-          type: PART_TYPE_ELEMENT,
-          node: document.createElement('div'),
-        },
+        createElementPart(document.createElement('div')),
         SpreadPrimitive,
       ],
       [
         'foo',
-        {
-          type: PART_TYPE_EVENT,
-          node: document.createElement('div'),
-          name: 'click',
-        },
+        createEventPart(document.createElement('div'), 'click'),
         EventPrimitive,
       ],
       [
         'foo',
-        {
-          type: PART_TYPE_LIVE,
-          node: document.createElement('textarea'),
-          name: 'value',
-          defaultValue: '',
-        },
+        createLivePart(document.createElement('textarea'), 'value'),
         LivePrimitive,
       ],
       [
         'foo',
-        {
-          type: PART_TYPE_PROPERTY,
-          node: document.createElement('textarea'),
-          name: 'value',
-          defaultValue: '',
-        },
+        createPropertyPart(document.createElement('textarea'), 'value'),
         PropertyPrimitive,
       ],
       [
         'foo',
-        {
-          type: PART_TYPE_TEXT,
-          node: document.createTextNode(''),
-          precedingText: '',
-          followingText: '',
-        },
+        createTextPart(document.createTextNode(''), '', ''),
         TextPrimitive,
       ],
     ])('resolves primitives from any parts', (source, part, expectedPrimitive) => {
@@ -373,38 +335,22 @@ describe('BrowserBackend', () => {
     it.each<[unknown, Part.AttributePart, Primitive<unknown>]>([
       [
         [],
-        {
-          type: PART_TYPE_ATTRIBUTE,
-          node: document.createElement('div'),
-          name: ':class',
-        },
+        createAttributePart(document.createElement('div'), ':class'),
         ClassPrimitive,
       ],
       [
         { current: null },
-        {
-          type: PART_TYPE_ATTRIBUTE,
-          node: document.createElement('div'),
-          name: ':ref',
-        },
+        createAttributePart(document.createElement('div'), ':ref'),
         RefPrimitive,
       ],
       [
         {},
-        {
-          type: PART_TYPE_ATTRIBUTE,
-          node: document.createElement('div'),
-          name: ':style',
-        },
+        createAttributePart(document.createElement('div'), ':style'),
         StylePrimitive,
       ],
       [
         null,
-        {
-          type: PART_TYPE_ATTRIBUTE,
-          node: document.createElement('div'),
-          name: ':',
-        },
+        createAttributePart(document.createElement('div'), ':'),
         BlackholePrimitive,
       ],
     ])('resolves primitives from attribute parts starting with ":"', (source, part, expectedPrimitive) => {
@@ -424,68 +370,33 @@ describe('BrowserBackend', () => {
     it.each<[unknown, Part, Layout]>([
       [
         'foo',
-        {
-          type: PART_TYPE_ATTRIBUTE,
-          node: document.createElement('div'),
-          name: 'class',
-        },
+        createAttributePart(document.createElement('div'), 'class'),
         StrictLayout,
       ],
       [
         'foo',
-        {
-          type: PART_TYPE_CHILD_NODE,
-          node: document.createComment(''),
-          anchorNode: null,
-          namespaceURI: HTML_NAMESPACE_URI,
-        },
+        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
         LooseLayout,
       ],
+      ['foo', createElementPart(document.createElement('div')), StrictLayout],
       [
         'foo',
-        {
-          type: PART_TYPE_ELEMENT,
-          node: document.createElement('div'),
-        },
+        createEventPart(document.createElement('div'), 'click'),
         StrictLayout,
       ],
       [
         'foo',
-        {
-          type: PART_TYPE_EVENT,
-          node: document.createElement('div'),
-          name: 'click',
-        },
+        createLivePart(document.createElement('textarea'), 'value'),
         StrictLayout,
       ],
       [
         'foo',
-        {
-          type: PART_TYPE_LIVE,
-          node: document.createElement('textarea'),
-          name: 'value',
-          defaultValue: '',
-        },
+        createPropertyPart(document.createElement('textarea'), 'value'),
         StrictLayout,
       ],
       [
         'foo',
-        {
-          type: PART_TYPE_PROPERTY,
-          node: document.createElement('textarea'),
-          name: 'value',
-          defaultValue: '',
-        },
-        StrictLayout,
-      ],
-      [
-        'foo',
-        {
-          type: PART_TYPE_TEXT,
-          node: document.createTextNode(''),
-          precedingText: '',
-          followingText: '',
-        },
+        createTextPart(document.createTextNode(''), '', ''),
         StrictLayout,
       ],
     ])('resolves the Layout from an arbitrary part', (value, part, expectedLayout) => {

@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   PART_TYPE_ATTRIBUTE,
-  PART_TYPE_ELEMENT,
   PART_TYPE_EVENT,
   PART_TYPE_LIVE,
   PART_TYPE_PROPERTY,
-  PART_TYPE_TEXT,
   SLOT_STATUS_IDLE,
 } from '@/core.js';
+import { createChildNodePart, createElementPart } from '@/part.js';
 import { SpreadBinding, SpreadPrimitive } from '@/primitive/spread.js';
 import { createRuntime, MockSlot } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -15,10 +14,7 @@ import { TestUpdater } from '../../test-updater.js';
 describe('SpreadPrimitive', () => {
   describe('ensureValue()', () => {
     it('asserts the value is a object', () => {
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
 
       expect(() => {
         SpreadPrimitive.ensureValue!.call(
@@ -34,10 +30,7 @@ describe('SpreadPrimitive', () => {
       undefined,
       'foo',
     ])('throws an error if the value is not object', (value) => {
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
 
       expect(() => {
         SpreadPrimitive.ensureValue!.call(SpreadPrimitive, value, part);
@@ -48,10 +41,7 @@ describe('SpreadPrimitive', () => {
   describe('resolveBinding()', () => {
     it('constructs a new SpreadBinding', () => {
       const props = { color: 'red' };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
       const binding = SpreadPrimitive.resolveBinding(props, part, runtime);
 
@@ -63,12 +53,7 @@ describe('SpreadPrimitive', () => {
 
     it('should throw the error if the part is not a element part', () => {
       const props = { class: 'foo' };
-      const part = {
-        type: PART_TYPE_TEXT,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      } as const;
+      const part = createChildNodePart(document.createComment(''), null);
       const runtime = createRuntime();
 
       expect(() =>
@@ -82,10 +67,7 @@ describe('SpreadBinding', () => {
   describe('shouldUpdate', () => {
     it('returns true if the committed value does not exist', () => {
       const props = { class: 'foo' };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const binding = new SpreadBinding(props, part);
 
       expect(binding.shouldUpdate(props)).toBe(true);
@@ -94,10 +76,7 @@ describe('SpreadBinding', () => {
     it('returns true if the style has changed from the committed one', () => {
       const props1 = { class: 'foo' };
       const props2 = { id: 'bar' };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const binding = new SpreadBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -117,7 +96,7 @@ describe('SpreadBinding', () => {
         id: 'foo',
         class: 'bar',
         title: undefined,
-        $open: true,
+        $hidden: true,
       };
       const props2 = {
         id: undefined,
@@ -125,10 +104,7 @@ describe('SpreadBinding', () => {
         '.innerHTML': '<div>foo</div>',
         '@click': () => {},
       };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('dialog'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const binding = new SpreadBinding(props1, part);
       const updater = new TestUpdater();
 
@@ -166,14 +142,14 @@ describe('SpreadBinding', () => {
             value: props1.class,
             status: SLOT_STATUS_IDLE,
           }),
-          $open: expect.objectContaining({
+          $hidden: expect.objectContaining({
             part: {
               type: PART_TYPE_LIVE,
-              name: 'open',
+              name: 'hidden',
               node: expect.exact(part.node),
               defaultValue: false,
             },
-            value: props1.$open,
+            value: props1.$hidden,
             status: SLOT_STATUS_IDLE,
           }),
         });
@@ -203,7 +179,7 @@ describe('SpreadBinding', () => {
             value: props1.class,
             status: SLOT_STATUS_IDLE,
           }),
-          $open: expect.objectContaining({
+          $hidden: expect.objectContaining({
             status: SLOT_STATUS_IDLE,
           }),
         });
@@ -251,10 +227,7 @@ describe('SpreadBinding', () => {
   describe('detach()', () => {
     it('should do nothing if the committed properties does not exist', () => {
       const props = {};
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const binding = new SpreadBinding(props, part);
       const updater = new TestUpdater();
 
@@ -272,14 +245,11 @@ describe('SpreadBinding', () => {
       const props = {
         id: 'foo',
         class: 'bar',
-        $open: true,
+        $hidden: true,
         '.innerHTML': '<div>foo</div>',
         '@click': () => {},
       };
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('dialog'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const binding = new SpreadBinding(props, part);
       const updater = new TestUpdater();
 
@@ -315,14 +285,14 @@ describe('SpreadBinding', () => {
             value: props.class,
             status: SLOT_STATUS_IDLE,
           }),
-          $open: expect.objectContaining({
+          $hidden: expect.objectContaining({
             part: {
               type: PART_TYPE_LIVE,
-              name: 'open',
+              name: 'hidden',
               node: expect.exact(part.node),
               defaultValue: false,
             },
-            value: props.$open,
+            value: props.$hidden,
             status: SLOT_STATUS_IDLE,
           }),
           '.innerHTML': expect.objectContaining({
@@ -362,7 +332,7 @@ describe('SpreadBinding', () => {
           class: expect.objectContaining({
             status: SLOT_STATUS_IDLE,
           }),
-          $open: expect.objectContaining({
+          $hidden: expect.objectContaining({
             status: SLOT_STATUS_IDLE,
           }),
           '.innerHTML': expect.objectContaining({

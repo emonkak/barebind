@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PART_TYPE_CHILD_NODE } from '@/core.js';
 import { createTreeWalker } from '@/hydration.js';
+import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
 import { FragmentTemplate } from '@/template/fragment.js';
-import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   MockBinding,
   MockDirective,
@@ -56,29 +55,29 @@ describe('FragmentTemplate', () => {
       ] as const;
       const template = new FragmentTemplate(innerTemplates);
       const values = ['foo', 'bar', 'baz'];
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const container = document.createElement('div');
       const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const hydrationSpys = innerTemplates.map((template) =>
         vi.spyOn(template, 'hydrate').mockImplementation(() => {
-          const part = {
-            type: PART_TYPE_CHILD_NODE,
-            node: document.createComment(template.values.join('')),
-            anchorNode: null,
-            namespaceURI: HTML_NAMESPACE_URI,
-          } as const;
+          const part = createChildNodePart(
+            document.createComment(''),
+            HTML_NAMESPACE_URI,
+          );
           return {
             children: [part.node],
             slots: [
               new MockSlot(
-                new MockBinding(new MockDirective(), template.values, part),
+                new MockBinding(
+                  new MockDirective(),
+                  template.values.join(','),
+                  part,
+                ),
               ),
             ],
           };
@@ -90,19 +89,19 @@ describe('FragmentTemplate', () => {
       });
 
       expect(children.map(serializeNode)).toStrictEqual([
-        '<!--foo-->',
         '<!---->',
-        '<!--barbaz-->',
+        '<!---->',
+        '<!---->',
       ]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
-          value: ['foo'],
+          value: 'foo',
         }),
         expect.objectContaining({
-          value: [],
+          value: '',
         }),
         expect.objectContaining({
-          value: ['bar', 'baz'],
+          value: 'bar,baz',
         }),
       ]);
       expect(hydrationSpys[0]).toHaveBeenCalledOnce();
@@ -138,27 +137,27 @@ describe('FragmentTemplate', () => {
       ] as const;
       const template = new FragmentTemplate(innerTemplates);
       const values = ['foo', 'bar', 'baz'];
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const updater = new TestUpdater();
 
       const renderSpys = innerTemplates.map((template) =>
         vi.spyOn(template, 'render').mockImplementation(() => {
-          const part = {
-            type: PART_TYPE_CHILD_NODE,
-            node: document.createComment(template.values.join('')),
-            anchorNode: null,
-            namespaceURI: HTML_NAMESPACE_URI,
-          } as const;
+          const part = createChildNodePart(
+            document.createComment(''),
+            HTML_NAMESPACE_URI,
+          );
           return {
             children: [part.node],
             slots: [
               new MockSlot(
-                new MockBinding(new MockDirective(), template.values, part),
+                new MockBinding(
+                  new MockDirective(),
+                  template.values.join(','),
+                  part,
+                ),
               ),
             ],
           };
@@ -170,19 +169,19 @@ describe('FragmentTemplate', () => {
       });
 
       expect(children.map(serializeNode)).toStrictEqual([
-        '<!--foo-->',
         '<!---->',
-        '<!--barbaz-->',
+        '<!---->',
+        '<!---->',
       ]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
-          value: ['foo'],
+          value: 'foo',
         }),
         expect.objectContaining({
-          value: [],
+          value: '',
         }),
         expect.objectContaining({
-          value: ['bar', 'baz'],
+          value: 'bar,baz',
         }),
       ]);
       expect(renderSpys[0]).toHaveBeenCalledOnce();

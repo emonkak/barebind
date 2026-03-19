@@ -1,21 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   BOUNDARY_TYPE_HYDRATION,
-  PART_TYPE_ATTRIBUTE,
-  PART_TYPE_CHILD_NODE,
-  PART_TYPE_ELEMENT,
-  PART_TYPE_TEXT,
   SLOT_STATUS_DETACHED,
   SLOT_STATUS_IDLE,
 } from '@/core.js';
 import { createTreeWalker } from '@/hydration.js';
 import {
-  getNamespaceURIByTagName,
+  createAttributePart,
+  createChildNodePart,
+  createElementPart,
+  createTextPart,
   HTML_NAMESPACE_URI,
-  MATH_NAMESPACE_URI,
-  SVG_NAMESPACE_URI,
-  TemplateBinding,
-} from '@/template/template.js';
+} from '@/part.js';
+import { TemplateBinding } from '@/template/template.js';
 import {
   createRuntime,
   createScope,
@@ -39,12 +36,10 @@ describe('AbstractTemplate', () => {
     it('constructs a new TemplateBinding', () => {
       const template = new MockTemplate();
       const values = ['foo'] as const;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const runtime = createRuntime();
       const binding = template.resolveBinding(values, part, runtime);
 
@@ -57,10 +52,7 @@ describe('AbstractTemplate', () => {
     it('should throw the error if the part is not a child node part', () => {
       const template = new MockTemplate();
       const values = ['foo'] as const;
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
 
       expect(() => template.resolveBinding(values, part, runtime)).toThrow(
@@ -75,12 +67,10 @@ describe('TemplateBinding', () => {
     it('returns true if the committed result does not exist', () => {
       const template = new MockTemplate();
       const values = [] as const;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new TemplateBinding(template, values, part);
 
       expect(binding.shouldUpdate(values)).toBe(true);
@@ -90,12 +80,10 @@ describe('TemplateBinding', () => {
       const template = new MockTemplate();
       const args1 = ['foo'];
       const args2 = ['bar'];
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new TemplateBinding(template, args1, part);
       const updater = new TestUpdater();
 
@@ -116,12 +104,10 @@ describe('TemplateBinding', () => {
       const template = new MockTemplate();
       const args1 = ['foo', 'bar', 'baz'];
       const args2 = ['qux', 'quux', 'corge'];
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new TemplateBinding(template, args1, part);
       const updater = new TestUpdater();
 
@@ -139,27 +125,32 @@ describe('TemplateBinding', () => {
         .mockImplementation((values, _part, session) => {
           const slots = [
             new MockSlot(
-              new MockBinding(MockPrimitive, values[0], {
-                type: PART_TYPE_ATTRIBUTE,
-                node: fragment.firstChild as Element,
-                name: 'class',
-              }),
+              new MockBinding(
+                MockPrimitive,
+                values[0],
+                createAttributePart(fragment.firstChild as Element, 'class'),
+              ),
             ),
             new MockSlot(
-              new MockBinding(MockPrimitive, values[1], {
-                type: PART_TYPE_TEXT,
-                node: fragment.firstChild!.nextSibling as Text,
-                precedingText: '',
-                followingText: '',
-              }),
+              new MockBinding(
+                MockPrimitive,
+                values[1],
+                createTextPart(
+                  fragment.firstChild!.nextSibling as Text,
+                  '',
+                  '',
+                ),
+              ),
             ),
             new MockSlot(
-              new MockBinding(MockPrimitive, values[2], {
-                type: PART_TYPE_CHILD_NODE,
-                node: fragment.firstChild!.nextSibling!.nextSibling as Comment,
-                anchorNode: null,
-                namespaceURI: HTML_NAMESPACE_URI,
-              }),
+              new MockBinding(
+                MockPrimitive,
+                values[2],
+                createChildNodePart(
+                  fragment.firstChild!.nextSibling!.nextSibling as Comment,
+                  HTML_NAMESPACE_URI,
+                ),
+              ),
             ),
           ];
           for (const slot of slots) {
@@ -176,7 +167,7 @@ describe('TemplateBinding', () => {
 
         expect(renderSpy).toHaveBeenCalledOnce();
         expect(renderSpy).toHaveBeenCalledWith(args1, part, expect.any(Object));
-        expect(part.anchorNode).toBe(fragment);
+        expect(part.node).toBe(fragment);
         expect(container.innerHTML).toBe(
           '<div><div class="foo"></div>bar<!--baz--></div><!---->',
         );
@@ -208,7 +199,7 @@ describe('TemplateBinding', () => {
         });
 
         expect(renderSpy).toHaveBeenCalledOnce();
-        expect(part.anchorNode).toBe(fragment);
+        expect(part.node).toBe(fragment);
         expect(container.innerHTML).toBe(
           '<div><div class="qux"></div>quux<!--corge--></div><!---->',
         );
@@ -239,7 +230,7 @@ describe('TemplateBinding', () => {
         });
 
         expect(renderSpy).toHaveBeenCalledOnce();
-        expect(part.anchorNode).toBe(null);
+        expect(part.node).toBe(part.sentinelNode);
         expect(container.innerHTML).toBe('<!---->');
         expect(binding['_pendingResult']).toStrictEqual({
           children: [fragment],
@@ -266,12 +257,10 @@ describe('TemplateBinding', () => {
       const template = new MockTemplate();
       const args1 = ['foo', 'bar', 'baz'];
       const args2 = ['qux', 'quux', 'corge'];
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new TemplateBinding(template, args1, part);
       const updater = new TestUpdater();
 
@@ -287,27 +276,25 @@ describe('TemplateBinding', () => {
         .mockImplementation((values, _part, session) => {
           const slots = [
             new MockSlot(
-              new MockBinding(MockPrimitive, values[0], {
-                type: PART_TYPE_CHILD_NODE,
-                node: fragment[0],
-                anchorNode: null,
-                namespaceURI: HTML_NAMESPACE_URI,
-              }),
+              new MockBinding(
+                MockPrimitive,
+                values[0],
+                createChildNodePart(fragment[0], HTML_NAMESPACE_URI),
+              ),
             ),
             new MockSlot(
-              new MockBinding(MockPrimitive, values[1], {
-                type: PART_TYPE_TEXT,
-                node: fragment[1],
-                precedingText: '',
-                followingText: '',
-              }),
+              new MockBinding(
+                MockPrimitive,
+                values[1],
+                createTextPart(fragment[1], '', ''),
+              ),
             ),
             new MockSlot(
-              new MockBinding(MockPrimitive, values[2], {
-                type: PART_TYPE_ATTRIBUTE,
-                node: fragment[2],
-                name: 'class',
-              }),
+              new MockBinding(
+                MockPrimitive,
+                values[2],
+                createAttributePart(fragment[2], 'class'),
+              ),
             ),
           ];
           for (const slot of slots) {
@@ -327,7 +314,7 @@ describe('TemplateBinding', () => {
 
         expect(renderSpy).toHaveBeenCalledOnce();
         expect(renderSpy).toHaveBeenCalledWith(args1, part, expect.any(Object));
-        expect(part.anchorNode).toStrictEqual(fragment[0]);
+        expect(part.node).toStrictEqual(fragment[0]);
         expect(container.innerHTML).toBe(
           '<!--foo-->bar<div class="baz"></div><!---->',
         );
@@ -359,7 +346,7 @@ describe('TemplateBinding', () => {
         });
 
         expect(renderSpy).toHaveBeenCalledOnce();
-        expect(part.anchorNode).toStrictEqual(fragment[0]);
+        expect(part.node).toStrictEqual(fragment[0]);
         expect(container.innerHTML).toBe(
           '<!--qux-->quux<div class="corge"></div><!---->',
         );
@@ -390,7 +377,7 @@ describe('TemplateBinding', () => {
         });
 
         expect(renderSpy).toHaveBeenCalledOnce();
-        expect(part.anchorNode).toBe(null);
+        expect(part.node).toBe(part.sentinelNode);
         expect(container.innerHTML).toBe('<!---->');
         expect(binding['_pendingResult']).toStrictEqual({
           children: fragment,
@@ -416,12 +403,10 @@ describe('TemplateBinding', () => {
     it('hydrates a template', () => {
       const template = new MockTemplate();
       const values = [] as const;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new TemplateBinding(template, values, part);
       const container = createElement('div', {}, 'foo', part.node);
       const scope = createScope();
@@ -451,20 +436,8 @@ describe('TemplateBinding', () => {
         targetTree,
         expect.any(Object),
       );
-      expect(part.anchorNode).toBe(container.firstChild);
+      expect(part.node).toBe(container.firstChild);
       expect(container.innerHTML).toBe('foo<!---->');
     });
-  });
-});
-
-describe('getNamespaceURIByTagName()', () => {
-  it('returns the namespace URI from the tag name', () => {
-    expect(getNamespaceURIByTagName('HTML')).toBe(HTML_NAMESPACE_URI);
-    expect(getNamespaceURIByTagName('MATH')).toBe(MATH_NAMESPACE_URI);
-    expect(getNamespaceURIByTagName('SVG')).toBe(SVG_NAMESPACE_URI);
-    expect(getNamespaceURIByTagName('html')).toBe(HTML_NAMESPACE_URI);
-    expect(getNamespaceURIByTagName('math')).toBe(MATH_NAMESPACE_URI);
-    expect(getNamespaceURIByTagName('svg')).toBe(SVG_NAMESPACE_URI);
-    expect(getNamespaceURIByTagName('div')).toBe(null);
   });
 });

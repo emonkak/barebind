@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PART_TYPE_ELEMENT, PART_TYPE_PROPERTY } from '@/core.js';
+import { createElementPart, createPropertyPart } from '@/part.js';
 import { PropertyBinding, PropertyPrimitive } from '@/primitive/property.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -8,12 +8,10 @@ describe('PropertyPrimitive', () => {
   describe('resolveBinding()', () => {
     it('constructs a new PropertyBinding', () => {
       const value = '<div>foo</div>';
-      const part = {
-        type: PART_TYPE_PROPERTY,
-        node: document.createElement('div'),
-        name: 'innerHTML',
-        defaultValue: '',
-      } as const;
+      const part = createPropertyPart(
+        document.createElement('div'),
+        'innerHTML',
+      );
       const runtime = createRuntime();
       const binding = PropertyPrimitive.resolveBinding(value, part, runtime);
 
@@ -25,10 +23,7 @@ describe('PropertyPrimitive', () => {
 
     it('should throw the error if the part is not a property part', () => {
       const value = '<div>foo</div>';
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
 
       expect(() =>
@@ -42,12 +37,10 @@ describe('PropertyBinding', () => {
   describe('shouldUpdate()', () => {
     it('returns true if the committed value does not exist', () => {
       const value = '<div>foo</div>';
-      const part = {
-        type: PART_TYPE_PROPERTY,
-        node: document.createElement('div'),
-        name: 'innerHTML',
-        defaultValue: '',
-      } as const;
+      const part = createPropertyPart(
+        document.createElement('div'),
+        'innerHTML',
+      );
       const binding = new PropertyBinding(value, part);
 
       expect(binding.shouldUpdate(value)).toBe(true);
@@ -56,12 +49,10 @@ describe('PropertyBinding', () => {
     it('returns true if the committed value is different from the new one', () => {
       const value1 = '<div>foo</div>';
       const value2 = '<div>bar</div>';
-      const part = {
-        type: PART_TYPE_PROPERTY,
-        node: document.createElement('div'),
-        name: 'innerHTML',
-        defaultValue: '',
-      } as const;
+      const part = createPropertyPart(
+        document.createElement('div'),
+        'innerHTML',
+      );
       const binding = new PropertyBinding(value1, part);
       const updater = new TestUpdater();
 
@@ -81,12 +72,10 @@ describe('PropertyBinding', () => {
     it('sets the value for the property', () => {
       const value1 = '<div>foo</div>';
       const value2 = '<div>foo</div>';
-      const part = {
-        type: PART_TYPE_PROPERTY,
-        node: document.createElement('div'),
-        name: 'innerHTML',
-        defaultValue: '',
-      } as const;
+      const part = createPropertyPart(
+        document.createElement('div'),
+        'innerHTML',
+      );
       const binding = new PropertyBinding(value1, part);
       const updater = new TestUpdater();
 
@@ -114,12 +103,10 @@ describe('PropertyBinding', () => {
   describe('rollback()', () => {
     it('restores the property to the initial value of the part', () => {
       const value = '<div>foo</div>';
-      const part = {
-        type: PART_TYPE_PROPERTY,
-        node: document.createElement('div'),
-        name: 'innerHTML',
-        defaultValue: '',
-      } as const;
+      const part = createPropertyPart(
+        document.createElement('div'),
+        'innerHTML',
+      );
       const binding = new PropertyBinding(value, part);
       const updater = new TestUpdater();
 
@@ -144,12 +131,10 @@ describe('PropertyBinding', () => {
 
     it('should do nothing if the committed value does not exist', () => {
       const value = '<div>foo</div>';
-      const part = {
-        type: PART_TYPE_PROPERTY,
-        node: document.createElement('div'),
-        name: 'innerHTML',
-        defaultValue: '',
-      } as const;
+      const part = createPropertyPart(
+        document.createElement('div'),
+        'innerHTML',
+      );
       const binding = new PropertyBinding(value, part);
       const updater = new TestUpdater();
 

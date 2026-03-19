@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PART_TYPE_CHILD_NODE } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import { Strict, StrictLayout, StrictSlot } from '@/layout/strict.js';
-import { HTML_NAMESPACE_URI } from '@/template/template.js';
+import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
 import {
   MockBinding,
   MockDirective,
@@ -32,12 +31,10 @@ describe('StrictLayout', () => {
   describe('placeBinding()', () => {
     it('constructs a new LooseSlot', () => {
       const value = 'foo';
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = StrictLayout.placeBinding(binding, new MockLayout());
 
@@ -51,12 +48,10 @@ describe('StrictLayout', () => {
 describe('StrictSlot', () => {
   it('can commit the binding after attaching', () => {
     const source = 'foo';
-    const part = {
-      type: PART_TYPE_CHILD_NODE,
-      node: document.createComment(''),
-      anchorNode: null,
-      namespaceURI: HTML_NAMESPACE_URI,
-    } as const;
+    const part = createChildNodePart(
+      document.createComment(''),
+      HTML_NAMESPACE_URI,
+    );
     const binding = new MockBinding(MockPrimitive, source, part);
     const slot = new StrictSlot(binding);
     const updater = new TestUpdater();
@@ -73,18 +68,16 @@ describe('StrictSlot', () => {
 
       expect(attachSpy).toHaveBeenCalledOnce();
       expect(commitSpy).toHaveBeenCalledOnce();
-      expect(part.node.data).toBe('/MockPrimitive("foo")');
+      expect(part.node.nodeValue).toBe('/MockPrimitive("foo")');
     }
   });
 
   it('commits the binding if it is dirty', () => {
     const source = 'foo';
-    const part = {
-      type: PART_TYPE_CHILD_NODE,
-      node: document.createComment(''),
-      anchorNode: null,
-      namespaceURI: HTML_NAMESPACE_URI,
-    } as const;
+    const part = createChildNodePart(
+      document.createComment(''),
+      HTML_NAMESPACE_URI,
+    );
     const binding = new MockBinding(MockPrimitive, source, part);
     const slot = new StrictSlot(binding);
     const updater = new TestUpdater();
@@ -111,18 +104,16 @@ describe('StrictSlot', () => {
       expect(attachSpy).toHaveBeenCalledTimes(1);
       expect(commitSpy).toHaveBeenCalledTimes(1);
       expect(dirty).toBe(false);
-      expect(part.node.data).toBe('/MockPrimitive("foo")');
+      expect(part.node.nodeValue).toBe('/MockPrimitive("foo")');
     }
   });
 
   it('can rollback the binding after detaching', () => {
     const source = 'foo';
-    const part = {
-      type: PART_TYPE_CHILD_NODE,
-      node: document.createComment(''),
-      anchorNode: null,
-      namespaceURI: HTML_NAMESPACE_URI,
-    } as const;
+    const part = createChildNodePart(
+      document.createComment(''),
+      HTML_NAMESPACE_URI,
+    );
     const binding = new MockBinding(MockPrimitive, source, part);
     const slot = new StrictSlot(binding);
     const updater = new TestUpdater();
@@ -146,7 +137,7 @@ describe('StrictSlot', () => {
 
       expect(detachSpy).toHaveBeenCalledOnce();
       expect(rollbackSpy).toHaveBeenCalledOnce();
-      expect(part.node.data).toBe('');
+      expect(part.node.nodeValue).toBe('');
     }
   });
 
@@ -154,12 +145,10 @@ describe('StrictSlot', () => {
     it('resuse the binding when the directive type is the same', () => {
       const source1 = 'foo';
       const source2 = 'bar';
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new MockBinding(MockPrimitive, source1, part);
       const slot = new StrictSlot(binding);
       const updater = new TestUpdater();
@@ -190,19 +179,17 @@ describe('StrictSlot', () => {
         expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(rollbackSpy).toHaveBeenCalledTimes(0);
         expect(dirty).toBe(true);
-        expect(part.node.data).toBe('/MockPrimitive("bar")');
+        expect(part.node.nodeValue).toBe('/MockPrimitive("bar")');
       }
     });
 
     it('throws DirectiveError when directive types are mismatched', () => {
       const source1 = 'foo';
       const source2 = new DirectiveSpecifier(new MockDirective(), 'bar');
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const binding = new MockBinding(MockPrimitive, source1, part);
       const slot = new StrictSlot(binding);
       const updater = new TestUpdater();

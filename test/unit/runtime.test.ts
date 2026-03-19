@@ -6,7 +6,6 @@ import {
   BOUNDARY_TYPE_ERROR,
   EffectQueue,
   type Hook,
-  PART_TYPE_CHILD_NODE,
   type SessionEvent,
 } from '@/core.js';
 import { AbortError, InterruptError } from '@/error.js';
@@ -16,8 +15,8 @@ import {
   UserBlockingLane,
   ViewTransitionLane,
 } from '@/lane.js';
+import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
 import { RenderSession } from '@/render-session.js';
-import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   createRenderFrame,
   createRuntime,
@@ -762,12 +761,10 @@ describe('Runtime', () => {
       null,
       undefined,
     ])('resolves primitive values as primitive directives', (source) => {
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const runtime = createRuntime();
 
       const resolvePrimitiveSpy = vi.spyOn(
@@ -790,12 +787,10 @@ describe('Runtime', () => {
         value: 'foo',
         layout: new MockLayout(),
       });
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const runtime = createRuntime();
 
       const directive = runtime.resolveDirective(source, part);
@@ -810,12 +805,10 @@ describe('Runtime', () => {
   describe('resolveSlot()', () => {
     it('resolves the slot from the primitive source', () => {
       const source = 'foo';
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const runtime = createRuntime();
 
       const resolvePrimitiveSpy = vi.spyOn(
@@ -844,12 +837,10 @@ describe('Runtime', () => {
           };
         },
       };
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const runtime = createRuntime();
 
       const resolveLayoutSpy = vi.spyOn(runtime['_backend'], 'resolveLayout');

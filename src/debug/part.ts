@@ -15,15 +15,20 @@ export function debugPart(
   type: DirectiveType<unknown>,
   value: unknown,
 ): void {
-  if (
-    part.type === PART_TYPE_CHILD_NODE &&
-    (part.node.data === '' || part.node.data.startsWith('/' + type.name + '('))
-  ) {
-    part.node.data = `/${type.name}(${formatValue(value)})`;
+  if (part.type === PART_TYPE_CHILD_NODE) {
+    const { sentinelNode } = part;
+    if (
+      sentinelNode.data === '' ||
+      sentinelNode.data.startsWith(`/${type.name}(`)
+    ) {
+      sentinelNode.data = `/${type.name}(${formatValue(value)})`;
+    }
   }
 }
 
 export function formatPart(part: Part, marker: string): string {
+  const node =
+    part.type === PART_TYPE_CHILD_NODE ? part.sentinelNode : part.node;
   switch (part.type) {
     case PART_TYPE_ATTRIBUTE:
       marker = part.name + '=' + marker;
@@ -38,14 +43,14 @@ export function formatPart(part: Part, marker: string): string {
       marker = '.' + part.name + '=' + marker;
       break;
   }
-  return emphasizeNode(part.node, marker);
+  return emphasizeNode(node, marker);
 }
 
 export function undebugPart(part: Part, type: DirectiveType<unknown>): void {
-  if (
-    part.type === PART_TYPE_CHILD_NODE &&
-    part.node.data.startsWith('/' + type.name + '(')
-  ) {
-    part.node.data = '';
+  if (part.type === PART_TYPE_CHILD_NODE) {
+    const { sentinelNode } = part;
+    if (sentinelNode.data.startsWith('/' + type.name + '(')) {
+      sentinelNode.data = '';
+    }
   }
 }

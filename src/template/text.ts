@@ -5,6 +5,7 @@ import {
   type UpdateSession,
 } from '../core.js';
 import { splitText } from '../hydration.js';
+import { createTextPart } from '../part.js';
 import { AbstractTemplate } from './template.js';
 
 export class TextTemplate<T> extends AbstractTemplate<readonly [T]> {
@@ -58,13 +59,12 @@ export class TextTemplate<T> extends AbstractTemplate<readonly [T]> {
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;
-    const document = part.node.ownerDocument;
-    const textPart = {
-      type: PART_TYPE_TEXT,
-      node: document.createTextNode(''),
-      precedingText: this._precedingText,
-      followingText: this._followingText,
-    } as const;
+    const { ownerDocument } = part.sentinelNode;
+    const textPart = createTextPart(
+      ownerDocument.createTextNode(''),
+      this._precedingText,
+      this._followingText,
+    );
     const textSlot = context.resolveSlot(values[0], textPart);
 
     textSlot.attach(session);

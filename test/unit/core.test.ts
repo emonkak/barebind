@@ -1,19 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import {
-  type Effect,
-  EffectQueue,
-  getStartNode,
-  PART_TYPE_ATTRIBUTE,
-  PART_TYPE_CHILD_NODE,
-  PART_TYPE_ELEMENT,
-  PART_TYPE_EVENT,
-  PART_TYPE_LIVE,
-  PART_TYPE_PROPERTY,
-  PART_TYPE_TEXT,
-  type Part,
-} from '@/core.js';
-import { HTML_NAMESPACE_URI } from '@/template/template.js';
+import { EffectQueue } from '@/core.js';
 import { createEffect } from '../mocks.js';
 
 describe('EffectQueue', () => {
@@ -260,75 +247,5 @@ describe('EffectQueue', () => {
       queue.flush();
       expect(order).toStrictEqual([1, 2]);
     });
-  });
-});
-
-describe('getStartNode()', () => {
-  it.each<[Part]>([
-    [
-      {
-        type: PART_TYPE_ATTRIBUTE,
-        node: document.createElement('div'),
-        name: 'class',
-      },
-    ],
-    [
-      {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      },
-    ],
-    [
-      {
-        type: PART_TYPE_TEXT,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      },
-    ],
-    [
-      {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      },
-    ],
-    [
-      {
-        type: PART_TYPE_EVENT,
-        node: document.createElement('div'),
-        name: 'click',
-      },
-    ],
-    [
-      {
-        type: PART_TYPE_LIVE,
-        node: document.createElement('textarea'),
-        name: 'value',
-        defaultValue: '',
-      },
-    ],
-    [
-      {
-        type: PART_TYPE_PROPERTY,
-        node: document.createElement('textarea'),
-        name: 'value',
-        defaultValue: '',
-      },
-    ],
-  ])('returns the node of the part', (part) => {
-    expect(getStartNode(part)).toBe(part.node);
-  });
-
-  it('returns the child node if the part has a child node', () => {
-    const part = {
-      type: PART_TYPE_CHILD_NODE,
-      node: document.createComment(''),
-      anchorNode: document.createElement('div'),
-      namespaceURI: HTML_NAMESPACE_URI,
-    } as const;
-
-    expect(getStartNode(part)).toBe(part.anchorNode);
   });
 });

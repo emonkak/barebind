@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { PART_TYPE_CHILD_NODE, SLOT_STATUS_ATTACHED } from '@/core.js';
 import { createTreeWalker, HydrationError } from '@/hydration.js';
+import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
-import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockSlot, MockTemplate } from '../../mocks.js';
 import { createElement } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -29,12 +29,10 @@ describe('ChildNodeTemplate', () => {
     it('hydrates a tree containing a comment node', () => {
       const template = new ChildNodeTemplate();
       const values = ['foo'] as const;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const container = createElement('div', {}, document.createComment(''));
       const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
@@ -51,7 +49,7 @@ describe('ChildNodeTemplate', () => {
           part: {
             type: PART_TYPE_CHILD_NODE,
             node: expect.exact(container.firstChild),
-            anchorNode: null,
+            sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
           },
           status: SLOT_STATUS_ATTACHED,
@@ -62,12 +60,10 @@ describe('ChildNodeTemplate', () => {
     it('should throw the error if there is a tree mismatch', () => {
       const template = new ChildNodeTemplate();
       const values = ['foo'] as const;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const container = createElement('div', {});
       const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
@@ -84,12 +80,10 @@ describe('ChildNodeTemplate', () => {
     it('renders a template containing a child node part', () => {
       const template = new ChildNodeTemplate();
       const values = ['foo'] as const;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
@@ -104,7 +98,7 @@ describe('ChildNodeTemplate', () => {
           part: {
             type: PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
-            anchorNode: null,
+            sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
           },
           status: SLOT_STATUS_ATTACHED,

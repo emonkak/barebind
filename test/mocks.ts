@@ -175,10 +175,10 @@ export class MockBinding<T> implements Binding<T> {
       case PART_TYPE_CHILD_NODE:
         // For part debugging, update comments only if the data is empty.
         if (
-          this.part.node.data === '' ||
-          this.part.node.data === stringify(this.memoizedValue)
+          this.part.sentinelNode.data === '' ||
+          this.part.sentinelNode.data === stringify(this.memoizedValue)
         ) {
-          this.part.node.data = stringify(this.value);
+          this.part.sentinelNode.data = stringify(this.value);
         }
         break;
       case PART_TYPE_ELEMENT:
@@ -230,8 +230,8 @@ export class MockBinding<T> implements Binding<T> {
         );
         break;
       case PART_TYPE_CHILD_NODE:
-        if (this.part.node.data === this.memoizedValue) {
-          this.part.node.data = '';
+        if (this.part.sentinelNode.data === this.memoizedValue) {
+          this.part.sentinelNode.data = '';
         }
         break;
       case PART_TYPE_TEXT:

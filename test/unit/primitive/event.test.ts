@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PART_TYPE_ELEMENT, PART_TYPE_EVENT } from '@/core.js';
+import { createElementPart, createEventPart } from '@/part.js';
 import { EventBinding, EventPrimitive } from '@/primitive/event.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -7,11 +7,7 @@ import { TestUpdater } from '../../test-updater.js';
 describe('EventPrimitive', () => {
   describe('ensureValue()', () => {
     it('asserts the value is an event listener, null or undefined', () => {
-      const part = {
-        type: PART_TYPE_EVENT,
-        node: document.createElement('div'),
-        name: 'click',
-      } as const;
+      const part = createEventPart(document.createElement('div'), 'click');
 
       expect(() => {
         EventPrimitive.ensureValue!.call(EventPrimitive, null, part);
@@ -26,11 +22,7 @@ describe('EventPrimitive', () => {
     });
 
     it('throws an error if the value is not valid', () => {
-      const part = {
-        type: PART_TYPE_EVENT,
-        node: document.createElement('div'),
-        name: 'click',
-      } as const;
+      const part = createEventPart(document.createElement('div'), 'click');
 
       expect(() => {
         EventPrimitive.ensureValue!.call(EventPrimitive, {}, part);
@@ -43,11 +35,7 @@ describe('EventPrimitive', () => {
   describe('resolveBinding()', () => {
     it('constructs a new EventBinding', () => {
       const handler = () => {};
-      const part = {
-        type: PART_TYPE_EVENT,
-        node: document.createElement('div'),
-        name: 'click',
-      } as const;
+      const part = createEventPart(document.createElement('div'), 'click');
       const runtime = createRuntime();
       const binding = EventPrimitive.resolveBinding(handler, part, runtime);
 
@@ -59,10 +47,7 @@ describe('EventPrimitive', () => {
 
     it('should throw the error if the part is not an event part', () => {
       const handler = () => {};
-      const part = {
-        type: PART_TYPE_ELEMENT,
-        node: document.createElement('div'),
-      } as const;
+      const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
 
       expect(() =>
@@ -76,11 +61,7 @@ describe('EventBinding', () => {
   describe('shouldUpdate()', () => {
     it('returns true if the committed value does not exist', () => {
       const handler = () => {};
-      const part = {
-        type: PART_TYPE_EVENT,
-        node: document.createElement('div'),
-        name: 'click',
-      } as const;
+      const part = createEventPart(document.createElement('div'), 'click');
       const binding = new EventBinding(handler, part);
 
       expect(binding.shouldUpdate(handler)).toBe(true);
@@ -89,11 +70,7 @@ describe('EventBinding', () => {
     it('returns true if the committed value is different from the new one', () => {
       const handler1 = () => {};
       const handler2 = () => {};
-      const part = {
-        type: PART_TYPE_EVENT,
-        node: document.createElement('div'),
-        name: 'click',
-      } as const;
+      const part = createEventPart(document.createElement('div'), 'click');
       const binding = new EventBinding(handler1, part);
       const updater = new TestUpdater();
 
@@ -113,11 +90,7 @@ describe('EventBinding', () => {
     it('attaches the event listener function', () => {
       const handler1 = vi.fn();
       const handler2 = vi.fn();
-      const part = {
-        type: PART_TYPE_EVENT,
-        node: document.createElement('div'),
-        name: 'click',
-      } as const;
+      const part = createEventPart(document.createElement('div'), 'click');
       const binding = new EventBinding(handler1, part);
       const updater = new TestUpdater();
 
@@ -164,11 +137,7 @@ describe('EventBinding', () => {
     it('attaches the event listener object', () => {
       const handler1 = { handleEvent: vi.fn() };
       const handler2 = { handleEvent: vi.fn() };
-      const part = {
-        type: PART_TYPE_EVENT,
-        node: document.createElement('div'),
-        name: 'click',
-      } as const;
+      const part = createEventPart(document.createElement('div'), 'click');
       const binding = new EventBinding(handler1, part);
       const updater = new TestUpdater();
 
@@ -230,11 +199,7 @@ describe('EventBinding', () => {
       undefined,
     ])('detaches the old event listener if the new event listener is null or undefined', (handler2) => {
       const handler1 = { handleEvent: () => {} };
-      const part = {
-        type: PART_TYPE_EVENT,
-        node: document.createElement('div'),
-        name: 'click',
-      } as const;
+      const part = createEventPart(document.createElement('div'), 'click');
       const binding = new EventBinding(handler1, part);
       const updater = new TestUpdater();
 
@@ -277,11 +242,7 @@ describe('EventBinding', () => {
   describe('rollback()', () => {
     it('should do nothing if the attached event listener does not exist', () => {
       const handler = () => {};
-      const part = {
-        type: PART_TYPE_EVENT,
-        node: document.createElement('div'),
-        name: 'click',
-      } as const;
+      const part = createEventPart(document.createElement('div'), 'click');
       const binding = new EventBinding(handler, part);
       const updater = new TestUpdater();
 
@@ -301,11 +262,7 @@ describe('EventBinding', () => {
 
     it('detaches the event listener', () => {
       const handler = () => {};
-      const part = {
-        type: PART_TYPE_EVENT,
-        node: document.createElement('div'),
-        name: 'click',
-      } as const;
+      const part = createEventPart(document.createElement('div'), 'click');
       const binding = new EventBinding(handler, part);
       const updater = new TestUpdater();
 

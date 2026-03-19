@@ -21,7 +21,17 @@ import {
   treatNodeName,
   treatNodeType,
 } from '../hydration.js';
-import { AbstractTemplate, getNamespaceURIByTagName } from './template.js';
+import {
+  createAttributePart,
+  createChildNodePart,
+  createElementPart,
+  createEventPart,
+  createLivePart,
+  createPropertyPart,
+  createTextPart,
+  getNamespaceURIByTagName,
+} from '../part.js';
+import { AbstractTemplate } from './template.js';
 
 export type Hole =
   | Hole.AttributeHole
@@ -149,7 +159,7 @@ export class TaggedTemplate<
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;
-    const document = part.node.ownerDocument;
+    const { ownerDocument } = part.sentinelNode;
     const fragment = this._template.content;
     const sourceTree = createTreeWalker(fragment);
     const holes = this._holes;
@@ -173,69 +183,50 @@ export class TaggedTemplate<
           break;
         }
 
-        const continuous = hole.index === lastHoleIndex;
-
-        switch (hole.type) {
-          case PART_TYPE_ATTRIBUTE:
-          case PART_TYPE_EVENT:
-            currentPart = {
-              type: hole.type,
-              node: treatNodeType(
-                Node.ELEMENT_NODE,
-                continuous ? targetTree.currentNode : targetTree.nextNode(),
-                targetTree,
-              ),
-              name: hole.name,
-            };
-            break;
-          case PART_TYPE_CHILD_NODE:
-            currentPart = {
-              type: hole.type,
-              node: document.createComment(''),
-              anchorNode: null,
-              namespaceURI: getNamespaceURI(targetTree.currentNode, this._mode),
-            };
-            break;
-          case PART_TYPE_ELEMENT:
-            currentPart = {
-              type: hole.type,
-              node: treatNodeType(
-                Node.ELEMENT_NODE,
-                continuous ? targetTree.currentNode : targetTree.nextNode(),
-                targetTree,
-              ),
-            };
-            break;
-          case PART_TYPE_LIVE:
-          case PART_TYPE_PROPERTY: {
-            const node = treatNodeType(
-              Node.ELEMENT_NODE,
-              continuous ? targetTree.currentNode : targetTree.nextNode(),
-              targetTree,
-            );
-            currentPart = {
-              type: hole.type,
-              node,
-              name: hole.name,
-              defaultValue: (node as any)[hole.name],
-            };
-            break;
+        if (hole.type === PART_TYPE_TEXT) {
+          currentPart = createTextPart(
+            splitText(targetTree),
+            hole.precedingText,
+            hole.followingText,
+          );
+        } else if (hole.type === PART_TYPE_CHILD_NODE) {
+          currentPart = createChildNodePart(
+            ownerDocument.createComment(''),
+            getNamespaceURI(targetTree.currentNode, this._mode),
+          );
+        } else {
+          const currentNode =
+            hole.index === lastHoleIndex
+              ? (targetTree.currentNode as Element)
+              : treatNodeType(
+                  Node.ELEMENT_NODE,
+                  targetTree.nextNode(),
+                  targetTree,
+                );
+          switch (hole.type) {
+            case PART_TYPE_ATTRIBUTE:
+              currentPart = createAttributePart(currentNode, hole.name);
+              break;
+            case PART_TYPE_EVENT:
+              currentPart = createEventPart(currentNode, hole.name);
+              break;
+            case PART_TYPE_ELEMENT:
+              currentPart = createElementPart(currentNode);
+              break;
+            case PART_TYPE_LIVE:
+              currentPart = createLivePart(currentNode, hole.name);
+              break;
+            case PART_TYPE_PROPERTY:
+              currentPart = createPropertyPart(currentNode, hole.name);
+              break;
           }
-          case PART_TYPE_TEXT:
-            currentPart = {
-              type: hole.type,
-              node: splitText(targetTree),
-              precedingText: hole.precedingText,
-              followingText: hole.followingText,
-            };
-            break;
         }
 
         const slot = context.resolveSlot(values[holeIndex]!, currentPart!);
         slot.attach(session);
 
         if (currentPart!.type === PART_TYPE_CHILD_NODE) {
-          replaceMarkerNode(targetTree, currentPart!.node);
+          replaceMarkerNode(targetTree, currentPart!.sentinelNode);
         }
 
         slots[holeIndex] = slot;
@@ -271,8 +262,8 @@ export class TaggedTemplate<
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;
-    const document = part.node.ownerDocument;
-    const fragment = document.importNode(this._template.content, true);
+    const { ownerDocument } = part.sentinelNode;
+    const fragment = ownerDocument.importNode(this._template.content, true);
     const holes = this._holes;
     const slots: Slot<unknown>[] = new Array(holes.length);
 
@@ -295,43 +286,44 @@ export class TaggedTemplate<
 
         switch (hole.type) {
           case PART_TYPE_ATTRIBUTE:
+            currentPart = createAttributePart(
+              sourceTree.currentNode as Element,
+              hole.name,
+            );
+            break;
           case PART_TYPE_EVENT:
-            currentPart = {
-              type: hole.type,
-              node: sourceTree.currentNode as Element,
-              name: hole.name,
-            };
+            currentPart = createEventPart(
+              sourceTree.currentNode as Element,
+              hole.name,
+            );
             break;
           case PART_TYPE_CHILD_NODE:
-            currentPart = {
-              type: hole.type,
-              node: sourceTree.currentNode as Comment,
-              anchorNode: null,
-              namespaceURI: getNamespaceURI(sourceTree.currentNode, this._mode),
-            };
+            currentPart = createChildNodePart(
+              sourceTree.currentNode as Comment,
+              getNamespaceURI(sourceTree.currentNode, this._mode),
+            );
             break;
           case PART_TYPE_ELEMENT:
-            currentPart = {
-              type: hole.type,
-              node: sourceTree.currentNode as Element,
-            };
+            currentPart = createElementPart(sourceTree.currentNode as Element);
             break;
           case PART_TYPE_LIVE:
+            currentPart = createLivePart(
+              sourceTree.currentNode as Element,
+              hole.name,
+            );
+            break;
           case PART_TYPE_PROPERTY:
-            currentPart = {
-              type: hole.type,
-              node: sourceTree.currentNode as Element,
-              name: hole.name,
-              defaultValue: (sourceTree.currentNode as any)[hole.name],
-            };
+            currentPart = createPropertyPart(
+              sourceTree.currentNode as Element,
+              hole.name,
+            );
             break;
           case PART_TYPE_TEXT:
-            currentPart = {
-              type: hole.type,
-              node: sourceTree.currentNode as Text,
-              precedingText: hole.precedingText,
-              followingText: hole.followingText,
-            };
+            currentPart = createTextPart(
+              sourceTree.currentNode as Text,
+              hole.precedingText,
+              hole.followingText,
+            );
             break;
         }
 

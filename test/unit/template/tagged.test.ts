@@ -10,12 +10,13 @@ import {
   SLOT_STATUS_ATTACHED,
 } from '@/core.js';
 import { createTreeWalker, HydrationError } from '@/hydration.js';
-import { TaggedTemplate } from '@/template/tagged.js';
 import {
+  createChildNodePart,
   HTML_NAMESPACE_URI,
   MATH_NAMESPACE_URI,
   SVG_NAMESPACE_URI,
-} from '@/template/template.js';
+} from '@/part.js';
+import { TaggedTemplate } from '@/template/tagged.js';
 import { MockSlot } from '../../mocks.js';
 import { createElement, serializeNode } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -482,12 +483,10 @@ describe('TaggedTemplate', () => {
         </div>
         <!-- ${'corge'} -->
       `;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const container = createElement(
         'div',
         {},
@@ -526,7 +525,7 @@ describe('TaggedTemplate', () => {
           part: {
             type: PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
-            anchorNode: null,
+            sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
           },
           value: values[1],
@@ -591,7 +590,7 @@ describe('TaggedTemplate', () => {
           part: {
             type: PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
-            anchorNode: null,
+            sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
           },
           value: values[8],
@@ -602,12 +601,10 @@ describe('TaggedTemplate', () => {
 
     it('hydrates a HTML template element without holes', () => {
       const { template, values } = html`<div>foo</div>`;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const container = createElement(
         'div',
         {},
@@ -627,12 +624,10 @@ describe('TaggedTemplate', () => {
     it('hydrates a split text template', () => {
       const { template, values } =
         html`(${'foo'}, ${'bar'}, ${'baz'})<div>[${'qux'}, ${'quux'}]</div>`;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const container = createElement(
         'div',
         {},
@@ -715,12 +710,10 @@ describe('TaggedTemplate', () => {
 
     it('hydrates an empty template', () => {
       const { template, values } = html``;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const container = createElement('div', {});
       const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
@@ -744,12 +737,10 @@ describe('TaggedTemplate', () => {
         ],
         'html',
       );
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const container = createElement('div', {}, 'foo');
       const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
@@ -778,12 +769,10 @@ describe('TaggedTemplate', () => {
     ])('should throw the error if there is a tree mismatch', ({
       template,
     }, container) => {
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
@@ -805,12 +794,10 @@ describe('TaggedTemplate', () => {
         </div>
         <!-- ${'corge'} -->
       `;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
@@ -836,7 +823,7 @@ describe('TaggedTemplate', () => {
           part: {
             type: PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
-            anchorNode: null,
+            sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
           },
           value: values[1],
@@ -901,7 +888,7 @@ describe('TaggedTemplate', () => {
           part: {
             type: PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
-            anchorNode: null,
+            sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
           },
           value: values[8],
@@ -912,12 +899,10 @@ describe('TaggedTemplate', () => {
 
     it('renders a HTML template element without holes', () => {
       const { template, values } = html`<div>foo</div>`;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
@@ -931,12 +916,10 @@ describe('TaggedTemplate', () => {
     it('renders a split text template', () => {
       const { template, values } =
         html`(${'foo'}, ${'bar'}, ${'baz'})<div>[${'qux'}, ${'quux'}]</div>`;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
@@ -1013,12 +996,10 @@ describe('TaggedTemplate', () => {
     it('renders a template containing nodes in another namespace', () => {
       const { template, values } =
         html`<${'foo'}><math><${'bar'}></math><svg><${'baz'}></svg>`;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
@@ -1036,7 +1017,7 @@ describe('TaggedTemplate', () => {
           part: {
             type: PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
-            anchorNode: null,
+            sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
           },
           value: values[0],
@@ -1046,7 +1027,7 @@ describe('TaggedTemplate', () => {
           part: {
             type: PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
-            anchorNode: null,
+            sentinelNode: expect.any(Comment),
             namespaceURI: MATH_NAMESPACE_URI,
           },
           value: values[1],
@@ -1056,7 +1037,7 @@ describe('TaggedTemplate', () => {
           part: {
             type: PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
-            anchorNode: null,
+            sentinelNode: expect.any(Comment),
             namespaceURI: SVG_NAMESPACE_URI,
           },
           value: values[2],
@@ -1067,12 +1048,10 @@ describe('TaggedTemplate', () => {
 
     it('renders an empty template', () => {
       const { template, values } = html``;
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const updater = new TestUpdater();
 
       const { children, slots } = updater.startUpdate((session) => {
@@ -1094,12 +1073,10 @@ describe('TaggedTemplate', () => {
         ],
         'html',
       );
-      const part = {
-        type: PART_TYPE_CHILD_NODE,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      } as const;
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
       const updater = new TestUpdater();
 
       expect(() => {
