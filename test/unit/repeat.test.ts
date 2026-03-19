@@ -265,13 +265,13 @@ describe('RepeatBinding', () => {
         document.createComment(''),
       );
       const scope = createScope();
-      const targetTree = createTreeWalker(container);
+      const target = createTreeWalker(container);
       const updater = new TestUpdater(scope);
 
       scope.boundary = {
         type: BOUNDARY_TYPE_HYDRATION,
         next: scope.boundary,
-        targetTree,
+        target,
       };
 
       updater.startUpdate((session) => {

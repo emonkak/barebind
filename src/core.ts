@@ -109,7 +109,7 @@ export namespace Boundary {
   export interface HydrationBoundary {
     type: typeof BOUNDARY_TYPE_HYDRATION;
     next: Boundary | null;
-    targetTree: TreeWalker;
+    target: TreeWalker;
   }
 
   export interface SharedContextBoundary {
@@ -580,7 +580,7 @@ export interface Template<TValues extends readonly unknown[]>
   hydrate(
     values: TValues,
     part: Part.ChildNodePart,
-    targetTree: TreeWalker,
+    target: TreeWalker,
     session: UpdateSession,
   ): TemplateResult;
 }

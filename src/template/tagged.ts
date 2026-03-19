@@ -155,13 +155,13 @@ export class TaggedTemplate<
   hydrate(
     values: TValues,
     part: Part.ChildNodePart,
-    targetTree: TreeWalker,
+    target: TreeWalker,
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;
     const { ownerDocument } = part.sentinelNode;
     const fragment = this._template.content;
-    const sourceTree = createTreeWalker(fragment);
+    const source = createTreeWalker(fragment);
     const holes = this._holes;
     const totalHoles = holes.length;
     const childNodes: ChildNode[] = [];
@@ -172,7 +172,7 @@ export class TaggedTemplate<
 
     for (
       let sourceNode: Node | null;
-      (sourceNode = sourceTree.nextNode()) !== null;
+      (sourceNode = source.nextNode()) !== null;
       nodeIndex++
     ) {
       let currentPart: Part | null = null;
@@ -185,24 +185,20 @@ export class TaggedTemplate<
 
         if (hole.type === PART_TYPE_TEXT) {
           currentPart = createTextPart(
-            splitText(targetTree),
+            splitText(target),
             hole.precedingText,
             hole.followingText,
           );
         } else if (hole.type === PART_TYPE_CHILD_NODE) {
           currentPart = createChildNodePart(
             ownerDocument.createComment(''),
-            getNamespaceURI(targetTree.currentNode, this._mode),
+            getNamespaceURI(target.currentNode, this._mode),
           );
         } else {
           const currentNode =
             hole.index === lastHoleIndex
-              ? (targetTree.currentNode as Element)
-              : treatNodeType(
-                  Node.ELEMENT_NODE,
-                  targetTree.nextNode(),
-                  targetTree,
-                );
+              ? (target.currentNode as Element)
+              : treatNodeType(Node.ELEMENT_NODE, target.nextNode(), target);
           switch (hole.type) {
             case PART_TYPE_ATTRIBUTE:
               currentPart = createAttributePart(currentNode, hole.name);
@@ -225,8 +221,8 @@ export class TaggedTemplate<
         const slot = context.resolveSlot(values[holeIndex]!, currentPart!);
         slot.attach(session);
 
-        if (currentPart!.type === PART_TYPE_CHILD_NODE) {
-          replaceMarkerNode(targetTree, currentPart!.sentinelNode);
+        if (currentPart.type === PART_TYPE_CHILD_NODE) {
+          replaceMarkerNode(target, currentPart!.sentinelNode);
         }
 
         slots[holeIndex] = slot;
@@ -235,12 +231,8 @@ export class TaggedTemplate<
 
       const targetNode =
         currentPart !== null
-          ? targetTree.currentNode
-          : treatNodeName(
-              sourceNode.nodeName,
-              targetTree.nextNode(),
-              targetTree,
-            );
+          ? target.currentNode
+          : treatNodeName(sourceNode.nodeName, target.nextNode(), target);
 
       if (sourceNode.parentNode === fragment) {
         childNodes.push(targetNode as ChildNode);
@@ -268,59 +260,51 @@ export class TaggedTemplate<
     const slots: Slot<unknown>[] = new Array(holes.length);
 
     if (holes.length > 0) {
-      const sourceTree = createTreeWalker(fragment);
+      const source = createTreeWalker(fragment);
       let nodeIndex = 0;
 
       for (let i = 0, l = holes.length; i < l; i++) {
         const hole = holes[i]!;
 
         for (; nodeIndex <= hole.index; nodeIndex++) {
-          if (sourceTree.nextNode() === null) {
+          if (source.nextNode() === null) {
             throw new Error(
               'There is no node that the hole indicates. The template may have been modified.',
             );
           }
         }
 
+        const { currentNode } = source;
         let currentPart: Part;
 
         switch (hole.type) {
           case PART_TYPE_ATTRIBUTE:
             currentPart = createAttributePart(
-              sourceTree.currentNode as Element,
+              currentNode as Element,
               hole.name,
             );
             break;
           case PART_TYPE_EVENT:
-            currentPart = createEventPart(
-              sourceTree.currentNode as Element,
-              hole.name,
-            );
+            currentPart = createEventPart(currentNode as Element, hole.name);
             break;
           case PART_TYPE_CHILD_NODE:
             currentPart = createChildNodePart(
-              sourceTree.currentNode as Comment,
-              getNamespaceURI(sourceTree.currentNode, this._mode),
+              currentNode as Comment,
+              getNamespaceURI(currentNode, this._mode),
             );
             break;
           case PART_TYPE_ELEMENT:
-            currentPart = createElementPart(sourceTree.currentNode as Element);
+            currentPart = createElementPart(currentNode as Element);
             break;
           case PART_TYPE_LIVE:
-            currentPart = createLivePart(
-              sourceTree.currentNode as Element,
-              hole.name,
-            );
+            currentPart = createLivePart(currentNode as Element, hole.name);
             break;
           case PART_TYPE_PROPERTY:
-            currentPart = createPropertyPart(
-              sourceTree.currentNode as Element,
-              hole.name,
-            );
+            currentPart = createPropertyPart(currentNode as Element, hole.name);
             break;
           case PART_TYPE_TEXT:
             currentPart = createTextPart(
-              sourceTree.currentNode as Text,
+              currentNode as Text,
               hole.precedingText,
               hole.followingText,
             );

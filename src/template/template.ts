@@ -11,7 +11,7 @@ import {
   type UpdateSession,
 } from '../core.js';
 import { ensurePartType } from '../directive.js';
-import { getHydrationTargetTree } from '../hydration.js';
+import { getHydrationTarget } from '../hydration.js';
 
 export abstract class AbstractTemplate<TValues extends readonly unknown[]>
   implements Template<TValues>
@@ -31,7 +31,7 @@ export abstract class AbstractTemplate<TValues extends readonly unknown[]>
   abstract hydrate(
     values: TValues,
     part: Part.ChildNodePart,
-    targetTree: TreeWalker,
+    target: TreeWalker,
     session: UpdateSession,
   ): TemplateResult;
 
@@ -101,13 +101,13 @@ export class TemplateBinding<TValues extends readonly unknown[]>
         slots[i]!.reconcile(this._values[i]!, session);
       }
     } else {
-      const targetTree = getHydrationTargetTree(session.coroutine.scope);
+      const target = getHydrationTarget(session.coroutine.scope);
 
-      if (targetTree !== null) {
+      if (target !== null) {
         this._pendingResult = this._template.hydrate(
           this._values,
           this._part,
-          targetTree,
+          target,
           session,
         );
         this._memoizedResult = this._pendingResult;

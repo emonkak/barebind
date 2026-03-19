@@ -8,17 +8,16 @@ interface NodeTypeMap {
 }
 
 export class HydrationError extends Error {
-  readonly targetTree: TreeWalker;
+  readonly target: TreeWalker;
 
-  constructor(targetTree: TreeWalker, message: string) {
+  constructor(target: TreeWalker, message: string) {
     DEBUG: {
-      message +=
-        '\n' + emphasizeNode(targetTree.currentNode, '[[ERROR IN HERE!]]');
+      message += '\n' + emphasizeNode(target.currentNode, '[[ERROR IN HERE!]]');
     }
 
     super(message);
 
-    this.targetTree = targetTree;
+    this.target = target;
   }
 }
 
@@ -31,34 +30,32 @@ export function createTreeWalker(
   );
 }
 
-export function getHydrationTargetTree(scope: Scope): TreeWalker | null {
+export function getHydrationTarget(scope: Scope): TreeWalker | null {
   for (
     let boundary = scope.boundary;
     boundary !== null;
     boundary = boundary.next
   ) {
     if (boundary.type === BOUNDARY_TYPE_HYDRATION) {
-      return boundary.targetTree;
+      return boundary.target;
     }
   }
   return null;
 }
 
 export function replaceMarkerNode(
-  targetTree: TreeWalker,
+  target: TreeWalker,
   markerNode: Comment,
 ): void {
-  treatNodeType(
-    Node.COMMENT_NODE,
-    targetTree.nextNode(),
-    targetTree,
-  ).replaceWith(markerNode);
-  targetTree.currentNode = markerNode;
+  treatNodeType(Node.COMMENT_NODE, target.nextNode(), target).replaceWith(
+    markerNode,
+  );
+  target.currentNode = markerNode;
 }
 
-export function splitText(targetTree: TreeWalker): Text {
-  const previousNode = targetTree.currentNode;
-  const currentNode = targetTree.nextNode();
+export function splitText(target: TreeWalker): Text {
+  const previousNode = target.currentNode;
+  const currentNode = target.nextNode();
 
   if (
     previousNode instanceof Text &&
@@ -66,21 +63,21 @@ export function splitText(targetTree: TreeWalker): Text {
   ) {
     const splittedText = previousNode.ownerDocument.createTextNode('');
     previousNode.after(splittedText);
-    targetTree.currentNode = splittedText;
+    target.currentNode = splittedText;
     return splittedText;
   } else {
-    return treatNodeType(Node.TEXT_NODE, currentNode, targetTree);
+    return treatNodeType(Node.TEXT_NODE, currentNode, target);
   }
 }
 
 export function treatNodeName(
   expectedName: string,
   node: Node | null,
-  targetTree: TreeWalker,
+  target: TreeWalker,
 ): Node {
   if (node === null || node.nodeName !== expectedName) {
     throw new HydrationError(
-      targetTree,
+      target,
       `Hydration is failed because the node name is mismatched. ${expectedName} is expected here, but got ${node?.nodeName}.`,
     );
   }
@@ -91,11 +88,11 @@ export function treatNodeName(
 export function treatNodeType<TExpectedType extends keyof NodeTypeMap>(
   expectedType: TExpectedType,
   node: Node | null,
-  targetTree: TreeWalker,
+  target: TreeWalker,
 ): NodeTypeMap[TExpectedType] {
   if (node === null || node.nodeType !== expectedType) {
     throw new HydrationError(
-      targetTree,
+      target,
       `Hydration is failed because the node type is mismatched. ${expectedType} is expected here, but got ${node?.nodeType}.`,
     );
   }
