@@ -4,7 +4,6 @@ import {
   type CommitPhase,
   type Component,
   type Coroutine,
-  createUpdateSession,
   type Directive,
   EffectQueue,
   type Hook,
@@ -102,12 +101,12 @@ export class Runtime implements SessionContext {
       }
 
       const frame = createRenderFrame(id, lanes);
-      const session = createUpdateSession(
+      const session: UpdateSession = {
         frame,
-        coroutine.scope,
+        scope: coroutine.scope,
         coroutine,
-        this,
-      );
+        context: this,
+      };
 
       try {
         coroutine.start(session);

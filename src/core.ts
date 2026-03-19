@@ -640,23 +640,6 @@ export function createScope(owner: Coroutine | null = null): Scope {
 /**
  * @internal
  */
-export function createUpdateSession(
-  frame: RenderFrame,
-  scope: Scope,
-  coroutine: Coroutine,
-  context: SessionContext,
-): UpdateSession {
-  return {
-    frame,
-    scope,
-    coroutine,
-    context,
-  };
-}
-
-/**
- * @internal
- */
 export function getStartNode(part: Part): ChildNode {
   return part.type === PART_TYPE_CHILD_NODE
     ? (part.anchorNode ?? part.node)

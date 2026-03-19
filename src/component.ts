@@ -4,7 +4,6 @@ import {
   type Component,
   type Coroutine,
   createScope,
-  createUpdateSession,
   DETACHED_SCOPE,
   type DirectiveContext,
   type Effect,
@@ -133,7 +132,7 @@ export class ComponentBinding<TProps, TResult>
       this,
     );
 
-    const childSession = createUpdateSession(frame, scope, coroutine, context);
+    const childSession: UpdateSession = { frame, scope, coroutine, context };
 
     if (this._slot !== null) {
       this._slot.reconcile(result, childSession);
