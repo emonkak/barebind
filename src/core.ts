@@ -294,8 +294,8 @@ export namespace Hook {
 }
 
 /**
- * Represents a class with a static [$hook] method. never[] and NoInfer<T>
- * ensure T is inferred solely from the constructor.
+ * Represents a class with static [$hook] method. never[] and NoInfer<T> ensure
+ * T is inferred solely from the constructor.
  */
 export interface HookClass<T> {
   new (...args: never[]): T;
