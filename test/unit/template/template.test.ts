@@ -410,7 +410,7 @@ describe('TemplateBinding', () => {
       const binding = new TemplateBinding(template, values, part);
       const container = createElement('div', {}, 'foo', part.node);
       const scope = createScope();
-      const target = createTreeWalker(container);
+      const hydrationTarget = createTreeWalker(container);
       const updater = new TestUpdater(scope);
 
       const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
@@ -421,7 +421,7 @@ describe('TemplateBinding', () => {
       scope.boundary = {
         type: BOUNDARY_TYPE_HYDRATION,
         next: scope.boundary,
-        target,
+        target: hydrationTarget,
       };
 
       updater.startUpdate((session) => {
@@ -433,7 +433,7 @@ describe('TemplateBinding', () => {
       expect(hydrateSpy).toHaveBeenCalledWith(
         values,
         part,
-        target,
+        hydrationTarget,
         expect.any(Object),
       );
       expect(part.node).toBe(container.firstChild);

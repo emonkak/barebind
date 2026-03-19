@@ -35,11 +35,11 @@ describe('TextTemplate', () => {
         HTML_NAMESPACE_URI,
       );
       const container = createElement('div', {}, 'foo');
-      const target = createTreeWalker(container);
+      const hydrationTarget = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(values, part, target, session);
+        return template.hydrate(values, part, hydrationTarget, session);
       });
 
       expect(childNodes).toStrictEqual([expect.exact(container.firstChild)]);
@@ -65,12 +65,12 @@ describe('TextTemplate', () => {
         HTML_NAMESPACE_URI,
       );
       const container = createElement('div', {});
-      const target = createTreeWalker(container);
+      const hydrationTarget = createTreeWalker(container);
       const updater = new TestUpdater();
 
       expect(() => {
         updater.startUpdate((session) => {
-          template.hydrate(values, part, target, session);
+          template.hydrate(values, part, hydrationTarget, session);
         });
       }).toThrow(HydrationError);
     });

@@ -47,18 +47,21 @@ export class Root<T> {
   }
 
   hydrate(options?: UpdateOptions): UpdateHandle {
-    const target = createTreeWalker(this._container);
+    const hydrationTarget = createTreeWalker(this._container);
     const scope = createRootScope({
       type: BOUNDARY_TYPE_HYDRATION,
       next: null,
-      target,
+      target: hydrationTarget,
     });
     return this._startSession(
       scope,
       (session) => {
         const { frame } = session;
         this._slot.attach(session);
-        frame.mutationEffects.push(new HydrateSlot(this._slot, target), 0);
+        frame.mutationEffects.push(
+          new HydrateSlot(this._slot, hydrationTarget),
+          0,
+        );
       },
       options,
     );
@@ -132,17 +135,17 @@ export class Root<T> {
 class HydrateSlot<T> implements Effect {
   private readonly _slot: Slot<T>;
 
-  private readonly _target: TreeWalker;
+  private readonly _hydrationTarget: TreeWalker;
 
-  constructor(slot: Slot<T>, target: TreeWalker) {
+  constructor(slot: Slot<T>, hydrationTarget: TreeWalker) {
     this._slot = slot;
-    this._target = target;
+    this._hydrationTarget = hydrationTarget;
   }
 
   commit(): void {
     const { sentinelNode } = this._slot.part as Part.ChildNodePart;
-    replaceSentinelNode(this._target, sentinelNode);
-    this._target.root.appendChild(sentinelNode);
+    replaceSentinelNode(this._hydrationTarget, sentinelNode);
+    this._hydrationTarget.root.appendChild(sentinelNode);
     this._slot.commit();
   }
 }

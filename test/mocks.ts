@@ -442,7 +442,7 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
   hydrate(
     _values: readonly unknown[],
     _part: Part.ChildNodePart,
-    _target: TreeWalker,
+    _hydrationTarget: TreeWalker,
     _session: UpdateSession,
   ): TemplateResult {
     return {

@@ -580,7 +580,7 @@ export interface Template<TValues extends readonly unknown[]>
   hydrate(
     values: TValues,
     part: Part.ChildNodePart,
-    target: TreeWalker,
+    hydrationTarget: TreeWalker,
     session: UpdateSession,
   ): TemplateResult;
 }

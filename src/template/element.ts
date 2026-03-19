@@ -34,7 +34,7 @@ export class ElementTemplate<
   hydrate(
     values: readonly [TProps, TChildren],
     part: Part.ChildNodePart,
-    target: TreeWalker,
+    hydrationTarget: TreeWalker,
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;
@@ -44,8 +44,8 @@ export class ElementTemplate<
     const elementPart = createElementPart(
       treatNodeName(
         this._tagName.toUpperCase(),
-        target.nextNode(),
-        target,
+        hydrationTarget.nextNode(),
+        hydrationTarget,
       ) as Element,
     );
     const childrenPart = createChildNodePart(
@@ -58,7 +58,7 @@ export class ElementTemplate<
     elementSlot.attach(session);
     childrenSlot.attach(session);
 
-    replaceSentinelNode(target, childrenPart.sentinelNode);
+    replaceSentinelNode(hydrationTarget, childrenPart.sentinelNode);
 
     return {
       childNodes: [elementPart.node],

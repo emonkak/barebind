@@ -499,11 +499,11 @@ describe('TaggedTemplate', () => {
         ),
         document.createComment('corge'),
       );
-      const target = createTreeWalker(container);
+      const hydrationTarget = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(values, part, target, session);
+        return template.hydrate(values, part, hydrationTarget, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -610,11 +610,11 @@ describe('TaggedTemplate', () => {
         {},
         createElement('div', {}, 'foo'),
       );
-      const target = createTreeWalker(container);
+      const hydrationTarget = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(values, part, target, session);
+        return template.hydrate(values, part, hydrationTarget, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual(['<div>foo</div>']);
@@ -634,11 +634,11 @@ describe('TaggedTemplate', () => {
         '(foo, bar, baz)',
         createElement('div', {}, '[qux, quux]'),
       );
-      const target = createTreeWalker(container);
+      const hydrationTarget = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(values, part, target, session);
+        return template.hydrate(values, part, hydrationTarget, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -715,11 +715,11 @@ describe('TaggedTemplate', () => {
         HTML_NAMESPACE_URI,
       );
       const container = createElement('div', {});
-      const target = createTreeWalker(container);
+      const hydrationTarget = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(values, part, target, session);
+        return template.hydrate(values, part, hydrationTarget, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([]);
@@ -742,12 +742,12 @@ describe('TaggedTemplate', () => {
         HTML_NAMESPACE_URI,
       );
       const container = createElement('div', {}, 'foo');
-      const target = createTreeWalker(container);
+      const hydrationTarget = createTreeWalker(container);
       const updater = new TestUpdater();
 
       expect(() => {
         updater.startUpdate((session) => {
-          return template.hydrate(['foo'], part, target, session);
+          return template.hydrate(['foo'], part, hydrationTarget, session);
         });
       }).toThrow('There is no node that the hole indicates.');
     });
@@ -773,12 +773,12 @@ describe('TaggedTemplate', () => {
         document.createComment(''),
         HTML_NAMESPACE_URI,
       );
-      const target = createTreeWalker(container);
+      const hydrationTarget = createTreeWalker(container);
       const updater = new TestUpdater();
 
       expect(() => {
         updater.startUpdate((session) => {
-          return template.hydrate([], part, target, session);
+          return template.hydrate([], part, hydrationTarget, session);
         });
       }).toThrow(HydrationError);
     });

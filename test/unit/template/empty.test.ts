@@ -31,11 +31,11 @@ describe('EmptyTemplate', () => {
         document.createComment(''),
         HTML_NAMESPACE_URI,
       );
-      const target = createTreeWalker(document.createElement('div'));
+      const hydrationTarget = createTreeWalker(document.createElement('div'));
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(values, part, target, session);
+        return template.hydrate(values, part, hydrationTarget, session);
       });
 
       expect(childNodes).toStrictEqual([]);

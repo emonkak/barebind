@@ -36,13 +36,13 @@ export class TextTemplate<T> extends AbstractTemplate<readonly [T]> {
   hydrate(
     values: readonly [T],
     _part: Part.ChildNodePart,
-    target: TreeWalker,
+    hydrationTarget: TreeWalker,
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;
     const textPart = {
       type: PART_TYPE_TEXT,
-      node: splitText(target),
+      node: splitText(hydrationTarget),
       precedingText: this._precedingText,
       followingText: this._followingText,
     } as const;

@@ -155,13 +155,13 @@ export class TaggedTemplate<
   hydrate(
     values: TValues,
     part: Part.ChildNodePart,
-    target: TreeWalker,
+    hydrationTarget: TreeWalker,
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;
     const { ownerDocument } = part.sentinelNode;
     const fragment = this._template.content;
-    const source = createTreeWalker(fragment);
+    const hydrationTemplate = createTreeWalker(fragment);
     const holes = this._holes;
     const totalHoles = holes.length;
     const childNodes: ChildNode[] = [];
@@ -171,8 +171,8 @@ export class TaggedTemplate<
     let lastHoleIndex = -1;
 
     for (
-      let sourceNode: Node | null;
-      (sourceNode = source.nextNode()) !== null;
+      let templateNode: Node | null;
+      (templateNode = hydrationTemplate.nextNode()) !== null;
       nodeIndex++
     ) {
       let currentPart: Part | null = null;
@@ -185,20 +185,24 @@ export class TaggedTemplate<
 
         if (hole.type === PART_TYPE_TEXT) {
           currentPart = createTextPart(
-            splitText(target),
+            splitText(hydrationTarget),
             hole.precedingText,
             hole.followingText,
           );
         } else if (hole.type === PART_TYPE_CHILD_NODE) {
           currentPart = createChildNodePart(
             ownerDocument.createComment(''),
-            getNamespaceURI(target.currentNode, this._mode),
+            getNamespaceURI(hydrationTarget.currentNode, this._mode),
           );
         } else {
           const currentNode =
             hole.index === lastHoleIndex
-              ? (target.currentNode as Element)
-              : treatNodeType(Node.ELEMENT_NODE, target.nextNode(), target);
+              ? (hydrationTarget.currentNode as Element)
+              : treatNodeType(
+                  Node.ELEMENT_NODE,
+                  hydrationTarget.nextNode(),
+                  hydrationTarget,
+                );
           switch (hole.type) {
             case PART_TYPE_ATTRIBUTE:
               currentPart = createAttributePart(currentNode, hole.name);
@@ -222,7 +226,7 @@ export class TaggedTemplate<
         slot.attach(session);
 
         if (currentPart.type === PART_TYPE_CHILD_NODE) {
-          replaceSentinelNode(target, currentPart!.sentinelNode);
+          replaceSentinelNode(hydrationTarget, currentPart!.sentinelNode);
         }
 
         slots[holeIndex] = slot;
@@ -231,10 +235,14 @@ export class TaggedTemplate<
 
       const targetNode =
         currentPart !== null
-          ? target.currentNode
-          : treatNodeName(sourceNode.nodeName, target.nextNode(), target);
+          ? hydrationTarget.currentNode
+          : treatNodeName(
+              templateNode.nodeName,
+              hydrationTarget.nextNode(),
+              hydrationTarget,
+            );
 
-      if (sourceNode.parentNode === fragment) {
+      if (templateNode.parentNode === fragment) {
         childNodes.push(targetNode as ChildNode);
       }
     }
@@ -260,21 +268,21 @@ export class TaggedTemplate<
     const slots: Slot<unknown>[] = new Array(holes.length);
 
     if (holes.length > 0) {
-      const source = createTreeWalker(fragment);
+      const renderTarget = createTreeWalker(fragment);
       let nodeIndex = 0;
 
       for (let i = 0, l = holes.length; i < l; i++) {
         const hole = holes[i]!;
 
         for (; nodeIndex <= hole.index; nodeIndex++) {
-          if (source.nextNode() === null) {
+          if (renderTarget.nextNode() === null) {
             throw new Error(
               'There is no node that the hole indicates. The template may have been modified.',
             );
           }
         }
 
-        const { currentNode } = source;
+        const { currentNode } = renderTarget;
         let currentPart: Part;
 
         switch (hole.type) {

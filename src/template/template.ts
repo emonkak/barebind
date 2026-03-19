@@ -31,7 +31,7 @@ export abstract class AbstractTemplate<TValues extends readonly unknown[]>
   abstract hydrate(
     values: TValues,
     part: Part.ChildNodePart,
-    target: TreeWalker,
+    hydrationTarget: TreeWalker,
     session: UpdateSession,
   ): TemplateResult;
 
@@ -101,13 +101,13 @@ export class TemplateBinding<TValues extends readonly unknown[]>
         slots[i]!.reconcile(this._values[i]!, session);
       }
     } else {
-      const target = getHydrationTarget(session.coroutine.scope);
+      const hydrationTarget = getHydrationTarget(session.coroutine.scope);
 
-      if (target !== null) {
+      if (hydrationTarget !== null) {
         this._pendingResult = this._template.hydrate(
           this._values,
           this._part,
-          target,
+          hydrationTarget,
           session,
         );
         this._memoizedResult = this._pendingResult;
