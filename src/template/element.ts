@@ -4,7 +4,7 @@ import type {
   TemplateResult,
   UpdateSession,
 } from '../core.js';
-import { replaceMarkerNode, treatNodeName } from '../hydration.js';
+import { replaceSentinelNode, treatNodeName } from '../hydration.js';
 import {
   createChildNodePart,
   createElementPart,
@@ -58,7 +58,7 @@ export class ElementTemplate<
     elementSlot.attach(session);
     childrenSlot.attach(session);
 
-    replaceMarkerNode(target, childrenPart.sentinelNode);
+    replaceSentinelNode(target, childrenPart.sentinelNode);
 
     return {
       childNodes: [elementPart.node],

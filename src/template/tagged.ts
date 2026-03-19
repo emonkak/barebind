@@ -16,7 +16,7 @@ import { emphasizeNode } from '../debug/node.js';
 import { formatPart } from '../debug/part.js';
 import {
   createTreeWalker,
-  replaceMarkerNode,
+  replaceSentinelNode,
   splitText,
   treatNodeName,
   treatNodeType,
@@ -222,7 +222,7 @@ export class TaggedTemplate<
         slot.attach(session);
 
         if (currentPart.type === PART_TYPE_CHILD_NODE) {
-          replaceMarkerNode(target, currentPart!.sentinelNode);
+          replaceSentinelNode(target, currentPart!.sentinelNode);
         }
 
         slots[holeIndex] = slot;

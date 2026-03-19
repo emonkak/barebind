@@ -43,14 +43,14 @@ export function getHydrationTarget(scope: Scope): TreeWalker | null {
   return null;
 }
 
-export function replaceMarkerNode(
+export function replaceSentinelNode(
   target: TreeWalker,
-  markerNode: Comment,
+  sentinelNode: Comment,
 ): void {
   treatNodeType(Node.COMMENT_NODE, target.nextNode(), target).replaceWith(
-    markerNode,
+    sentinelNode,
   );
-  target.currentNode = markerNode;
+  target.currentNode = sentinelNode;
 }
 
 export function splitText(target: TreeWalker): Text {

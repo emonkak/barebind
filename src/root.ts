@@ -11,7 +11,7 @@ import {
   type UpdateOptions,
   type UpdateSession,
 } from './core.js';
-import { createTreeWalker, replaceMarkerNode } from './hydration.js';
+import { createTreeWalker, replaceSentinelNode } from './hydration.js';
 import { NoLanes } from './lane.js';
 import { createChildNodePart } from './part.js';
 
@@ -141,7 +141,7 @@ class HydrateSlot<T> implements Effect {
 
   commit(): void {
     const { sentinelNode } = this._slot.part as Part.ChildNodePart;
-    replaceMarkerNode(this._target, sentinelNode);
+    replaceSentinelNode(this._target, sentinelNode);
     this._target.root.appendChild(sentinelNode);
     this._slot.commit();
   }

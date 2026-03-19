@@ -4,7 +4,7 @@ import type {
   TemplateResult,
   UpdateSession,
 } from '../core.js';
-import { replaceMarkerNode } from '../hydration.js';
+import { replaceSentinelNode } from '../hydration.js';
 import { createChildNodePart } from '../part.js';
 import { AbstractTemplate } from './template.js';
 
@@ -35,7 +35,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
 
     childNodeSlot.attach(session);
 
-    replaceMarkerNode(target, childNodePart.sentinelNode);
+    replaceSentinelNode(target, childNodePart.sentinelNode);
 
     return { childNodes: [childNodePart.sentinelNode], slots: [childNodeSlot] };
   }

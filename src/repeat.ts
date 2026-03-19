@@ -10,7 +10,7 @@ import {
   type UpdateSession,
 } from './core.js';
 import { DirectiveSpecifier, ensurePartType } from './directive.js';
-import { getHydrationTarget, replaceMarkerNode } from './hydration.js';
+import { getHydrationTarget, replaceSentinelNode } from './hydration.js';
 import { createChildNodePart } from './part.js';
 import { reconcileProjections } from './reconciliation.js';
 
@@ -134,7 +134,7 @@ export class RepeatBinding<TSource, TKey, TElement>
           const slot = context.resolveSlot(item, part);
           slot.attach(session);
           if (target !== null) {
-            replaceMarkerNode(target, part.sentinelNode);
+            replaceSentinelNode(target, part.sentinelNode);
           }
           this._pendingMutations.push({
             type: MUTATION_TYPE_INSERT,
