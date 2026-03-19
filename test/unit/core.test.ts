@@ -14,6 +14,7 @@ import {
   type Part,
 } from '@/core.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
+import { createEffect } from '../mocks.js';
 
 describe('EffectQueue', () => {
   describe('size', () => {
@@ -331,7 +332,3 @@ describe('getStartNode()', () => {
     expect(getStartNode(part)).toBe(part.anchorNode);
   });
 });
-
-function createEffect(callback: () => void = () => {}): Effect {
-  return { commit: vi.fn(callback) };
-}

@@ -19,7 +19,7 @@ import {
   UserVisibleLane,
   ViewTransitionLane,
 } from '@/lane.js';
-import { createEffectQueue, MockCoroutine, MockEffect } from '../../mocks.js';
+import { createEffect, createEffectQueue, MockCoroutine } from '../../mocks.js';
 
 describe('SessionProfiler', () => {
   describe('onSessionEvent()', () => {
@@ -33,11 +33,11 @@ describe('SessionProfiler', () => {
         return null;
       });
       const mutationEffects = createEffectQueue([
-        new MockEffect(),
-        new MockEffect(),
+        createEffect(),
+        createEffect(),
       ]);
-      const layoutEffects = createEffectQueue([new MockEffect()]);
-      const passiveEffects = createEffectQueue([new MockEffect()]);
+      const layoutEffects = createEffectQueue([createEffect()]);
+      const passiveEffects = createEffectQueue([createEffect()]);
       const events: SessionEvent[] = [
         {
           type: 'render-start',
@@ -360,10 +360,10 @@ describe('SessionProfiler', () => {
         return null;
       });
       const mutationEffects = createEffectQueue([
-        new MockEffect(),
-        new MockEffect(),
+        createEffect(),
+        createEffect(),
       ]);
-      const passiveEffects = createEffectQueue([new MockEffect()]);
+      const passiveEffects = createEffectQueue([createEffect()]);
       const events: SessionEvent[] = [
         {
           type: 'render-start',
@@ -476,10 +476,10 @@ describe('SessionProfiler', () => {
         return null;
       });
       const mutationEffects = createEffectQueue([
-        new MockEffect(),
-        new MockEffect(),
+        createEffect(),
+        createEffect(),
       ]);
-      const passiveEffects = createEffectQueue([new MockEffect()]);
+      const passiveEffects = createEffectQueue([createEffect()]);
       const events: SessionEvent[] = [
         {
           type: 'render-start',

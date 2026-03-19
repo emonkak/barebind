@@ -1,5 +1,6 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
+import { vi } from 'vitest';
 import {
   $directive,
   type Backend,
@@ -304,10 +305,6 @@ export const MockPrimitive: Primitive<any> = {
   },
 };
 
-export class MockEffect implements Effect {
-  commit(): void {}
-}
-
 export class MockLayout implements Layout {
   layout: Layout | null = null;
 
@@ -453,6 +450,10 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
       slots: [],
     };
   }
+}
+
+export function createEffect(callback: () => void = () => {}): Effect {
+  return { commit: vi.fn(callback) };
 }
 
 export function createEffectQueue(effects: Effect[]): EffectQueue {
