@@ -114,15 +114,15 @@ export function Transition(): HookFunction<TransitionReturn> {
 
     const startTransition: TransitionReturn[1] = (action) => {
       return context.startTransition((transition) => {
-        const complete = () => {
+        const endTransition = () => {
           setIsPending(false, { transition });
         };
         setIsPending(true, { immediate: true });
         const result = action(transition);
         if (result instanceof Promise) {
-          result.then(complete, complete);
+          result.then(endTransition, endTransition);
         } else {
-          complete();
+          endTransition();
         }
         return result;
       });
