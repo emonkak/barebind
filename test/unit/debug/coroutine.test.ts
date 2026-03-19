@@ -1,31 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { type Coroutine, createScope } from '@/core.js';
 import { formatOwnerStack, getOwnerStack } from '@/debug/coroutine.js';
-import { NoLanes } from '@/lane.js';
+import { createScope, MockCoroutine } from '../../mocks.js';
 
 describe('AbortError', () => {
   it('contains the coroutine stack in the message', () => {
-    const coroutine = createCoroutine(
-      'Child',
-      createCoroutine('Parent', createCoroutine('GrandParent')),
-    );
+    const grandParent = new MockCoroutine('GrandParent');
+    const parent = new MockCoroutine('Parent', createScope(grandParent));
+    const child = new MockCoroutine('Child', createScope(parent));
 
-    expect(formatOwnerStack(getOwnerStack(coroutine))).toBe(`GrandParent
+    expect(formatOwnerStack(getOwnerStack(child))).toBe(`GrandParent
 \`- Parent
    \`- Child <- ERROR occurred here!`);
   });
 });
-
-function createCoroutine(
-  name: string,
-  owner: Coroutine | null = null,
-): Coroutine {
-  return {
-    name,
-    scope: createScope(owner),
-    pendingLanes: NoLanes,
-    start: () => {},
-    resume: () => {},
-  };
-}

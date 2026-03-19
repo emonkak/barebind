@@ -5,7 +5,6 @@ import {
   type CommitPhase,
   PART_TYPE_CHILD_NODE,
   type RenderContext,
-  SLOT_STATUS_ATTACHED,
   SLOT_STATUS_DETACHED,
   SLOT_STATUS_IDLE,
 } from '@/core.js';

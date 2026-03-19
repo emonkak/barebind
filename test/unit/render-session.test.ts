@@ -3,10 +3,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { shallowEqual } from '@/compare.js';
 import {
   $hook,
-  DETACHED_SCOPE,
   EffectQueue,
   type RefObject,
   type RenderContext,
+  SCOPE_DETACHED,
   type UpdateHandle,
 } from '@/core.js';
 import { RenderSession } from '@/render-session.js';
@@ -168,7 +168,7 @@ describe('RenderSession', () => {
         }, []);
 
         return count;
-      }, DETACHED_SCOPE);
+      }, SCOPE_DETACHED);
       const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
 
       expect(renderer.render({})).toBe(0);

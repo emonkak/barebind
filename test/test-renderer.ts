@@ -2,19 +2,18 @@ import { vi } from 'vitest';
 import {
   BOUNDARY_TYPE_ERROR,
   type Coroutine,
-  createScope,
-  DETACHED_SCOPE,
   HOOK_TYPE_INSERTION_EFFECT,
   HOOK_TYPE_LAYOUT_EFFECT,
   HOOK_TYPE_PASSIVE_EFFECT,
   type Hook,
+  SCOPE_DETACHED,
   type Scope,
   type UpdateOptions,
 } from '@/core.js';
 import { NoLanes } from '@/lane.js';
 import { RenderSession } from '@/render-session.js';
 import type { Runtime } from '@/runtime.js';
-import { createRuntime } from './mocks.js';
+import { createRuntime, createScope } from './mocks.js';
 
 export class TestRenderer<TProps = {}, TResult = unknown> {
   readonly callback: (props: TProps, session: RenderSession) => TResult;
@@ -55,7 +54,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
     let returnValue: TResult;
     let thrownError: unknown;
 
-    if (this.scope !== DETACHED_SCOPE) {
+    if (this.scope !== SCOPE_DETACHED) {
       this.scope.boundary = {
         type: BOUNDARY_TYPE_ERROR,
         next: previousBoundary,
@@ -103,7 +102,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
 
     this.runtime.flushUpdates();
 
-    if (this.scope !== DETACHED_SCOPE) {
+    if (this.scope !== SCOPE_DETACHED) {
       this.scope.boundary = previousBoundary;
     }
 

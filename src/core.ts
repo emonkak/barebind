@@ -10,8 +10,6 @@ export const BOUNDARY_TYPE_ERROR = 0;
 export const BOUNDARY_TYPE_HYDRATION = 1;
 export const BOUNDARY_TYPE_SHARED_CONTEXT = 2;
 
-export const DETACHED_SCOPE: Scope = Object.freeze(createScope());
-
 export const HOOK_TYPE_FINALIZER = 0;
 export const HOOK_TYPE_PASSIVE_EFFECT = 1;
 export const HOOK_TYPE_LAYOUT_EFFECT = 2;
@@ -37,6 +35,13 @@ export const PART_TYPE_EVENT = 3;
 export const PART_TYPE_LIVE = 4;
 export const PART_TYPE_PROPERTY = 5;
 export const PART_TYPE_TEXT = 6;
+
+export const SCOPE_DETACHED: Scope = Object.freeze({
+  owner: null,
+  level: 0,
+  boundary: null,
+});
+export const SCOPE_ROOT: Scope = Object.freeze({ ...SCOPE_DETACHED });
 
 export const SLOT_STATUS_IDLE = 0;
 export const SLOT_STATUS_ATTACHED = 1;
@@ -625,17 +630,6 @@ export interface UpdateSession {
 }
 
 export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;
-
-/**
- * @internal
- */
-export function createScope(owner: Coroutine | null = null): Scope {
-  return {
-    owner,
-    level: owner !== null ? owner.scope.level + 1 : 0,
-    boundary: null,
-  };
-}
 
 /**
  * @internal

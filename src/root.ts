@@ -1,9 +1,9 @@
 import {
   BOUNDARY_TYPE_HYDRATION,
   type Coroutine,
-  createScope,
   type Effect,
   PART_TYPE_CHILD_NODE,
+  SCOPE_ROOT,
   type SessionContext,
   type Slot,
   type UpdateHandle,
@@ -93,7 +93,7 @@ export class Root<T> {
   ): UpdateHandle {
     const coroutine: Coroutine = {
       name: Root.name,
-      scope: createScope(),
+      scope: SCOPE_ROOT,
       pendingLanes: NoLanes,
       start(session) {
         session.frame.coroutines.push(this);

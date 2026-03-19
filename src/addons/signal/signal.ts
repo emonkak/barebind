@@ -5,7 +5,6 @@ import {
   type Bindable,
   type Binding,
   type Coroutine,
-  DETACHED_SCOPE,
   type Directive,
   type DirectiveContext,
   type DirectiveType,
@@ -14,6 +13,7 @@ import {
   type Lanes,
   type Part,
   type RenderContext,
+  SCOPE_DETACHED,
   type Scope,
   type Slot,
   type UpdateSession,
@@ -60,7 +60,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   private _memoizedVersion: number;
 
-  private _scope: Scope = DETACHED_SCOPE;
+  private _scope: Scope = SCOPE_DETACHED;
 
   private _subscription: Subscription = {
     unsubscribe: null,
@@ -146,7 +146,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   rollback(): void {
     this._slot.rollback();
-    this._scope = DETACHED_SCOPE;
+    this._scope = SCOPE_DETACHED;
   }
 }
 

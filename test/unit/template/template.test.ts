@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   BOUNDARY_TYPE_HYDRATION,
-  createScope,
   PART_TYPE_ATTRIBUTE,
   PART_TYPE_CHILD_NODE,
   PART_TYPE_ELEMENT,
@@ -19,6 +18,7 @@ import {
 } from '@/template/template.js';
 import {
   createRuntime,
+  createScope,
   MockBinding,
   MockPrimitive,
   MockSlot,

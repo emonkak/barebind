@@ -6,7 +6,6 @@ import {
   BOUNDARY_TYPE_SHARED_CONTEXT,
   type Cleanup,
   type Coroutine,
-  DETACHED_SCOPE,
   type Effect,
   type EffectHandler,
   type EffectQueue,
@@ -28,6 +27,7 @@ import {
   type RefObject,
   type RenderContext,
   type RenderFrame,
+  SCOPE_DETACHED,
   type Scope,
   type SessionContext,
   type StateOptions,
@@ -96,7 +96,7 @@ export class RenderSession implements RenderContext {
     // Refuse to mutate scope after finalization.
     Object.freeze(this._scope);
 
-    this._scope = DETACHED_SCOPE;
+    this._scope = SCOPE_DETACHED;
     this._hooks = DETACHED_HOOKS;
     this._hookIndex = 0;
   }
@@ -565,7 +565,7 @@ function getInitialState<TState>(initialState: InitialState<TState>): TState {
 function isDetachedScope(scope: Scope): boolean {
   let currentScope: Scope | undefined = scope;
   do {
-    if (currentScope === DETACHED_SCOPE) {
+    if (currentScope === SCOPE_DETACHED) {
       return true;
     }
     currentScope = currentScope.owner?.scope;

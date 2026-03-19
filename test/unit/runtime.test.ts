@@ -4,7 +4,6 @@ import {
   $directive,
   type Bindable,
   BOUNDARY_TYPE_ERROR,
-  createScope,
   EffectQueue,
   type Hook,
   PART_TYPE_CHILD_NODE,
@@ -22,6 +21,7 @@ import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   createRenderFrame,
   createRuntime,
+  createScope,
   MockBindable,
   MockCoroutine,
   MockDirective,
@@ -71,20 +71,31 @@ describe('Runtime', () => {
         runtime.addObserver(observer);
 
         SESSION: {
-          const coroutine = new MockCoroutine((session) => {
-            session.frame.coroutines.push(subcoroutine);
-          });
-          const subcoroutine = new MockCoroutine((session) => {
-            session.frame.mutationEffects.push(
-              mutationEffect,
-              session.scope.level,
-            );
-            session.frame.layoutEffects.push(layoutEffect, session.scope.level);
-            session.frame.passiveEffects.push(
-              passiveEffect,
-              session.scope.level,
-            );
-          });
+          const coroutine = new MockCoroutine(
+            'coroutine1',
+            createScope(),
+            (session) => {
+              session.frame.coroutines.push(subcoroutine);
+            },
+          );
+          const subcoroutine = new MockCoroutine(
+            'coroutine2',
+            createScope(coroutine),
+            (session) => {
+              session.frame.mutationEffects.push(
+                mutationEffect,
+                session.scope.level,
+              );
+              session.frame.layoutEffects.push(
+                layoutEffect,
+                session.scope.level,
+              );
+              session.frame.passiveEffects.push(
+                passiveEffect,
+                session.scope.level,
+              );
+            },
+          );
 
           await runtime.scheduleUpdate(coroutine).finished;
           await waitForTimeout(1); // Wait for passive effects
@@ -169,20 +180,31 @@ describe('Runtime', () => {
         runtime.addObserver(observer);
 
         SESSION: {
-          const coroutine = new MockCoroutine((session) => {
-            session.frame.coroutines.push(subcoroutine);
-          });
-          const subcoroutine = new MockCoroutine((session) => {
-            session.frame.mutationEffects.push(
-              mutationEffect,
-              session.scope.level,
-            );
-            session.frame.layoutEffects.push(layoutEffect, session.scope.level);
-            session.frame.passiveEffects.push(
-              passiveEffect,
-              session.scope.level,
-            );
-          });
+          const coroutine = new MockCoroutine(
+            'coroutine1',
+            createScope(),
+            (session) => {
+              session.frame.coroutines.push(subcoroutine);
+            },
+          );
+          const subcoroutine = new MockCoroutine(
+            'coroutine2',
+            createScope(coroutine),
+            (session) => {
+              session.frame.mutationEffects.push(
+                mutationEffect,
+                session.scope.level,
+              );
+              session.frame.layoutEffects.push(
+                layoutEffect,
+                session.scope.level,
+              );
+              session.frame.passiveEffects.push(
+                passiveEffect,
+                session.scope.level,
+              );
+            },
+          );
 
           await runtime.scheduleUpdate(coroutine, {
             flushSync: true,
@@ -269,13 +291,20 @@ describe('Runtime', () => {
         runtime.addObserver(observer);
 
         SESSION: {
-          const coroutine = new MockCoroutine((session) => {
-            session.frame.mutationEffects.push(
-              mutationEffect,
-              session.scope.level,
-            );
-            session.frame.layoutEffects.push(layoutEffect, session.scope.level);
-          });
+          const coroutine = new MockCoroutine(
+            'coroutine',
+            createScope(),
+            (session) => {
+              session.frame.mutationEffects.push(
+                mutationEffect,
+                session.scope.level,
+              );
+              session.frame.layoutEffects.push(
+                layoutEffect,
+                session.scope.level,
+              );
+            },
+          );
 
           await runtime.scheduleUpdate(coroutine, {
             viewTransition: true,
@@ -340,9 +369,13 @@ describe('Runtime', () => {
         runtime.addObserver(observer);
 
         SESSION: {
-          const coroutine = new MockCoroutine(() => {
-            throw error;
-          });
+          const coroutine = new MockCoroutine(
+            'coroutine',
+            createScope(),
+            () => {
+              throw error;
+            },
+          );
 
           const handle = runtime.scheduleUpdate(coroutine);
 
@@ -389,17 +422,20 @@ describe('Runtime', () => {
         runtime.addObserver(observer);
 
         SESSION: {
-          const parentScope = createScope();
-          parentScope.boundary = {
+          const scope = createScope();
+          scope.boundary = {
             type: BOUNDARY_TYPE_ERROR,
             next: null,
             handler: errorHandler,
           };
-          const parentCoroutine = new MockCoroutine(() => {}, parentScope);
-          const childScope = createScope(parentCoroutine);
-          const childCoroutine = new MockCoroutine(() => {
-            throw error;
-          }, childScope);
+          const parentCoroutine = new MockCoroutine('coroutine1', scope);
+          const childCoroutine = new MockCoroutine(
+            'coroutine2',
+            createScope(parentCoroutine),
+            () => {
+              throw error;
+            },
+          );
 
           const handle = runtime.scheduleUpdate(childCoroutine);
 
@@ -457,20 +493,31 @@ describe('Runtime', () => {
         runtime.addObserver(observer);
 
         SESSION: {
-          const coroutine = new MockCoroutine((session) => {
-            session.frame.coroutines.push(subcoroutine);
-          });
-          const subcoroutine = new MockCoroutine((session) => {
-            session.frame.mutationEffects.push(
-              mutationEffect,
-              session.scope.level,
-            );
-            session.frame.layoutEffects.push(layoutEffect, session.scope.level);
-            session.frame.passiveEffects.push(
-              passiveEffect,
-              session.scope.level,
-            );
-          });
+          const coroutine = new MockCoroutine(
+            'coroutine1',
+            createScope(),
+            (session) => {
+              session.frame.coroutines.push(subcoroutine);
+            },
+          );
+          const subcoroutine = new MockCoroutine(
+            'coroutine2',
+            createScope(coroutine),
+            (session) => {
+              session.frame.mutationEffects.push(
+                mutationEffect,
+                session.scope.level,
+              );
+              session.frame.layoutEffects.push(
+                layoutEffect,
+                session.scope.level,
+              );
+              session.frame.passiveEffects.push(
+                passiveEffect,
+                session.scope.level,
+              );
+            },
+          );
 
           await runtime.scheduleUpdate(coroutine, {
             flushSync: true,
@@ -547,9 +594,13 @@ describe('Runtime', () => {
         runtime.addObserver(observer);
 
         SESSION: {
-          const coroutine = new MockCoroutine(() => {
-            throw error;
-          });
+          const coroutine = new MockCoroutine(
+            'coroutine',
+            createScope(),
+            () => {
+              throw error;
+            },
+          );
 
           try {
             await runtime.scheduleUpdate(coroutine).finished;
@@ -594,17 +645,20 @@ describe('Runtime', () => {
         runtime.addObserver(observer);
 
         SESSION: {
-          const parentScope = createScope();
-          parentScope.boundary = {
+          const scope = createScope();
+          scope.boundary = {
             type: BOUNDARY_TYPE_ERROR,
             next: null,
             handler: errorHandler,
           };
-          const parentCoroutine = new MockCoroutine(() => {}, parentScope);
-          const childScope = createScope(parentCoroutine);
-          const childCoroutine = new MockCoroutine(() => {
-            throw error;
-          }, childScope);
+          const parentCoroutine = new MockCoroutine('coroutine1', scope);
+          const childCoroutine = new MockCoroutine(
+            'coroutine2',
+            createScope(parentCoroutine),
+            () => {
+              throw error;
+            },
+          );
 
           const handle = runtime.scheduleUpdate(childCoroutine, {});
 

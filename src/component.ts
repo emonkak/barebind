@@ -3,8 +3,6 @@ import {
   type Binding,
   type Component,
   type Coroutine,
-  createScope,
-  DETACHED_SCOPE,
   type DirectiveContext,
   type Effect,
   type EffectHandler,
@@ -16,6 +14,7 @@ import {
   type Lanes,
   type Part,
   type RenderContext,
+  SCOPE_DETACHED,
   type Scope,
   type Slot,
   type UpdateSession,
@@ -64,7 +63,7 @@ export class ComponentBinding<TProps, TResult>
 
   private _slot: Slot<TResult> | null = null;
 
-  private _scope: Scope = DETACHED_SCOPE;
+  private _scope: Scope = SCOPE_DETACHED;
 
   private _pendingHooks: Hook[] = [];
 
@@ -106,7 +105,7 @@ export class ComponentBinding<TProps, TResult>
 
   shouldUpdate(props: TProps): boolean {
     return (
-      this._scope === DETACHED_SCOPE ||
+      this._scope === SCOPE_DETACHED ||
       !this._component.arePropsEqual(props, this._props)
     );
   }
@@ -121,7 +120,11 @@ export class ComponentBinding<TProps, TResult>
   resume(session: UpdateSession): void {
     const { frame, coroutine, context } = session;
     const hooks = this._pendingHooks.slice();
-    const scope = createScope(this);
+    const scope: Scope = {
+      owner: this,
+      level: this.scope.level + 1,
+      boundary: null,
+    };
 
     const result = context.renderComponent(
       this._component,
@@ -181,7 +184,7 @@ export class ComponentBinding<TProps, TResult>
 
   rollback(): void {
     this._slot?.rollback();
-    this._scope = DETACHED_SCOPE;
+    this._scope = SCOPE_DETACHED;
     this._memoizedHooks = [];
   }
 }

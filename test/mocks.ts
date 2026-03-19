@@ -7,7 +7,6 @@ import {
   type Binding,
   type CommitPhase,
   type Coroutine,
-  createScope,
   type Directive,
   type DirectiveContext,
   type DirectiveType,
@@ -246,24 +245,22 @@ export class MockBinding<T> implements Binding<T> {
 }
 
 export class MockCoroutine implements Coroutine {
-  callback: (this: Coroutine, session: UpdateSession) => void;
+  name: string;
 
   scope: Scope;
 
-  pendingLanes: Lanes;
+  callback: (this: Coroutine, session: UpdateSession) => void;
+
+  pendingLanes: Lanes = -1;
 
   constructor(
-    callback: (this: Coroutine, session: UpdateSession) => void = () => {},
+    name: string = MockCoroutine.name,
     scope: Scope = createScope(),
-    pendingLanes: Lanes = -1,
+    callback: (this: Coroutine, session: UpdateSession) => void = () => {},
   ) {
-    this.callback = callback;
+    this.name = name;
     this.scope = scope;
-    this.pendingLanes = pendingLanes;
-  }
-
-  get name(): string {
-    return MockCoroutine.name;
+    this.callback = callback;
   }
 
   start(session: UpdateSession): void {
@@ -481,6 +478,14 @@ export function createRuntime({
   ...options
 }: RuntimeOptions & { defaultLanes?: Lanes } = {}): Runtime {
   return new Runtime(new MockBackend(defaultLanes), options);
+}
+
+export function createScope(owner: Coroutine | null = null): Scope {
+  return {
+    owner,
+    level: owner !== null ? owner.scope.level + 1 : 0,
+    boundary: null,
+  };
 }
 
 function stringify(value: unknown): string {

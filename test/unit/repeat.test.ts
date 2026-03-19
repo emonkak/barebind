@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   BOUNDARY_TYPE_HYDRATION,
-  createScope,
   PART_TYPE_CHILD_NODE,
   PART_TYPE_ELEMENT,
   type Part,
@@ -16,7 +15,7 @@ import {
 } from '@/repeat.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
-import { createRuntime } from '../mocks.js';
+import { createRuntime, createScope } from '../mocks.js';
 import {
   allCombinations,
   createElement,
