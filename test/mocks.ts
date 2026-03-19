@@ -434,7 +434,7 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
     _session: UpdateSession,
   ): TemplateResult {
     return {
-      children: [],
+      childNodes: [],
       slots: [],
     };
   }
@@ -446,7 +446,7 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
     _session: UpdateSession,
   ): TemplateResult {
     return {
-      children: [],
+      childNodes: [],
       slots: [],
     };
   }

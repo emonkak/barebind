@@ -38,11 +38,11 @@ describe('TextTemplate', () => {
       const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
-      const { children, slots } = updater.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.hydrate(values, part, targetTree, session);
       });
 
-      expect(children).toStrictEqual([expect.exact(container.firstChild)]);
+      expect(childNodes).toStrictEqual([expect.exact(container.firstChild)]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
           value: values[0],
@@ -86,11 +86,11 @@ describe('TextTemplate', () => {
       );
       const updater = new TestUpdater();
 
-      const { children, slots } = updater.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.render(values, part, session);
       });
 
-      expect(children).toStrictEqual([expect.any(Text)]);
+      expect(childNodes).toStrictEqual([expect.any(Text)]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
           value: values[0],

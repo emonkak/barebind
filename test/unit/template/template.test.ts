@@ -156,7 +156,7 @@ describe('TemplateBinding', () => {
           for (const slot of slots) {
             slot.attach(session);
           }
-          return { children: [fragment], slots };
+          return { childNodes: [fragment], slots };
         });
 
       SESSION1: {
@@ -172,7 +172,7 @@ describe('TemplateBinding', () => {
           '<div><div class="foo"></div>bar<!--baz--></div><!---->',
         );
         expect(binding['_pendingResult']).toStrictEqual({
-          children: [fragment],
+          childNodes: [fragment],
           slots: [
             expect.objectContaining({
               value: args1[0],
@@ -204,7 +204,7 @@ describe('TemplateBinding', () => {
           '<div><div class="qux"></div>quux<!--corge--></div><!---->',
         );
         expect(binding['_pendingResult']).toStrictEqual({
-          children: [fragment],
+          childNodes: [fragment],
           slots: [
             expect.objectContaining({
               value: args2[0],
@@ -233,7 +233,7 @@ describe('TemplateBinding', () => {
         expect(part.node).toBe(part.sentinelNode);
         expect(container.innerHTML).toBe('<!---->');
         expect(binding['_pendingResult']).toStrictEqual({
-          children: [fragment],
+          childNodes: [fragment],
           slots: [
             expect.objectContaining({
               value: args2[0],
@@ -301,7 +301,7 @@ describe('TemplateBinding', () => {
             slot.attach(session);
           }
           return {
-            children: fragment,
+            childNodes: fragment,
             slots,
           };
         });
@@ -319,7 +319,7 @@ describe('TemplateBinding', () => {
           '<!--foo-->bar<div class="baz"></div><!---->',
         );
         expect(binding['_pendingResult']).toStrictEqual({
-          children: fragment,
+          childNodes: fragment,
           slots: [
             expect.objectContaining({
               value: args1[0],
@@ -351,7 +351,7 @@ describe('TemplateBinding', () => {
           '<!--qux-->quux<div class="corge"></div><!---->',
         );
         expect(binding['_pendingResult']).toStrictEqual({
-          children: fragment,
+          childNodes: fragment,
           slots: [
             expect.objectContaining({
               value: args2[0],
@@ -380,7 +380,7 @@ describe('TemplateBinding', () => {
         expect(part.node).toBe(part.sentinelNode);
         expect(container.innerHTML).toBe('<!---->');
         expect(binding['_pendingResult']).toStrictEqual({
-          children: fragment,
+          childNodes: fragment,
           slots: [
             expect.objectContaining({
               value: args2[0],
@@ -414,7 +414,7 @@ describe('TemplateBinding', () => {
       const updater = new TestUpdater(scope);
 
       const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
-        children: [container.firstChild!],
+        childNodes: [container.firstChild!],
         slots: [],
       });
 

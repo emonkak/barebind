@@ -37,7 +37,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
 
     replaceMarkerNode(targetTree, childNodePart.sentinelNode);
 
-    return { children: [childNodePart.sentinelNode], slots: [childNodeSlot] };
+    return { childNodes: [childNodePart.sentinelNode], slots: [childNodeSlot] };
   }
 
   render(
@@ -55,6 +55,6 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
 
     childNodeSlot.attach(session);
 
-    return { children: [childNodePart.sentinelNode], slots: [childNodeSlot] };
+    return { childNodes: [childNodePart.sentinelNode], slots: [childNodeSlot] };
   }
 }

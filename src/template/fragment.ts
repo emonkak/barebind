@@ -31,7 +31,7 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
     targetTree: TreeWalker,
     session: UpdateSession,
   ): TemplateResult {
-    const children = [];
+    const childNodes = [];
     const slots = [];
     let offset = 0;
 
@@ -43,12 +43,12 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
         targetTree,
         session,
       );
-      children.push(...result.children);
+      childNodes.push(...result.childNodes);
       slots.push(...result.slots);
       offset += arity;
     }
 
-    return { children, slots };
+    return { childNodes, slots };
   }
 
   render(
@@ -56,7 +56,7 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
     part: Part.ChildNodePart,
     session: UpdateSession,
   ): TemplateResult {
-    const children = [];
+    const childNodes = [];
     const slots = [];
     let offset = 0;
 
@@ -67,11 +67,11 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
         part,
         session,
       );
-      children.push(...result.children);
+      childNodes.push(...result.childNodes);
       slots.push(...result.slots);
       offset += arity;
     }
 
-    return { children, slots };
+    return { childNodes, slots };
   }
 }

@@ -70,7 +70,7 @@ describe('FragmentTemplate', () => {
             HTML_NAMESPACE_URI,
           );
           return {
-            children: [part.node],
+            childNodes: [part.node],
             slots: [
               new MockSlot(
                 new MockBinding(
@@ -84,11 +84,11 @@ describe('FragmentTemplate', () => {
         }),
       );
 
-      const { children, slots } = updater.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.hydrate(values, part, targetTree, session);
       });
 
-      expect(children.map(serializeNode)).toStrictEqual([
+      expect(childNodes.map(serializeNode)).toStrictEqual([
         '<!---->',
         '<!---->',
         '<!---->',
@@ -150,7 +150,7 @@ describe('FragmentTemplate', () => {
             HTML_NAMESPACE_URI,
           );
           return {
-            children: [part.node],
+            childNodes: [part.node],
             slots: [
               new MockSlot(
                 new MockBinding(
@@ -164,11 +164,11 @@ describe('FragmentTemplate', () => {
         }),
       );
 
-      const { children, slots } = updater.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.render(values, part, session);
       });
 
-      expect(children.map(serializeNode)).toStrictEqual([
+      expect(childNodes.map(serializeNode)).toStrictEqual([
         '<!---->',
         '<!---->',
         '<!---->',

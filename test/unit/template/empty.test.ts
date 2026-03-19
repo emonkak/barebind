@@ -34,11 +34,11 @@ describe('EmptyTemplate', () => {
       const targetTree = createTreeWalker(document.createElement('div'));
       const updater = new TestUpdater();
 
-      const { children, slots } = updater.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.hydrate(values, part, targetTree, session);
       });
 
-      expect(children).toStrictEqual([]);
+      expect(childNodes).toStrictEqual([]);
       expect(slots).toStrictEqual([]);
     });
   });
@@ -53,11 +53,11 @@ describe('EmptyTemplate', () => {
       );
       const updater = new TestUpdater();
 
-      const { children, slots } = updater.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.render(values, part, session);
       });
 
-      expect(children).toStrictEqual([]);
+      expect(childNodes).toStrictEqual([]);
       expect(slots).toStrictEqual([]);
     });
   });

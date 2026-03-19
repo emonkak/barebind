@@ -61,7 +61,7 @@ export class ElementTemplate<
     replaceMarkerNode(targetTree, childrenPart.sentinelNode);
 
     return {
-      children: [elementPart.node],
+      childNodes: [elementPart.node],
       slots: [elementSlot, childrenSlot],
     };
   }
@@ -91,7 +91,7 @@ export class ElementTemplate<
     childrenSlot.attach(session);
 
     return {
-      children: [elementPart.node],
+      childNodes: [elementPart.node],
       slots: [elementSlot, childrenSlot],
     };
   }

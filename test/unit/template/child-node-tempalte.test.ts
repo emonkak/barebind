@@ -37,11 +37,11 @@ describe('ChildNodeTemplate', () => {
       const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
-      const { children, slots } = updater.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.hydrate(values, part, targetTree, session);
       });
 
-      expect(children).toStrictEqual([expect.exact(container.firstChild)]);
+      expect(childNodes).toStrictEqual([expect.exact(container.firstChild)]);
       expect(slots).toStrictEqual([expect.any(MockSlot)]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
@@ -86,11 +86,11 @@ describe('ChildNodeTemplate', () => {
       );
       const updater = new TestUpdater();
 
-      const { children, slots } = updater.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.render(values, part, session);
       });
 
-      expect(children).toStrictEqual([expect.any(Comment)]);
+      expect(childNodes).toStrictEqual([expect.any(Comment)]);
       expect(slots).toStrictEqual([expect.any(MockSlot)]);
       expect(slots).toStrictEqual([
         expect.objectContaining({

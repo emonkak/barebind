@@ -133,10 +133,10 @@ export class TemplateBinding<TValues extends readonly unknown[]>
 
   commit(): void {
     if (this._pendingResult !== null) {
-      const { children, slots } = this._pendingResult;
+      const { childNodes, slots } = this._pendingResult;
 
       if (this._memoizedResult === null) {
-        this._part.sentinelNode.before(...children);
+        this._part.sentinelNode.before(...childNodes);
       }
 
       for (const slot of slots) {
@@ -144,7 +144,7 @@ export class TemplateBinding<TValues extends readonly unknown[]>
       }
 
       this._part.node =
-        getStartNode(children, slots) ?? this._part.sentinelNode;
+        getStartNode(childNodes, slots) ?? this._part.sentinelNode;
     }
 
     this._memoizedResult = this._pendingResult;
@@ -152,20 +152,20 @@ export class TemplateBinding<TValues extends readonly unknown[]>
 
   rollback(): void {
     if (this._memoizedResult !== null) {
-      const { children, slots } = this._memoizedResult;
+      const { childNodes, slots } = this._memoizedResult;
 
       for (const slot of slots) {
         if (
           (slot.part.type === PART_TYPE_CHILD_NODE ||
             slot.part.type === PART_TYPE_TEXT) &&
-          children.includes(getEndNode(slot.part))
+          childNodes.includes(getEndNode(slot.part))
         ) {
           // This binding is mounted as a child of the root, so we must rollback it.
           slot.rollback();
         }
       }
 
-      for (const child of children) {
+      for (const child of childNodes) {
         child.remove();
       }
     }
@@ -176,16 +176,16 @@ export class TemplateBinding<TValues extends readonly unknown[]>
 }
 
 function getStartNode(
-  children: readonly ChildNode[],
-  slots: Slot<unknown>[],
+  childNodes: readonly ChildNode[],
+  slots: readonly Slot<unknown>[],
 ): ChildNode | null {
-  const child = children[0];
+  const childNode = childNodes[0];
   const slot = slots[0];
-  return child !== undefined &&
+  return childNode !== undefined &&
     slot !== undefined &&
-    child === getEndNode(slot.part)
+    childNode === getEndNode(slot.part)
     ? slot.part.node
-    : (child ?? null);
+    : (childNode ?? null);
 }
 
 function getEndNode(part: Part): ChildNode {

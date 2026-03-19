@@ -588,8 +588,8 @@ export interface Template<TValues extends readonly unknown[]>
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
 export interface TemplateResult {
-  children: readonly ChildNode[];
-  slots: Slot<unknown>[];
+  childNodes: readonly ChildNode[];
+  slots: readonly Slot<unknown>[];
 }
 
 export type UnwrapBindable<T> = T extends Bindable<infer Value> ? Value : T;
