@@ -23,21 +23,21 @@ export const Suspense = createComponent(function Suspense(
   const store = $.useMemo(
     () => ({
       isMounted: false,
-      suspendRefCounts: new WeakMap<Suspend<unknown>, RefCount>(),
+      refCounts: new WeakMap<Suspend<unknown>, RefCount>(),
     }),
     [],
   );
-  const trackedSuspends = $.useMemo(
+  const trackingSuspends = $.useMemo(
     () => new Set<Suspend<unknown>>(),
     [children],
   );
 
   const areAllSuspendsSettled = () =>
-    trackedSuspends.values().every(({ status }) => status !== 'pending');
+    trackingSuspends.values().every(({ status }) => status !== 'pending');
 
   $.catchError((errorOrSuspend, handleError) => {
     if (errorOrSuspend instanceof Suspend) {
-      const refCount = store.suspendRefCounts.getOrInsertComputed(
+      const refCount = store.refCounts.getOrInsertComputed(
         errorOrSuspend,
         () => ({
           count: 0,
@@ -48,37 +48,32 @@ export const Suspense = createComponent(function Suspense(
         return;
       }
 
-      const subsequentUpdate = store.isMounted
-        ? $.getSessionContext().getScheduledUpdates()[0]
-        : undefined;
-
       // If the boundary is already mounted and the update is a transition,
       // suppress the fallback and retry once the suspend resolves. Otherwise,
       // show the fallback immediately. This matches React's behavior.
+      const updateInProgress = store.isMounted
+        ? $.getSessionContext().getScheduledUpdates()[0]
+        : undefined;
+
       if (
-        subsequentUpdate !== undefined &&
-        subsequentUpdate.lanes & TransitionLanes
+        updateInProgress !== undefined &&
+        updateInProgress.lanes & TransitionLanes
       ) {
-        const { coroutine, lanes } = subsequentUpdate;
+        const { coroutine, lanes } = updateInProgress;
         const transition = getTranstionIndex(lanes);
-        const forceUpdate = () =>
+        const rescheduleUpdate = () =>
           $.getSessionContext().scheduleUpdate(coroutine, {
             transition,
           }).finished;
-        errorOrSuspend.then(forceUpdate, forceUpdate);
+        errorOrSuspend.then(rescheduleUpdate, rescheduleUpdate);
       } else {
-        const forceUpdateWhenSettled = () => {
-          if (areAllSuspendsSettled()) {
-            $.forceUpdate();
-          }
-        };
-
+        const forceUpdateWhenSettled = () =>
+          areAllSuspendsSettled() ? $.forceUpdate().finished : undefined;
         errorOrSuspend.then(forceUpdateWhenSettled, forceUpdateWhenSettled);
-
         forceUpdateWhenSettled();
       }
 
-      trackedSuspends.add(errorOrSuspend);
+      trackingSuspends.add(errorOrSuspend);
     } else {
       handleError(errorOrSuspend);
     }
@@ -93,14 +88,14 @@ export const Suspense = createComponent(function Suspense(
 
   $.useLayoutEffect(() => {
     return () => {
-      for (const suspend of trackedSuspends) {
-        const refCount = store.suspendRefCounts.get(suspend);
+      for (const suspend of trackingSuspends) {
+        const refCount = store.refCounts.get(suspend);
         if (refCount !== undefined && --refCount.count === 0) {
           suspend.abort();
         }
       }
     };
-  }, [trackedSuspends]);
+  }, [trackingSuspends]);
 
   const shouldRenderChildren = areAllSuspendsSettled();
 
