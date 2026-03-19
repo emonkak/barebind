@@ -54,19 +54,19 @@ export function replaceSentinelNode(
 }
 
 export function splitText(target: TreeWalker): Text {
-  const previousNode = target.currentNode;
-  const currentNode = target.nextNode();
+  const { currentNode } = target;
+  const nextNode = target.nextNode();
 
   if (
-    previousNode instanceof Text &&
-    (currentNode === null || currentNode.previousSibling === previousNode)
+    currentNode instanceof Text &&
+    (nextNode === null || nextNode.previousSibling === currentNode)
   ) {
-    const splittedText = previousNode.ownerDocument.createTextNode('');
-    previousNode.after(splittedText);
-    target.currentNode = splittedText;
-    return splittedText;
+    const newText = currentNode.ownerDocument.createTextNode('');
+    currentNode.after(newText);
+    target.currentNode = newText;
+    return newText;
   } else {
-    return treatNodeType(Node.TEXT_NODE, currentNode, target);
+    return treatNodeType(Node.TEXT_NODE, nextNode, target);
   }
 }
 
