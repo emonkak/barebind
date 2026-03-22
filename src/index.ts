@@ -25,7 +25,7 @@ export {
 export { HydrationError } from './hydration.js';
 export type { ClassMap } from './primitive/class.js';
 export type { EventHandler } from './primitive/event.js';
-export type { StyleProps } from './primitive/style.js';
+export type { StyleMap } from './primitive/style.js';
 export {
   Repeat,
   type RepeatProps,

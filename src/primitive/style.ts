@@ -9,26 +9,26 @@ import { DirectiveError } from '../error.js';
 import { ensurePartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export type StyleProps = CSSStyleProperties & UnknownStyleProperties;
-
-type CSSStyleProperties = {
-  [K in StringKeys<CSSStyleDeclaration>]?: string | null | undefined;
-};
-
-interface UnknownStyleProperties {
-  [key: string]: string | null | undefined;
+export interface StyleMap extends CSSStyleProperties {
+  [unknownProperty: string]: StyleValue;
 }
 
-type StringKeys<T> = {
+type CSSStyleProperties = {
+  [K in ExtractStringKeys<CSSStyleDeclaration>]?: StyleValue;
+};
+
+type ExtractStringKeys<T> = {
   [K in keyof T]: T[K] extends string ? K : never;
 }[keyof T & string];
+
+type StyleValue = string | null | undefined;
 
 const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
 const UPPERCASE_LETTER_PATTERN = /[A-Z]/g;
 
-export const StylePrimitive: Primitive<StyleProps> = {
+export const StylePrimitive: Primitive<StyleMap> = {
   name: 'StylePrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is StyleProps {
+  ensureValue(value: unknown, part: Part): asserts value is StyleMap {
     if (!(typeof value === 'object' && value !== null)) {
       throw new DirectiveError(
         this,
@@ -39,7 +39,7 @@ export const StylePrimitive: Primitive<StyleProps> = {
     }
   },
   resolveBinding(
-    value: StyleProps,
+    value: StyleMap,
     part: Part,
     _context: DirectiveContext,
   ): StyleBinding {
@@ -49,65 +49,55 @@ export const StylePrimitive: Primitive<StyleProps> = {
 };
 
 export class StyleBinding extends PrimitiveBinding<
-  StyleProps,
+  StyleMap,
   Part.AttributePart
 > {
-  private _memoizedValue: StyleProps = {};
+  private _memoizedValue: StyleMap = {};
 
-  get type(): Primitive<StyleProps> {
+  get type(): Primitive<StyleMap> {
     return StylePrimitive;
   }
 
-  shouldUpdate(value: StyleProps): boolean {
+  shouldUpdate(value: StyleMap): boolean {
     return !shallowEqual(value, this._memoizedValue);
   }
 
   override commit(): void {
-    const newProps = this._value;
-    const oldProps = this._memoizedValue;
-    const { style } = this._part.node as
-      | HTMLElement
-      | MathMLElement
-      | SVGElement;
-
-    updateStyles(style, newProps, oldProps);
-
+    const declaration = (this._part.node as HTMLElement).style;
+    const newStyles = this._value;
+    const oldStyles = this._memoizedValue;
+    updateStyles(declaration, newStyles, oldStyles);
     this._memoizedValue = this._value;
   }
 
   override rollback(): void {
-    const props = this._memoizedValue;
-    const { style } = this._part.node as
-      | HTMLElement
-      | MathMLElement
-      | SVGElement;
-
-    updateStyles(style, {}, props);
-
+    const declaration = (this._part.node as HTMLElement).style;
+    const styles = this._memoizedValue;
+    updateStyles(declaration, {}, styles);
     this._memoizedValue = {};
   }
 }
 
 export function updateStyles(
-  style: CSSStyleDeclaration,
-  newProps: StyleProps,
-  oldProps: StyleProps,
+  declaration: CSSStyleDeclaration,
+  newStyles: StyleMap,
+  oldStyles: StyleMap,
 ): void {
-  for (const key of Object.keys(oldProps)) {
+  for (const key of Object.keys(oldStyles)) {
     if (
-      oldProps[key] != null &&
-      (!Object.hasOwn(newProps, key) || newProps[key] == null)
+      oldStyles[key] != null &&
+      (!Object.hasOwn(newStyles, key) || newStyles[key] == null)
     ) {
       const property = toCSSProperty(key);
-      style.removeProperty(property);
+      declaration.removeProperty(property);
     }
   }
 
-  for (const key of Object.keys(newProps)) {
-    const value = newProps[key];
+  for (const key of Object.keys(newStyles)) {
+    const value = newStyles[key];
     if (value != null) {
       const property = toCSSProperty(key);
-      style.setProperty(property, value);
+      declaration.setProperty(property, value);
     }
   }
 }

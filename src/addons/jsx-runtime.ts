@@ -1,4 +1,4 @@
-import type { StyleProps } from '../primitive/style.js';
+import type { StyleMap } from '../primitive/style.js';
 import {
   type Ref,
   VElement,
@@ -54,7 +54,7 @@ export namespace JSX {
     innerHTML?: string;
     key?: unknown;
     ref?: Ref<Element | null>;
-    style?: StyleProps;
+    style?: StyleMap;
     textContent?: string;
   }
 

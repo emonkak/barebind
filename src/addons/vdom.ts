@@ -14,7 +14,7 @@ import {
 } from '../core.js';
 import { ensurePartType } from '../part.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
-import { type StyleProps, updateStyles } from '../primitive/style.js';
+import { type StyleMap, updateStyles } from '../primitive/style.js';
 import { RepeatDirective, type RepeatProps } from '../repeat.js';
 import { ChildNodeTemplate } from '../template/child-node.js';
 import { ElementTemplate } from '../template/element.js';
@@ -353,7 +353,7 @@ export class ElementBinding implements Binding<ElementProps> {
         updateStyles(
           (element as HTMLElement).style,
           {},
-          (value ?? {}) as StyleProps,
+          (value ?? {}) as StyleMap,
         );
         return;
       case 'value':
@@ -454,8 +454,8 @@ export class ElementBinding implements Binding<ElementProps> {
         }
         updateStyles(
           (element as HTMLElement).style,
-          (newValue ?? {}) as StyleProps,
-          (oldValue ?? {}) as StyleProps,
+          (newValue ?? {}) as StyleMap,
+          (oldValue ?? {}) as StyleMap,
         );
         return;
       case 'value':
