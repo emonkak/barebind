@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createElementPart, createTextPart } from '@/part.js';
+import { createTextPart } from '@/part.js';
 import { TextBinding, TextType } from '@/primitive/text.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -16,16 +16,6 @@ describe('TextType', () => {
       expect(binding.type).toBe(TextType);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
-    });
-
-    it('should throw the error if the part is not a property part', () => {
-      const value = '<div>foo</div>';
-      const part = createElementPart(document.createElement('div'));
-      const runtime = createRuntime();
-
-      expect(() => TextType.resolveBinding(value, part, runtime)).toThrow(
-        'TextType must be used in TextPart.',
-      );
     });
   });
 });

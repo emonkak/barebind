@@ -1,10 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  createChildNodePart,
-  createElementPart,
-  HTML_NAMESPACE_URI,
-} from '@/part.js';
+import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
 import { CommentBinding, CommentType } from '@/primitive/comment.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -24,16 +20,6 @@ describe('CommentType', () => {
       expect(binding.type).toBe(CommentType);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
-    });
-
-    it('should throw the error if the part is not a child node part', () => {
-      const value = '<div>foo</div>';
-      const part = createElementPart(document.createElement('div'));
-      const runtime = createRuntime();
-
-      expect(() => CommentType.resolveBinding(value, part, runtime)).toThrow(
-        'CommentType must be used in ChildNodePart.',
-      );
     });
   });
 });

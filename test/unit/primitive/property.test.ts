@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createElementPart, createPropertyPart } from '@/part.js';
+import { createPropertyPart } from '@/part.js';
 import { PropertyBinding, PropertyType } from '@/primitive/property.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -19,16 +19,6 @@ describe('PropertyType', () => {
       expect(binding.type).toBe(PropertyType);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
-    });
-
-    it('should throw the error if the part is not a property part', () => {
-      const value = '<div>foo</div>';
-      const part = createElementPart(document.createElement('div'));
-      const runtime = createRuntime();
-
-      expect(() => PropertyType.resolveBinding(value, part, runtime)).toThrow(
-        'PropertyType must be used in PropertyPart.',
-      );
     });
   });
 });

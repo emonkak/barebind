@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createChildNodePart, createElementPart } from '@/part.js';
+import { createElementPart } from '@/part.js';
 import { SpreadBinding, SpreadType } from '@/primitive/spread.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -38,16 +38,6 @@ describe('SpreadType', () => {
       expect(binding.type).toBe(SpreadType);
       expect(binding.value).toBe(props);
       expect(binding.part).toBe(part);
-    });
-
-    it('should throw the error if the part is not a element part', () => {
-      const props = { class: 'foo' };
-      const part = createChildNodePart(document.createComment(''), null);
-      const runtime = createRuntime();
-
-      expect(() => SpreadType.resolveBinding(props, part, runtime)).toThrow(
-        'SpreadType must be used in ElementPart.',
-      );
     });
   });
 });

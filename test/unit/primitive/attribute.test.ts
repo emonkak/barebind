@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createAttributePart, createElementPart } from '@/part.js';
+import { createAttributePart } from '@/part.js';
 import { AttributeBinding, AttributeType } from '@/primitive/attribute.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -16,16 +16,6 @@ describe('AttributeType', () => {
       expect(binding.type).toBe(AttributeType);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
-    });
-
-    it('should throw the error if the part is not an attribute part', () => {
-      const value = 'foo';
-      const part = createElementPart(document.createElement('div'));
-      const runtime = createRuntime();
-
-      expect(() => AttributeType.resolveBinding(value, part, runtime)).toThrow(
-        'AttributeType must be used in AttributePart.',
-      );
     });
   });
 });

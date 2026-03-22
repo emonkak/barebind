@@ -13,7 +13,9 @@ export abstract class AttributeType {
     part: Part,
     _context: DirectiveContext,
   ): AttributeBinding<T> {
-    ensurePartType(PART_TYPE_ATTRIBUTE, this, value, part);
+    DEBUG: {
+      ensurePartType(PART_TYPE_ATTRIBUTE, this, value, part);
+    }
     return new AttributeBinding(value, part);
   }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createAttributePart, createElementPart } from '@/part.js';
+import { createAttributePart } from '@/part.js';
 import { StyleBinding, StyleType } from '@/primitive/style.js';
 import { createRuntime } from '../../mocks.js';
 import { createElement } from '../../test-helpers.js';
@@ -45,16 +45,6 @@ describe('StyleType', () => {
       expect(binding.type).toBe(StyleType);
       expect(binding.value).toBe(style);
       expect(binding.part).toBe(part);
-    });
-
-    it('should throw the error if the part is not an attribute part', () => {
-      const style = { color: 'red' };
-      const part = createElementPart(document.createElement('div'));
-      const runtime = createRuntime();
-
-      expect(() => StyleType.resolveBinding(style, part, runtime)).toThrow(
-        'StyleType must be used in AttributePart.',
-      );
     });
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createAttributePart, createElementPart } from '@/part.js';
+import { createAttributePart } from '@/part.js';
 import { RefBinding, RefType } from '@/primitive/ref.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -43,16 +43,6 @@ describe('RefType', () => {
       expect(binding.type).toBe(RefType);
       expect(binding.value).toBe(ref);
       expect(binding.part).toBe(part);
-    });
-
-    it('should throw the error if the part is not a ":ref" attribute part', () => {
-      const ref = { current: null };
-      const part = createElementPart(document.createElement('div'));
-      const runtime = createRuntime();
-
-      expect(() => RefType.resolveBinding(ref, part, runtime)).toThrow(
-        'RefType must be used in AttributePart.',
-      );
     });
   });
 });

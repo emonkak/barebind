@@ -15,7 +15,9 @@ export abstract class PropertyType {
     part: Part,
     _context: DirectiveContext,
   ): PropertyBinding<T> {
-    ensurePartType(PART_TYPE_PROPERTY, this, value, part);
+    DEBUG: {
+      ensurePartType(PART_TYPE_PROPERTY, this, value, part);
+    }
     return new PropertyBinding(value, part);
   }
 }

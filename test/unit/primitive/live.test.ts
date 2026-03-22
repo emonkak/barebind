@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createElementPart, createLivePart } from '@/part.js';
+import { createLivePart } from '@/part.js';
 import { LiveBinding, LiveType } from '@/primitive/live.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -16,16 +16,6 @@ describe('LiveType', () => {
       expect(binding.type).toBe(LiveType);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
-    });
-
-    it('should throw the error if the part is not a live part', () => {
-      const value = 'foo';
-      const part = createElementPart(document.createElement('textarea'));
-      const runtime = createRuntime();
-
-      expect(() => LiveType.resolveBinding(value, part, runtime)).toThrow(
-        'LiveType must be used in LivePart.',
-      );
     });
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createAttributePart, createElementPart } from '@/part.js';
+import { createAttributePart } from '@/part.js';
 import { ClassBinding, ClassType } from '@/primitive/class.js';
 import { createRuntime } from '../../mocks.js';
 import { createElement } from '../../test-helpers.js';
@@ -50,16 +50,6 @@ describe('ClassType', () => {
       expect(binding.type).toBe(ClassType);
       expect(binding.value).toBe(classes);
       expect(binding.part).toBe(part);
-    });
-
-    it('throws an error if the part is not an attribute part', () => {
-      const classes = { foo: true, bar: true, baz: false };
-      const part = createElementPart(document.createElement('div'));
-      const runtime = createRuntime();
-
-      expect(() => ClassType.resolveBinding(classes, part, runtime)).toThrow(
-        'ClassType must be used in AttributePart.',
-      );
     });
   });
 });

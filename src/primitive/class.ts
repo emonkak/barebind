@@ -38,7 +38,9 @@ export abstract class ClassType {
     part: Part,
     _context: DirectiveContext,
   ): ClassBinding {
-    ensurePartType(PART_TYPE_ATTRIBUTE, this, value, part);
+    DEBUG: {
+      ensurePartType(PART_TYPE_ATTRIBUTE, this, value, part);
+    }
     return new ClassBinding(value, part);
   }
 }

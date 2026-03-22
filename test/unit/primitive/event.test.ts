@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createElementPart, createEventPart } from '@/part.js';
+import { createEventPart } from '@/part.js';
 import { EventBinding, EventType } from '@/primitive/event.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -39,16 +39,6 @@ describe('EventType', () => {
       expect(binding.type).toBe(EventType);
       expect(binding.value).toBe(handler);
       expect(binding.part).toBe(part);
-    });
-
-    it('should throw the error if the part is not an event part', () => {
-      const handler = () => {};
-      const part = createElementPart(document.createElement('div'));
-      const runtime = createRuntime();
-
-      expect(() => EventType.resolveBinding(handler, part, runtime)).toThrow(
-        'EventType must be used in EventPart.',
-      );
     });
   });
 });

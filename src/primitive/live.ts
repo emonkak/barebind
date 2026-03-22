@@ -13,7 +13,9 @@ export abstract class LiveType {
     part: Part,
     _context: DirectiveContext,
   ): LiveBinding<T> {
-    ensurePartType(PART_TYPE_LIVE, this, value, part);
+    DEBUG: {
+      ensurePartType(PART_TYPE_LIVE, this, value, part);
+    }
     return new LiveBinding(value, part);
   }
 }
