@@ -6,6 +6,7 @@ import {
   BOUNDARY_TYPE_SHARED_CONTEXT,
   type Cleanup,
   type Coroutine,
+  Directive,
   type Effect,
   type EffectHandler,
   type EffectQueue,
@@ -38,7 +39,6 @@ import {
   type UpdateResult,
   type Usable,
 } from './core.js';
-import { DirectiveSpecifier } from './directive.js';
 import { AbortError, handleError, InterruptError } from './error.js';
 import { getSchedulingLanes, NoLanes } from './lane.js';
 
@@ -170,7 +170,7 @@ export class RenderSession implements RenderContext {
   html(
     strings: readonly string[],
     ...values: readonly unknown[]
-  ): DirectiveSpecifier<readonly unknown[]> {
+  ): Directive<readonly unknown[]> {
     return this._createTemplate(strings, values, 'html');
   }
 
@@ -194,7 +194,7 @@ export class RenderSession implements RenderContext {
   math(
     strings: readonly string[],
     ...values: readonly unknown[]
-  ): DirectiveSpecifier<readonly unknown[]> {
+  ): Directive<readonly unknown[]> {
     return this._createTemplate(strings, values, 'math');
   }
 
@@ -222,14 +222,14 @@ export class RenderSession implements RenderContext {
   svg(
     strings: readonly string[],
     ...values: readonly unknown[]
-  ): DirectiveSpecifier<readonly unknown[]> {
+  ): Directive<readonly unknown[]> {
     return this._createTemplate(strings, values, 'svg');
   }
 
   text(
     strings: readonly string[],
     ...values: readonly unknown[]
-  ): DirectiveSpecifier<readonly unknown[]> {
+  ): Directive<readonly unknown[]> {
     return this._createTemplate(strings, values, 'textarea');
   }
 
@@ -384,9 +384,9 @@ export class RenderSession implements RenderContext {
     strings: readonly string[],
     values: readonly unknown[],
     mode: TemplateMode,
-  ): DirectiveSpecifier<readonly unknown[]> {
-    const template = this._context.resolveTemplate(strings, values, mode);
-    return new DirectiveSpecifier(template, values);
+  ): Directive<readonly unknown[]> {
+    const template = this._context.getTemplate(strings, values, mode);
+    return new Directive(template, values);
   }
 
   private _useEffectHook(

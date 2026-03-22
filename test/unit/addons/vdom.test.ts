@@ -10,10 +10,7 @@ import {
   VStaticFragment,
 } from '@/addons/vdom.js';
 import { createComponent } from '@/component.js';
-import { $directive } from '@/core.js';
-import { DirectiveSpecifier } from '@/directive.js';
-import { KeyedLayout } from '@/layout/keyed.js';
-import { LooseLayout } from '@/layout/loose.js';
+import { $directive, Directive } from '@/core.js';
 import {
   createChildNodePart,
   createElementPart,
@@ -26,7 +23,7 @@ import { ElementTemplate } from '@/template/element.js';
 import { EmptyTemplate } from '@/template/empty.js';
 import { FragmentTemplate } from '@/template/fragment.js';
 import { TextTemplate } from '@/template/text.js';
-import { createRuntime, MockBindable, MockPrimitive } from '../../mocks.js';
+import { createRuntime, MockPrimitive } from '../../mocks.js';
 import { createElement as createDOMElement } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
 
@@ -77,7 +74,7 @@ describe('VElement', () => {
 
       expect(directive.type).toStrictEqual(new ElementTemplate(type));
       expect(directive.value).toStrictEqual([
-        new DirectiveSpecifier(ElementDirective, props),
+        new Directive(ElementDirective, props),
         new VFragment(props.children),
       ]);
     });
@@ -90,7 +87,7 @@ describe('VElement', () => {
 
       expect(directive.type).toStrictEqual(new ElementTemplate(type));
       expect(directive.value).toStrictEqual([
-        new DirectiveSpecifier(ElementDirective, props),
+        new Directive(ElementDirective, props),
         new VStaticFragment(props.children),
       ]);
     });
@@ -103,8 +100,8 @@ describe('VElement', () => {
 
       expect(directive.type).toStrictEqual(new ElementTemplate(type));
       expect(directive.value).toStrictEqual([
-        new DirectiveSpecifier(ElementDirective, props),
-        new DirectiveSpecifier(BlackholePrimitive, undefined),
+        new Directive(ElementDirective, props),
+        new Directive(BlackholePrimitive, undefined),
       ]);
     });
 
@@ -117,10 +114,10 @@ describe('VElement', () => {
 
       expect(directive.type).toStrictEqual(new ElementTemplate(type));
       expect(directive.value).toStrictEqual([
-        new DirectiveSpecifier(ElementDirective, props),
-        new DirectiveSpecifier(BlackholePrimitive, undefined),
+        new Directive(ElementDirective, props),
+        new Directive(BlackholePrimitive, undefined),
       ]);
-      expect(directive.layout).toStrictEqual(new KeyedLayout(key, LooseLayout));
+      expect(directive.key).toStrictEqual(key);
     });
   });
 });
@@ -150,10 +147,7 @@ describe('VStaticFragment', () => {
         new VElement(component, {}),
         new VElement('div', { children: 'foo' }),
         new VElement('div', { children: ['foo'] }),
-        new MockBindable({
-          type: MockPrimitive,
-          value: 'foo',
-        }),
+        new Directive(MockPrimitive, 'foo'),
         ['foo', 'bar'],
         null,
         false,
@@ -176,11 +170,9 @@ describe('VStaticFragment', () => {
       );
       expect(directive.value).toStrictEqual([
         children[0],
-        new DirectiveSpecifier(ElementDirective, children[1].props),
-        new DirectiveSpecifier(new TextTemplate(), [
-          children[1].props.children,
-        ]),
-        new DirectiveSpecifier(ElementDirective, children[2].props),
+        new Directive(ElementDirective, children[1].props),
+        new Directive(new TextTemplate(), [children[1].props.children]),
+        new Directive(ElementDirective, children[2].props),
         new VFragment(children[2].props.children),
         children[3],
         new VFragment(children[4]),

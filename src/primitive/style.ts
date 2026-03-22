@@ -5,7 +5,8 @@ import {
   type Part,
   type Primitive,
 } from '../core.js';
-import { DirectiveError, ensurePartType } from '../directive.js';
+import { DirectiveError } from '../error.js';
+import { ensurePartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export type StyleProps = CSSStyleProperties & UnknownStyleProperties;

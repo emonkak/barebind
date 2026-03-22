@@ -6,7 +6,7 @@ import { FragmentTemplate } from '@/template/fragment.js';
 import { Element, Fragment } from '@/template.js';
 
 describe('Element()', () => {
-  it('returns a new DirectiveSpecifier with ElementTemplate', () => {
+  it('returns a new Directive with ElementTemplate', () => {
     const props = { class: 'foo' };
     const children = 'bar';
     const bindable = Element('div', props, children);
@@ -18,7 +18,7 @@ describe('Element()', () => {
 });
 
 describe('Fragment()', () => {
-  it('returns a new DirectiveSpecifier with FragmentTemplate', () => {
+  it('returns a new Directive with FragmentTemplate', () => {
     const children = ['foo', 'bar', 'baz'];
     const bindable = Fragment(children);
 

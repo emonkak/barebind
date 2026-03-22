@@ -1,12 +1,15 @@
 import { LinkedList } from './collections/linked-list.js';
 import {
+  $directive,
   type Backend,
   type CommitPhase,
   type Component,
   type Coroutine,
-  type Directive,
+  Directive,
+  type DirectiveType,
   EffectQueue,
   type Hook,
+  isBindable,
   type Lanes,
   type Part,
   type Primitive,
@@ -15,8 +18,6 @@ import {
   type SessionContext,
   type SessionEvent,
   type SessionObserver,
-  type Slot,
-  type Template,
   type TemplateMode,
   type UnwrapBindable,
   type Update,
@@ -25,7 +26,6 @@ import {
   type UpdateResult,
   type UpdateSession,
 } from './core.js';
-import { toDirective } from './directive.js';
 import {
   AbortError,
   CoroutineError,
@@ -50,7 +50,7 @@ export class Runtime implements SessionContext {
 
   private readonly _cachedTemplates: WeakMap<
     readonly string[],
-    Template<readonly unknown[]>
+    DirectiveType<readonly unknown[]>
   > = new WeakMap();
 
   private readonly _observers: LinkedList<SessionObserver> = new LinkedList();
@@ -184,43 +184,27 @@ export class Runtime implements SessionContext {
     return result;
   }
 
-  resolveDirective<T>(
-    source: T,
-    part: Part,
-  ): Required<Directive<UnwrapBindable<T>>> {
-    let { type, value, layout, defaultLayout } = toDirective(source);
-
-    if (type === undefined) {
-      type = this._backend.resolvePrimitive(source, part) as Primitive<
+  resolveDirective<T>(source: T, part: Part): Directive<UnwrapBindable<T>> {
+    if (isBindable(source)) {
+      return source[$directive]();
+    } else {
+      const type = this._backend.resolvePrimitive(source, part) as Primitive<
         UnwrapBindable<T>
       >;
       (type as Primitive<UnwrapBindable<T>>).ensureValue?.(source, part);
+      return new Directive(type, source as UnwrapBindable<T>);
     }
-
-    defaultLayout ??= this._backend.resolveLayout(source, part);
-    layout ??= defaultLayout;
-
-    return { type, value, layout, defaultLayout };
   }
 
-  resolveSlot<T>(source: T, part: Part): Slot<T> {
-    const { type, value, layout, defaultLayout } = this.resolveDirective(
-      source,
-      part,
-    );
-    const binding = type.resolveBinding(value, part, this);
-    return layout.placeBinding(binding, defaultLayout);
-  }
-
-  resolveTemplate(
+  getTemplate(
     strings: readonly string[],
     values: readonly unknown[],
     mode: TemplateMode,
-  ): Template<readonly unknown[]> {
+  ): DirectiveType<readonly unknown[]> {
     let template = this._cachedTemplates.get(strings);
 
     if (template === undefined) {
-      template = this._backend.parseTemplate(
+      template = this._backend.resolveTemplate(
         strings,
         values,
         this._uniqueIdentifier,

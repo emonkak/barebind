@@ -1,46 +1,41 @@
 import type {
   Binding,
+  DirectiveContext,
   DirectiveType,
-  Layout,
   Part,
-  Slot,
   UnwrapBindable,
   UpdateSession,
-} from '../core.js';
-import {
-  SLOT_STATUS_ATTACHED,
-  SLOT_STATUS_DETACHED,
-  SLOT_STATUS_IDLE,
-  type SlotStatus,
-} from '../core.js';
-import { debugPart, undebugPart } from '../debug/part.js';
-import { areDirectiveTypesEqual, LayoutModifier } from '../directive.js';
+} from './core.js';
+import { areDirectiveTypesEqual } from './core.js';
+import { debugPart, undebugPart } from './debug/part.js';
 
-export function Flexible<T>(source: T): LayoutModifier<T> {
-  return new LayoutModifier(source, FlexibleLayout);
-}
+export const SLOT_STATUS_IDLE = 0;
+export const SLOT_STATUS_ATTACHED = 1;
+export const SLOT_STATUS_DETACHED = 2;
 
-export const FlexibleLayout: Layout = {
-  name: 'FlexibleLayout',
-  compose(): Layout {
-    return this;
-  },
-  placeBinding<T>(binding: Binding<UnwrapBindable<T>>): FlexibleSlot<T> {
-    return new FlexibleSlot(binding);
-  },
-};
+export type SlotStatus =
+  | typeof SLOT_STATUS_IDLE
+  | typeof SLOT_STATUS_ATTACHED
+  | typeof SLOT_STATUS_DETACHED;
 
-export class FlexibleSlot<T> implements Slot<T> {
+export class Slot<T> {
   private _pendingBinding: Binding<UnwrapBindable<T>>;
 
   private _memoizedBinding: Binding<UnwrapBindable<T>> | null = null;
 
-  private _cachedBinding: Binding<UnwrapBindable<T>> | null = null;
+  private _key: unknown;
 
   private _status: SlotStatus = SLOT_STATUS_IDLE;
 
-  constructor(binding: Binding<UnwrapBindable<T>>) {
+  static place<T>(source: T, part: Part, context: DirectiveContext): Slot<T> {
+    const { type, value, key } = context.resolveDirective(source, part);
+    const binding = type.resolveBinding(value, part, context);
+    return new Slot(binding, key);
+  }
+
+  constructor(binding: Binding<UnwrapBindable<T>>, key?: unknown) {
     this._pendingBinding = binding;
+    this._key = key;
   }
 
   get type(): DirectiveType<UnwrapBindable<T>> {
@@ -49,6 +44,10 @@ export class FlexibleSlot<T> implements Slot<T> {
 
   get value(): UnwrapBindable<T> {
     return this._pendingBinding.value;
+  }
+
+  get key(): unknown {
+    return this._key;
   }
 
   get part(): Part {
@@ -71,13 +70,17 @@ export class FlexibleSlot<T> implements Slot<T> {
 
   reconcile(source: T, session: UpdateSession): boolean {
     const { context } = session;
-    const { type, value } = context.resolveDirective(
+    const { type, value, key } = context.resolveDirective(
       source,
       this._pendingBinding.part,
     );
+    let dirty: boolean;
 
-    if (areDirectiveTypesEqual(type, this._pendingBinding.type)) {
-      const dirty =
+    if (
+      areDirectiveTypesEqual(type, this._pendingBinding.type) &&
+      this._key === key
+    ) {
+      dirty =
         this._status !== SLOT_STATUS_IDLE ||
         this._pendingBinding.shouldUpdate(value);
       if (dirty) {
@@ -85,33 +88,21 @@ export class FlexibleSlot<T> implements Slot<T> {
         this._pendingBinding.attach(session);
         this._status = SLOT_STATUS_ATTACHED;
       }
-      return dirty;
     } else {
-      const cachedBinding = this._cachedBinding;
-
+      dirty = true;
       this._pendingBinding.detach(session);
-      this._cachedBinding = this._pendingBinding;
-
-      if (
-        cachedBinding !== null &&
-        areDirectiveTypesEqual(cachedBinding.type, type)
-      ) {
-        cachedBinding.value = value;
-        cachedBinding.attach(session);
-        this._pendingBinding = cachedBinding;
-      } else {
-        this._pendingBinding = type.resolveBinding(
-          value,
-          this._pendingBinding.part,
-          context,
-        );
-        this._pendingBinding.attach(session);
-      }
-
+      this._pendingBinding = type.resolveBinding(
+        value,
+        this._pendingBinding.part,
+        context,
+      );
+      this._pendingBinding.attach(session);
       this._status = SLOT_STATUS_ATTACHED;
-
-      return true;
     }
+
+    this._key = key;
+
+    return dirty;
   }
 
   commit(): void {

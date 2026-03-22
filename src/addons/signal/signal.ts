@@ -5,7 +5,7 @@ import {
   type Bindable,
   type Binding,
   type Coroutine,
-  type Directive,
+  Directive,
   type DirectiveContext,
   type DirectiveType,
   type Effect,
@@ -15,10 +15,10 @@ import {
   type RenderContext,
   SCOPE_DETACHED,
   type Scope,
-  type Slot,
   type UpdateSession,
 } from '../../core.js';
 import { NoLanes } from '../../lane.js';
+import { Slot } from '../../slot.js';
 
 export interface InvalidateEvent<T = unknown> {
   readonly source: Atom<T>;
@@ -46,7 +46,7 @@ export const SignalDirective: DirectiveType<Signal<any>> = {
     part: Part,
     context: DirectiveContext,
   ): SignalBinding<unknown> {
-    const slot = context.resolveSlot(signal.value, part);
+    const slot = Slot.place(signal.value, part, context);
     return new SignalBinding(signal, slot);
   },
 };
@@ -185,7 +185,7 @@ export abstract class Signal<T> implements HookObject<T>, Bindable<Signal<T>> {
   }
 
   [$directive](): Directive<Signal<T>> {
-    return { type: SignalDirective, value: this };
+    return new Directive(SignalDirective, this);
   }
 
   abstract subscribe(subscriber: Subscriber): Unsubscribe;

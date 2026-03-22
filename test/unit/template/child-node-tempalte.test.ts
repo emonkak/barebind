@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { PART_TYPE_CHILD_NODE, SLOT_STATUS_ATTACHED } from '@/core.js';
+import { PART_TYPE_CHILD_NODE } from '@/core.js';
 import { createTreeWalker, HydrationError } from '@/hydration.js';
 import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
+import { SLOT_STATUS_ATTACHED, Slot } from '@/slot.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
-import { MockSlot, MockTemplate } from '../../mocks.js';
+import { MockTemplate } from '../../mocks.js';
 import { createElement } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
 
@@ -42,7 +43,7 @@ describe('ChildNodeTemplate', () => {
       });
 
       expect(childNodes).toStrictEqual([expect.exact(container.firstChild)]);
-      expect(slots).toStrictEqual([expect.any(MockSlot)]);
+      expect(slots).toStrictEqual([expect.any(Slot)]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
           value: values[0],
@@ -91,7 +92,7 @@ describe('ChildNodeTemplate', () => {
       });
 
       expect(childNodes).toStrictEqual([expect.any(Comment)]);
-      expect(slots).toStrictEqual([expect.any(MockSlot)]);
+      expect(slots).toStrictEqual([expect.any(Slot)]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
           value: values[0],

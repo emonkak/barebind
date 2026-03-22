@@ -7,7 +7,6 @@ import {
   PART_TYPE_LIVE,
   PART_TYPE_PROPERTY,
   PART_TYPE_TEXT,
-  SLOT_STATUS_ATTACHED,
 } from '@/core.js';
 import { createTreeWalker, HydrationError } from '@/hydration.js';
 import {
@@ -16,8 +15,8 @@ import {
   MATH_NAMESPACE_URI,
   SVG_NAMESPACE_URI,
 } from '@/part.js';
+import { SLOT_STATUS_ATTACHED } from '@/slot.js';
 import { TaggedTemplate } from '@/template/tagged.js';
-import { MockSlot } from '../../mocks.js';
 import { createElement, serializeNode } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
 
@@ -510,7 +509,6 @@ describe('TaggedTemplate', () => {
         '<div class="foo"><!----><label for="quux">baz</label><input type="text" id="quux"></div>',
         '<!---->',
       ]);
-      expect(slots).toStrictEqual(values.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
@@ -653,7 +651,6 @@ describe('TaggedTemplate', () => {
         expect.exact(slots[2]?.part.node),
         expect.exact(container.lastChild),
       ]);
-      expect(slots).toStrictEqual(values.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
@@ -808,7 +805,6 @@ describe('TaggedTemplate', () => {
         '<div><!----><label></label><input type="text"></div>',
         '<!---->',
       ]);
-      expect(slots).toStrictEqual(values.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
@@ -938,7 +934,6 @@ describe('TaggedTemplate', () => {
         expect.exact(slots[2]?.part.node),
         expect.any(HTMLDivElement),
       ]);
-      expect(slots).toStrictEqual(values.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
@@ -1011,7 +1006,6 @@ describe('TaggedTemplate', () => {
         '<math><!----></math>',
         '<svg><!----></svg>',
       ]);
-      expect(slots).toStrictEqual(values.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {

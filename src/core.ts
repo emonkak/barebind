@@ -42,10 +42,6 @@ export const SCOPE_DETACHED: Scope = Object.freeze({
   boundary: null,
 });
 
-export const SLOT_STATUS_IDLE = 0;
-export const SLOT_STATUS_ATTACHED = 1;
-export const SLOT_STATUS_DETACHED = 2;
-
 export interface ActionDispatcher<TState, TAction> {
   context: RenderContext;
   dispatch: (
@@ -67,18 +63,17 @@ export interface Backend {
   flushEffects(effects: EffectQueue, phase: CommitPhase): void;
   getDefaultLanes(): Lanes;
   getUpdatePriority(): TaskPriority;
-  parseTemplate(
-    strings: readonly string[],
-    values: readonly unknown[],
-    markerIdentifier: string,
-    mode: TemplateMode,
-  ): Template<readonly unknown[]>;
   requestCallback<T>(
     callback: () => T | PromiseLike<T>,
     options?: RequestCallbackOptions,
   ): Promise<T>;
-  resolveLayout(source: unknown, part: Part): Layout;
   resolvePrimitive(source: unknown, part: Part): Primitive<unknown>;
+  resolveTemplate(
+    strings: readonly string[],
+    values: readonly unknown[],
+    markerIdentifier: string,
+    mode: TemplateMode,
+  ): DirectiveType<readonly unknown[]>;
   startViewTransition(callback: () => Promise<void> | void): Promise<void>;
   yieldToMain(): Promise<void>;
 }
@@ -143,19 +138,29 @@ export interface Coroutine {
   resume(session: UpdateSession): void;
 }
 
-export interface Directive<T> {
-  type?: DirectiveType<T>;
-  value: T;
-  layout?: Layout;
-  defaultLayout?: Layout;
+export class Directive<T> implements Bindable<T> {
+  readonly type: DirectiveType<T>;
+
+  readonly value: T;
+
+  readonly key: unknown;
+
+  constructor(type: DirectiveType<T>, value: T, key?: unknown) {
+    this.type = type;
+    this.value = value;
+    this.key = key;
+    DEBUG: {
+      Object.freeze(this);
+    }
+  }
+
+  [$directive](): Directive<T> {
+    return this;
+  }
 }
 
 export interface DirectiveContext {
-  resolveDirective<T>(
-    source: T,
-    part: Part,
-  ): Required<Directive<UnwrapBindable<T>>>;
-  resolveSlot<T>(source: T, part: Part): Slot<T>;
+  resolveDirective<T>(source: T, part: Part): Directive<UnwrapBindable<T>>;
 }
 
 export interface DirectiveType<T> {
@@ -313,15 +318,6 @@ export type Lane = number;
 
 export type Lanes = number;
 
-export interface Layout {
-  readonly name: string;
-  compose(other: Layout): Layout;
-  placeBinding<T>(
-    binding: Binding<UnwrapBindable<T>>,
-    defaultLayout: Layout,
-  ): Slot<T>;
-}
-
 export type NextState<T> = (T extends Function ? never : T) | ((state: T) => T);
 
 export type Part =
@@ -475,6 +471,11 @@ export interface ReversibleEffect extends Effect {
 export interface SessionContext extends DirectiveContext {
   addObserver(observer: SessionObserver): Cleanup;
   getScheduledUpdates(): Update[];
+  getTemplate(
+    strings: readonly string[],
+    args: readonly unknown[],
+    mode: TemplateMode,
+  ): DirectiveType<readonly unknown[]>;
   startTransition<T>(action: (transition: number) => T): T;
   nextIdentifier(): string;
   renderComponent<TProps, TResult>(
@@ -485,11 +486,6 @@ export interface SessionContext extends DirectiveContext {
     scope: Scope,
     coroutine: Coroutine,
   ): TResult;
-  resolveTemplate(
-    strings: readonly string[],
-    args: readonly unknown[],
-    mode: TemplateMode,
-  ): Template<readonly unknown[]>;
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateHandle;
 }
 
@@ -543,19 +539,6 @@ export interface Scope {
   boundary: Boundary | null;
 }
 
-export interface Slot<T> extends ReversibleEffect, SessionLifecycle {
-  readonly type: DirectiveType<UnwrapBindable<T>>;
-  readonly value: UnwrapBindable<T>;
-  readonly part: Part;
-  readonly status: SlotStatus;
-  reconcile(source: T, session: UpdateSession): boolean;
-}
-
-export type SlotStatus =
-  | typeof SLOT_STATUS_IDLE
-  | typeof SLOT_STATUS_ATTACHED
-  | typeof SLOT_STATUS_DETACHED;
-
 export interface StateOptions {
   passthrough?: boolean;
 }
@@ -569,28 +552,7 @@ export type StateReturn<TState> = [
   isStale: boolean,
 ];
 
-export interface Template<TValues extends readonly unknown[]>
-  extends DirectiveType<TValues> {
-  readonly arity: TValues['length'];
-  render(
-    values: TValues,
-    part: Part.ChildNodePart,
-    session: UpdateSession,
-  ): TemplateResult;
-  hydrate(
-    values: TValues,
-    part: Part.ChildNodePart,
-    hydrationTarget: TreeWalker,
-    session: UpdateSession,
-  ): TemplateResult;
-}
-
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
-
-export interface TemplateResult {
-  childNodes: readonly ChildNode[];
-  slots: readonly Slot<unknown>[];
-}
 
 export type UnwrapBindable<T> = T extends Bindable<infer Value> ? Value : T;
 
@@ -629,3 +591,14 @@ export interface UpdateSession {
 }
 
 export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;
+
+export function areDirectiveTypesEqual(
+  nextType: DirectiveType<unknown>,
+  prevType: DirectiveType<unknown>,
+): boolean {
+  return nextType.equals?.(prevType) ?? nextType === prevType;
+}
+
+export function isBindable(value: unknown): value is Bindable<any> {
+  return typeof (value as Bindable)?.[$directive] === 'function';
+}

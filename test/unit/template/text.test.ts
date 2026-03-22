@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { PART_TYPE_TEXT, SLOT_STATUS_ATTACHED } from '@/core.js';
+import { PART_TYPE_TEXT } from '@/core.js';
 import { createTreeWalker, HydrationError } from '@/hydration.js';
 import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
+import { SLOT_STATUS_ATTACHED } from '@/slot.js';
 import { TextTemplate } from '@/template/text.js';
 import { createElement } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';

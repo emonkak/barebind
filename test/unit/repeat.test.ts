@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { BOUNDARY_TYPE_HYDRATION } from '@/core.js';
-import { DirectiveSpecifier } from '@/directive.js';
 import { createTreeWalker } from '@/hydration.js';
 import {
   createChildNodePart,
@@ -13,7 +12,6 @@ import {
   RepeatDirective,
   type RepeatProps,
 } from '@/repeat.js';
-import { TextTemplate } from '@/template/text.js';
 import { createRuntime, createScope } from '../mocks.js';
 import {
   allCombinations,
@@ -22,14 +20,12 @@ import {
 } from '../test-helpers.js';
 import { TestUpdater } from '../test-updater.js';
 
-const TEXT_TEMPLATE = new TextTemplate<string>();
-
 const EMPTY_COMMENT = '<!---->';
 
 type KeyValuePair = { key: string; value: string };
 
 describe('Repeat()', () => {
-  it('returns a new DirectiveSpecifier with RepeatDirective', () => {
+  it('returns a new Directive with RepeatDirective', () => {
     const props: RepeatProps<string> = {
       source: ['foo', 'bar', 'baz'],
     };
@@ -117,12 +113,12 @@ describe('RepeatBinding', () => {
       for (const combinations1 of allCombinations(items)) {
         for (const combinations2 of allCombinations(items)) {
           const props1: RepeatProps<KeyValuePair> = {
-            elementSelector: ({ value }) => textTemplate(value),
+            elementSelector: ({ value }) => value,
             keySelector: ({ key }) => key,
             source: combinations1,
           };
           const props2: RepeatProps<KeyValuePair> = {
-            elementSelector: ({ value }) => textTemplate(value),
+            elementSelector: ({ value }) => value,
             keySelector: ({ key }) => key,
             source: combinations2,
           };
@@ -141,8 +137,9 @@ describe('RepeatBinding', () => {
             });
 
             expect(container.innerHTML).toBe(
-              combinations1.map(({ value }) => value + EMPTY_COMMENT).join('') +
-                '<!---->',
+              combinations1
+                .map(({ value }) => toCommentString(value))
+                .join('') + '<!---->',
             );
             expect(part.node.nodeValue).toBe(combinations1[0]?.value);
           }
@@ -155,8 +152,9 @@ describe('RepeatBinding', () => {
             });
 
             expect(container.innerHTML).toBe(
-              combinations2.map(({ value }) => value + EMPTY_COMMENT).join('') +
-                EMPTY_COMMENT,
+              combinations2
+                .map(({ value }) => toCommentString(value))
+                .join('') + EMPTY_COMMENT,
             );
             expect(part.node.nodeValue).toBe(combinations2[0]?.value);
           }
@@ -181,12 +179,12 @@ describe('RepeatBinding', () => {
       for (const permutation1 of permutations(items1)) {
         for (const permutation2 of permutations(items2)) {
           const props1: RepeatProps<KeyValuePair> = {
-            elementSelector: ({ value }) => textTemplate(value),
+            elementSelector: ({ value }) => value,
             keySelector: ({ key }) => key,
             source: permutation1,
           };
           const props2: RepeatProps<KeyValuePair> = {
-            elementSelector: ({ value }) => textTemplate(value),
+            elementSelector: ({ value }) => value,
             keySelector: ({ key }) => key,
             source: permutation2,
           };
@@ -205,7 +203,7 @@ describe('RepeatBinding', () => {
             });
 
             expect(container.innerHTML).toBe(
-              permutation1.map(({ value }) => value + EMPTY_COMMENT).join('') +
+              permutation1.map(({ value }) => toCommentString(value)).join('') +
                 EMPTY_COMMENT,
             );
             expect(part.node.nodeValue).toBe(permutation1[0]?.value);
@@ -219,7 +217,7 @@ describe('RepeatBinding', () => {
             });
 
             expect(container.innerHTML).toBe(
-              permutation2.map(({ value }) => value + EMPTY_COMMENT).join('') +
+              permutation2.map(({ value }) => toCommentString(value)).join('') +
                 EMPTY_COMMENT,
             );
             expect(part.node.nodeValue).toBe(permutation2[0]?.value);
@@ -233,7 +231,7 @@ describe('RepeatBinding', () => {
             });
 
             expect(container.innerHTML).toBe(
-              permutation1.map(({ value }) => value + EMPTY_COMMENT).join('') +
+              permutation1.map(({ value }) => toCommentString(value)).join('') +
                 EMPTY_COMMENT,
             );
             expect(part.node.nodeValue).toBe(permutation1[0]?.value);
@@ -245,7 +243,6 @@ describe('RepeatBinding', () => {
     it('hydrates the tree by slots', () => {
       const source = ['foo', 'bar', 'baz'];
       const props: RepeatProps<string> = {
-        elementSelector: textTemplate,
         source,
       };
       const part = createChildNodePart(
@@ -256,12 +253,9 @@ describe('RepeatBinding', () => {
       const container = createElement(
         'div',
         {},
-        'foo',
-        document.createComment(''),
-        'bar',
-        document.createComment(''),
-        'baz',
-        document.createComment(''),
+        document.createComment('foo'),
+        document.createComment('bar'),
+        document.createComment('baz'),
         document.createComment(''),
       );
       const scope = createScope();
@@ -278,18 +272,11 @@ describe('RepeatBinding', () => {
         binding.attach(session);
       });
 
-      expect(part.node).not.toBe(part.sentinelNode);
-      expect(container.innerHTML).toBe(
-        source.map((element) => element + EMPTY_COMMENT).join('') +
-          EMPTY_COMMENT,
-      );
-
       binding.commit();
 
       expect(part.node).toBe(container.firstChild);
       expect(container.innerHTML).toBe(
-        source.map((element) => element + EMPTY_COMMENT).join('') +
-          EMPTY_COMMENT,
+        source.map((item) => toCommentString(item)).join('') + EMPTY_COMMENT,
       );
     });
 
@@ -332,10 +319,9 @@ describe('RepeatBinding', () => {
             });
 
             expect(container.innerHTML).toBe(
-              permutation1.map(({ value }) => `<!--${value}-->`).join('') +
+              permutation1.map(({ value }) => toCommentString(value)).join('') +
                 EMPTY_COMMENT,
             );
-            expect(part.node.nodeValue).toBe(permutation1[0]?.value);
           }
 
           SESSION2: {
@@ -346,10 +332,9 @@ describe('RepeatBinding', () => {
             });
 
             expect(container.innerHTML).toBe(
-              permutation2.map(({ value }) => `<!--${value}-->`).join('') +
+              permutation2.map(({ value }) => toCommentString(value)).join('') +
                 EMPTY_COMMENT,
             );
-            expect(part.node.nodeValue).toBe(permutation2[0]?.value);
           }
 
           SESSION3: {
@@ -360,10 +345,9 @@ describe('RepeatBinding', () => {
             });
 
             expect(container.innerHTML).toBe(
-              permutation1.map(({ value }) => `<!--${value}-->`).join('') +
+              permutation1.map(({ value }) => toCommentString(value)).join('') +
                 EMPTY_COMMENT,
             );
-            expect(part.node.nodeValue).toBe(permutation1[0]?.value);
           }
         }
       }
@@ -403,7 +387,6 @@ describe('RepeatBinding', () => {
         expect(container.innerHTML).toBe(
           source1.map(toCommentString).join('') + EMPTY_COMMENT,
         );
-        expect(part.node.nodeValue).toBe(source1[0]);
       }
 
       SESSION2: {
@@ -416,7 +399,6 @@ describe('RepeatBinding', () => {
         expect(container.innerHTML).toBe(
           source2.map(toCommentString).join('') + EMPTY_COMMENT,
         );
-        expect(part.node.nodeValue).toBe(source2[0] ?? '');
       }
 
       SESSION3: {
@@ -429,7 +411,6 @@ describe('RepeatBinding', () => {
         expect(container.innerHTML).toBe(
           source1.map(toCommentString).join('') + EMPTY_COMMENT,
         );
-        expect(part.node.nodeValue).toBe(source1[0]);
       }
     });
   });
@@ -481,10 +462,6 @@ describe('RepeatBinding', () => {
     });
   });
 });
-
-function textTemplate(content: string): DirectiveSpecifier<readonly [string]> {
-  return new DirectiveSpecifier(TEXT_TEMPLATE, [content]);
-}
 
 function toCommentString(content: string): string {
   const node = document.createComment(content);

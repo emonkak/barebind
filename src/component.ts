@@ -3,6 +3,7 @@ import {
   type Binding,
   type Component,
   type Coroutine,
+  Directive,
   type DirectiveContext,
   type Effect,
   type EffectHandler,
@@ -16,11 +17,10 @@ import {
   type RenderContext,
   SCOPE_DETACHED,
   type Scope,
-  type Slot,
   type UpdateSession,
 } from './core.js';
-import { DirectiveSpecifier } from './directive.js';
 import { NoLanes } from './lane.js';
+import { Slot } from './slot.js';
 
 export interface ComponentOptions<TProps> {
   arePropsEqual?: (nextProps: TProps, prevProps: TProps) => boolean;
@@ -31,10 +31,7 @@ export function createComponent<TProps = {}, TResult = unknown>(
   options: ComponentOptions<TProps> = {},
 ): Component<TProps, TResult> {
   function Component(props: TProps): Bindable<TProps> {
-    return new DirectiveSpecifier(
-      Component as Component<TProps, TResult>,
-      props,
-    );
+    return new Directive(Component as Component<TProps, TResult>, props);
   }
 
   DEBUG: {
@@ -140,7 +137,7 @@ export class ComponentBinding<TProps, TResult>
     if (this._slot !== null) {
       this._slot.reconcile(result, childSession);
     } else {
-      this._slot = context.resolveSlot(result, this._part);
+      this._slot = Slot.place(result, this._part, context);
       this._slot.attach(childSession);
     }
 

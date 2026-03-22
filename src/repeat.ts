@@ -2,17 +2,17 @@
 
 import {
   type Binding,
+  Directive,
   type DirectiveContext,
   type DirectiveType,
   PART_TYPE_CHILD_NODE,
   type Part,
-  type Slot,
   type UpdateSession,
 } from './core.js';
-import { DirectiveSpecifier, ensurePartType } from './directive.js';
 import { getHydrationTarget, replaceSentinelNode } from './hydration.js';
-import { createChildNodePart } from './part.js';
+import { createChildNodePart, ensurePartType } from './part.js';
 import { reconcileProjections } from './reconciliation.js';
+import { Slot } from './slot.js';
 
 const MUTATION_TYPE_INSERT = 0;
 const MUTATION_TYPE_MOVE = 1;
@@ -39,8 +39,8 @@ interface Mutation<T> {
 
 export function Repeat<TSource, TKey, TElement>(
   props: RepeatProps<TSource, TKey, TElement>,
-): DirectiveSpecifier<RepeatProps<TSource, TKey, TElement>> {
-  return new DirectiveSpecifier(RepeatDirective, props);
+): Directive<RepeatProps<TSource, TKey, TElement>> {
+  return new Directive(RepeatDirective, props);
 }
 
 export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
@@ -131,7 +131,7 @@ export class RepeatBinding<TSource, TKey, TElement>
             sentinelNode.ownerDocument.createComment(''),
             namespaceURI,
           );
-          const slot = context.resolveSlot(item, part);
+          const slot = Slot.place(item, part, context);
           slot.attach(session);
           if (target !== null) {
             replaceSentinelNode(target, part.sentinelNode);

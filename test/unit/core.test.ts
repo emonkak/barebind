@@ -1,7 +1,21 @@
 import { describe, expect, it } from 'vitest';
+import {
+  $directive,
+  areDirectiveTypesEqual,
+  Directive,
+  EffectQueue,
+  isBindable,
+} from '@/core.js';
+import { createEffect, MockDirective, MockPrimitive } from '../mocks.js';
 
-import { EffectQueue } from '@/core.js';
-import { createEffect } from '../mocks.js';
+describe('Directive', () => {
+  describe('[$directive]()', () => {
+    it('returns itself', () => {
+      const directive = new Directive(new MockDirective(), 'foo');
+      expect(directive[$directive]()).toBe(directive);
+    });
+  });
+});
 
 describe('EffectQueue', () => {
   describe('size', () => {
@@ -247,5 +261,27 @@ describe('EffectQueue', () => {
       queue.flush();
       expect(order).toStrictEqual([1, 2]);
     });
+  });
+});
+
+describe('areDirectiveTypesEqual()', () => {
+  it('returns the result from Directive.equals() if it is definied', () => {
+    const type1 = new MockDirective('A');
+    const type2 = new MockDirective('B');
+
+    expect(areDirectiveTypesEqual(type1, type1)).toBe(true);
+    expect(areDirectiveTypesEqual(type1, type2)).toBe(false);
+    expect(areDirectiveTypesEqual(type2, type1)).toBe(false);
+    expect(areDirectiveTypesEqual(type2, type2)).toBe(true);
+  });
+});
+
+describe('isBindable()', () => {
+  it('returns true when the value is a bindable', () => {
+    expect(isBindable(new Directive(MockPrimitive, 'foo'))).toBe(true);
+  });
+
+  it('returns false when the value is not a bindable', () => {
+    expect(isBindable('foo')).toBe(false);
   });
 });

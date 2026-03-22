@@ -7,9 +7,7 @@ import {
   PART_TYPE_PROPERTY,
   PART_TYPE_TEXT,
   type Part,
-  type Slot,
   type TemplateMode,
-  type TemplateResult,
   type UpdateSession,
 } from '../core.js';
 import { emphasizeNode } from '../debug/node.js';
@@ -31,7 +29,8 @@ import {
   createTextPart,
   getNamespaceURIByTagName,
 } from '../part.js';
-import { AbstractTemplate } from './template.js';
+import { Slot } from '../slot.js';
+import { AbstractTemplate, type TemplateResult } from './template.js';
 
 export type Hole =
   | Hole.AttributeHole
@@ -222,7 +221,7 @@ export class TaggedTemplate<
           }
         }
 
-        const slot = context.resolveSlot(values[holeIndex]!, currentPart!);
+        const slot = Slot.place(values[holeIndex]!, currentPart!, context);
         slot.attach(session);
 
         if (currentPart.type === PART_TYPE_CHILD_NODE) {
@@ -319,7 +318,7 @@ export class TaggedTemplate<
             break;
         }
 
-        const slot = context.resolveSlot(values[i]!, currentPart);
+        const slot = Slot.place(values[i]!, currentPart, context);
         slot.attach(session);
 
         slots[i] = slot;

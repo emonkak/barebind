@@ -224,13 +224,12 @@ describe('Signal', () => {
   });
 
   describe('[$directive]()', () => {
-    it('returns a DirectiveElement with the signal', () => {
+    it('returns a Directive with the signal', () => {
       const signal = new Atom('foo');
       const directive = signal[$directive]();
 
       expect(directive.type).toBe(SignalDirective);
       expect(directive.value).toBe(signal);
-      expect(directive.layout).toBe(undefined);
     });
   });
 

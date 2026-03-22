@@ -3,14 +3,11 @@ import { BrowserBackend } from '@/backend/browser.js';
 import {
   type Effect,
   EffectQueue,
-  type Layout,
   PART_TYPE_TEXT,
   type Part,
   type Primitive,
 } from '@/core.js';
 import { ConcurrentLane } from '@/lane.js';
-import { LooseLayout } from '@/layout/loose.js';
-import { StrictLayout } from '@/layout/strict.js';
 import {
   createAttributePart,
   createChildNodePart,
@@ -137,39 +134,6 @@ describe('BrowserBackend', () => {
 
       expect(backend.getUpdatePriority()).toBe('user-visible');
       expect(getEventSpy).toHaveBeenCalledOnce();
-    });
-  });
-
-  describe('parseTemplate()', () => {
-    it('creates a TaggedTemplate', () => {
-      const [strings, ...values] =
-        templateLiteral`<div>${'Hello'}, ${'World'}!</div>`;
-      const backend = new BrowserBackend();
-      const template = backend.parseTemplate(
-        strings,
-        values,
-        TEMPLATE_PLACEHOLDER,
-        'html',
-      );
-
-      expect(template).toBeInstanceOf(TaggedTemplate);
-      expect((template as TaggedTemplate)['_template'].innerHTML).toBe(
-        '<div></div>',
-      );
-      expect((template as TaggedTemplate)['_holes']).toStrictEqual([
-        {
-          type: PART_TYPE_TEXT,
-          index: 1,
-          precedingText: '',
-          followingText: '',
-        },
-        {
-          type: PART_TYPE_TEXT,
-          index: 2,
-          precedingText: ', ',
-          followingText: '!',
-        },
-      ]);
     });
   });
 
@@ -366,43 +330,36 @@ describe('BrowserBackend', () => {
     });
   });
 
-  describe('resolveLayout()', () => {
-    it.each<[unknown, Part, Layout]>([
-      [
-        'foo',
-        createAttributePart(document.createElement('div'), 'class'),
-        StrictLayout,
-      ],
-      [
-        'foo',
-        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
-        LooseLayout,
-      ],
-      ['foo', createElementPart(document.createElement('div')), StrictLayout],
-      [
-        'foo',
-        createEventPart(document.createElement('div'), 'click'),
-        StrictLayout,
-      ],
-      [
-        'foo',
-        createLivePart(document.createElement('textarea'), 'value'),
-        StrictLayout,
-      ],
-      [
-        'foo',
-        createPropertyPart(document.createElement('textarea'), 'value'),
-        StrictLayout,
-      ],
-      [
-        'foo',
-        createTextPart(document.createTextNode(''), '', ''),
-        StrictLayout,
-      ],
-    ])('resolves the Layout from an arbitrary part', (value, part, expectedLayout) => {
+  describe('resolveTemplate()', () => {
+    it('creates a TaggedTemplate', () => {
+      const [strings, ...values] =
+        templateLiteral`<div>${'Hello'}, ${'World'}!</div>`;
       const backend = new BrowserBackend();
+      const template = backend.resolveTemplate(
+        strings,
+        values,
+        TEMPLATE_PLACEHOLDER,
+        'html',
+      );
 
-      expect(backend.resolveLayout(value, part)).toBe(expectedLayout);
+      expect(template).toBeInstanceOf(TaggedTemplate);
+      expect((template as TaggedTemplate)['_template'].innerHTML).toBe(
+        '<div></div>',
+      );
+      expect((template as TaggedTemplate)['_holes']).toStrictEqual([
+        {
+          type: PART_TYPE_TEXT,
+          index: 1,
+          precedingText: '',
+          followingText: '',
+        },
+        {
+          type: PART_TYPE_TEXT,
+          index: 2,
+          precedingText: ', ',
+          followingText: '!',
+        },
+      ]);
     });
   });
 

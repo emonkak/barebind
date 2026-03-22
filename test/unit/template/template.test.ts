@@ -1,9 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-  BOUNDARY_TYPE_HYDRATION,
-  SLOT_STATUS_DETACHED,
-  SLOT_STATUS_IDLE,
-} from '@/core.js';
+import { BOUNDARY_TYPE_HYDRATION } from '@/core.js';
 import { createTreeWalker } from '@/hydration.js';
 import {
   createAttributePart,
@@ -12,13 +8,13 @@ import {
   createTextPart,
   HTML_NAMESPACE_URI,
 } from '@/part.js';
+import { SLOT_STATUS_DETACHED, SLOT_STATUS_IDLE, Slot } from '@/slot.js';
 import { TemplateBinding } from '@/template/template.js';
 import {
   createRuntime,
   createScope,
   MockBinding,
   MockPrimitive,
-  MockSlot,
   MockTemplate,
 } from '../../mocks.js';
 import { createElement } from '../../test-helpers.js';
@@ -124,14 +120,14 @@ describe('TemplateBinding', () => {
         .spyOn(template, 'render')
         .mockImplementation((values, _part, session) => {
           const slots = [
-            new MockSlot(
+            new Slot(
               new MockBinding(
                 MockPrimitive,
                 values[0],
                 createAttributePart(fragment.firstChild as Element, 'class'),
               ),
             ),
-            new MockSlot(
+            new Slot(
               new MockBinding(
                 MockPrimitive,
                 values[1],
@@ -142,7 +138,7 @@ describe('TemplateBinding', () => {
                 ),
               ),
             ),
-            new MockSlot(
+            new Slot(
               new MockBinding(
                 MockPrimitive,
                 values[2],
@@ -275,21 +271,21 @@ describe('TemplateBinding', () => {
         .spyOn(template, 'render')
         .mockImplementation((values, _part, session) => {
           const slots = [
-            new MockSlot(
+            new Slot(
               new MockBinding(
                 MockPrimitive,
                 values[0],
                 createChildNodePart(fragment[0], HTML_NAMESPACE_URI),
               ),
             ),
-            new MockSlot(
+            new Slot(
               new MockBinding(
                 MockPrimitive,
                 values[1],
                 createTextPart(fragment[1], '', ''),
               ),
             ),
-            new MockSlot(
+            new Slot(
               new MockBinding(
                 MockPrimitive,
                 values[2],

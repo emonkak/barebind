@@ -2,19 +2,15 @@
 
 import { vi } from 'vitest';
 import {
-  $directive,
   type Backend,
-  type Bindable,
   type Binding,
   type CommitPhase,
   type Coroutine,
-  type Directive,
   type DirectiveContext,
   type DirectiveType,
   type Effect,
   EffectQueue,
   type Lanes,
-  type Layout,
   PART_TYPE_ATTRIBUTE,
   PART_TYPE_CHILD_NODE,
   PART_TYPE_ELEMENT,
@@ -29,21 +25,12 @@ import {
   type Scope,
   type SessionEvent,
   type SessionObserver,
-  SLOT_STATUS_ATTACHED,
-  SLOT_STATUS_DETACHED,
-  SLOT_STATUS_IDLE,
-  type Slot,
-  type SlotStatus,
-  type Template,
   type TemplateMode,
-  type TemplateResult,
-  type UnwrapBindable,
   type UpdateSession,
 } from '@/core.js';
-import { areDirectiveTypesEqual } from '@/directive.js';
 import { SyncLane } from '@/lane.js';
 import { Runtime, type RuntimeOptions } from '@/runtime.js';
-import { AbstractTemplate } from '@/template/template.js';
+import { AbstractTemplate, type TemplateResult } from '@/template/template.js';
 
 export class MockBackend implements Backend {
   readonly defaultLanes: Lanes;
@@ -62,15 +49,6 @@ export class MockBackend implements Backend {
 
   getUpdatePriority(): TaskPriority {
     return 'user-blocking';
-  }
-
-  parseTemplate(
-    strings: readonly string[],
-    values: readonly unknown[],
-    markerIdentifier: string,
-    mode: TemplateMode,
-  ): Template<readonly unknown[]> {
-    return new MockTemplate(strings, values, markerIdentifier, mode);
   }
 
   requestCallback<T>(
@@ -104,12 +82,17 @@ export class MockBackend implements Backend {
       : promise;
   }
 
-  resolveLayout(_value: unknown, _part: Part): Layout {
-    return new MockLayout();
-  }
-
   resolvePrimitive(_value: unknown, _part: Part): Primitive<unknown> {
     return MockPrimitive;
+  }
+
+  resolveTemplate(
+    strings: readonly string[],
+    values: readonly unknown[],
+    markerIdentifier: string,
+    mode: TemplateMode,
+  ): DirectiveType<readonly unknown[]> {
+    return new MockTemplate(strings, values, markerIdentifier, mode);
   }
 
   startViewTransition(callback: () => void | Promise<void>): Promise<void> {
@@ -118,18 +101,6 @@ export class MockBackend implements Backend {
 
   yieldToMain(): Promise<void> {
     return Promise.resolve();
-  }
-}
-
-export class MockBindable<T> implements Bindable<T> {
-  directive: Directive<T>;
-
-  constructor(directive: Directive<T>) {
-    this.directive = directive;
-  }
-
-  [$directive](): Directive<T> {
-    return this.directive;
   }
 }
 
@@ -173,13 +144,7 @@ export class MockBinding<T> implements Binding<T> {
         );
         break;
       case PART_TYPE_CHILD_NODE:
-        // For part debugging, update comments only if the data is empty.
-        if (
-          this.part.sentinelNode.data === '' ||
-          this.part.sentinelNode.data === stringify(this.memoizedValue)
-        ) {
-          this.part.sentinelNode.data = stringify(this.value);
-        }
+        this.part.sentinelNode.data = stringify(this.value);
         break;
       case PART_TYPE_ELEMENT:
         for (const name in this.value) {
@@ -274,18 +239,14 @@ export class MockCoroutine implements Coroutine {
 }
 
 export class MockDirective<T> implements DirectiveType<T> {
-  readonly id: string;
+  readonly name: string;
 
-  constructor(id: string = '') {
-    this.id = id;
-  }
-
-  get name(): string {
-    return MockDirective.name;
+  constructor(name: string = 'MockDirective') {
+    this.name = name;
   }
 
   equals(other: unknown) {
-    return other instanceof MockDirective && other.id === this.id;
+    return other instanceof MockDirective && other.name === this.name;
   }
 
   resolveBinding(value: T, part: Part, _context: DirectiveContext): Binding<T> {
@@ -305,26 +266,6 @@ export const MockPrimitive: Primitive<any> = {
   },
 };
 
-export class MockLayout implements Layout {
-  layout: Layout | null = null;
-
-  constructor(layout: Layout | null = null) {
-    this.layout = layout;
-  }
-
-  get name(): string {
-    return 'MockLayout';
-  }
-
-  compose(): Layout {
-    return new MockLayout(this);
-  }
-
-  placeBinding<T>(binding: Binding<UnwrapBindable<T>>) {
-    return new MockSlot(binding);
-  }
-}
-
 export class MockObserver implements SessionObserver {
   events: SessionEvent[] = [];
 
@@ -336,69 +277,6 @@ export class MockObserver implements SessionObserver {
     const events = this.events;
     this.events = [];
     return events;
-  }
-}
-
-export class MockSlot<T> implements Slot<T> {
-  readonly binding: Binding<UnwrapBindable<T>>;
-
-  status: SlotStatus = SLOT_STATUS_IDLE;
-
-  constructor(binding: Binding<UnwrapBindable<T>>) {
-    this.binding = binding;
-  }
-
-  get type(): DirectiveType<UnwrapBindable<T>> {
-    return this.binding.type;
-  }
-
-  get value(): UnwrapBindable<T> {
-    return this.binding.value;
-  }
-
-  get part(): Part {
-    return this.binding.part;
-  }
-
-  attach(session: UpdateSession): void {
-    this.binding.attach(session);
-    this.status = SLOT_STATUS_ATTACHED;
-  }
-
-  detach(session: UpdateSession): void {
-    this.binding.detach(session);
-    this.status = SLOT_STATUS_DETACHED;
-  }
-
-  reconcile(source: T, session: UpdateSession): boolean {
-    const { context } = session;
-    const { type, value } = context.resolveDirective(source, this.binding.part);
-
-    if (!areDirectiveTypesEqual(this.binding.type, type)) {
-      throw new Error(
-        `The directive must be ${this.binding.type.name} in the slot, but got ${type.name}.`,
-      );
-    }
-
-    const dirty = this.binding.shouldUpdate(value);
-
-    if (dirty) {
-      this.binding.value = value;
-      this.binding.attach(session);
-      this.status = SLOT_STATUS_ATTACHED;
-    }
-
-    return dirty;
-  }
-
-  commit(): void {
-    this.binding.commit();
-    this.status = SLOT_STATUS_IDLE;
-  }
-
-  rollback(): void {
-    this.binding.rollback();
-    this.status = SLOT_STATUS_IDLE;
   }
 }
 

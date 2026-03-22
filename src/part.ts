@@ -1,13 +1,16 @@
 import {
+  type DirectiveType,
   PART_TYPE_ATTRIBUTE,
   PART_TYPE_CHILD_NODE,
   PART_TYPE_ELEMENT,
   PART_TYPE_EVENT,
   PART_TYPE_LIVE,
+  PART_TYPE_NAMES,
   PART_TYPE_PROPERTY,
   PART_TYPE_TEXT,
   type Part,
 } from './core.js';
+import { DirectiveError } from './error.js';
 
 export const HTML_NAMESPACE_URI = 'http://www.w3.org/1999/xhtml';
 export const MATH_NAMESPACE_URI = 'http://www.w3.org/1998/Math/MathML';
@@ -88,6 +91,22 @@ export function createTextPart(
     precedingText,
     followingText,
   };
+}
+
+export function ensurePartType<TExpectedPart extends Part>(
+  expectedPartType: TExpectedPart['type'],
+  type: DirectiveType<unknown>,
+  value: unknown,
+  part: Part,
+): asserts part is TExpectedPart {
+  if (part.type !== expectedPartType) {
+    throw new DirectiveError(
+      type,
+      value,
+      part,
+      `${type.name} must be used in ${PART_TYPE_NAMES[expectedPartType]}Part.`,
+    );
+  }
 }
 
 export function getNamespaceURIByTagName(tagName: string): string | null {

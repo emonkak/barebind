@@ -4,21 +4,15 @@ import {
   type Bindable,
   type Binding,
   type Component,
-  type Directive,
+  Directive,
   type DirectiveContext,
   type DirectiveType,
+  isBindable,
   PART_TYPE_ELEMENT,
   type Part,
-  type Template,
   type UpdateSession,
 } from '../core.js';
-import {
-  DirectiveSpecifier,
-  ensurePartType,
-  isBindable,
-} from '../directive.js';
-import { KeyedLayout } from '../layout/keyed.js';
-import { LooseLayout } from '../layout/loose.js';
+import { ensurePartType } from '../part.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
 import { type StyleProps, updateStyles } from '../primitive/style.js';
 import { RepeatDirective, type RepeatProps } from '../repeat.js';
@@ -26,6 +20,7 @@ import { ChildNodeTemplate } from '../template/child-node.js';
 import { ElementTemplate } from '../template/element.js';
 import { EmptyTemplate } from '../template/empty.js';
 import { FragmentTemplate } from '../template/fragment.js';
+import type { Template } from '../template/template.js';
 import { TextTemplate } from '../template/text.js';
 
 const $cleanup = Symbol('$cleanup');
@@ -133,10 +128,7 @@ export class VElement<TProps extends {} = {}> implements Bindable<unknown> {
 
   [$directive](): Directive<unknown> {
     return typeof this.type === 'function'
-      ? {
-          type: this.type,
-          value: this.props,
-        }
+      ? new Directive(this.type, this.props, this.key)
       : resolveVElement(
           this.type,
           this.props,
@@ -157,14 +149,11 @@ export class VFragment implements Bindable<RepeatProps<VNode>> {
   }
 
   [$directive](): Directive<RepeatProps<VNode>> {
-    return {
-      type: RepeatDirective,
-      value: {
-        elementSelector: resolveVChild,
-        keySelector: resolveKey,
-        source: this.children,
-      },
-    };
+    return new Directive(RepeatDirective, {
+      elementSelector: resolveVChild,
+      keySelector: resolveKey,
+      source: this.children,
+    });
   }
 }
 
@@ -211,10 +200,7 @@ export class VStaticFragment implements Bindable<unknown> {
       }
     }
 
-    return {
-      type: new FragmentTemplate(templates),
-      value: values,
-    };
+    return new Directive(new FragmentTemplate(templates), values);
   }
 }
 
@@ -575,9 +561,9 @@ function resolveVChild(child: VNode): Bindable<unknown> {
   } else if (Array.isArray(child)) {
     return new VFragment(child);
   } else if (child == null || typeof child === 'boolean') {
-    return new DirectiveSpecifier(BlackholePrimitive, child);
+    return new Directive(BlackholePrimitive, child);
   } else {
-    return new DirectiveSpecifier(TextTemplate.Default, [child]);
+    return new Directive(TextTemplate.Default, [child]);
   }
 }
 
@@ -587,7 +573,7 @@ function resolveVElement(
   key: unknown,
   hasStaticChildren: boolean,
 ): TemplateDirective<readonly [unknown, unknown]> {
-  const element = new DirectiveSpecifier(ElementDirective, props);
+  const element = new Directive(ElementDirective, props);
   const children = Array.isArray(props.children)
     ? hasStaticChildren
       ? new VStaticFragment(props.children)
@@ -596,16 +582,15 @@ function resolveVElement(
   const template = new ElementTemplate(type);
   const values = [element, children] as const;
   if (key != null) {
-    return {
-      type: template,
-      value: values,
-      layout: new KeyedLayout(key, LooseLayout),
-    };
+    return new Directive(template, values, key) as TemplateDirective<
+      readonly [unknown, unknown]
+    >;
   } else {
-    return {
-      type: new ElementTemplate(type),
-      value: values,
-    };
+    return new Directive(
+      new ElementTemplate(type),
+      values,
+      key,
+    ) as TemplateDirective<readonly [unknown, unknown]>;
   }
 }
 

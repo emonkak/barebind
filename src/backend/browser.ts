@@ -3,9 +3,9 @@
 import {
   type Backend,
   type CommitPhase,
+  type DirectiveType,
   type EffectQueue,
   type Lanes,
-  type Layout,
   PART_TYPE_ATTRIBUTE,
   PART_TYPE_CHILD_NODE,
   PART_TYPE_ELEMENT,
@@ -16,12 +16,9 @@ import {
   type Part,
   type Primitive,
   type RequestCallbackOptions,
-  type Template,
   type TemplateMode,
 } from '../core.js';
 import { ConcurrentLane } from '../lane.js';
-import { LooseLayout } from '../layout/loose.js';
-import { StrictLayout } from '../layout/strict.js';
 import { AttributePrimitive } from '../primitive/attribute.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
 import { ClassPrimitive } from '../primitive/class.js';
@@ -49,21 +46,6 @@ export class BrowserBackend implements Backend {
     return event !== undefined && !isContinuousEvent(event)
       ? 'user-blocking'
       : 'user-visible';
-  }
-
-  parseTemplate(
-    strings: readonly string[],
-    values: readonly unknown[],
-    markerIdentifier: string,
-    mode: TemplateMode,
-  ): Template<readonly unknown[]> {
-    return TaggedTemplate.parse(
-      strings,
-      values,
-      markerIdentifier,
-      mode,
-      document,
-    );
   }
 
   requestCallback<T>(
@@ -96,10 +78,6 @@ export class BrowserBackend implements Backend {
     }
   }
 
-  resolveLayout(_source: unknown, part: Part): Layout {
-    return part.type === PART_TYPE_CHILD_NODE ? LooseLayout : StrictLayout;
-  }
-
   resolvePrimitive(source: unknown, part: Part): Primitive<unknown> {
     switch (part.type) {
       case PART_TYPE_ATTRIBUTE:
@@ -129,6 +107,21 @@ export class BrowserBackend implements Backend {
       case PART_TYPE_TEXT:
         return TextPrimitive;
     }
+  }
+
+  resolveTemplate(
+    strings: readonly string[],
+    values: readonly unknown[],
+    markerIdentifier: string,
+    mode: TemplateMode,
+  ): DirectiveType<readonly unknown[]> {
+    return TaggedTemplate.parse(
+      strings,
+      values,
+      markerIdentifier,
+      mode,
+      document,
+    );
   }
 
   startViewTransition(callback: () => Promise<void> | void): Promise<void> {

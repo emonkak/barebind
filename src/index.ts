@@ -16,14 +16,13 @@ export {
   type SessionEvent,
   type SessionObserver,
 } from './core.js';
-export { DirectiveError } from './directive.js';
-export { AbortError, CoroutineError, InterruptError } from './error.js';
+export {
+  AbortError,
+  CoroutineError,
+  DirectiveError,
+  InterruptError,
+} from './error.js';
 export { HydrationError } from './hydration.js';
-export { Cached } from './layout/cached.js';
-export { Flexible } from './layout/flexible.js';
-export { Keyed } from './layout/keyed.js';
-export { Loose } from './layout/loose.js';
-export { Strict } from './layout/strict.js';
 export type { ClassSpecifier } from './primitive/class.js';
 export type { EventHandler } from './primitive/event.js';
 export type { StyleProps } from './primitive/style.js';

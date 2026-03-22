@@ -1,7 +1,14 @@
 import { sequentialEqual } from '../compare.js';
-import type { Part, Template, TemplateResult, UpdateSession } from '../core.js';
-import { areDirectiveTypesEqual } from '../directive.js';
-import { AbstractTemplate } from './template.js';
+import {
+  areDirectiveTypesEqual,
+  type Part,
+  type UpdateSession,
+} from '../core.js';
+import {
+  AbstractTemplate,
+  type Template,
+  type TemplateResult,
+} from './template.js';
 
 export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
   private readonly _templates: readonly Template<readonly unknown[]>[];

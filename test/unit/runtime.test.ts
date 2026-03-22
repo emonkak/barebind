@@ -1,9 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createComponent } from '@/component.js';
 import {
-  $directive,
-  type Bindable,
   BOUNDARY_TYPE_ERROR,
+  Directive,
   EffectQueue,
   type Hook,
   type SessionEvent,
@@ -21,13 +20,10 @@ import {
   createRenderFrame,
   createRuntime,
   createScope,
-  MockBindable,
   MockCoroutine,
   MockDirective,
-  MockLayout,
   MockObserver,
   MockPrimitive,
-  MockSlot,
   MockTemplate,
 } from '../mocks.js';
 import { waitForTimeout } from '../test-helpers.js';
@@ -699,6 +695,27 @@ describe('Runtime', () => {
     });
   });
 
+  describe('getTemplate()', () => {
+    it('returns a cached template if it exists', () => {
+      const strings = ['<div>', '</div>'];
+      const values = ['foo'];
+      const mode = 'html';
+      const runtime = createRuntime();
+
+      const template = runtime.getTemplate(strings, values, mode);
+
+      expect(template).toBeInstanceOf(MockTemplate);
+      expect(template).toStrictEqual(
+        expect.objectContaining({
+          strings,
+          values,
+          mode,
+        }),
+      );
+      expect(runtime.getTemplate(strings, values, mode)).toBe(template);
+    });
+  });
+
   describe('nextIdentifier()', () => {
     it('generates unique identifiers', () => {
       const runtime = createRuntime();
@@ -760,7 +777,7 @@ describe('Runtime', () => {
       'foo',
       null,
       undefined,
-    ])('resolves primitive values as primitive directives', (source) => {
+    ])('resolves primitive values as primitive types', (source) => {
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -778,15 +795,11 @@ describe('Runtime', () => {
       expect(resolvePrimitiveSpy).toHaveBeenCalledWith(source, part);
       expect(directive.type).toBe(MockPrimitive);
       expect(directive.value).toBe(source);
-      expect(directive.layout).toStrictEqual(new MockLayout());
+      expect(directive.key).toBe(undefined);
     });
 
-    it('resolves the bindable value as a specific directive', () => {
-      const source = new MockBindable({
-        type: new MockDirective(),
-        value: 'foo',
-        layout: new MockLayout(),
-      });
+    it('resolves bindable values as directives', () => {
+      const source = new Directive(new MockDirective(), 'foo', 'key');
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -795,86 +808,7 @@ describe('Runtime', () => {
 
       const directive = runtime.resolveDirective(source, part);
 
-      expect(directive.type).toBe(source.directive.type);
-      expect(directive.value).toBe(source.directive.value);
-      expect(directive.layout).toBe(source.directive.layout);
-      expect(directive.defaultLayout).toStrictEqual(new MockLayout());
-    });
-  });
-
-  describe('resolveSlot()', () => {
-    it('resolves the slot from the primitive source', () => {
-      const source = 'foo';
-      const part = createChildNodePart(
-        document.createComment(''),
-        HTML_NAMESPACE_URI,
-      );
-      const runtime = createRuntime();
-
-      const resolvePrimitiveSpy = vi.spyOn(
-        runtime['_backend'],
-        'resolvePrimitive',
-      );
-
-      const slot = runtime.resolveSlot(source, part);
-
-      expect(resolvePrimitiveSpy).toHaveBeenCalledOnce();
-      expect(resolvePrimitiveSpy).toHaveBeenCalledWith(source, part);
-      expect(slot).toBeInstanceOf(MockSlot);
-      expect(slot.type).toBe(MockPrimitive);
-      expect(slot.value).toBe(source);
-      expect(slot.part).toBe(part);
-    });
-
-    it('resolves the slot from the bindable source', () => {
-      const type = MockPrimitive;
-      const value = 'foo';
-      const source: Bindable<string> = {
-        [$directive]() {
-          return {
-            type,
-            value,
-          };
-        },
-      };
-      const part = createChildNodePart(
-        document.createComment(''),
-        HTML_NAMESPACE_URI,
-      );
-      const runtime = createRuntime();
-
-      const resolveLayoutSpy = vi.spyOn(runtime['_backend'], 'resolveLayout');
-
-      const slot = runtime.resolveSlot(source, part);
-
-      expect(resolveLayoutSpy).toHaveBeenCalledOnce();
-      expect(resolveLayoutSpy).toHaveBeenCalledWith(source, part);
-      expect(slot).toBeInstanceOf(MockSlot);
-      expect(slot.type).toBe(type);
-      expect(slot.value).toBe(value);
-      expect(slot.part).toBe(part);
-    });
-  });
-
-  describe('resolveTemplate()', () => {
-    it('returns the cached template if it exists', () => {
-      const strings = ['<div>', '</div>'];
-      const values = ['foo'];
-      const mode = 'html';
-      const runtime = createRuntime();
-
-      const template = runtime.resolveTemplate(strings, values, mode);
-
-      expect(template).toBeInstanceOf(MockTemplate);
-      expect(template).toStrictEqual(
-        expect.objectContaining({
-          strings,
-          values,
-          mode,
-        }),
-      );
-
-      expect(runtime.resolveTemplate(strings, values, mode)).toBe(template);
+      expect(directive).toBe(source);
     });
   });
 

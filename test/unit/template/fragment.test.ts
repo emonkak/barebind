@@ -1,13 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createTreeWalker } from '@/hydration.js';
 import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
+import { Slot } from '@/slot.js';
 import { FragmentTemplate } from '@/template/fragment.js';
-import {
-  MockBinding,
-  MockDirective,
-  MockSlot,
-  MockTemplate,
-} from '../../mocks.js';
+import { MockBinding, MockDirective, MockTemplate } from '../../mocks.js';
 import { serializeNode } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
 
@@ -72,7 +68,7 @@ describe('FragmentTemplate', () => {
           return {
             childNodes: [part.node],
             slots: [
-              new MockSlot(
+              new Slot(
                 new MockBinding(
                   new MockDirective(),
                   template.values.join(','),
@@ -152,7 +148,7 @@ describe('FragmentTemplate', () => {
           return {
             childNodes: [part.node],
             slots: [
-              new MockSlot(
+              new Slot(
                 new MockBinding(
                   new MockDirective(),
                   template.values.join(','),

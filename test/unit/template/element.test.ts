@@ -1,15 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import {
-  PART_TYPE_CHILD_NODE,
-  PART_TYPE_ELEMENT,
-  SLOT_STATUS_ATTACHED,
-} from '@/core.js';
+import { PART_TYPE_CHILD_NODE, PART_TYPE_ELEMENT } from '@/core.js';
 import { createTreeWalker } from '@/hydration.js';
 import {
   createChildNodePart,
   HTML_NAMESPACE_URI,
   SVG_NAMESPACE_URI,
 } from '@/part.js';
+import { SLOT_STATUS_ATTACHED } from '@/slot.js';
 import { ElementTemplate } from '@/template/element.js';
 import { createElement, serializeNode } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';

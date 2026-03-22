@@ -1,17 +1,37 @@
 import {
   type Binding,
   type DirectiveContext,
+  type DirectiveType,
   type Effect,
   PART_TYPE_CHILD_NODE,
   PART_TYPE_TEXT,
   type Part,
-  type Slot,
-  type Template,
-  type TemplateResult,
   type UpdateSession,
 } from '../core.js';
-import { ensurePartType } from '../directive.js';
 import { getHydrationTarget } from '../hydration.js';
+import { ensurePartType } from '../part.js';
+import type { Slot } from '../slot.js';
+
+export interface Template<TValues extends readonly unknown[]>
+  extends DirectiveType<TValues> {
+  readonly arity: TValues['length'];
+  render(
+    values: TValues,
+    part: Part.ChildNodePart,
+    session: UpdateSession,
+  ): TemplateResult;
+  hydrate(
+    values: TValues,
+    part: Part.ChildNodePart,
+    hydrationTarget: TreeWalker,
+    session: UpdateSession,
+  ): TemplateResult;
+}
+
+export interface TemplateResult {
+  childNodes: readonly ChildNode[];
+  slots: readonly Slot<unknown>[];
+}
 
 export abstract class AbstractTemplate<TValues extends readonly unknown[]>
   implements Template<TValues>

@@ -3,9 +3,9 @@
 import {
   type Backend,
   type CommitPhase,
+  type DirectiveType,
   type EffectQueue,
   type Lanes,
-  type Layout,
   PART_TYPE_ATTRIBUTE,
   PART_TYPE_CHILD_NODE,
   PART_TYPE_ELEMENT,
@@ -16,12 +16,9 @@ import {
   type Part,
   type Primitive,
   type RequestCallbackOptions,
-  type Template,
   type TemplateMode,
 } from '../core.js';
 import { SyncLane } from '../lane.js';
-import { LooseLayout } from '../layout/loose.js';
-import { StrictLayout } from '../layout/strict.js';
 import { AttributePrimitive } from '../primitive/attribute.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
 import { ClassPrimitive } from '../primitive/class.js';
@@ -54,21 +51,6 @@ export class ServerBackend implements Backend {
     return 'user-visible';
   }
 
-  parseTemplate(
-    strings: readonly string[],
-    values: readonly unknown[],
-    markerIdentifier: string,
-    mode: TemplateMode,
-  ): Template<readonly unknown[]> {
-    return TaggedTemplate.parse(
-      strings,
-      values,
-      markerIdentifier,
-      mode,
-      this._document,
-    );
-  }
-
   requestCallback<T>(
     callback: () => T | PromiseLike<T>,
     _options?: RequestCallbackOptions,
@@ -76,10 +58,6 @@ export class ServerBackend implements Backend {
     return new Promise((resolve) => {
       setTimeout(resolve);
     }).then(callback);
-  }
-
-  resolveLayout(_source: unknown, part: Part): Layout {
-    return part.type === PART_TYPE_CHILD_NODE ? LooseLayout : StrictLayout;
   }
 
   resolvePrimitive(source: unknown, part: Part): Primitive<unknown> {
@@ -109,6 +87,21 @@ export class ServerBackend implements Backend {
       case PART_TYPE_TEXT:
         return TextPrimitive;
     }
+  }
+
+  resolveTemplate(
+    strings: readonly string[],
+    values: readonly unknown[],
+    markerIdentifier: string,
+    mode: TemplateMode,
+  ): DirectiveType<readonly unknown[]> {
+    return TaggedTemplate.parse(
+      strings,
+      values,
+      markerIdentifier,
+      mode,
+      this._document,
+    );
   }
 
   startViewTransition(callback: () => Promise<void> | void): Promise<void> {

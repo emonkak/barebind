@@ -1,10 +1,5 @@
-import type {
-  DirectiveType,
-  Part,
-  TemplateResult,
-  UpdateSession,
-} from '../core.js';
-import { AbstractTemplate } from './template.js';
+import type { DirectiveType, Part, UpdateSession } from '../core.js';
+import { AbstractTemplate, type TemplateResult } from './template.js';
 
 export class EmptyTemplate extends AbstractTemplate<readonly []> {
   static readonly Default: EmptyTemplate = new EmptyTemplate();

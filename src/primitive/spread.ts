@@ -7,10 +7,11 @@ import {
   PART_TYPE_PROPERTY,
   type Part,
   type Primitive,
-  type Slot,
   type UpdateSession,
 } from '../core.js';
-import { DirectiveError, ensurePartType } from '../directive.js';
+import { DirectiveError } from '../error.js';
+import { ensurePartType } from '../part.js';
+import { Slot } from '../slot.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export type SpreadProps = { [key: string]: unknown };
@@ -74,7 +75,7 @@ export class SpreadBinding extends PrimitiveBinding<
         slot.reconcile(prop, session);
       } else {
         const part = resolveNamedPart(key, this._part.node);
-        slot = context.resolveSlot(prop, part);
+        slot = Slot.place(prop, part, context);
         slot.attach(session);
       }
       newSlots.set(key, slot);

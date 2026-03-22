@@ -1,5 +1,13 @@
-import { BOUNDARY_TYPE_ERROR, type Coroutine, type Scope } from './core.js';
+import {
+  BOUNDARY_TYPE_ERROR,
+  type Coroutine,
+  type DirectiveType,
+  type Part,
+  type Scope,
+} from './core.js';
 import { formatOwnerStack, getOwnerStack } from './debug/coroutine.js';
+import { formatPart } from './debug/part.js';
+import { formatValue } from './debug/value.js';
 
 export class CoroutineError extends Error {
   constructor(coroutine: Coroutine, message?: string, options?: ErrorOptions) {
@@ -7,6 +15,27 @@ export class CoroutineError extends Error {
       message += '\n' + formatOwnerStack(getOwnerStack(coroutine));
     }
     super(message, options);
+  }
+}
+
+export class DirectiveError<T> extends Error {
+  readonly type: DirectiveType<T>;
+
+  readonly value: T;
+
+  readonly part: Part;
+
+  constructor(type: DirectiveType<T>, value: T, part: Part, message: string) {
+    DEBUG: {
+      const marker = `[[${type.name}(${formatValue(value)}) IS USED IN HERE!]]`;
+      message += '\n' + formatPart(part, marker);
+    }
+
+    super(message);
+
+    this.type = type;
+    this.value = value;
+    this.part = part;
   }
 }
 

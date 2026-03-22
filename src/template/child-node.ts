@@ -1,12 +1,8 @@
-import type {
-  DirectiveType,
-  Part,
-  TemplateResult,
-  UpdateSession,
-} from '../core.js';
+import type { DirectiveType, Part, UpdateSession } from '../core.js';
 import { replaceSentinelNode } from '../hydration.js';
 import { createChildNodePart } from '../part.js';
-import { AbstractTemplate } from './template.js';
+import { Slot } from '../slot.js';
+import { AbstractTemplate, type TemplateResult } from './template.js';
 
 export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
   static readonly Default: ChildNodeTemplate<any> = new ChildNodeTemplate();
@@ -26,12 +22,11 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;
-    const { sentinelNode, namespaceURI } = part;
     const childNodePart = createChildNodePart(
-      sentinelNode.ownerDocument.createComment(''),
-      namespaceURI,
+      part.sentinelNode.ownerDocument.createComment(''),
+      part.namespaceURI,
     );
-    const childNodeSlot = context.resolveSlot(values[0], childNodePart);
+    const childNodeSlot = Slot.place(values[0], childNodePart, context);
 
     childNodeSlot.attach(session);
 
@@ -46,12 +41,11 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;
-    const { sentinelNode, namespaceURI } = part;
     const childNodePart = createChildNodePart(
-      sentinelNode.ownerDocument.createComment(''),
-      namespaceURI,
+      part.sentinelNode.ownerDocument.createComment(''),
+      part.namespaceURI,
     );
-    const childNodeSlot = context.resolveSlot(values[0], childNodePart);
+    const childNodeSlot = Slot.place(values[0], childNodePart, context);
 
     childNodeSlot.attach(session);
 

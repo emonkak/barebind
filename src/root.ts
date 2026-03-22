@@ -6,7 +6,6 @@ import {
   type Part,
   type Scope,
   type SessionContext,
-  type Slot,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateSession,
@@ -14,6 +13,7 @@ import {
 import { createTreeWalker, replaceSentinelNode } from './hydration.js';
 import { NoLanes } from './lane.js';
 import { createChildNodePart } from './part.js';
+import { Slot } from './slot.js';
 
 export class Root<T> {
   private readonly _slot: Slot<T>;
@@ -32,7 +32,7 @@ export class Root<T> {
       ownerDocument.createComment(''),
       namespaceURI,
     );
-    const slot = context.resolveSlot(source, part);
+    const slot = Slot.place(source, part, context);
     return new Root(slot, container, context);
   }
 

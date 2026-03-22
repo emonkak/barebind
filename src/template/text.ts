@@ -1,12 +1,8 @@
-import {
-  PART_TYPE_TEXT,
-  type Part,
-  type TemplateResult,
-  type UpdateSession,
-} from '../core.js';
+import { PART_TYPE_TEXT, type Part, type UpdateSession } from '../core.js';
 import { splitText } from '../hydration.js';
 import { createTextPart } from '../part.js';
-import { AbstractTemplate } from './template.js';
+import { Slot } from '../slot.js';
+import { AbstractTemplate, type TemplateResult } from './template.js';
 
 export class TextTemplate<T> extends AbstractTemplate<readonly [T]> {
   static readonly Default: TextTemplate<any> = new TextTemplate();
@@ -46,7 +42,7 @@ export class TextTemplate<T> extends AbstractTemplate<readonly [T]> {
       precedingText: this._precedingText,
       followingText: this._followingText,
     } as const;
-    const textSlot = context.resolveSlot(values[0], textPart);
+    const textSlot = Slot.place(values[0], textPart, context);
 
     textSlot.attach(session);
 
@@ -65,7 +61,7 @@ export class TextTemplate<T> extends AbstractTemplate<readonly [T]> {
       this._precedingText,
       this._followingText,
     );
-    const textSlot = context.resolveSlot(values[0], textPart);
+    const textSlot = Slot.place(values[0], textPart, context);
 
     textSlot.attach(session);
 

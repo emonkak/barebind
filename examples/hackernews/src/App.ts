@@ -1,4 +1,4 @@
-import { createComponent, Flexible, type RenderContext } from 'barebind';
+import { createComponent, type RenderContext } from 'barebind';
 import { HashHistory, ScrollRestration } from 'barebind/addons/router';
 
 import { Nav } from './Nav.js';
@@ -26,7 +26,7 @@ export const App = createComponent(function App(
       <${Nav({})}>
     </header>
     <main class="main">
-      <${Flexible(page)}>
+      <${page}>
     </main>
   `;
 });

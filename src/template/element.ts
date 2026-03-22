@@ -1,16 +1,12 @@
-import type {
-  DirectiveType,
-  Part,
-  TemplateResult,
-  UpdateSession,
-} from '../core.js';
+import type { DirectiveType, Part, UpdateSession } from '../core.js';
 import { replaceSentinelNode, treatNodeName } from '../hydration.js';
 import {
   createChildNodePart,
   createElementPart,
   getNamespaceURIByTagName,
 } from '../part.js';
-import { AbstractTemplate } from '../template/template.js';
+import { Slot } from '../slot.js';
+import { AbstractTemplate, type TemplateResult } from '../template/template.js';
 
 export class ElementTemplate<
   TProps = unknown,
@@ -52,8 +48,8 @@ export class ElementTemplate<
       ownerDocument.createComment(''),
       namespaceURI,
     );
-    const elementSlot = context.resolveSlot(values[0], elementPart);
-    const childrenSlot = context.resolveSlot(values[1], childrenPart);
+    const elementSlot = Slot.place(values[0], elementPart, context);
+    const childrenSlot = Slot.place(values[1], childrenPart, context);
 
     elementSlot.attach(session);
     childrenSlot.attach(session);
@@ -82,8 +78,8 @@ export class ElementTemplate<
       ownerDocument.createComment(''),
       namespaceURI,
     );
-    const elementSlot = context.resolveSlot(values[0], elementPart);
-    const childrenSlot = context.resolveSlot(values[1], childrenPart);
+    const elementSlot = Slot.place(values[0], elementPart, context);
+    const childrenSlot = Slot.place(values[1], childrenPart, context);
 
     elementPart.node.appendChild(childrenPart.node);
 

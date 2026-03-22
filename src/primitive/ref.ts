@@ -9,7 +9,8 @@ import {
   type RefObject,
   type UpdateSession,
 } from '../core.js';
-import { DirectiveError, ensurePartType } from '../directive.js';
+import { DirectiveError } from '../error.js';
+import { ensurePartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export const RefPrimitive: Primitive<Ref<Element>> = {

@@ -4,11 +4,11 @@ import {
   PART_TYPE_EVENT,
   PART_TYPE_LIVE,
   PART_TYPE_PROPERTY,
-  SLOT_STATUS_IDLE,
 } from '@/core.js';
 import { createChildNodePart, createElementPart } from '@/part.js';
 import { SpreadBinding, SpreadPrimitive } from '@/primitive/spread.js';
-import { createRuntime, MockSlot } from '../../mocks.js';
+import { SLOT_STATUS_IDLE } from '@/slot.js';
+import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
 describe('SpreadPrimitive', () => {
@@ -116,13 +116,6 @@ describe('SpreadBinding', () => {
 
         const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
-        expect(slots).toStrictEqual(
-          Object.fromEntries(
-            Object.entries(props1)
-              .filter(([_key, value]) => value !== undefined)
-              .map(([key]) => [key, expect.any(MockSlot)]),
-          ),
-        );
         expect(slots).toStrictEqual({
           id: expect.objectContaining({
             part: {
@@ -183,13 +176,6 @@ describe('SpreadBinding', () => {
             status: SLOT_STATUS_IDLE,
           }),
         });
-        expect(newSlots).toStrictEqual(
-          Object.fromEntries(
-            Object.entries(props2)
-              .filter(([_key, value]) => value !== undefined)
-              .map(([key]) => [key, expect.any(MockSlot)]),
-          ),
-        );
         expect(newSlots).toStrictEqual({
           class: expect.objectContaining({
             part: {
@@ -261,11 +247,6 @@ describe('SpreadBinding', () => {
 
         const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
-        expect(slots).toStrictEqual(
-          Object.fromEntries(
-            Object.entries(props).map(([key]) => [key, expect.any(MockSlot)]),
-          ),
-        );
         expect(slots).toStrictEqual({
           id: expect.objectContaining({
             part: {
