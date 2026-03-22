@@ -89,10 +89,10 @@ export class MockBackend implements Backend {
   resolveTemplate(
     strings: readonly string[],
     values: readonly unknown[],
-    markerIdentifier: string,
+    placeholder: string,
     mode: TemplateMode,
   ): DirectiveType<readonly unknown[]> {
-    return new MockTemplate(strings, values, markerIdentifier, mode);
+    return new MockTemplate(strings, values, placeholder, mode);
   }
 
   startViewTransition(callback: () => void | Promise<void>): Promise<void> {
@@ -262,20 +262,20 @@ export class MockTemplate extends Template<readonly unknown[]> {
 
   readonly values: readonly unknown[];
 
-  readonly markerIdentifier: string;
+  readonly placeholder: string;
 
   readonly mode: TemplateMode;
 
   constructor(
     strings: readonly string[] = [],
     values: readonly unknown[] = [],
-    markerIdentifier = '',
+    placeholder = '',
     mode: TemplateMode = 'html',
   ) {
     super();
     this.strings = strings;
     this.values = values;
-    this.markerIdentifier = markerIdentifier;
+    this.placeholder = placeholder;
     this.mode = mode;
   }
 

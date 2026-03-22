@@ -84,7 +84,7 @@ export namespace Hole {
   }
 }
 
-const MARKER_IDENTIFIER_PATTERN = /^[0-9a-z_-]+$/;
+const PLACEHOLDER_PATTERN = /^[0-9a-z_-]+$/;
 
 // https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
 const ATTRIBUTE_NAME_CHARS = String.raw`[^ "'>/=\p{Control}\p{Noncharacter_Code_Point}]`;
@@ -114,12 +114,12 @@ export class TaggedTemplate<
   static parse<TValues extends readonly unknown[]>(
     strings: readonly string[],
     values: TValues,
-    markerIdentifier: string,
+    placeholder: string,
     mode: TemplateMode,
     document: Document,
   ): TaggedTemplate<TValues> {
     const template = document.createElement('template');
-    const marker = createMarker(markerIdentifier);
+    const marker = createMarker(placeholder);
     const htmlString = stripWhitespaces(strings.join(marker));
 
     if (mode === 'html') {
@@ -331,18 +331,18 @@ export class TaggedTemplate<
   }
 }
 
-function createMarker(markerIdentifier: string): string {
-  // Marker Requirements:
-  // - A marker starts with "?" to detect when it is used as a tag name. In that
-  //   case, the tag is treated as a comment.
+function createMarker(placeholder: string): string {
+  // Marker requirements:
+  // - Makers start with "?" to detect when it is used as a tag name. In
+  //   that case, the tag is treated as a comment.
   //   https://html.spec.whatwg.org/multipage/parsing.html#parse-error-unexpected-question-mark-instead-of-tag-name
-  // - A marker is lowercase to match attribute names.
-  if (!MARKER_IDENTIFIER_PATTERN.test(markerIdentifier)) {
+  // - Makers are all lowercase to match attribute names.
+  if (!PLACEHOLDER_PATTERN.test(placeholder)) {
     throw new Error(
-      `A marker identifier must match pattern ${MARKER_IDENTIFIER_PATTERN}, but got ${JSON.stringify(markerIdentifier)}.`,
+      `Placeholders must match pattern ${PLACEHOLDER_PATTERN}, but got ${JSON.stringify(placeholder)}.`,
     );
   }
-  return '??' + markerIdentifier + '??';
+  return '??' + placeholder + '??';
 }
 
 function extractCaseSensitiveAttributeName(s: string): string | undefined {

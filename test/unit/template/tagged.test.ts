@@ -356,7 +356,7 @@ describe('TaggedTemplate', () => {
     it('should throw an error if the passed marker identifier has an invalid format', () => {
       expect(() => {
         TaggedTemplate.parse([], [], 'INVALID_MARKER', 'html', document);
-      }).toThrow('A marker identifier must match pattern /^[0-9a-z_-]+$/');
+      }).toThrow('Placeholders must match pattern /^[0-9a-z_-]+$/');
       expect(() => {
         TaggedTemplate.parse(
           [],
@@ -365,7 +365,7 @@ describe('TaggedTemplate', () => {
           'html',
           document,
         );
-      }).toThrow('A marker identifier must match pattern /^[0-9a-z_-]+$/');
+      }).toThrow('Placeholders must match pattern /^[0-9a-z_-]+$/');
     });
 
     it('should throw an error when there is a hole as an attribute name', () => {

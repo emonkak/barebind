@@ -38,7 +38,7 @@ export interface Backend {
   resolveTemplate(
     strings: readonly string[],
     values: readonly unknown[],
-    markerIdentifier: string,
+    placeholder: string,
     mode: TemplateMode,
   ): DirectiveType<readonly unknown[]>;
   startViewTransition(callback: () => Promise<void> | void): Promise<void>;
