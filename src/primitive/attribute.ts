@@ -5,7 +5,7 @@ import {
   type Primitive,
 } from '../core.js';
 import { ensurePartType } from '../part.js';
-import { PrimitiveBinding } from './primitive.js';
+import { PrimitiveBinding, toStringOrEmpty } from './primitive.js';
 
 export abstract class AttributeType {
   static resolveBinding<T>(
@@ -38,19 +38,12 @@ export class AttributeBinding<T> extends PrimitiveBinding<
     const { node, name } = this._part;
     const value = this._value;
 
-    switch (typeof value) {
-      case 'string':
-        node.setAttribute(name, value);
-        break;
-      case 'boolean':
-        node.toggleAttribute(name, value);
-        break;
-      default:
-        if (value == null) {
-          node.removeAttribute(name);
-        } else {
-          node.setAttribute(name, value.toString());
-        }
+    if (typeof value === 'boolean') {
+      node.toggleAttribute(name, value);
+    } else if (value == null) {
+      node.removeAttribute(name);
+    } else {
+      node.setAttribute(name, toStringOrEmpty(value));
     }
 
     this._memoizedValue = this._value;

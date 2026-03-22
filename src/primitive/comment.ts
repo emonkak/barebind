@@ -5,7 +5,7 @@ import {
   type Primitive,
 } from '../core.js';
 import { ensurePartType } from '../part.js';
-import { PrimitiveBinding } from './primitive.js';
+import { PrimitiveBinding, toStringOrEmpty } from './primitive.js';
 
 export abstract class CommentType {
   static resolveBinding<T>(
@@ -33,7 +33,7 @@ export class CommentBinding<T> extends PrimitiveBinding<T, Part.ChildNodePart> {
 
   override commit(): void {
     const value = this._value;
-    this._part.sentinelNode.data = value?.toString() ?? '';
+    this._part.sentinelNode.data = toStringOrEmpty(value);
     this._memoizedValue = this._value;
   }
 

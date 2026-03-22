@@ -5,7 +5,7 @@ import {
   type Primitive,
 } from '../core.js';
 import { ensurePartType } from '../part.js';
-import { PrimitiveBinding } from './primitive.js';
+import { PrimitiveBinding, toStringOrEmpty } from './primitive.js';
 
 export abstract class TextType {
   static resolveBinding<T>(
@@ -34,7 +34,7 @@ export class TextBinding<T> extends PrimitiveBinding<T, Part.TextPart> {
   override commit(): void {
     const { node, precedingText, followingText } = this._part;
     const value = this._value;
-    node.data = precedingText + (value?.toString() ?? '') + followingText;
+    node.data = precedingText + toStringOrEmpty(value) + followingText;
     this._memoizedValue = this._value;
   }
 

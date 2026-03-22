@@ -36,3 +36,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
 
   rollback(): void {}
 }
+
+export function toStringOrEmpty(value: unknown): string {
+  return value?.toString?.() ?? '';
+}
