@@ -1,16 +1,18 @@
 import {
   type DirectiveContext,
-  PART_TYPE_ATTRIBUTE,
   PART_TYPE_ELEMENT,
-  PART_TYPE_EVENT,
-  PART_TYPE_LIVE,
-  PART_TYPE_PROPERTY,
   type Part,
   type Primitive,
   type Session,
 } from '../core.js';
 import { DirectiveError } from '../error.js';
-import { ensurePartType } from '../part.js';
+import {
+  createAttributePart,
+  createEventPart,
+  createLivePart,
+  createPropertyPart,
+  ensurePartType,
+} from '../part.js';
 import { Slot } from '../slot.js';
 import { PrimitiveBinding } from './primitive.js';
 
@@ -127,35 +129,13 @@ function isSpreadProps(value: unknown): value is SpreadProps {
 
 function resolveNamedPart(key: string, node: Element): Part {
   switch (key[0]) {
-    case '$': {
-      const name = key.slice(1);
-      return {
-        type: PART_TYPE_LIVE,
-        node,
-        name,
-        defaultValue: node[name as keyof Element],
-      };
-    }
-    case '.': {
-      const name = key.slice(1);
-      return {
-        type: PART_TYPE_PROPERTY,
-        node,
-        name,
-        defaultValue: node[name as keyof Element],
-      };
-    }
+    case '$':
+      return createLivePart(node, key.slice(1));
+    case '.':
+      return createPropertyPart(node, key.slice(1));
     case '@':
-      return {
-        type: PART_TYPE_EVENT,
-        node,
-        name: key.slice(1),
-      };
+      return createEventPart(node, key.slice(1));
     default:
-      return {
-        type: PART_TYPE_ATTRIBUTE,
-        node,
-        name: key,
-      };
+      return createAttributePart(node, key);
   }
 }
