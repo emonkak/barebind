@@ -73,7 +73,7 @@ export abstract class ElementType {
     part: Part,
     _context: DirectiveContext,
   ): ElementBinding {
-    ensurePartType<Part.ElementPart>(PART_TYPE_ELEMENT, this, props, part);
+    ensurePartType(PART_TYPE_ELEMENT, this, props, part);
     return new ElementBinding(props, part);
   }
 }

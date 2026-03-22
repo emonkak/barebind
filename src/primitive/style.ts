@@ -43,7 +43,7 @@ export abstract class StyleType {
     part: Part,
     _context: DirectiveContext,
   ): StyleBinding {
-    ensurePartType<Part.AttributePart>(PART_TYPE_ATTRIBUTE, this, value, part);
+    ensurePartType(PART_TYPE_ATTRIBUTE, this, value, part);
     return new StyleBinding(value, part);
   }
 }

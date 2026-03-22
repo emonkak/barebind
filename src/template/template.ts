@@ -44,12 +44,7 @@ export abstract class Template<TValues extends readonly unknown[]>
     part: Part,
     _context: DirectiveContext,
   ): Binding<TValues> {
-    ensurePartType<Part.ChildNodePart>(
-      PART_TYPE_CHILD_NODE,
-      this,
-      values,
-      part,
-    );
+    ensurePartType(PART_TYPE_CHILD_NODE, this, values, part);
     return new TemplateBinding(this, values, part);
   }
 }

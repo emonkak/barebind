@@ -93,12 +93,12 @@ export function createTextPart(
   };
 }
 
-export function ensurePartType<TExpectedPart extends Part>(
-  expectedPartType: TExpectedPart['type'],
+export function ensurePartType<TPartType extends Part['type']>(
+  expectedPartType: TPartType,
   type: DirectiveType<unknown>,
   value: unknown,
   part: Part,
-): asserts part is TExpectedPart {
+): asserts part is Part & { type: TPartType } {
   if (part.type !== expectedPartType) {
     throw new DirectiveError(
       type,

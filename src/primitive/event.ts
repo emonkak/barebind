@@ -40,7 +40,7 @@ export abstract class EventType {
     part: Part,
     _context: DirectiveContext,
   ): EventBinding {
-    ensurePartType<Part.EventPart>(PART_TYPE_EVENT, this, value, part);
+    ensurePartType(PART_TYPE_EVENT, this, value, part);
     return new EventBinding(value, part);
   }
 }

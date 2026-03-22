@@ -31,7 +31,7 @@ export abstract class RefType {
     part: Part,
     _context: DirectiveContext,
   ): RefBinding {
-    ensurePartType<Part.AttributePart>(PART_TYPE_ATTRIBUTE, this, value, part);
+    ensurePartType(PART_TYPE_ATTRIBUTE, this, value, part);
     return new RefBinding(value, part);
   }
 }

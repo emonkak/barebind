@@ -33,7 +33,7 @@ export abstract class SpreadType {
     part: Part,
     _context: DirectiveContext,
   ): SpreadBinding {
-    ensurePartType<Part.ElementPart>(PART_TYPE_ELEMENT, this, value, part);
+    ensurePartType(PART_TYPE_ELEMENT, this, value, part);
     return new SpreadBinding(value, part);
   }
 }

@@ -13,7 +13,7 @@ export abstract class TextType {
     part: Part,
     _context: DirectiveContext,
   ): TextBinding<T> {
-    ensurePartType<Part.TextPart>(PART_TYPE_TEXT, this, value, part);
+    ensurePartType(PART_TYPE_TEXT, this, value, part);
     return new TextBinding(value, part);
   }
 }

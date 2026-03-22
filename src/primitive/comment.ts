@@ -13,7 +13,7 @@ export abstract class CommentType {
     part: Part,
     _context: DirectiveContext,
   ): CommentBinding<T> {
-    ensurePartType<Part.ChildNodePart>(PART_TYPE_CHILD_NODE, this, value, part);
+    ensurePartType(PART_TYPE_CHILD_NODE, this, value, part);
     return new CommentBinding(value, part);
   }
 }

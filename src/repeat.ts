@@ -48,7 +48,7 @@ Repeat.resolveBinding = function <TSource, TKey, TElement>(
   part: Part,
   _context: DirectiveContext,
 ): RepeatBinding<TSource, TKey, TElement> {
-  ensurePartType<Part.ChildNodePart>(PART_TYPE_CHILD_NODE, this, props, part);
+  ensurePartType(PART_TYPE_CHILD_NODE, this, props, part);
   return new RepeatBinding(props, part);
 };
 
