@@ -27,18 +27,18 @@ export class DevToolsProfiler implements SessionObserver {
         this._measure(`Barebind - Render phase #${id}`, startMark, endMark);
         break;
       }
-      case 'component-render-start': {
-        const { name } = event.component;
+      case 'coroutine-start': {
+        const { name } = event.coroutine;
         const index = this._componentIndex;
-        const startMark = `barebind:component-render-start:${id}:${name}:${index}`;
+        const startMark = `barebind:coroutine-start:${id}:${name}:${index}`;
         this._mark(startMark);
         break;
       }
-      case 'component-render-end': {
-        const { name } = event.component;
+      case 'coroutine-end': {
+        const { name } = event.coroutine;
         const index = this._componentIndex++;
-        const startMark = `barebind:component-render-start:${id}:${name}:${index}`;
-        const endMark = `barebind:component-render-end:${id}:${name}:${index}`;
+        const startMark = `barebind:coroutine-start:${id}:${name}:${index}`;
+        const endMark = `barebind:coroutine-end:${id}:${name}:${index}`;
         this._mark(endMark);
         this._measure(`Barebind - Render ${name} #${id}`, startMark, endMark);
         break;

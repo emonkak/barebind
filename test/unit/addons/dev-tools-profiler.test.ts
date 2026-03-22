@@ -1,12 +1,8 @@
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 import { DevToolsProfiler } from '@/addons/dev-tools-profiler.js';
-import { createComponent } from '@/component.js';
 import { EffectQueue } from '@/core.js';
-
-const Foo = createComponent(function Foo() {});
-
-const Bar = createComponent(function Bar() {});
+import { MockCoroutine } from '../../mocks.js';
 
 interface MockPerformance {
   mark: Mock<typeof performance.mark>;
@@ -14,6 +10,9 @@ interface MockPerformance {
 }
 
 describe('DevToolsProfiler', () => {
+  const Foo = new MockCoroutine('Foo');
+  const Bar = new MockCoroutine('Bar');
+
   let performance: MockPerformance;
   let profiler: DevToolsProfiler;
 
@@ -41,34 +40,30 @@ describe('DevToolsProfiler', () => {
     });
   });
 
-  describe('component-render-start / component-render-end', () => {
+  describe('coroutine-start / coroutine-end', () => {
     it('records marks and a measure for a single component', () => {
       profiler.onSessionEvent({ type: 'render-start', id: 0, lanes: 0 });
       profiler.onSessionEvent({
-        type: 'component-render-start',
+        type: 'coroutine-start',
         id: 0,
-        component: Foo,
-        props: {},
-        context: null as any,
+        coroutine: Foo,
       });
       profiler.onSessionEvent({
-        type: 'component-render-end',
+        type: 'coroutine-end',
         id: 0,
-        component: Foo,
-        props: {},
-        context: null as any,
+        coroutine: Foo,
       });
 
       expect(marksOf(performance)).toStrictEqual([
         'barebind:render-start:0',
-        `barebind:component-render-start:0:${Foo.name}:0`,
-        `barebind:component-render-end:0:${Foo.name}:0`,
+        `barebind:coroutine-start:0:Foo:0`,
+        `barebind:coroutine-end:0:Foo:0`,
       ]);
       expect(measuresOf(performance)).toStrictEqual([
         {
-          name: `Barebind - Render ${Foo.name} #0`,
-          start: `barebind:component-render-start:0:${Foo.name}:0`,
-          end: `barebind:component-render-end:0:${Foo.name}:0`,
+          name: `Barebind - Render Foo #0`,
+          start: `barebind:coroutine-start:0:Foo:0`,
+          end: `barebind:coroutine-end:0:Foo:0`,
         },
       ]);
     });
@@ -78,45 +73,41 @@ describe('DevToolsProfiler', () => {
 
       for (let i = 0; i < 3; i++) {
         profiler.onSessionEvent({
-          type: 'component-render-start',
+          type: 'coroutine-start',
           id: 0,
-          component: Foo,
-          props: {},
-          context: null as any,
+          coroutine: Foo,
         });
         profiler.onSessionEvent({
-          type: 'component-render-end',
+          type: 'coroutine-end',
           id: 0,
-          component: Foo,
-          props: {},
-          context: null as any,
+          coroutine: Foo,
         });
       }
 
       expect(marksOf(performance)).toStrictEqual([
         `barebind:render-start:0`,
-        `barebind:component-render-start:0:${Foo.name}:0`,
-        `barebind:component-render-end:0:${Foo.name}:0`,
-        `barebind:component-render-start:0:${Foo.name}:1`,
-        `barebind:component-render-end:0:${Foo.name}:1`,
-        `barebind:component-render-start:0:${Foo.name}:2`,
-        `barebind:component-render-end:0:${Foo.name}:2`,
+        `barebind:coroutine-start:0:Foo:0`,
+        `barebind:coroutine-end:0:Foo:0`,
+        `barebind:coroutine-start:0:Foo:1`,
+        `barebind:coroutine-end:0:Foo:1`,
+        `barebind:coroutine-start:0:Foo:2`,
+        `barebind:coroutine-end:0:Foo:2`,
       ]);
       expect(measuresOf(performance)).toStrictEqual([
         {
-          name: `Barebind - Render ${Foo.name} #0`,
-          start: `barebind:component-render-start:0:${Foo.name}:0`,
-          end: `barebind:component-render-end:0:${Foo.name}:0`,
+          name: `Barebind - Render Foo #0`,
+          start: `barebind:coroutine-start:0:Foo:0`,
+          end: `barebind:coroutine-end:0:Foo:0`,
         },
         {
-          name: `Barebind - Render ${Foo.name} #0`,
-          start: `barebind:component-render-start:0:${Foo.name}:1`,
-          end: `barebind:component-render-end:0:${Foo.name}:1`,
+          name: `Barebind - Render Foo #0`,
+          start: `barebind:coroutine-start:0:Foo:1`,
+          end: `barebind:coroutine-end:0:Foo:1`,
         },
         {
-          name: `Barebind - Render ${Foo.name} #0`,
-          start: `barebind:component-render-start:0:${Foo.name}:2`,
-          end: `barebind:component-render-end:0:${Foo.name}:2`,
+          name: `Barebind - Render Foo #0`,
+          start: `barebind:coroutine-start:0:Foo:2`,
+          end: `barebind:coroutine-end:0:Foo:2`,
         },
       ]);
     });
@@ -124,44 +115,36 @@ describe('DevToolsProfiler', () => {
     it('disambiguates different components within the same update', () => {
       profiler.onSessionEvent({ type: 'render-start', id: 0, lanes: 0 });
       profiler.onSessionEvent({
-        type: 'component-render-start',
+        type: 'coroutine-start',
         id: 0,
-        component: Foo,
-        props: {},
-        context: null as any,
+        coroutine: Foo,
       });
       profiler.onSessionEvent({
-        type: 'component-render-end',
+        type: 'coroutine-end',
         id: 0,
-        component: Foo,
-        props: {},
-        context: null as any,
+        coroutine: Foo,
       });
       profiler.onSessionEvent({
-        type: 'component-render-start',
+        type: 'coroutine-start',
         id: 0,
-        component: Bar,
-        props: {},
-        context: null as any,
+        coroutine: Bar,
       });
       profiler.onSessionEvent({
-        type: 'component-render-end',
+        type: 'coroutine-end',
         id: 0,
-        component: Bar,
-        props: {},
-        context: null as any,
+        coroutine: Bar,
       });
 
       expect(measuresOf(performance)).toStrictEqual([
         {
-          name: `Barebind - Render ${Foo.name} #0`,
-          start: `barebind:component-render-start:0:${Foo.name}:0`,
-          end: `barebind:component-render-end:0:${Foo.name}:0`,
+          name: `Barebind - Render Foo #0`,
+          start: `barebind:coroutine-start:0:Foo:0`,
+          end: `barebind:coroutine-end:0:Foo:0`,
         },
         {
-          name: `Barebind - Render ${Bar.name} #0`,
-          start: `barebind:component-render-start:0:${Bar.name}:1`,
-          end: `barebind:component-render-end:0:${Bar.name}:1`,
+          name: `Barebind - Render Bar #0`,
+          start: `barebind:coroutine-start:0:Bar:1`,
+          end: `barebind:coroutine-end:0:Bar:1`,
         },
       ]);
     });
@@ -170,31 +153,27 @@ describe('DevToolsProfiler', () => {
       for (const id of [0, 1]) {
         profiler.onSessionEvent({ type: 'render-start', id, lanes: 0 });
         profiler.onSessionEvent({
-          type: 'component-render-start',
+          type: 'coroutine-start',
           id,
-          component: Foo,
-          props: {},
-          context: null as any,
+          coroutine: Foo,
         });
         profiler.onSessionEvent({
-          type: 'component-render-end',
+          type: 'coroutine-end',
           id,
-          component: Foo,
-          props: {},
-          context: null as any,
+          coroutine: Foo,
         });
       }
 
       expect(measuresOf(performance)).toStrictEqual([
         {
-          name: `Barebind - Render ${Foo.name} #0`,
-          start: `barebind:component-render-start:0:${Foo.name}:0`,
-          end: `barebind:component-render-end:0:${Foo.name}:0`,
+          name: `Barebind - Render Foo #0`,
+          start: `barebind:coroutine-start:0:Foo:0`,
+          end: `barebind:coroutine-end:0:Foo:0`,
         },
         {
-          name: `Barebind - Render ${Foo.name} #1`,
-          start: `barebind:component-render-start:1:${Foo.name}:0`,
-          end: `barebind:component-render-end:1:${Foo.name}:0`,
+          name: `Barebind - Render Foo #1`,
+          start: `barebind:coroutine-start:1:Foo:0`,
+          end: `barebind:coroutine-end:1:Foo:0`,
         },
       ]);
     });

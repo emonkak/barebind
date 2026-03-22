@@ -157,29 +157,11 @@ export class Runtime implements SessionContext {
     scope: Scope,
     coroutine: Coroutine,
   ): TResult {
-    const { id } = frame;
-
     const context = new RenderSession(hooks, frame, scope, coroutine, this);
-
-    notifyObservers(this._observers, {
-      type: 'component-render-start',
-      id,
-      component,
-      props,
-      context,
-    });
 
     const result = component.render(props, context);
 
     context.finalize();
-
-    notifyObservers(this._observers, {
-      type: 'component-render-end',
-      id,
-      component,
-      props,
-      context,
-    });
 
     return result;
   }
@@ -442,12 +424,24 @@ export class Runtime implements SessionContext {
           0,
           this._maxCoroutinesPerYield,
         )) {
+          notifyObservers(this._observers, {
+            type: 'coroutine-start',
+            id,
+            coroutine,
+          });
+
           try {
             coroutine.resume(session);
             coroutine.pendingLanes &= ~frame.lanes;
           } catch (error) {
             this._handleRenderError(id, error, coroutine);
           }
+
+          notifyObservers(this._observers, {
+            type: 'coroutine-end',
+            id,
+            coroutine,
+          });
         }
 
         if (coroutines.length === 0) {
@@ -480,12 +474,24 @@ export class Runtime implements SessionContext {
     try {
       do {
         for (const coroutine of coroutines.splice(0)) {
+          notifyObservers(this._observers, {
+            type: 'coroutine-start',
+            id,
+            coroutine,
+          });
+
           try {
             coroutine.resume(session);
             coroutine.pendingLanes &= ~frame.lanes;
           } catch (error) {
             this._handleRenderError(id, error, coroutine);
           }
+
+          notifyObservers(this._observers, {
+            type: 'coroutine-end',
+            id,
+            coroutine,
+          });
         }
       } while (coroutines.length > 0);
     } finally {

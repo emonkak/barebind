@@ -6,8 +6,7 @@ import {
   type SessionProfile,
   SessionProfiler,
 } from '@/addons/session-profiler.js';
-import { createComponent } from '@/component.js';
-import type { RenderContext, SessionEvent } from '@/core.js';
+import type { SessionEvent } from '@/core.js';
 import { InterruptError } from '@/error.js';
 import {
   BackgroundLane,
@@ -22,6 +21,8 @@ import {
 import { createEffect, createEffectQueue, MockCoroutine } from '../../mocks.js';
 
 describe('SessionProfiler', () => {
+  const coroutine = new MockCoroutine('Foo');
+
   describe('onSessionEvent()', () => {
     it('reports profiles with completed status when update succeeds', () => {
       const reporter = {
@@ -29,9 +30,6 @@ describe('SessionProfiler', () => {
       };
       const profiler = new SessionProfiler(reporter);
 
-      const component = createComponent(function MyComponent(_props: {}) {
-        return null;
-      });
       const mutationEffects = createEffectQueue([
         createEffect(),
         createEffect(),
@@ -45,18 +43,14 @@ describe('SessionProfiler', () => {
           lanes: ConcurrentLane,
         },
         {
-          type: 'component-render-start',
+          type: 'coroutine-start',
           id: 0,
-          component,
-          props: {},
-          context: {} as RenderContext,
+          coroutine,
         },
         {
-          type: 'component-render-end',
+          type: 'coroutine-end',
           id: 0,
-          component,
-          props: {},
-          context: {} as RenderContext,
+          coroutine,
         },
         {
           type: 'render-end',
@@ -128,9 +122,9 @@ describe('SessionProfiler', () => {
           endTime: expect.any(Number),
         },
         errorRecords: [],
-        componentRecords: [
+        coroutineRecords: [
           {
-            name: 'MyComponent',
+            name: 'Foo',
             startTime: expect.any(Number),
             endTime: expect.any(Number),
           },
@@ -199,7 +193,7 @@ describe('SessionProfiler', () => {
         },
         commitMeasurement: null,
         errorRecords: [],
-        componentRecords: [],
+        coroutineRecords: [],
         effectRecords: [],
       } satisfies SessionProfile);
     });
@@ -210,9 +204,6 @@ describe('SessionProfiler', () => {
       };
       const profiler = new SessionProfiler(reporter);
 
-      const component = createComponent(function MyComponent(_props: {}) {
-        return null;
-      });
       const error = new Error('fail');
       const events: SessionEvent[] = [
         {
@@ -221,11 +212,9 @@ describe('SessionProfiler', () => {
           lanes: UserBlockingLane,
         },
         {
-          type: 'component-render-start',
+          type: 'coroutine-start',
           id: 0,
-          component,
-          props: {},
-          context: {} as RenderContext,
+          coroutine,
         },
         {
           type: 'render-error',
@@ -266,9 +255,9 @@ describe('SessionProfiler', () => {
             captured: false,
           },
         ],
-        componentRecords: [
+        coroutineRecords: [
           {
-            name: 'MyComponent',
+            name: 'Foo',
             startTime: expect.any(Number),
             endTime: expect.any(Number),
           },
@@ -283,9 +272,6 @@ describe('SessionProfiler', () => {
       };
       const profiler = new SessionProfiler(reporter);
 
-      const component = createComponent(function MyComponent(_props: {}) {
-        return null;
-      });
       const error = new InterruptError(new MockCoroutine());
       const events: SessionEvent[] = [
         {
@@ -294,11 +280,9 @@ describe('SessionProfiler', () => {
           lanes: ConcurrentLane,
         },
         {
-          type: 'component-render-start',
+          type: 'coroutine-start',
           id: 0,
-          component,
-          props: {},
-          context: {} as RenderContext,
+          coroutine,
         },
         {
           type: 'render-error',
@@ -339,9 +323,9 @@ describe('SessionProfiler', () => {
             captured: false,
           },
         ],
-        componentRecords: [
+        coroutineRecords: [
           {
-            name: 'MyComponent',
+            name: 'Foo',
             startTime: expect.any(Number),
             endTime: expect.any(Number),
           },
@@ -356,9 +340,6 @@ describe('SessionProfiler', () => {
       };
       const profiler = new SessionProfiler(reporter);
 
-      const component = createComponent(function MyComponent(_props: {}) {
-        return null;
-      });
       const mutationEffects = createEffectQueue([
         createEffect(),
         createEffect(),
@@ -371,18 +352,14 @@ describe('SessionProfiler', () => {
           lanes: ConcurrentLane,
         },
         {
-          type: 'component-render-start',
+          type: 'coroutine-start',
           id: 0,
-          component,
-          props: {},
-          context: {} as RenderContext,
+          coroutine,
         },
         {
-          type: 'component-render-end',
+          type: 'coroutine-end',
           id: 0,
-          component,
-          props: {},
-          context: {} as RenderContext,
+          coroutine,
         },
         {
           type: 'render-end',
@@ -442,9 +419,9 @@ describe('SessionProfiler', () => {
           endTime: expect.any(Number),
         },
         errorRecords: [],
-        componentRecords: [
+        coroutineRecords: [
           {
-            name: 'MyComponent',
+            name: 'Foo',
             startTime: expect.any(Number),
             endTime: expect.any(Number),
           },
@@ -472,9 +449,6 @@ describe('SessionProfiler', () => {
       };
       const profiler = new SessionProfiler(reporter);
 
-      const component = createComponent(function MyComponent(_props: {}) {
-        return null;
-      });
       const mutationEffects = createEffectQueue([
         createEffect(),
         createEffect(),
@@ -487,18 +461,14 @@ describe('SessionProfiler', () => {
           lanes: ConcurrentLane,
         },
         {
-          type: 'component-render-start',
+          type: 'coroutine-start',
           id: 0,
-          component,
-          props: {},
-          context: {} as RenderContext,
+          coroutine,
         },
         {
-          type: 'component-render-end',
+          type: 'coroutine-end',
           id: 0,
-          component,
-          props: {},
-          context: {} as RenderContext,
+          coroutine,
         },
         {
           type: 'render-end',
@@ -558,9 +528,9 @@ describe('SessionProfiler', () => {
           endTime: expect.any(Number),
         },
         errorRecords: [],
-        componentRecords: [
+        coroutineRecords: [
           {
-            name: 'MyComponent',
+            name: 'Foo',
             startTime: expect.any(Number),
             endTime: expect.any(Number),
           },
@@ -618,7 +588,7 @@ describe('ConsoleReporter', () => {
         renderMeasurement: null,
         commitMeasurement: null,
         errorRecords: [],
-        componentRecords: [],
+        coroutineRecords: [],
         effectRecords: [],
       });
 
@@ -643,7 +613,7 @@ describe('ConsoleReporter', () => {
         },
         commitMeasurement: null,
         errorRecords: [],
-        componentRecords: [],
+        coroutineRecords: [],
         effectRecords: [],
       });
 
@@ -652,7 +622,7 @@ describe('ConsoleReporter', () => {
           'groupCollapsed',
           '#0 Transition1/ViewTransition COMPLETED without priority in concurrent mode after %c10ms',
         ],
-        ['group', '%cRENDER PHASE:%c 0 component(s) rendered after %c10ms'],
+        ['group', '%cRENDER PHASE:%c 0 coroutine(s) resumed after %c10ms'],
         ['groupEnd'],
         ['groupEnd'],
       ]);
@@ -674,7 +644,7 @@ describe('ConsoleReporter', () => {
         },
         commitMeasurement: null,
         errorRecords: [],
-        componentRecords: [],
+        coroutineRecords: [],
         effectRecords: [],
       });
 
@@ -683,7 +653,7 @@ describe('ConsoleReporter', () => {
           'groupCollapsed',
           `#0 Update COMPLETED with ${expectedPriority} priority in concurrent mode after %c10ms`,
         ],
-        ['group', '%cRENDER PHASE:%c 0 component(s) rendered after %c10ms'],
+        ['group', '%cRENDER PHASE:%c 0 coroutine(s) resumed after %c10ms'],
         ['groupEnd'],
         ['groupEnd'],
       ]);
@@ -705,7 +675,7 @@ describe('ConsoleReporter', () => {
         },
         commitMeasurement: null,
         errorRecords: [],
-        componentRecords: [],
+        coroutineRecords: [],
         effectRecords: [],
       });
 
@@ -714,13 +684,13 @@ describe('ConsoleReporter', () => {
           'groupCollapsed',
           `#0 Update COMPLETED without priority in ${expectedMode} mode after %c10ms`,
         ],
-        ['group', '%cRENDER PHASE:%c 0 component(s) rendered after %c10ms'],
+        ['group', '%cRENDER PHASE:%c 0 coroutine(s) resumed after %c10ms'],
         ['groupEnd'],
         ['groupEnd'],
       ]);
     });
 
-    it('reports component records when render is measured', () => {
+    it('reports coroutine records when render is measured', () => {
       const profile: SessionProfile = {
         id: 0,
         phase: 'prerender',
@@ -732,7 +702,7 @@ describe('ConsoleReporter', () => {
         },
         commitMeasurement: null,
         errorRecords: [],
-        componentRecords: [
+        coroutineRecords: [
           {
             name: 'Foo',
             startTime: 0,
@@ -754,10 +724,10 @@ describe('ConsoleReporter', () => {
           'groupCollapsed',
           `#0 Update COMPLETED without priority in concurrent mode after %c10ms`,
         ],
-        ['group', '%cRENDER PHASE:%c 2 component(s) rendered after %c10ms'],
+        ['group', '%cRENDER PHASE:%c 2 coroutine(s) resumed after %c10ms'],
         [
           'table',
-          profile.componentRecords.map(({ name, startTime, endTime }) => ({
+          profile.coroutineRecords.map(({ name, startTime, endTime }) => ({
             name,
             duration: Math.max(0, endTime - startTime),
           })),
@@ -785,7 +755,7 @@ describe('ConsoleReporter', () => {
             captured: true,
           },
         ],
-        componentRecords: [],
+        coroutineRecords: [],
         effectRecords: [],
       };
 
@@ -796,7 +766,7 @@ describe('ConsoleReporter', () => {
           'groupCollapsed',
           `#0 Update INTERRUPTED without priority in concurrent mode after %c10ms`,
         ],
-        ['group', '%cRENDER PHASE:%c 0 component(s) rendered after %c10ms'],
+        ['group', '%cRENDER PHASE:%c 0 coroutine(s) resumed after %c10ms'],
         ['table', profile.errorRecords],
         ['groupEnd'],
         ['groupEnd'],
@@ -814,7 +784,7 @@ describe('ConsoleReporter', () => {
           endTime: 3,
         },
         errorRecords: [],
-        componentRecords: [],
+        coroutineRecords: [],
         effectRecords: [
           {
             phase: 'mutation',

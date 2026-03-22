@@ -502,11 +502,9 @@ export type SessionEvent =
       captured: boolean;
     }
   | {
-      type: 'component-render-start' | 'component-render-end';
+      type: 'coroutine-start' | 'coroutine-end';
       id: number;
-      component: Component<any>;
-      props: unknown;
-      context: RenderContext;
+      coroutine: Coroutine;
     }
   | {
       type: 'commit-start' | 'commit-end';

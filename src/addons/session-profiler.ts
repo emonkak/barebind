@@ -45,7 +45,7 @@ export interface CommitMeasurement {
   endTime: number;
 }
 
-export interface ComponentRecord {
+export interface CoroutineRecord {
   name: string;
   startTime: number;
   endTime: number;
@@ -76,7 +76,7 @@ export interface SessionProfile {
   renderMeasurement: RenderMeasurement | null;
   commitMeasurement: CommitMeasurement | null;
   errorRecords: ErrorRecord[];
-  componentRecords: ComponentRecord[];
+  coroutineRecords: CoroutineRecord[];
   effectRecords: EffectRecord[];
 }
 
@@ -132,15 +132,15 @@ export class SessionProfiler implements SessionObserver {
         });
         break;
       }
-      case 'component-render-start':
-        profile.componentRecords.push({
-          name: event.component.name,
+      case 'coroutine-start':
+        profile.coroutineRecords.push({
+          name: event.coroutine.name,
           startTime: performance.now(),
           endTime: 0,
         });
         break;
-      case 'component-render-end': {
-        const record = profile.componentRecords.at(-1);
+      case 'coroutine-end': {
+        const record = profile.coroutineRecords.at(-1);
         if (record !== undefined) {
           record.endTime = performance.now();
         }
@@ -203,7 +203,7 @@ export class ConsoleReporter implements SessionProfileReporter {
       status,
       renderMeasurement,
       errorRecords,
-      componentRecords,
+      coroutineRecords,
       effectRecords,
       commitMeasurement,
     } = profile;
@@ -230,7 +230,7 @@ export class ConsoleReporter implements SessionProfileReporter {
       const { startTime, endTime } = renderMeasurement;
       const renderDuration = getDuration(startTime, endTime);
       this._logger.group(
-        `%cRENDER PHASE:%c ${componentRecords.length} component(s) rendered after %c${renderDuration}ms`,
+        `%cRENDER PHASE:%c ${coroutineRecords.length} coroutine(s) resumed after %c${renderDuration}ms`,
         RENDER_PHASE_STYLE,
         DEFAULT_STYLE,
         DURATION_STYLE,
@@ -238,9 +238,9 @@ export class ConsoleReporter implements SessionProfileReporter {
       if (errorRecords.length > 0) {
         this._logger.table(errorRecords, ['error', 'captured']);
       }
-      if (componentRecords.length > 0) {
+      if (coroutineRecords.length > 0) {
         this._logger.table(
-          componentRecords.map(({ name, startTime, endTime }) => ({
+          coroutineRecords.map(({ name, startTime, endTime }) => ({
             name,
             duration: getDuration(startTime, endTime),
           })),
@@ -286,7 +286,7 @@ function createProfile(id: number): SessionProfile {
     renderMeasurement: null,
     commitMeasurement: null,
     errorRecords: [],
-    componentRecords: [],
+    coroutineRecords: [],
     effectRecords: [],
   };
 }

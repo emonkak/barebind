@@ -66,14 +66,14 @@ describe('Runtime', () => {
 
         SESSION: {
           const coroutine = new MockCoroutine(
-            'coroutine1',
+            'Coroutine1',
             createScope(),
             (session) => {
               session.frame.coroutines.push(subcoroutine);
             },
           );
           const subcoroutine = new MockCoroutine(
-            'coroutine2',
+            'Coroutine2',
             createScope(coroutine),
             (session) => {
               session.frame.mutationEffects.push(
@@ -98,64 +98,83 @@ describe('Runtime', () => {
           expect(mutationEffect.commit).toHaveBeenCalledOnce();
           expect(layoutEffect.commit).toHaveBeenCalledOnce();
           expect(passiveEffect.commit).toHaveBeenCalledOnce();
+          expect(observer.flushEvents()).toStrictEqual([
+            {
+              type: 'render-start',
+              id: 0,
+              lanes: ConcurrentLane | UserBlockingLane,
+            },
+            {
+              type: 'coroutine-start',
+              id: 0,
+              coroutine,
+            },
+            {
+              type: 'coroutine-end',
+              id: 0,
+              coroutine,
+            },
+            {
+              type: 'coroutine-start',
+              id: 0,
+              coroutine: subcoroutine,
+            },
+            {
+              type: 'coroutine-end',
+              id: 0,
+              coroutine: subcoroutine,
+            },
+            {
+              type: 'render-end',
+              id: 0,
+              lanes: ConcurrentLane | UserBlockingLane,
+            },
+            {
+              type: 'commit-start',
+              id: 0,
+            },
+            {
+              type: 'effect-commit-start',
+              id: 0,
+              phase: 'mutation',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-end',
+              id: 0,
+              phase: 'mutation',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-start',
+              id: 0,
+              phase: 'layout',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-end',
+              id: 0,
+              phase: 'layout',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-start',
+              id: 0,
+              phase: 'passive',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-end',
+              id: 0,
+              phase: 'passive',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'commit-end',
+              id: 0,
+            },
+          ] satisfies SessionEvent[]);
         }
-
-        expect(observer.flushEvents()).toStrictEqual([
-          {
-            type: 'render-start',
-            id: 0,
-            lanes: ConcurrentLane | UserBlockingLane,
-          },
-          {
-            type: 'render-end',
-            id: 0,
-            lanes: ConcurrentLane | UserBlockingLane,
-          },
-          {
-            type: 'commit-start',
-            id: 0,
-          },
-          {
-            type: 'effect-commit-start',
-            id: 0,
-            phase: 'mutation',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-end',
-            id: 0,
-            phase: 'mutation',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-start',
-            id: 0,
-            phase: 'layout',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-end',
-            id: 0,
-            phase: 'layout',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-start',
-            id: 0,
-            phase: 'passive',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-end',
-            id: 0,
-            phase: 'passive',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'commit-end',
-            id: 0,
-          },
-        ] satisfies SessionEvent[]);
       });
 
       it('commits effects synchronously if flushSync option is true', async () => {
@@ -207,64 +226,83 @@ describe('Runtime', () => {
           expect(mutationEffect.commit).toHaveBeenCalledOnce();
           expect(layoutEffect.commit).toHaveBeenCalledOnce();
           expect(passiveEffect.commit).toHaveBeenCalledOnce();
+          expect(observer.flushEvents()).toStrictEqual([
+            {
+              type: 'render-start',
+              id: 0,
+              lanes: ConcurrentLane | SyncLane | UserBlockingLane,
+            },
+            {
+              type: 'coroutine-start',
+              id: 0,
+              coroutine,
+            },
+            {
+              type: 'coroutine-end',
+              id: 0,
+              coroutine,
+            },
+            {
+              type: 'coroutine-start',
+              id: 0,
+              coroutine: subcoroutine,
+            },
+            {
+              type: 'coroutine-end',
+              id: 0,
+              coroutine: subcoroutine,
+            },
+            {
+              type: 'render-end',
+              id: 0,
+              lanes: ConcurrentLane | SyncLane | UserBlockingLane,
+            },
+            {
+              type: 'commit-start',
+              id: 0,
+            },
+            {
+              type: 'effect-commit-start',
+              id: 0,
+              phase: 'mutation',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-end',
+              id: 0,
+              phase: 'mutation',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-start',
+              id: 0,
+              phase: 'layout',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-end',
+              id: 0,
+              phase: 'layout',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-start',
+              id: 0,
+              phase: 'passive',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-end',
+              id: 0,
+              phase: 'passive',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'commit-end',
+              id: 0,
+            },
+          ] satisfies SessionEvent[]);
         }
-
-        expect(observer.flushEvents()).toStrictEqual([
-          {
-            type: 'render-start',
-            id: 0,
-            lanes: ConcurrentLane | SyncLane | UserBlockingLane,
-          },
-          {
-            type: 'render-end',
-            id: 0,
-            lanes: ConcurrentLane | SyncLane | UserBlockingLane,
-          },
-          {
-            type: 'commit-start',
-            id: 0,
-          },
-          {
-            type: 'effect-commit-start',
-            id: 0,
-            phase: 'mutation',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-end',
-            id: 0,
-            phase: 'mutation',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-start',
-            id: 0,
-            phase: 'layout',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-end',
-            id: 0,
-            phase: 'layout',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-start',
-            id: 0,
-            phase: 'passive',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-end',
-            id: 0,
-            phase: 'passive',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'commit-end',
-            id: 0,
-          },
-        ] satisfies SessionEvent[]);
       });
 
       it('commits mutation and layout effects in view transition if viewTransition option is true', async () => {
@@ -286,7 +324,7 @@ describe('Runtime', () => {
 
         SESSION: {
           const coroutine = new MockCoroutine(
-            'coroutine',
+            'Coroutine',
             createScope(),
             (session) => {
               session.frame.mutationEffects.push(
@@ -307,52 +345,61 @@ describe('Runtime', () => {
           expect(startViewTransitionSpy).toHaveBeenCalledOnce();
           expect(mutationEffect.commit).toHaveBeenCalledOnce();
           expect(layoutEffect.commit).toHaveBeenCalledOnce();
+          expect(observer.flushEvents()).toStrictEqual([
+            {
+              type: 'render-start',
+              id: 0,
+              lanes: ConcurrentLane | UserBlockingLane | ViewTransitionLane,
+            },
+            {
+              type: 'coroutine-start',
+              id: 0,
+              coroutine,
+            },
+            {
+              type: 'coroutine-end',
+              id: 0,
+              coroutine,
+            },
+            {
+              type: 'render-end',
+              id: 0,
+              lanes: ConcurrentLane | UserBlockingLane | ViewTransitionLane,
+            },
+            {
+              type: 'commit-start',
+              id: 0,
+            },
+            {
+              type: 'effect-commit-start',
+              id: 0,
+              phase: 'mutation',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-end',
+              id: 0,
+              phase: 'mutation',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-start',
+              id: 0,
+              phase: 'layout',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-end',
+              id: 0,
+              phase: 'layout',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'commit-end',
+              id: 0,
+            },
+          ] satisfies SessionEvent[]);
         }
-
-        expect(observer.flushEvents()).toStrictEqual([
-          {
-            type: 'render-start',
-            id: 0,
-            lanes: ConcurrentLane | UserBlockingLane | ViewTransitionLane,
-          },
-          {
-            type: 'render-end',
-            id: 0,
-            lanes: ConcurrentLane | UserBlockingLane | ViewTransitionLane,
-          },
-          {
-            type: 'commit-start',
-            id: 0,
-          },
-          {
-            type: 'effect-commit-start',
-            id: 0,
-            phase: 'mutation',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-end',
-            id: 0,
-            phase: 'mutation',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-start',
-            id: 0,
-            phase: 'layout',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-end',
-            id: 0,
-            phase: 'layout',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'commit-end',
-            id: 0,
-          },
-        ] satisfies SessionEvent[]);
       });
 
       it('handles errors that occurs during rendering', async () => {
@@ -380,31 +427,36 @@ describe('Runtime', () => {
             expect(caughtError).toBeInstanceOf(AbortError);
             expect((caughtError as AbortError).cause).toBe(error);
           }
-        }
 
-        expect(observer.flushEvents()).toStrictEqual([
-          {
-            type: 'render-start',
-            id: 0,
-            lanes: ConcurrentLane | UserBlockingLane,
-          },
-          {
-            type: 'render-error',
-            id: 0,
-            error,
-            captured: false,
-          },
-          {
-            type: 'render-end',
-            id: 0,
-            lanes: ConcurrentLane | UserBlockingLane,
-          },
-          {
-            type: 'commit-cancel',
-            id: 0,
-            reason: expect.any(AbortError),
-          },
-        ] satisfies SessionEvent[]);
+          expect(observer.flushEvents()).toStrictEqual([
+            {
+              type: 'render-start',
+              id: 0,
+              lanes: ConcurrentLane | UserBlockingLane,
+            },
+            {
+              type: 'coroutine-start',
+              id: 0,
+              coroutine,
+            },
+            {
+              type: 'render-error',
+              id: 0,
+              error,
+              captured: false,
+            },
+            {
+              type: 'render-end',
+              id: 0,
+              lanes: ConcurrentLane | UserBlockingLane,
+            },
+            {
+              type: 'commit-cancel',
+              id: 0,
+              reason: expect.any(AbortError),
+            },
+          ] satisfies SessionEvent[]);
+        }
       });
 
       it('aborts rendering when error is captured outside the root', async () => {
@@ -442,31 +494,35 @@ describe('Runtime', () => {
             error,
             expect.any(Function),
           );
+          expect(observer.flushEvents()).toStrictEqual([
+            {
+              type: 'render-start',
+              id: 0,
+              lanes: ConcurrentLane | UserBlockingLane,
+            },
+            {
+              type: 'coroutine-start',
+              id: 0,
+              coroutine: childCoroutine,
+            },
+            {
+              type: 'render-error',
+              id: 0,
+              error,
+              captured: true,
+            },
+            {
+              type: 'render-end',
+              id: 0,
+              lanes: ConcurrentLane | UserBlockingLane,
+            },
+            {
+              type: 'commit-cancel',
+              id: 0,
+              reason: expect.any(InterruptError),
+            },
+          ] satisfies SessionEvent[]);
         }
-
-        expect(observer.flushEvents()).toStrictEqual([
-          {
-            type: 'render-start',
-            id: 0,
-            lanes: ConcurrentLane | UserBlockingLane,
-          },
-          {
-            type: 'render-error',
-            id: 0,
-            error,
-            captured: true,
-          },
-          {
-            type: 'render-end',
-            id: 0,
-            lanes: ConcurrentLane | UserBlockingLane,
-          },
-          {
-            type: 'commit-cancel',
-            id: 0,
-            reason: expect.any(InterruptError),
-          },
-        ] satisfies SessionEvent[]);
       });
     });
 
@@ -488,14 +544,14 @@ describe('Runtime', () => {
 
         SESSION: {
           const coroutine = new MockCoroutine(
-            'coroutine1',
+            'Coroutine1',
             createScope(),
             (session) => {
               session.frame.coroutines.push(subcoroutine);
             },
           );
           const subcoroutine = new MockCoroutine(
-            'coroutine2',
+            'Coroutine2',
             createScope(coroutine),
             (session) => {
               session.frame.mutationEffects.push(
@@ -520,64 +576,83 @@ describe('Runtime', () => {
           expect(mutationEffect.commit).toHaveBeenCalledOnce();
           expect(layoutEffect.commit).toHaveBeenCalledOnce();
           expect(passiveEffect.commit).toHaveBeenCalledOnce();
+          expect(observer.flushEvents()).toStrictEqual([
+            {
+              type: 'render-start',
+              id: 0,
+              lanes: SyncLane | UserBlockingLane,
+            },
+            {
+              type: 'coroutine-start',
+              id: 0,
+              coroutine,
+            },
+            {
+              type: 'coroutine-end',
+              id: 0,
+              coroutine,
+            },
+            {
+              type: 'coroutine-start',
+              id: 0,
+              coroutine: subcoroutine,
+            },
+            {
+              type: 'coroutine-end',
+              id: 0,
+              coroutine: subcoroutine,
+            },
+            {
+              type: 'render-end',
+              id: 0,
+              lanes: SyncLane | UserBlockingLane,
+            },
+            {
+              type: 'commit-start',
+              id: 0,
+            },
+            {
+              type: 'effect-commit-start',
+              id: 0,
+              phase: 'mutation',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-end',
+              id: 0,
+              phase: 'mutation',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-start',
+              id: 0,
+              phase: 'layout',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-end',
+              id: 0,
+              phase: 'layout',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-start',
+              id: 0,
+              phase: 'passive',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'effect-commit-end',
+              id: 0,
+              phase: 'passive',
+              effects: expect.any(EffectQueue),
+            },
+            {
+              type: 'commit-end',
+              id: 0,
+            },
+          ] satisfies SessionEvent[]);
         }
-
-        expect(observer.flushEvents()).toStrictEqual([
-          {
-            type: 'render-start',
-            id: 0,
-            lanes: SyncLane | UserBlockingLane,
-          },
-          {
-            type: 'render-end',
-            id: 0,
-            lanes: SyncLane | UserBlockingLane,
-          },
-          {
-            type: 'commit-start',
-            id: 0,
-          },
-          {
-            type: 'effect-commit-start',
-            id: 0,
-            phase: 'mutation',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-end',
-            id: 0,
-            phase: 'mutation',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-start',
-            id: 0,
-            phase: 'layout',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-end',
-            id: 0,
-            phase: 'layout',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-start',
-            id: 0,
-            phase: 'passive',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'effect-commit-end',
-            id: 0,
-            phase: 'passive',
-            effects: expect.any(EffectQueue),
-          },
-          {
-            type: 'commit-end',
-            id: 0,
-          },
-        ] satisfies SessionEvent[]);
       });
 
       it('handles an error that occurs during rendering', async () => {
@@ -603,31 +678,36 @@ describe('Runtime', () => {
             expect(caughtError).toBeInstanceOf(AbortError);
             expect((caughtError as AbortError).cause).toBe(error);
           }
-        }
 
-        expect(observer.flushEvents()).toStrictEqual([
-          {
-            type: 'render-start',
-            id: 0,
-            lanes: SyncLane | UserBlockingLane,
-          },
-          {
-            type: 'render-error',
-            id: 0,
-            error,
-            captured: false,
-          },
-          {
-            type: 'render-end',
-            id: 0,
-            lanes: SyncLane | UserBlockingLane,
-          },
-          {
-            type: 'commit-cancel',
-            id: 0,
-            reason: expect.any(AbortError),
-          },
-        ] satisfies SessionEvent[]);
+          expect(observer.flushEvents()).toStrictEqual([
+            {
+              type: 'render-start',
+              id: 0,
+              lanes: SyncLane | UserBlockingLane,
+            },
+            {
+              type: 'coroutine-start',
+              id: 0,
+              coroutine,
+            },
+            {
+              type: 'render-error',
+              id: 0,
+              error,
+              captured: false,
+            },
+            {
+              type: 'render-end',
+              id: 0,
+              lanes: SyncLane | UserBlockingLane,
+            },
+            {
+              type: 'commit-cancel',
+              id: 0,
+              reason: expect.any(AbortError),
+            },
+          ] satisfies SessionEvent[]);
+        }
       });
 
       it('aborts rendering when error is captured outside the root', async () => {
@@ -645,9 +725,9 @@ describe('Runtime', () => {
             next: null,
             handler: errorHandler,
           };
-          const parentCoroutine = new MockCoroutine('coroutine1', scope);
+          const parentCoroutine = new MockCoroutine('Coroutine1', scope);
           const childCoroutine = new MockCoroutine(
-            'coroutine2',
+            'Coroutine2',
             createScope(parentCoroutine),
             () => {
               throw error;
@@ -665,31 +745,35 @@ describe('Runtime', () => {
             error,
             expect.any(Function),
           );
+          expect(observer.flushEvents()).toStrictEqual([
+            {
+              type: 'render-start',
+              id: 0,
+              lanes: SyncLane | UserBlockingLane,
+            },
+            {
+              type: 'coroutine-start',
+              id: 0,
+              coroutine: childCoroutine,
+            },
+            {
+              type: 'render-error',
+              id: 0,
+              error,
+              captured: true,
+            },
+            {
+              type: 'render-end',
+              id: 0,
+              lanes: SyncLane | UserBlockingLane,
+            },
+            {
+              type: 'commit-cancel',
+              id: 0,
+              reason: expect.any(InterruptError),
+            },
+          ] satisfies SessionEvent[]);
         }
-
-        expect(observer.flushEvents()).toStrictEqual([
-          {
-            type: 'render-start',
-            id: 0,
-            lanes: SyncLane | UserBlockingLane,
-          },
-          {
-            type: 'render-error',
-            id: 0,
-            error,
-            captured: true,
-          },
-          {
-            type: 'render-end',
-            id: 0,
-            lanes: SyncLane | UserBlockingLane,
-          },
-          {
-            type: 'commit-cancel',
-            id: 0,
-            reason: expect.any(InterruptError),
-          },
-        ] satisfies SessionEvent[]);
       });
     });
   });
@@ -733,9 +817,6 @@ describe('Runtime', () => {
       const scope = createScope();
       const coroutine = new MockCoroutine();
       const runtime = createRuntime();
-      const observer = new MockObserver();
-
-      runtime.addObserver(observer);
 
       const result = runtime.renderComponent(
         component,
@@ -751,22 +832,6 @@ describe('Runtime', () => {
         props,
         expect.any(RenderSession),
       );
-      expect(observer.flushEvents()).toStrictEqual([
-        {
-          type: 'component-render-start',
-          id: 1,
-          component,
-          props,
-          context: expect.any(RenderSession),
-        },
-        {
-          type: 'component-render-end',
-          id: 1,
-          component,
-          props,
-          context: expect.any(RenderSession),
-        },
-      ]);
       expect(result).toBe(null);
     });
   });
