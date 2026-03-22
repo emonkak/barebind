@@ -1,4 +1,4 @@
-import type { DirectiveType, Part, UpdateSession } from '../core.js';
+import type { DirectiveType, Part, Session } from '../core.js';
 import { replaceSentinelNode, treatNodeName } from '../hydration.js';
 import {
   createChildNodePart,
@@ -31,7 +31,7 @@ export class ElementTemplate<
     values: readonly [TProps, TChildren],
     part: Part.ChildNodePart,
     hydrationTarget: TreeWalker,
-    session: UpdateSession,
+    session: Session,
   ): TemplateResult {
     const { context } = session;
     const { ownerDocument } = part.sentinelNode;
@@ -65,7 +65,7 @@ export class ElementTemplate<
   render(
     values: readonly [TProps, TChildren],
     part: Part.ChildNodePart,
-    session: UpdateSession,
+    session: Session,
   ): TemplateResult {
     const { context } = session;
     const { ownerDocument } = part.sentinelNode;

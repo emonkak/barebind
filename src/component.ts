@@ -9,7 +9,7 @@ import {
   type Lanes,
   type Part,
   Scope,
-  type UpdateSession,
+  type Session,
 } from './core.js';
 import { NoLanes } from './lane.js';
 import {
@@ -108,14 +108,14 @@ export class ComponentBinding<TProps, TResult>
     );
   }
 
-  start(session: UpdateSession): void {
+  start(session: Session): void {
     const { frame, scope } = session;
     frame.coroutines.push(this);
     frame.mutationEffects.push(this, scope.level);
     this._pendingHooks = this._memoizedHooks;
   }
 
-  resume(session: UpdateSession): void {
+  resume(session: Session): void {
     const hooks = this._pendingHooks.slice();
     const scope = new Scope(this);
 
@@ -131,7 +131,7 @@ export class ComponentBinding<TProps, TResult>
 
     context.finalize();
 
-    const childSession: UpdateSession = { ...session, scope };
+    const childSession: Session = { ...session, scope };
 
     if (this._slot !== null) {
       this._slot.reconcile(result, childSession);
@@ -143,14 +143,14 @@ export class ComponentBinding<TProps, TResult>
     this._pendingHooks = hooks;
   }
 
-  attach(session: UpdateSession): void {
+  attach(session: Session): void {
     const { frame, scope } = session;
     frame.coroutines.push(this);
     this._scope = scope;
     this._pendingHooks = this._memoizedHooks;
   }
 
-  detach(session: UpdateSession): void {
+  detach(session: Session): void {
     const { frame } = session;
 
     // Cleanup effects follow the same declaration order within a component,

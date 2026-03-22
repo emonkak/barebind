@@ -2,8 +2,8 @@ import {
   BOUNDARY_TYPE_ERROR,
   type Coroutine,
   Scope,
+  type Session,
   type UpdateOptions,
-  type UpdateSession,
 } from '@/core.js';
 import { NoLanes } from '@/lane.js';
 import type { Runtime } from '@/runtime.js';
@@ -19,7 +19,7 @@ export class TestUpdater {
   }
 
   startUpdate<T>(
-    callback: (session: UpdateSession) => T,
+    callback: (session: Session) => T,
     options?: UpdateOptions,
   ): T {
     const previousBoundary = this.scope.boundary;

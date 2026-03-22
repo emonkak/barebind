@@ -4,10 +4,10 @@ import {
   type Effect,
   type Part,
   Scope,
+  type Session,
   type SessionContext,
   type UpdateHandle,
   type UpdateOptions,
-  type UpdateSession,
 } from './core.js';
 import { createTreeWalker, replaceSentinelNode } from './hydration.js';
 import { NoLanes } from './lane.js';
@@ -112,7 +112,7 @@ export class Root<T> {
 
   private _startSession(
     scope: Scope,
-    resume: (session: UpdateSession) => void,
+    resume: (session: Session) => void,
     options?: UpdateOptions,
   ): UpdateHandle {
     const coroutine: Coroutine = {

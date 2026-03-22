@@ -3,8 +3,8 @@ import type {
   DirectiveContext,
   DirectiveType,
   Part,
+  Session,
   UnwrapBindable,
-  UpdateSession,
 } from './core.js';
 import { areDirectiveTypesEqual } from './core.js';
 import { debugPart, undebugPart } from './debug/part.js';
@@ -58,17 +58,17 @@ export class Slot<T> {
     return this._status;
   }
 
-  attach(session: UpdateSession): void {
+  attach(session: Session): void {
     this._pendingBinding.attach(session);
     this._status = SLOT_STATUS_ATTACHED;
   }
 
-  detach(session: UpdateSession): void {
+  detach(session: Session): void {
     this._pendingBinding.detach(session);
     this._status = SLOT_STATUS_DETACHED;
   }
 
-  reconcile(source: T, session: UpdateSession): boolean {
+  reconcile(source: T, session: Session): boolean {
     const { context } = session;
     const { type, value, key } = context.resolveDirective(
       source,

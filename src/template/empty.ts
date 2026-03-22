@@ -1,4 +1,4 @@
-import type { DirectiveType, Part, UpdateSession } from '../core.js';
+import type { DirectiveType, Part, Session } from '../core.js';
 import { Template, type TemplateResult } from './template.js';
 
 export class EmptyTemplate extends Template<readonly []> {
@@ -16,7 +16,7 @@ export class EmptyTemplate extends Template<readonly []> {
     _values: readonly [],
     _part: Part.ChildNodePart,
     _hydrationTarget: TreeWalker,
-    _session: UpdateSession,
+    _session: Session,
   ): TemplateResult {
     return { childNodes: [], slots: [] };
   }
@@ -24,7 +24,7 @@ export class EmptyTemplate extends Template<readonly []> {
   render(
     _values: readonly [],
     _part: Part.ChildNodePart,
-    _session: UpdateSession,
+    _session: Session,
   ): TemplateResult {
     return { childNodes: [], slots: [] };
   }

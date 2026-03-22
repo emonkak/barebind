@@ -7,7 +7,7 @@ import {
   PART_TYPE_PROPERTY,
   type Part,
   type Primitive,
-  type UpdateSession,
+  type Session,
 } from '../core.js';
 import { DirectiveError } from '../error.js';
 import { ensurePartType } from '../part.js';
@@ -54,7 +54,7 @@ export class SpreadBinding extends PrimitiveBinding<
     return this._memoizedSlots === null || value !== this._value;
   }
 
-  override attach(session: UpdateSession): void {
+  override attach(session: Session): void {
     const { context } = session;
     const oldSlots = this._pendingSlots;
     const newSlots = new Map();
@@ -84,7 +84,7 @@ export class SpreadBinding extends PrimitiveBinding<
     this._pendingSlots = newSlots;
   }
 
-  override detach(session: UpdateSession): void {
+  override detach(session: Session): void {
     if (this._memoizedSlots !== null) {
       for (const slot of this._memoizedSlots.values()) {
         slot.detach(session);

@@ -13,6 +13,7 @@ import {
   type Primitive,
   type RenderFrame,
   type Scope,
+  type Session,
   type SessionContext,
   type SessionEvent,
   type SessionObserver,
@@ -22,7 +23,6 @@ import {
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
-  type UpdateSession,
 } from './core.js';
 import {
   AbortError,
@@ -98,7 +98,7 @@ export class Runtime implements SessionContext {
       }
 
       const frame = createRenderFrame(id, lanes);
-      const session: UpdateSession = {
+      const session: Session = {
         frame,
         scope: coroutine.scope,
         coroutine,
@@ -388,7 +388,7 @@ export class Runtime implements SessionContext {
     }
   }
 
-  private async _runRenderAsync(session: UpdateSession): Promise<void> {
+  private async _runRenderAsync(session: Session): Promise<void> {
     const { frame } = session;
     const { id, lanes, coroutines } = frame;
 
@@ -441,7 +441,7 @@ export class Runtime implements SessionContext {
     }
   }
 
-  private _runRenderSync(session: UpdateSession): void {
+  private _runRenderSync(session: Session): void {
     const { frame } = session;
     const { id, lanes, coroutines } = frame;
 

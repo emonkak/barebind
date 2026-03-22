@@ -23,10 +23,10 @@ import {
   type RenderFrame,
   type RequestCallbackOptions,
   Scope,
+  type Session,
   type SessionEvent,
   type SessionObserver,
   type TemplateMode,
-  type UpdateSession,
 } from '@/core.js';
 import { SyncLane } from '@/lane.js';
 import { Runtime, type RuntimeOptions } from '@/runtime.js';
@@ -127,11 +127,11 @@ export class MockBinding<T> implements Binding<T> {
     return !Object.is(value, this.memoizedValue);
   }
 
-  attach(_session: UpdateSession): void {
+  attach(_session: Session): void {
     this.dirty = true;
   }
 
-  detach(_session: UpdateSession): void {
+  detach(_session: Session): void {
     this.dirty = true;
   }
 
@@ -215,25 +215,25 @@ export class MockCoroutine implements Coroutine {
 
   scope: Scope;
 
-  callback: (this: Coroutine, session: UpdateSession) => void;
+  callback: (this: Coroutine, session: Session) => void;
 
   pendingLanes: Lanes = -1;
 
   constructor(
     name: string = MockCoroutine.name,
     scope: Scope = new Scope(),
-    callback: (this: Coroutine, session: UpdateSession) => void = () => {},
+    callback: (this: Coroutine, session: Session) => void = () => {},
   ) {
     this.name = name;
     this.scope = scope;
     this.callback = callback;
   }
 
-  start(session: UpdateSession): void {
+  start(session: Session): void {
     session.frame.coroutines.push(this);
   }
 
-  resume(session: UpdateSession): void {
+  resume(session: Session): void {
     this.callback(session);
   }
 }
@@ -292,7 +292,7 @@ export class MockTemplate extends Template<readonly unknown[]> {
   render(
     _values: readonly unknown[],
     _part: Part.ChildNodePart,
-    _session: UpdateSession,
+    _session: Session,
   ): TemplateResult {
     return {
       childNodes: [],
@@ -304,7 +304,7 @@ export class MockTemplate extends Template<readonly unknown[]> {
     _values: readonly unknown[],
     _part: Part.ChildNodePart,
     _hydrationTarget: TreeWalker,
-    _session: UpdateSession,
+    _session: Session,
   ): TemplateResult {
     return {
       childNodes: [],

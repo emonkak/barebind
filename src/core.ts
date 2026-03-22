@@ -88,8 +88,8 @@ export interface Coroutine {
   readonly name: string;
   readonly scope: Scope;
   pendingLanes: Lanes;
-  start(session: UpdateSession): void;
-  resume(session: UpdateSession): void;
+  start(session: Session): void;
+  resume(session: Session): void;
 }
 
 export class Directive<T> implements Bindable<T> {
@@ -279,6 +279,13 @@ export interface ReversibleEffect extends Effect {
   rollback(): void;
 }
 
+export interface Session {
+  frame: RenderFrame;
+  scope: Scope;
+  coroutine: Coroutine;
+  context: SessionContext;
+}
+
 export interface SessionContext extends DirectiveContext {
   addObserver(observer: SessionObserver): () => void;
   getScheduledUpdates(): Update[];
@@ -326,8 +333,8 @@ export type SessionEvent =
     };
 
 export interface SessionLifecycle {
-  attach(session: UpdateSession): void;
-  detach(session: UpdateSession): void;
+  attach(session: Session): void;
+  detach(session: Session): void;
 }
 
 export interface SessionObserver {
@@ -378,13 +385,6 @@ export type UpdateResult =
   | { status: 'done' }
   | { status: 'skipped' }
   | { status: 'canceled'; reason: unknown };
-
-export interface UpdateSession {
-  frame: RenderFrame;
-  scope: Scope;
-  coroutine: Coroutine;
-  context: SessionContext;
-}
 
 export function areDirectiveTypesEqual(
   nextType: DirectiveType<unknown>,

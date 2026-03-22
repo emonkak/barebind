@@ -1,4 +1,4 @@
-import { PART_TYPE_TEXT, type Part, type UpdateSession } from '../core.js';
+import { PART_TYPE_TEXT, type Part, type Session } from '../core.js';
 import { splitText } from '../hydration.js';
 import { createTextPart } from '../part.js';
 import { Slot } from '../slot.js';
@@ -33,7 +33,7 @@ export class TextTemplate<T> extends Template<readonly [T]> {
     values: readonly [T],
     _part: Part.ChildNodePart,
     hydrationTarget: TreeWalker,
-    session: UpdateSession,
+    session: Session,
   ): TemplateResult {
     const { context } = session;
     const textPart = {
@@ -52,7 +52,7 @@ export class TextTemplate<T> extends Template<readonly [T]> {
   render(
     values: readonly [T],
     part: Part.ChildNodePart,
-    session: UpdateSession,
+    session: Session,
   ): TemplateResult {
     const { context } = session;
     const { ownerDocument } = part.sentinelNode;

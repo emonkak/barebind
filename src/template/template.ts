@@ -6,7 +6,7 @@ import {
   PART_TYPE_CHILD_NODE,
   PART_TYPE_TEXT,
   type Part,
-  type UpdateSession,
+  type Session,
 } from '../core.js';
 import { getHydrationTarget } from '../hydration.js';
 import { ensurePartType } from '../part.js';
@@ -29,14 +29,14 @@ export abstract class Template<TValues extends readonly unknown[]>
   abstract render(
     values: TValues,
     part: Part.ChildNodePart,
-    session: UpdateSession,
+    session: Session,
   ): TemplateResult;
 
   abstract hydrate(
     values: TValues,
     part: Part.ChildNodePart,
     hydrationTarget: TreeWalker,
-    session: UpdateSession,
+    session: Session,
   ): TemplateResult;
 
   resolveBinding(
@@ -97,7 +97,7 @@ export class TemplateBinding<TValues extends readonly unknown[]>
     return this._memoizedResult === null || values !== this._values;
   }
 
-  attach(session: UpdateSession): void {
+  attach(session: Session): void {
     if (this._pendingResult !== null) {
       const { slots } = this._pendingResult;
 
@@ -125,7 +125,7 @@ export class TemplateBinding<TValues extends readonly unknown[]>
     }
   }
 
-  detach(session: UpdateSession): void {
+  detach(session: Session): void {
     if (this._pendingResult !== null) {
       const { slots } = this._pendingResult;
 

@@ -7,8 +7,8 @@ import {
   PART_TYPE_PROPERTY,
   PART_TYPE_TEXT,
   type Part,
+  type Session,
   type TemplateMode,
-  type UpdateSession,
 } from '../core.js';
 import { emphasizeNode } from '../debug/node.js';
 import { formatPart } from '../debug/part.js';
@@ -155,7 +155,7 @@ export class TaggedTemplate<
     values: TValues,
     part: Part.ChildNodePart,
     hydrationTarget: TreeWalker,
-    session: UpdateSession,
+    session: Session,
   ): TemplateResult {
     const { context } = session;
     const { ownerDocument } = part.sentinelNode;
@@ -258,7 +258,7 @@ export class TaggedTemplate<
   render(
     values: TValues,
     part: Part.ChildNodePart,
-    session: UpdateSession,
+    session: Session,
   ): TemplateResult {
     const { context } = session;
     const { ownerDocument } = part.sentinelNode;

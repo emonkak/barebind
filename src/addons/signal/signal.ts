@@ -11,7 +11,7 @@ import {
   type Lanes,
   type Part,
   Scope,
-  type UpdateSession,
+  type Session,
 } from '../../core.js';
 import { NoLanes } from '../../lane.js';
 import {
@@ -148,17 +148,17 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     return this._subscription.unsubscribe === null || signal !== this._signal;
   }
 
-  start(session: UpdateSession): void {
+  start(session: Session): void {
     session.frame.coroutines.push(this);
   }
 
-  resume(session: UpdateSession): void {
+  resume(session: Session): void {
     if (this._slot.reconcile(this._signal.value, session)) {
       session.frame.mutationEffects.push(this._slot, this._scope.level);
     }
   }
 
-  attach(session: UpdateSession): void {
+  attach(session: Session): void {
     const { frame, scope, context } = session;
     const { version } = this._signal;
 
@@ -179,7 +179,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._scope = scope;
   }
 
-  detach(session: UpdateSession): void {
+  detach(session: Session): void {
     const { frame } = session;
 
     frame.layoutEffects.pushBefore(new UnsubscribeSignal(this._subscription));

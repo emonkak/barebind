@@ -9,7 +9,7 @@ import {
   isBindable,
   PART_TYPE_ELEMENT,
   type Part,
-  type UpdateSession,
+  type Session,
 } from '../core.js';
 import { ensurePartType } from '../part.js';
 import { BlackholeType } from '../primitive/blackhole.js';
@@ -243,9 +243,9 @@ export class ElementBinding implements Binding<ElementProps> {
     );
   }
 
-  attach(_session: UpdateSession): void {}
+  attach(_session: Session): void {}
 
-  detach(_session: UpdateSession): void {}
+  detach(_session: Session): void {}
 
   commit(): void {
     const newProps = this._props;

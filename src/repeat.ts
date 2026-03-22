@@ -7,7 +7,7 @@ import {
   type DirectiveType,
   PART_TYPE_CHILD_NODE,
   type Part,
-  type UpdateSession,
+  type Session,
 } from './core.js';
 import { getHydrationTarget, replaceSentinelNode } from './hydration.js';
 import { createChildNodePart, ensurePartType } from './part.js';
@@ -100,7 +100,7 @@ export class RepeatBinding<TSource, TKey, TElement>
     );
   }
 
-  attach(session: UpdateSession): void {
+  attach(session: Session): void {
     const { context, coroutine } = session;
     const target = getHydrationTarget(coroutine.scope);
 
@@ -179,7 +179,7 @@ export class RepeatBinding<TSource, TKey, TElement>
     }
   }
 
-  detach(session: UpdateSession): void {
+  detach(session: Session): void {
     for (const slot of this._pendingSlots) {
       slot.detach(session);
     }

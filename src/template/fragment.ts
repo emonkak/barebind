@@ -1,9 +1,5 @@
 import { sequentialEqual } from '../compare.js';
-import {
-  areDirectiveTypesEqual,
-  type Part,
-  type UpdateSession,
-} from '../core.js';
+import { areDirectiveTypesEqual, type Part, type Session } from '../core.js';
 import { Template, type TemplateResult } from './template.js';
 
 export class FragmentTemplate extends Template<readonly unknown[]> {
@@ -32,7 +28,7 @@ export class FragmentTemplate extends Template<readonly unknown[]> {
     values: readonly unknown[],
     part: Part.ChildNodePart,
     hydrationTarget: TreeWalker,
-    session: UpdateSession,
+    session: Session,
   ): TemplateResult {
     const childNodes = [];
     const slots = [];
@@ -57,7 +53,7 @@ export class FragmentTemplate extends Template<readonly unknown[]> {
   render(
     values: readonly unknown[],
     part: Part.ChildNodePart,
-    session: UpdateSession,
+    session: Session,
   ): TemplateResult {
     const childNodes = [];
     const slots = [];

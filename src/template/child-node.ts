@@ -1,4 +1,4 @@
-import type { DirectiveType, Part, UpdateSession } from '../core.js';
+import type { DirectiveType, Part, Session } from '../core.js';
 import { replaceSentinelNode } from '../hydration.js';
 import { createChildNodePart } from '../part.js';
 import { Slot } from '../slot.js';
@@ -19,7 +19,7 @@ export class ChildNodeTemplate<T> extends Template<[T]> {
     values: readonly [unknown],
     part: Part.ChildNodePart,
     hydrationTarget: TreeWalker,
-    session: UpdateSession,
+    session: Session,
   ): TemplateResult {
     const { context } = session;
     const childNodePart = createChildNodePart(
@@ -38,7 +38,7 @@ export class ChildNodeTemplate<T> extends Template<[T]> {
   render(
     values: readonly [unknown],
     part: Part.ChildNodePart,
-    session: UpdateSession,
+    session: Session,
   ): TemplateResult {
     const { context } = session;
     const childNodePart = createChildNodePart(

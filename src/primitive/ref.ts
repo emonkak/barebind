@@ -4,7 +4,7 @@ import {
   PART_TYPE_ATTRIBUTE,
   type Part,
   type Primitive,
-  type UpdateSession,
+  type Session,
 } from '../core.js';
 import { DirectiveError } from '../error.js';
 import { ensurePartType } from '../part.js';
@@ -52,11 +52,11 @@ export class RefBinding extends PrimitiveBinding<
     return value !== this._memoizedValue;
   }
 
-  override attach(session: UpdateSession): void {
+  override attach(session: Session): void {
     session.frame.layoutEffects.pushBefore(new InvokeRef(this));
   }
 
-  override detach(session: UpdateSession): void {
+  override detach(session: Session): void {
     session.frame.mutationEffects.pushAfter(new CleanupRef(this));
   }
 

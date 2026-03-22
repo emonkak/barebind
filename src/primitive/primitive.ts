@@ -1,4 +1,4 @@
-import type { Binding, Part, Primitive, UpdateSession } from '../core.js';
+import type { Binding, Part, Primitive, Session } from '../core.js';
 
 export abstract class PrimitiveBinding<TValue, TPart extends Part>
   implements Binding<TValue>
@@ -28,9 +28,9 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
 
   abstract shouldUpdate(value: TValue): boolean;
 
-  attach(_session: UpdateSession): void {}
+  attach(_session: Session): void {}
 
-  detach(_session: UpdateSession): void {}
+  detach(_session: Session): void {}
 
   commit(): void {}
 
