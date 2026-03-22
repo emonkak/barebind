@@ -9,21 +9,21 @@ import { DirectiveError } from '../error.js';
 import { ensurePartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export type ClassSpecifier = ClassArray | ClassObject;
+export type ClassMap =
+  | {
+      readonly [index: number]: ClassValue;
+    }
+  | {
+      readonly [key: string]: ClassValue;
+    };
 
-type ClassArray = readonly ClassAtom[];
-
-type ClassObject = {
-  readonly [key: string]: ClassAtom;
-};
-
-type ClassAtom = boolean | string | null | undefined;
+export type ClassValue = boolean | string | null | undefined;
 
 const CLASS_SEPARATOR_PATTERN = /\s+/;
 
-export const ClassPrimitive: Primitive<ClassSpecifier> = {
+export const ClassPrimitive: Primitive<ClassMap> = {
   name: 'ClassPrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is ClassSpecifier {
+  ensureValue(value: unknown, part: Part): asserts value is ClassMap {
     if (!isObject(value)) {
       throw new DirectiveError(
         this,
@@ -34,7 +34,7 @@ export const ClassPrimitive: Primitive<ClassSpecifier> = {
     }
   },
   resolveBinding(
-    value: ClassSpecifier,
+    value: ClassMap,
     part: Part,
     _context: DirectiveContext,
   ): ClassBinding {
@@ -44,27 +44,23 @@ export const ClassPrimitive: Primitive<ClassSpecifier> = {
 };
 
 export class ClassBinding extends PrimitiveBinding<
-  ClassSpecifier,
+  ClassMap,
   Part.AttributePart
 > {
-  private _memoizedValue: ClassSpecifier = {};
+  private _memoizedValue: ClassMap = {};
 
-  get type(): Primitive<ClassSpecifier> {
+  get type(): Primitive<ClassMap> {
     return ClassPrimitive;
   }
 
-  shouldUpdate(classes: ClassSpecifier): boolean {
+  shouldUpdate(classes: ClassMap): boolean {
     return !shallowEqual(classes, this._memoizedValue);
   }
 
   override commit(): void {
     const { classList } = this._part.node;
 
-    updateClasses(
-      classList,
-      this._value as ClassObject,
-      this._memoizedValue as ClassObject,
-    );
+    updateClasses(classList, this._value, this._memoizedValue);
 
     this._memoizedValue = this._value;
   }
@@ -72,7 +68,7 @@ export class ClassBinding extends PrimitiveBinding<
   override rollback(): void {
     const { classList } = this.part.node;
 
-    updateClasses(classList, {}, this._memoizedValue as ClassObject);
+    updateClasses(classList, {}, this._memoizedValue);
 
     this._memoizedValue = {};
   }
@@ -85,7 +81,7 @@ function isObject(value: unknown): value is object {
 function toggleClass(
   classList: DOMTokenList,
   key: string,
-  value: ClassAtom,
+  value: ClassValue,
   enabled: boolean,
 ): void {
   let className: string;
@@ -109,8 +105,8 @@ function toggleClass(
 
 function updateClasses(
   classList: DOMTokenList,
-  newClasses: ClassObject,
-  oldClasses: ClassObject,
+  newClasses: Record<string, ClassValue>,
+  oldClasses: Record<string, ClassValue>,
 ): void {
   for (const key of Object.keys(oldClasses)) {
     const value = oldClasses[key];
