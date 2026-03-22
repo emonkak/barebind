@@ -16,27 +16,27 @@ import { PrimitiveBinding } from './primitive.js';
 
 export type SpreadProps = { [key: string]: unknown };
 
-export const SpreadPrimitive: Primitive<SpreadProps> = {
-  name: 'SpreadPrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is SpreadProps {
+export abstract class SpreadType {
+  static ensureValue(value: unknown, part: Part): asserts value is SpreadProps {
     if (!isSpreadProps(value)) {
       throw new DirectiveError(
         this,
         value,
         part,
-        'The value of SpreadPrimitive must be an object.',
+        'SpreadType values must be object.',
       );
     }
-  },
-  resolveBinding(
+  }
+
+  static resolveBinding(
     value: SpreadProps,
     part: Part,
     _context: DirectiveContext,
   ): SpreadBinding {
     ensurePartType<Part.ElementPart>(PART_TYPE_ELEMENT, this, value, part);
     return new SpreadBinding(value, part);
-  },
-};
+  }
+}
 
 export class SpreadBinding extends PrimitiveBinding<
   SpreadProps,
@@ -47,7 +47,7 @@ export class SpreadBinding extends PrimitiveBinding<
   private _memoizedSlots: Map<string, Slot<unknown>> | null = null;
 
   get type(): Primitive<SpreadProps> {
-    return SpreadPrimitive;
+    return SpreadType;
   }
 
   shouldUpdate(value: SpreadProps): boolean {

@@ -7,25 +7,24 @@ import {
 import { ensurePartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-const noValue = Symbol('noValue');
+const NoValue = Symbol();
 
-export const PropertyPrimitive: Primitive<any> = {
-  name: 'PropertyPrimitive',
-  resolveBinding(
-    value: unknown,
+export abstract class PropertyType {
+  static resolveBinding<T>(
+    value: T,
     part: Part,
     _context: DirectiveContext,
-  ): PropertyBinding<unknown> {
+  ): PropertyBinding<T> {
     ensurePartType<Part.PropertyPart>(PART_TYPE_PROPERTY, this, value, part);
     return new PropertyBinding(value, part);
-  },
-};
+  }
+}
 
 export class PropertyBinding<T> extends PrimitiveBinding<T, Part.PropertyPart> {
-  private _memoizedValue: T | typeof noValue = noValue;
+  private _memoizedValue: T | typeof NoValue = NoValue;
 
   get type(): Primitive<T> {
-    return PropertyPrimitive;
+    return PropertyType;
   }
 
   shouldUpdate(value: T): boolean {
@@ -39,10 +38,10 @@ export class PropertyBinding<T> extends PrimitiveBinding<T, Part.PropertyPart> {
   }
 
   override rollback(): void {
-    if (this._memoizedValue !== noValue) {
+    if (this._memoizedValue !== NoValue) {
       const { node, name, defaultValue } = this._part;
       (node as any)[name] = defaultValue;
-      this._memoizedValue = noValue;
+      this._memoizedValue = NoValue;
     }
   }
 }

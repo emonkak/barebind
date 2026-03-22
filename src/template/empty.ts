@@ -1,7 +1,7 @@
 import type { DirectiveType, Part, UpdateSession } from '../core.js';
-import { AbstractTemplate, type TemplateResult } from './template.js';
+import { Template, type TemplateResult } from './template.js';
 
-export class EmptyTemplate extends AbstractTemplate<readonly []> {
+export class EmptyTemplate extends Template<readonly []> {
   static readonly Default: EmptyTemplate = new EmptyTemplate();
 
   get arity(): 0 {

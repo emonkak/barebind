@@ -7,23 +7,22 @@ import {
 import { ensurePartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export const TextPrimitive: Primitive<any> = {
-  name: 'TextPrimitive',
-  resolveBinding(
-    value: unknown,
+export abstract class TextType {
+  static resolveBinding<T>(
+    value: T,
     part: Part,
     _context: DirectiveContext,
-  ): TextBinding<unknown> {
+  ): TextBinding<T> {
     ensurePartType<Part.TextPart>(PART_TYPE_TEXT, this, value, part);
     return new TextBinding(value, part);
-  },
-};
+  }
+}
 
 export class TextBinding<T> extends PrimitiveBinding<T, Part.TextPart> {
   private _memoizedValue: T | null = null;
 
   get type(): Primitive<T> {
-    return TextPrimitive;
+    return TextType;
   }
 
   shouldUpdate(value: T): boolean {

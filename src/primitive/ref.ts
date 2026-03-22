@@ -13,27 +13,30 @@ import { DirectiveError } from '../error.js';
 import { ensurePartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export const RefPrimitive: Primitive<Ref<Element>> = {
-  name: 'RefPrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is Ref<Element> {
+export abstract class RefType {
+  static ensureValue(
+    value: unknown,
+    part: Part,
+  ): asserts value is Ref<Element> {
     if (!isElementRef(value)) {
       throw new DirectiveError(
         this,
         value,
         part,
-        'The value of RefPrimitive must be a function, object, null or undefined.',
+        'RefType values must be function, object, null or undefined.',
       );
     }
-  },
-  resolveBinding(
+  }
+
+  static resolveBinding(
     value: Ref<Element>,
     part: Part,
     _context: DirectiveContext,
   ): RefBinding {
     ensurePartType<Part.AttributePart>(PART_TYPE_ATTRIBUTE, this, value, part);
     return new RefBinding(value, part);
-  },
-};
+  }
+}
 
 export class RefBinding extends PrimitiveBinding<
   Ref<Element>,
@@ -44,7 +47,7 @@ export class RefBinding extends PrimitiveBinding<
   private _memoizedCleanup: Cleanup | void = undefined;
 
   get type(): Primitive<Ref<Element>> {
-    return RefPrimitive;
+    return RefType;
   }
 
   shouldUpdate(value: Ref<Element>): boolean {

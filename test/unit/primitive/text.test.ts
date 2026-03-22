@@ -1,19 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createElementPart, createTextPart } from '@/part.js';
-import { TextBinding, TextPrimitive } from '@/primitive/text.js';
+import { TextBinding, TextType } from '@/primitive/text.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
-describe('TextPrimitive', () => {
+describe('TextType', () => {
   describe('resolveBinding()', () => {
     it('constructs a new TextBinding', () => {
       const value = 'foo';
       const part = createTextPart(document.createTextNode(''), '', '');
       const runtime = createRuntime();
-      const binding = TextPrimitive.resolveBinding(value, part, runtime);
+      const binding = TextType.resolveBinding(value, part, runtime);
 
       expect(binding).toBeInstanceOf(TextBinding);
-      expect(binding.type).toBe(TextPrimitive);
+      expect(binding.type).toBe(TextType);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });
@@ -23,8 +23,8 @@ describe('TextPrimitive', () => {
       const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
 
-      expect(() => TextPrimitive.resolveBinding(value, part, runtime)).toThrow(
-        'TextPrimitive must be used in TextPart.',
+      expect(() => TextType.resolveBinding(value, part, runtime)).toThrow(
+        'TextType must be used in TextPart.',
       );
     });
   });

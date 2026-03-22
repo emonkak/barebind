@@ -18,15 +18,15 @@ import {
   createTextPart,
   HTML_NAMESPACE_URI,
 } from '@/part.js';
-import { AttributePrimitive } from '@/primitive/attribute.js';
-import { BlackholePrimitive } from '@/primitive/blackhole.js';
-import { ClassPrimitive } from '@/primitive/class.js';
-import { CommentPrimitive } from '@/primitive/comment.js';
-import { LivePrimitive } from '@/primitive/live.js';
-import { PropertyPrimitive } from '@/primitive/property.js';
-import { SpreadPrimitive } from '@/primitive/spread.js';
-import { StylePrimitive } from '@/primitive/style.js';
-import { TextPrimitive } from '@/primitive/text.js';
+import { AttributeType } from '@/primitive/attribute.js';
+import { BlackholeType } from '@/primitive/blackhole.js';
+import { ClassType } from '@/primitive/class.js';
+import { CommentType } from '@/primitive/comment.js';
+import { LiveType } from '@/primitive/live.js';
+import { PropertyType } from '@/primitive/property.js';
+import { SpreadType } from '@/primitive/spread.js';
+import { StyleType } from '@/primitive/style.js';
+import { TextType } from '@/primitive/text.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import { templateLiteral } from '../../test-helpers.js';
 
@@ -117,54 +117,50 @@ describe('ServerBackend', () => {
     });
   });
 
-  describe('resolvePrimitive()', () => {
+  describe('resolveType()', () => {
     it.each<[unknown, Part, Primitive<unknown>]>([
       [
         'foo',
         createAttributePart(document.createElement('div'), 'class'),
-        AttributePrimitive,
+        AttributeType,
       ],
       [
         null,
         createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
-        BlackholePrimitive,
+        BlackholeType,
       ],
       [
         undefined,
         createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
-        BlackholePrimitive,
+        BlackholeType,
       ],
       [
         'foo',
         createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
-        CommentPrimitive,
+        CommentType,
       ],
-      [{}, createElementPart(document.createElement('div')), SpreadPrimitive],
+      [{}, createElementPart(document.createElement('div')), SpreadType],
       [
         () => {},
         createEventPart(document.createElement('div'), 'click'),
-        BlackholePrimitive,
+        BlackholeType,
       ],
       [
         'foo',
         createLivePart(document.createElement('textarea'), 'value'),
-        LivePrimitive,
+        LiveType,
       ],
       [
         'foo',
         createPropertyPart(document.createElement('textarea'), 'value'),
-        PropertyPrimitive,
+        PropertyType,
       ],
-      [
-        'foo',
-        createTextPart(document.createTextNode(''), '', ''),
-        TextPrimitive,
-      ],
-    ])('resolves primitives from any parts', (source, part, expectedPrimitive) => {
+      ['foo', createTextPart(document.createTextNode(''), '', ''), TextType],
+    ])('resolves primitives from any parts', (source, part, expectedType) => {
       const backend = new ServerBackend(document);
 
       expect(backend.resolvePrimitive(source, part)).toStrictEqual(
-        expectedPrimitive,
+        expectedType,
       );
     });
 
@@ -172,30 +168,30 @@ describe('ServerBackend', () => {
       [
         [],
         createAttributePart(document.createElement('div'), ':class'),
-        ClassPrimitive,
+        ClassType,
       ],
       [
         'foo',
         createAttributePart(document.createElement('div'), ':ref'),
-        BlackholePrimitive,
+        BlackholeType,
       ],
       [
         {},
         createAttributePart(document.createElement('div'), ':style'),
-        StylePrimitive,
+        StyleType,
       ],
       [
         null,
         createAttributePart(document.createElement('div'), ':'),
-        BlackholePrimitive,
+        BlackholeType,
       ],
-    ])('resolves primitives from attribute parts starting with ":"', (source, part, expectedPrimitive) => {
+    ])('resolves primitives from attribute parts starting with ":"', (source, part, expectedType) => {
       const backend = new ServerBackend(document);
 
-      expect(backend.resolvePrimitive(source, part)).toBe(expectedPrimitive);
+      expect(backend.resolvePrimitive(source, part)).toBe(expectedType);
       expect(
         backend.resolvePrimitive(source, { ...part, name: part.name }),
-      ).toBe(expectedPrimitive);
+      ).toBe(expectedType);
     });
   });
 

@@ -7,17 +7,16 @@ import {
 import { ensurePartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export const AttributePrimitive: Primitive<any> = {
-  name: 'AttributePrimitive',
-  resolveBinding(
-    value: unknown,
+export abstract class AttributeType {
+  static resolveBinding<T>(
+    value: T,
     part: Part,
     _context: DirectiveContext,
-  ): AttributeBinding<unknown> {
+  ): AttributeBinding<T> {
     ensurePartType<Part.AttributePart>(PART_TYPE_ATTRIBUTE, this, value, part);
     return new AttributeBinding(value, part);
-  },
-};
+  }
+}
 
 export class AttributeBinding<T> extends PrimitiveBinding<
   T,
@@ -26,7 +25,7 @@ export class AttributeBinding<T> extends PrimitiveBinding<
   private _memoizedValue: T | null = null;
 
   get type(): Primitive<T> {
-    return AttributePrimitive;
+    return AttributeType;
   }
 
   shouldUpdate(value: T): boolean {

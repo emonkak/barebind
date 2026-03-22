@@ -1,23 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createElementPart, createEventPart } from '@/part.js';
-import { EventBinding, EventPrimitive } from '@/primitive/event.js';
+import { EventBinding, EventType } from '@/primitive/event.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
-describe('EventPrimitive', () => {
+describe('EventType', () => {
   describe('ensureValue()', () => {
     it('asserts the value is an event listener, null or undefined', () => {
       const part = createEventPart(document.createElement('div'), 'click');
 
       expect(() => {
-        EventPrimitive.ensureValue!.call(EventPrimitive, null, part);
-        EventPrimitive.ensureValue!.call(EventPrimitive, undefined, part);
-        EventPrimitive.ensureValue!.call(EventPrimitive, () => {}, part);
-        EventPrimitive.ensureValue!.call(
-          EventPrimitive,
-          { handleEvent: () => {} },
-          part,
-        );
+        EventType.ensureValue!.call(EventType, null, part);
+        EventType.ensureValue!.call(EventType, undefined, part);
+        EventType.ensureValue!.call(EventType, () => {}, part);
+        EventType.ensureValue!.call(EventType, { handleEvent: () => {} }, part);
       }).not.toThrow();
     });
 
@@ -25,9 +21,9 @@ describe('EventPrimitive', () => {
       const part = createEventPart(document.createElement('div'), 'click');
 
       expect(() => {
-        EventPrimitive.ensureValue!.call(EventPrimitive, {}, part);
+        EventType.ensureValue!.call(EventType, {}, part);
       }).toThrow(
-        'The value of EventPrimitive must be an EventListener, EventListenerObject, null or undefined.',
+        'EventType values must be EventListener, EventListenerObject, null or undefined.',
       );
     });
   });
@@ -37,10 +33,10 @@ describe('EventPrimitive', () => {
       const handler = () => {};
       const part = createEventPart(document.createElement('div'), 'click');
       const runtime = createRuntime();
-      const binding = EventPrimitive.resolveBinding(handler, part, runtime);
+      const binding = EventType.resolveBinding(handler, part, runtime);
 
       expect(binding).toBeInstanceOf(EventBinding);
-      expect(binding.type).toBe(EventPrimitive);
+      expect(binding.type).toBe(EventType);
       expect(binding.value).toBe(handler);
       expect(binding.part).toBe(part);
     });
@@ -50,9 +46,9 @@ describe('EventPrimitive', () => {
       const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
 
-      expect(() =>
-        EventPrimitive.resolveBinding(handler, part, runtime),
-      ).toThrow('EventPrimitive must be used in EventPart.');
+      expect(() => EventType.resolveBinding(handler, part, runtime)).toThrow(
+        'EventType must be used in EventPart.',
+      );
     });
   });
 });

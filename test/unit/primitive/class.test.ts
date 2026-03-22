@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { createAttributePart, createElementPart } from '@/part.js';
-import { ClassBinding, ClassPrimitive } from '@/primitive/class.js';
+import { ClassBinding, ClassType } from '@/primitive/class.js';
 import { createRuntime } from '../../mocks.js';
 import { createElement } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
 
-describe('ClassPrimitive', () => {
+describe('ClassType', () => {
   describe('ensureValue()', () => {
     it.for([
       { foo: true },
@@ -16,7 +16,7 @@ describe('ClassPrimitive', () => {
       const part = createAttributePart(document.createElement('div'), ':class');
 
       expect(() => {
-        ClassPrimitive.ensureValue!.call(ClassPrimitive, source, part);
+        ClassType.ensureValue!.call(ClassType, source, part);
       }).not.toThrow();
     });
 
@@ -28,8 +28,8 @@ describe('ClassPrimitive', () => {
       const part = createAttributePart(document.createElement('div'), ':class');
 
       expect(() => {
-        ClassPrimitive.ensureValue!.call(ClassPrimitive, source, part);
-      }).toThrow('The value of ClassPrimitive must be an object.');
+        ClassType.ensureValue!.call(ClassType, source, part);
+      }).toThrow('ClassType values must be object.');
     });
   });
 
@@ -44,10 +44,10 @@ describe('ClassPrimitive', () => {
         attributeName,
       );
       const runtime = createRuntime();
-      const binding = ClassPrimitive.resolveBinding(classes, part, runtime);
+      const binding = ClassType.resolveBinding(classes, part, runtime);
 
       expect(binding).toBeInstanceOf(ClassBinding);
-      expect(binding.type).toBe(ClassPrimitive);
+      expect(binding.type).toBe(ClassType);
       expect(binding.value).toBe(classes);
       expect(binding.part).toBe(part);
     });
@@ -57,9 +57,9 @@ describe('ClassPrimitive', () => {
       const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
 
-      expect(() =>
-        ClassPrimitive.resolveBinding(classes, part, runtime),
-      ).toThrow('ClassPrimitive must be used in AttributePart.');
+      expect(() => ClassType.resolveBinding(classes, part, runtime)).toThrow(
+        'ClassType must be used in AttributePart.',
+      );
     });
   });
 });

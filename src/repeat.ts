@@ -40,19 +40,16 @@ interface Mutation<T> {
 export function Repeat<TSource, TKey, TElement>(
   props: RepeatProps<TSource, TKey, TElement>,
 ): Directive<RepeatProps<TSource, TKey, TElement>> {
-  return new Directive(RepeatDirective, props);
+  return new Directive<RepeatProps<TSource, TKey, TElement>>(Repeat, props);
 }
 
-export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
-  name: 'RepeatDirective',
-  resolveBinding(
-    props: RepeatProps<unknown, unknown, unknown>,
-    part: Part,
-    _context: DirectiveContext,
-  ): RepeatBinding<unknown, unknown, unknown> {
-    ensurePartType<Part.ChildNodePart>(PART_TYPE_CHILD_NODE, this, props, part);
-    return new RepeatBinding(props, part);
-  },
+Repeat.resolveBinding = function <TSource, TKey, TElement>(
+  props: RepeatProps<TSource, TKey, TElement>,
+  part: Part,
+  _context: DirectiveContext,
+): RepeatBinding<TSource, TKey, TElement> {
+  ensurePartType<Part.ChildNodePart>(PART_TYPE_CHILD_NODE, this, props, part);
+  return new RepeatBinding(props, part);
 };
 
 export class RepeatBinding<TSource, TKey, TElement>
@@ -79,7 +76,7 @@ export class RepeatBinding<TSource, TKey, TElement>
   }
 
   get type(): DirectiveType<RepeatProps<TSource, TKey, TElement>> {
-    return RepeatDirective;
+    return Repeat;
   }
 
   get value(): RepeatProps<TSource, TKey, TElement> {

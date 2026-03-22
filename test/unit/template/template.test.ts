@@ -14,13 +14,13 @@ import {
   createRuntime,
   createScope,
   MockBinding,
-  MockPrimitive,
   MockTemplate,
+  MockType,
 } from '../../mocks.js';
 import { createElement } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
 
-describe('AbstractTemplate', () => {
+describe('Template', () => {
   describe('name', () => {
     it('returns the name of the class', () => {
       const template = new MockTemplate();
@@ -122,14 +122,14 @@ describe('TemplateBinding', () => {
           const slots = [
             new Slot(
               new MockBinding(
-                MockPrimitive,
+                new MockType(),
                 values[0],
                 createAttributePart(fragment.firstChild as Element, 'class'),
               ),
             ),
             new Slot(
               new MockBinding(
-                MockPrimitive,
+                new MockType(),
                 values[1],
                 createTextPart(
                   fragment.firstChild!.nextSibling as Text,
@@ -140,7 +140,7 @@ describe('TemplateBinding', () => {
             ),
             new Slot(
               new MockBinding(
-                MockPrimitive,
+                new MockType(),
                 values[2],
                 createChildNodePart(
                   fragment.firstChild!.nextSibling!.nextSibling as Comment,
@@ -273,21 +273,21 @@ describe('TemplateBinding', () => {
           const slots = [
             new Slot(
               new MockBinding(
-                MockPrimitive,
+                new MockType(),
                 values[0],
                 createChildNodePart(fragment[0], HTML_NAMESPACE_URI),
               ),
             ),
             new Slot(
               new MockBinding(
-                MockPrimitive,
+                new MockType(),
                 values[1],
                 createTextPart(fragment[1], '', ''),
               ),
             ),
             new Slot(
               new MockBinding(
-                MockPrimitive,
+                new MockType(),
                 values[2],
                 createAttributePart(fragment[2], 'class'),
               ),

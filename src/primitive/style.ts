@@ -26,27 +26,27 @@ type StyleValue = string | null | undefined;
 const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
 const UPPERCASE_LETTER_PATTERN = /[A-Z]/g;
 
-export const StylePrimitive: Primitive<StyleMap> = {
-  name: 'StylePrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is StyleMap {
+export abstract class StyleType {
+  static ensureValue(value: unknown, part: Part): asserts value is StyleMap {
     if (!(typeof value === 'object' && value !== null)) {
       throw new DirectiveError(
         this,
         value,
         part,
-        'The value of StylePrimitive must be an object.',
+        'StyleType values must be object.',
       );
     }
-  },
-  resolveBinding(
+  }
+
+  static resolveBinding(
     value: StyleMap,
     part: Part,
     _context: DirectiveContext,
   ): StyleBinding {
     ensurePartType<Part.AttributePart>(PART_TYPE_ATTRIBUTE, this, value, part);
     return new StyleBinding(value, part);
-  },
-};
+  }
+}
 
 export class StyleBinding extends PrimitiveBinding<
   StyleMap,
@@ -55,7 +55,7 @@ export class StyleBinding extends PrimitiveBinding<
   private _memoizedValue: StyleMap = {};
 
   get type(): Primitive<StyleMap> {
-    return StylePrimitive;
+    return StyleType;
   }
 
   shouldUpdate(value: StyleMap): boolean {

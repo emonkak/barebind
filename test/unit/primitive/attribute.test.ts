@@ -1,19 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createAttributePart, createElementPart } from '@/part.js';
-import { AttributeBinding, AttributePrimitive } from '@/primitive/attribute.js';
+import { AttributeBinding, AttributeType } from '@/primitive/attribute.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
-describe('AttributePrimitive', () => {
+describe('AttributeType', () => {
   describe('resolveBinding()', () => {
     it('constructs a new AttributeBinding', () => {
       const value = 'foo';
       const part = createAttributePart(document.createElement('div'), 'class');
       const runtime = createRuntime();
-      const binding = AttributePrimitive.resolveBinding(value, part, runtime);
+      const binding = AttributeType.resolveBinding(value, part, runtime);
 
       expect(binding).toBeInstanceOf(AttributeBinding);
-      expect(binding.type).toBe(AttributePrimitive);
+      expect(binding.type).toBe(AttributeType);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });
@@ -23,9 +23,9 @@ describe('AttributePrimitive', () => {
       const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
 
-      expect(() =>
-        AttributePrimitive.resolveBinding(value, part, runtime),
-      ).toThrow('AttributePrimitive must be used in AttributePart.');
+      expect(() => AttributeType.resolveBinding(value, part, runtime)).toThrow(
+        'AttributeType must be used in AttributePart.',
+      );
     });
   });
 });

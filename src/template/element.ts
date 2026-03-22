@@ -6,12 +6,12 @@ import {
   getNamespaceURIByTagName,
 } from '../part.js';
 import { Slot } from '../slot.js';
-import { AbstractTemplate, type TemplateResult } from '../template/template.js';
+import { Template, type TemplateResult } from '../template/template.js';
 
 export class ElementTemplate<
   TProps = unknown,
   TChildren = unknown,
-> extends AbstractTemplate<readonly [TProps, TChildren]> {
+> extends Template<readonly [TProps, TChildren]> {
   private readonly _tagName: string;
 
   constructor(tagName: string) {

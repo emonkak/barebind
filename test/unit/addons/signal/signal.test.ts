@@ -4,8 +4,8 @@ import {
   Atom,
   Computed,
   type InvalidateEvent,
+  Signal,
   SignalBinding,
-  SignalDirective,
 } from '@/addons/signal/signal.js';
 import { $directive } from '@/core.js';
 import { NoLanes, SyncLane, UserBlockingLane } from '@/lane.js';
@@ -15,34 +15,13 @@ import { waitForMicrotasks } from '../../../test-helpers.js';
 import { TestRenderer } from '../../../test-renderer.js';
 import { TestUpdater } from '../../../test-updater.js';
 
-describe('SignalDirective', () => {
-  describe('resolveBinding()', () => {
-    it('constructs a new SignalBinding', () => {
-      const signal = new Atom('foo');
-      const part = createTextPart(document.createTextNode(''), '', '');
-      const runtime = createRuntime();
-      const binding = SignalDirective.resolveBinding(
-        signal,
-        part,
-        runtime,
-      ) as SignalBinding<unknown>;
-
-      expect(binding).toBeInstanceOf(SignalBinding);
-      expect(binding.name).toBe('Signal');
-      expect(binding.type).toBe(SignalDirective);
-      expect(binding.value).toBe(signal);
-      expect(binding.part).toBe(part);
-    });
-  });
-});
-
 describe('SignalBinding', () => {
   describe('shouldUpdate()', () => {
     it('returns true if the subscribed value does not exist', () => {
       const signal = new Atom('foo');
       const part = createTextPart(document.createTextNode(''), '', '');
       const runtime = createRuntime();
-      const binding = SignalDirective.resolveBinding(signal, part, runtime);
+      const binding = Signal.resolveBinding(signal, part, runtime);
 
       expect(binding.shouldUpdate(signal)).toBe(true);
     });
@@ -52,11 +31,7 @@ describe('SignalBinding', () => {
       const signal2 = new Atom('bar');
       const part = createTextPart(document.createTextNode(''), '', '');
       const updater = new TestUpdater();
-      const binding = SignalDirective.resolveBinding(
-        signal1,
-        part,
-        updater.runtime,
-      );
+      const binding = Signal.resolveBinding(signal1, part, updater.runtime);
 
       updater.startUpdate((session) => {
         binding.attach(session);
@@ -73,7 +48,7 @@ describe('SignalBinding', () => {
       const signal = new Atom('foo');
       const part = createTextPart(document.createTextNode(''), '', '');
       const updater = new TestUpdater();
-      const binding = SignalDirective.resolveBinding(
+      const binding = Signal.resolveBinding(
         signal,
         part,
         updater.runtime,
@@ -103,7 +78,7 @@ describe('SignalBinding', () => {
       const signal2 = new Atom('bar');
       const part = createTextPart(document.createTextNode(''), '', '');
       const updater = new TestUpdater();
-      const binding = SignalDirective.resolveBinding(
+      const binding = Signal.resolveBinding(
         signal1,
         part,
         updater.runtime,
@@ -145,7 +120,7 @@ describe('SignalBinding', () => {
       const signal = new Atom('foo');
       const part = createTextPart(document.createTextNode(''), '', '');
       const updater = new TestUpdater();
-      const binding = SignalDirective.resolveBinding(
+      const binding = Signal.resolveBinding(
         signal,
         part,
         updater.runtime,
@@ -182,6 +157,25 @@ describe('SignalBinding', () => {
 });
 
 describe('Signal', () => {
+  describe('static resolveBinding()', () => {
+    it('constructs a new SignalBinding', () => {
+      const signal = new Atom('foo');
+      const part = createTextPart(document.createTextNode(''), '', '');
+      const runtime = createRuntime();
+      const binding = Signal.resolveBinding(
+        signal,
+        part,
+        runtime,
+      ) as SignalBinding<unknown>;
+
+      expect(binding).toBeInstanceOf(SignalBinding);
+      expect(binding.name).toBe('Signal');
+      expect(binding.type).toBe(Signal);
+      expect(binding.value).toBe(signal);
+      expect(binding.part).toBe(part);
+    });
+  });
+
   describe('[$hook]()', async () => {
     it('request an update if the signal value has been changed', async () => {
       const signal = new Atom('foo');
@@ -228,7 +222,7 @@ describe('Signal', () => {
       const signal = new Atom('foo');
       const directive = signal[$directive]();
 
-      expect(directive.type).toBe(SignalDirective);
+      expect(directive.type).toBe(Signal);
       expect(directive.value).toBe(signal);
     });
   });

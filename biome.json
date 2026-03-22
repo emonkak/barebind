@@ -21,6 +21,7 @@
     "rules": {
       "complexity": {
         "noBannedTypes": "off",
+        "noStaticOnlyClass": "off",
         "noThisInStatic": "off"
       },
       "correctness": {

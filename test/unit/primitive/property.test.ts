@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createElementPart, createPropertyPart } from '@/part.js';
-import { PropertyBinding, PropertyPrimitive } from '@/primitive/property.js';
+import { PropertyBinding, PropertyType } from '@/primitive/property.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
-describe('PropertyPrimitive', () => {
+describe('PropertyType', () => {
   describe('resolveBinding()', () => {
     it('constructs a new PropertyBinding', () => {
       const value = '<div>foo</div>';
@@ -13,10 +13,10 @@ describe('PropertyPrimitive', () => {
         'innerHTML',
       );
       const runtime = createRuntime();
-      const binding = PropertyPrimitive.resolveBinding(value, part, runtime);
+      const binding = PropertyType.resolveBinding(value, part, runtime);
 
       expect(binding).toBeInstanceOf(PropertyBinding);
-      expect(binding.type).toBe(PropertyPrimitive);
+      expect(binding.type).toBe(PropertyType);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });
@@ -26,9 +26,9 @@ describe('PropertyPrimitive', () => {
       const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
 
-      expect(() =>
-        PropertyPrimitive.resolveBinding(value, part, runtime),
-      ).toThrow('PropertyPrimitive must be used in PropertyPart.');
+      expect(() => PropertyType.resolveBinding(value, part, runtime)).toThrow(
+        'PropertyType must be used in PropertyPart.',
+      );
     });
   });
 });

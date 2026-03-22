@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { createElementPart } from '@/part.js';
-import { BlackholeBinding, BlackholePrimitive } from '@/primitive/blackhole.js';
+import { BlackholeBinding, BlackholeType } from '@/primitive/blackhole.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
-describe('BlackholePrimitive', () => {
+describe('BlackholeType', () => {
   describe('resolveBinding()', () => {
     it('constructs a new BlackholeBinding', () => {
       const value = 'foo';
       const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
-      const binding = BlackholePrimitive.resolveBinding(value, part, runtime);
+      const binding = BlackholeType.resolveBinding(value, part, runtime);
 
       expect(binding).toBeInstanceOf(BlackholeBinding);
-      expect(binding.type).toBe(BlackholePrimitive);
+      expect(binding.type).toBe(BlackholeType);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });

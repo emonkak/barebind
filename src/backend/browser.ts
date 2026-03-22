@@ -19,17 +19,17 @@ import {
   type TemplateMode,
 } from '../core.js';
 import { ConcurrentLane } from '../lane.js';
-import { AttributePrimitive } from '../primitive/attribute.js';
-import { BlackholePrimitive } from '../primitive/blackhole.js';
-import { ClassPrimitive } from '../primitive/class.js';
-import { CommentPrimitive } from '../primitive/comment.js';
-import { EventPrimitive } from '../primitive/event.js';
-import { LivePrimitive } from '../primitive/live.js';
-import { PropertyPrimitive } from '../primitive/property.js';
-import { RefPrimitive } from '../primitive/ref.js';
-import { SpreadPrimitive } from '../primitive/spread.js';
-import { StylePrimitive } from '../primitive/style.js';
-import { TextPrimitive } from '../primitive/text.js';
+import { AttributeType } from '../primitive/attribute.js';
+import { BlackholeType } from '../primitive/blackhole.js';
+import { ClassType } from '../primitive/class.js';
+import { CommentType } from '../primitive/comment.js';
+import { EventType } from '../primitive/event.js';
+import { LiveType } from '../primitive/live.js';
+import { PropertyType } from '../primitive/property.js';
+import { RefType } from '../primitive/ref.js';
+import { SpreadType } from '../primitive/spread.js';
+import { StyleType } from '../primitive/style.js';
+import { TextType } from '../primitive/text.js';
 import { TaggedTemplate } from '../template/tagged.js';
 
 export class BrowserBackend implements Backend {
@@ -84,28 +84,28 @@ export class BrowserBackend implements Backend {
         if (part.name[0] === ':') {
           switch (part.name.slice(1).toLowerCase()) {
             case 'class':
-              return ClassPrimitive;
+              return ClassType;
             case 'ref':
-              return RefPrimitive;
+              return RefType;
             case 'style':
-              return StylePrimitive;
+              return StyleType;
             default:
-              return BlackholePrimitive;
+              return BlackholeType;
           }
         }
-        return AttributePrimitive;
+        return AttributeType;
       case PART_TYPE_CHILD_NODE:
-        return source != null ? CommentPrimitive : BlackholePrimitive;
+        return source != null ? CommentType : BlackholeType;
       case PART_TYPE_ELEMENT:
-        return SpreadPrimitive;
+        return SpreadType;
       case PART_TYPE_EVENT:
-        return EventPrimitive;
+        return EventType;
       case PART_TYPE_LIVE:
-        return LivePrimitive;
+        return LiveType;
       case PART_TYPE_PROPERTY:
-        return PropertyPrimitive;
+        return PropertyType;
       case PART_TYPE_TEXT:
-        return TextPrimitive;
+        return TextType;
     }
   }
 

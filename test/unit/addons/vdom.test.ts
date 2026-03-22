@@ -4,7 +4,7 @@ import {
   createElement,
   createFragment,
   ElementBinding,
-  ElementDirective,
+  ElementType,
   VElement,
   VFragment,
   VStaticFragment,
@@ -16,14 +16,14 @@ import {
   createElementPart,
   HTML_NAMESPACE_URI,
 } from '@/part.js';
-import { BlackholePrimitive } from '@/primitive/blackhole.js';
-import { RepeatDirective } from '@/repeat.js';
+import { BlackholeType } from '@/primitive/blackhole.js';
+import { Repeat } from '@/repeat.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { ElementTemplate } from '@/template/element.js';
 import { EmptyTemplate } from '@/template/empty.js';
 import { FragmentTemplate } from '@/template/fragment.js';
 import { TextTemplate } from '@/template/text.js';
-import { createRuntime, MockPrimitive } from '../../mocks.js';
+import { createRuntime, MockType } from '../../mocks.js';
 import { createElement as createDOMElement } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
 
@@ -74,7 +74,7 @@ describe('VElement', () => {
 
       expect(directive.type).toStrictEqual(new ElementTemplate(type));
       expect(directive.value).toStrictEqual([
-        new Directive(ElementDirective, props),
+        new Directive(ElementType, props),
         new VFragment(props.children),
       ]);
     });
@@ -87,7 +87,7 @@ describe('VElement', () => {
 
       expect(directive.type).toStrictEqual(new ElementTemplate(type));
       expect(directive.value).toStrictEqual([
-        new Directive(ElementDirective, props),
+        new Directive(ElementType, props),
         new VStaticFragment(props.children),
       ]);
     });
@@ -100,8 +100,8 @@ describe('VElement', () => {
 
       expect(directive.type).toStrictEqual(new ElementTemplate(type));
       expect(directive.value).toStrictEqual([
-        new Directive(ElementDirective, props),
-        new Directive(BlackholePrimitive, undefined),
+        new Directive(ElementType, props),
+        new Directive(BlackholeType, undefined),
       ]);
     });
 
@@ -114,8 +114,8 @@ describe('VElement', () => {
 
       expect(directive.type).toStrictEqual(new ElementTemplate(type));
       expect(directive.value).toStrictEqual([
-        new Directive(ElementDirective, props),
-        new Directive(BlackholePrimitive, undefined),
+        new Directive(ElementType, props),
+        new Directive(BlackholeType, undefined),
       ]);
       expect(directive.key).toStrictEqual(key);
     });
@@ -129,7 +129,7 @@ describe('VFragment', () => {
       const element = new VFragment(children);
       const directive = element[$directive]();
 
-      expect(directive.type).toBe(RepeatDirective);
+      expect(directive.type).toBe(Repeat);
       expect(directive.value).toStrictEqual(
         expect.objectContaining({
           source: children,
@@ -147,7 +147,7 @@ describe('VStaticFragment', () => {
         new VElement(component, {}),
         new VElement('div', { children: 'foo' }),
         new VElement('div', { children: ['foo'] }),
-        new Directive(MockPrimitive, 'foo'),
+        new Directive(new MockType(), 'foo'),
         ['foo', 'bar'],
         null,
         false,
@@ -170,9 +170,9 @@ describe('VStaticFragment', () => {
       );
       expect(directive.value).toStrictEqual([
         children[0],
-        new Directive(ElementDirective, children[1].props),
+        new Directive(ElementType, children[1].props),
         new Directive(new TextTemplate(), [children[1].props.children]),
-        new Directive(ElementDirective, children[2].props),
+        new Directive(ElementType, children[2].props),
         new VFragment(children[2].props.children),
         children[3],
         new VFragment(children[4]),
@@ -182,16 +182,16 @@ describe('VStaticFragment', () => {
   });
 });
 
-describe('ElementDirective', () => {
+describe('ElementType', () => {
   describe('resolveBinding()', () => {
     it('constructs a new ElementBinding', () => {
       const props = { className: 'foo' };
       const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
-      const binding = ElementDirective.resolveBinding(props, part, runtime);
+      const binding = ElementType.resolveBinding(props, part, runtime);
 
       expect(binding).toBeInstanceOf(ElementBinding);
-      expect(binding.type).toBe(ElementDirective);
+      expect(binding.type).toBe(ElementType);
       expect(binding.value).toBe(props);
       expect(binding.part).toBe(part);
     });
@@ -204,9 +204,9 @@ describe('ElementDirective', () => {
       );
       const runtime = createRuntime();
 
-      expect(() =>
-        ElementDirective.resolveBinding(props, part, runtime),
-      ).toThrow('ElementDirective must be used in ElementPart.');
+      expect(() => ElementType.resolveBinding(props, part, runtime)).toThrow(
+        'ElementType must be used in ElementPart.',
+      );
     });
   });
 });

@@ -10,7 +10,7 @@ import {
   createTextPart,
   HTML_NAMESPACE_URI,
 } from '@/part.js';
-import { MockDirective, MockPrimitive } from '../../mocks.js';
+import { MockType } from '../../mocks.js';
 import { createElement } from '../../test-helpers.js';
 
 const MAKRER = '[[PART IS IN HERE!]]';
@@ -22,30 +22,30 @@ describe('debugPart()', () => {
       HTML_NAMESPACE_URI,
     );
 
-    debugPart(part, new MockDirective(), 'foo');
-    expect(part.sentinelNode.data).toBe('/MockDirective("foo")');
+    debugPart(part, new MockType('A'), 'foo');
+    expect(part.sentinelNode.data).toBe('/A("foo")');
 
-    debugPart(part, new MockDirective(), 'bar');
-    expect(part.sentinelNode.data).toBe('/MockDirective("bar")');
+    debugPart(part, new MockType('A'), 'bar');
+    expect(part.sentinelNode.data).toBe('/A("bar")');
 
-    debugPart(part, new MockDirective(), 'baz');
-    expect(part.sentinelNode.data).toBe('/MockDirective("baz")');
+    debugPart(part, new MockType('A'), 'baz');
+    expect(part.sentinelNode.data).toBe('/A("baz")');
 
-    undebugPart(part, MockPrimitive);
-    expect(part.sentinelNode.data).toBe('/MockDirective("baz")');
+    undebugPart(part, new MockType('B'));
+    expect(part.sentinelNode.data).toBe('/A("baz")');
 
-    undebugPart(part, new MockDirective());
+    undebugPart(part, new MockType('A'));
     expect(part.sentinelNode.data).toBe('');
   });
 
   it('should do nothing if the part is not a child node part', () => {
     const part = createTextPart(document.createTextNode(''), '', '');
 
-    debugPart(part, new MockDirective('FirstDirective'), 'foo');
+    debugPart(part, new MockType(), 'foo');
 
     expect(part.node.data).toBe('');
 
-    undebugPart(part, new MockDirective('FirstDirective'));
+    undebugPart(part, new MockType());
 
     expect(part.node.data).toBe('');
   });

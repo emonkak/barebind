@@ -30,7 +30,7 @@ import {
   getNamespaceURIByTagName,
 } from '../part.js';
 import { Slot } from '../slot.js';
-import { AbstractTemplate, type TemplateResult } from './template.js';
+import { Template, type TemplateResult } from './template.js';
 
 export type Hole =
   | Hole.AttributeHole
@@ -104,7 +104,7 @@ const TAILING_NEWLINE_PATTERN = /\n\s*$/;
 
 export class TaggedTemplate<
   TValues extends readonly unknown[] = unknown[],
-> extends AbstractTemplate<TValues> {
+> extends Template<TValues> {
   private readonly _template: HTMLTemplateElement;
 
   private readonly _holes: Hole[];

@@ -4,13 +4,9 @@ import {
   type Part,
   type UpdateSession,
 } from '../core.js';
-import {
-  AbstractTemplate,
-  type Template,
-  type TemplateResult,
-} from './template.js';
+import { Template, type TemplateResult } from './template.js';
 
-export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
+export class FragmentTemplate extends Template<readonly unknown[]> {
   private readonly _templates: readonly Template<readonly unknown[]>[];
 
   constructor(templates: readonly Template<readonly unknown[]>[]) {

@@ -7,23 +7,22 @@ import {
 import { ensurePartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export const CommentPrimitive: Primitive<any> = {
-  name: 'CommentPrimitive',
-  resolveBinding(
-    value: unknown,
+export abstract class CommentType {
+  static resolveBinding<T>(
+    value: T,
     part: Part,
     _context: DirectiveContext,
-  ): CommentBinding<unknown> {
+  ): CommentBinding<T> {
     ensurePartType<Part.ChildNodePart>(PART_TYPE_CHILD_NODE, this, value, part);
     return new CommentBinding(value, part);
-  },
-};
+  }
+}
 
 export class CommentBinding<T> extends PrimitiveBinding<T, Part.ChildNodePart> {
   private _memoizedValue: T | null = null;
 
   get type(): Primitive<T> {
-    return CommentPrimitive;
+    return CommentType;
   }
 
   shouldUpdate(value: T): boolean {

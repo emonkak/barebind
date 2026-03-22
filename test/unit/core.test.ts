@@ -6,12 +6,12 @@ import {
   EffectQueue,
   isBindable,
 } from '@/core.js';
-import { createEffect, MockDirective, MockPrimitive } from '../mocks.js';
+import { createEffect, MockType } from '../mocks.js';
 
 describe('Directive', () => {
   describe('[$directive]()', () => {
     it('returns itself', () => {
-      const directive = new Directive(new MockDirective(), 'foo');
+      const directive = new Directive(new MockType(), 'foo');
       expect(directive[$directive]()).toBe(directive);
     });
   });
@@ -266,8 +266,8 @@ describe('EffectQueue', () => {
 
 describe('areDirectiveTypesEqual()', () => {
   it('returns the result from Directive.equals() if it is definied', () => {
-    const type1 = new MockDirective('A');
-    const type2 = new MockDirective('B');
+    const type1 = new MockType('A');
+    const type2 = new MockType('B');
 
     expect(areDirectiveTypesEqual(type1, type1)).toBe(true);
     expect(areDirectiveTypesEqual(type1, type2)).toBe(false);
@@ -278,7 +278,7 @@ describe('areDirectiveTypesEqual()', () => {
 
 describe('isBindable()', () => {
   it('returns true when the value is a bindable', () => {
-    expect(isBindable(new Directive(MockPrimitive, 'foo'))).toBe(true);
+    expect(isBindable(new Directive(new MockType(), 'foo'))).toBe(true);
   });
 
   it('returns false when the value is not a bindable', () => {

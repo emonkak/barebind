@@ -6,22 +6,18 @@ import {
   PART_TYPE_PROPERTY,
 } from '@/core.js';
 import { createChildNodePart, createElementPart } from '@/part.js';
-import { SpreadBinding, SpreadPrimitive } from '@/primitive/spread.js';
+import { SpreadBinding, SpreadType } from '@/primitive/spread.js';
 import { SLOT_STATUS_IDLE } from '@/slot.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
-describe('SpreadPrimitive', () => {
+describe('SpreadType', () => {
   describe('ensureValue()', () => {
     it('asserts the value is a object', () => {
       const part = createElementPart(document.createElement('div'));
 
       expect(() => {
-        SpreadPrimitive.ensureValue!.call(
-          SpreadPrimitive,
-          { class: 'foo' },
-          part,
-        );
+        SpreadType.ensureValue!.call(SpreadType, { class: 'foo' }, part);
       }).not.toThrow();
     });
 
@@ -33,8 +29,8 @@ describe('SpreadPrimitive', () => {
       const part = createElementPart(document.createElement('div'));
 
       expect(() => {
-        SpreadPrimitive.ensureValue!.call(SpreadPrimitive, value, part);
-      }).toThrow('The value of SpreadPrimitive must be an object.');
+        SpreadType.ensureValue!.call(SpreadType, value, part);
+      }).toThrow('SpreadType values must be object.');
     });
   });
 
@@ -43,10 +39,10 @@ describe('SpreadPrimitive', () => {
       const props = { color: 'red' };
       const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
-      const binding = SpreadPrimitive.resolveBinding(props, part, runtime);
+      const binding = SpreadType.resolveBinding(props, part, runtime);
 
       expect(binding).toBeInstanceOf(SpreadBinding);
-      expect(binding.type).toBe(SpreadPrimitive);
+      expect(binding.type).toBe(SpreadType);
       expect(binding.value).toBe(props);
       expect(binding.part).toBe(part);
     });
@@ -56,9 +52,9 @@ describe('SpreadPrimitive', () => {
       const part = createChildNodePart(document.createComment(''), null);
       const runtime = createRuntime();
 
-      expect(() =>
-        SpreadPrimitive.resolveBinding(props, part, runtime),
-      ).toThrow('SpreadPrimitive must be used in ElementPart.');
+      expect(() => SpreadType.resolveBinding(props, part, runtime)).toThrow(
+        'SpreadType must be used in ElementPart.',
+      );
     });
   });
 });

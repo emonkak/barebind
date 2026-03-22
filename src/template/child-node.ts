@@ -2,9 +2,9 @@ import type { DirectiveType, Part, UpdateSession } from '../core.js';
 import { replaceSentinelNode } from '../hydration.js';
 import { createChildNodePart } from '../part.js';
 import { Slot } from '../slot.js';
-import { AbstractTemplate, type TemplateResult } from './template.js';
+import { Template, type TemplateResult } from './template.js';
 
-export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
+export class ChildNodeTemplate<T> extends Template<[T]> {
   static readonly Default: ChildNodeTemplate<any> = new ChildNodeTemplate();
 
   get arity(): 1 {

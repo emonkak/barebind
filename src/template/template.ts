@@ -12,29 +12,13 @@ import { getHydrationTarget } from '../hydration.js';
 import { ensurePartType } from '../part.js';
 import type { Slot } from '../slot.js';
 
-export interface Template<TValues extends readonly unknown[]>
-  extends DirectiveType<TValues> {
-  readonly arity: TValues['length'];
-  render(
-    values: TValues,
-    part: Part.ChildNodePart,
-    session: UpdateSession,
-  ): TemplateResult;
-  hydrate(
-    values: TValues,
-    part: Part.ChildNodePart,
-    hydrationTarget: TreeWalker,
-    session: UpdateSession,
-  ): TemplateResult;
-}
-
 export interface TemplateResult {
   childNodes: readonly ChildNode[];
   slots: readonly Slot<unknown>[];
 }
 
-export abstract class AbstractTemplate<TValues extends readonly unknown[]>
-  implements Template<TValues>
+export abstract class Template<TValues extends readonly unknown[]>
+  implements DirectiveType<TValues>
 {
   abstract get arity(): TValues['length'];
 

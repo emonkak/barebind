@@ -6,12 +6,7 @@ import {
   createElementPart,
   HTML_NAMESPACE_URI,
 } from '@/part.js';
-import {
-  Repeat,
-  RepeatBinding,
-  RepeatDirective,
-  type RepeatProps,
-} from '@/repeat.js';
+import { Repeat, RepeatBinding, type RepeatProps } from '@/repeat.js';
 import { createRuntime, createScope } from '../mocks.js';
 import {
   allCombinations,
@@ -31,7 +26,7 @@ describe('Repeat()', () => {
     };
     const bindable = Repeat(props);
 
-    expect(bindable.type).toBe(RepeatDirective);
+    expect(bindable.type).toBe(Repeat);
     expect(bindable.value).toBe(props);
   });
 });
@@ -45,10 +40,10 @@ describe('RepeatDirective', () => {
         HTML_NAMESPACE_URI,
       );
       const runtime = createRuntime();
-      const binding = RepeatDirective.resolveBinding(props, part, runtime);
+      const binding = Repeat.resolveBinding(props, part, runtime);
 
       expect(binding).toBeInstanceOf(RepeatBinding);
-      expect(binding.type).toBe(RepeatDirective);
+      expect(binding.type).toBe(Repeat);
       expect(binding.value).toBe(props);
       expect(binding.part).toBe(part);
     });
@@ -58,9 +53,9 @@ describe('RepeatDirective', () => {
       const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
 
-      expect(() =>
-        RepeatDirective.resolveBinding(props, part, runtime),
-      ).toThrow('RepeatDirective must be used in ChildNodePart.');
+      expect(() => Repeat.resolveBinding(props, part, runtime)).toThrow(
+        'Repeat must be used in ChildNodePart.',
+      );
     });
   });
 });

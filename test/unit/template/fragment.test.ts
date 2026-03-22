@@ -3,7 +3,7 @@ import { createTreeWalker } from '@/hydration.js';
 import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
 import { Slot } from '@/slot.js';
 import { FragmentTemplate } from '@/template/fragment.js';
-import { MockBinding, MockDirective, MockTemplate } from '../../mocks.js';
+import { MockBinding, MockTemplate, MockType } from '../../mocks.js';
 import { serializeNode } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
 
@@ -70,7 +70,7 @@ describe('FragmentTemplate', () => {
             slots: [
               new Slot(
                 new MockBinding(
-                  new MockDirective(),
+                  new MockType(),
                   template.values.join(','),
                   part,
                 ),
@@ -150,7 +150,7 @@ describe('FragmentTemplate', () => {
             slots: [
               new Slot(
                 new MockBinding(
-                  new MockDirective(),
+                  new MockType(),
                   template.values.join(','),
                   part,
                 ),

@@ -7,21 +7,20 @@ import {
 import { ensurePartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export const LivePrimitive: Primitive<any> = {
-  name: 'LivePrimitive',
-  resolveBinding(
-    value: unknown,
+export abstract class LiveType {
+  static resolveBinding<T>(
+    value: T,
     part: Part,
     _context: DirectiveContext,
-  ): LiveBinding<unknown> {
+  ): LiveBinding<T> {
     ensurePartType<Part.LivePart>(PART_TYPE_LIVE, this, value, part);
     return new LiveBinding(value, part);
-  },
-};
+  }
+}
 
 export class LiveBinding<T> extends PrimitiveBinding<T, Part.LivePart> {
   get type(): Primitive<T> {
-    return LivePrimitive;
+    return LiveType;
   }
 
   shouldUpdate(_value: T): boolean {

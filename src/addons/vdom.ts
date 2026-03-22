@@ -13,9 +13,9 @@ import {
   type UpdateSession,
 } from '../core.js';
 import { ensurePartType } from '../part.js';
-import { BlackholePrimitive } from '../primitive/blackhole.js';
+import { BlackholeType } from '../primitive/blackhole.js';
 import { type StyleMap, updateStyles } from '../primitive/style.js';
-import { RepeatDirective, type RepeatProps } from '../repeat.js';
+import { Repeat, type RepeatProps } from '../repeat.js';
 import { ChildNodeTemplate } from '../template/child-node.js';
 import { ElementTemplate } from '../template/element.js';
 import { EmptyTemplate } from '../template/empty.js';
@@ -67,17 +67,16 @@ interface TemplateDirective<TValues extends readonly unknown[]>
 /**
  * @internal
  */
-export const ElementDirective: DirectiveType<ElementProps> = {
-  name: 'ElementDirective',
-  resolveBinding(
+export abstract class ElementType {
+  static resolveBinding(
     props: ElementProps,
     part: Part,
     _context: DirectiveContext,
   ): ElementBinding {
     ensurePartType<Part.ElementPart>(PART_TYPE_ELEMENT, this, props, part);
     return new ElementBinding(props, part);
-  },
-};
+  }
+}
 
 export function createElement<TProps extends {}>(
   type: string,
@@ -149,7 +148,7 @@ export class VFragment implements Bindable<RepeatProps<VNode>> {
   }
 
   [$directive](): Directive<RepeatProps<VNode>> {
-    return new Directive(RepeatDirective, {
+    return new Directive<RepeatProps<VNode>>(Repeat, {
       elementSelector: resolveVChild,
       keySelector: resolveKey,
       source: this.children,
@@ -223,7 +222,7 @@ export class ElementBinding implements Binding<ElementProps> {
   }
 
   get type(): DirectiveType<ElementProps> {
-    return ElementDirective;
+    return ElementType;
   }
 
   get value(): ElementProps {
@@ -561,7 +560,7 @@ function resolveVChild(child: VNode): Bindable<unknown> {
   } else if (Array.isArray(child)) {
     return new VFragment(child);
   } else if (child == null || typeof child === 'boolean') {
-    return new Directive(BlackholePrimitive, child);
+    return new Directive(BlackholeType, child);
   } else {
     return new Directive(TextTemplate.Default, [child]);
   }
@@ -573,7 +572,7 @@ function resolveVElement(
   key: unknown,
   hasStaticChildren: boolean,
 ): TemplateDirective<readonly [unknown, unknown]> {
-  const element = new Directive(ElementDirective, props);
+  const element = new Directive(ElementType, props);
   const children = Array.isArray(props.children)
     ? hasStaticChildren
       ? new VStaticFragment(props.children)

@@ -30,7 +30,7 @@ import {
 } from '@/core.js';
 import { SyncLane } from '@/lane.js';
 import { Runtime, type RuntimeOptions } from '@/runtime.js';
-import { AbstractTemplate, type TemplateResult } from '@/template/template.js';
+import { Template, type TemplateResult } from '@/template/template.js';
 
 export class MockBackend implements Backend {
   readonly defaultLanes: Lanes;
@@ -83,7 +83,7 @@ export class MockBackend implements Backend {
   }
 
   resolvePrimitive(_value: unknown, _part: Part): Primitive<unknown> {
-    return MockPrimitive;
+    return new MockType();
   }
 
   resolveTemplate(
@@ -238,33 +238,16 @@ export class MockCoroutine implements Coroutine {
   }
 }
 
-export class MockDirective<T> implements DirectiveType<T> {
-  readonly name: string;
-
-  constructor(name: string = 'MockDirective') {
-    this.name = name;
-  }
-
-  equals(other: unknown) {
-    return other instanceof MockDirective && other.name === this.name;
-  }
-
-  resolveBinding(value: T, part: Part, _context: DirectiveContext): Binding<T> {
-    return new MockBinding(this, value, part);
-  }
-}
-
-export const MockPrimitive: Primitive<any> = {
-  name: 'MockPrimitive',
-  ensureValue(_value: unknown): asserts _value is unknown {},
-  resolveBinding(
-    value: unknown,
+export abstract class MockPrimitive {
+  static ensureValue<T>(_value: unknown): asserts _value is T {}
+  static resolveBinding<T>(
+    value: T,
     part: Part,
     _context: DirectiveContext,
-  ): Binding<unknown> {
-    return new MockBinding(this, value, part);
-  },
-};
+  ): Binding<T> {
+    return new MockBinding<T>(this, value, part);
+  }
+}
 
 export class MockObserver implements SessionObserver {
   events: SessionEvent[] = [];
@@ -280,7 +263,7 @@ export class MockObserver implements SessionObserver {
   }
 }
 
-export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
+export class MockTemplate extends Template<readonly unknown[]> {
   readonly strings: readonly string[];
 
   readonly values: readonly unknown[];
@@ -327,6 +310,22 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
       childNodes: [],
       slots: [],
     };
+  }
+}
+
+export class MockType<T> implements DirectiveType<T> {
+  readonly name: string;
+
+  constructor(name: string = MockType.name) {
+    this.name = name;
+  }
+
+  equals(other: unknown) {
+    return other instanceof MockType && other.name === this.name;
+  }
+
+  resolveBinding(value: T, part: Part, _context: DirectiveContext): Binding<T> {
+    return new MockBinding(this, value, part);
   }
 }
 

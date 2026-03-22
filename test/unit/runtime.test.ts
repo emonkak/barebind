@@ -21,10 +21,9 @@ import {
   createRuntime,
   createScope,
   MockCoroutine,
-  MockDirective,
   MockObserver,
-  MockPrimitive,
   MockTemplate,
+  MockType,
 } from '../mocks.js';
 import { waitForTimeout } from '../test-helpers.js';
 
@@ -793,13 +792,13 @@ describe('Runtime', () => {
 
       expect(resolvePrimitiveSpy).toHaveBeenCalledOnce();
       expect(resolvePrimitiveSpy).toHaveBeenCalledWith(source, part);
-      expect(directive.type).toBe(MockPrimitive);
+      expect(directive.type).toStrictEqual(new MockType());
       expect(directive.value).toBe(source);
       expect(directive.key).toBe(undefined);
     });
 
     it('resolves bindable values as directives', () => {
-      const source = new Directive(new MockDirective(), 'foo', 'key');
+      const source = new Directive(new MockType(), 'foo', 'key');
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,

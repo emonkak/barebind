@@ -21,27 +21,27 @@ export type ClassValue = boolean | string | null | undefined;
 
 const CLASS_SEPARATOR_PATTERN = /\s+/;
 
-export const ClassPrimitive: Primitive<ClassMap> = {
-  name: 'ClassPrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is ClassMap {
+export abstract class ClassType {
+  static ensureValue(value: unknown, part: Part): asserts value is ClassMap {
     if (!isObject(value)) {
       throw new DirectiveError(
         this,
         value,
         part,
-        'The value of ClassPrimitive must be an object.',
+        'ClassType values must be object.',
       );
     }
-  },
-  resolveBinding(
+  }
+
+  static resolveBinding(
     value: ClassMap,
     part: Part,
     _context: DirectiveContext,
   ): ClassBinding {
     ensurePartType<Part.AttributePart>(PART_TYPE_ATTRIBUTE, this, value, part);
     return new ClassBinding(value, part);
-  },
-};
+  }
+}
 
 export class ClassBinding extends PrimitiveBinding<
   ClassMap,
@@ -50,7 +50,7 @@ export class ClassBinding extends PrimitiveBinding<
   private _memoizedValue: ClassMap = {};
 
   get type(): Primitive<ClassMap> {
-    return ClassPrimitive;
+    return ClassType;
   }
 
   shouldUpdate(classes: ClassMap): boolean {

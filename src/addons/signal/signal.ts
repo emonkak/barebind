@@ -39,17 +39,63 @@ interface Subscription {
   unsubscribe: Unsubscribe | null;
 }
 
-export const SignalDirective: DirectiveType<Signal<any>> = {
-  name: 'SignalDirective',
-  resolveBinding(
-    signal: Signal<unknown>,
+export abstract class Signal<T> implements HookObject<T>, Bindable<Signal<T>> {
+  abstract get value(): T;
+
+  abstract get version(): number;
+
+  static resolveBinding<T>(
+    signal: Signal<T>,
     part: Part,
     context: DirectiveContext,
-  ): SignalBinding<unknown> {
+  ): SignalBinding<T> {
     const slot = Slot.place(signal.value, part, context);
     return new SignalBinding(signal, slot);
-  },
-};
+  }
+
+  [$hook](context: RenderContext): T {
+    const value = this.value;
+    const snapshot = context.useRef(value);
+
+    context.useLayoutEffect(() => {
+      snapshot.current = value;
+    }, [value]);
+
+    context.useEffect(() => {
+      // The guard for batch updates with microtasks.
+      let guard = true;
+      const checkForChanges = () => {
+        if (!Object.is(this.value, snapshot.current)) {
+          context.forceUpdate();
+        }
+        guard = false;
+      };
+      queueMicrotask(checkForChanges);
+      return this.subscribe(() => {
+        if (!guard) {
+          guard = true;
+          queueMicrotask(checkForChanges);
+        }
+      });
+    }, [this]);
+
+    return value;
+  }
+
+  [$directive](): Directive<Signal<T>> {
+    return new Directive<Signal<T>>(Signal, this);
+  }
+
+  abstract subscribe(subscriber: Subscriber): Unsubscribe;
+
+  map<TResult>(selector: (value: T) => TResult): Signal<TResult> {
+    return new Computed<TResult, [Signal<T>]>(selector, [this]);
+  }
+
+  valueOf(): T {
+    return this.value;
+  }
+}
 
 export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   pendingLanes: Lanes = NoLanes;
@@ -73,7 +119,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   }
 
   get type(): DirectiveType<Signal<T>> {
-    return SignalDirective;
+    return Signal;
   }
 
   get value(): Signal<T> {
@@ -147,55 +193,6 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   rollback(): void {
     this._slot.rollback();
     this._scope = SCOPE_DETACHED;
-  }
-}
-
-export abstract class Signal<T> implements HookObject<T>, Bindable<Signal<T>> {
-  abstract get value(): T;
-
-  abstract get version(): number;
-
-  [$hook](context: RenderContext): T {
-    const value = this.value;
-    const snapshot = context.useRef(value);
-
-    context.useLayoutEffect(() => {
-      snapshot.current = value;
-    }, [value]);
-
-    context.useEffect(() => {
-      // The guard for batch updates with microtasks.
-      let guard = true;
-      const checkForChanges = () => {
-        if (!Object.is(this.value, snapshot.current)) {
-          context.forceUpdate();
-        }
-        guard = false;
-      };
-      queueMicrotask(checkForChanges);
-      return this.subscribe(() => {
-        if (!guard) {
-          guard = true;
-          queueMicrotask(checkForChanges);
-        }
-      });
-    }, [this]);
-
-    return value;
-  }
-
-  [$directive](): Directive<Signal<T>> {
-    return new Directive(SignalDirective, this);
-  }
-
-  abstract subscribe(subscriber: Subscriber): Unsubscribe;
-
-  map<TResult>(selector: (value: T) => TResult): Signal<TResult> {
-    return new Computed<TResult, [Signal<T>]>(selector, [this]);
-  }
-
-  valueOf(): T {
-    return this.value;
   }
 }
 

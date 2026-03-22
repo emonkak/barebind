@@ -3,14 +3,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { Directive } from '@/core.js';
 import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
 import { Slot } from '@/slot.js';
-import { MockBinding, MockDirective, MockPrimitive } from '../mocks.js';
+import { MockBinding, MockType } from '../mocks.js';
 import { TestUpdater } from '../test-updater.js';
 
 describe('Slot', () => {
   describe('reconcile()', () => {
     it('update the current binding when the type is the same', () => {
       const binding = new MockBinding(
-        MockPrimitive,
+        new MockType(),
         'a',
         createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
       );
@@ -43,7 +43,7 @@ describe('Slot', () => {
 
     it('resolves a new binding when the type changes', () => {
       const binding = new MockBinding(
-        new MockDirective('A'),
+        new MockType('A'),
         'a',
         createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
       );
@@ -65,7 +65,7 @@ describe('Slot', () => {
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
           const dirty = slot.reconcile(
-            new Directive(new MockDirective('B'), 'b'),
+            new Directive(new MockType('B'), 'b'),
             session,
           );
           slot.commit();
@@ -77,7 +77,7 @@ describe('Slot', () => {
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(rollbackSpy).toHaveBeenCalledTimes(1);
         expect(dirty).toBe(true);
-        expect(slot.type).toStrictEqual(new MockDirective('B'));
+        expect(slot.type).toStrictEqual(new MockType('B'));
         expect(slot.value).toBe('b');
         expect(slot.part).toBe(binding.part);
         expect(slot['_memoizedBinding']).not.toBe(binding);
@@ -86,7 +86,7 @@ describe('Slot', () => {
 
     it('resolves a new binding when the key changes', () => {
       const binding = new MockBinding(
-        new MockDirective(),
+        new MockType(),
         'a',
         createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
       );
@@ -108,7 +108,7 @@ describe('Slot', () => {
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
           const dirty = slot.reconcile(
-            new Directive(new MockDirective(), 'b', 'key2'),
+            new Directive(new MockType(), 'b', 'key2'),
             session,
           );
           slot.commit();
@@ -120,7 +120,7 @@ describe('Slot', () => {
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(rollbackSpy).toHaveBeenCalledTimes(1);
         expect(dirty).toBe(true);
-        expect(slot.type).toStrictEqual(new MockDirective());
+        expect(slot.type).toStrictEqual(new MockType());
         expect(slot.value).toBe('b');
         expect(slot.part).toBe(binding.part);
         expect(slot['_memoizedBinding']).not.toBe(binding);
@@ -131,7 +131,7 @@ describe('Slot', () => {
   describe('commit()', () => {
     it('commits pending bindings when attached', () => {
       const binding = new MockBinding(
-        MockPrimitive,
+        new MockType(),
         'foo',
         createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
       );
@@ -151,7 +151,7 @@ describe('Slot', () => {
 
     it('does nothing when pending bindings are not attached', () => {
       const binding = new MockBinding(
-        MockPrimitive,
+        new MockType(),
         'foo',
         createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
       );
@@ -166,7 +166,7 @@ describe('Slot', () => {
 
     it('does nothing when pending bindings are detached', () => {
       const binding = new MockBinding(
-        MockPrimitive,
+        new MockType(),
         'foo',
         createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
       );
@@ -187,7 +187,7 @@ describe('Slot', () => {
   describe('rollback()', () => {
     it('rollbacks current bindings when detached', () => {
       const binding = new MockBinding(
-        MockPrimitive,
+        new MockType(),
         'foo',
         createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
       );
@@ -214,7 +214,7 @@ describe('Slot', () => {
 
     it('does nothing when current bindings are not mounted', () => {
       const binding = new MockBinding(
-        MockPrimitive,
+        new MockType(),
         'foo',
         createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
       );
@@ -229,7 +229,7 @@ describe('Slot', () => {
 
     it('does nothing when pending bindings are attached', () => {
       const binding = new MockBinding(
-        MockPrimitive,
+        new MockType(),
         'foo',
         createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
       );

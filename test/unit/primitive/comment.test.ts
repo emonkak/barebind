@@ -5,11 +5,11 @@ import {
   createElementPart,
   HTML_NAMESPACE_URI,
 } from '@/part.js';
-import { CommentBinding, CommentPrimitive } from '@/primitive/comment.js';
+import { CommentBinding, CommentType } from '@/primitive/comment.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
-describe('CommentPrimitive', () => {
+describe('CommentType', () => {
   describe('resolveBinding()', () => {
     it('constructs a new CommentBinding', () => {
       const value = 'foo';
@@ -18,10 +18,10 @@ describe('CommentPrimitive', () => {
         HTML_NAMESPACE_URI,
       );
       const runtime = createRuntime();
-      const binding = CommentPrimitive.resolveBinding(value, part, runtime);
+      const binding = CommentType.resolveBinding(value, part, runtime);
 
       expect(binding).toBeInstanceOf(CommentBinding);
-      expect(binding.type).toBe(CommentPrimitive);
+      expect(binding.type).toBe(CommentType);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });
@@ -31,9 +31,9 @@ describe('CommentPrimitive', () => {
       const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
 
-      expect(() =>
-        CommentPrimitive.resolveBinding(value, part, runtime),
-      ).toThrow('CommentPrimitive must be used in ChildNodePart.');
+      expect(() => CommentType.resolveBinding(value, part, runtime)).toThrow(
+        'CommentType must be used in ChildNodePart.',
+      );
     });
   });
 });

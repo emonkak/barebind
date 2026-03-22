@@ -1,19 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createElementPart, createLivePart } from '@/part.js';
-import { LiveBinding, LivePrimitive } from '@/primitive/live.js';
+import { LiveBinding, LiveType } from '@/primitive/live.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
-describe('LivePrimitive', () => {
+describe('LiveType', () => {
   describe('resolveBinding()', () => {
     it('constructs a new LiveBinding', () => {
       const value = 'foo';
       const part = createLivePart(document.createElement('textarea'), 'value');
       const runtime = createRuntime();
-      const binding = LivePrimitive.resolveBinding(value, part, runtime);
+      const binding = LiveType.resolveBinding(value, part, runtime);
 
       expect(binding).toBeInstanceOf(LiveBinding);
-      expect(binding.type).toBe(LivePrimitive);
+      expect(binding.type).toBe(LiveType);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });
@@ -23,8 +23,8 @@ describe('LivePrimitive', () => {
       const part = createElementPart(document.createElement('textarea'));
       const runtime = createRuntime();
 
-      expect(() => LivePrimitive.resolveBinding(value, part, runtime)).toThrow(
-        'LivePrimitive must be used in LivePart.',
+      expect(() => LiveType.resolveBinding(value, part, runtime)).toThrow(
+        'LiveType must be used in LivePart.',
       );
     });
   });

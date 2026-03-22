@@ -2,9 +2,9 @@ import { PART_TYPE_TEXT, type Part, type UpdateSession } from '../core.js';
 import { splitText } from '../hydration.js';
 import { createTextPart } from '../part.js';
 import { Slot } from '../slot.js';
-import { AbstractTemplate, type TemplateResult } from './template.js';
+import { Template, type TemplateResult } from './template.js';
 
-export class TextTemplate<T> extends AbstractTemplate<readonly [T]> {
+export class TextTemplate<T> extends Template<readonly [T]> {
   static readonly Default: TextTemplate<any> = new TextTemplate();
 
   private readonly _precedingText: string;
