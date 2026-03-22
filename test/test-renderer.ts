@@ -2,21 +2,23 @@ import { vi } from 'vitest';
 import {
   BOUNDARY_TYPE_ERROR,
   type Coroutine,
-  HOOK_TYPE_INSERTION_EFFECT,
-  HOOK_TYPE_LAYOUT_EFFECT,
-  HOOK_TYPE_PASSIVE_EFFECT,
-  type Hook,
   SCOPE_DETACHED,
   type Scope,
   type UpdateOptions,
 } from '@/core.js';
 import { NoLanes } from '@/lane.js';
-import { RenderSession } from '@/render-session.js';
+import {
+  HOOK_TYPE_INSERTION_EFFECT,
+  HOOK_TYPE_LAYOUT_EFFECT,
+  HOOK_TYPE_PASSIVE_EFFECT,
+  type Hook,
+  RenderContext,
+} from '@/render-context.js';
 import type { Runtime } from '@/runtime.js';
 import { createRuntime, createScope } from './mocks.js';
 
 export class TestRenderer<TProps = {}, TResult = unknown> {
-  readonly callback: (props: TProps, session: RenderSession) => TResult;
+  readonly callback: (props: TProps, session: RenderContext) => TResult;
 
   readonly runtime: Runtime = createRuntime();
 
@@ -25,7 +27,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
   hooks: Hook[] = [];
 
   constructor(
-    callback: (props: TProps, session: RenderSession) => TResult,
+    callback: (props: TProps, session: RenderContext) => TResult,
     scope: Scope = createScope(),
   ) {
     this.callback = vi.fn(callback);
@@ -78,7 +80,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
       resume: ({ frame, context }) => {
         const scope = createScope(coroutine);
         const hooks = this.hooks.slice();
-        const session = new RenderSession(
+        const session = new RenderContext(
           hooks,
           frame,
           scope,

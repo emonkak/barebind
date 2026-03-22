@@ -3,7 +3,6 @@ import {
   $directive,
   type Bindable,
   type Binding,
-  type Component,
   Directive,
   type DirectiveContext,
   type DirectiveType,
@@ -15,6 +14,7 @@ import {
 import { ensurePartType } from '../part.js';
 import { BlackholeType } from '../primitive/blackhole.js';
 import { type StyleMap, updateStyles } from '../primitive/style.js';
+import type { Component } from '../render-context.js';
 import { Repeat, type RepeatProps } from '../repeat.js';
 import { ChildNodeTemplate } from '../template/child-node.js';
 import { ElementTemplate } from '../template/element.js';

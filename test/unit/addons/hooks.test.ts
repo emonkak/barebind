@@ -7,7 +7,7 @@ import {
   SyncEnternalStore,
 } from '@/addons/hooks.js';
 import { LinkedList } from '@/collections/linked-list.js';
-import type { Cleanup, RefCallback } from '@/core.js';
+import type { Cleanup, RefCallback } from '@/render-context.js';
 import { waitForMicrotasks, waitForTimeout } from '../../test-helpers.js';
 import { TestRenderer } from '../../test-renderer.js';
 

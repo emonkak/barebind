@@ -1,50 +1,168 @@
 import { areDependenciesChanged } from './compare.js';
 import {
-  $hook,
-  type ActionDispatcher,
+  type Bindable,
   BOUNDARY_TYPE_ERROR,
   BOUNDARY_TYPE_SHARED_CONTEXT,
-  type Cleanup,
   type Coroutine,
   Directive,
+  type DirectiveType,
   type Effect,
-  type EffectHandler,
   type EffectQueue,
   type ErrorHandler,
-  HOOK_TYPE_FINALIZER,
-  HOOK_TYPE_ID,
-  HOOK_TYPE_INSERTION_EFFECT,
-  HOOK_TYPE_LAYOUT_EFFECT,
-  HOOK_TYPE_MEMO,
-  HOOK_TYPE_PASSIVE_EFFECT,
-  HOOK_TYPE_REDUCER,
-  type Hook,
-  type HookClass,
-  type HookFunction,
-  type HookObject,
-  type InitialState,
-  type NextState,
-  type ReducerReturn,
-  type RefObject,
-  type RenderContext,
+  type Lanes,
   type RenderFrame,
   SCOPE_DETACHED,
   type Scope,
   type SessionContext,
-  type StateOptions,
-  type StateReturn,
   type TemplateMode,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
-  type Usable,
 } from './core.js';
 import { AbortError, handleError, InterruptError } from './error.js';
 import { getSchedulingLanes, NoLanes } from './lane.js';
 
+export const $hook: unique symbol = Symbol('$hook');
+
+export const HOOK_TYPE_FINALIZER = 0;
+export const HOOK_TYPE_PASSIVE_EFFECT = 1;
+export const HOOK_TYPE_LAYOUT_EFFECT = 2;
+export const HOOK_TYPE_INSERTION_EFFECT = 3;
+export const HOOK_TYPE_ID = 4;
+export const HOOK_TYPE_MEMO = 5;
+export const HOOK_TYPE_REDUCER = 6;
+
 const DETACHED_HOOKS = Object.freeze([] as Hook[]) as Hook[];
 
-export class RenderSession implements RenderContext {
+export interface ActionDispatcher<TState, TAction> {
+  context: RenderContext;
+  dispatch: (
+    action: TAction,
+    options?: DispatchOptions<TState>,
+  ) => UpdateHandle;
+  pendingProposals: ActionProposal<TAction>[];
+  pendingState: TState;
+  reducer: (state: TState, action: TAction) => TState;
+}
+
+export interface ActionProposal<TAction> {
+  action: TAction;
+  lanes: Lanes;
+  revertLanes: Lanes;
+}
+
+export type Cleanup = () => void;
+
+export interface Component<TProps = {}, TResult = unknown>
+  extends DirectiveType<TProps> {
+  (props: TProps): Bindable<TProps>;
+  render(props: TProps, context: RenderContext): TResult;
+  arePropsEqual(nextProps: TProps, prevProps: TProps): boolean;
+}
+
+export interface DispatchOptions<TState> extends UpdateOptions {
+  areStatesEqual?: (nextState: TState, prevState: TState) => boolean;
+  transient?: boolean;
+}
+
+export interface EffectHandler {
+  setup: () => Cleanup | void;
+  cleanup: Cleanup | void;
+  epoch: number;
+}
+
+export type Hook =
+  | Hook.FinalizerHook
+  | Hook.EffectHook
+  | Hook.IdHook
+  | Hook.MemoHook<any>
+  | Hook.ReducerHook<any, any>;
+
+export namespace Hook {
+  export interface FinalizerHook {
+    type: typeof HOOK_TYPE_FINALIZER;
+  }
+
+  export interface EffectHook {
+    type:
+      | typeof HOOK_TYPE_PASSIVE_EFFECT
+      | typeof HOOK_TYPE_LAYOUT_EFFECT
+      | typeof HOOK_TYPE_INSERTION_EFFECT;
+    handler: EffectHandler;
+    memoizedDependencies: readonly unknown[] | null;
+  }
+
+  export interface IdHook {
+    type: typeof HOOK_TYPE_ID;
+    id: string;
+  }
+
+  export interface MemoHook<TResult> {
+    type: typeof HOOK_TYPE_MEMO;
+    memoizedResult: TResult;
+    memoizedDependencies: readonly unknown[] | null;
+  }
+
+  export interface ReducerHook<TState, TAction> {
+    type: typeof HOOK_TYPE_REDUCER;
+    dispatcher: ActionDispatcher<TState, TAction>;
+    memoizedState: TState;
+    memoizedProposals: ActionProposal<TAction>[];
+  }
+}
+
+/**
+ * Represents a class with static [$hook] method. never[] and NoInfer<T> ensure
+ * T is inferred solely from the constructor.
+ */
+export interface HookClass<T> {
+  new (...args: never[]): T;
+  [$hook](context: RenderContext): NoInfer<T>;
+}
+
+export type HookFunction<T> = (context: RenderContext) => T;
+
+export interface HookObject<T> {
+  [$hook](context: RenderContext): T;
+}
+
+export type InitialState<T> = (T extends Function ? never : T) | (() => T);
+
+export type NextState<T> = (T extends Function ? never : T) | ((state: T) => T);
+
+export type Ref<T> = RefCallback<T> | RefObject<T | null> | null | undefined;
+
+export type RefCallback<T> = (value: T) => Cleanup | void;
+
+export interface RefObject<T> {
+  current: T;
+}
+
+export type ReducerReturn<TState, TAction> = [
+  state: TState,
+  dispatch: (
+    action: TAction,
+    options?: DispatchOptions<TState>,
+  ) => UpdateHandle,
+  isStale: boolean,
+];
+
+export interface StateOptions {
+  passthrough?: boolean;
+}
+
+export type StateReturn<TState> = [
+  state: TState,
+  setState: (
+    nextState: NextState<TState>,
+    options?: DispatchOptions<TState>,
+  ) => UpdateHandle,
+  isStale: boolean,
+];
+
+export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;
+
+export class RenderContext {
   private _hooks: Hook[];
 
   private _hookIndex = 0;

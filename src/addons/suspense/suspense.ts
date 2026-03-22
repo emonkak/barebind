@@ -1,8 +1,8 @@
 /// <reference path="../../../typings/upsert.d.ts" />
 
 import { createComponent } from '../../component.js';
-import type { RenderContext } from '../../core.js';
 import { getTranstionIndex, TransitionLanes } from '../../lane.js';
+import type { RenderContext } from '../../render-context.js';
 import { Fragment } from '../../template.js';
 import { Suspend } from './suspend.js';
 

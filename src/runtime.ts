@@ -3,12 +3,10 @@ import {
   $directive,
   type Backend,
   type CommitPhase,
-  type Component,
   type Coroutine,
   Directive,
   type DirectiveType,
   EffectQueue,
-  type Hook,
   isBindable,
   type Lanes,
   type Part,
@@ -38,7 +36,6 @@ import {
   SyncLane,
   ViewTransitionLane,
 } from './lane.js';
-import { RenderSession } from './render-session.js';
 
 export interface RuntimeOptions {
   uniqueIdentifier?: string;
@@ -147,23 +144,6 @@ export class Runtime implements SessionContext {
   nextIdentifier(): string {
     // The identifier is also valid as a view transition name.
     return this._uniqueIdentifier + '-' + this._identifierCount++;
-  }
-
-  renderComponent<TProps, TResult>(
-    component: Component<TProps, TResult>,
-    props: TProps,
-    hooks: Hook[],
-    frame: RenderFrame,
-    scope: Scope,
-    coroutine: Coroutine,
-  ): TResult {
-    const context = new RenderSession(hooks, frame, scope, coroutine, this);
-
-    const result = component.render(props, context);
-
-    context.finalize();
-
-    return result;
   }
 
   resolveDirective<T>(source: T, part: Part): Directive<UnwrapBindable<T>> {

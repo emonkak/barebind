@@ -1,25 +1,27 @@
 import {
   type Bindable,
   type Binding,
-  type Component,
   type Coroutine,
   Directive,
   type DirectiveContext,
   type Effect,
-  type EffectHandler,
   type EffectQueue,
-  HOOK_TYPE_INSERTION_EFFECT,
-  HOOK_TYPE_LAYOUT_EFFECT,
-  HOOK_TYPE_PASSIVE_EFFECT,
-  type Hook,
   type Lanes,
   type Part,
-  type RenderContext,
   SCOPE_DETACHED,
   type Scope,
   type UpdateSession,
 } from './core.js';
 import { NoLanes } from './lane.js';
+import {
+  type Component,
+  type EffectHandler,
+  HOOK_TYPE_INSERTION_EFFECT,
+  HOOK_TYPE_LAYOUT_EFFECT,
+  HOOK_TYPE_PASSIVE_EFFECT,
+  type Hook,
+  RenderContext,
+} from './render-context.js';
 import { Slot } from './slot.js';
 
 export interface ComponentOptions<TProps> {
@@ -115,7 +117,6 @@ export class ComponentBinding<TProps, TResult>
   }
 
   resume(session: UpdateSession): void {
-    const { frame, coroutine, context } = session;
     const hooks = this._pendingHooks.slice();
     const scope: Scope = {
       owner: this,
@@ -123,21 +124,24 @@ export class ComponentBinding<TProps, TResult>
       boundary: null,
     };
 
-    const result = context.renderComponent(
-      this._component,
-      this._props,
+    const component = this._component;
+    const context = new RenderContext(
       hooks,
-      frame,
+      session.frame,
       scope,
       this,
+      session.context,
     );
+    const result = component.render(this._props, context);
 
-    const childSession: UpdateSession = { frame, scope, coroutine, context };
+    context.finalize();
+
+    const childSession: UpdateSession = { ...session, scope };
 
     if (this._slot !== null) {
       this._slot.reconcile(result, childSession);
     } else {
-      this._slot = Slot.place(result, this._part, context);
+      this._slot = Slot.place(result, this._part, session.context);
       this._slot.attach(childSession);
     }
 

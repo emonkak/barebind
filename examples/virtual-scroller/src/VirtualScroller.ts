@@ -1,7 +1,6 @@
 import {
   type Component,
   createComponent,
-  Keyed,
   type Ref,
   type RenderContext,
   Repeat,
@@ -255,7 +254,7 @@ export const VirtualScroller: VirtualScroller = createComponent(
               :ref=${spacerRef}
               :style=${{ height: aboveSpace + 'px' }}
             ></div>
-          `
+          `.withKey(aboveSpace)
         : null;
     const belowSpacer =
       belowSpace > 0
@@ -265,12 +264,12 @@ export const VirtualScroller: VirtualScroller = createComponent(
               :ref=${spacerRef}
               :style=${{ height: belowSpace + 'px' }}
             ></div>
-          `
+          `.withKey(belowSpace)
         : null;
 
     return $.html`
       <div class="VirtualScroller">
-        <${Keyed(aboveSpacer, aboveSpace)}>
+        <${aboveSpacer}>
         <ul class="VirtualScroller-list" :style=${{ scrollMargin }}>
           <${Repeat({
             elementSelector: (item, offset) => {
@@ -291,7 +290,7 @@ export const VirtualScroller: VirtualScroller = createComponent(
             source: items.slice(visibleRange.start, visibleRange.end),
           })}>
         </ul>
-        <${Keyed(belowSpacer, belowSpace)}>
+        <${belowSpacer}>
       </div>
     `;
   },

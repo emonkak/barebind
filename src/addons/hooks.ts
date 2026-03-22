@@ -4,7 +4,7 @@ import type {
   HookFunction,
   InitialState,
   Ref,
-} from '../core.js';
+} from '../render-context.js';
 
 export interface DeferredValueOptions<T> extends DispatchOptions<T> {
   initialValue?: InitialState<T>;

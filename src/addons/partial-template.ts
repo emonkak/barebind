@@ -1,5 +1,5 @@
 import { sequentialEqual } from '../compare.js';
-import type { HookFunction, RenderContext } from '../core.js';
+import type { HookFunction, RenderContext } from '../render-context.js';
 
 const stringInterpolationCache = new WeakMap<
   readonly string[],

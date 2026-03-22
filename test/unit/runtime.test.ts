@@ -1,10 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createComponent } from '@/component.js';
 import {
   BOUNDARY_TYPE_ERROR,
   Directive,
   EffectQueue,
-  type Hook,
   type SessionEvent,
 } from '@/core.js';
 import { AbortError, InterruptError } from '@/error.js';
@@ -15,9 +13,7 @@ import {
   ViewTransitionLane,
 } from '@/lane.js';
 import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
-import { RenderSession } from '@/render-session.js';
 import {
-  createRenderFrame,
   createRuntime,
   createScope,
   MockCoroutine,
@@ -805,34 +801,6 @@ describe('Runtime', () => {
 
       expect(runtime.nextIdentifier()).toMatch(/^[a-z][0-9a-z]*-0$/);
       expect(runtime.nextIdentifier()).toMatch(/^[a-z][0-9a-z]*-1$/);
-    });
-  });
-
-  describe('renderComponent()', () => {
-    it('renders the component with a new render session', () => {
-      const component = createComponent(vi.fn(() => null));
-      const props = {};
-      const hooks: Hook[] = [];
-      const frame = createRenderFrame(1, -1);
-      const scope = createScope();
-      const coroutine = new MockCoroutine();
-      const runtime = createRuntime();
-
-      const result = runtime.renderComponent(
-        component,
-        props,
-        hooks,
-        frame,
-        scope,
-        coroutine,
-      );
-
-      expect(component.render).toHaveBeenCalledOnce();
-      expect(component.render).toHaveBeenCalledWith(
-        props,
-        expect.any(RenderSession),
-      );
-      expect(result).toBe(null);
     });
   });
 

@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ComponentBinding, createComponent } from '@/component.js';
-import type { CommitPhase, RenderContext } from '@/core.js';
+import type { CommitPhase } from '@/core.js';
 import { Directive } from '@/core.js';
 import { ConcurrentLane } from '@/lane.js';
 import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
-import { RenderSession } from '@/render-session.js';
+import { RenderContext } from '@/render-context.js';
 import { SLOT_STATUS_DETACHED, SLOT_STATUS_IDLE } from '@/slot.js';
 import { createRuntime } from '../mocks.js';
 import { TestRenderer } from '../test-renderer.js';
@@ -43,7 +43,7 @@ describe('createComponent()', () => {
       renderer.render(props);
 
       expect(render).toHaveBeenCalledOnce();
-      expect(render).toHaveBeenCalledWith(props, expect.any(RenderSession));
+      expect(render).toHaveBeenCalledWith(props, expect.any(RenderContext));
     });
   });
 

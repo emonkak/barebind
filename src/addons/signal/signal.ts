@@ -1,7 +1,6 @@
 import { LinkedList } from '../../collections/linked-list.js';
 import {
   $directive,
-  $hook,
   type Bindable,
   type Binding,
   type Coroutine,
@@ -9,15 +8,18 @@ import {
   type DirectiveContext,
   type DirectiveType,
   type Effect,
-  type HookObject,
   type Lanes,
   type Part,
-  type RenderContext,
   SCOPE_DETACHED,
   type Scope,
   type UpdateSession,
 } from '../../core.js';
 import { NoLanes } from '../../lane.js';
+import {
+  $hook,
+  type HookObject,
+  type RenderContext,
+} from '../../render-context.js';
 import { Slot } from '../../slot.js';
 
 export interface InvalidateEvent<T = unknown> {

@@ -1,6 +1,6 @@
 /// <reference types="navigation-api-types" />
 
-import type { HookFunction, RenderContext } from '../../core.js';
+import type { HookFunction, RenderContext } from '../../render-context.js';
 import { HistoryContext, trimHashMark } from './history.js';
 
 export function ScrollRestration(): HookFunction<void> {

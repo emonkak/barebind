@@ -1,16 +1,14 @@
 import {
-  type Cleanup,
   type DirectiveContext,
   type Effect,
   PART_TYPE_ATTRIBUTE,
   type Part,
   type Primitive,
-  type Ref,
-  type RefObject,
   type UpdateSession,
 } from '../core.js';
 import { DirectiveError } from '../error.js';
 import { ensurePartType } from '../part.js';
+import type { Cleanup, Ref, RefObject } from '../render-context.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export abstract class RefType {

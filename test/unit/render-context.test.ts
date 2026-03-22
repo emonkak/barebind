@@ -1,15 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { shallowEqual } from '@/compare.js';
-import {
-  $hook,
-  EffectQueue,
-  type RefObject,
-  type RenderContext,
-  SCOPE_DETACHED,
-  type UpdateHandle,
-} from '@/core.js';
-import { RenderSession } from '@/render-session.js';
+import { EffectQueue, SCOPE_DETACHED, type UpdateHandle } from '@/core.js';
+import { $hook, type RefObject, RenderContext } from '@/render-context.js';
 import { MockTemplate } from '../mocks.js';
 import { waitForMicrotasks, waitForTimeout } from '../test-helpers.js';
 import { TestRenderer } from '../test-renderer.js';
@@ -267,7 +260,7 @@ describe('RenderSession', () => {
 
       expect(result).toBe('foo');
       expect(hook).toHaveBeenCalledOnce();
-      expect(hook).toHaveBeenCalledWith(expect.any(RenderSession));
+      expect(hook).toHaveBeenCalledWith(expect.any(RenderContext));
     });
 
     it('performs a custom hook object', () => {
@@ -280,7 +273,7 @@ describe('RenderSession', () => {
 
       expect(result).toBe('foo');
       expect(hook[$hook]).toHaveBeenCalledOnce();
-      expect(hook[$hook]).toHaveBeenCalledWith(expect.any(RenderSession));
+      expect(hook[$hook]).toHaveBeenCalledWith(expect.any(RenderContext));
     });
   });
 

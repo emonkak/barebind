@@ -4,19 +4,9 @@ import { LinkedList } from './collections/linked-list.js';
 
 export const $directive: unique symbol = Symbol('$directive');
 
-export const $hook: unique symbol = Symbol('$hook');
-
 export const BOUNDARY_TYPE_ERROR = 0;
 export const BOUNDARY_TYPE_HYDRATION = 1;
 export const BOUNDARY_TYPE_SHARED_CONTEXT = 2;
-
-export const HOOK_TYPE_FINALIZER = 0;
-export const HOOK_TYPE_PASSIVE_EFFECT = 1;
-export const HOOK_TYPE_LAYOUT_EFFECT = 2;
-export const HOOK_TYPE_INSERTION_EFFECT = 3;
-export const HOOK_TYPE_ID = 4;
-export const HOOK_TYPE_MEMO = 5;
-export const HOOK_TYPE_REDUCER = 6;
 
 export const PART_TYPE_NAMES = [
   'Attribute',
@@ -41,23 +31,6 @@ export const SCOPE_DETACHED: Scope = Object.freeze({
   level: 0,
   boundary: null,
 });
-
-export interface ActionDispatcher<TState, TAction> {
-  context: RenderContext;
-  dispatch: (
-    action: TAction,
-    options?: DispatchOptions<TState>,
-  ) => UpdateHandle;
-  pendingProposals: ActionProposal<TAction>[];
-  pendingState: TState;
-  reducer: (state: TState, action: TAction) => TState;
-}
-
-export interface ActionProposal<TAction> {
-  action: TAction;
-  lanes: Lanes;
-  revertLanes: Lanes;
-}
 
 export interface Backend {
   flushEffects(effects: EffectQueue, phase: CommitPhase): void;
@@ -115,20 +88,7 @@ export namespace Boundary {
   }
 }
 
-export type Cleanup = () => void;
-
 export type CommitPhase = 'mutation' | 'layout' | 'passive';
-
-export interface Component<TProps = {}, TResult = unknown>
-  extends DirectiveType<TProps> {
-  (props: TProps): Bindable<TProps>;
-  render(props: TProps, context: RenderContext): TResult;
-  arePropsEqual(nextProps: TProps, prevProps: TProps): boolean;
-}
-
-export interface ComponentState {
-  hooks: Hook[];
-}
 
 export interface Coroutine {
   readonly name: string;
@@ -169,19 +129,8 @@ export interface DirectiveType<T> {
   resolveBinding(value: T, part: Part, context: DirectiveContext): Binding<T>;
 }
 
-export interface DispatchOptions<TState> extends UpdateOptions {
-  areStatesEqual?: (nextState: TState, prevState: TState) => boolean;
-  transient?: boolean;
-}
-
 export interface Effect {
   commit(): void;
-}
-
-export interface EffectHandler {
-  setup: () => Cleanup | void;
-  cleanup: Cleanup | void;
-  epoch: number;
 }
 
 export class EffectQueue {
@@ -257,68 +206,9 @@ export type ErrorHandler = (
   handleError: (error: unknown) => void,
 ) => void;
 
-export type Hook =
-  | Hook.FinalizerHook
-  | Hook.EffectHook
-  | Hook.IdHook
-  | Hook.MemoHook<any>
-  | Hook.ReducerHook<any, any>;
-
-export namespace Hook {
-  export interface FinalizerHook {
-    type: typeof HOOK_TYPE_FINALIZER;
-  }
-
-  export interface EffectHook {
-    type:
-      | typeof HOOK_TYPE_PASSIVE_EFFECT
-      | typeof HOOK_TYPE_LAYOUT_EFFECT
-      | typeof HOOK_TYPE_INSERTION_EFFECT;
-    handler: EffectHandler;
-    memoizedDependencies: readonly unknown[] | null;
-  }
-
-  export interface IdHook {
-    type: typeof HOOK_TYPE_ID;
-    id: string;
-  }
-
-  export interface MemoHook<TResult> {
-    type: typeof HOOK_TYPE_MEMO;
-    memoizedResult: TResult;
-    memoizedDependencies: readonly unknown[] | null;
-  }
-
-  export interface ReducerHook<TState, TAction> {
-    type: typeof HOOK_TYPE_REDUCER;
-    dispatcher: ActionDispatcher<TState, TAction>;
-    memoizedState: TState;
-    memoizedProposals: ActionProposal<TAction>[];
-  }
-}
-
-/**
- * Represents a class with static [$hook] method. never[] and NoInfer<T> ensure
- * T is inferred solely from the constructor.
- */
-export interface HookClass<T> {
-  new (...args: never[]): T;
-  [$hook](context: RenderContext): NoInfer<T>;
-}
-
-export type HookFunction<T> = (context: RenderContext) => T;
-
-export interface HookObject<T> {
-  [$hook](context: RenderContext): T;
-}
-
-export type InitialState<T> = (T extends Function ? never : T) | (() => T);
-
 export type Lane = number;
 
 export type Lanes = number;
-
-export type NextState<T> = (T extends Function ? never : T) | ((state: T) => T);
 
 export type Part =
   | Part.AttributePart
@@ -380,79 +270,6 @@ export interface Primitive<T> extends DirectiveType<T> {
   ensureValue?(value: unknown, part: Part): asserts value is T;
 }
 
-export type ReducerReturn<TState, TAction> = [
-  state: TState,
-  dispatch: (
-    action: TAction,
-    options?: DispatchOptions<TState>,
-  ) => UpdateHandle,
-  isStale: boolean,
-];
-
-export type Ref<T> = RefCallback<T> | RefObject<T | null> | null | undefined;
-
-export type RefCallback<T> = (value: T) => Cleanup | void;
-
-export interface RefObject<T> {
-  current: T;
-}
-
-export interface RenderContext {
-  catchError(handler: ErrorHandler): void;
-  forceUpdate(options?: UpdateOptions): UpdateHandle;
-  getSessionContext(): SessionContext;
-  getSharedContext<T>(key: unknown): T | undefined;
-  html(
-    strings: readonly string[],
-    ...values: readonly unknown[]
-  ): Bindable<readonly unknown[]>;
-  interrupt(error: unknown): never;
-  math(
-    strings: readonly string[],
-    ...values: readonly unknown[]
-  ): Bindable<readonly unknown[]>;
-  setSharedContext<T>(key: unknown, value: T): void;
-  startTransition<T>(action: (transition: number) => T): T;
-  svg(
-    strings: readonly string[],
-    ...values: readonly unknown[]
-  ): Bindable<readonly unknown[]>;
-  text(
-    strings: readonly string[],
-    ...values: readonly unknown[]
-  ): Bindable<readonly unknown[]>;
-  use<T>(usable: HookClass<T>): T;
-  use<T>(usable: HookObject<T>): T;
-  use<T>(usable: HookFunction<T>): T;
-  useCallback<TCallback extends (...args: any[]) => any>(
-    callback: TCallback,
-    dependencies: readonly unknown[],
-  ): TCallback;
-  useEffect(
-    setup: () => Cleanup | void,
-    dependencies?: readonly unknown[] | null,
-  ): void;
-  useId(): string;
-  useInsertionEffect(
-    setup: () => Cleanup | void,
-    dependencies?: readonly unknown[] | null,
-  ): void;
-  useLayoutEffect(
-    setup: () => Cleanup | void,
-    dependencies?: readonly unknown[] | null,
-  ): void;
-  useMemo<TResult>(
-    computation: () => TResult,
-    dependencies: readonly unknown[],
-  ): TResult;
-  useReducer<TState, TAction>(
-    reducer: (state: TState, action: TAction) => TState,
-    initialState: InitialState<TState>,
-  ): ReducerReturn<TState, TAction>;
-  useRef<T>(initialValue: T): RefObject<T>;
-  useState<TState>(initialState: InitialState<TState>): StateReturn<TState>;
-}
-
 export interface RenderFrame {
   id: number;
   lanes: Lanes;
@@ -469,7 +286,7 @@ export interface ReversibleEffect extends Effect {
 }
 
 export interface SessionContext extends DirectiveContext {
-  addObserver(observer: SessionObserver): Cleanup;
+  addObserver(observer: SessionObserver): () => void;
   getScheduledUpdates(): Update[];
   getTemplate(
     strings: readonly string[],
@@ -478,14 +295,6 @@ export interface SessionContext extends DirectiveContext {
   ): DirectiveType<readonly unknown[]>;
   startTransition<T>(action: (transition: number) => T): T;
   nextIdentifier(): string;
-  renderComponent<TProps, TResult>(
-    component: Component<TProps, TResult>,
-    props: TProps,
-    hooks: Hook[],
-    frame: RenderFrame,
-    scope: Scope,
-    coroutine: Coroutine,
-  ): TResult;
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateHandle;
 }
 
@@ -537,19 +346,6 @@ export interface Scope {
   boundary: Boundary | null;
 }
 
-export interface StateOptions {
-  passthrough?: boolean;
-}
-
-export type StateReturn<TState> = [
-  state: TState,
-  setState: (
-    nextState: NextState<TState>,
-    options?: DispatchOptions<TState>,
-  ) => UpdateHandle,
-  isStale: boolean,
-];
-
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
 export type UnwrapBindable<T> = T extends Bindable<infer Value> ? Value : T;
@@ -587,8 +383,6 @@ export interface UpdateSession {
   coroutine: Coroutine;
   context: SessionContext;
 }
-
-export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;
 
 export function areDirectiveTypesEqual(
   nextType: DirectiveType<unknown>,
