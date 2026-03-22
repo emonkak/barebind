@@ -8,7 +8,7 @@ import {
   createTextPart,
   HTML_NAMESPACE_URI,
 } from '@/part.js';
-import { SLOT_STATUS_DETACHED, SLOT_STATUS_IDLE, Slot } from '@/slot.js';
+import { Slot } from '@/slot.js';
 import { TemplateBinding } from '@/template/template.js';
 import {
   createRuntime,
@@ -166,24 +166,6 @@ describe('TemplateBinding', () => {
         expect(container.innerHTML).toBe(
           '<div><div class="foo"></div>bar<!--baz--></div><!---->',
         );
-        expect(binding['_pendingResult']).toStrictEqual({
-          childNodes: [fragment],
-          slots: [
-            expect.objectContaining({
-              value: args1[0],
-              status: SLOT_STATUS_IDLE,
-            }),
-            expect.objectContaining({
-              value: args1[1],
-              status: SLOT_STATUS_IDLE,
-            }),
-            expect.objectContaining({
-              value: args1[2],
-              status: SLOT_STATUS_IDLE,
-            }),
-          ],
-        });
-        expect(binding['_memoizedResult']).toBe(binding['_pendingResult']);
       }
 
       SESSION2: {
@@ -198,24 +180,6 @@ describe('TemplateBinding', () => {
         expect(container.innerHTML).toBe(
           '<div><div class="qux"></div>quux<!--corge--></div><!---->',
         );
-        expect(binding['_pendingResult']).toStrictEqual({
-          childNodes: [fragment],
-          slots: [
-            expect.objectContaining({
-              value: args2[0],
-              status: SLOT_STATUS_IDLE,
-            }),
-            expect.objectContaining({
-              value: args2[1],
-              status: SLOT_STATUS_IDLE,
-            }),
-            expect.objectContaining({
-              value: args2[2],
-              status: SLOT_STATUS_IDLE,
-            }),
-          ],
-        });
-        expect(binding['_memoizedResult']).toBe(binding['_pendingResult']);
       }
 
       SESSION3: {
@@ -227,24 +191,6 @@ describe('TemplateBinding', () => {
         expect(renderSpy).toHaveBeenCalledOnce();
         expect(part.node).toBe(part.sentinelNode);
         expect(container.innerHTML).toBe('<!---->');
-        expect(binding['_pendingResult']).toStrictEqual({
-          childNodes: [fragment],
-          slots: [
-            expect.objectContaining({
-              value: args2[0],
-              status: SLOT_STATUS_DETACHED,
-            }),
-            expect.objectContaining({
-              value: args2[1],
-              status: SLOT_STATUS_DETACHED,
-            }),
-            expect.objectContaining({
-              value: args2[2],
-              status: SLOT_STATUS_DETACHED,
-            }),
-          ],
-        });
-        expect(binding['_memoizedResult']).toBe(null);
       }
     });
 
@@ -313,24 +259,6 @@ describe('TemplateBinding', () => {
         expect(container.innerHTML).toBe(
           '<!--foo-->bar<div class="baz"></div><!---->',
         );
-        expect(binding['_pendingResult']).toStrictEqual({
-          childNodes: fragment,
-          slots: [
-            expect.objectContaining({
-              value: args1[0],
-              status: SLOT_STATUS_IDLE,
-            }),
-            expect.objectContaining({
-              value: args1[1],
-              status: SLOT_STATUS_IDLE,
-            }),
-            expect.objectContaining({
-              value: args1[2],
-              status: SLOT_STATUS_IDLE,
-            }),
-          ],
-        });
-        expect(binding['_memoizedResult']).toBe(binding['_pendingResult']);
       }
 
       SESSION2: {
@@ -345,24 +273,6 @@ describe('TemplateBinding', () => {
         expect(container.innerHTML).toBe(
           '<!--qux-->quux<div class="corge"></div><!---->',
         );
-        expect(binding['_pendingResult']).toStrictEqual({
-          childNodes: fragment,
-          slots: [
-            expect.objectContaining({
-              value: args2[0],
-              status: SLOT_STATUS_IDLE,
-            }),
-            expect.objectContaining({
-              value: args2[1],
-              status: SLOT_STATUS_IDLE,
-            }),
-            expect.objectContaining({
-              value: args2[2],
-              status: SLOT_STATUS_IDLE,
-            }),
-          ],
-        });
-        expect(binding['_memoizedResult']).toBe(binding['_pendingResult']);
       }
 
       SESSION3: {
@@ -374,24 +284,6 @@ describe('TemplateBinding', () => {
         expect(renderSpy).toHaveBeenCalledOnce();
         expect(part.node).toBe(part.sentinelNode);
         expect(container.innerHTML).toBe('<!---->');
-        expect(binding['_pendingResult']).toStrictEqual({
-          childNodes: fragment,
-          slots: [
-            expect.objectContaining({
-              value: args2[0],
-              status: SLOT_STATUS_IDLE,
-            }),
-            expect.objectContaining({
-              value: args2[1],
-              status: SLOT_STATUS_IDLE,
-            }),
-            expect.objectContaining({
-              value: args2[2],
-              status: SLOT_STATUS_DETACHED,
-            }),
-          ],
-        });
-        expect(binding['_memoizedResult']).toBe(null);
       }
     });
 

@@ -1,7 +1,6 @@
 import type {
   Binding,
   DirectiveContext,
-  DirectiveType,
   Part,
   Session,
   UnwrapBindable,
@@ -9,11 +8,11 @@ import type {
 import { areDirectiveTypesEqual } from './core.js';
 import { debugPart, undebugPart } from './debug/part.js';
 
-export const SLOT_STATUS_IDLE = 0;
-export const SLOT_STATUS_ATTACHED = 1;
-export const SLOT_STATUS_DETACHED = 2;
+const SLOT_STATUS_IDLE = 0;
+const SLOT_STATUS_ATTACHED = 1;
+const SLOT_STATUS_DETACHED = 2;
 
-export type SlotStatus =
+type SlotStatus =
   | typeof SLOT_STATUS_IDLE
   | typeof SLOT_STATUS_ATTACHED
   | typeof SLOT_STATUS_DETACHED;
@@ -38,24 +37,12 @@ export class Slot<T> {
     this._key = key;
   }
 
-  get type(): DirectiveType<UnwrapBindable<T>> {
-    return this._pendingBinding.type;
-  }
-
-  get value(): UnwrapBindable<T> {
-    return this._pendingBinding.value;
-  }
-
-  get key(): unknown {
-    return this._key;
-  }
-
   get part(): Part {
     return this._pendingBinding.part;
   }
 
-  get status(): SlotStatus {
-    return this._status;
+  get key(): unknown {
+    return this._key;
   }
 
   attach(session: Session): void {

@@ -6,7 +6,6 @@ import {
   HTML_NAMESPACE_URI,
   SVG_NAMESPACE_URI,
 } from '@/part.js';
-import { SLOT_STATUS_ATTACHED } from '@/slot.js';
 import { ElementTemplate } from '@/template/element.js';
 import { createElement, serializeNode } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -53,22 +52,18 @@ describe('ElementTemplate', () => {
       expect(childNodes).toStrictEqual([container.firstChild]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
-          value: values[0],
           part: {
             type: PART_TYPE_ELEMENT,
             node: expect.exact(container.firstChild),
           },
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
-          value: values[1],
           part: {
             type: PART_TYPE_CHILD_NODE,
             node: expect.exact(container.firstChild!.firstChild),
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          status: SLOT_STATUS_ATTACHED,
         }),
       ]);
     });
@@ -93,22 +88,18 @@ describe('ElementTemplate', () => {
       ]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
-          value: values[0],
           part: {
             type: PART_TYPE_ELEMENT,
             node: expect.any(window.Element),
           },
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
-          value: values[1],
           part: {
             type: PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          status: SLOT_STATUS_ATTACHED,
         }),
       ]);
       expect((slots[0]!.part.node as Element).namespaceURI).toBe(
@@ -134,22 +125,18 @@ describe('ElementTemplate', () => {
       ]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
-          value: values[0],
           part: {
             type: PART_TYPE_ELEMENT,
             node: expect.any(window.Element),
           },
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
-          value: values[1],
           part: {
             type: PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             sentinelNode: expect.any(Comment),
             namespaceURI: SVG_NAMESPACE_URI,
           },
-          status: SLOT_STATUS_ATTACHED,
         }),
       ]);
       expect((slots[0]!.part.node as Element).namespaceURI).toBe(

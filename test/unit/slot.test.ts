@@ -7,6 +7,20 @@ import { MockBinding, MockType } from '../mocks.js';
 import { TestUpdater } from '../test-updater.js';
 
 describe('Slot', () => {
+  describe('constructor()', () => {
+    it('starts with pending binding', () => {
+      const binding = new MockBinding(
+        new MockType(),
+        'a',
+        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
+      );
+      const slot = new Slot(binding, 'key');
+
+      expect(slot.part).toBe(binding.part);
+      expect(slot.key).toBe('key');
+    });
+  });
+
   describe('reconcile()', () => {
     it('update the current binding when the type is the same', () => {
       const binding = new MockBinding(
@@ -34,10 +48,6 @@ describe('Slot', () => {
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(rollbackSpy).toHaveBeenCalledTimes(0);
         expect(dirty).toBe(true);
-        expect(slot.type).toBe(binding.type);
-        expect(slot.value).toBe(binding.value);
-        expect(slot.part).toBe(binding.part);
-        expect(slot['_memoizedBinding']).toBe(binding);
       }
     });
 
@@ -77,10 +87,6 @@ describe('Slot', () => {
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(rollbackSpy).toHaveBeenCalledTimes(1);
         expect(dirty).toBe(true);
-        expect(slot.type).toStrictEqual(new MockType('B'));
-        expect(slot.value).toBe('b');
-        expect(slot.part).toBe(binding.part);
-        expect(slot['_memoizedBinding']).not.toBe(binding);
       }
     });
 
@@ -120,10 +126,6 @@ describe('Slot', () => {
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(rollbackSpy).toHaveBeenCalledTimes(1);
         expect(dirty).toBe(true);
-        expect(slot.type).toStrictEqual(new MockType());
-        expect(slot.value).toBe('b');
-        expect(slot.part).toBe(binding.part);
-        expect(slot['_memoizedBinding']).not.toBe(binding);
       }
     });
   });

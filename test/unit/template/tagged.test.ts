@@ -15,7 +15,6 @@ import {
   MATH_NAMESPACE_URI,
   SVG_NAMESPACE_URI,
 } from '@/part.js';
-import { SLOT_STATUS_ATTACHED } from '@/slot.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import { createElement, serializeNode } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
@@ -516,8 +515,6 @@ describe('TaggedTemplate', () => {
             node: expect.exact(container.querySelector('div')),
             name: 'class',
           },
-          value: values[0],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -526,16 +523,12 @@ describe('TaggedTemplate', () => {
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          value: values[1],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
             type: PART_TYPE_ELEMENT,
             node: expect.exact(container.querySelector('label')),
           },
-          value: values[2],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -544,8 +537,6 @@ describe('TaggedTemplate', () => {
             followingText: '',
             precedingText: '',
           },
-          value: values[3],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -554,8 +545,6 @@ describe('TaggedTemplate', () => {
             name: 'value',
             defaultValue: '',
           },
-          value: values[4],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -564,8 +553,6 @@ describe('TaggedTemplate', () => {
             name: 'disabled',
             defaultValue: false,
           },
-          value: values[5],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -573,16 +560,12 @@ describe('TaggedTemplate', () => {
             node: expect.exact(container.querySelector('input')),
             name: 'onchange',
           },
-          value: values[6],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
             type: PART_TYPE_ELEMENT,
             node: expect.exact(container.querySelector('input')),
           },
-          value: values[7],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -591,8 +574,6 @@ describe('TaggedTemplate', () => {
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          value: values[8],
-          status: SLOT_STATUS_ATTACHED,
         }),
       ]);
     });
@@ -659,8 +640,6 @@ describe('TaggedTemplate', () => {
             precedingText: '(',
             followingText: '',
           },
-          value: values[0],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -669,8 +648,6 @@ describe('TaggedTemplate', () => {
             precedingText: ', ',
             followingText: '',
           },
-          value: values[1],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -679,8 +656,6 @@ describe('TaggedTemplate', () => {
             precedingText: ', ',
             followingText: ')',
           },
-          value: values[2],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -689,8 +664,6 @@ describe('TaggedTemplate', () => {
             precedingText: '[',
             followingText: '',
           },
-          value: values[3],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -699,8 +672,6 @@ describe('TaggedTemplate', () => {
             precedingText: ', ',
             followingText: ']',
           },
-          value: values[4],
-          status: SLOT_STATUS_ATTACHED,
         }),
       ]);
     });
@@ -812,8 +783,6 @@ describe('TaggedTemplate', () => {
             node: expect.any(HTMLDivElement),
             name: 'class',
           },
-          value: values[0],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -822,16 +791,12 @@ describe('TaggedTemplate', () => {
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          value: values[1],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
             type: PART_TYPE_ELEMENT,
             node: expect.any(HTMLLabelElement),
           },
-          value: values[2],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -840,8 +805,6 @@ describe('TaggedTemplate', () => {
             followingText: '',
             precedingText: '',
           },
-          value: values[3],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -850,8 +813,6 @@ describe('TaggedTemplate', () => {
             name: 'value',
             defaultValue: '',
           },
-          value: values[4],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -860,8 +821,6 @@ describe('TaggedTemplate', () => {
             name: 'disabled',
             defaultValue: false,
           },
-          value: values[5],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -869,16 +828,12 @@ describe('TaggedTemplate', () => {
             node: expect.any(HTMLInputElement),
             name: 'onchange',
           },
-          value: values[6],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
             type: PART_TYPE_ELEMENT,
             node: expect.any(HTMLInputElement),
           },
-          value: values[7],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -887,8 +842,6 @@ describe('TaggedTemplate', () => {
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          value: values[8],
-          status: SLOT_STATUS_ATTACHED,
         }),
       ]);
     });
@@ -942,8 +895,6 @@ describe('TaggedTemplate', () => {
             precedingText: '(',
             followingText: '',
           },
-          value: values[0],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -952,8 +903,6 @@ describe('TaggedTemplate', () => {
             precedingText: ', ',
             followingText: '',
           },
-          value: values[1],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -962,8 +911,6 @@ describe('TaggedTemplate', () => {
             precedingText: ', ',
             followingText: ')',
           },
-          value: values[2],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -972,8 +919,6 @@ describe('TaggedTemplate', () => {
             precedingText: '[',
             followingText: '',
           },
-          value: values[3],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -982,8 +927,6 @@ describe('TaggedTemplate', () => {
             precedingText: ', ',
             followingText: ']',
           },
-          value: values[4],
-          status: SLOT_STATUS_ATTACHED,
         }),
       ]);
     });
@@ -1014,8 +957,6 @@ describe('TaggedTemplate', () => {
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          value: values[0],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -1024,8 +965,6 @@ describe('TaggedTemplate', () => {
             sentinelNode: expect.any(Comment),
             namespaceURI: MATH_NAMESPACE_URI,
           },
-          value: values[1],
-          status: SLOT_STATUS_ATTACHED,
         }),
         expect.objectContaining({
           part: {
@@ -1034,8 +973,6 @@ describe('TaggedTemplate', () => {
             sentinelNode: expect.any(Comment),
             namespaceURI: SVG_NAMESPACE_URI,
           },
-          value: values[2],
-          status: SLOT_STATUS_ATTACHED,
         }),
       ]);
     });

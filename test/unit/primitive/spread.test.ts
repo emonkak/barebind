@@ -1,13 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  PART_TYPE_ATTRIBUTE,
-  PART_TYPE_EVENT,
-  PART_TYPE_LIVE,
-  PART_TYPE_PROPERTY,
-} from '@/core.js';
 import { createChildNodePart, createElementPart } from '@/part.js';
 import { SpreadBinding, SpreadType } from '@/primitive/spread.js';
-import { SLOT_STATUS_IDLE } from '@/slot.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';
 
@@ -86,8 +79,8 @@ describe('SpreadBinding', () => {
     });
   });
 
-  describe('attach()', () => {
-    it('request commits the corresponding slots for each properties', () => {
+  describe('commit()', () => {
+    it('commits pending properties', () => {
       const props1 = {
         id: 'foo',
         class: 'bar',
@@ -110,120 +103,27 @@ describe('SpreadBinding', () => {
           binding.commit();
         });
 
-        const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
-
-        expect(slots).toStrictEqual({
-          id: expect.objectContaining({
-            part: {
-              type: PART_TYPE_ATTRIBUTE,
-              name: 'id',
-              node: expect.exact(part.node),
-            },
-            value: props1.id,
-            status: SLOT_STATUS_IDLE,
-          }),
-          class: expect.objectContaining({
-            part: {
-              type: PART_TYPE_ATTRIBUTE,
-              name: 'class',
-              node: expect.exact(part.node),
-            },
-            value: props1.class,
-            status: SLOT_STATUS_IDLE,
-          }),
-          $hidden: expect.objectContaining({
-            part: {
-              type: PART_TYPE_LIVE,
-              name: 'hidden',
-              node: expect.exact(part.node),
-              defaultValue: false,
-            },
-            value: props1.$hidden,
-            status: SLOT_STATUS_IDLE,
-          }),
-        });
+        expect(part.node.outerHTML).toBe(
+          '<div id="foo" class="bar" hidden=""></div>',
+        );
       }
 
       SESSION2: {
-        const oldSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
-
         updater.startUpdate((session) => {
           binding.value = props2;
           binding.attach(session);
           binding.commit();
         });
 
-        const newSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
-
-        expect(oldSlots).toStrictEqual({
-          id: expect.objectContaining({
-            status: SLOT_STATUS_IDLE,
-          }),
-          class: expect.objectContaining({
-            part: {
-              type: PART_TYPE_ATTRIBUTE,
-              name: 'class',
-              node: expect.exact(part.node),
-            },
-            value: props1.class,
-            status: SLOT_STATUS_IDLE,
-          }),
-          $hidden: expect.objectContaining({
-            status: SLOT_STATUS_IDLE,
-          }),
-        });
-        expect(newSlots).toStrictEqual({
-          class: expect.objectContaining({
-            part: {
-              type: PART_TYPE_ATTRIBUTE,
-              name: 'class',
-              node: part.node,
-            },
-            value: props1.class,
-            status: SLOT_STATUS_IDLE,
-          }),
-          '.innerHTML': expect.objectContaining({
-            part: {
-              type: PART_TYPE_PROPERTY,
-              name: 'innerHTML',
-              node: expect.exact(part.node),
-              defaultValue: '',
-            },
-            value: props2['.innerHTML'],
-            status: SLOT_STATUS_IDLE,
-          }),
-          '@click': expect.objectContaining({
-            part: {
-              type: PART_TYPE_EVENT,
-              name: 'click',
-              node: expect.exact(part.node),
-            },
-            value: props2['@click'],
-            status: SLOT_STATUS_IDLE,
-          }),
-        });
+        expect(part.node.outerHTML).toBe(
+          '<div class="bar"><div>foo</div></div>',
+        );
       }
     });
   });
 
-  describe('detach()', () => {
-    it('should do nothing if the committed properties does not exist', () => {
-      const props = {};
-      const part = createElementPart(document.createElement('div'));
-      const binding = new SpreadBinding(props, part);
-      const updater = new TestUpdater();
-
-      SESSION: {
-        updater.startUpdate((session) => {
-          binding.detach(session);
-          binding.rollback();
-        });
-
-        expect(binding['_memoizedSlots']).toBe(null);
-      }
-    });
-
-    it('rollbacks the committed properties', () => {
+  describe('rollback()', () => {
+    it('rollbacks current properties', () => {
       const props = {
         id: 'foo',
         class: 'bar',
@@ -241,85 +141,34 @@ describe('SpreadBinding', () => {
           binding.commit();
         });
 
-        const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
-
-        expect(slots).toStrictEqual({
-          id: expect.objectContaining({
-            part: {
-              type: PART_TYPE_ATTRIBUTE,
-              name: 'id',
-              node: expect.exact(part.node),
-            },
-            value: props.id,
-            status: SLOT_STATUS_IDLE,
-          }),
-          class: expect.objectContaining({
-            part: {
-              type: PART_TYPE_ATTRIBUTE,
-              name: 'class',
-              node: expect.exact(part.node),
-            },
-            value: props.class,
-            status: SLOT_STATUS_IDLE,
-          }),
-          $hidden: expect.objectContaining({
-            part: {
-              type: PART_TYPE_LIVE,
-              name: 'hidden',
-              node: expect.exact(part.node),
-              defaultValue: false,
-            },
-            value: props.$hidden,
-            status: SLOT_STATUS_IDLE,
-          }),
-          '.innerHTML': expect.objectContaining({
-            part: {
-              type: PART_TYPE_PROPERTY,
-              name: 'innerHTML',
-              node: expect.exact(part.node),
-              defaultValue: '',
-            },
-            value: props['.innerHTML'],
-            status: SLOT_STATUS_IDLE,
-          }),
-          '@click': expect.objectContaining({
-            part: {
-              type: PART_TYPE_EVENT,
-              name: 'click',
-              node: expect.exact(part.node),
-            },
-            value: props['@click'],
-            status: SLOT_STATUS_IDLE,
-          }),
-        });
+        expect(part.node.outerHTML).toBe(
+          '<div id="foo" class="bar" hidden=""><div>foo</div></div>',
+        );
       }
 
       SESSION2: {
-        const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
-
         updater.startUpdate((session) => {
           binding.detach(session);
           binding.rollback();
         });
 
-        expect(slots).toStrictEqual({
-          id: expect.objectContaining({
-            status: SLOT_STATUS_IDLE,
-          }),
-          class: expect.objectContaining({
-            status: SLOT_STATUS_IDLE,
-          }),
-          $hidden: expect.objectContaining({
-            status: SLOT_STATUS_IDLE,
-          }),
-          '.innerHTML': expect.objectContaining({
-            status: SLOT_STATUS_IDLE,
-          }),
-          '@click': expect.objectContaining({
-            status: SLOT_STATUS_IDLE,
-          }),
+        expect(part.node.outerHTML).toBe('<div></div>');
+      }
+    });
+
+    it('does nothing if there are no current properties', () => {
+      const props = {};
+      const part = createElementPart(document.createElement('div'));
+      const binding = new SpreadBinding(props, part);
+      const updater = new TestUpdater();
+
+      SESSION: {
+        updater.startUpdate((session) => {
+          binding.detach(session);
+          binding.rollback();
         });
-        expect(binding['_memoizedSlots']).toBe(null);
+
+        expect(part.node.outerHTML).toBe('<div></div>');
       }
     });
   });

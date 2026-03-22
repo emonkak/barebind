@@ -6,7 +6,6 @@ import { Directive } from '@/core.js';
 import { ConcurrentLane } from '@/lane.js';
 import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
 import { RenderContext } from '@/render-context.js';
-import { SLOT_STATUS_DETACHED, SLOT_STATUS_IDLE } from '@/slot.js';
 import { createRuntime } from '../mocks.js';
 import { TestRenderer } from '../test-renderer.js';
 import { TestUpdater } from '../test-updater.js';
@@ -150,12 +149,6 @@ describe('ComponentBinding', () => {
           session.frame.mutationEffects.push(binding, session.scope.level);
         });
 
-        expect(binding['_slot']).toStrictEqual(
-          expect.objectContaining({
-            status: SLOT_STATUS_IDLE,
-          }),
-        );
-        expect(binding['_slot']?.part).toBe(part);
         expect(part.node.nodeValue).toBe('Hello, foo!');
       }
 
@@ -166,12 +159,6 @@ describe('ComponentBinding', () => {
           session.frame.mutationEffects.push(binding, session.scope.level);
         });
 
-        expect(binding['_slot']).toStrictEqual(
-          expect.objectContaining({
-            status: SLOT_STATUS_IDLE,
-          }),
-        );
-        expect(binding['_slot']?.part).toBe(part);
         expect(part.node.nodeValue).toBe('Chao, bar!');
       }
     });
@@ -196,12 +183,6 @@ describe('ComponentBinding', () => {
           session.frame.mutationEffects.push(binding, session.scope.level);
         });
 
-        expect(binding['_slot']).toStrictEqual(
-          expect.objectContaining({
-            status: SLOT_STATUS_IDLE,
-          }),
-        );
-        expect(binding['_slot']?.part).toBe(part);
         expect(part.node.nodeValue).toBe('3 effects are enqueued');
       }
 
@@ -211,11 +192,6 @@ describe('ComponentBinding', () => {
           binding.rollback();
         });
 
-        expect(binding['_slot']).toStrictEqual(
-          expect.objectContaining({
-            status: SLOT_STATUS_IDLE,
-          }),
-        );
         expect(binding['_slot']?.part).toBe(part);
         expect(props.callback).toHaveBeenCalledTimes(3);
         expect(props.callback).toHaveBeenNthCalledWith(1, 'mutation');
@@ -258,11 +234,6 @@ describe('ComponentBinding', () => {
           });
         });
 
-        expect(binding['_slot']).toStrictEqual(
-          expect.objectContaining({
-            status: SLOT_STATUS_DETACHED,
-          }),
-        );
         expect(binding['_slot']?.part).toBe(part);
         expect(props.callback).not.toHaveBeenCalled();
         expect(props.cleanup).not.toHaveBeenCalled();

@@ -156,10 +156,7 @@ export class MockBinding<T> implements Binding<T> {
         (this.part.node as any)[this.part.name] = this.value;
         break;
       case PART_TYPE_EVENT:
-        this.part.node.addEventListener(
-          this.part.name,
-          this.value as EventListenerOrEventListenerObject,
-        );
+        (this.part.node as any)['on' + this.part.name] = this.value;
         break;
       case PART_TYPE_TEXT:
         this.part.node.data =
@@ -189,10 +186,7 @@ export class MockBinding<T> implements Binding<T> {
         (this.part.node as any)[this.part.name] = this.part.defaultValue;
         break;
       case PART_TYPE_EVENT:
-        this.part.node.removeEventListener(
-          this.part.name,
-          this.value as EventListenerOrEventListenerObject,
-        );
+        (this.part.node as any)['on' + this.part.name] = null;
         break;
       case PART_TYPE_CHILD_NODE:
         if (this.part.sentinelNode.data === this.memoizedValue) {

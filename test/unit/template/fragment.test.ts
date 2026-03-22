@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { PART_TYPE_CHILD_NODE } from '@/core.js';
 import { createTreeWalker } from '@/hydration.js';
 import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
 import { Slot } from '@/slot.js';
@@ -60,9 +61,9 @@ describe('FragmentTemplate', () => {
       const updater = new TestUpdater();
 
       const hydrationSpys = innerTemplates.map((template) =>
-        vi.spyOn(template, 'hydrate').mockImplementation(() => {
+        vi.spyOn(template, 'hydrate').mockImplementation((values) => {
           const part = createChildNodePart(
-            document.createComment(''),
+            document.createComment(values.join(',')),
             HTML_NAMESPACE_URI,
           );
           return {
@@ -85,19 +86,34 @@ describe('FragmentTemplate', () => {
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
+        '<!--foo-->',
         '<!---->',
-        '<!---->',
-        '<!---->',
+        '<!--bar,baz-->',
       ]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
-          value: 'foo',
+          part: {
+            type: PART_TYPE_CHILD_NODE,
+            node: expect.any(Comment),
+            sentinelNode: expect.any(Comment),
+            namespaceURI: HTML_NAMESPACE_URI,
+          },
         }),
         expect.objectContaining({
-          value: '',
+          part: {
+            type: PART_TYPE_CHILD_NODE,
+            node: expect.any(Comment),
+            sentinelNode: expect.any(Comment),
+            namespaceURI: HTML_NAMESPACE_URI,
+          },
         }),
         expect.objectContaining({
-          value: 'bar,baz',
+          part: {
+            type: PART_TYPE_CHILD_NODE,
+            node: expect.any(Comment),
+            sentinelNode: expect.any(Comment),
+            namespaceURI: HTML_NAMESPACE_URI,
+          },
         }),
       ]);
       expect(hydrationSpys[0]).toHaveBeenCalledOnce();
@@ -171,13 +187,28 @@ describe('FragmentTemplate', () => {
       ]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
-          value: 'foo',
+          part: {
+            type: PART_TYPE_CHILD_NODE,
+            node: expect.exact(childNodes[0]),
+            sentinelNode: expect.any(Comment),
+            namespaceURI: HTML_NAMESPACE_URI,
+          },
         }),
         expect.objectContaining({
-          value: '',
+          part: {
+            type: PART_TYPE_CHILD_NODE,
+            node: expect.exact(childNodes[1]),
+            sentinelNode: expect.any(Comment),
+            namespaceURI: HTML_NAMESPACE_URI,
+          },
         }),
         expect.objectContaining({
-          value: 'bar,baz',
+          part: {
+            type: PART_TYPE_CHILD_NODE,
+            node: expect.exact(childNodes[2]),
+            sentinelNode: expect.any(Comment),
+            namespaceURI: HTML_NAMESPACE_URI,
+          },
         }),
       ]);
       expect(renderSpys[0]).toHaveBeenCalledOnce();
