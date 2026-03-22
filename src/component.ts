@@ -8,8 +8,7 @@ import {
   type EffectQueue,
   type Lanes,
   type Part,
-  SCOPE_DETACHED,
-  type Scope,
+  Scope,
   type UpdateSession,
 } from './core.js';
 import { NoLanes } from './lane.js';
@@ -62,7 +61,7 @@ export class ComponentBinding<TProps, TResult>
 
   private _slot: Slot<TResult> | null = null;
 
-  private _scope: Scope = SCOPE_DETACHED;
+  private _scope: Scope = Scope.Detached;
 
   private _pendingHooks: Hook[] = [];
 
@@ -104,7 +103,7 @@ export class ComponentBinding<TProps, TResult>
 
   shouldUpdate(props: TProps): boolean {
     return (
-      this._scope === SCOPE_DETACHED ||
+      this._scope === Scope.Detached ||
       !this._component.arePropsEqual(props, this._props)
     );
   }
@@ -118,11 +117,7 @@ export class ComponentBinding<TProps, TResult>
 
   resume(session: UpdateSession): void {
     const hooks = this._pendingHooks.slice();
-    const scope: Scope = {
-      owner: this,
-      level: this.scope.level + 1,
-      boundary: null,
-    };
+    const scope = new Scope(this);
 
     const component = this._component;
     const context = new RenderContext(
@@ -185,7 +180,7 @@ export class ComponentBinding<TProps, TResult>
 
   rollback(): void {
     this._slot?.rollback();
-    this._scope = SCOPE_DETACHED;
+    this._scope = Scope.Detached;
     this._memoizedHooks = [];
   }
 }

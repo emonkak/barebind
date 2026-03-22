@@ -1,10 +1,9 @@
 import {
   BOUNDARY_TYPE_HYDRATION,
-  type Boundary,
   type Coroutine,
   type Effect,
   type Part,
-  type Scope,
+  Scope,
   type SessionContext,
   type UpdateHandle,
   type UpdateOptions,
@@ -48,11 +47,12 @@ export class Root<T> {
 
   hydrate(options?: UpdateOptions): UpdateHandle {
     const hydrationTarget = createTreeWalker(this._container);
-    const scope = createRootScope({
+    const scope = new Scope();
+    scope.boundary = {
       type: BOUNDARY_TYPE_HYDRATION,
       next: null,
       target: hydrationTarget,
-    });
+    };
     return this._startSession(
       scope,
       (session) => {
@@ -68,7 +68,7 @@ export class Root<T> {
   }
 
   mount(options?: UpdateOptions): UpdateHandle {
-    const scope = createRootScope();
+    const scope = new Scope();
     return this._startSession(
       scope,
       (session) => {
@@ -84,7 +84,7 @@ export class Root<T> {
   }
 
   update(source: T, options?: UpdateOptions): UpdateHandle {
-    const scope = createRootScope();
+    const scope = new Scope();
     return this._startSession(
       scope,
       (session) => {
@@ -98,7 +98,7 @@ export class Root<T> {
   }
 
   unmount(options?: UpdateOptions): UpdateHandle {
-    const scope = createRootScope();
+    const scope = new Scope();
     return this._startSession(
       scope,
       (session) => {
@@ -117,14 +117,13 @@ export class Root<T> {
   ): UpdateHandle {
     const coroutine: Coroutine = {
       name: Root.name,
-      scope,
+      scope: Object.freeze(scope),
       pendingLanes: NoLanes,
       start(session) {
         session.frame.coroutines.push(this);
       },
       resume,
     };
-    Object.freeze(scope);
     return this._context.scheduleUpdate(coroutine, {
       immediate: true,
       ...options,
@@ -179,12 +178,4 @@ class UnmountSlot<T> implements Effect {
     this._slot.rollback();
     sentinelNode.remove();
   }
-}
-
-function createRootScope(boundary: Boundary | null = null): Scope {
-  return Object.freeze({
-    owner: null,
-    level: 0,
-    boundary,
-  });
 }

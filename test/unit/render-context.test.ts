@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { shallowEqual } from '@/compare.js';
-import { EffectQueue, SCOPE_DETACHED, type UpdateHandle } from '@/core.js';
+import { EffectQueue, Scope, type UpdateHandle } from '@/core.js';
 import { $hook, type RefObject, RenderContext } from '@/render-context.js';
 import { MockTemplate } from '../mocks.js';
 import { waitForMicrotasks, waitForTimeout } from '../test-helpers.js';
@@ -161,7 +161,7 @@ describe('RenderSession', () => {
         }, []);
 
         return count;
-      }, SCOPE_DETACHED);
+      }, Scope.Detached);
       const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
 
       expect(renderer.render({})).toBe(0);

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { BOUNDARY_TYPE_HYDRATION } from '@/core.js';
+import { BOUNDARY_TYPE_HYDRATION, Scope } from '@/core.js';
 import { createTreeWalker } from '@/hydration.js';
 import {
   createAttributePart,
@@ -12,7 +12,6 @@ import { SLOT_STATUS_DETACHED, SLOT_STATUS_IDLE, Slot } from '@/slot.js';
 import { TemplateBinding } from '@/template/template.js';
 import {
   createRuntime,
-  createScope,
   MockBinding,
   MockTemplate,
   MockType,
@@ -405,7 +404,7 @@ describe('TemplateBinding', () => {
       );
       const binding = new TemplateBinding(template, values, part);
       const container = createElement('div', {}, 'foo', part.node);
-      const scope = createScope();
+      const scope = new Scope();
       const hydrationTarget = createTreeWalker(container);
       const updater = new TestUpdater(scope);
 

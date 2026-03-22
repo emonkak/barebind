@@ -22,7 +22,7 @@ import {
   type Primitive,
   type RenderFrame,
   type RequestCallbackOptions,
-  type Scope,
+  Scope,
   type SessionEvent,
   type SessionObserver,
   type TemplateMode,
@@ -221,7 +221,7 @@ export class MockCoroutine implements Coroutine {
 
   constructor(
     name: string = MockCoroutine.name,
-    scope: Scope = createScope(),
+    scope: Scope = new Scope(),
     callback: (this: Coroutine, session: UpdateSession) => void = () => {},
   ) {
     this.name = name;
@@ -356,14 +356,6 @@ export function createRuntime({
   ...options
 }: RuntimeOptions & { defaultLanes?: Lanes } = {}): Runtime {
   return new Runtime(new MockBackend(defaultLanes), options);
-}
-
-export function createScope(owner: Coroutine | null = null): Scope {
-  return {
-    owner,
-    level: owner !== null ? owner.scope.level + 1 : 0,
-    boundary: null,
-  };
 }
 
 function stringify(value: unknown): string {

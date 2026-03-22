@@ -2,8 +2,7 @@ import { vi } from 'vitest';
 import {
   BOUNDARY_TYPE_ERROR,
   type Coroutine,
-  SCOPE_DETACHED,
-  type Scope,
+  Scope,
   type UpdateOptions,
 } from '@/core.js';
 import { NoLanes } from '@/lane.js';
@@ -15,7 +14,7 @@ import {
   RenderContext,
 } from '@/render-context.js';
 import type { Runtime } from '@/runtime.js';
-import { createRuntime, createScope } from './mocks.js';
+import { createRuntime } from './mocks.js';
 
 export class TestRenderer<TProps = {}, TResult = unknown> {
   readonly callback: (props: TProps, session: RenderContext) => TResult;
@@ -28,7 +27,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
 
   constructor(
     callback: (props: TProps, session: RenderContext) => TResult,
-    scope: Scope = createScope(),
+    scope: Scope = new Scope(),
   ) {
     this.callback = vi.fn(callback);
     this.scope = scope;
@@ -56,7 +55,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
     let returnValue: TResult;
     let thrownError: unknown;
 
-    if (this.scope !== SCOPE_DETACHED) {
+    if (this.scope !== Scope.Detached) {
       this.scope.boundary = {
         type: BOUNDARY_TYPE_ERROR,
         next: previousBoundary,
@@ -78,7 +77,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
         frame.coroutines.push(this);
       },
       resume: ({ frame, context }) => {
-        const scope = createScope(coroutine);
+        const scope = new Scope(coroutine);
         const hooks = this.hooks.slice();
         const session = new RenderContext(
           hooks,
@@ -104,7 +103,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
 
     this.runtime.flushUpdates();
 
-    if (this.scope !== SCOPE_DETACHED) {
+    if (this.scope !== Scope.Detached) {
       this.scope.boundary = previousBoundary;
     }
 

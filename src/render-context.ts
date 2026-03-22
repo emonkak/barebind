@@ -11,8 +11,7 @@ import {
   type ErrorHandler,
   type Lanes,
   type RenderFrame,
-  SCOPE_DETACHED,
-  type Scope,
+  Scope,
   type SessionContext,
   type TemplateMode,
   type UpdateHandle,
@@ -214,7 +213,7 @@ export class RenderContext {
     // Refuse to mutate scope after finalization.
     Object.freeze(this._scope);
 
-    this._scope = SCOPE_DETACHED;
+    this._scope = Scope.Detached;
     this._hooks = DETACHED_HOOKS;
     this._hookIndex = 0;
   }
@@ -683,7 +682,7 @@ function getInitialState<TState>(initialState: InitialState<TState>): TState {
 function isDetachedScope(scope: Scope): boolean {
   let currentScope: Scope | undefined = scope;
   do {
-    if (currentScope === SCOPE_DETACHED) {
+    if (currentScope === Scope.Detached) {
       return true;
     }
     currentScope = currentScope.owner?.scope;

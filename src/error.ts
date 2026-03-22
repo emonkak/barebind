@@ -45,7 +45,8 @@ export class InterruptError extends CoroutineError {}
 
 export function handleError(error: unknown, scope: Scope): Scope {
   let currentScope = scope;
-  let { owner: nextOwner, boundary: nextBoundary } = currentScope;
+  let nextOwner = currentScope.owner;
+  let nextBoundary = currentScope.boundary;
 
   const handleError = (error: unknown) => {
     while (true) {

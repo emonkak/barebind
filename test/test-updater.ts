@@ -1,20 +1,20 @@
 import {
   BOUNDARY_TYPE_ERROR,
   type Coroutine,
-  type Scope,
+  Scope,
   type UpdateOptions,
   type UpdateSession,
 } from '@/core.js';
 import { NoLanes } from '@/lane.js';
 import type { Runtime } from '@/runtime.js';
-import { createRuntime, createScope } from './mocks.js';
+import { createRuntime } from './mocks.js';
 
 export class TestUpdater {
   readonly scope: Scope;
 
   readonly runtime: Runtime = createRuntime();
 
-  constructor(scope: Scope = createScope()) {
+  constructor(scope: Scope = new Scope()) {
     this.scope = scope;
   }
 

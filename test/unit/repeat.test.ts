@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BOUNDARY_TYPE_HYDRATION } from '@/core.js';
+import { BOUNDARY_TYPE_HYDRATION, Scope } from '@/core.js';
 import { createTreeWalker } from '@/hydration.js';
 import {
   createChildNodePart,
@@ -7,7 +7,7 @@ import {
   HTML_NAMESPACE_URI,
 } from '@/part.js';
 import { Repeat, RepeatBinding, type RepeatProps } from '@/repeat.js';
-import { createRuntime, createScope } from '../mocks.js';
+import { createRuntime } from '../mocks.js';
 import {
   allCombinations,
   createElement,
@@ -253,7 +253,7 @@ describe('RepeatBinding', () => {
         document.createComment('baz'),
         document.createComment(''),
       );
-      const scope = createScope();
+      const scope = new Scope();
       const hydrationTarget = createTreeWalker(container);
       const updater = new TestUpdater(scope);
 

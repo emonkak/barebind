@@ -26,12 +26,6 @@ export const PART_TYPE_LIVE = 4;
 export const PART_TYPE_PROPERTY = 5;
 export const PART_TYPE_TEXT = 6;
 
-export const SCOPE_DETACHED: Scope = Object.freeze({
-  owner: null,
-  level: 0,
-  boundary: null,
-});
-
 export interface Backend {
   flushEffects(effects: EffectQueue, phase: CommitPhase): void;
   getDefaultLanes(): Lanes;
@@ -340,10 +334,18 @@ export interface SessionObserver {
   onSessionEvent(event: SessionEvent): void;
 }
 
-export interface Scope {
+export class Scope {
   owner: Coroutine | null;
   level: number;
   boundary: Boundary | null;
+
+  static Detached: Scope = Object.freeze(new Scope());
+
+  constructor(owner: Coroutine | null = null) {
+    this.owner = owner;
+    this.level = owner !== null ? owner.scope.level + 1 : 0;
+    this.boundary = null;
+  }
 }
 
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';

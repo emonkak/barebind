@@ -10,8 +10,7 @@ import {
   type Effect,
   type Lanes,
   type Part,
-  SCOPE_DETACHED,
-  type Scope,
+  Scope,
   type UpdateSession,
 } from '../../core.js';
 import { NoLanes } from '../../lane.js';
@@ -108,7 +107,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   private _memoizedVersion: number;
 
-  private _scope: Scope = SCOPE_DETACHED;
+  private _scope: Scope = Scope.Detached;
 
   private _subscription: Subscription = {
     unsubscribe: null,
@@ -194,7 +193,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   rollback(): void {
     this._slot.rollback();
-    this._scope = SCOPE_DETACHED;
+    this._scope = Scope.Detached;
   }
 }
 
