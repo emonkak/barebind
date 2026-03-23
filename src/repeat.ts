@@ -106,13 +106,12 @@ export class RepeatBinding<TSource, TKey, TElement>
 
   attach(session: Session): void {
     const { context, coroutine } = session;
-    const hydrationTarget = getHydrationTarget(coroutine.scope);
-
     const {
       source,
       keySelector = defaultKeySelector,
       elementSelector = defaultElementSelector,
     } = this._props;
+
     const oldKeys = this._currentKeys ?? [];
     const oldSlots = this._currentSlots ?? [];
     const newItems = Array.isArray(source)
@@ -120,6 +119,9 @@ export class RepeatBinding<TSource, TKey, TElement>
       : Array.from(source);
     const newKeys = newItems.map(keySelector);
     const newElements = newItems.map(elementSelector);
+    const newMutations: Mutation<TElement>[] = [];
+    const hydrationTarget = getHydrationTarget(coroutine.scope);
+
     const newSlots = reconcileItems(oldKeys, newKeys, oldSlots, newElements, {
       insert: (item, referenceSlot) => {
         const { sentinelNode, namespaceURI } = this._part;
@@ -132,7 +134,7 @@ export class RepeatBinding<TSource, TKey, TElement>
         if (hydrationTarget !== null) {
           replaceSentinelNode(hydrationTarget, part.sentinelNode);
         }
-        this._pendingMutations.push({
+        newMutations.push({
           type: MUTATION_TYPE_INSERT,
           slot,
           referenceSlot,
@@ -141,7 +143,7 @@ export class RepeatBinding<TSource, TKey, TElement>
       },
       update: (slot, item) => {
         if (slot.reconcile(item, session)) {
-          this._pendingMutations.push({
+          newMutations.push({
             type: MUTATION_TYPE_UPDATE,
             slot,
           });
@@ -150,7 +152,7 @@ export class RepeatBinding<TSource, TKey, TElement>
       },
       updateAndMove: (slot, item, referenceSlot) => {
         slot.reconcile(item, session);
-        this._pendingMutations.push({
+        newMutations.push({
           type: MUTATION_TYPE_UPDATE_AND_MOVE,
           slot,
           referenceSlot,
@@ -159,7 +161,7 @@ export class RepeatBinding<TSource, TKey, TElement>
       },
       remove: (slot) => {
         slot.detach(session);
-        this._pendingMutations.push({
+        newMutations.push({
           type: MUTATION_TYPE_REMOVE,
           slot,
         });
@@ -168,6 +170,7 @@ export class RepeatBinding<TSource, TKey, TElement>
 
     this._pendingKeys = newKeys;
     this._pendingSlots = newSlots;
+    this._pendingMutations = newMutations;
   }
 
   detach(session: Session): void {
