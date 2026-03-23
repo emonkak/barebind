@@ -1,5 +1,5 @@
 import { BOUNDARY_TYPE_HYDRATION, type Scope } from './core.js';
-import { emphasizeNode } from './debug/node.js';
+import { emphasizeNode } from './debug/dom.js';
 
 interface NodeTypeMap {
   [Node.COMMENT_NODE]: Comment;

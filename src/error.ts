@@ -6,7 +6,7 @@ import {
   type Scope,
 } from './core.js';
 import { formatOwnerStack, getOwnerStack } from './debug/coroutine.js';
-import { formatPart } from './debug/part.js';
+import { formatPart } from './debug/dom.js';
 import { formatValue } from './debug/value.js';
 
 export class CoroutineError extends Error {

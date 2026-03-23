@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { debugPart, formatPart, undebugPart } from '@/debug/part.js';
+
+import {
+  debugPart,
+  emphasizeNode,
+  formatPart,
+  undebugPart,
+} from '@/debug/dom.js';
 import {
   createAttributePart,
   createChildNodePart,
@@ -13,7 +19,7 @@ import {
 import { MockType } from '../../mocks.js';
 import { createElement } from '../../test-helpers.js';
 
-const MAKRER = '[[PART IS IN HERE!]]';
+const MAKRER = '[[ERROR IN HERE!]]';
 
 describe('debugPart()', () => {
   it('sets the debug information for the value in child node part', () => {
@@ -51,6 +57,112 @@ describe('debugPart()', () => {
   });
 });
 
+describe('emphasizeNode()', () => {
+  it('reports where a text node', () => {
+    const node = document.createTextNode('foo');
+
+    expect(emphasizeNode(node, MAKRER)).toBe('[[ERROR IN HERE!]]foo');
+
+    createElement(
+      'div',
+      {},
+      createElement('span', {}, 'foo'),
+      createElement('p', {}, 'bar', node, document.createComment('')),
+      createElement('span', {}, 'qux'),
+    );
+
+    expect(emphasizeNode(node, MAKRER)).toBe(
+      `
+<div>
+  <span>
+    foo
+  </span>
+  <p>
+    bar
+    [[ERROR IN HERE!]]foo
+    <!---->
+  </p>
+  <span>
+    qux
+  </span>
+</div>
+`.trim(),
+    );
+  });
+
+  it('reports where a comment node', () => {
+    const node = document.createComment('foo');
+
+    expect(emphasizeNode(node, MAKRER)).toBe('[[ERROR IN HERE!]]<!--foo-->');
+
+    createElement(
+      'div',
+      {},
+      createElement('span', {}, 'foo'),
+      createElement('p', {}, 'bar', node, document.createComment('')),
+      createElement('span', {}, 'qux'),
+    );
+
+    expect(emphasizeNode(node, MAKRER)).toBe(
+      `
+<div>
+  <span>
+    foo
+  </span>
+  <p>
+    bar
+    [[ERROR IN HERE!]]<!--foo-->
+    <!---->
+  </p>
+  <span>
+    qux
+  </span>
+</div>
+`.trim(),
+    );
+  });
+
+  it('reports where an element node', () => {
+    const node = createElement('mark', {}, 'foo');
+
+    expect(emphasizeNode(node, MAKRER)).toBe(
+      `
+<mark [[ERROR IN HERE!]]>
+  foo
+</mark>
+`.trim(),
+    );
+
+    createElement(
+      'div',
+      {},
+      createElement('span', {}, 'foo'),
+      createElement('p', {}, 'bar', node, document.createComment('')),
+      createElement('span', {}, 'qux'),
+    );
+
+    expect(emphasizeNode(node, MAKRER)).toBe(
+      `
+<div>
+  <span>
+    foo
+  </span>
+  <p>
+    bar
+    <mark [[ERROR IN HERE!]]>
+      foo
+    </mark>
+    <!---->
+  </p>
+  <span>
+    qux
+  </span>
+</div>
+`.trim(),
+    );
+  });
+});
+
 describe('formatPart()', () => {
   it('reports where an AttributePart is inserted', () => {
     const part = createAttributePart(
@@ -59,7 +171,7 @@ describe('formatPart()', () => {
     );
 
     expect(formatPart(part, MAKRER)).toBe(
-      `<input type="text" class=[[PART IS IN HERE!]]>`,
+      `<input type="text" class=[[ERROR IN HERE!]]>`,
     );
 
     createElement(
@@ -78,7 +190,7 @@ describe('formatPart()', () => {
   </span>
   <p>
     bar
-    <input type="text" class=[[PART IS IN HERE!]]>
+    <input type="text" class=[[ERROR IN HERE!]]>
     <!---->
   </p>
   <span>
@@ -118,7 +230,7 @@ describe('formatPart()', () => {
       </span>
       <p>
         bar
-        <input type="text" class=[[PART IS IN HERE!]]>
+        <input type="text" class=[[ERROR IN HERE!]]>
         <!---->
       </p>
       <span>
@@ -148,7 +260,7 @@ describe('formatPart()', () => {
   </span>
   <p>
     bar
-    <input type="text" class=[[PART IS IN HERE!]]>
+    <input type="text" class=[[ERROR IN HERE!]]>
     <!---->
   </p>
   <span>
@@ -165,7 +277,7 @@ describe('formatPart()', () => {
       HTML_NAMESPACE_URI,
     );
 
-    expect(formatPart(part, MAKRER)).toBe(`[[PART IS IN HERE!]]<!---->`);
+    expect(formatPart(part, MAKRER)).toBe(`[[ERROR IN HERE!]]<!---->`);
 
     createElement(
       'div',
@@ -183,7 +295,7 @@ describe('formatPart()', () => {
   </span>
   <p>
     bar
-    [[PART IS IN HERE!]]<!---->
+    [[ERROR IN HERE!]]<!---->
     <!---->
   </p>
   <span>
@@ -197,7 +309,7 @@ describe('formatPart()', () => {
   it('reports where an ElementPart is inserted', () => {
     const part = createElementPart(document.createElement('div'));
 
-    expect(formatPart(part, MAKRER)).toBe(`<div [[PART IS IN HERE!]]></div>`);
+    expect(formatPart(part, MAKRER)).toBe(`<div [[ERROR IN HERE!]]></div>`);
 
     createElement(
       'div',
@@ -215,7 +327,7 @@ describe('formatPart()', () => {
   </span>
   <p>
     bar
-    <div [[PART IS IN HERE!]]></div>
+    <div [[ERROR IN HERE!]]></div>
     <!---->
   </p>
   <span>
@@ -233,7 +345,7 @@ describe('formatPart()', () => {
     );
 
     expect(formatPart(part, MAKRER)).toBe(
-      `<button type="button" @click=[[PART IS IN HERE!]]></button>`,
+      `<button type="button" @click=[[ERROR IN HERE!]]></button>`,
     );
 
     createElement(
@@ -252,7 +364,7 @@ describe('formatPart()', () => {
   </span>
   <p>
     bar
-    <button type="button" @click=[[PART IS IN HERE!]]></button>
+    <button type="button" @click=[[ERROR IN HERE!]]></button>
     <!---->
   </p>
   <span>
@@ -270,7 +382,7 @@ describe('formatPart()', () => {
     );
 
     expect(formatPart(part, MAKRER)).toBe(
-      `<input type="text" $value=[[PART IS IN HERE!]]>`,
+      `<input type="text" $value=[[ERROR IN HERE!]]>`,
     );
 
     createElement(
@@ -289,7 +401,7 @@ describe('formatPart()', () => {
   </span>
   <p>
     bar
-    <input type="text" $value=[[PART IS IN HERE!]]>
+    <input type="text" $value=[[ERROR IN HERE!]]>
     <!---->
   </p>
   <span>
@@ -307,7 +419,7 @@ describe('formatPart()', () => {
     );
 
     expect(formatPart(part, MAKRER)).toBe(
-      `<input type="text" .value=[[PART IS IN HERE!]]>`,
+      `<input type="text" .value=[[ERROR IN HERE!]]>`,
     );
 
     createElement(
@@ -326,7 +438,7 @@ describe('formatPart()', () => {
   </span>
   <p>
     bar
-    <input type="text" .value=[[PART IS IN HERE!]]>
+    <input type="text" .value=[[ERROR IN HERE!]]>
     <!---->
   </p>
   <span>
@@ -340,7 +452,7 @@ describe('formatPart()', () => {
   it('reports where a TextPart is inserted', () => {
     const part = createTextPart(document.createTextNode('foo'), '', '');
 
-    expect(formatPart(part, MAKRER)).toBe(`[[PART IS IN HERE!]]foo`);
+    expect(formatPart(part, MAKRER)).toBe(`[[ERROR IN HERE!]]foo`);
 
     createElement(
       'div',
@@ -364,7 +476,7 @@ describe('formatPart()', () => {
   </span>
   <p>
     bar
-    [[PART IS IN HERE!]]foo
+    [[ERROR IN HERE!]]foo
     <!---->
   </p>
   <span>

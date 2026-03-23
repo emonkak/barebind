@@ -6,7 +6,7 @@ import type {
   UnwrapBindable,
 } from './core.js';
 import { areDirectiveTypesEqual } from './core.js';
-import { debugPart, undebugPart } from './debug/part.js';
+import { debugPart, undebugPart } from './debug/dom.js';
 
 const SLOT_STATUS_IDLE = 0;
 const SLOT_STATUS_ATTACHED = 1;

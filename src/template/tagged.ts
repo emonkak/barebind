@@ -10,8 +10,7 @@ import {
   type Session,
   type TemplateMode,
 } from '../core.js';
-import { emphasizeNode } from '../debug/node.js';
-import { formatPart } from '../debug/part.js';
+import { emphasizeNode, formatPart } from '../debug/dom.js';
 import {
   createTreeWalker,
   replaceSentinelNode,
