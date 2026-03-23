@@ -49,26 +49,26 @@ export class ClassBinding extends PrimitiveBinding<
   ClassMap,
   Part.AttributePart
 > {
-  private _memoizedValue: ClassMap = {};
+  private _currentValue: ClassMap = {};
 
   get type(): Primitive<ClassMap> {
     return ClassType;
   }
 
   shouldUpdate(classes: ClassMap): boolean {
-    return !shallowEqual(classes, this._memoizedValue);
+    return !shallowEqual(classes, this._currentValue);
   }
 
   override commit(): void {
     const { classList } = this._part.node;
-    updateClasses(classList, this._value, this._memoizedValue);
-    this._memoizedValue = this._value;
+    updateClasses(classList, this._pendingValue, this._currentValue);
+    this._currentValue = this._pendingValue;
   }
 
   override rollback(): void {
     const { classList } = this.part.node;
-    updateClasses(classList, {}, this._memoizedValue);
-    this._memoizedValue = {};
+    updateClasses(classList, {}, this._currentValue);
+    this._currentValue = {};
   }
 }
 

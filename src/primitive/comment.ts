@@ -21,26 +21,26 @@ export abstract class CommentType {
 }
 
 export class CommentBinding<T> extends PrimitiveBinding<T, Part.ChildNodePart> {
-  private _memoizedValue: T | null = null;
+  private _currentValue: T | null = null;
 
   get type(): Primitive<T> {
     return CommentType;
   }
 
   shouldUpdate(value: T): boolean {
-    return !Object.is(value, this._memoizedValue);
+    return !Object.is(value, this._currentValue);
   }
 
   override commit(): void {
-    const value = this._value;
+    const value = this._pendingValue;
     this._part.sentinelNode.data = toStringOrEmpty(value);
-    this._memoizedValue = this._value;
+    this._currentValue = this._pendingValue;
   }
 
   override rollback(): void {
-    if (this._memoizedValue !== null) {
+    if (this._currentValue !== null) {
       this._part.sentinelNode.data = '';
-      this._memoizedValue = null;
+      this._currentValue = null;
     }
   }
 }

@@ -24,19 +24,19 @@ export class AttributeBinding<T> extends PrimitiveBinding<
   T,
   Part.AttributePart
 > {
-  private _memoizedValue: T | null = null;
+  private _currentValue: T | null = null;
 
   get type(): Primitive<T> {
     return AttributeType;
   }
 
   shouldUpdate(value: T): boolean {
-    return !Object.is(value, this._memoizedValue);
+    return !Object.is(value, this._currentValue);
   }
 
   override commit(): void {
     const { node, name } = this._part;
-    const value = this._value;
+    const value = this._pendingValue;
 
     if (typeof value === 'boolean') {
       node.toggleAttribute(name, value);
@@ -46,14 +46,14 @@ export class AttributeBinding<T> extends PrimitiveBinding<
       node.setAttribute(name, toStringOrEmpty(value));
     }
 
-    this._memoizedValue = this._value;
+    this._currentValue = this._pendingValue;
   }
 
   override rollback(): void {
-    if (this._memoizedValue !== null) {
+    if (this._currentValue !== null) {
       const { node, name } = this._part;
       node.removeAttribute(name);
-      this._memoizedValue = null;
+      this._currentValue = null;
     }
   }
 }

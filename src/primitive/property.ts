@@ -23,27 +23,27 @@ export abstract class PropertyType {
 }
 
 export class PropertyBinding<T> extends PrimitiveBinding<T, Part.PropertyPart> {
-  private _memoizedValue: T | typeof NoValue = NoValue;
+  private _currentValue: T | typeof NoValue = NoValue;
 
   get type(): Primitive<T> {
     return PropertyType;
   }
 
   shouldUpdate(value: T): boolean {
-    return !Object.is(value, this._memoizedValue);
+    return !Object.is(value, this._currentValue);
   }
 
   override commit(): void {
     const { node, name } = this._part;
-    (node as any)[name] = this._value;
-    this._memoizedValue = this._value;
+    (node as any)[name] = this._pendingValue;
+    this._currentValue = this._pendingValue;
   }
 
   override rollback(): void {
-    if (this._memoizedValue !== NoValue) {
+    if (this._currentValue !== NoValue) {
       const { node, name, defaultValue } = this._part;
       (node as any)[name] = defaultValue;
-      this._memoizedValue = NoValue;
+      this._currentValue = NoValue;
     }
   }
 }

@@ -60,7 +60,7 @@ export class TemplateBinding<TValues extends readonly unknown[]>
 
   private _pendingResult: TemplateResult | null = null;
 
-  private _memoizedResult: TemplateResult | null = null;
+  private _currentResult: TemplateResult | null = null;
 
   constructor(
     template: Template<TValues>,
@@ -89,7 +89,7 @@ export class TemplateBinding<TValues extends readonly unknown[]>
   }
 
   shouldUpdate(values: TValues): boolean {
-    return this._memoizedResult === null || values !== this._values;
+    return this._currentResult === null || values !== this._values;
   }
 
   attach(session: Session): void {
@@ -109,7 +109,6 @@ export class TemplateBinding<TValues extends readonly unknown[]>
           hydrationTarget,
           session,
         );
-        this._memoizedResult = this._pendingResult;
       } else {
         this._pendingResult = this._template.render(
           this._values,
@@ -121,8 +120,8 @@ export class TemplateBinding<TValues extends readonly unknown[]>
   }
 
   detach(session: Session): void {
-    if (this._pendingResult !== null) {
-      const { slots } = this._pendingResult;
+    if (this._currentResult !== null) {
+      const { slots } = this._currentResult;
 
       for (let i = 0, l = slots.length; i < l; i++) {
         slots[i]!.detach(session);
@@ -134,7 +133,7 @@ export class TemplateBinding<TValues extends readonly unknown[]>
     if (this._pendingResult !== null) {
       const { childNodes, slots } = this._pendingResult;
 
-      if (this._memoizedResult === null) {
+      if (this._currentResult === null) {
         this._part.sentinelNode.before(...childNodes);
       }
 
@@ -146,12 +145,12 @@ export class TemplateBinding<TValues extends readonly unknown[]>
         getStartNode(childNodes, slots) ?? this._part.sentinelNode;
     }
 
-    this._memoizedResult = this._pendingResult;
+    this._currentResult = this._pendingResult;
   }
 
   rollback(): void {
-    if (this._memoizedResult !== null) {
-      const { childNodes, slots } = this._memoizedResult;
+    if (this._currentResult !== null) {
+      const { childNodes, slots } = this._currentResult;
 
       for (const slot of slots) {
         if (
@@ -170,7 +169,7 @@ export class TemplateBinding<TValues extends readonly unknown[]>
     }
 
     this._part.node = this._part.sentinelNode;
-    this._memoizedResult = null;
+    this._currentResult = null;
   }
 }
 

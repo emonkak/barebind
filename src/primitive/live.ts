@@ -30,7 +30,7 @@ export class LiveBinding<T> extends PrimitiveBinding<T, Part.LivePart> {
   }
 
   override commit(): void {
-    const value = this._value;
+    const value = this._pendingValue;
     const { node, name } = this._part;
     const currentValue = node[name as keyof Element];
 

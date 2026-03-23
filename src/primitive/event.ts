@@ -45,19 +45,19 @@ export class EventBinding extends PrimitiveBinding<
   EventListenerOrNullish,
   Part.EventPart
 > {
-  private _memoizedValue: EventListenerOrNullish = null;
+  private _currnetValue: EventListenerOrNullish = null;
 
   get type(): Primitive<EventListenerOrNullish> {
     return EventType;
   }
 
   shouldUpdate(value: EventListenerOrNullish): boolean {
-    return value !== this._memoizedValue;
+    return value !== this._currnetValue;
   }
 
   override commit(): void {
-    const newListener = this._value;
-    const oldListener = this._memoizedValue;
+    const newListener = this._pendingValue;
+    const oldListener = this._currnetValue;
 
     if (
       newListener == null ||
@@ -72,24 +72,24 @@ export class EventBinding extends PrimitiveBinding<
       }
     }
 
-    this._memoizedValue = this._value;
+    this._currnetValue = this._pendingValue;
   }
 
   override rollback(): void {
-    const handler = this._memoizedValue;
+    const handler = this._currnetValue;
 
     if (handler != null) {
       abortEventDelegation(this._part, handler, this);
     }
 
-    this._memoizedValue = null;
+    this._currnetValue = null;
   }
 
   handleEvent(event: Event): void {
-    if (typeof this._memoizedValue === 'function') {
-      this._memoizedValue(event);
+    if (typeof this._currnetValue === 'function') {
+      this._currnetValue(event);
     } else {
-      this._memoizedValue?.handleEvent(event);
+      this._currnetValue?.handleEvent(event);
     }
   }
 }

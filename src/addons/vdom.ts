@@ -207,17 +207,17 @@ export class VStaticFragment implements Bindable<unknown> {
  * @internal
  */
 export class ElementBinding implements Binding<ElementProps> {
-  private _props: ElementProps;
+  private _pendingProps: ElementProps;
+
+  private _currentProps: ElementProps | null = null;
 
   private readonly _part: Part.ElementPart;
-
-  private _memoizedProps: ElementProps | null = null;
 
   private readonly _eventListenerMap: Map<string, EventListenerWithOptions> =
     new Map();
 
   constructor(props: ElementProps, part: Part.ElementPart) {
-    this._props = props;
+    this._pendingProps = props;
     this._part = part;
   }
 
@@ -226,11 +226,11 @@ export class ElementBinding implements Binding<ElementProps> {
   }
 
   get value(): ElementProps {
-    return this._props;
+    return this._pendingProps;
   }
 
   set value(props: ElementProps) {
-    this._props = props;
+    this._pendingProps = props;
   }
 
   get part(): Part.ElementPart {
@@ -239,7 +239,7 @@ export class ElementBinding implements Binding<ElementProps> {
 
   shouldUpdate(value: ElementProps): boolean {
     return (
-      this._memoizedProps === null || !shallowEqual(this._memoizedProps, value)
+      this._currentProps === null || !shallowEqual(this._currentProps, value)
     );
   }
 
@@ -248,8 +248,8 @@ export class ElementBinding implements Binding<ElementProps> {
   detach(_session: Session): void {}
 
   commit(): void {
-    const newProps = this._props;
-    const oldProps = this._memoizedProps ?? ({} as ElementProps);
+    const newProps = this._pendingProps;
+    const oldProps = this._currentProps ?? ({} as ElementProps);
     const element = this._part.node;
 
     for (const key of Object.keys(oldProps)) {
@@ -271,11 +271,11 @@ export class ElementBinding implements Binding<ElementProps> {
       );
     }
 
-    this._memoizedProps = newProps;
+    this._currentProps = newProps;
   }
 
   rollback(): void {
-    const props = this._memoizedProps;
+    const props = this._currentProps;
 
     if (props !== null) {
       const element = this._part.node;
@@ -284,7 +284,7 @@ export class ElementBinding implements Binding<ElementProps> {
       }
     }
 
-    this._memoizedProps = null;
+    this._currentProps = null;
   }
 
   handleEvent(event: Event): void {

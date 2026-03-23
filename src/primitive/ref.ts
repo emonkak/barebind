@@ -42,16 +42,16 @@ export class RefBinding extends PrimitiveBinding<
   Ref<Element>,
   Part.AttributePart
 > {
-  private _memoizedValue: Ref<Element>;
+  private _currentValue: Ref<Element>;
 
-  private _memoizedCleanup: Cleanup | void = undefined;
+  private _currentCleanup: Cleanup | void = undefined;
 
   get type(): Primitive<Ref<Element>> {
     return RefType;
   }
 
   shouldUpdate(value: Ref<Element>): boolean {
-    return value !== this._memoizedValue;
+    return value !== this._currentValue;
   }
 
   override attach(session: Session): void {
@@ -63,40 +63,40 @@ export class RefBinding extends PrimitiveBinding<
   }
 
   invokeRef(): void {
-    const newRef = this._value;
-    const oldRef = this._memoizedValue;
+    const newRef = this._pendingValue;
+    const oldRef = this._currentValue;
 
     if (newRef !== oldRef) {
       if (typeof oldRef === 'function') {
-        this._memoizedCleanup?.();
-        this._memoizedCleanup = undefined;
+        this._currentCleanup?.();
+        this._currentCleanup = undefined;
       } else if (oldRef != null) {
         oldRef.current = null;
       }
 
       if (typeof newRef === 'function') {
-        this._memoizedCleanup = newRef(this.part.node);
+        this._currentCleanup = newRef(this.part.node);
       } else if (newRef != null) {
         newRef.current = this.part.node;
       }
     }
 
-    this._memoizedValue = this.value;
+    this._currentValue = this.value;
   }
 
   cleanupRef(): void {
-    const ref = this._memoizedValue;
+    const ref = this._currentValue;
 
     if (ref != null) {
       if (typeof ref === 'function') {
-        this._memoizedCleanup?.();
-        this._memoizedCleanup = undefined;
+        this._currentCleanup?.();
+        this._currentCleanup = undefined;
       } else {
         ref.current = null;
       }
     }
 
-    this._memoizedValue = null;
+    this._currentValue = null;
   }
 }
 

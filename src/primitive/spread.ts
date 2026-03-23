@@ -48,33 +48,38 @@ export class SpreadBinding extends PrimitiveBinding<
 > {
   private _pendingSlots: Map<string, Slot<unknown>> = new Map();
 
-  private _memoizedSlots: Map<string, Slot<unknown>> | null = null;
+  private _currentSlots: Map<string, Slot<unknown>> | null = null;
 
   get type(): Primitive<SpreadProps> {
     return SpreadType;
   }
 
   shouldUpdate(value: SpreadProps): boolean {
-    return this._memoizedSlots === null || value !== this._value;
+    return this._currentSlots === null || value !== this._pendingValue;
   }
 
   override attach(session: Session): void {
     const { context } = session;
-    const oldSlots = this._pendingSlots;
+    const oldSlots = this._currentSlots;
     const newSlots = new Map();
 
-    for (const [key, slot] of oldSlots.entries()) {
-      if (!Object.hasOwn(this._value, key) || this._value[key] === undefined) {
-        slot.detach(session);
+    if (oldSlots !== null) {
+      for (const [key, slot] of oldSlots.entries()) {
+        if (
+          this._pendingValue[key] === undefined ||
+          !Object.hasOwn(this._pendingValue, key)
+        ) {
+          slot.detach(session);
+        }
       }
     }
 
-    for (const key of Object.keys(this._value)) {
-      const prop = this._value[key];
+    for (const key of Object.keys(this._pendingValue)) {
+      const prop = this._pendingValue[key];
       if (prop === undefined) {
         continue;
       }
-      let slot = oldSlots.get(key);
+      let slot = oldSlots?.get(key);
       if (slot !== undefined) {
         slot.reconcile(prop, session);
       } else {
@@ -89,16 +94,16 @@ export class SpreadBinding extends PrimitiveBinding<
   }
 
   override detach(session: Session): void {
-    if (this._memoizedSlots !== null) {
-      for (const slot of this._memoizedSlots.values()) {
+    if (this._currentSlots !== null) {
+      for (const slot of this._currentSlots.values()) {
         slot.detach(session);
       }
     }
   }
 
   override commit(): void {
-    if (this._memoizedSlots !== null) {
-      for (const [name, slot] of this._memoizedSlots.entries()) {
+    if (this._currentSlots !== null) {
+      for (const [name, slot] of this._currentSlots.entries()) {
         if (!this._pendingSlots.has(name)) {
           slot.rollback();
         }
@@ -109,16 +114,16 @@ export class SpreadBinding extends PrimitiveBinding<
       binding.commit();
     }
 
-    this._memoizedSlots = this._pendingSlots;
+    this._currentSlots = this._pendingSlots;
   }
 
   override rollback(): void {
-    if (this._memoizedSlots !== null) {
-      for (const binding of this._memoizedSlots.values()) {
+    if (this._currentSlots !== null) {
+      for (const binding of this._currentSlots.values()) {
         binding.rollback();
       }
 
-      this._memoizedSlots = null;
+      this._currentSlots = null;
     }
   }
 }

@@ -65,7 +65,7 @@ export class ComponentBinding<TProps, TResult>
 
   private _pendingHooks: Hook[] = [];
 
-  private _memoizedHooks: Hook[] = [];
+  private _currentHooks: Hook[] = [];
 
   constructor(
     component: Component<TProps, TResult>,
@@ -112,7 +112,7 @@ export class ComponentBinding<TProps, TResult>
     const { frame, scope } = session;
     frame.coroutines.push(this);
     frame.mutationEffects.push(this, scope.level);
-    this._pendingHooks = this._memoizedHooks;
+    this._pendingHooks = this._currentHooks;
   }
 
   resume(session: Session): void {
@@ -147,7 +147,7 @@ export class ComponentBinding<TProps, TResult>
     const { frame, scope } = session;
     frame.coroutines.push(this);
     this._scope = scope;
-    this._pendingHooks = this._memoizedHooks;
+    this._pendingHooks = this._currentHooks;
   }
 
   detach(session: Session): void {
@@ -175,13 +175,13 @@ export class ComponentBinding<TProps, TResult>
 
   commit(): void {
     this._slot?.commit();
-    this._memoizedHooks = this._pendingHooks;
+    this._currentHooks = this._pendingHooks;
   }
 
   rollback(): void {
     this._slot?.rollback();
     this._scope = Scope.Detached;
-    this._memoizedHooks = [];
+    this._currentHooks = [];
   }
 }
 

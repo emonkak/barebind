@@ -65,7 +65,9 @@ export class RepeatBinding<TSource, TKey, TElement>
 
   private _pendingMutations: Mutation<TElement>[] = [];
 
-  private _memoizedSlots: Slot<TElement>[] | null = null;
+  private _currentKeys: TKey[] | null = null;
+
+  private _currentSlots: Slot<TElement>[] | null = null;
 
   constructor(
     props: RepeatProps<TSource, TKey, TElement>,
@@ -93,7 +95,7 @@ export class RepeatBinding<TSource, TKey, TElement>
 
   shouldUpdate(props: RepeatProps<TSource, TKey, TElement>): boolean {
     return (
-      this._memoizedSlots === null ||
+      this._currentSlots === null ||
       props.source !== this._props.source ||
       props.keySelector !== this._props.keySelector ||
       props.elementSelector !== this._props.elementSelector
@@ -102,15 +104,15 @@ export class RepeatBinding<TSource, TKey, TElement>
 
   attach(session: Session): void {
     const { context, coroutine } = session;
-    const target = getHydrationTarget(coroutine.scope);
+    const hydrationTarget = getHydrationTarget(coroutine.scope);
 
     const {
       source,
       keySelector = defaultKeySelector,
       elementSelector = defaultElementSelector,
     } = this._props;
-    const oldKeys = this._pendingKeys;
-    const oldSlots = this._pendingSlots;
+    const oldKeys = this._currentKeys ?? [];
+    const oldSlots = this._currentSlots ?? [];
     const newItems = Array.isArray(source)
       ? (source as TSource[])
       : Array.from(source);
@@ -130,8 +132,8 @@ export class RepeatBinding<TSource, TKey, TElement>
           );
           const slot = Slot.place(item, part, context);
           slot.attach(session);
-          if (target !== null) {
-            replaceSentinelNode(target, part.sentinelNode);
+          if (hydrationTarget !== null) {
+            replaceSentinelNode(hydrationTarget, part.sentinelNode);
           }
           this._pendingMutations.push({
             type: MUTATION_TYPE_INSERT,
@@ -172,16 +174,13 @@ export class RepeatBinding<TSource, TKey, TElement>
 
     this._pendingKeys = newKeys;
     this._pendingSlots = newSlots;
-
-    if (target !== null) {
-      this._part.node = newSlots[0]?.part.node ?? this._part.sentinelNode;
-      this._memoizedSlots = newSlots;
-    }
   }
 
   detach(session: Session): void {
-    for (const slot of this._pendingSlots) {
-      slot.detach(session);
+    if (this._currentSlots !== null) {
+      for (const slot of this._currentSlots) {
+        slot.detach(session);
+      }
     }
   }
 
@@ -212,23 +211,22 @@ export class RepeatBinding<TSource, TKey, TElement>
     this._part.node =
       this._pendingSlots[0]?.part.node ?? this._part.sentinelNode;
     this._pendingMutations = [];
-    this._memoizedSlots = this._pendingSlots;
+    this._currentKeys = this._pendingKeys;
+    this._currentSlots = this._pendingSlots;
   }
 
   rollback(): void {
-    if (this._memoizedSlots !== null) {
-      for (const slot of this._memoizedSlots) {
+    if (this._currentSlots !== null) {
+      for (const slot of this._currentSlots) {
         slot.rollback();
         (slot.part as Part.ChildNodePart).sentinelNode.remove();
       }
     }
 
     this._part.node = this._part.sentinelNode;
-    this._pendingMutations = this._pendingSlots.map((slot) => ({
-      type: MUTATION_TYPE_INSERT,
-      slot,
-    }));
-    this._memoizedSlots = null;
+    this._pendingMutations = [];
+    this._currentKeys = null;
+    this._currentSlots = null;
   }
 }
 

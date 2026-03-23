@@ -150,11 +150,12 @@ export class Runtime implements SessionContext {
     if (isBindable(source)) {
       return source[$directive]();
     } else {
-      const type = this._backend.resolvePrimitive(source, part) as Primitive<
-        UnwrapBindable<T>
-      >;
-      (type as Primitive<UnwrapBindable<T>>).ensureValue?.(source, part);
-      return new Directive(type, source as UnwrapBindable<T>);
+      const type = this._backend.resolvePrimitive(source, part);
+      type.ensureValue?.(source, part);
+      return new Directive(
+        type as Primitive<UnwrapBindable<T>>,
+        source as UnwrapBindable<T>,
+      );
     }
   }
 

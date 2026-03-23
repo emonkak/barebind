@@ -20,7 +20,7 @@ type SlotStatus =
 export class Slot<T> {
   private _pendingBinding: Binding<UnwrapBindable<T>>;
 
-  private _memoizedBinding: Binding<UnwrapBindable<T>> | null = null;
+  private _currentBinding: Binding<UnwrapBindable<T>> | null = null;
 
   private _key: unknown;
 
@@ -98,7 +98,7 @@ export class Slot<T> {
     }
 
     const newBinding = this._pendingBinding;
-    const oldBinding = this._memoizedBinding;
+    const oldBinding = this._currentBinding;
 
     if (newBinding !== oldBinding) {
       if (oldBinding !== null) {
@@ -116,7 +116,7 @@ export class Slot<T> {
 
     newBinding.commit();
 
-    this._memoizedBinding = newBinding;
+    this._currentBinding = newBinding;
     this._status = SLOT_STATUS_IDLE;
   }
 
@@ -125,7 +125,7 @@ export class Slot<T> {
       return;
     }
 
-    const binding = this._memoizedBinding;
+    const binding = this._currentBinding;
 
     if (binding !== null) {
       binding.rollback();
@@ -135,7 +135,7 @@ export class Slot<T> {
       }
     }
 
-    this._memoizedBinding = null;
+    this._currentBinding = null;
     this._status = SLOT_STATUS_IDLE;
   }
 }

@@ -54,29 +54,29 @@ export class StyleBinding extends PrimitiveBinding<
   StyleMap,
   Part.AttributePart
 > {
-  private _memoizedValue: StyleMap = {};
+  private _currentValue: StyleMap = {};
 
   get type(): Primitive<StyleMap> {
     return StyleType;
   }
 
   shouldUpdate(value: StyleMap): boolean {
-    return !shallowEqual(value, this._memoizedValue);
+    return !shallowEqual(value, this._currentValue);
   }
 
   override commit(): void {
     const declaration = (this._part.node as HTMLElement).style;
-    const newStyles = this._value;
-    const oldStyles = this._memoizedValue;
+    const newStyles = this._pendingValue;
+    const oldStyles = this._currentValue;
     updateStyles(declaration, newStyles, oldStyles);
-    this._memoizedValue = this._value;
+    this._currentValue = this._pendingValue;
   }
 
   override rollback(): void {
     const declaration = (this._part.node as HTMLElement).style;
-    const styles = this._memoizedValue;
+    const styles = this._currentValue;
     updateStyles(declaration, {}, styles);
-    this._memoizedValue = {};
+    this._currentValue = {};
   }
 }
 
