@@ -2,7 +2,7 @@
 
 import { LinkedList } from './collections/linked-list.js';
 
-export const $directive: unique symbol = Symbol('$directive');
+const toDirective: unique symbol = Symbol('Bindable.toDirective');
 
 export const BOUNDARY_TYPE_ERROR = 0;
 export const BOUNDARY_TYPE_HYDRATION = 1;
@@ -46,7 +46,7 @@ export interface Backend {
 }
 
 export interface Bindable<TValue, TPart extends Part = Part> {
-  [$directive](): Directive<TValue, TPart>;
+  [toDirective](): Directive<TValue, TPart>;
 }
 
 export interface Binding<TValue, TPart extends Part = Part>
@@ -97,6 +97,8 @@ export interface Coroutine {
 export class Directive<TValue, TPart extends Part = Part>
   implements Bindable<TValue>
 {
+  static readonly toDirective: typeof toDirective = toDirective;
+
   readonly type: DirectiveType<TValue, TPart>;
 
   readonly value: TValue;
@@ -116,7 +118,7 @@ export class Directive<TValue, TPart extends Part = Part>
     }
   }
 
-  [$directive](): Directive<TValue> {
+  [toDirective](): Directive<TValue> {
     return this;
   }
 
@@ -414,5 +416,5 @@ export function areDirectiveTypesEqual(
 }
 
 export function isBindable(value: unknown): value is Bindable<any, any> {
-  return typeof (value as Bindable<any>)?.[$directive] === 'function';
+  return typeof (value as Bindable<unknown>)?.[toDirective] === 'function';
 }

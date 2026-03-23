@@ -1,6 +1,5 @@
 import { LinkedList } from './collections/linked-list.js';
 import {
-  $directive,
   type Backend,
   type CommitPhase,
   type Coroutine,
@@ -151,7 +150,7 @@ export class Runtime implements SessionContext {
     part: TPart,
   ): Directive<UnwrapBindable<TSource>, TPart> {
     if (isBindable(source)) {
-      return source[$directive]();
+      return source[Directive.toDirective]();
     } else {
       const type = this._backend.resolvePrimitive(source, part);
       type.ensureValue?.(source, part);

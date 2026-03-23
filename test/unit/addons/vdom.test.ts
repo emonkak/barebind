@@ -10,7 +10,7 @@ import {
   VStaticFragment,
 } from '@/addons/vdom.js';
 import { createComponent } from '@/component.js';
-import { $directive, Directive } from '@/core.js';
+import { Directive } from '@/core.js';
 import {
   createChildNodePart,
   createElementPart,
@@ -55,12 +55,12 @@ describe('createFragment()', () => {
 });
 
 describe('VElement', () => {
-  describe('[$directive]()', () => {
+  describe('[Directive.toDirective]()', () => {
     it('returns a directive with the function component', () => {
       const type = createComponent((_props: {}) => null);
       const props = {};
       const element = new VElement(type, props);
-      const directive = element[$directive]();
+      const directive = element[Directive.toDirective]();
 
       expect(directive.type).toStrictEqual(type);
       expect(directive.value).toBe(props);
@@ -70,7 +70,7 @@ describe('VElement', () => {
       const type = 'div';
       const props = { children: [] };
       const element = new VElement(type, props);
-      const directive = element[$directive]();
+      const directive = element[Directive.toDirective]();
 
       expect(directive.type).toStrictEqual(new ElementTemplate(type));
       expect(directive.value).toStrictEqual([
@@ -83,7 +83,7 @@ describe('VElement', () => {
       const type = 'div';
       const props = { children: [] };
       const element = new VElement(type, props, undefined, true);
-      const directive = element[$directive]();
+      const directive = element[Directive.toDirective]();
 
       expect(directive.type).toStrictEqual(new ElementTemplate(type));
       expect(directive.value).toStrictEqual([
@@ -96,7 +96,7 @@ describe('VElement', () => {
       const type = 'div';
       const props = {};
       const element = new VElement(type, props);
-      const directive = element[$directive]();
+      const directive = element[Directive.toDirective]();
 
       expect(directive.type).toStrictEqual(new ElementTemplate(type));
       expect(directive.value).toStrictEqual([
@@ -110,7 +110,7 @@ describe('VElement', () => {
       const props = {};
       const key = 'key';
       const element = new VElement(type, props, key);
-      const directive = element[$directive]();
+      const directive = element[Directive.toDirective]();
 
       expect(directive.type).toStrictEqual(new ElementTemplate(type));
       expect(directive.value).toStrictEqual([
@@ -123,11 +123,11 @@ describe('VElement', () => {
 });
 
 describe('VFragment', () => {
-  describe('[$directive]()', () => {
+  describe('[Directive.toDirective]()', () => {
     it('returns a directive with the repeat directive', () => {
       const children = [new VElement('foo', {}), 'bar'];
       const element = new VFragment(children);
-      const directive = element[$directive]();
+      const directive = element[Directive.toDirective]();
 
       expect(directive.type).toBe(Repeat);
       expect(directive.value).toStrictEqual(
@@ -140,7 +140,7 @@ describe('VFragment', () => {
 });
 
 describe('VStaticFragment', () => {
-  describe('[$directive]()', () => {
+  describe('[Directive.toDirective]()', () => {
     it('returns a directive with the fragment template', () => {
       const component = createComponent((_props: {}) => null);
       const children = [
@@ -154,7 +154,7 @@ describe('VStaticFragment', () => {
         'foo',
       ] as const;
       const element = new VStaticFragment(children);
-      const directive = element[$directive]();
+      const directive = element[Directive.toDirective]();
 
       expect(directive.type).toStrictEqual(
         new FragmentTemplate([

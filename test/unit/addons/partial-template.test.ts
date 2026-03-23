@@ -4,7 +4,7 @@ import {
   PartialTemplate,
   PartialTemplateContext,
 } from '@/addons/partial-template.js';
-import { $directive } from '@/core.js';
+import { Directive } from '@/core.js';
 import { MockTemplate } from '../../mocks.js';
 import { TestRenderer } from '../../test-renderer.js';
 
@@ -84,7 +84,7 @@ describe('PartialTemplateContext', () => {
     const renderer = new TestRenderer((_props, session) => {
       const { html } = session.use(PartialTemplateContext);
       const tag = PartialTemplate.literal('div');
-      return html`<${tag}>Hello, ${'World'}!</${tag}>`[$directive]();
+      return html`<${tag}>Hello, ${'World'}!</${tag}>`[Directive.toDirective]();
     });
 
     const directive = renderer.render({});
@@ -104,7 +104,7 @@ describe('PartialTemplateContext', () => {
     const renderer = new TestRenderer((_props, session) => {
       const { svg } = session.use(PartialTemplateContext);
       const tag = PartialTemplate.literal('text');
-      return svg`<${tag}>Hello, ${'World'}!</${tag}>`[$directive]();
+      return svg`<${tag}>Hello, ${'World'}!</${tag}>`[Directive.toDirective]();
     });
 
     const directive = renderer.render({});
@@ -124,7 +124,7 @@ describe('PartialTemplateContext', () => {
     const renderer = new TestRenderer((_props, session) => {
       const { math } = session.use(PartialTemplateContext);
       const tag = PartialTemplate.literal('mi');
-      return math`<${tag}>${'x'}</${tag}>`[$directive]();
+      return math`<${tag}>${'x'}</${tag}>`[Directive.toDirective]();
     });
 
     const directive = renderer.render({});

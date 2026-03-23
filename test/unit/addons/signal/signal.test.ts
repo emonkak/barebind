@@ -7,7 +7,7 @@ import {
   Signal,
   SignalBinding,
 } from '@/addons/signal/signal.js';
-import { $directive } from '@/core.js';
+import { Directive } from '@/core.js';
 import { createTextPart } from '@/dom.js';
 import { NoLanes, SyncLane, UserBlockingLane } from '@/lane.js';
 import { createRuntime } from '../../../mocks.js';
@@ -220,7 +220,7 @@ describe('Signal', () => {
   describe('[$directive]()', () => {
     it('returns a Directive with the signal', () => {
       const signal = new Atom('foo');
-      const directive = signal[$directive]();
+      const directive = signal[Directive.toDirective]();
 
       expect(directive.type).toBe(Signal);
       expect(directive.value).toBe(signal);

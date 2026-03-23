@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  $directive,
   areDirectiveTypesEqual,
   Directive,
   EffectQueue,
@@ -19,10 +18,10 @@ describe('Directive', () => {
     });
   });
 
-  describe('[$directive]()', () => {
+  describe('[Directive.toDirective]()', () => {
     it('returns itself', () => {
       const directive = new Directive(new MockType(), 'value');
-      expect(directive[$directive]()).toBe(directive);
+      expect(directive[Directive.toDirective]()).toBe(directive);
     });
   });
 

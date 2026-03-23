@@ -1,6 +1,5 @@
 import { shallowEqual } from '../compare.js';
 import {
-  $directive,
   type Bindable,
   type Binding,
   Directive,
@@ -125,7 +124,7 @@ export class VElement<TProps extends {} = {}> implements Bindable<unknown> {
     }
   }
 
-  [$directive](): Directive<unknown> {
+  [Directive.toDirective](): Directive<unknown> {
     return typeof this.type === 'function'
       ? new Directive(this.type, this.props, this.key)
       : resolveVElement(
@@ -147,7 +146,7 @@ export class VFragment implements Bindable<RepeatProps<VNode>> {
     }
   }
 
-  [$directive](): Directive<RepeatProps<VNode>> {
+  [Directive.toDirective](): Directive<RepeatProps<VNode>> {
     return new Directive<RepeatProps<VNode>>(Repeat, {
       elementSelector: resolveVChild,
       keySelector: resolveKey,
@@ -166,7 +165,7 @@ export class VStaticFragment implements Bindable<unknown> {
     }
   }
 
-  [$directive](): Directive<unknown> {
+  [Directive.toDirective](): Directive<unknown> {
     const templates: Template<readonly unknown[]>[] = [];
     const values: unknown[] = [];
 

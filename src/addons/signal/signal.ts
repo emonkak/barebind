@@ -1,6 +1,5 @@
 import { LinkedList } from '../../collections/linked-list.js';
 import {
-  $directive,
   type Bindable,
   type Binding,
   type Coroutine,
@@ -83,7 +82,7 @@ export abstract class Signal<T> implements HookObject<T>, Bindable<Signal<T>> {
     return value;
   }
 
-  [$directive](): Directive<Signal<T>> {
+  [Directive.toDirective](): Directive<Signal<T>> {
     return new Directive<Signal<T>>(Signal, this);
   }
 
