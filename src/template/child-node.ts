@@ -1,6 +1,5 @@
 import type { DirectiveType, Part, Session } from '../core.js';
-import { replaceSentinelNode } from '../hydration.js';
-import { createChildNodePart } from '../part.js';
+import { createChildNodePart, replaceSentinelNode } from '../dom.js';
 import { Slot } from '../slot.js';
 import { Template, type TemplateResult } from './template.js';
 

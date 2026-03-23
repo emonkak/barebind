@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createEventPart } from '@/part.js';
+import { createEventPart } from '@/dom.js';
 import { EventBinding, EventType } from '@/primitive/event.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';

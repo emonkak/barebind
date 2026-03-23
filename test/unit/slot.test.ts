@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { Directive } from '@/core.js';
-import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
+import { createChildNodePart, HTML_NAMESPACE_URI } from '@/dom.js';
 import { Slot } from '@/slot.js';
 import { MockBinding, MockType } from '../mocks.js';
 import { TestUpdater } from '../test-updater.js';

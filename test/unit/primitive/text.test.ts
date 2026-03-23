@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createTextPart } from '@/part.js';
+import { createTextPart } from '@/dom.js';
 import { TextBinding, TextType } from '@/primitive/text.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';

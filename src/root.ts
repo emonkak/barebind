@@ -9,9 +9,12 @@ import {
   type UpdateHandle,
   type UpdateOptions,
 } from './core.js';
-import { createTreeWalker, replaceSentinelNode } from './hydration.js';
+import {
+  createChildNodePart,
+  createTreeWalker,
+  replaceSentinelNode,
+} from './dom.js';
 import { NoLanes } from './lane.js';
-import { createChildNodePart } from './part.js';
 import { Slot } from './slot.js';
 
 export class Root<T> {

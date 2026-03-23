@@ -7,7 +7,6 @@ import {
   type Part,
   type Primitive,
 } from '@/core.js';
-import { ConcurrentLane } from '@/lane.js';
 import {
   createAttributePart,
   createChildNodePart,
@@ -17,7 +16,8 @@ import {
   createPropertyPart,
   createTextPart,
   HTML_NAMESPACE_URI,
-} from '@/part.js';
+} from '@/dom.js';
+import { ConcurrentLane } from '@/lane.js';
 import { AttributeType } from '@/primitive/attribute.js';
 import { BlackholeType } from '@/primitive/blackhole.js';
 import { ClassType } from '@/primitive/class.js';

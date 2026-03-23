@@ -5,14 +5,14 @@ import {
   type Primitive,
   type Session,
 } from '../core.js';
-import { DirectiveError } from '../error.js';
 import {
   createAttributePart,
   createEventPart,
   createLivePart,
   createPropertyPart,
   ensurePartType,
-} from '../part.js';
+} from '../dom.js';
+import { DirectiveError } from '../error.js';
 import { Slot } from '../slot.js';
 import { isObject, PrimitiveBinding } from './primitive.js';
 

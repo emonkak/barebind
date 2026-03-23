@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createLivePart } from '@/part.js';
+import { createLivePart } from '@/dom.js';
 import { LiveBinding, LiveType } from '@/primitive/live.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';

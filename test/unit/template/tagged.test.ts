@@ -8,13 +8,14 @@ import {
   PART_TYPE_PROPERTY,
   PART_TYPE_TEXT,
 } from '@/core.js';
-import { createTreeWalker, HydrationError } from '@/hydration.js';
 import {
   createChildNodePart,
+  createTreeWalker,
   HTML_NAMESPACE_URI,
   MATH_NAMESPACE_URI,
   SVG_NAMESPACE_URI,
-} from '@/part.js';
+} from '@/dom.js';
+import { HydrationError } from '@/error.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import { createElement, serializeNode } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';

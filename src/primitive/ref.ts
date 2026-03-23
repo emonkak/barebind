@@ -6,8 +6,8 @@ import {
   type Primitive,
   type Session,
 } from '../core.js';
+import { ensurePartType } from '../dom.js';
 import { DirectiveError } from '../error.js';
-import { ensurePartType } from '../part.js';
 import type { Cleanup, Ref, RefObject } from '../render-context.js';
 import { PrimitiveBinding } from './primitive.js';
 

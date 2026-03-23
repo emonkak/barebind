@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createAttributePart } from '@/part.js';
+import { createAttributePart } from '@/dom.js';
 import { AttributeBinding, AttributeType } from '@/primitive/attribute.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';

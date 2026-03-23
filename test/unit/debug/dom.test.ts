@@ -15,7 +15,7 @@ import {
   createPropertyPart,
   createTextPart,
   HTML_NAMESPACE_URI,
-} from '@/part.js';
+} from '@/dom.js';
 import { MockType } from '../../mocks.js';
 import { createElement } from '../../test-helpers.js';
 

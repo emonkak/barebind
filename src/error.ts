@@ -6,7 +6,7 @@ import {
   type Scope,
 } from './core.js';
 import { formatOwnerStack, getOwnerStack } from './debug/coroutine.js';
-import { formatPart } from './debug/dom.js';
+import { emphasizeNode, formatPart } from './debug/dom.js';
 import { formatValue } from './debug/value.js';
 
 export class CoroutineError extends Error {
@@ -17,6 +17,10 @@ export class CoroutineError extends Error {
     super(message, options);
   }
 }
+
+export class AbortError extends CoroutineError {}
+
+export class InterruptError extends CoroutineError {}
 
 export class DirectiveError<T> extends Error {
   readonly type: DirectiveType<T>;
@@ -39,9 +43,19 @@ export class DirectiveError<T> extends Error {
   }
 }
 
-export class AbortError extends CoroutineError {}
+export class HydrationError extends Error {
+  readonly target: TreeWalker;
 
-export class InterruptError extends CoroutineError {}
+  constructor(target: TreeWalker, message: string) {
+    DEBUG: {
+      message += '\n' + emphasizeNode(target.currentNode, '[[ERROR IN HERE!]]');
+    }
+
+    super(message);
+
+    this.target = target;
+  }
+}
 
 export function handleError(error: unknown, scope: Scope): Scope {
   let currentScope = scope;

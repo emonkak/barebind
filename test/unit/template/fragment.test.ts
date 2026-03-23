@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { PART_TYPE_CHILD_NODE } from '@/core.js';
-import { createTreeWalker } from '@/hydration.js';
-import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
+import {
+  createChildNodePart,
+  createTreeWalker,
+  HTML_NAMESPACE_URI,
+} from '@/dom.js';
 import { Slot } from '@/slot.js';
 import { FragmentTemplate } from '@/template/fragment.js';
 import { MockBinding, MockTemplate, MockType } from '../../mocks.js';

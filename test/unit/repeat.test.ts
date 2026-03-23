@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { BOUNDARY_TYPE_HYDRATION, Scope } from '@/core.js';
-import { createTreeWalker } from '@/hydration.js';
 import {
   createChildNodePart,
   createElementPart,
+  createTreeWalker,
   HTML_NAMESPACE_URI,
-} from '@/part.js';
+} from '@/dom.js';
 import { Repeat, RepeatBinding, type RepeatProps } from '@/repeat.js';
 import { createRuntime } from '../mocks.js';
 import {

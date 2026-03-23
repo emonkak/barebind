@@ -12,13 +12,6 @@ import {
 } from '../core.js';
 import { emphasizeNode, formatPart } from '../debug/dom.js';
 import {
-  createTreeWalker,
-  replaceSentinelNode,
-  splitText,
-  treatNodeName,
-  treatNodeType,
-} from '../hydration.js';
-import {
   createAttributePart,
   createChildNodePart,
   createElementPart,
@@ -26,8 +19,13 @@ import {
   createLivePart,
   createPropertyPart,
   createTextPart,
+  createTreeWalker,
   getNamespaceURIByTagName,
-} from '../part.js';
+  replaceSentinelNode,
+  splitText,
+  treatNodeName,
+  treatNodeType,
+} from '../dom.js';
 import { Slot } from '../slot.js';
 import { Template, type TemplateResult } from './template.js';
 

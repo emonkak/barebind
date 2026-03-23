@@ -5,7 +5,7 @@ import {
   HTML_NAMESPACE_URI,
   MATH_NAMESPACE_URI,
   SVG_NAMESPACE_URI,
-} from '@/part.js';
+} from '@/dom.js';
 
 describe('getNamespaceURIByTagName()', () => {
   it('returns the namespace URI from the tag name', () => {

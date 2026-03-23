@@ -5,8 +5,8 @@ import {
   type Part,
   type Primitive,
 } from '../core.js';
+import { ensurePartType } from '../dom.js';
 import { DirectiveError } from '../error.js';
-import { ensurePartType } from '../part.js';
 import { isObject, PrimitiveBinding } from './primitive.js';
 
 export type ClassMap =

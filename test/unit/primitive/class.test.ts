@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createAttributePart } from '@/part.js';
+import { createAttributePart } from '@/dom.js';
 import { ClassBinding, ClassType } from '@/primitive/class.js';
 import { createRuntime } from '../../mocks.js';
 import { createElement } from '../../test-helpers.js';

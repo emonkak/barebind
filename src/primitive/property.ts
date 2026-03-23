@@ -4,7 +4,7 @@ import {
   type Part,
   type Primitive,
 } from '../core.js';
-import { ensurePartType } from '../part.js';
+import { ensurePartType } from '../dom.js';
 import { PrimitiveBinding } from './primitive.js';
 
 const NoValue = Symbol();

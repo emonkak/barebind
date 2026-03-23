@@ -4,7 +4,7 @@ import {
   type Part,
   type Primitive,
 } from '../core.js';
-import { ensurePartType } from '../part.js';
+import { ensurePartType } from '../dom.js';
 import { PrimitiveBinding, toStringOrEmpty } from './primitive.js';
 
 export abstract class AttributeType {

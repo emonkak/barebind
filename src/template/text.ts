@@ -1,6 +1,5 @@
 import { PART_TYPE_TEXT, type Part, type Session } from '../core.js';
-import { splitText } from '../hydration.js';
-import { createTextPart } from '../part.js';
+import { createTextPart, splitText } from '../dom.js';
 import { Slot } from '../slot.js';
 import { Template, type TemplateResult } from './template.js';
 

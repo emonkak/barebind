@@ -1,4 +1,5 @@
 import {
+  BOUNDARY_TYPE_HYDRATION,
   type DirectiveType,
   PART_TYPE_ATTRIBUTE,
   PART_TYPE_CHILD_NODE,
@@ -9,12 +10,19 @@ import {
   PART_TYPE_PROPERTY,
   PART_TYPE_TEXT,
   type Part,
+  type Scope,
 } from './core.js';
-import { DirectiveError } from './error.js';
+import { DirectiveError, HydrationError } from './error.js';
 
 export const HTML_NAMESPACE_URI = 'http://www.w3.org/1999/xhtml';
 export const MATH_NAMESPACE_URI = 'http://www.w3.org/1998/Math/MathML';
 export const SVG_NAMESPACE_URI = 'http://www.w3.org/2000/svg';
+
+interface NodeTypeMap {
+  [Node.COMMENT_NODE]: Comment;
+  [Node.ELEMENT_NODE]: Element;
+  [Node.TEXT_NODE]: Text;
+}
 
 export function createAttributePart<TElement extends Element>(
   node: TElement,
@@ -93,6 +101,15 @@ export function createTextPart(
   };
 }
 
+export function createTreeWalker(
+  container: DocumentFragment | Element,
+): TreeWalker {
+  return container.ownerDocument.createTreeWalker(
+    container,
+    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
+  );
+}
+
 export function ensurePartType<TPartType extends Part['type']>(
   expectedPartType: TPartType,
   type: DirectiveType<unknown>,
@@ -109,6 +126,19 @@ export function ensurePartType<TPartType extends Part['type']>(
   }
 }
 
+export function getHydrationTarget(scope: Scope): TreeWalker | null {
+  for (
+    let boundary = scope.boundary;
+    boundary !== null;
+    boundary = boundary.next
+  ) {
+    if (boundary.type === BOUNDARY_TYPE_HYDRATION) {
+      return boundary.target;
+    }
+  }
+  return null;
+}
+
 export function getNamespaceURIByTagName(tagName: string): string | null {
   switch (tagName.toLowerCase()) {
     case 'html':
@@ -120,4 +150,61 @@ export function getNamespaceURIByTagName(tagName: string): string | null {
     default:
       return null;
   }
+}
+
+export function replaceSentinelNode(
+  target: TreeWalker,
+  sentinelNode: Comment,
+): void {
+  treatNodeType(Node.COMMENT_NODE, target.nextNode(), target).replaceWith(
+    sentinelNode,
+  );
+  target.currentNode = sentinelNode;
+}
+
+export function splitText(target: TreeWalker): Text {
+  const { currentNode } = target;
+  const nextNode = target.nextNode();
+
+  if (
+    currentNode instanceof Text &&
+    (nextNode === null || nextNode.previousSibling === currentNode)
+  ) {
+    const newText = currentNode.ownerDocument.createTextNode('');
+    currentNode.after(newText);
+    target.currentNode = newText;
+    return newText;
+  } else {
+    return treatNodeType(Node.TEXT_NODE, nextNode, target);
+  }
+}
+
+export function treatNodeName(
+  expectedName: string,
+  node: Node | null,
+  target: TreeWalker,
+): Node {
+  if (node === null || node.nodeName !== expectedName) {
+    throw new HydrationError(
+      target,
+      `Hydration is failed because the node name is mismatched. ${expectedName} is expected here, but got ${node?.nodeName}.`,
+    );
+  }
+
+  return node;
+}
+
+export function treatNodeType<TExpectedType extends keyof NodeTypeMap>(
+  expectedType: TExpectedType,
+  node: Node | null,
+  target: TreeWalker,
+): NodeTypeMap[TExpectedType] {
+  if (node === null || node.nodeType !== expectedType) {
+    throw new HydrationError(
+      target,
+      `Hydration is failed because the node type is mismatched. ${expectedType} is expected here, but got ${node?.nodeType}.`,
+    );
+  }
+
+  return node as NodeTypeMap[TExpectedType];
 }

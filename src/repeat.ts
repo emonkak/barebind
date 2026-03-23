@@ -9,8 +9,12 @@ import {
   type Part,
   type Session,
 } from './core.js';
-import { getHydrationTarget, replaceSentinelNode } from './hydration.js';
-import { createChildNodePart, ensurePartType } from './part.js';
+import {
+  createChildNodePart,
+  ensurePartType,
+  getHydrationTarget,
+  replaceSentinelNode,
+} from './dom.js';
 import { reconcileItems } from './reconciliation.js';
 import { Slot } from './slot.js';
 

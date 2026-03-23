@@ -6,6 +6,7 @@ import {
   Scope,
   type SessionEvent,
 } from '@/core.js';
+import { createChildNodePart, HTML_NAMESPACE_URI } from '@/dom.js';
 import { AbortError, InterruptError } from '@/error.js';
 import {
   ConcurrentLane,
@@ -13,7 +14,6 @@ import {
   UserBlockingLane,
   ViewTransitionLane,
 } from '@/lane.js';
-import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
 import {
   createRuntime,
   MockCoroutine,

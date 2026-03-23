@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
+import { createChildNodePart, HTML_NAMESPACE_URI } from '@/dom.js';
 import { CommentBinding, CommentType } from '@/primitive/comment.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';

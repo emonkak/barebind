@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { createTreeWalker } from '@/hydration.js';
-import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
+import {
+  createChildNodePart,
+  createTreeWalker,
+  HTML_NAMESPACE_URI,
+} from '@/dom.js';
 import { EmptyTemplate } from '@/template/empty.js';
 import { MockTemplate } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';

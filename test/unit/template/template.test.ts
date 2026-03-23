@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { BOUNDARY_TYPE_HYDRATION, Scope } from '@/core.js';
-import { createTreeWalker } from '@/hydration.js';
 import {
   createAttributePart,
   createChildNodePart,
   createElementPart,
   createTextPart,
+  createTreeWalker,
   HTML_NAMESPACE_URI,
-} from '@/part.js';
+} from '@/dom.js';
 import { Slot } from '@/slot.js';
 import { TemplateBinding } from '@/template/template.js';
 import {

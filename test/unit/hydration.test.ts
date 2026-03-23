@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createTreeWalker, treatNodeName, treatNodeType } from '@/hydration.js';
+import { createTreeWalker, treatNodeName, treatNodeType } from '@/dom.js';
 
 describe('treatNodeName()', () => {
   it.each([

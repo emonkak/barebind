@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createElementPart } from '@/part.js';
+import { createElementPart } from '@/dom.js';
 import { SpreadBinding, SpreadType } from '@/primitive/spread.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';

@@ -11,7 +11,7 @@ import {
   type Part,
   type Session,
 } from '../core.js';
-import { ensurePartType } from '../part.js';
+import { ensurePartType } from '../dom.js';
 import { BlackholeType } from '../primitive/blackhole.js';
 import { type StyleMap, updateStyles } from '../primitive/style.js';
 import type { Component } from '../render-context.js';

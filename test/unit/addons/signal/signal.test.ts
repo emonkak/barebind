@@ -8,8 +8,8 @@ import {
   SignalBinding,
 } from '@/addons/signal/signal.js';
 import { $directive } from '@/core.js';
+import { createTextPart } from '@/dom.js';
 import { NoLanes, SyncLane, UserBlockingLane } from '@/lane.js';
-import { createTextPart } from '@/part.js';
 import { createRuntime } from '../../../mocks.js';
 import { waitForMicrotasks } from '../../../test-helpers.js';
 import { TestRenderer } from '../../../test-renderer.js';

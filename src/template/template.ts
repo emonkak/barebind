@@ -8,8 +8,7 @@ import {
   type Part,
   type Session,
 } from '../core.js';
-import { getHydrationTarget } from '../hydration.js';
-import { ensurePartType } from '../part.js';
+import { ensurePartType, getHydrationTarget } from '../dom.js';
 import type { Slot } from '../slot.js';
 
 export interface TemplateResult {

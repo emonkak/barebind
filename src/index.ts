@@ -12,9 +12,9 @@ export {
   AbortError,
   CoroutineError,
   DirectiveError,
+  HydrationError,
   InterruptError,
 } from './error.js';
-export { HydrationError } from './hydration.js';
 export type { ClassMap } from './primitive/class.js';
 export type { StyleMap } from './primitive/style.js';
 export {

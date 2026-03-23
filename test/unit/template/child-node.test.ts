@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { PART_TYPE_CHILD_NODE } from '@/core.js';
-import { createTreeWalker, HydrationError } from '@/hydration.js';
-import { createChildNodePart, HTML_NAMESPACE_URI } from '@/part.js';
+import {
+  createChildNodePart,
+  createTreeWalker,
+  HTML_NAMESPACE_URI,
+} from '@/dom.js';
+import { HydrationError } from '@/error.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { MockTemplate } from '../../mocks.js';
 import { createElement } from '../../test-helpers.js';

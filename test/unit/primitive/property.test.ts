@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createPropertyPart } from '@/part.js';
+import { createPropertyPart } from '@/dom.js';
 import { PropertyBinding, PropertyType } from '@/primitive/property.js';
 import { createRuntime } from '../../mocks.js';
 import { TestUpdater } from '../../test-updater.js';

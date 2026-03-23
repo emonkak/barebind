@@ -1,10 +1,11 @@
 import type { DirectiveType, Part, Session } from '../core.js';
-import { replaceSentinelNode, treatNodeName } from '../hydration.js';
 import {
   createChildNodePart,
   createElementPart,
   getNamespaceURIByTagName,
-} from '../part.js';
+  replaceSentinelNode,
+  treatNodeName,
+} from '../dom.js';
 import { Slot } from '../slot.js';
 import { Template, type TemplateResult } from '../template/template.js';
 

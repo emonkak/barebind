@@ -15,7 +15,7 @@ import {
   createChildNodePart,
   createElementPart,
   HTML_NAMESPACE_URI,
-} from '@/part.js';
+} from '@/dom.js';
 import { BlackholeType } from '@/primitive/blackhole.js';
 import { Repeat } from '@/repeat.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
