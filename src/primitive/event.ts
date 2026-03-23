@@ -8,24 +8,17 @@ import { DirectiveError } from '../error.js';
 import { ensurePartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export type EventHandler<T extends Event = Event> =
-  | EventHandlerFunction<T>
-  | EventHandlerObject<T>
+type EventListenerOrNullish =
+  | EventListenerOrEventListenerObject
   | null
   | undefined;
-
-type EventHandlerFunction<T extends Event> = (event: T) => void;
-
-interface EventHandlerObject<T extends Event> extends AddEventListenerOptions {
-  handleEvent(event: T): void;
-}
 
 export abstract class EventType {
   static ensureValue(
     value: unknown,
     part: Part,
-  ): asserts value is EventHandler {
-    if (!isEventHandler(value)) {
+  ): asserts value is EventListenerOrNullish {
+    if (!isEventListnerOrNullish(value)) {
       throw new DirectiveError(
         this,
         value,
@@ -36,7 +29,7 @@ export abstract class EventType {
   }
 
   static resolveBinding(
-    value: EventHandler,
+    value: EventListenerOrNullish,
     part: Part,
     _context: DirectiveContext,
   ): EventBinding {
@@ -48,34 +41,34 @@ export abstract class EventType {
 }
 
 export class EventBinding extends PrimitiveBinding<
-  EventHandler,
+  EventListenerOrNullish,
   Part.EventPart
 > {
-  private _memoizedValue: EventHandler = null;
+  private _memoizedValue: EventListenerOrNullish = null;
 
-  get type(): Primitive<EventHandler> {
+  get type(): Primitive<EventListenerOrNullish> {
     return EventType;
   }
 
-  shouldUpdate(value: EventHandler): boolean {
+  shouldUpdate(value: EventListenerOrNullish): boolean {
     return value !== this._memoizedValue;
   }
 
   override commit(): void {
-    const newHandler = this._value;
-    const oldHandler = this._memoizedValue;
+    const newListener = this._value;
+    const oldListener = this._memoizedValue;
 
     if (
-      typeof newHandler === 'object' ||
-      typeof oldHandler === 'object' ||
-      newHandler === undefined ||
-      oldHandler === undefined
+      typeof newListener === 'object' ||
+      typeof oldListener === 'object' ||
+      newListener === undefined ||
+      oldListener === undefined
     ) {
-      if (oldHandler != null) {
-        detachEventListener(this._part, oldHandler, this);
+      if (oldListener != null) {
+        uninstallEventListener(this._part, oldListener, this);
       }
-      if (newHandler != null) {
-        attachEventListener(this._part, newHandler, this);
+      if (newListener != null) {
+        installEventListener(this._part, newListener, this);
       }
     }
 
@@ -86,7 +79,7 @@ export class EventBinding extends PrimitiveBinding<
     const handler = this._memoizedValue;
 
     if (handler != null) {
-      detachEventListener(this._part, handler, this);
+      uninstallEventListener(this._part, handler, this);
     }
 
     this._memoizedValue = null;
@@ -101,37 +94,39 @@ export class EventBinding extends PrimitiveBinding<
   }
 }
 
-function attachEventListener(
+function installEventListener(
   part: Part.EventPart,
-  handler: NonNullable<EventHandler>,
+  listener: NonNullable<EventListenerOrNullish>,
   delegate: EventListenerObject,
 ): void {
   const { node, name } = part;
-  if (typeof handler === 'function') {
+  if (typeof listener === 'function') {
     node.addEventListener(name, delegate);
   } else {
-    node.addEventListener(name, delegate, handler);
+    node.addEventListener(name, delegate, listener as EventListenerOptions);
   }
 }
 
-function detachEventListener(
-  part: Part.EventPart,
-  handler: NonNullable<EventHandler>,
-  delegate: EventListenerObject,
-): void {
-  const { node, name } = part;
-  if (typeof handler === 'function') {
-    node.removeEventListener(name, delegate);
-  } else {
-    node.removeEventListener(name, delegate, handler);
-  }
-}
-
-function isEventHandler(value: unknown): value is EventHandler {
+function isEventListnerOrNullish(
+  value: unknown,
+): value is EventListenerOrNullish {
   return (
     value == null ||
     typeof value === 'function' ||
     (typeof value === 'object' &&
       typeof (value as EventListenerObject).handleEvent === 'function')
   );
+}
+
+function uninstallEventListener(
+  part: Part.EventPart,
+  listener: NonNullable<EventListenerOrNullish>,
+  delegate: EventListenerObject,
+): void {
+  const { node, name } = part;
+  if (typeof listener === 'function') {
+    node.removeEventListener(name, delegate);
+  } else {
+    node.removeEventListener(name, delegate, listener as EventListenerOptions);
+  }
 }
