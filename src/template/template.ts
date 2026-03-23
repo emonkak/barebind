@@ -50,7 +50,7 @@ export abstract class Template<TValues extends readonly unknown[]>
 }
 
 export class TemplateBinding<TValues extends readonly unknown[]>
-  implements Binding<TValues>, Effect
+  implements Binding<TValues, Part.ChildNodePart>, Effect
 {
   private readonly _template: Template<TValues>;
 

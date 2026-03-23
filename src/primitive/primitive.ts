@@ -1,7 +1,7 @@
 import type { Binding, Part, Primitive, Session } from '../core.js';
 
 export abstract class PrimitiveBinding<TValue, TPart extends Part>
-  implements Binding<TValue>
+  implements Binding<TValue, TPart>
 {
   protected _pendingValue: TValue;
 

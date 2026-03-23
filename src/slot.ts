@@ -17,27 +17,32 @@ type SlotStatus =
   | typeof SLOT_STATUS_ATTACHED
   | typeof SLOT_STATUS_DETACHED;
 
-export class Slot<T> {
-  private _pendingBinding: Binding<UnwrapBindable<T>>;
+export class Slot<TSource, TPart extends Part = Part> {
+  private _pendingBinding: Binding<UnwrapBindable<TSource>, TPart>;
 
-  private _currentBinding: Binding<UnwrapBindable<T>> | null = null;
+  private _currentBinding: Binding<UnwrapBindable<TSource>, TPart> | null =
+    null;
 
   private _key: unknown;
 
   private _status: SlotStatus = SLOT_STATUS_IDLE;
 
-  static place<T>(source: T, part: Part, context: DirectiveContext): Slot<T> {
+  static place<TSource, TPart extends Part>(
+    source: TSource,
+    part: TPart,
+    context: DirectiveContext,
+  ): Slot<TSource, TPart> {
     const { type, value, key } = context.resolveDirective(source, part);
     const binding = type.resolveBinding(value, part, context);
     return new Slot(binding, key);
   }
 
-  constructor(binding: Binding<UnwrapBindable<T>>, key?: unknown) {
+  constructor(binding: Binding<UnwrapBindable<TSource>, TPart>, key?: unknown) {
     this._pendingBinding = binding;
     this._key = key;
   }
 
-  get part(): Part {
+  get part(): TPart {
     return this._pendingBinding.part;
   }
 
@@ -55,7 +60,7 @@ export class Slot<T> {
     this._status = SLOT_STATUS_DETACHED;
   }
 
-  reconcile(source: T, session: Session): boolean {
+  reconcile(source: TSource, session: Session): boolean {
     const { context } = session;
     const { type, value, key } = context.resolveDirective(
       source,

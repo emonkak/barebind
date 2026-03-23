@@ -45,15 +45,17 @@ export interface Backend {
   yieldToMain(): Promise<void>;
 }
 
-export interface Bindable<T = unknown> {
-  [$directive](): Directive<T>;
+export interface Bindable<TValue, TPart extends Part = Part> {
+  [$directive](): Directive<TValue, TPart>;
 }
 
-export interface Binding<T> extends ReversibleEffect, SessionLifecycle {
-  readonly type: DirectiveType<T>;
-  value: T;
-  readonly part: Part;
-  shouldUpdate(value: T): boolean;
+export interface Binding<TValue, TPart extends Part = Part>
+  extends ReversibleEffect,
+    SessionLifecycle {
+  readonly type: DirectiveType<TValue>;
+  value: TValue;
+  readonly part: TPart;
+  shouldUpdate(value: TValue): boolean;
 }
 
 export type Boundary =
@@ -92,14 +94,20 @@ export interface Coroutine {
   resume(session: Session): void;
 }
 
-export class Directive<T> implements Bindable<T> {
-  readonly type: DirectiveType<T>;
+export class Directive<TValue, TPart extends Part = Part>
+  implements Bindable<TValue>
+{
+  readonly type: DirectiveType<TValue, TPart>;
 
-  readonly value: T;
+  readonly value: TValue;
 
   readonly key: unknown;
 
-  constructor(type: DirectiveType<T>, value: T, key?: unknown) {
+  constructor(
+    type: DirectiveType<TValue, TPart>,
+    value: TValue,
+    key?: unknown,
+  ) {
     this.type = type;
     this.value = value;
     this.key = key;
@@ -108,23 +116,30 @@ export class Directive<T> implements Bindable<T> {
     }
   }
 
-  [$directive](): Directive<T> {
+  [$directive](): Directive<TValue> {
     return this;
   }
 
-  withKey(key: unknown): Directive<T> {
+  withKey(key: unknown): Directive<TValue> {
     return new Directive(this.type, this.value, key);
   }
 }
 
 export interface DirectiveContext {
-  resolveDirective<T>(source: T, part: Part): Directive<UnwrapBindable<T>>;
+  resolveDirective<TSource, TPart extends Part>(
+    source: TSource,
+    part: TPart,
+  ): Directive<UnwrapBindable<TSource>, TPart>;
 }
 
-export interface DirectiveType<T> {
+export interface DirectiveType<TValue, TPart extends Part = Part> {
   readonly name: string;
   equals?(other: DirectiveType<unknown>): boolean;
-  resolveBinding(value: T, part: Part, context: DirectiveContext): Binding<T>;
+  resolveBinding(
+    value: TValue,
+    part: TPart,
+    context: DirectiveContext,
+  ): Binding<TValue, TPart>;
 }
 
 export interface Effect {
@@ -264,8 +279,9 @@ export namespace Part {
   }
 }
 
-export interface Primitive<T> extends DirectiveType<T> {
-  ensureValue?(value: unknown, part: Part): asserts value is T;
+export interface Primitive<TValue, TPart extends Part = Part>
+  extends DirectiveType<TValue, TPart> {
+  ensureValue?(value: unknown, part: Part): asserts value is TValue;
 }
 
 export interface RenderFrame {
@@ -397,6 +413,6 @@ export function areDirectiveTypesEqual(
   return nextType.equals?.(prevType) ?? nextType === prevType;
 }
 
-export function isBindable(value: unknown): value is Bindable<any> {
-  return typeof (value as Bindable)?.[$directive] === 'function';
+export function isBindable(value: unknown): value is Bindable<any, any> {
+  return typeof (value as Bindable<any>)?.[$directive] === 'function';
 }

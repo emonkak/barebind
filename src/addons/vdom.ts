@@ -28,7 +28,7 @@ const $cleanup = Symbol('$cleanup');
 export type VNode =
   | readonly VNode[]
   | VElement
-  | Bindable
+  | Bindable<unknown>
   | bigint
   | boolean
   | number
@@ -206,7 +206,7 @@ export class VStaticFragment implements Bindable<unknown> {
 /**
  * @internal
  */
-export class ElementBinding implements Binding<ElementProps> {
+export class ElementBinding implements Binding<ElementProps, Part.ElementPart> {
   private _pendingProps: ElementProps;
 
   private _currentProps: ElementProps | null = null;

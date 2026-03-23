@@ -15,7 +15,7 @@ import { createChildNodePart } from './part.js';
 import { Slot } from './slot.js';
 
 export class Root<T> {
-  private readonly _slot: Slot<T>;
+  private readonly _slot: Slot<T, Part.ChildNodePart>;
 
   private readonly _container: Element;
 
@@ -36,7 +36,7 @@ export class Root<T> {
   }
 
   private constructor(
-    slot: Slot<T>,
+    slot: Slot<T, Part.ChildNodePart>,
     container: Element,
     context: SessionContext,
   ) {
@@ -132,17 +132,17 @@ export class Root<T> {
 }
 
 class HydrateSlot<T> implements Effect {
-  private readonly _slot: Slot<T>;
+  private readonly _slot: Slot<T, Part.ChildNodePart>;
 
   private readonly _hydrationTarget: TreeWalker;
 
-  constructor(slot: Slot<T>, hydrationTarget: TreeWalker) {
+  constructor(slot: Slot<T, Part.ChildNodePart>, hydrationTarget: TreeWalker) {
     this._slot = slot;
     this._hydrationTarget = hydrationTarget;
   }
 
   commit(): void {
-    const { sentinelNode } = this._slot.part as Part.ChildNodePart;
+    const { sentinelNode } = this._slot.part;
     replaceSentinelNode(this._hydrationTarget, sentinelNode);
     this._hydrationTarget.root.appendChild(sentinelNode);
     this._slot.commit();
@@ -150,31 +150,31 @@ class HydrateSlot<T> implements Effect {
 }
 
 class MountSlot<T> implements Effect {
-  private readonly _slot: Slot<T>;
+  private readonly _slot: Slot<T, Part.ChildNodePart>;
 
   private readonly _container: Element;
 
-  constructor(slot: Slot<T>, container: Element) {
+  constructor(slot: Slot<T, Part.ChildNodePart>, container: Element) {
     this._slot = slot;
     this._container = container;
   }
 
   commit(): void {
-    const { sentinelNode } = this._slot.part as Part.ChildNodePart;
+    const { sentinelNode } = this._slot.part;
     this._container.appendChild(sentinelNode);
     this._slot.commit();
   }
 }
 
 class UnmountSlot<T> implements Effect {
-  private readonly _slot: Slot<T>;
+  private readonly _slot: Slot<T, Part.ChildNodePart>;
 
-  constructor(slot: Slot<T>) {
+  constructor(slot: Slot<T, Part.ChildNodePart>) {
     this._slot = slot;
   }
 
   commit(): void {
-    const { sentinelNode } = this._slot.part as Part.ChildNodePart;
+    const { sentinelNode } = this._slot.part;
     this._slot.rollback();
     sentinelNode.remove();
   }

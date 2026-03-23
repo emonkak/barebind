@@ -31,8 +31,8 @@ interface Mutation<T> {
     | typeof MUTATION_TYPE_UPDATE
     | typeof MUTATION_TYPE_UPDATE_AND_MOVE
     | typeof MUTATION_TYPE_REMOVE;
-  slot: Slot<T>;
-  referenceSlot?: Slot<T> | undefined;
+  slot: Slot<T, Part.ChildNodePart>;
+  referenceSlot?: Slot<T, Part.ChildNodePart> | undefined;
 }
 
 export function Repeat<TSource, TKey, TElement>(
@@ -51,7 +51,7 @@ Repeat.resolveBinding = function <TSource, TKey, TElement>(
 };
 
 export class RepeatBinding<TSource, TKey, TElement>
-  implements Binding<RepeatProps<TSource, TKey, TElement>>
+  implements Binding<RepeatProps<TSource, TKey, TElement>, Part.ChildNodePart>
 {
   private _props: RepeatProps<TSource, TKey, TElement>;
 
@@ -59,13 +59,13 @@ export class RepeatBinding<TSource, TKey, TElement>
 
   private _pendingKeys: TKey[] = [];
 
-  private _pendingSlots: Slot<TElement>[] = [];
+  private _pendingSlots: Slot<TElement, Part.ChildNodePart>[] = [];
 
   private _pendingMutations: Mutation<TElement>[] = [];
 
   private _currentKeys: TKey[] | null = null;
 
-  private _currentSlots: Slot<TElement>[] | null = null;
+  private _currentSlots: Slot<TElement, Part.ChildNodePart>[] | null = null;
 
   constructor(
     props: RepeatProps<TSource, TKey, TElement>,
@@ -190,7 +190,7 @@ export class RepeatBinding<TSource, TKey, TElement>
           break;
         case MUTATION_TYPE_REMOVE:
           slot.rollback();
-          (slot.part as Part.ChildNodePart).sentinelNode.remove();
+          slot.part.sentinelNode.remove();
           break;
       }
     }
@@ -206,7 +206,7 @@ export class RepeatBinding<TSource, TKey, TElement>
     if (this._currentSlots !== null) {
       for (const slot of this._currentSlots) {
         slot.rollback();
-        (slot.part as Part.ChildNodePart).sentinelNode.remove();
+        slot.part.sentinelNode.remove();
       }
     }
 
@@ -238,22 +238,22 @@ function getSiblings(startNode: ChildNode, endNode: ChildNode): ChildNode[] {
 }
 
 function insertSlot<T>(
-  slot: Slot<T>,
-  referenceSlot: Slot<T> | undefined,
+  slot: Slot<T, Part.ChildNodePart>,
+  referenceSlot: Slot<T, Part.ChildNodePart> | undefined,
   part: Part.ChildNodePart,
 ): void {
   const referenceNode =
     referenceSlot !== undefined ? referenceSlot.part.node : part.sentinelNode;
-  referenceNode.before((slot.part as Part.ChildNodePart).sentinelNode);
+  referenceNode.before(slot.part.sentinelNode);
 }
 
 function moveSlot<T>(
-  slot: Slot<T>,
-  referenceSlot: Slot<T> | undefined,
+  slot: Slot<T, Part.ChildNodePart>,
+  referenceSlot: Slot<T, Part.ChildNodePart> | undefined,
   part: Part.ChildNodePart,
 ): void {
   const startNode = slot.part.node;
-  const endNode = (slot.part as Part.ChildNodePart).sentinelNode;
+  const endNode = slot.part.sentinelNode;
   const siblings = getSiblings(startNode, endNode);
   const referenceNode =
     referenceSlot !== undefined ? referenceSlot.part.node : part.sentinelNode;

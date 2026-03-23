@@ -146,15 +146,18 @@ export class Runtime implements SessionContext {
     return this._uniqueIdentifier + '-' + this._identifierCount++;
   }
 
-  resolveDirective<T>(source: T, part: Part): Directive<UnwrapBindable<T>> {
+  resolveDirective<TSource, TPart extends Part>(
+    source: TSource,
+    part: TPart,
+  ): Directive<UnwrapBindable<TSource>, TPart> {
     if (isBindable(source)) {
       return source[$directive]();
     } else {
       const type = this._backend.resolvePrimitive(source, part);
       type.ensureValue?.(source, part);
       return new Directive(
-        type as Primitive<UnwrapBindable<T>>,
-        source as UnwrapBindable<T>,
+        type as Primitive<UnwrapBindable<TSource>, TPart>,
+        source as UnwrapBindable<TSource>,
       );
     }
   }
