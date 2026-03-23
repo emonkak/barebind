@@ -1,3 +1,4 @@
+import { sequentialEqual } from '../compare.js';
 import {
   type DirectiveContext,
   PART_TYPE_EVENT,
@@ -59,16 +60,15 @@ export class EventBinding extends PrimitiveBinding<
     const oldListener = this._memoizedValue;
 
     if (
-      typeof newListener === 'object' ||
-      typeof oldListener === 'object' ||
-      newListener === undefined ||
-      oldListener === undefined
+      newListener == null ||
+      oldListener == null ||
+      !compareEventListenerOptions(newListener, oldListener)
     ) {
       if (oldListener != null) {
-        uninstallEventListener(this._part, oldListener, this);
+        abortEventDelegation(this._part, oldListener, this);
       }
       if (newListener != null) {
-        installEventListener(this._part, newListener, this);
+        startEventDelegation(this._part, newListener, this);
       }
     }
 
@@ -79,7 +79,7 @@ export class EventBinding extends PrimitiveBinding<
     const handler = this._memoizedValue;
 
     if (handler != null) {
-      uninstallEventListener(this._part, handler, this);
+      abortEventDelegation(this._part, handler, this);
     }
 
     this._memoizedValue = null;
@@ -94,17 +94,31 @@ export class EventBinding extends PrimitiveBinding<
   }
 }
 
-function installEventListener(
+function abortEventDelegation(
   part: Part.EventPart,
   listener: NonNullable<EventListenerOrNullish>,
   delegate: EventListenerObject,
 ): void {
   const { node, name } = part;
-  if (typeof listener === 'function') {
-    node.addEventListener(name, delegate);
-  } else {
-    node.addEventListener(name, delegate, listener as EventListenerOptions);
-  }
+  node.removeEventListener(name, delegate, listener as EventListenerOptions);
+}
+
+function compareEventListenerOptions(
+  newListener: EventListenerOrEventListenerObject,
+  oldListener: EventListenerOrEventListenerObject,
+): boolean {
+  return sequentialEqual(
+    getEventListenerOptions(newListener),
+    getEventListenerOptions(oldListener),
+  );
+}
+
+function getEventListenerOptions(
+  listener: EventListenerOrEventListenerObject,
+): unknown[] {
+  const { capture, once, passive, signal } =
+    listener as AddEventListenerOptions;
+  return [capture, once, passive, signal];
 }
 
 function isEventListnerOrNullish(
@@ -118,15 +132,11 @@ function isEventListnerOrNullish(
   );
 }
 
-function uninstallEventListener(
+function startEventDelegation(
   part: Part.EventPart,
   listener: NonNullable<EventListenerOrNullish>,
   delegate: EventListenerObject,
 ): void {
   const { node, name } = part;
-  if (typeof listener === 'function') {
-    node.removeEventListener(name, delegate);
-  } else {
-    node.removeEventListener(name, delegate, listener as EventListenerOptions);
-  }
+  node.addEventListener(name, delegate, listener as EventListenerOptions);
 }

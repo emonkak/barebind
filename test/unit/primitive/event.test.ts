@@ -45,7 +45,7 @@ describe('EventType', () => {
 
 describe('EventBinding', () => {
   describe('shouldUpdate()', () => {
-    it('returns true if the committed value does not exist', () => {
+    it('returns true when there is no current listener', () => {
       const listener = () => {};
       const part = createEventPart(document.createElement('div'), 'click');
       const binding = new EventBinding(listener, part);
@@ -53,7 +53,7 @@ describe('EventBinding', () => {
       expect(binding.shouldUpdate(listener)).toBe(true);
     });
 
-    it('returns true if the committed value is different from the new one', () => {
+    it('returns true when the new listener is different', () => {
       const handler1 = () => {};
       const handler2 = () => {};
       const part = createEventPart(document.createElement('div'), 'click');
@@ -73,7 +73,7 @@ describe('EventBinding', () => {
   });
 
   describe('commit()', () => {
-    it('attaches the event listener function', () => {
+    it('delegates events to event listener functions', () => {
       const listener1 = vi.fn();
       const listener2 = vi.fn();
       const part = createEventPart(document.createElement('div'), 'click');
@@ -89,17 +89,9 @@ describe('EventBinding', () => {
           binding.attach(session);
           binding.commit();
         });
-
-        expect(addEventListenerSpy).toHaveBeenCalledOnce();
-        expect(addEventListenerSpy).toHaveBeenCalledWith('click', binding);
-        expect(removeEventListenerSpy).not.toHaveBeenCalled();
       }
 
       part.node.dispatchEvent(event);
-
-      expect(listener1).toHaveBeenCalledOnce();
-      expect(listener1).toHaveBeenCalledWith(event);
-      expect(listener2).not.toHaveBeenCalled();
 
       SESSION2: {
         updater.startUpdate((session) => {
@@ -107,20 +99,24 @@ describe('EventBinding', () => {
           binding.attach(session);
           binding.commit();
         });
-
-        expect(addEventListenerSpy).toHaveBeenCalledOnce();
-        expect(addEventListenerSpy).toHaveBeenCalledWith('click', binding);
-        expect(removeEventListenerSpy).not.toHaveBeenCalled();
       }
 
       part.node.dispatchEvent(event);
 
+      expect(addEventListenerSpy).toHaveBeenCalledOnce();
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        'click',
+        binding,
+        listener1,
+      );
+      expect(removeEventListenerSpy).not.toHaveBeenCalled();
       expect(listener1).toHaveBeenCalledOnce();
+      expect(listener1).toHaveBeenCalledWith(event);
       expect(listener2).toHaveBeenCalledOnce();
       expect(listener2).toHaveBeenCalledWith(event);
     });
 
-    it('attaches the event listener object', () => {
+    it('delegates events to event listener objects', () => {
       const listener1 = { handleEvent: vi.fn() };
       const listener2 = { handleEvent: vi.fn() };
       const part = createEventPart(document.createElement('div'), 'click');
@@ -136,21 +132,9 @@ describe('EventBinding', () => {
           binding.attach(session);
           binding.commit();
         });
-
-        expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
-        expect(addEventListenerSpy).toHaveBeenCalledWith(
-          'click',
-          binding,
-          listener1,
-        );
-        expect(removeEventListenerSpy).not.toHaveBeenCalled();
       }
 
       part.node.dispatchEvent(event);
-
-      expect(listener1.handleEvent).toHaveBeenCalledOnce();
-      expect(listener1.handleEvent).toHaveBeenCalledWith(event);
-      expect(listener2.handleEvent).not.toHaveBeenCalled();
 
       SESSION2: {
         updater.startUpdate((session) => {
@@ -158,24 +142,19 @@ describe('EventBinding', () => {
           binding.attach(session);
           binding.commit();
         });
-
-        expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
-        expect(addEventListenerSpy).toHaveBeenCalledWith(
-          'click',
-          binding,
-          listener2,
-        );
-        expect(removeEventListenerSpy).toHaveBeenCalledTimes(1);
-        expect(removeEventListenerSpy).toHaveBeenCalledWith(
-          'click',
-          binding,
-          listener1,
-        );
       }
 
       part.node.dispatchEvent(event);
 
+      expect(addEventListenerSpy).toHaveBeenCalledOnce();
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        'click',
+        binding,
+        listener1,
+      );
+      expect(removeEventListenerSpy).not.toHaveBeenCalled();
       expect(listener1.handleEvent).toHaveBeenCalledOnce();
+      expect(listener1.handleEvent).toHaveBeenCalledWith(event);
       expect(listener2.handleEvent).toHaveBeenCalledOnce();
       expect(listener2.handleEvent).toHaveBeenCalledWith(event);
     });
@@ -183,7 +162,7 @@ describe('EventBinding', () => {
     it.for([
       null,
       undefined,
-    ])('detaches the old event listener if the new event listener is null or undefined', (listener2) => {
+    ])('aborts event delegations when the new listener is nullish', (listener2) => {
       const listener1 = { handleEvent: () => {} };
       const part = createEventPart(document.createElement('div'), 'click');
       const binding = new EventBinding(listener1, part);
@@ -197,14 +176,6 @@ describe('EventBinding', () => {
           binding.attach(session);
           binding.commit();
         });
-
-        expect(addEventListenerSpy).toHaveBeenCalledOnce();
-        expect(addEventListenerSpy).toHaveBeenCalledWith(
-          'click',
-          binding,
-          listener1,
-        );
-        expect(removeEventListenerSpy).not.toHaveBeenCalled();
       }
 
       SESSION2: {
@@ -213,20 +184,69 @@ describe('EventBinding', () => {
           binding.attach(session);
           binding.commit();
         });
-
-        expect(addEventListenerSpy).toHaveBeenCalledOnce();
-        expect(removeEventListenerSpy).toHaveBeenCalledOnce();
-        expect(removeEventListenerSpy).toHaveBeenCalledWith(
-          'click',
-          binding,
-          listener1,
-        );
       }
+
+      expect(addEventListenerSpy).toHaveBeenCalledOnce();
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        'click',
+        binding,
+        listener1,
+      );
+      expect(removeEventListenerSpy).toHaveBeenCalledOnce();
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        'click',
+        binding,
+        listener1,
+      );
+    });
+
+    it('restarts event delegations when options change', () => {
+      const listener1 = { handleEvent: () => {}, capture: false };
+      const listener2 = { handleEvent: () => {}, capture: true };
+      const part = createEventPart(document.createElement('div'), 'click');
+      const binding = new EventBinding(listener1, part);
+      const updater = new TestUpdater();
+
+      const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
+      const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
+
+      SESSION1: {
+        updater.startUpdate((session) => {
+          binding.attach(session);
+          binding.commit();
+        });
+      }
+
+      SESSION2: {
+        updater.startUpdate((session) => {
+          binding.value = listener2;
+          binding.attach(session);
+          binding.commit();
+        });
+      }
+
+      expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        'click',
+        binding,
+        listener1,
+      );
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        'click',
+        binding,
+        listener2,
+      );
+      expect(removeEventListenerSpy).toHaveBeenCalledOnce();
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        'click',
+        binding,
+        listener1,
+      );
     });
   });
 
   describe('rollback()', () => {
-    it('should do nothing if the attached event listener does not exist', () => {
+    it('does nothing when there is no curernt event listener', () => {
       const listener = () => {};
       const part = createEventPart(document.createElement('div'), 'click');
       const binding = new EventBinding(listener, part);
@@ -240,13 +260,13 @@ describe('EventBinding', () => {
           binding.detach(session);
           binding.rollback();
         });
-
-        expect(addEventListenerSpy).not.toHaveBeenCalled();
-        expect(removeEventListenerSpy).not.toHaveBeenCalled();
       }
+
+      expect(addEventListenerSpy).not.toHaveBeenCalled();
+      expect(removeEventListenerSpy).not.toHaveBeenCalled();
     });
 
-    it('detaches the event listener', () => {
+    it('aborts event delegations when started', () => {
       const listener = () => {};
       const part = createEventPart(document.createElement('div'), 'click');
       const binding = new EventBinding(listener, part);
@@ -260,10 +280,6 @@ describe('EventBinding', () => {
           binding.attach(session);
           binding.commit();
         });
-
-        expect(addEventListenerSpy).toHaveBeenCalledOnce();
-        expect(addEventListenerSpy).toHaveBeenCalledWith('click', binding);
-        expect(removeEventListenerSpy).not.toHaveBeenCalled();
       }
 
       SESSION2: {
@@ -271,11 +287,20 @@ describe('EventBinding', () => {
           binding.detach(session);
           binding.rollback();
         });
-
-        expect(addEventListenerSpy).toHaveBeenCalledOnce();
-        expect(removeEventListenerSpy).toHaveBeenCalledOnce();
-        expect(removeEventListenerSpy).toHaveBeenCalledWith('click', binding);
       }
+
+      expect(addEventListenerSpy).toHaveBeenCalledOnce();
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        'click',
+        binding,
+        listener,
+      );
+      expect(removeEventListenerSpy).toHaveBeenCalledOnce();
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        'click',
+        binding,
+        listener,
+      );
     });
   });
 });
