@@ -27,7 +27,7 @@ const $cleanup = Symbol('$cleanup');
 export type VNode =
   | readonly VNode[]
   | VElement
-  | Bindable<unknown>
+  | Bindable
   | bigint
   | boolean
   | number
@@ -59,7 +59,7 @@ interface HasCleanup {
 }
 
 interface TemplateDirective<TValues extends readonly unknown[]>
-  extends Directive<TValues> {
+  extends Directive.Element<TValues> {
   type: Template<TValues>;
 }
 
@@ -100,7 +100,7 @@ export function createFragment(children: VNode[]): VStaticFragment {
   return new VStaticFragment(children);
 }
 
-export class VElement<TProps extends {} = {}> implements Bindable<unknown> {
+export class VElement<TProps extends {} = {}> implements Bindable {
   readonly type: VElementType<TProps>;
 
   readonly props: TProps;
@@ -124,7 +124,7 @@ export class VElement<TProps extends {} = {}> implements Bindable<unknown> {
     }
   }
 
-  [Directive.toDirective](): Directive<unknown> {
+  [Directive.toDirective](): Directive.Element<unknown> {
     return typeof this.type === 'function'
       ? new Directive(this.type, this.props, this.key)
       : resolveVElement(
@@ -136,7 +136,9 @@ export class VElement<TProps extends {} = {}> implements Bindable<unknown> {
   }
 }
 
-export class VFragment implements Bindable<RepeatProps<VNode>> {
+export class VFragment
+  implements Bindable<Directive.Element<RepeatProps<VNode>>>
+{
   readonly children: readonly VNode[];
 
   constructor(children: readonly VNode[]) {
@@ -146,8 +148,8 @@ export class VFragment implements Bindable<RepeatProps<VNode>> {
     }
   }
 
-  [Directive.toDirective](): Directive<RepeatProps<VNode>> {
-    return new Directive<RepeatProps<VNode>>(Repeat, {
+  [Directive.toDirective](): Directive.Element<RepeatProps<VNode>> {
+    return new Directive(Repeat, {
       elementSelector: resolveVChild,
       keySelector: resolveKey,
       source: this.children,
@@ -155,7 +157,7 @@ export class VFragment implements Bindable<RepeatProps<VNode>> {
   }
 }
 
-export class VStaticFragment implements Bindable<unknown> {
+export class VStaticFragment implements Bindable {
   readonly children: readonly VNode[];
 
   constructor(children: readonly VNode[]) {
@@ -165,7 +167,7 @@ export class VStaticFragment implements Bindable<unknown> {
     }
   }
 
-  [Directive.toDirective](): Directive<unknown> {
+  [Directive.toDirective](): Directive.Element<unknown> {
     const templates: Template<readonly unknown[]>[] = [];
     const values: unknown[] = [];
 
@@ -553,7 +555,7 @@ function resolveKey(child: VNode, index: number): unknown {
   return child instanceof VElement ? (child.key ?? index) : index;
 }
 
-function resolveVChild(child: VNode): Bindable<unknown> {
+function resolveVChild(child: VNode): Bindable {
   if (isBindable(child)) {
     return child;
   } else if (Array.isArray(child)) {

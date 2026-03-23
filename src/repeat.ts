@@ -41,8 +41,8 @@ interface Mutation<T> {
 
 export function Repeat<TSource, TKey, TElement>(
   props: RepeatProps<TSource, TKey, TElement>,
-): Directive<RepeatProps<TSource, TKey, TElement>> {
-  return new Directive<RepeatProps<TSource, TKey, TElement>>(Repeat, props);
+): Directive.Element<RepeatProps<TSource, TKey, TElement>> {
+  return new Directive(Repeat, props);
 }
 
 Repeat.resolveBinding = function <TSource, TKey, TElement>(

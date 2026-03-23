@@ -1,6 +1,5 @@
 import { areDependenciesChanged } from './compare.js';
 import {
-  type Bindable,
   BOUNDARY_TYPE_ERROR,
   BOUNDARY_TYPE_SHARED_CONTEXT,
   type Coroutine,
@@ -54,7 +53,7 @@ export type Cleanup = () => void;
 
 export interface Component<TProps = {}, TResult = unknown>
   extends DirectiveType<TProps> {
-  (props: TProps): Bindable<TProps>;
+  (props: TProps): Directive.Element<TProps>;
   render(props: TProps, context: RenderContext): TResult;
   arePropsEqual(nextProps: TProps, prevProps: TProps): boolean;
 }
@@ -287,7 +286,7 @@ export class RenderContext {
   html(
     strings: readonly string[],
     ...values: readonly unknown[]
-  ): Directive<readonly unknown[]> {
+  ): Directive.Element<readonly unknown[]> {
     return this._createTemplate(strings, values, 'html');
   }
 
@@ -311,7 +310,7 @@ export class RenderContext {
   math(
     strings: readonly string[],
     ...values: readonly unknown[]
-  ): Directive<readonly unknown[]> {
+  ): Directive.Element<readonly unknown[]> {
     return this._createTemplate(strings, values, 'math');
   }
 
@@ -339,14 +338,14 @@ export class RenderContext {
   svg(
     strings: readonly string[],
     ...values: readonly unknown[]
-  ): Directive<readonly unknown[]> {
+  ): Directive.Element<readonly unknown[]> {
     return this._createTemplate(strings, values, 'svg');
   }
 
   text(
     strings: readonly string[],
     ...values: readonly unknown[]
-  ): Directive<readonly unknown[]> {
+  ): Directive.Element<readonly unknown[]> {
     return this._createTemplate(strings, values, 'textarea');
   }
 
@@ -501,7 +500,7 @@ export class RenderContext {
     strings: readonly string[],
     values: readonly unknown[],
     mode: TemplateMode,
-  ): Directive<readonly unknown[]> {
+  ): Directive.Element<readonly unknown[]> {
     const template = this._context.getTemplate(strings, values, mode);
     return new Directive(template, values);
   }

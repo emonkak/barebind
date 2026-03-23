@@ -39,7 +39,9 @@ interface Subscription {
   unsubscribe: Unsubscribe | null;
 }
 
-export abstract class Signal<T> implements HookObject<T>, Bindable<Signal<T>> {
+export abstract class Signal<T>
+  implements HookObject<T>, Bindable<Directive.Element<Signal<T>>>
+{
   abstract get value(): T;
 
   abstract get version(): number;
@@ -82,8 +84,8 @@ export abstract class Signal<T> implements HookObject<T>, Bindable<Signal<T>> {
     return value;
   }
 
-  [Directive.toDirective](): Directive<Signal<T>> {
-    return new Directive<Signal<T>>(Signal, this);
+  [Directive.toDirective](): Directive.Element<Signal<T>> {
+    return new Directive<typeof Signal, Signal<T>>(Signal, this);
   }
 
   abstract subscribe(subscriber: Subscriber): Unsubscribe;

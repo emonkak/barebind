@@ -13,7 +13,7 @@ import { TestUpdater } from '../test-updater.js';
 describe('createComponent()', () => {
   it('returns a directive with props', () => {
     const props = { greet: 'Hello', name: 'foo' };
-    const directive = Greet(props) as Directive<GreetProps>;
+    const directive = Greet(props) as Directive.Element<GreetProps>;
 
     expect(directive).toBeInstanceOf(Directive);
     expect(directive.type).toBe(Greet);

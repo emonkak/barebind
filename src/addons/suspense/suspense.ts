@@ -3,7 +3,7 @@
 import { createComponent } from '../../component.js';
 import { getTranstionIndex, TransitionLanes } from '../../lane.js';
 import type { RenderContext } from '../../render-context.js';
-import { Fragment } from '../../template.js';
+import { createFragment } from '../../template.js';
 import { Suspend } from './suspend.js';
 
 export interface SuspenseProps {
@@ -98,7 +98,7 @@ export const Suspense = createComponent(function Suspense(
 
   const shouldRenderChildren = areAllSuspendsSettled();
 
-  return Fragment([
+  return createFragment([
     shouldRenderChildren ? children : null,
     shouldRenderChildren ? null : fallback,
   ]);

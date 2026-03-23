@@ -1,7 +1,7 @@
 import {
   BrowserBackend,
   createComponent,
-  Fragment,
+  createFragment,
   type HookFunction,
   type RenderContext,
   Root,
@@ -184,7 +184,7 @@ const Foo = createComponent(function Foo({
   return Node({
     name: 'Foo',
     logs,
-    children: Fragment([
+    children: createFragment([
       Node({
         name: 'Foo.0',
         logs,

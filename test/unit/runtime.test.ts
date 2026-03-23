@@ -3,8 +3,10 @@ import {
   BOUNDARY_TYPE_ERROR,
   Directive,
   EffectQueue,
+  Primitive,
   Scope,
   type SessionEvent,
+  Template,
 } from '@/core.js';
 import { createChildNodePart, HTML_NAMESPACE_URI } from '@/dom.js';
 import { AbortError, InterruptError } from '@/error.js';
@@ -801,12 +803,12 @@ describe('Runtime', () => {
       'foo',
       null,
       undefined,
-    ])('resolves primitive values as primitive types', (source) => {
+    ])('resolves sources as primitive directives when not bindable', (source) => {
+      const runtime = createRuntime();
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
       );
-      const runtime = createRuntime();
 
       const resolvePrimitiveSpy = vi.spyOn(
         runtime['_backend'],
@@ -822,17 +824,80 @@ describe('Runtime', () => {
       expect(directive.key).toBe(undefined);
     });
 
-    it('resolves bindable values as directives', () => {
+    it('resolves sources as primitive directives when primitive', () => {
+      const runtime = createRuntime();
+      const source = new Directive(Primitive, 'value', 'key');
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
+
+      const resolvePrimitiveSpy = vi.spyOn(
+        runtime['_backend'],
+        'resolvePrimitive',
+      );
+
+      const directive = runtime.resolveDirective(source, part);
+
+      expect(resolvePrimitiveSpy).toHaveBeenCalledOnce();
+      expect(resolvePrimitiveSpy).toHaveBeenCalledWith('value', part);
+      expect(directive.type).toStrictEqual(new MockType());
+      expect(directive.value).toBe('value');
+      expect(directive.key).toBe('key');
+    });
+
+    it('resolves sources as specific directives when bindable', () => {
+      const runtime = createRuntime();
       const source = new Directive(new MockType(), 'foo', 'key');
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
       );
-      const runtime = createRuntime();
-
       const directive = runtime.resolveDirective(source, part);
 
       expect(directive).toBe(source);
+    });
+
+    it('resolves sources as template directives when template type', () => {
+      const runtime = createRuntime();
+      const source = new Directive(
+        Template,
+        {
+          strings: ['(', ')'],
+          values: ['value'],
+          mode: 'html',
+        },
+        'key',
+      );
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
+      const directive = runtime.resolveDirective(source, part);
+
+      expect(directive.type).toBeInstanceOf(MockTemplate);
+      expect(directive.type).toStrictEqual(
+        expect.objectContaining(source.value),
+      );
+      expect(directive.value).toStrictEqual(['value']);
+      expect(directive.key).toStrictEqual('key');
+    });
+
+    it('returns same directive types when the template is cached', () => {
+      const runtime = createRuntime();
+      const source = new Directive(Template, {
+        strings: ['(', ')'],
+        values: 'foo',
+        mode: 'html',
+      });
+      const part = createChildNodePart(
+        document.createComment(''),
+        HTML_NAMESPACE_URI,
+      );
+      const directive1 = runtime.resolveDirective(source, part);
+      const directive2 = runtime.resolveDirective(source, part);
+
+      expect(directive1.type).toBe(directive2.type);
     });
   });
 

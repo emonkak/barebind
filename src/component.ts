@@ -1,5 +1,4 @@
 import {
-  type Bindable,
   type Binding,
   type Coroutine,
   Directive,
@@ -31,8 +30,8 @@ export function createComponent<TProps = {}, TResult = unknown>(
   render: (props: TProps, context: RenderContext) => TResult,
   options: ComponentOptions<TProps> = {},
 ): Component<TProps, TResult> {
-  function Component(props: TProps): Bindable<TProps> {
-    return new Directive(Component as Component<TProps, TResult>, props);
+  function Component(props: TProps): Directive.Element<TProps> {
+    return new Directive(Component, props);
   }
 
   DEBUG: {

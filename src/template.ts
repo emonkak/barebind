@@ -1,19 +1,19 @@
-import { Directive } from './core.js';
+import { Directive, Template } from './core.js';
 import { ChildNodeTemplate } from './template/child-node.js';
 import { ElementTemplate } from './template/element.js';
 import { FragmentTemplate } from './template/fragment.js';
 
-export function Element<TProps, TChildren>(
+export function createElement<TProps, TChildren>(
   name: string,
   props: TProps,
   children: TChildren,
-): Directive<readonly [TProps, TChildren]> {
+): Directive.Element<readonly [TProps, TChildren]> {
   return new Directive(new ElementTemplate(name), [props, children]);
 }
 
-export function Fragment(
+export function createFragment(
   children: readonly unknown[],
-): Directive<readonly unknown[]> {
+): Directive.Element<readonly unknown[]> {
   return new Directive(
     new FragmentTemplate(
       new Array<ChildNodeTemplate<unknown>>(children.length).fill(
@@ -22,4 +22,25 @@ export function Fragment(
     ),
     children,
   );
+}
+
+export function html(
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): Directive.Template<readonly unknown[]> {
+  return new Directive(Template, { strings, values, mode: 'html' });
+}
+
+export function math(
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): Directive.Template<readonly unknown[]> {
+  return new Directive(Template, { strings, values, mode: 'math' });
+}
+
+export function svg(
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): Directive.Template<readonly unknown[]> {
+  return new Directive(Template, { strings, values, mode: 'svg' });
 }

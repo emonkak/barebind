@@ -2,6 +2,9 @@
 
 import { LinkedList } from './collections/linked-list.js';
 
+export const Template = Symbol('Directive.Template');
+export const Primitive = Symbol('Directive.Primitive');
+
 const toDirective: unique symbol = Symbol('Bindable.toDirective');
 
 export const BOUNDARY_TYPE_ERROR = 0;
@@ -45,8 +48,8 @@ export interface Backend {
   yieldToMain(): Promise<void>;
 }
 
-export interface Bindable<TValue, TPart extends Part = Part> {
-  [toDirective](): Directive<TValue, TPart>;
+export interface Bindable<T extends Directive.Node = Directive.Node> {
+  [toDirective](): T;
 }
 
 export interface Binding<TValue, TPart extends Part = Part>
@@ -94,22 +97,35 @@ export interface Coroutine {
   resume(session: Session): void;
 }
 
-export class Directive<TValue, TPart extends Part = Part>
-  implements Bindable<TValue>
-{
+export namespace Directive {
+  export type Node =
+    | Element<unknown>
+    | Primitive<unknown>
+    | Template<readonly unknown[]>;
+
+  export type Element<TVaue, TPart extends Part = Part> = Directive<
+    DirectiveType<TVaue, TPart>,
+    TVaue
+  >;
+
+  export type Primitive<T> = Directive<typeof Primitive, T>;
+
+  export type Template<T extends readonly unknown[]> = Directive<
+    typeof Template,
+    { strings: readonly string[]; values: T; mode: TemplateMode }
+  >;
+}
+
+export class Directive<TType, TValue> {
   static readonly toDirective: typeof toDirective = toDirective;
 
-  readonly type: DirectiveType<TValue, TPart>;
+  readonly type: TType;
 
   readonly value: TValue;
 
   readonly key: unknown;
 
-  constructor(
-    type: DirectiveType<TValue, TPart>,
-    value: TValue,
-    key?: unknown,
-  ) {
+  constructor(type: TType, value: TValue, key?: unknown) {
     this.type = type;
     this.value = value;
     this.key = key;
@@ -118,11 +134,11 @@ export class Directive<TValue, TPart extends Part = Part>
     }
   }
 
-  [toDirective](): Directive<TValue> {
+  [toDirective](): Directive<TType, TValue> {
     return this;
   }
 
-  withKey(key: unknown): Directive<TValue> {
+  withKey(key: unknown): Directive<TType, TValue> {
     return new Directive(this.type, this.value, key);
   }
 }
@@ -131,7 +147,7 @@ export interface DirectiveContext {
   resolveDirective<TSource, TPart extends Part>(
     source: TSource,
     part: TPart,
-  ): Directive<UnwrapBindable<TSource>, TPart>;
+  ): Directive.Element<UnwrapBindable<TSource>, TPart>;
 }
 
 export interface DirectiveType<TValue, TPart extends Part = Part> {
@@ -415,6 +431,12 @@ export function areDirectiveTypesEqual(
   return nextType.equals?.(prevType) ?? nextType === prevType;
 }
 
-export function isBindable(value: unknown): value is Bindable<any, any> {
-  return typeof (value as Bindable<unknown>)?.[toDirective] === 'function';
+export function isBindable(value: unknown): value is Bindable<any> {
+  return typeof (value as Bindable)?.[toDirective] === 'function';
+}
+
+export function toDirectiveNode(source: unknown): Directive.Node {
+  return isBindable(source)
+    ? source[Directive.toDirective]()
+    : new Directive(Primitive, source);
 }

@@ -1,3 +1,5 @@
+/// <reference path="../typings/upsert.d.ts" />
+
 import { LinkedList } from './collections/linked-list.js';
 import {
   type Backend,
@@ -6,17 +8,18 @@ import {
   Directive,
   type DirectiveType,
   EffectQueue,
-  isBindable,
   type Lanes,
   type Part,
-  type Primitive,
+  Primitive,
   type RenderFrame,
   type Scope,
   type Session,
   type SessionContext,
   type SessionEvent,
   type SessionObserver,
+  Template,
   type TemplateMode,
+  toDirectiveNode,
   type UnwrapBindable,
   type Update,
   type UpdateHandle,
@@ -148,16 +151,36 @@ export class Runtime implements SessionContext {
   resolveDirective<TSource, TPart extends Part>(
     source: TSource,
     part: TPart,
-  ): Directive<UnwrapBindable<TSource>, TPart> {
-    if (isBindable(source)) {
-      return source[Directive.toDirective]();
-    } else {
-      const type = this._backend.resolvePrimitive(source, part);
-      type.ensureValue?.(source, part);
-      return new Directive(
-        type as Primitive<UnwrapBindable<TSource>, TPart>,
-        source as UnwrapBindable<TSource>,
-      );
+  ): Directive.Element<UnwrapBindable<TSource>, TPart> {
+    const directive = toDirectiveNode(source);
+    switch (directive.type) {
+      case Primitive: {
+        const { value, key } = directive;
+        const type = this._backend.resolvePrimitive(value, part);
+        type.ensureValue?.(value, part);
+        return new Directive(type, value, key) as Directive.Element<
+          UnwrapBindable<TSource>,
+          TPart
+        >;
+      }
+      case Template: {
+        const { value, key } = directive;
+        const { strings, values, mode } = value;
+        const type = this._cachedTemplates.getOrInsertComputed(strings, () => {
+          return this._backend.resolveTemplate(
+            strings,
+            values,
+            this._uniqueIdentifier,
+            mode,
+          );
+        });
+        return new Directive(type, values, key) as Directive.Element<
+          UnwrapBindable<TSource>,
+          TPart
+        >;
+      }
+      default:
+        return directive as Directive.Element<UnwrapBindable<TSource>, TPart>;
     }
   }
 

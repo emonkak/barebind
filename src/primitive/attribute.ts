@@ -2,12 +2,13 @@ import {
   type DirectiveContext,
   PART_TYPE_ATTRIBUTE,
   type Part,
-  type Primitive,
+  Primitive,
 } from '../core.js';
 import { ensurePartType } from '../dom.js';
 import { PrimitiveBinding, toStringOrEmpty } from './primitive.js';
 
 export abstract class AttributeType {
+  static readonly kind = Primitive;
   static resolveBinding<T>(
     value: T,
     part: Part,

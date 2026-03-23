@@ -5,6 +5,7 @@ export { type ComponentOptions, createComponent } from './component.js';
 export type {
   Backend,
   Bindable,
+  Directive,
   SessionEvent,
   SessionObserver,
 } from './core.js';
@@ -34,4 +35,10 @@ export {
 export { Root } from './root.js';
 export { Runtime } from './runtime.js';
 export { SharedContext } from './shared-context.js';
-export { Element, Fragment } from './template.js';
+export {
+  createElement,
+  createFragment,
+  html,
+  math,
+  svg,
+} from './template.js';
