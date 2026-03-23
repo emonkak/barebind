@@ -11,14 +11,13 @@ import {
 } from './core.js';
 import { getHydrationTarget, replaceSentinelNode } from './hydration.js';
 import { createChildNodePart, ensurePartType } from './part.js';
-import { reconcileProjections } from './reconciliation.js';
+import { reconcileItems } from './reconciliation.js';
 import { Slot } from './slot.js';
 
 const MUTATION_TYPE_INSERT = 0;
-const MUTATION_TYPE_MOVE = 1;
-const MUTATION_TYPE_MOVE_AND_UPDATE = 2;
-const MUTATION_TYPE_UPDATE = 3;
-const MUTATION_TYPE_REMOVE = 4;
+const MUTATION_TYPE_UPDATE = 1;
+const MUTATION_TYPE_UPDATE_AND_MOVE = 2;
+const MUTATION_TYPE_REMOVE = 3;
 
 export type RepeatProps<TSource, TKey = unknown, TElement = unknown> = {
   elementSelector?: (item: TSource, index: number) => TElement;
@@ -29,9 +28,8 @@ export type RepeatProps<TSource, TKey = unknown, TElement = unknown> = {
 interface Mutation<T> {
   type:
     | typeof MUTATION_TYPE_INSERT
-    | typeof MUTATION_TYPE_MOVE
-    | typeof MUTATION_TYPE_MOVE_AND_UPDATE
     | typeof MUTATION_TYPE_UPDATE
+    | typeof MUTATION_TYPE_UPDATE_AND_MOVE
     | typeof MUTATION_TYPE_REMOVE;
   slot: Slot<T>;
   referenceSlot?: Slot<T> | undefined;
@@ -118,59 +116,51 @@ export class RepeatBinding<TSource, TKey, TElement>
       : Array.from(source);
     const newKeys = newItems.map(keySelector);
     const newElements = newItems.map(elementSelector);
-    const newSlots = reconcileProjections(
-      oldKeys,
-      newKeys,
-      oldSlots,
-      newElements,
-      {
-        insert: (item, referenceSlot) => {
-          const { sentinelNode, namespaceURI } = this._part;
-          const part = createChildNodePart(
-            sentinelNode.ownerDocument.createComment(''),
-            namespaceURI,
-          );
-          const slot = Slot.place(item, part, context);
-          slot.attach(session);
-          if (hydrationTarget !== null) {
-            replaceSentinelNode(hydrationTarget, part.sentinelNode);
-          }
-          this._pendingMutations.push({
-            type: MUTATION_TYPE_INSERT,
-            slot,
-            referenceSlot,
-          });
-          return slot;
-        },
-        update: (slot, item) => {
-          if (slot.reconcile(item, session)) {
-            this._pendingMutations.push({
-              type: MUTATION_TYPE_UPDATE,
-              slot,
-            });
-          }
-          return slot;
-        },
-        move: (slot, item, referenceSlot) => {
-          const type = slot.reconcile(item, session)
-            ? MUTATION_TYPE_MOVE_AND_UPDATE
-            : MUTATION_TYPE_MOVE;
-          this._pendingMutations.push({
-            type,
-            slot,
-            referenceSlot,
-          });
-          return slot;
-        },
-        remove: (slot) => {
-          slot.detach(session);
-          this._pendingMutations.push({
-            type: MUTATION_TYPE_REMOVE,
-            slot,
-          });
-        },
+    const newSlots = reconcileItems(oldKeys, newKeys, oldSlots, newElements, {
+      insert: (item, referenceSlot) => {
+        const { sentinelNode, namespaceURI } = this._part;
+        const part = createChildNodePart(
+          sentinelNode.ownerDocument.createComment(''),
+          namespaceURI,
+        );
+        const slot = Slot.place(item, part, context);
+        slot.attach(session);
+        if (hydrationTarget !== null) {
+          replaceSentinelNode(hydrationTarget, part.sentinelNode);
+        }
+        this._pendingMutations.push({
+          type: MUTATION_TYPE_INSERT,
+          slot,
+          referenceSlot,
+        });
+        return slot;
       },
-    );
+      update: (slot, item) => {
+        if (slot.reconcile(item, session)) {
+          this._pendingMutations.push({
+            type: MUTATION_TYPE_UPDATE,
+            slot,
+          });
+        }
+        return slot;
+      },
+      updateAndMove: (slot, item, referenceSlot) => {
+        slot.reconcile(item, session);
+        this._pendingMutations.push({
+          type: MUTATION_TYPE_UPDATE_AND_MOVE,
+          slot,
+          referenceSlot,
+        });
+        return slot;
+      },
+      remove: (slot) => {
+        slot.detach(session);
+        this._pendingMutations.push({
+          type: MUTATION_TYPE_REMOVE,
+          slot,
+        });
+      },
+    });
 
     this._pendingKeys = newKeys;
     this._pendingSlots = newSlots;
@@ -191,14 +181,11 @@ export class RepeatBinding<TSource, TKey, TElement>
           insertSlot(slot, referenceSlot, this._part);
           slot.commit();
           break;
-        case MUTATION_TYPE_MOVE:
-          moveSlot(slot, referenceSlot, this._part);
-          break;
-        case MUTATION_TYPE_MOVE_AND_UPDATE:
-          moveSlot(slot, referenceSlot, this._part);
+        case MUTATION_TYPE_UPDATE:
           slot.commit();
           break;
-        case MUTATION_TYPE_UPDATE:
+        case MUTATION_TYPE_UPDATE_AND_MOVE:
+          moveSlot(slot, referenceSlot, this._part);
           slot.commit();
           break;
         case MUTATION_TYPE_REMOVE:

@@ -1,19 +1,19 @@
 export interface MutationHandler<TSource, TTarget> {
-  insert(source: TSource, referenceTarget: TTarget | undefined): TTarget;
-  update(target: TTarget, source: TSource): TTarget;
-  move(
+  insert(item: TSource, referenceTarget: TTarget | undefined): TTarget;
+  update(target: TTarget, item: TSource): TTarget;
+  updateAndMove(
     target: TTarget,
-    source: TSource,
+    item: TSource,
     referenceTarget: TTarget | undefined,
   ): TTarget;
   remove(target: TTarget): void;
 }
 
-export function reconcileProjections<TSource, TTarget, TKey>(
+export function reconcileItems<TSource, TTarget, TKey>(
   oldKeys: TKey[],
   newKeys: TKey[],
   oldTargets: (TTarget | undefined)[],
-  newSources: TSource[],
+  newItems: TSource[],
   handler: MutationHandler<TSource, TTarget>,
 ): TTarget[] {
   const newTargets: TTarget[] = new Array(newKeys.length);
@@ -38,7 +38,7 @@ export function reconcileProjections<TSource, TTarget, TKey>(
     } else if (oldHead > oldTail) {
       while (newHead <= newTail) {
         newTargets[newHead] = handler.insert(
-          newSources[newHead]!,
+          newItems[newHead]!,
           newTargets[newTail + 1],
         );
         newHead++;
@@ -51,14 +51,14 @@ export function reconcileProjections<TSource, TTarget, TKey>(
     } else if (Object.is(oldKeys[oldHead]!, newKeys[newHead]!)) {
       newTargets[newHead] = handler.update(
         oldTargets[oldHead]!,
-        newSources[newHead]!,
+        newItems[newHead]!,
       );
       oldHead++;
       newHead++;
     } else if (Object.is(oldKeys[oldTail]!, newKeys[newTail]!)) {
       newTargets[newTail] = handler.update(
         oldTargets[oldTail]!,
-        newSources[newTail]!,
+        newItems[newTail]!,
       );
       oldTail--;
       newTail--;
@@ -66,14 +66,14 @@ export function reconcileProjections<TSource, TTarget, TKey>(
       Object.is(oldKeys[oldHead]!, newKeys[newTail]!) &&
       Object.is(oldKeys[oldTail]!, newKeys[newHead]!)
     ) {
-      newTargets[newHead] = handler.move(
+      newTargets[newHead] = handler.updateAndMove(
         oldTargets[oldTail]!,
-        newSources[newHead]!,
+        newItems[newHead]!,
         oldTargets[oldHead],
       );
-      newTargets[newTail] = handler.move(
+      newTargets[newTail] = handler.updateAndMove(
         oldTargets[oldHead]!,
-        newSources[newTail]!,
+        newItems[newTail]!,
         newTargets[newTail + 1],
       );
       oldHead++;
@@ -100,15 +100,15 @@ export function reconcileProjections<TSource, TTarget, TKey>(
           oldIndex <= oldTail &&
           oldTargets[oldIndex] !== undefined
         ) {
-          newTargets[newTail] = handler.move(
+          newTargets[newTail] = handler.updateAndMove(
             oldTargets[oldIndex],
-            newSources[newTail]!,
+            newItems[newTail]!,
             newTargets[newTail + 1],
           );
           oldTargets[oldIndex] = undefined;
         } else {
           newTargets[newTail] = handler.insert(
-            newSources[newTail]!,
+            newItems[newTail]!,
             newTargets[newTail + 1],
           );
         }
