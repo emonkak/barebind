@@ -1,15 +1,15 @@
-import { createComponent } from 'barebind';
+import { createComponent, html } from 'barebind';
 
 export interface LayoutProps {
   children: unknown;
   isPending: boolean;
 }
 
-export const Layout = createComponent<LayoutProps>(function Layout(
-  { children, isPending },
-  $,
-) {
-  return $.html`
+export const Layout = createComponent<LayoutProps>(function Layout({
+  children,
+  isPending,
+}) {
+  return html`
     <div class="layout">
       <section
         :style=${{ opacity: isPending ? 0.7 : 1 }}

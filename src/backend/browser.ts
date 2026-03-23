@@ -112,10 +112,10 @@ export class BrowserBackend implements Backend {
   resolveTemplate(
     strings: readonly string[],
     values: readonly unknown[],
-    placeholder: string,
     mode: TemplateMode,
+    placeholder: string,
   ): DirectiveType<readonly unknown[]> {
-    return TaggedTemplate.parse(strings, values, placeholder, mode, document);
+    return TaggedTemplate.parse(strings, values, mode, placeholder, document);
   }
 
   startViewTransition(callback: () => Promise<void> | void): Promise<void> {

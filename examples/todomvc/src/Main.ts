@@ -1,14 +1,11 @@
-import { createComponent, type RenderContext, Repeat } from 'barebind';
+import { createComponent, html, Repeat } from 'barebind';
 
 import { TodoStore } from './state.js';
 import { TodoItem } from './TodoItem.js';
 
 export interface MainProps {}
 
-export const Main = createComponent(function Main(
-  _props: MainProps,
-  $: RenderContext,
-): unknown {
+export const Main = createComponent<MainProps>(function Main(_props, $) {
   const { state$ } = $.use(TodoStore);
   const visibleTodos = $.use(state$.get('visibleTodos'));
 
@@ -18,11 +15,11 @@ export const Main = createComponent(function Main(
     });
   };
 
-  return $.html`
+  return html`
     <main class="main" data-testid="main">
       <${
         visibleTodos.length > 0
-          ? $.html`
+          ? html`
             <div class="toggle-all-container">
               <input
                 class="toggle-all"

@@ -1,6 +1,7 @@
 import {
   BrowserBackend,
   createComponent,
+  html,
   type RenderContext,
   Root,
   Runtime,
@@ -106,5 +107,5 @@ const Child = createComponent(function Child(
 ): unknown {
   const greet = $.getSharedContext('greet');
 
-  return $.html`<div>${greet}, <strong>${name}</strong>!</div>`;
+  return html`<div>${greet}, <strong>${name}</strong>!</div>`;
 });

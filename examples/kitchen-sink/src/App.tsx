@@ -1,13 +1,12 @@
 import {
   createComponent,
-  type RenderContext,
+  html,
   Repeat,
   shallowEqual,
+  svg,
+  text,
 } from 'barebind';
-import {
-  PartialTemplate,
-  PartialTemplateContext,
-} from 'barebind/addons/partial-template';
+import { PartialTemplate } from 'barebind/addons/partial-template';
 import { Atom, type Signal } from 'barebind/addons/signal';
 import type { VElement } from 'barebind/addons/vdom';
 
@@ -29,7 +28,7 @@ const ITEM_LABELS = [
   'thud',
 ];
 
-export const App = createComponent(function App(_props: {}, $: RenderContext) {
+export const App = createComponent(function App({}, $) {
   const count$ = $.useMemo(() => new Atom(0), []);
 
   const [state, setState] = $.useState({
@@ -106,7 +105,7 @@ export const App = createComponent(function App(_props: {}, $: RenderContext) {
     });
   }, []);
 
-  return $.html`
+  return html`
     <div ${{ class: 'root' }}>
       <${Dashboard({ count$ })}>
       <nav>
@@ -126,7 +125,7 @@ export const App = createComponent(function App(_props: {}, $: RenderContext) {
       <${VDOMSVG({})}>
       <div>
         <h1>Text</h1>
-        <${$.text`This is a <plain> text.`}>
+        <${text`This is a <plain> text.`}>
       </div>
       <div class="SVGCounter">
         <h1>SVG Counter</h1>
@@ -142,20 +141,19 @@ interface DashboardProps {
   count$: Signal<number>;
 }
 
-const Dashboard = createComponent(function Dashboard(
-  { count$ }: DashboardProps,
-  $: RenderContext,
-): unknown {
+const Dashboard = createComponent<DashboardProps>(function Dashboard(
+  { count$ },
+  $,
+) {
   const env = $.getSharedContext(ENV_CONTEXT);
   const countElementRef = $.useRef<Element | null>(null);
   const count = $.use(count$);
-  const { html } = $.use(PartialTemplateContext);
 
   const greetTag = PartialTemplate.literal(
     count$.value % 2 === 0 ? 'span' : 'em',
   );
 
-  return $.html`
+  return html`
     <div
       :class=${{
         _: 'Dashboard',
@@ -166,7 +164,7 @@ const Dashboard = createComponent(function Dashboard(
       data-count=${count}
     >
       <h1>
-        <${html`
+        <${PartialTemplate.html`
           <${greetTag} :style=${{ color: 'blue' }}>Hello, World!</${greetTag}>
         `}>
       </h1>
@@ -186,11 +184,8 @@ interface ListProps {
   onUp: (index: number, isFirst: boolean, isLast: boolean) => void;
 }
 
-const List = createComponent(
-  function List(
-    { items, onUp, onDown, onDelete }: ListProps,
-    $: RenderContext,
-  ): unknown {
+const List = createComponent<ListProps>(
+  function List({ items, onUp, onDown, onDelete }) {
     const itemsList = Repeat({
       elementSelector: (item, index) =>
         Item({
@@ -206,7 +201,7 @@ const List = createComponent(
       source: items,
     });
 
-    return $.html`
+    return html`
       <div class="List">
         <h1>List</h1>
         <ol>
@@ -228,11 +223,8 @@ interface ItemProps {
   onUp: (index: number, isFirst: boolean, isLast: boolean) => void;
 }
 
-const Item = createComponent(
-  function Item(
-    { isFirst, isLast, index, label, onUp, onDown, onDelete }: ItemProps,
-    $: RenderContext,
-  ) {
+const Item = createComponent<ItemProps>(
+  function Item({ isFirst, isLast, index, label, onUp, onDown, onDelete }) {
     const handleUp = () => {
       onUp(index, isFirst, isLast);
     };
@@ -243,7 +235,7 @@ const Item = createComponent(
       onDelete(index);
     };
 
-    return $.html`
+    return html`
       <li>
         <button type="button" disabled=${isFirst} @click=${handleUp}>↑</button>
         <button type="button" disabled=${isLast} @click=${handleDown}>↓</button>
@@ -255,17 +247,14 @@ const Item = createComponent(
   { arePropsEqual: shallowEqual },
 );
 
-const TemplateCounter = createComponent(function TemplateCounter(
-  _props: {},
-  $: RenderContext,
-): unknown {
+const TemplateCounter = createComponent(function TemplateCounter({}, $) {
   const [count, setCount] = $.useState(0);
 
   const handleIncrement = $.useCallback(() => {
     setCount((count) => count + 1);
   }, []);
 
-  return $.html`
+  return html`
     <div class="TemplateCounter">
       <h1>Tempalte Counter</h1>
       <button type="button" @click=${handleIncrement}>${count}</button>
@@ -273,10 +262,7 @@ const TemplateCounter = createComponent(function TemplateCounter(
   `;
 });
 
-const VDOMCounter = createComponent(function VDOMCounter(
-  _props: {},
-  $: RenderContext,
-): VElement {
+const VDOMCounter = createComponent(function VDOMCounter({}, $): VElement {
   const [count, setCount] = $.useState(0);
 
   const handleIncrement = $.useCallback(() => {
@@ -302,7 +288,7 @@ const VDOMCounter = createComponent(function VDOMCounter(
   );
 });
 
-const VDOMSVG = createComponent(function VDOMSVG(_props: {}): VElement {
+const VDOMSVG = createComponent<{}, VElement>(function VDOMSVG(_props: {}) {
   return (
     <div>
       <h1>Virtual DOM SVG</h1>
@@ -325,11 +311,14 @@ interface SVGCounterProps {
   text$: Signal<string>;
 }
 
-const SVGCounter = createComponent(function SVGCounter(
-  { cx, cy, r, fill, text$ }: SVGCounterProps,
-  $: RenderContext,
-): unknown {
-  return $.svg`
+const SVGCounter = createComponent<SVGCounterProps>(function SVGCounter({
+  cx,
+  cy,
+  r,
+  fill,
+  text$,
+}) {
+  return svg`
     <circle cx=${cx} cy=${cy} r=${r} fill=${fill} />
     <text x=${cx} y=${cy} fill="white" dominant-baseline="middle" text-anchor="middle">${text$}</text>
   `;

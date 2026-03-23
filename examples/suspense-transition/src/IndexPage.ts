@@ -1,14 +1,13 @@
-import { createComponent } from 'barebind';
+import { createComponent, html } from 'barebind';
 
 export interface IndexPageProps {
   navigate: (url: string) => void;
 }
 
-export const IndexPage = createComponent<IndexPageProps>(function IndexPage(
-  { navigate },
-  $,
-) {
-  return $.html`
+export const IndexPage = createComponent<IndexPageProps>(function IndexPage({
+  navigate,
+}) {
+  return html`
     <button @click=${() => navigate('/the-beatles')}>
       Open The Beatles artist page
     </button>

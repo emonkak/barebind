@@ -1,4 +1,4 @@
-import { createComponent, type RenderContext, shallowEqual } from 'barebind';
+import { createComponent, html, shallowEqual } from 'barebind';
 
 import { type Todo, TodoStore } from './state.js';
 import { TodoInput } from './TodoInput.js';
@@ -7,8 +7,8 @@ export interface TodoItemProps {
   todo: Todo;
 }
 
-export const TodoItem = createComponent(
-  function TodoItem({ todo }: TodoItemProps, $: RenderContext): unknown {
+export const TodoItem = createComponent<TodoItemProps>(
+  function TodoItem({ todo }, $) {
     const [isEditing, setIsEditing] = $.useState(false);
     const { state$ } = $.use(TodoStore);
 
@@ -43,7 +43,7 @@ export const TodoItem = createComponent(
       });
     };
 
-    return $.html`
+    return html`
       <li
         :class=${{ completed: todo.completed }}
         data-testid="todo-item">
@@ -56,7 +56,7 @@ export const TodoItem = createComponent(
                   onBlur: handleEndEditing,
                   defaultValue: todo.title,
                 })
-              : $.html`
+              : html`
                 <input
                   type="checkbox"
                   class="toggle"

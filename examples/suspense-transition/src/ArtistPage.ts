@@ -1,4 +1,4 @@
-import { createComponent } from 'barebind';
+import { createComponent, html } from 'barebind';
 import { Suspense } from 'barebind/addons/suspense';
 
 import { Albums } from './Albums.js';
@@ -10,11 +10,10 @@ export interface ArtistPageProps {
   artist: Artist;
 }
 
-export const ArtistPage = createComponent<ArtistPageProps>(function ArtistPage(
-  { artist },
-  $,
-) {
-  return $.html`
+export const ArtistPage = createComponent<ArtistPageProps>(function ArtistPage({
+  artist,
+}) {
+  return html`
     <h1>${artist.name}</h1>
     <${Biography({ artistId: artist.id })}>
     <${Suspense({
@@ -24,8 +23,8 @@ export const ArtistPage = createComponent<ArtistPageProps>(function ArtistPage(
   `;
 });
 
-const AlbumsGlimmer = createComponent(function AlbumsGlimmer(_props, $) {
-  return $.html`
+const AlbumsGlimmer = createComponent(function AlbumsGlimmer(_props) {
+  return html`
     <div class="glimmer-panel">
       <div class="glimmer-line" />
       <div class="glimmer-line" />

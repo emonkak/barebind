@@ -1,4 +1,4 @@
-import { createComponent, type RenderContext } from 'barebind';
+import { createComponent, html } from 'barebind';
 
 import { AppStore } from '../store.js';
 import { UserView } from './UserView.js';
@@ -7,10 +7,10 @@ export interface UserPageProps {
   id: string;
 }
 
-export const UserPage = createComponent(function UserPage(
-  { id }: UserPageProps,
-  $: RenderContext,
-): unknown {
+export const UserPage = createComponent<UserPageProps>(function UserPage(
+  { id },
+  $,
+) {
   const appStore = $.use(AppStore);
   const userState = $.use(appStore.userState$);
 
@@ -21,7 +21,7 @@ export const UserPage = createComponent(function UserPage(
   }, [id]);
 
   if (!userState.isLoading && userState.error !== null) {
-    return $.html`
+    return html`
       <div class="error-view">
         <h1>${userState.error.error}</h1>
       </div>

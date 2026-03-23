@@ -1,4 +1,4 @@
-import { createComponent, type RenderContext } from 'barebind';
+import { createComponent, html } from 'barebind';
 import { HashHistory, ScrollRestration } from 'barebind/addons/router';
 
 import { Nav } from './Nav.js';
@@ -10,10 +10,7 @@ interface AppProps {
   store: AppStore;
 }
 
-export const App = createComponent(function App(
-  { store }: AppProps,
-  $: RenderContext,
-): unknown {
+export const App = createComponent<AppProps>(function App({ store }, $) {
   const { location } = $.use(HashHistory({ viewTransition: true }));
   const page = router.match(location.url) ?? NotFound({ url: location.url });
 
@@ -21,7 +18,7 @@ export const App = createComponent(function App(
 
   $.use(ScrollRestration());
 
-  return $.html`
+  return html`
     <header class="header">
       <${Nav({})}>
     </header>

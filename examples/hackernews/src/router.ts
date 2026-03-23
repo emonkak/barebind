@@ -1,11 +1,10 @@
-import type { Bindable } from 'barebind';
+import type { Directive } from 'barebind';
 import { decoded, integer, Router, route } from 'barebind/addons/router';
-
 import { ItemPage } from './item/ItemPage.js';
 import { StoriesPage } from './story/StoriesPage.js';
 import { UserPage } from './user/UserPage.js';
 
-export const router = new Router<Bindable<any>>([
+export const router = new Router<Directive.Node>([
   route([''], () => StoriesPage({ type: 'news' })),
   route(['top'], null, [
     route([integer], ([page]) => StoriesPage({ type: 'news', page })),

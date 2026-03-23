@@ -3,7 +3,7 @@ import { ChildNodeTemplate } from './template/child-node.js';
 import { ElementTemplate } from './template/element.js';
 import { FragmentTemplate } from './template/fragment.js';
 
-export function createElement<TProps, TChildren>(
+export function Element<TProps, TChildren>(
   name: string,
   props: TProps,
   children: TChildren,
@@ -11,7 +11,7 @@ export function createElement<TProps, TChildren>(
   return new Directive(new ElementTemplate(name), [props, children]);
 }
 
-export function createFragment(
+export function Fragment(
   children: readonly unknown[],
 ): Directive.Element<readonly unknown[]> {
   return new Directive(
@@ -25,22 +25,29 @@ export function createFragment(
 }
 
 export function html(
-  strings: TemplateStringsArray,
-  ...values: unknown[]
+  strings: readonly string[],
+  ...exprs: unknown[]
 ): Directive.Template<readonly unknown[]> {
-  return new Directive(Template, { strings, values, mode: 'html' });
+  return new Directive(Template, { strings, exprs, mode: 'html' });
 }
 
 export function math(
-  strings: TemplateStringsArray,
-  ...values: unknown[]
+  strings: readonly string[],
+  ...exprs: unknown[]
 ): Directive.Template<readonly unknown[]> {
-  return new Directive(Template, { strings, values, mode: 'math' });
+  return new Directive(Template, { strings, exprs, mode: 'math' });
 }
 
 export function svg(
-  strings: TemplateStringsArray,
-  ...values: unknown[]
+  strings: readonly string[],
+  ...exprs: unknown[]
 ): Directive.Template<readonly unknown[]> {
-  return new Directive(Template, { strings, values, mode: 'svg' });
+  return new Directive(Template, { strings, exprs, mode: 'svg' });
+}
+
+export function text(
+  strings: readonly string[],
+  ...exprs: unknown[]
+): Directive.Template<readonly unknown[]> {
+  return new Directive(Template, { strings, exprs, mode: 'textarea' });
 }

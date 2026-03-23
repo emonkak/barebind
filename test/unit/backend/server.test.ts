@@ -203,8 +203,8 @@ describe('ServerBackend', () => {
       const template = backend.resolveTemplate(
         strings,
         values,
-        TEMPLATE_PLACEHOLDER,
         'html',
+        TEMPLATE_PLACEHOLDER,
       );
 
       expect(template).toBeInstanceOf(TaggedTemplate);

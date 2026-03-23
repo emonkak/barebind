@@ -1,13 +1,10 @@
-import { createComponent, type RenderContext } from 'barebind';
+import { createComponent, html } from 'barebind';
 
 import { type TodoFilter, TodoStore } from './state.js';
 
 export interface FooterProps {}
 
-export const Footer = createComponent(function Footer(
-  _props: FooterProps,
-  $: RenderContext,
-): unknown {
+export const Footer = createComponent<FooterProps>(function Footer(_props, $) {
   const { state$ } = $.use(TodoStore);
   const { todos, activeTodos, filter } = $.use(state$);
 
@@ -29,7 +26,7 @@ export const Footer = createComponent(function Footer(
     return null;
   }
 
-  return $.html`
+  return html`
     <footer class="footer" data-testid="footer">
       <span class="todo-count">${activeTodos.length} ${activeTodos.length === 1 ? 'item' : 'items'} left!</span>
       <ul class="filters" data-testid="footer-navigation">

@@ -1,7 +1,7 @@
 import {
   BrowserBackend,
   createComponent,
-  type RenderContext,
+  html,
   Repeat,
   Root,
   Runtime,
@@ -20,10 +20,7 @@ interface AppProps {
   items: { height: number; label: string }[];
 }
 
-const App = createComponent(function App(
-  { items }: AppProps,
-  $: RenderContext,
-): unknown {
+const App = createComponent<AppProps>(function App({ items }, $) {
   const [selectedIndex, setSelectedIndex] = $.useState(0);
   const virtualScrollerHandle = $.useRef<VirtualScrollerHandle | null>(null);
 
@@ -40,7 +37,7 @@ const App = createComponent(function App(
       VirtualScroller({
         ref: virtualScrollerHandle,
         assumedItemHeight: 200,
-        renderItem: ({ label, height }, _index, $) => $.html`
+        renderItem: ({ label, height }, _index) => html`
           <div :style=${{ lineHeight: height + 'px' }}>
             ${label} (${height}px)
           </div>
@@ -50,12 +47,12 @@ const App = createComponent(function App(
     [items],
   );
 
-  return $.html`
+  return html`
     <header class="Header">
       <nav class="Header-nav">
         <select @change=${handleSelectedIndexChange}>
           <${Repeat({
-            elementSelector: (item, index) => $.html`
+            elementSelector: (item, index) => html`
               <option
                 value=${index}
                 selected=${index === selectedIndex}

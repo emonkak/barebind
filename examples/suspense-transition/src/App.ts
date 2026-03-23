@@ -1,4 +1,4 @@
-import { createComponent } from 'barebind';
+import { createComponent, html } from 'barebind';
 import { Transition } from 'barebind/addons/hooks';
 import { Suspense } from 'barebind/addons/suspense';
 import { ArtistPage } from './ArtistPage.js';
@@ -43,8 +43,8 @@ const Router = createComponent(function Router(_props, $) {
   });
 });
 
-const BigSpinner = createComponent(function BigSpinner(_props, $) {
-  return $.html`
+const BigSpinner = createComponent(function BigSpinner(_props) {
+  return html`
     <h2>🌀 Loading...</h2>
   `;
 });

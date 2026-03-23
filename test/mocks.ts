@@ -89,10 +89,10 @@ export class MockBackend implements Backend {
   resolveTemplate(
     strings: readonly string[],
     values: readonly unknown[],
-    placeholder: string,
     mode: TemplateMode,
+    placeholder: string,
   ): DirectiveType<readonly unknown[]> {
-    return new MockTemplate(strings, values, placeholder, mode);
+    return new MockTemplate(strings, values, mode, placeholder);
   }
 
   startViewTransition(callback: () => void | Promise<void>): Promise<void> {
@@ -260,27 +260,27 @@ export class MockObserver implements SessionObserver {
 export class MockTemplate extends Template<readonly unknown[]> {
   readonly strings: readonly string[];
 
-  readonly values: readonly unknown[];
-
-  readonly placeholder: string;
+  readonly exprs: readonly unknown[];
 
   readonly mode: TemplateMode;
 
+  readonly placeholder: string;
+
   constructor(
     strings: readonly string[] = [],
-    values: readonly unknown[] = [],
-    placeholder = '',
+    exprs: readonly unknown[] = [],
     mode: TemplateMode = 'html',
+    placeholder = '',
   ) {
     super();
     this.strings = strings;
-    this.values = values;
-    this.placeholder = placeholder;
+    this.exprs = exprs;
     this.mode = mode;
+    this.placeholder = placeholder;
   }
 
   get arity(): number {
-    return this.values.length;
+    return this.exprs.length;
   }
 
   render(

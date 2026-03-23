@@ -1,10 +1,4 @@
-import {
-  BrowserBackend,
-  createComponent,
-  type RenderContext,
-  Root,
-  Runtime,
-} from 'barebind';
+import { BrowserBackend, createComponent, html, Root, Runtime } from 'barebind';
 import { expect, test, vi } from 'vitest';
 
 import { stripComments } from '../test-helpers.js';
@@ -31,35 +25,30 @@ test('does not commit any effects when an error occurs during render', async () 
   }
 });
 
-const App = createComponent(function App(
-  { effect }: { effect: () => void },
-  $: RenderContext,
-): unknown {
-  return $.html`
+const App = createComponent<{
+  effect: () => void;
+}>(function App({ effect }) {
+  return html`
     <main>
       <${AbortOnError({ effect, children: Parent({}) })}>
     </main>
   `;
 });
 
-const Parent = createComponent(function Parent(
-  _props: {},
-  $: RenderContext,
-): unknown {
-  return $.html`<p><${Child({})}></p>`;
+const Parent = createComponent(function Parent() {
+  return html`<p><${Child({})}></p>`;
 });
 
-const Child = createComponent(function Child(): unknown {
+const Child = createComponent(function Child() {
   throw new Error('Fail');
 });
 
-const AbortOnError = createComponent(function ErrorBoundary(
-  { effect, children }: { effect: () => void; children: unknown },
-  $: RenderContext,
-): unknown {
-  $.catchError(() => {});
+const AbortOnError = createComponent<{ effect: () => void; children: unknown }>(
+  function ErrorBoundary({ effect, children }, $) {
+    $.catchError(() => {});
 
-  $.useLayoutEffect(effect);
+    $.useLayoutEffect(effect);
 
-  return children;
-});
+    return children;
+  },
+);

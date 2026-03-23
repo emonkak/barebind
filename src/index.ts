@@ -36,9 +36,10 @@ export { Root } from './root.js';
 export { Runtime } from './runtime.js';
 export { SharedContext } from './shared-context.js';
 export {
-  createElement,
-  createFragment,
+  Element,
+  Fragment,
   html,
   math,
   svg,
+  text,
 } from './template.js';

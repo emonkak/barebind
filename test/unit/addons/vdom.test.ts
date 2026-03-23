@@ -2,9 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   createElement,
-  createFragment,
   ElementBinding,
   ElementType,
+  Fragment,
   VElement,
   VFragment,
   VStaticFragment,
@@ -45,10 +45,10 @@ describe('createElement()', () => {
   });
 });
 
-describe('createFragment()', () => {
+describe('Fragment()', () => {
   it('constructs the new VStaticFragment', () => {
     const children = [createElement('div'), 'foo'];
-    const element = createFragment(children);
+    const element = Fragment(children);
 
     expect(element.children).toBe(children);
   });

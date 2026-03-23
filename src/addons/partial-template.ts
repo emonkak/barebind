@@ -1,5 +1,5 @@
 import { sequentialEqual } from '../compare.js';
-import type { HookFunction, RenderContext } from '../render-context.js';
+import { html, math, svg } from '../template.js';
 
 const stringInterpolationCache = new WeakMap<
   readonly string[],
@@ -15,29 +15,43 @@ interface StringInterpolation {
 export class PartialTemplate {
   readonly strings: readonly string[];
 
-  readonly values: readonly unknown[];
+  readonly exprs: readonly unknown[];
+
+  static html(strings: readonly string[], ...exprs: unknown[]) {
+    const template = PartialTemplate.parse(strings, ...exprs);
+    return html(template.strings, ...template.exprs);
+  }
+
+  static literal(s: string): PartialTemplate {
+    return new PartialTemplate([s], []);
+  }
+
+  static math(strings: readonly string[], ...exprs: unknown[]) {
+    const template = PartialTemplate.parse(strings, ...exprs);
+    return math(template.strings, ...template.exprs);
+  }
 
   static parse(
     strings: readonly string[],
-    ...values: readonly unknown[]
+    ...exprs: readonly unknown[]
   ): PartialTemplate {
     const literalStrings: string[] = [];
     const literalPositions: number[] = [];
-    const flattenedValues: unknown[] = [];
+    const flattenedExprs: unknown[] = [];
 
-    for (let i = 0, l = values.length; i < l; i++) {
-      const value = values[i]!;
-      if (value instanceof PartialTemplate) {
-        literalStrings.push(...value.strings);
+    for (let i = 0, l = exprs.length; i < l; i++) {
+      const expr = exprs[i]!;
+      if (expr instanceof PartialTemplate) {
+        literalStrings.push(...expr.strings);
         literalPositions.push(i);
-        flattenedValues.push(...value.values);
+        flattenedExprs.push(...expr.exprs);
       } else {
-        flattenedValues.push(value);
+        flattenedExprs.push(expr);
       }
     }
 
     if (literalStrings.length === 0) {
-      return new PartialTemplate(strings, values);
+      return new PartialTemplate(strings, exprs);
     }
 
     let stringInterpolations = stringInterpolationCache.get(strings);
@@ -53,7 +67,7 @@ export class PartialTemplate {
         ) {
           return new PartialTemplate(
             stringInterpolation.interpolatedStrings,
-            flattenedValues,
+            flattenedExprs,
           );
         }
       }
@@ -62,7 +76,7 @@ export class PartialTemplate {
       stringInterpolationCache.set(strings, stringInterpolations);
     }
 
-    const interpolatedStrings = interpolateStrings(strings, values);
+    const interpolatedStrings = interpolateStrings(strings, exprs);
 
     stringInterpolations.push({
       interpolatedStrings,
@@ -70,16 +84,17 @@ export class PartialTemplate {
       literalPositions,
     });
 
-    return new PartialTemplate(interpolatedStrings, flattenedValues);
+    return new PartialTemplate(interpolatedStrings, flattenedExprs);
   }
 
-  static literal(s: string): PartialTemplate {
-    return new PartialTemplate([s], []);
+  static svg(strings: readonly string[], ...exprs: unknown[]) {
+    const template = PartialTemplate.parse(strings, ...exprs);
+    return svg(template.strings, ...template.exprs);
   }
 
-  private constructor(strings: readonly string[], values: readonly unknown[]) {
+  private constructor(strings: readonly string[], exprs: readonly unknown[]) {
     this.strings = strings;
-    this.values = values;
+    this.exprs = exprs;
 
     DEBUG: {
       Object.freeze(this);
@@ -87,47 +102,23 @@ export class PartialTemplate {
   }
 
   toString(): string {
-    return String.raw({ raw: this.strings }, ...this.values);
+    return String.raw({ raw: this.strings }, ...this.exprs);
   }
 }
 
-export type PartialTemplateContext = Pick<
-  RenderContext,
-  'html' | 'math' | 'svg'
->;
-
-export const PartialTemplateContext: HookFunction<PartialTemplateContext> = (
-  context: RenderContext,
-): PartialTemplateContext => {
-  return {
-    html(strings, ...values) {
-      const template = PartialTemplate.parse(strings, ...values);
-      return context.html(template.strings, ...template.values);
-    },
-    math(strings, ...values) {
-      const template = PartialTemplate.parse(strings, ...values);
-      return context.math(template.strings, ...template.values);
-    },
-    svg(strings, ...values) {
-      const template = PartialTemplate.parse(strings, ...values);
-      return context.svg(template.strings, ...template.values);
-    },
-  };
-};
-
 function interpolateStrings(
   strings: readonly string[],
-  values: readonly unknown[],
+  exprs: readonly unknown[],
 ): readonly string[] {
   const interpolatedStrings = [strings[0]!];
   let interpolatedIndex = 0;
 
-  for (let i = 0, l = values.length; i < l; i++) {
-    const value = values[i];
-    if (value instanceof PartialTemplate) {
-      interpolatedStrings[interpolatedIndex] += value.strings[0]!;
-      for (let j = 0, m = value.values.length; j < m; j++) {
-        interpolatedStrings.push(value.strings[j + 1]!);
+  for (let i = 0, l = exprs.length; i < l; i++) {
+    const expr = exprs[i];
+    if (expr instanceof PartialTemplate) {
+      interpolatedStrings[interpolatedIndex] += expr.strings[0]!;
+      for (let j = 0, m = expr.exprs.length; j < m; j++) {
+        interpolatedStrings.push(expr.strings[j + 1]!);
         interpolatedIndex++;
       }
       interpolatedStrings[interpolatedIndex] += strings[i + 1]!;

@@ -1,9 +1,9 @@
 import {
   BrowserBackend,
   createComponent,
-  createFragment,
+  Fragment,
   type HookFunction,
-  type RenderContext,
+  html,
   Root,
   Runtime,
 } from 'barebind';
@@ -176,15 +176,13 @@ test('invokes effects from child to parent', async () => {
   }
 });
 
-const Foo = createComponent(function Foo({
-  logs,
-}: {
+const Foo = createComponent<{
   logs: string[];
-}): unknown {
+}>(function Foo({ logs }) {
   return Node({
     name: 'Foo',
     logs,
-    children: createFragment([
+    children: Fragment([
       Node({
         name: 'Foo.0',
         logs,
@@ -199,11 +197,9 @@ const Foo = createComponent(function Foo({
   });
 });
 
-const Bar = createComponent(function Bar({
-  logs,
-}: {
+const Bar = createComponent<{
   logs: string[];
-}): unknown {
+}>(function Bar({ logs }) {
   return Node({
     name: 'Bar',
     logs,
@@ -215,18 +211,11 @@ const Bar = createComponent(function Bar({
   });
 });
 
-const Node = createComponent(function Node(
-  {
-    name,
-    logs,
-    children,
-  }: {
-    name: string;
-    logs: string[];
-    children?: unknown;
-  },
-  $: RenderContext,
-): unknown {
+const Node = createComponent<{
+  name: string;
+  logs: string[];
+  children?: unknown;
+}>(function Node({ name, logs, children }, $) {
   logs.push(`render ${name}`);
 
   $.use(TestEffects(name, logs));
@@ -238,7 +227,7 @@ const Node = createComponent(function Node(
     };
   };
 
-  return $.html`
+  return html`
     <div :ref=${ref} class=${name}>
       <${children}>
     </div>

@@ -1,6 +1,7 @@
 import {
   type Component,
   createComponent,
+  html,
   type Ref,
   type RenderContext,
   Repeat,
@@ -19,7 +20,7 @@ export interface VirtualScrollerProps<T> {
   items: T[];
   offscreenRatio?: number;
   ref?: Ref<VirtualScrollerHandle>;
-  renderItem: (item: T, index: number, context: RenderContext) => unknown;
+  renderItem: (item: T, index: number) => unknown;
   scrollMargin?: string;
 }
 
@@ -248,7 +249,7 @@ export const VirtualScroller: VirtualScroller = createComponent(
 
     const aboveSpacer =
       aboveSpace > 0
-        ? $.html`
+        ? html`
             <div
               class="VirtualScroller-spacer"
               :ref=${spacerRef}
@@ -258,7 +259,7 @@ export const VirtualScroller: VirtualScroller = createComponent(
         : null;
     const belowSpacer =
       belowSpace > 0
-        ? $.html`
+        ? html`
             <div
               class="VirtualScroller-spacer"
               :ref=${spacerRef}
@@ -267,21 +268,21 @@ export const VirtualScroller: VirtualScroller = createComponent(
           `.withKey(belowSpace)
         : null;
 
-    return $.html`
+    return html`
       <div class="VirtualScroller">
         <${aboveSpacer}>
         <ul class="VirtualScroller-list" :style=${{ scrollMargin }}>
           <${Repeat({
             elementSelector: (item, offset) => {
               const index = visibleRange.start + offset;
-              return $.html`
+              return html`
                 <li
                   aria-posinset=${index + 1}
                   aria-setsize=${items.length}
                   class="VirtualScroller-item"
                   :ref=${itemRef}
                 >
-                  <${renderItem(item, index, $)}>
+                  <${renderItem(item, index)}>
                 </li>
               `;
             },

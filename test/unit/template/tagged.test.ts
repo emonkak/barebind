@@ -354,16 +354,16 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should throw an error if the passed marker identifier has an invalid format', () => {
+    it('throws errors when a invalid placeholder is passed', () => {
       expect(() => {
-        TaggedTemplate.parse([], [], 'INVALID_MARKER', 'html', document);
+        TaggedTemplate.parse([], [], 'html', 'INVALID', document);
       }).toThrow('Placeholders must match pattern /^[0-9a-z_-]+$/');
       expect(() => {
         TaggedTemplate.parse(
           [],
           [],
-          MARKER_IDENTIFIER.toUpperCase(),
           'html',
+          MARKER_IDENTIFIER.toUpperCase(),
           document,
         );
       }).toThrow('Placeholders must match pattern /^[0-9a-z_-]+$/');
@@ -1028,8 +1028,8 @@ function html<TValues extends readonly unknown[]>(
     template: TaggedTemplate.parse(
       strings,
       values,
-      MARKER_IDENTIFIER,
       'html',
+      MARKER_IDENTIFIER,
       document,
     ),
     values,
@@ -1044,8 +1044,8 @@ function math<const TValues extends readonly unknown[]>(
     template: TaggedTemplate.parse(
       strings,
       values,
-      MARKER_IDENTIFIER,
       'math',
+      MARKER_IDENTIFIER,
       document,
     ),
     values,
@@ -1060,8 +1060,8 @@ function svg<const TValues extends readonly unknown[]>(
     template: TaggedTemplate.parse(
       strings,
       values,
-      MARKER_IDENTIFIER,
       'svg',
+      MARKER_IDENTIFIER,
       document,
     ),
     values,
@@ -1076,8 +1076,8 @@ function text<const TValues extends readonly unknown[]>(
     template: TaggedTemplate.parse(
       strings,
       values,
-      MARKER_IDENTIFIER,
       'textarea',
+      MARKER_IDENTIFIER,
       document,
     ),
     values,

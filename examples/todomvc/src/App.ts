@@ -1,4 +1,4 @@
-import { createComponent, type RenderContext } from 'barebind';
+import { createComponent, html } from 'barebind';
 
 import { Footer } from './Footer.js';
 import { Header } from './Header.js';
@@ -9,13 +9,10 @@ interface AppProps {
   store: TodoStore;
 }
 
-export const App = createComponent(function App(
-  { store }: AppProps,
-  $: RenderContext,
-): unknown {
+export const App = createComponent<AppProps>(function App({ store }, $) {
   $.use(store);
 
-  return $.html`
+  return html`
     <section class="todoapp">
       <${Header({})}>
       <${Main({})}>

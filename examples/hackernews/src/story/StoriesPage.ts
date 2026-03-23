@@ -1,4 +1,4 @@
-import { createComponent, type RenderContext, Repeat } from 'barebind';
+import { createComponent, html, Repeat } from 'barebind';
 
 import { AppStore, type StoryType } from '../store.js';
 import { StoryView } from './StoryView.js';
@@ -10,25 +10,23 @@ export interface StoriesPageProps {
 
 const STORIES_PER_PAGE = 30;
 
-export const StoriesPage = createComponent(function StoriesPage(
-  { type, page = 1 }: StoriesPageProps,
-  $: RenderContext,
-): unknown {
-  const appStore = $.use(AppStore);
-  const storyState = $.use(appStore.storyState$);
+export const StoriesPage = createComponent<StoriesPageProps>(
+  function StoriesPage({ type, page = 1 }, $) {
+    const appStore = $.use(AppStore);
+    const storyState = $.use(appStore.storyState$);
 
-  $.useEffect(() => {
-    if (storyState.type !== type || storyState.page !== page) {
-      appStore.fetchStories(type, page);
-    }
-  }, [type, page]);
+    $.useEffect(() => {
+      if (storyState.type !== type || storyState.page !== page) {
+        appStore.fetchStories(type, page);
+      }
+    }, [type, page]);
 
-  return $.html`
-    <div class="story-view">
-      <div class="story-list-nav">
+    return html`
+      <div class="story-view">
+        <div class="story-list-nav">
         <${
           !storyState.isLoading && page > 1
-            ? $.html`
+            ? html`
                 <a
                   class="page-link"
                   href=${`#/${storyTypeToPathName(type)}/${page - 1}`}
@@ -37,7 +35,7 @@ export const StoriesPage = createComponent(function StoriesPage(
                   &lt; prev
                 </a>
               `
-            : $.html`
+            : html`
                 <span class="page-link disabled" aria-hidden="true">
                   &lt; prev
                 </span>
@@ -46,7 +44,7 @@ export const StoriesPage = createComponent(function StoriesPage(
         <span>page ${page}</span>
         <${
           !storyState.isLoading && storyState.stories.length >= STORIES_PER_PAGE
-            ? $.html`
+            ? html`
                 <a
                   class="page-link"
                   href=${`#/${storyTypeToPathName(type)}/${page + 1}`}
@@ -55,7 +53,7 @@ export const StoriesPage = createComponent(function StoriesPage(
                   more &gt;
                 </a>
               `
-            : $.html`
+            : html`
                 <span class="page-link disabled" aria-hidden="true">
                   more &gt;
                 </span>
@@ -73,7 +71,8 @@ export const StoriesPage = createComponent(function StoriesPage(
       </div>
     </div>
   `;
-});
+  },
+);
 
 function storyTypeToPathName(type: StoryType): string {
   switch (type) {

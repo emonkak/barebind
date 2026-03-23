@@ -1,10 +1,10 @@
-import { createComponent, type RenderContext, shallowEqual } from 'barebind';
+import { createComponent, html, shallowEqual } from 'barebind';
 
 export interface NavProps {}
 
-export const Nav = createComponent(
-  function Nav(_props: NavProps, $: RenderContext): unknown {
-    return $.html`
+export const Nav = createComponent<NavProps>(
+  function Nav() {
+    return html`
     <nav class="inner">
       <a href="#/">
         <strong>HN</strong>

@@ -111,8 +111,8 @@ export class TaggedTemplate<
   static parse<TValues extends readonly unknown[]>(
     strings: readonly string[],
     values: TValues,
-    placeholder: string,
     mode: TemplateMode,
+    placeholder: string,
     document: Document,
   ): TaggedTemplate<TValues> {
     const template = document.createElement('template');

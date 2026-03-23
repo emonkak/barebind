@@ -73,11 +73,7 @@ describe('FragmentTemplate', () => {
             childNodes: [part.node],
             slots: [
               new Slot(
-                new MockBinding(
-                  new MockType(),
-                  template.values.join(','),
-                  part,
-                ),
+                new MockBinding(new MockType(), template.exprs.join(','), part),
               ),
             ],
           };
@@ -168,11 +164,7 @@ describe('FragmentTemplate', () => {
             childNodes: [part.node],
             slots: [
               new Slot(
-                new MockBinding(
-                  new MockType(),
-                  template.values.join(','),
-                  part,
-                ),
+                new MockBinding(new MockType(), template.exprs.join(','), part),
               ),
             ],
           };

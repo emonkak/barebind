@@ -1,4 +1,4 @@
-import { createComponent, type RenderContext } from 'barebind';
+import { createComponent, html } from 'barebind';
 
 import { AppStore } from '../store.js';
 import { ItemView } from './ItemView.js';
@@ -7,9 +7,9 @@ export interface ItemPageProps {
   id: number;
 }
 
-export const ItemPage = createComponent(function ItemPage(
-  { id }: ItemPageProps,
-  $: RenderContext,
+export const ItemPage = createComponent<ItemPageProps>(function ItemPage(
+  { id },
+  $,
 ): unknown {
   const appStore = $.use(AppStore);
   const itemState = $.use(appStore.itemState$);
@@ -21,7 +21,7 @@ export const ItemPage = createComponent(function ItemPage(
   }, [id]);
 
   if (!itemState.isLoading && itemState.error !== null) {
-    return $.html`
+    return html`
       <div class="error-view">
         <h1>${itemState.error.error}</h1>
       </div>

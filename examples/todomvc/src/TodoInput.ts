@@ -1,4 +1,4 @@
-import { createComponent, type RenderContext } from 'barebind';
+import { createComponent, html } from 'barebind';
 
 export interface TodoInputProps {
   defaultValue?: string;
@@ -8,16 +8,10 @@ export interface TodoInputProps {
   placeholder?: string;
 }
 
-export const TodoInput = createComponent(function TodoInput(
-  {
-    defaultValue = '',
-    label,
-    onBlur = null,
-    onSubmit = null,
-    placeholder,
-  }: TodoInputProps,
-  $: RenderContext,
-): unknown {
+export const TodoInput = createComponent<TodoInputProps>(function TodoInput(
+  { defaultValue = '', label, onBlur = null, onSubmit = null, placeholder },
+  $,
+) {
   const inputRef = $.useRef<HTMLInputElement | null>(null);
 
   $.useEffect(() => {
@@ -40,7 +34,7 @@ export const TodoInput = createComponent(function TodoInput(
     }
   };
 
-  return $.html`
+  return html`
     <div class="input-container">
       <input
         :ref=${inputRef}

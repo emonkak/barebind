@@ -96,7 +96,7 @@ export function createElement<TProps extends {}>(
   return new VElement(type, { children, ...restProps }, key, true);
 }
 
-export function createFragment(children: VNode[]): VStaticFragment {
+export function Fragment(children: VNode[]): VStaticFragment {
   return new VStaticFragment(children);
 }
 

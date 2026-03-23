@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { shallowEqual } from '@/compare.js';
 import { EffectQueue, Scope, type UpdateHandle } from '@/core.js';
 import { $hook, type RefObject, RenderContext } from '@/render-context.js';
-import { MockTemplate } from '../mocks.js';
 import { waitForMicrotasks, waitForTimeout } from '../test-helpers.js';
 import { TestRenderer } from '../test-renderer.js';
 
@@ -172,82 +171,6 @@ describe('RenderSession', () => {
       expect(await handle?.finished).toStrictEqual({
         status: 'skipped',
       });
-    });
-  });
-
-  describe('html()', () => {
-    it('returns a bindable with the HTML template', () => {
-      const renderer = new TestRenderer(
-        (_props, session) => session.html`<div>Hello, ${'World'}!</div>`,
-      );
-      const directive = renderer.render({});
-
-      expect(directive.type).toBeInstanceOf(MockTemplate);
-      expect(directive.type).toStrictEqual(
-        expect.objectContaining({
-          strings: ['<div>Hello, ', '!</div>'],
-          values: ['World'],
-          mode: 'html',
-        }),
-      );
-      expect(directive.value).toStrictEqual(['World']);
-    });
-  });
-
-  describe('math()', () => {
-    it('returns a bindable with the MathML template', () => {
-      const renderer = new TestRenderer(
-        (_props, session) => session.math`<mi>${'x'}</mi>`,
-      );
-      const directive = renderer.render({});
-
-      expect(directive.type).toBeInstanceOf(MockTemplate);
-      expect(directive.type).toStrictEqual(
-        expect.objectContaining({
-          strings: ['<mi>', '</mi>'],
-          values: ['x'],
-          mode: 'math',
-        }),
-      );
-      expect(directive.value).toStrictEqual(['x']);
-    });
-  });
-
-  describe('svg()', () => {
-    it('returns a bindable with the SVG template', () => {
-      const renderer = new TestRenderer(
-        (_props, session) => session.svg`<text>Hello, ${'World'}!</text>`,
-      );
-      const directive = renderer.render({});
-
-      expect(directive.type).toBeInstanceOf(MockTemplate);
-      expect(directive.type).toStrictEqual(
-        expect.objectContaining({
-          strings: ['<text>Hello, ', '!</text>'],
-          values: ['World'],
-          mode: 'svg',
-        }),
-      );
-      expect(directive.value).toStrictEqual(['World']);
-    });
-  });
-
-  describe('text()', () => {
-    it('returns a bindable with the text template', () => {
-      const renderer = new TestRenderer(
-        (_props, session) => session.text`<div>Hello, ${'World'}!</div>`,
-      );
-      const directive = renderer.render({});
-
-      expect(directive.type).toBeInstanceOf(MockTemplate);
-      expect(directive.type).toStrictEqual(
-        expect.objectContaining({
-          strings: ['<div>Hello, ', '!</div>'],
-          values: ['World'],
-          mode: 'textarea',
-        }),
-      );
-      expect(directive.value).toStrictEqual(['World']);
     });
   });
 

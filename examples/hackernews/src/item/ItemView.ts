@@ -1,4 +1,4 @@
-import { createComponent, type RenderContext, Repeat } from 'barebind';
+import { createComponent, html, Repeat } from 'barebind';
 
 import type { Item } from '../store.js';
 import { CommentView } from './CommentView.js';
@@ -7,17 +7,16 @@ export interface ItemViewProps {
   item: Item;
 }
 
-export const ItemView = createComponent(function ItemView(
-  { item }: ItemViewProps,
-  $: RenderContext,
-): unknown {
-  return $.html`
+export const ItemView = createComponent<ItemViewProps>(function ItemView({
+  item,
+}) {
+  return html`
     <div class="item-view">
       <div class="item-view-header">
         <a href=${item.url} target="_blank">
           <h1>${item.title}</h1>
         </a>
-        <${item.domain ? $.html`<span class="host">(${item.domain})</span>` : null}>
+        <${item.domain ? html`<span class="host">(${item.domain})</span>` : null}>
         <div class="meta">
           ${item.points} points | by <a href=${`#/users/${item.user}`}>${item.user}</a> ${item.time_ago}
         </div>

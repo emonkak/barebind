@@ -1,6 +1,7 @@
 import type { RenderContext } from 'barebind';
 import {
   createComponent,
+  html,
   Repeat,
   Root,
   Runtime,
@@ -29,11 +30,11 @@ const App = createComponent<AppProps>(function App(
   });
 
   if (error !== null) {
-    return $.html`<p>${error}</p>`;
+    return html`<p>${error}</p>`;
   }
 
   return Suspense({
-    children: $.html`
+    children: html`
       <ul>
         <${Repeat({
           elementSelector: (itemId) => Item({ id: itemId }),
@@ -42,7 +43,7 @@ const App = createComponent<AppProps>(function App(
         })}>
       </ul>
     `,
-    fallback: $.html`<p>Loading...</p>`,
+    fallback: html`<p>Loading...</p>`,
   });
 });
 
@@ -52,7 +53,7 @@ const Item = createComponent<Item>(function Item(
 ): unknown {
   const item = $.use(ItemStorage).loadItem(id).unwrap();
 
-  return $.html`<li>${item.id}</li>`;
+  return html`<li>${item.id}</li>`;
 });
 
 class ItemStorage extends SharedContext {

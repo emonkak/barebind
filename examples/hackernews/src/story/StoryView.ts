@@ -1,4 +1,4 @@
-import { createComponent, type RenderContext } from 'barebind';
+import { createComponent, html } from 'barebind';
 
 import type { Story } from '../store.js';
 
@@ -6,18 +6,17 @@ export interface StoryViewProps {
   story: Story;
 }
 
-export const StoryView = createComponent(function StoryView(
-  { story }: StoryViewProps,
-  $: RenderContext,
-): unknown {
-  return $.html`
+export const StoryView = createComponent<StoryViewProps>(function StoryView({
+  story,
+}) {
+  return html`
     <li class="story-item">
       <div class="score">${story.points}</div>
       <div class="title">
         <${
           story.url.startsWith('item?id=')
-            ? $.html`<a href=${`#/items/${story.id}`}>${story.title}</a>`
-            : $.html`
+            ? html`<a href=${`#/items/${story.id}`}>${story.title}</a>`
+            : html`
               <a href=${story.url} target="_blank" rel="noreferrer">
                 ${story.title}
               </a>
@@ -28,8 +27,8 @@ export const StoryView = createComponent(function StoryView(
       <div class="meta">
         <${
           story.type === 'job'
-            ? $.html`<a href=${`#/items/${story.id}`}>${story.time_ago}</a>`
-            : $.html`
+            ? html`<a href=${`#/items/${story.id}`}>${story.time_ago}</a>`
+            : html`
               by <a href=${`#/users/${story.user}`}>${story.user}</a>${' '}
               ${story.time_ago}${' | '}
               <a href=${`#/items/${story.id}`}>
@@ -39,7 +38,7 @@ export const StoryView = createComponent(function StoryView(
         }>
         <${
           story.type !== 'link'
-            ? $.html` | <span class="label">${story.type}</span>`
+            ? html` | <span class="label">${story.type}</span>`
             : null
         }>
       </div>

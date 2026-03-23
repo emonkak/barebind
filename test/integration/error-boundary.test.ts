@@ -2,7 +2,7 @@ import {
   AbortError,
   BrowserBackend,
   createComponent,
-  type RenderContext,
+  html,
   Root,
   Runtime,
 } from 'barebind';
@@ -16,7 +16,7 @@ const App = createComponent<{ children: unknown }>(function App({ children }) {
 
 const ErrorBoundary = createComponent<{
   children: unknown;
-  getFallback?: (error: unknown, $: RenderContext) => unknown;
+  getFallback?: (error: unknown) => unknown;
 }>(function ErrorBoundary({ children, getFallback }, $): unknown {
   const [errorCapture, setErrorCapture] = $.useState<{
     fallback: unknown;
@@ -27,7 +27,7 @@ const ErrorBoundary = createComponent<{
     if (getFallback !== undefined) {
       setErrorCapture(
         {
-          fallback: getFallback(error, $),
+          fallback: getFallback(error),
           children,
         },
         {
@@ -57,7 +57,7 @@ test('renders the fallback when an error occurs during rendering', async () => {
   const source = App({
     children: ErrorBoundary({
       children: FailOnRender({}),
-      getFallback: (error, $) => $.html`<p>${String(error)}</p>`,
+      getFallback: (error) => html`<p>${String(error)}</p>`,
     }),
   });
   const container = document.createElement('div');
@@ -80,7 +80,7 @@ test('renders the fallback when an error occurs on effect', async () => {
   const source = App({
     children: ErrorBoundary({
       children: FailOnEffect({}),
-      getFallback: (error, $) => $.html`<p>${String(error)}</p>`,
+      getFallback: (error) => html`<p>${String(error)}</p>`,
     }),
   });
   const container = document.createElement('div');

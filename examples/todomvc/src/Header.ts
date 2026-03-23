@@ -1,14 +1,11 @@
-import { createComponent, type RenderContext } from 'barebind';
+import { createComponent, html } from 'barebind';
 
 import { TodoStore } from './state.js';
 import { TodoInput } from './TodoInput.js';
 
 export interface HeaderProps {}
 
-export const Header = createComponent(function Header(
-  _props: HeaderProps,
-  $: RenderContext,
-): unknown {
+export const Header = createComponent<HeaderProps>(function Header({}, $) {
   const { state$ } = $.use(TodoStore);
 
   const handleSubmit = (title: string) => {
@@ -17,7 +14,7 @@ export const Header = createComponent(function Header(
     });
   };
 
-  return $.html`
+  return html`
     <header class="header" data-testid="header">
       <h1>todos</h1>
       <${TodoInput({

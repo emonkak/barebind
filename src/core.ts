@@ -40,9 +40,9 @@ export interface Backend {
   resolvePrimitive(source: unknown, part: Part): Primitive<unknown>;
   resolveTemplate(
     strings: readonly string[],
-    values: readonly unknown[],
-    placeholder: string,
+    exprs: readonly unknown[],
     mode: TemplateMode,
+    placeholder: string,
   ): DirectiveType<readonly unknown[]>;
   startViewTransition(callback: () => Promise<void> | void): Promise<void>;
   yieldToMain(): Promise<void>;
@@ -112,7 +112,7 @@ export namespace Directive {
 
   export type Template<T extends readonly unknown[]> = Directive<
     typeof Template,
-    { strings: readonly string[]; values: T; mode: TemplateMode }
+    { strings: readonly string[]; exprs: T; mode: TemplateMode }
   >;
 }
 
@@ -327,11 +327,6 @@ export interface Session {
 export interface SessionContext extends DirectiveContext {
   addObserver(observer: SessionObserver): () => void;
   getScheduledUpdates(): Update[];
-  getTemplate(
-    strings: readonly string[],
-    args: readonly unknown[],
-    mode: TemplateMode,
-  ): DirectiveType<readonly unknown[]>;
   startTransition<T>(action: (transition: number) => T): T;
   nextIdentifier(): string;
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateHandle;

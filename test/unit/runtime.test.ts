@@ -768,27 +768,6 @@ describe('Runtime', () => {
     });
   });
 
-  describe('getTemplate()', () => {
-    it('returns a cached template if it exists', () => {
-      const strings = ['<div>', '</div>'];
-      const values = ['foo'];
-      const mode = 'html';
-      const runtime = createRuntime();
-
-      const template = runtime.getTemplate(strings, values, mode);
-
-      expect(template).toBeInstanceOf(MockTemplate);
-      expect(template).toStrictEqual(
-        expect.objectContaining({
-          strings,
-          values,
-          mode,
-        }),
-      );
-      expect(runtime.getTemplate(strings, values, mode)).toBe(template);
-    });
-  });
-
   describe('nextIdentifier()', () => {
     it('generates unique identifiers', () => {
       const runtime = createRuntime();
@@ -864,7 +843,7 @@ describe('Runtime', () => {
         Template,
         {
           strings: ['(', ')'],
-          values: ['value'],
+          exprs: ['value'],
           mode: 'html',
         },
         'key',
@@ -887,7 +866,7 @@ describe('Runtime', () => {
       const runtime = createRuntime();
       const source = new Directive(Template, {
         strings: ['(', ')'],
-        values: 'foo',
+        exprs: 'foo',
         mode: 'html',
       });
       const part = createChildNodePart(

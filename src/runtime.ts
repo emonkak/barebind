@@ -18,7 +18,6 @@ import {
   type SessionEvent,
   type SessionObserver,
   Template,
-  type TemplateMode,
   toDirectiveNode,
   type UnwrapBindable,
   type Update,
@@ -165,16 +164,16 @@ export class Runtime implements SessionContext {
       }
       case Template: {
         const { value, key } = directive;
-        const { strings, values, mode } = value;
+        const { strings, exprs, mode } = value;
         const type = this._cachedTemplates.getOrInsertComputed(strings, () => {
           return this._backend.resolveTemplate(
             strings,
-            values,
-            this._uniqueIdentifier,
+            exprs,
             mode,
+            this._uniqueIdentifier,
           );
         });
-        return new Directive(type, values, key) as Directive.Element<
+        return new Directive(type, exprs, key) as Directive.Element<
           UnwrapBindable<TSource>,
           TPart
         >;
@@ -182,26 +181,6 @@ export class Runtime implements SessionContext {
       default:
         return directive as Directive.Element<UnwrapBindable<TSource>, TPart>;
     }
-  }
-
-  getTemplate(
-    strings: readonly string[],
-    values: readonly unknown[],
-    mode: TemplateMode,
-  ): DirectiveType<readonly unknown[]> {
-    let template = this._cachedTemplates.get(strings);
-
-    if (template === undefined) {
-      template = this._backend.resolveTemplate(
-        strings,
-        values,
-        this._uniqueIdentifier,
-        mode,
-      );
-      this._cachedTemplates.set(strings, template);
-    }
-
-    return template;
   }
 
   scheduleUpdate(

@@ -3,7 +3,7 @@ import {
   BOUNDARY_TYPE_ERROR,
   BOUNDARY_TYPE_SHARED_CONTEXT,
   type Coroutine,
-  Directive,
+  type Directive,
   type DirectiveType,
   type Effect,
   type EffectQueue,
@@ -12,7 +12,6 @@ import {
   type RenderFrame,
   Scope,
   type SessionContext,
-  type TemplateMode,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
@@ -283,13 +282,6 @@ export class RenderContext {
     return undefined;
   }
 
-  html(
-    strings: readonly string[],
-    ...values: readonly unknown[]
-  ): Directive.Element<readonly unknown[]> {
-    return this._createTemplate(strings, values, 'html');
-  }
-
   interrupt(error: unknown): never {
     try {
       handleError(error, this._coroutine.scope);
@@ -305,13 +297,6 @@ export class RenderContext {
       'The error was captured by an error boundary.',
       { cause: error },
     );
-  }
-
-  math(
-    strings: readonly string[],
-    ...values: readonly unknown[]
-  ): Directive.Element<readonly unknown[]> {
-    return this._createTemplate(strings, values, 'math');
   }
 
   setSharedContext<T>(key: unknown, value: T): void {
@@ -333,20 +318,6 @@ export class RenderContext {
       }
       return result;
     });
-  }
-
-  svg(
-    strings: readonly string[],
-    ...values: readonly unknown[]
-  ): Directive.Element<readonly unknown[]> {
-    return this._createTemplate(strings, values, 'svg');
-  }
-
-  text(
-    strings: readonly string[],
-    ...values: readonly unknown[]
-  ): Directive.Element<readonly unknown[]> {
-    return this._createTemplate(strings, values, 'textarea');
   }
 
   use<T>(usable: HookClass<T>): T;
@@ -494,15 +465,6 @@ export class RenderContext {
       dispatcher.dispatch,
       memoizedProposals.length > 0,
     ];
-  }
-
-  private _createTemplate(
-    strings: readonly string[],
-    values: readonly unknown[],
-    mode: TemplateMode,
-  ): Directive.Element<readonly unknown[]> {
-    const template = this._context.getTemplate(strings, values, mode);
-    return new Directive(template, values);
   }
 
   private _useEffectHook(
