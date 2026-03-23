@@ -13,7 +13,7 @@ import { TestUpdater } from '../../test-updater.js';
 
 describe('ChildNodeTemplate', () => {
   describe('arity', () => {
-    it('is the number of values', () => {
+    it('is the number of expressions', () => {
       const template = new ChildNodeTemplate();
 
       expect(template.arity).toBe(1);
@@ -32,7 +32,7 @@ describe('ChildNodeTemplate', () => {
   describe('hydrate()', () => {
     it('hydrates a tree containing a comment node', () => {
       const template = new ChildNodeTemplate();
-      const values = ['foo'] as const;
+      const exprs = ['foo'] as const;
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -42,7 +42,7 @@ describe('ChildNodeTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(values, part, hydrationTarget, session);
+        return template.hydrate(exprs, part, hydrationTarget, session);
       });
 
       expect(childNodes).toStrictEqual([expect.exact(container.firstChild)]);
@@ -60,7 +60,7 @@ describe('ChildNodeTemplate', () => {
 
     it('should throw the error if there is a tree mismatch', () => {
       const template = new ChildNodeTemplate();
-      const values = ['foo'] as const;
+      const exprs = ['foo'] as const;
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -71,7 +71,7 @@ describe('ChildNodeTemplate', () => {
 
       expect(() => {
         updater.startUpdate((session) => {
-          template.hydrate(values, part, hydrationTarget, session);
+          template.hydrate(exprs, part, hydrationTarget, session);
         });
       }).toThrow(HydrationError);
     });
@@ -80,7 +80,7 @@ describe('ChildNodeTemplate', () => {
   describe('render()', () => {
     it('renders a template containing a child node part', () => {
       const template = new ChildNodeTemplate();
-      const values = ['foo'] as const;
+      const exprs = ['foo'] as const;
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -88,7 +88,7 @@ describe('ChildNodeTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.render(values, part, session);
+        return template.render(exprs, part, session);
       });
 
       expect(childNodes).toStrictEqual([expect.any(Comment)]);

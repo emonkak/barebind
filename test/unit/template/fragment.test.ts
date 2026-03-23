@@ -54,7 +54,7 @@ describe('FragmentTemplate', () => {
         new MockTemplate(['[', ', ', ']'], ['bar', 'baz']),
       ] as const;
       const template = new FragmentTemplate(innerTemplates);
-      const values = ['foo', 'bar', 'baz'];
+      const exprs = ['foo', 'bar', 'baz'];
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -64,9 +64,9 @@ describe('FragmentTemplate', () => {
       const updater = new TestUpdater();
 
       const hydrationSpys = innerTemplates.map((template) =>
-        vi.spyOn(template, 'hydrate').mockImplementation((values) => {
+        vi.spyOn(template, 'hydrate').mockImplementation((exprs) => {
           const part = createChildNodePart(
-            document.createComment(values.join(',')),
+            document.createComment(exprs.join(',')),
             HTML_NAMESPACE_URI,
           );
           return {
@@ -81,7 +81,7 @@ describe('FragmentTemplate', () => {
       );
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(values, part, hydrationTarget, session);
+        return template.hydrate(exprs, part, hydrationTarget, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -147,7 +147,7 @@ describe('FragmentTemplate', () => {
         new MockTemplate(['[', ', ', ']'], ['bar', 'baz']),
       ] as const;
       const template = new FragmentTemplate(innerTemplates);
-      const values = ['foo', 'bar', 'baz'];
+      const exprs = ['foo', 'bar', 'baz'];
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -172,7 +172,7 @@ describe('FragmentTemplate', () => {
       );
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.render(values, part, session);
+        return template.render(exprs, part, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([

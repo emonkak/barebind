@@ -30,27 +30,27 @@ describe('Template', () => {
   describe('resolveBinding()', () => {
     it('constructs a new TemplateBinding', () => {
       const template = new MockTemplate();
-      const values = ['foo'] as const;
+      const exprs = ['foo'] as const;
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
       );
       const runtime = createRuntime();
-      const binding = template.resolveBinding(values, part, runtime);
+      const binding = template.resolveBinding(exprs, part, runtime);
 
       expect(binding).toBeInstanceOf(TemplateBinding);
       expect(binding.type).toBe(template);
-      expect(binding.value).toBe(values);
+      expect(binding.value).toBe(exprs);
       expect(binding.part).toBe(part);
     });
 
     it('should throw the error if the part is not a child node part', () => {
       const template = new MockTemplate();
-      const values = ['foo'] as const;
+      const exprs = ['foo'] as const;
       const part = createElementPart(document.createElement('div'));
       const runtime = createRuntime();
 
-      expect(() => template.resolveBinding(values, part, runtime)).toThrow(
+      expect(() => template.resolveBinding(exprs, part, runtime)).toThrow(
         'MockTemplate must be used in ChildNodePart.',
       );
     });
@@ -61,17 +61,17 @@ describe('TemplateBinding', () => {
   describe('shouldUpdate()', () => {
     it('returns true if the committed result does not exist', () => {
       const template = new MockTemplate();
-      const values = [] as const;
+      const exprs = [] as const;
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
       );
-      const binding = new TemplateBinding(template, values, part);
+      const binding = new TemplateBinding(template, exprs, part);
 
-      expect(binding.shouldUpdate(values)).toBe(true);
+      expect(binding.shouldUpdate(exprs)).toBe(true);
     });
 
-    it('returns true if the committed values is different from the new one', () => {
+    it('returns true if the committed expressions is different from the new one', () => {
       const template = new MockTemplate();
       const args1 = ['foo'];
       const args2 = ['bar'];
@@ -117,19 +117,19 @@ describe('TemplateBinding', () => {
 
       const renderSpy = vi
         .spyOn(template, 'render')
-        .mockImplementation((values, _part, session) => {
+        .mockImplementation((exprs, _part, session) => {
           const slots = [
             new Slot(
               new MockBinding(
                 new MockType(),
-                values[0],
+                exprs[0],
                 createAttributePart(fragment.firstChild as Element, 'class'),
               ),
             ),
             new Slot(
               new MockBinding(
                 new MockType(),
-                values[1],
+                exprs[1],
                 createTextPart(
                   fragment.firstChild!.nextSibling as Text,
                   '',
@@ -140,7 +140,7 @@ describe('TemplateBinding', () => {
             new Slot(
               new MockBinding(
                 new MockType(),
-                values[2],
+                exprs[2],
                 createChildNodePart(
                   fragment.firstChild!.nextSibling!.nextSibling as Comment,
                   HTML_NAMESPACE_URI,
@@ -214,26 +214,26 @@ describe('TemplateBinding', () => {
 
       const renderSpy = vi
         .spyOn(template, 'render')
-        .mockImplementation((values, _part, session) => {
+        .mockImplementation((exprs, _part, session) => {
           const slots = [
             new Slot(
               new MockBinding(
                 new MockType(),
-                values[0],
+                exprs[0],
                 createChildNodePart(fragment[0], HTML_NAMESPACE_URI),
               ),
             ),
             new Slot(
               new MockBinding(
                 new MockType(),
-                values[1],
+                exprs[1],
                 createTextPart(fragment[1], '', ''),
               ),
             ),
             new Slot(
               new MockBinding(
                 new MockType(),
-                values[2],
+                exprs[2],
                 createAttributePart(fragment[2], 'class'),
               ),
             ),
@@ -289,12 +289,12 @@ describe('TemplateBinding', () => {
 
     it('hydrates a template', () => {
       const template = new MockTemplate();
-      const values = [] as const;
+      const exprs = [] as const;
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
       );
-      const binding = new TemplateBinding(template, values, part);
+      const binding = new TemplateBinding(template, exprs, part);
       const container = createElement('div', {}, 'foo', part.node);
       const scope = new Scope();
       const hydrationTarget = createTreeWalker(container);
@@ -318,7 +318,7 @@ describe('TemplateBinding', () => {
 
       expect(hydrateSpy).toHaveBeenCalledOnce();
       expect(hydrateSpy).toHaveBeenCalledWith(
-        values,
+        exprs,
         part,
         hydrationTarget,
         expect.any(Object),

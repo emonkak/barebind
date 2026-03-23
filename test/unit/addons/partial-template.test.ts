@@ -23,7 +23,7 @@ describe('PartialTemplate', () => {
   });
 
   describe('literal()', () => {
-    it('should create a PartialTemplate with a single string and no values', () => {
+    it('should create a PartialTemplate with a single string and no expressions', () => {
       const template = PartialTemplate.literal('div');
       expect(template.strings).toStrictEqual(['div']);
       expect(template.exprs).toStrictEqual([]);
@@ -64,7 +64,7 @@ describe('PartialTemplate', () => {
       expect(template.toString()).toBe('<div>content</div>');
     });
 
-    it('should interpolate a nested PartialTemplate that has values', () => {
+    it('should interpolate a nested PartialTemplate that has expressions', () => {
       const greeting = PartialTemplate.parse`Hello, ${'World'}!`;
       const template = PartialTemplate.parse`<p>${greeting}</p>`;
       expect(template.strings).toStrictEqual(['<p>Hello, ', '!</p>']);
@@ -82,7 +82,7 @@ describe('PartialTemplate', () => {
       expect(template2.exprs).toStrictEqual(['Bob']);
     });
 
-    it('should return different interpolated strings when PartialTemplate values change', () => {
+    it('should return different interpolated strings when PartialTemplate expressions change', () => {
       const strings = ['<', '>content</', '>'];
       const tag1 = PartialTemplate.literal('div');
       const tag2 = PartialTemplate.literal('span');
@@ -97,11 +97,11 @@ describe('PartialTemplate', () => {
       expect(template3.exprs).toStrictEqual([]);
     });
 
-    it('should handle no values', () => {
-      const template = PartialTemplate.parse`no values here`;
-      expect(template.strings).toStrictEqual(['no values here']);
+    it('should handle no expressions', () => {
+      const template = PartialTemplate.parse`no expressions here`;
+      expect(template.strings).toStrictEqual(['no expressions here']);
       expect(template.exprs).toStrictEqual([]);
-      expect(template.toString()).toBe('no values here');
+      expect(template.toString()).toBe('no expressions here');
     });
   });
 

@@ -29,7 +29,7 @@ export class TextTemplate<T> extends Template<readonly [T]> {
   }
 
   hydrate(
-    values: readonly [T],
+    exprs: readonly [T],
     _part: Part.ChildNodePart,
     hydrationTarget: TreeWalker,
     session: Session,
@@ -41,7 +41,7 @@ export class TextTemplate<T> extends Template<readonly [T]> {
       precedingText: this._precedingText,
       followingText: this._followingText,
     } as const;
-    const textSlot = Slot.place(values[0], textPart, context);
+    const textSlot = Slot.place(exprs[0], textPart, context);
 
     textSlot.attach(session);
 
@@ -49,7 +49,7 @@ export class TextTemplate<T> extends Template<readonly [T]> {
   }
 
   render(
-    values: readonly [T],
+    exprs: readonly [T],
     part: Part.ChildNodePart,
     session: Session,
   ): TemplateResult {
@@ -60,7 +60,7 @@ export class TextTemplate<T> extends Template<readonly [T]> {
       this._precedingText,
       this._followingText,
     );
-    const textSlot = Slot.place(values[0], textPart, context);
+    const textSlot = Slot.place(exprs[0], textPart, context);
 
     textSlot.attach(session);
 

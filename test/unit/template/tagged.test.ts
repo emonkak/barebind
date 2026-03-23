@@ -24,7 +24,7 @@ const MARKER_IDENTIFIER = '__test__';
 
 describe('TaggedTemplate', () => {
   describe('arity', () => {
-    it('returns the number of values', () => {
+    it('is the number of expressions', () => {
       expect(html``.template.arity).toBe(0);
       expect(html`${'foo'}`.template.arity).toBe(1);
       expect(html`${'foo'} ${'bar'}`.template.arity).toBe(2);
@@ -458,7 +458,7 @@ describe('TaggedTemplate', () => {
       }).toThrow(`The attribute name must be "id", but got "class".`);
     });
 
-    it('should throw an error if the number of holes and values do not match', () => {
+    it('should throw an error if the number of holes and expressions do not match', () => {
       expect(() => {
         html`
           <div class="foo" class=${'bar'}></div>
@@ -474,7 +474,7 @@ describe('TaggedTemplate', () => {
 
   describe('hydrate()', () => {
     it('hydrates a HTML template element with multiple holes', () => {
-      const { template, values } = html`
+      const { template, exprs } = html`
         <div class=${'foo'}>
           <!-- ${'bar'} -->
           <label ${{ for: 'quux' }}>${'baz'}</label>
@@ -502,7 +502,7 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(values, part, hydrationTarget, session);
+        return template.hydrate(exprs, part, hydrationTarget, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -580,7 +580,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('hydrates a HTML template element without holes', () => {
-      const { template, values } = html`<div>foo</div>`;
+      const { template, exprs } = html`<div>foo</div>`;
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -594,7 +594,7 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(values, part, hydrationTarget, session);
+        return template.hydrate(exprs, part, hydrationTarget, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual(['<div>foo</div>']);
@@ -602,7 +602,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('hydrates a split text template', () => {
-      const { template, values } =
+      const { template, exprs } =
         html`(${'foo'}, ${'bar'}, ${'baz'})<div>[${'qux'}, ${'quux'}]</div>`;
       const part = createChildNodePart(
         document.createComment(''),
@@ -618,7 +618,7 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(values, part, hydrationTarget, session);
+        return template.hydrate(exprs, part, hydrationTarget, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -678,7 +678,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('hydrates an empty template', () => {
-      const { template, values } = html``;
+      const { template, exprs } = html``;
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -688,7 +688,7 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(values, part, hydrationTarget, session);
+        return template.hydrate(exprs, part, hydrationTarget, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([]);
@@ -755,7 +755,7 @@ describe('TaggedTemplate', () => {
 
   describe('render()', () => {
     it('renders a HTML template element with multiple holes', () => {
-      const { template, values } = html`
+      const { template, exprs } = html`
         <div class=${'foo'}>
           <!-- ${'bar'} -->
           <label ${{ for: 'quux' }}>${'baz'}</label>
@@ -770,7 +770,7 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.render(values, part, session);
+        return template.render(exprs, part, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -848,7 +848,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('renders a HTML template element without holes', () => {
-      const { template, values } = html`<div>foo</div>`;
+      const { template, exprs } = html`<div>foo</div>`;
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -856,7 +856,7 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.render(values, part, session);
+        return template.render(exprs, part, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual(['<div>foo</div>']);
@@ -864,7 +864,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('renders a split text template', () => {
-      const { template, values } =
+      const { template, exprs } =
         html`(${'foo'}, ${'bar'}, ${'baz'})<div>[${'qux'}, ${'quux'}]</div>`;
       const part = createChildNodePart(
         document.createComment(''),
@@ -873,7 +873,7 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.render(values, part, session);
+        return template.render(exprs, part, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -933,7 +933,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('renders a template containing nodes in another namespace', () => {
-      const { template, values } =
+      const { template, exprs } =
         html`<${'foo'}><math><${'bar'}></math><svg><${'baz'}></svg>`;
       const part = createChildNodePart(
         document.createComment(''),
@@ -942,7 +942,7 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.render(values, part, session);
+        return template.render(exprs, part, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -979,7 +979,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('renders an empty template', () => {
-      const { template, values } = html``;
+      const { template, exprs } = html``;
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -987,7 +987,7 @@ describe('TaggedTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.render(values, part, session);
+        return template.render(exprs, part, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([]);
@@ -1020,66 +1020,66 @@ describe('TaggedTemplate', () => {
   });
 });
 
-function html<TValues extends readonly unknown[]>(
+function html<TExprs extends readonly unknown[]>(
   strings: TemplateStringsArray,
-  ...values: TValues
-): { template: TaggedTemplate<TValues>; values: TValues } {
+  ...exprs: TExprs
+): { template: TaggedTemplate<TExprs>; exprs: TExprs } {
   return {
     template: TaggedTemplate.parse(
       strings,
-      values,
+      exprs,
       'html',
       MARKER_IDENTIFIER,
       document,
     ),
-    values,
+    exprs,
   };
 }
 
-function math<const TValues extends readonly unknown[]>(
+function math<const TExprs extends readonly unknown[]>(
   strings: TemplateStringsArray,
-  ...values: TValues
-): { template: TaggedTemplate<TValues>; values: TValues } {
+  ...exprs: TExprs
+): { template: TaggedTemplate<TExprs>; exprs: TExprs } {
   return {
     template: TaggedTemplate.parse(
       strings,
-      values,
+      exprs,
       'math',
       MARKER_IDENTIFIER,
       document,
     ),
-    values,
+    exprs,
   };
 }
 
-function svg<const TValues extends readonly unknown[]>(
+function svg<const TExprs extends readonly unknown[]>(
   strings: TemplateStringsArray,
-  ...values: TValues
-): { template: TaggedTemplate<TValues>; values: TValues } {
+  ...exprs: TExprs
+): { template: TaggedTemplate<TExprs>; exprs: TExprs } {
   return {
     template: TaggedTemplate.parse(
       strings,
-      values,
+      exprs,
       'svg',
       MARKER_IDENTIFIER,
       document,
     ),
-    values,
+    exprs,
   };
 }
 
-function text<const TValues extends readonly unknown[]>(
+function text<const TExprs extends readonly unknown[]>(
   strings: TemplateStringsArray,
-  ...values: TValues
-): { template: TaggedTemplate<TValues>; values: TValues } {
+  ...exprs: TExprs
+): { template: TaggedTemplate<TExprs>; exprs: TExprs } {
   return {
     template: TaggedTemplate.parse(
       strings,
-      values,
+      exprs,
       'textarea',
       MARKER_IDENTIFIER,
       document,
     ),
-    values,
+    exprs,
   };
 }

@@ -16,44 +16,44 @@ export interface TemplateResult {
   slots: readonly Slot<unknown>[];
 }
 
-export abstract class Template<TValues extends readonly unknown[]>
-  implements DirectiveType<TValues>
+export abstract class Template<TExprs extends readonly unknown[]>
+  implements DirectiveType<TExprs>
 {
-  abstract get arity(): TValues['length'];
+  abstract get arity(): TExprs['length'];
 
   get name(): string {
     return this.constructor.name;
   }
 
   abstract render(
-    values: TValues,
+    exprs: TExprs,
     part: Part.ChildNodePart,
     session: Session,
   ): TemplateResult;
 
   abstract hydrate(
-    values: TValues,
+    exprs: TExprs,
     part: Part.ChildNodePart,
     hydrationTarget: TreeWalker,
     session: Session,
   ): TemplateResult;
 
   resolveBinding(
-    values: TValues,
+    exprs: TExprs,
     part: Part,
     _context: DirectiveContext,
-  ): Binding<TValues> {
-    ensurePartType(PART_TYPE_CHILD_NODE, this, values, part);
-    return new TemplateBinding(this, values, part);
+  ): Binding<TExprs> {
+    ensurePartType(PART_TYPE_CHILD_NODE, this, exprs, part);
+    return new TemplateBinding(this, exprs, part);
   }
 }
 
-export class TemplateBinding<TValues extends readonly unknown[]>
-  implements Binding<TValues, Part.ChildNodePart>, Effect
+export class TemplateBinding<TExprs extends readonly unknown[]>
+  implements Binding<TExprs, Part.ChildNodePart>, Effect
 {
-  private readonly _template: Template<TValues>;
+  private readonly _template: Template<TExprs>;
 
-  private _values: TValues;
+  private _exprs: TExprs;
 
   private readonly _part: Part.ChildNodePart;
 
@@ -62,33 +62,33 @@ export class TemplateBinding<TValues extends readonly unknown[]>
   private _currentResult: TemplateResult | null = null;
 
   constructor(
-    template: Template<TValues>,
-    values: TValues,
+    template: Template<TExprs>,
+    exprs: TExprs,
     part: Part.ChildNodePart,
   ) {
     this._template = template;
-    this._values = values;
+    this._exprs = exprs;
     this._part = part;
   }
 
-  get type(): Template<TValues> {
+  get type(): Template<TExprs> {
     return this._template;
   }
 
-  get value(): TValues {
-    return this._values;
+  get value(): TExprs {
+    return this._exprs;
   }
 
-  set value(values: TValues) {
-    this._values = values;
+  set value(exprs: TExprs) {
+    this._exprs = exprs;
   }
 
   get part(): Part.ChildNodePart {
     return this._part;
   }
 
-  shouldUpdate(values: TValues): boolean {
-    return this._currentResult === null || values !== this._values;
+  shouldUpdate(newExprs: TExprs): boolean {
+    return this._currentResult === null || newExprs !== this._exprs;
   }
 
   attach(session: Session): void {
@@ -96,21 +96,21 @@ export class TemplateBinding<TValues extends readonly unknown[]>
       const { slots } = this._pendingResult;
 
       for (let i = 0, l = slots.length; i < l; i++) {
-        slots[i]!.reconcile(this._values[i]!, session);
+        slots[i]!.reconcile(this._exprs[i]!, session);
       }
     } else {
       const hydrationTarget = getHydrationTarget(session.coroutine.scope);
 
       if (hydrationTarget !== null) {
         this._pendingResult = this._template.hydrate(
-          this._values,
+          this._exprs,
           this._part,
           hydrationTarget,
           session,
         );
       } else {
         this._pendingResult = this._template.render(
-          this._values,
+          this._exprs,
           this._part,
           session,
         );

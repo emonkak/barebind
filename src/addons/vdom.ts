@@ -58,9 +58,9 @@ interface HasCleanup {
   [$cleanup]?: Cleanup | void;
 }
 
-interface TemplateDirective<TValues extends readonly unknown[]>
-  extends Directive.Element<TValues> {
-  type: Template<TValues>;
+interface TemplateDirective<TExprs extends readonly unknown[]>
+  extends Directive.Element<TExprs> {
+  type: Template<TExprs>;
 }
 
 /**
@@ -169,13 +169,13 @@ export class VStaticFragment implements Bindable {
 
   [Directive.toDirective](): Directive.Element<unknown> {
     const templates: Template<readonly unknown[]>[] = [];
-    const values: unknown[] = [];
+    const exprs: unknown[] = [];
 
     for (const child of this.children) {
       if (child instanceof VElement) {
         if (typeof child.type === 'function') {
           templates.push(ChildNodeTemplate.Default);
-          values.push(child);
+          exprs.push(child);
         } else {
           const { type, value } = resolveVElement(
             child.type,
@@ -184,23 +184,23 @@ export class VStaticFragment implements Bindable {
             child.hasStaticChildren,
           );
           templates.push(type);
-          values.push(value[0], value[1]);
+          exprs.push(value[0], value[1]);
         }
       } else if (isBindable(child)) {
         templates.push(ChildNodeTemplate.Default);
-        values.push(child);
+        exprs.push(child);
       } else if (Array.isArray(child)) {
         templates.push(ChildNodeTemplate.Default);
-        values.push(new VFragment(child));
+        exprs.push(new VFragment(child));
       } else if (child == null || typeof child === 'boolean') {
         templates.push(EmptyTemplate.Default);
       } else {
         templates.push(TextTemplate.Default);
-        values.push(child);
+        exprs.push(child);
       }
     }
 
-    return new Directive(new FragmentTemplate(templates), values);
+    return new Directive(new FragmentTemplate(templates), exprs);
   }
 }
 
@@ -580,15 +580,15 @@ function resolveVElement(
       : new VFragment(props.children)
     : resolveVChild(props.children as VNode);
   const template = new ElementTemplate(type);
-  const values = [element, children] as const;
+  const exprs = [element, children] as const;
   if (key != null) {
-    return new Directive(template, values, key) as TemplateDirective<
+    return new Directive(template, exprs, key) as TemplateDirective<
       readonly [unknown, unknown]
     >;
   } else {
     return new Directive(
       new ElementTemplate(type),
-      values,
+      exprs,
       key,
     ) as TemplateDirective<readonly [unknown, unknown]>;
   }

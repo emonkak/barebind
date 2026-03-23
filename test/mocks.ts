@@ -88,11 +88,11 @@ export class MockBackend implements Backend {
 
   resolveTemplate(
     strings: readonly string[],
-    values: readonly unknown[],
+    exprs: readonly unknown[],
     mode: TemplateMode,
     placeholder: string,
   ): DirectiveType<readonly unknown[]> {
-    return new MockTemplate(strings, values, mode, placeholder);
+    return new MockTemplate(strings, exprs, mode, placeholder);
   }
 
   startViewTransition(callback: () => void | Promise<void>): Promise<void> {
@@ -284,7 +284,7 @@ export class MockTemplate extends Template<readonly unknown[]> {
   }
 
   render(
-    _values: readonly unknown[],
+    _exprs: readonly unknown[],
     _part: Part.ChildNodePart,
     _session: Session,
   ): TemplateResult {
@@ -295,7 +295,7 @@ export class MockTemplate extends Template<readonly unknown[]> {
   }
 
   hydrate(
-    _values: readonly unknown[],
+    _exprs: readonly unknown[],
     _part: Part.ChildNodePart,
     _hydrationTarget: TreeWalker,
     _session: Session,

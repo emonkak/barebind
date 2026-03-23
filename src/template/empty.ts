@@ -13,7 +13,7 @@ export class EmptyTemplate extends Template<readonly []> {
   }
 
   hydrate(
-    _values: readonly [],
+    _exprs: readonly [],
     _part: Part.ChildNodePart,
     _hydrationTarget: TreeWalker,
     _session: Session,
@@ -22,7 +22,7 @@ export class EmptyTemplate extends Template<readonly []> {
   }
 
   render(
-    _values: readonly [],
+    _exprs: readonly [],
     _part: Part.ChildNodePart,
     _session: Session,
   ): TemplateResult {

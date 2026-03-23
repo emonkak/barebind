@@ -15,7 +15,7 @@ export class ChildNodeTemplate<T> extends Template<[T]> {
   }
 
   hydrate(
-    values: readonly [unknown],
+    exprs: readonly [unknown],
     part: Part.ChildNodePart,
     hydrationTarget: TreeWalker,
     session: Session,
@@ -25,7 +25,7 @@ export class ChildNodeTemplate<T> extends Template<[T]> {
       part.sentinelNode.ownerDocument.createComment(''),
       part.namespaceURI,
     );
-    const childNodeSlot = Slot.place(values[0], childNodePart, context);
+    const childNodeSlot = Slot.place(exprs[0], childNodePart, context);
 
     childNodeSlot.attach(session);
 
@@ -35,7 +35,7 @@ export class ChildNodeTemplate<T> extends Template<[T]> {
   }
 
   render(
-    values: readonly [unknown],
+    exprs: readonly [unknown],
     part: Part.ChildNodePart,
     session: Session,
   ): TemplateResult {
@@ -44,7 +44,7 @@ export class ChildNodeTemplate<T> extends Template<[T]> {
       part.sentinelNode.ownerDocument.createComment(''),
       part.namespaceURI,
     );
-    const childNodeSlot = Slot.place(values[0], childNodePart, context);
+    const childNodeSlot = Slot.place(exprs[0], childNodePart, context);
 
     childNodeSlot.attach(session);
 

@@ -12,7 +12,7 @@ import { TestUpdater } from '../../test-updater.js';
 
 describe('ElementTemplate', () => {
   describe('arity', () => {
-    it('returns the number of values', () => {
+    it('returns the number of expressions', () => {
       const template = new ElementTemplate('div');
 
       expect(template.arity).toBe(2);
@@ -32,7 +32,7 @@ describe('ElementTemplate', () => {
   describe('hydrate()', () => {
     it('hydrates a tree containing a element', () => {
       const template = new ElementTemplate('div');
-      const values = [{ class: 'foo' }, 'bar'] as const;
+      const expressions = [{ class: 'foo' }, 'bar'] as const;
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -46,7 +46,7 @@ describe('ElementTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(values, part, hydrationTarget, session);
+        return template.hydrate(expressions, part, hydrationTarget, session);
       });
 
       expect(childNodes).toStrictEqual([container.firstChild]);
@@ -72,7 +72,7 @@ describe('ElementTemplate', () => {
   describe('render()', () => {
     it('renders an HTML element', () => {
       const template = new ElementTemplate('div');
-      const values = [{ class: 'foo' }, 'bar'] as const;
+      const expressions = [{ class: 'foo' }, 'bar'] as const;
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -80,7 +80,7 @@ describe('ElementTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.render(values, part, session);
+        return template.render(expressions, part, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -109,7 +109,7 @@ describe('ElementTemplate', () => {
 
     it('renders an SVG element', () => {
       const template = new ElementTemplate('svg');
-      const values = [{ class: 'foo' }, 'bar'] as const;
+      const expressions = [{ class: 'foo' }, 'bar'] as const;
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -117,7 +117,7 @@ describe('ElementTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.render(values, part, session);
+        return template.render(expressions, part, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([

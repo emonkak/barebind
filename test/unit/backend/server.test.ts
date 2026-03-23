@@ -197,12 +197,12 @@ describe('ServerBackend', () => {
 
   describe('resolveTemplate()', () => {
     it('creates a TaggedTemplate', () => {
-      const [strings, ...values] =
+      const [strings, ...exprs] =
         templateLiteral`<div>${'Hello'}, ${'World'}!</div>`;
       const backend = new ServerBackend(document);
       const template = backend.resolveTemplate(
         strings,
-        values,
+        exprs,
         'html',
         TEMPLATE_PLACEHOLDER,
       );

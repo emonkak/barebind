@@ -25,7 +25,7 @@ export class FragmentTemplate extends Template<readonly unknown[]> {
   }
 
   hydrate(
-    values: readonly unknown[],
+    exprs: readonly unknown[],
     part: Part.ChildNodePart,
     hydrationTarget: TreeWalker,
     session: Session,
@@ -37,7 +37,7 @@ export class FragmentTemplate extends Template<readonly unknown[]> {
     for (const template of this._templates) {
       const { arity } = template;
       const result = template.hydrate(
-        values.slice(offset, offset + arity),
+        exprs.slice(offset, offset + arity),
         part,
         hydrationTarget,
         session,
@@ -51,7 +51,7 @@ export class FragmentTemplate extends Template<readonly unknown[]> {
   }
 
   render(
-    values: readonly unknown[],
+    exprs: readonly unknown[],
     part: Part.ChildNodePart,
     session: Session,
   ): TemplateResult {
@@ -62,7 +62,7 @@ export class FragmentTemplate extends Template<readonly unknown[]> {
     for (const template of this._templates) {
       const { arity } = template;
       const result = template.render(
-        values.slice(offset, offset + arity),
+        exprs.slice(offset, offset + arity),
         part,
         session,
       );

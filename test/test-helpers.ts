@@ -130,11 +130,11 @@ export function stripComments<T extends Node>(node: T): T {
   return iterator.root as T;
 }
 
-export function templateLiteral<TValues extends readonly unknown[]>(
+export function templateLiteral<TExprs extends readonly unknown[]>(
   strings: TemplateStringsArray,
-  ...values: TValues
-): [TemplateStringsArray, ...TValues] {
-  return [strings, ...values];
+  ...exprs: TExprs
+): [TemplateStringsArray, ...TExprs] {
+  return [strings, ...exprs];
 }
 
 export async function waitForMicrotasks(times: number = 1): Promise<void> {

@@ -91,13 +91,13 @@ export class ServerBackend implements Backend {
 
   resolveTemplate(
     strings: readonly string[],
-    values: readonly unknown[],
+    exprs: readonly unknown[],
     mode: TemplateMode,
     placeholder: string,
   ): DirectiveType<readonly unknown[]> {
     return TaggedTemplate.parse(
       strings,
-      values,
+      exprs,
       mode,
       placeholder,
       this._document,

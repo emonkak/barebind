@@ -100,21 +100,21 @@ const LEADING_NEWLINE_PATTERN = /^\s*\n/;
 const TAILING_NEWLINE_PATTERN = /\n\s*$/;
 
 export class TaggedTemplate<
-  TValues extends readonly unknown[] = unknown[],
-> extends Template<TValues> {
+  TExprs extends readonly unknown[] = unknown[],
+> extends Template<TExprs> {
   private readonly _template: HTMLTemplateElement;
 
   private readonly _holes: Hole[];
 
   private readonly _mode: TemplateMode;
 
-  static parse<TValues extends readonly unknown[]>(
+  static parse<TExprs extends readonly unknown[]>(
     strings: readonly string[],
-    values: TValues,
+    exprs: TExprs,
     mode: TemplateMode,
     placeholder: string,
     document: Document,
-  ): TaggedTemplate<TValues> {
+  ): TaggedTemplate<TExprs> {
     const template = document.createElement('template');
     const marker = createMarker(placeholder);
     const htmlString = stripWhitespaces(strings.join(marker));
@@ -128,7 +128,7 @@ export class TaggedTemplate<
       );
     }
 
-    const holes = parseChildren(strings, values, marker, template.content);
+    const holes = parseChildren(strings, exprs, marker, template.content);
 
     return new TaggedTemplate(template, holes, mode);
   }
@@ -149,7 +149,7 @@ export class TaggedTemplate<
   }
 
   hydrate(
-    values: TValues,
+    exprs: TExprs,
     part: Part.ChildNodePart,
     hydrationTarget: TreeWalker,
     session: Session,
@@ -218,7 +218,7 @@ export class TaggedTemplate<
           }
         }
 
-        const slot = Slot.place(values[holeIndex]!, currentPart!, context);
+        const slot = Slot.place(exprs[holeIndex]!, currentPart!, context);
         slot.attach(session);
 
         if (currentPart.type === PART_TYPE_CHILD_NODE) {
@@ -253,7 +253,7 @@ export class TaggedTemplate<
   }
 
   render(
-    values: TValues,
+    exprs: TExprs,
     part: Part.ChildNodePart,
     session: Session,
   ): TemplateResult {
@@ -315,7 +315,7 @@ export class TaggedTemplate<
             break;
         }
 
-        const slot = Slot.place(values[i]!, currentPart, context);
+        const slot = Slot.place(exprs[i]!, currentPart, context);
         slot.attach(session);
 
         slots[i] = slot;
@@ -455,7 +455,7 @@ function parseAttribtues(
 
 function parseChildren(
   strings: readonly string[],
-  values: readonly unknown[],
+  exprs: readonly unknown[],
   marker: string,
   fragment: DocumentFragment,
 ): Hole[] {
@@ -556,9 +556,9 @@ function parseChildren(
     index++;
   }
 
-  if (values.length !== holes.length) {
+  if (exprs.length !== holes.length) {
     throw new Error(
-      `The number of holes must be ${values.length}, but got ${holes.length}. There may be multiple holes indicating the same attribute:\n` +
+      `The number of holes must be ${exprs.length}, but got ${holes.length}. There may be multiple holes indicating the same attribute:\n` +
         // biome-ignore lint/suspicious/noTemplateCurlyInString: "${...}" represents a template literal hole
         strings.join('${...}').trim(),
     );

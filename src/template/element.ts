@@ -29,7 +29,7 @@ export class ElementTemplate<
   }
 
   hydrate(
-    values: readonly [TProps, TChildren],
+    exprs: readonly [TProps, TChildren],
     part: Part.ChildNodePart,
     hydrationTarget: TreeWalker,
     session: Session,
@@ -49,8 +49,8 @@ export class ElementTemplate<
       ownerDocument.createComment(''),
       namespaceURI,
     );
-    const elementSlot = Slot.place(values[0], elementPart, context);
-    const childrenSlot = Slot.place(values[1], childrenPart, context);
+    const elementSlot = Slot.place(exprs[0], elementPart, context);
+    const childrenSlot = Slot.place(exprs[1], childrenPart, context);
 
     elementSlot.attach(session);
     childrenSlot.attach(session);
@@ -64,7 +64,7 @@ export class ElementTemplate<
   }
 
   render(
-    values: readonly [TProps, TChildren],
+    exprs: readonly [TProps, TChildren],
     part: Part.ChildNodePart,
     session: Session,
   ): TemplateResult {
@@ -79,8 +79,8 @@ export class ElementTemplate<
       ownerDocument.createComment(''),
       namespaceURI,
     );
-    const elementSlot = Slot.place(values[0], elementPart, context);
-    const childrenSlot = Slot.place(values[1], childrenPart, context);
+    const elementSlot = Slot.place(exprs[0], elementPart, context);
+    const childrenSlot = Slot.place(exprs[1], childrenPart, context);
 
     elementPart.node.appendChild(childrenPart.node);
 

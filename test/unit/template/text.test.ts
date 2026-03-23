@@ -12,7 +12,7 @@ import { TestUpdater } from '../../test-updater.js';
 
 describe('TextTemplate', () => {
   describe('arity', () => {
-    it('returns the number of values', () => {
+    it('is the number of expressions', () => {
       const template = new TextTemplate();
 
       expect(template.arity).toBe(1);
@@ -33,7 +33,7 @@ describe('TextTemplate', () => {
   describe('hydrate()', () => {
     it('hydrates a tree containing a text part', () => {
       const template = new TextTemplate('(', ')');
-      const values = ['foo'] as const;
+      const exprs = ['foo'] as const;
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -43,7 +43,7 @@ describe('TextTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(values, part, hydrationTarget, session);
+        return template.hydrate(exprs, part, hydrationTarget, session);
       });
 
       expect(childNodes).toStrictEqual([expect.exact(container.firstChild)]);
@@ -61,7 +61,7 @@ describe('TextTemplate', () => {
 
     it('should throw the error if there is a tree mismatch', () => {
       const template = new TextTemplate('(', ')');
-      const values = ['foo'] as const;
+      const exprs = ['foo'] as const;
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -72,7 +72,7 @@ describe('TextTemplate', () => {
 
       expect(() => {
         updater.startUpdate((session) => {
-          template.hydrate(values, part, hydrationTarget, session);
+          template.hydrate(exprs, part, hydrationTarget, session);
         });
       }).toThrow(HydrationError);
     });
@@ -81,7 +81,7 @@ describe('TextTemplate', () => {
   describe('render()', () => {
     it('renders a template containing a text part', () => {
       const template = new TextTemplate('(', ')');
-      const values = ['foo'] as const;
+      const exprs = ['foo'] as const;
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -89,7 +89,7 @@ describe('TextTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.render(values, part, session);
+        return template.render(exprs, part, session);
       });
 
       expect(childNodes).toStrictEqual([expect.any(Text)]);
