@@ -14,13 +14,13 @@ import {
   ensurePartType,
 } from '../part.js';
 import { Slot } from '../slot.js';
-import { PrimitiveBinding } from './primitive.js';
+import { isObject, PrimitiveBinding } from './primitive.js';
 
 export type SpreadProps = { [key: string]: unknown };
 
 export abstract class SpreadType {
   static ensureValue(value: unknown, part: Part): asserts value is SpreadProps {
-    if (!isSpreadProps(value)) {
+    if (!isObject(value)) {
       throw new DirectiveError(
         this,
         value,
@@ -121,10 +121,6 @@ export class SpreadBinding extends PrimitiveBinding<
       this._memoizedSlots = null;
     }
   }
-}
-
-function isSpreadProps(value: unknown): value is SpreadProps {
-  return value !== null && typeof value === 'object';
 }
 
 function resolveNamedPart(key: string, node: Element): Part {

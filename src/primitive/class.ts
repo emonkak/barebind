@@ -7,7 +7,7 @@ import {
 } from '../core.js';
 import { DirectiveError } from '../error.js';
 import { ensurePartType } from '../part.js';
-import { PrimitiveBinding } from './primitive.js';
+import { isObject, PrimitiveBinding } from './primitive.js';
 
 export type ClassMap =
   | {
@@ -61,23 +61,15 @@ export class ClassBinding extends PrimitiveBinding<
 
   override commit(): void {
     const { classList } = this._part.node;
-
     updateClasses(classList, this._value, this._memoizedValue);
-
     this._memoizedValue = this._value;
   }
 
   override rollback(): void {
     const { classList } = this.part.node;
-
     updateClasses(classList, {}, this._memoizedValue);
-
     this._memoizedValue = {};
   }
-}
-
-function isObject(value: unknown): value is object {
-  return typeof value === 'object' && value !== null;
 }
 
 function toggleClass(

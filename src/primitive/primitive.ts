@@ -37,6 +37,10 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
   rollback(): void {}
 }
 
+export function isObject(value: unknown): value is object {
+  return typeof value === 'object' && value !== null;
+}
+
 export function toStringOrEmpty(value: unknown): string {
   return value?.toString?.() ?? '';
 }

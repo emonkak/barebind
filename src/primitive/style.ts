@@ -7,7 +7,7 @@ import {
 } from '../core.js';
 import { DirectiveError } from '../error.js';
 import { ensurePartType } from '../part.js';
-import { PrimitiveBinding } from './primitive.js';
+import { isObject, PrimitiveBinding } from './primitive.js';
 
 export interface StyleMap extends CSSStyleProperties {
   [unknownProperty: string]: StyleValue;
@@ -28,7 +28,7 @@ const UPPERCASE_LETTER_PATTERN = /[A-Z]/g;
 
 export abstract class StyleType {
   static ensureValue(value: unknown, part: Part): asserts value is StyleMap {
-    if (!(typeof value === 'object' && value !== null)) {
+    if (!isObject(value)) {
       throw new DirectiveError(
         this,
         value,
