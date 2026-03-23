@@ -9,10 +9,29 @@ import {
 import { createEffect, MockType } from '../mocks.js';
 
 describe('Directive', () => {
+  describe('constructor()', () => {
+    it('assigns parameters', () => {
+      const type = new MockType();
+      const directive = new Directive(type, 'value', 'key');
+      expect(directive.type).toBe(type);
+      expect(directive.value).toBe('value');
+      expect(directive.key).toBe('key');
+    });
+  });
+
   describe('[$directive]()', () => {
     it('returns itself', () => {
-      const directive = new Directive(new MockType(), 'foo');
+      const directive = new Directive(new MockType(), 'value');
       expect(directive[$directive]()).toBe(directive);
+    });
+  });
+
+  describe('withKey()', () => {
+    it('returns a new instance with the given key', () => {
+      const directive = new Directive(new MockType(), 'value');
+      const keyed = directive.withKey('key');
+      expect(keyed).not.toBe(directive);
+      expect(keyed.key).toBe('key');
     });
   });
 });

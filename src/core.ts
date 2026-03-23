@@ -111,6 +111,10 @@ export class Directive<T> implements Bindable<T> {
   [$directive](): Directive<T> {
     return this;
   }
+
+  withKey(key: unknown): Directive<T> {
+    return new Directive(this.type, this.value, key);
+  }
 }
 
 export interface DirectiveContext {
