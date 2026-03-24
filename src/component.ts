@@ -58,9 +58,9 @@ export class ComponentBinding<TProps, TResult>
 
   private readonly _part: Part;
 
-  private _slot: Slot<TResult> | null = null;
-
   private _scope: Scope = Scope.Detached;
+
+  private _memoizedSlot: Slot<TResult> | null = null;
 
   private _pendingHooks: Hook[] = [];
 
@@ -132,11 +132,11 @@ export class ComponentBinding<TProps, TResult>
 
     const childSession: Session = { ...session, scope };
 
-    if (this._slot !== null) {
-      this._slot.update(result, childSession);
+    if (this._memoizedSlot !== null) {
+      this._memoizedSlot.update(result, childSession);
     } else {
-      this._slot = Slot.place(result, this._part, session.context);
-      this._slot.attach(childSession);
+      this._memoizedSlot = Slot.place(result, this._part, session.context);
+      this._memoizedSlot.attach(childSession);
     }
 
     this._pendingHooks = hooks;
@@ -169,16 +169,16 @@ export class ComponentBinding<TProps, TResult>
       }
     }
 
-    this._slot?.detach(session);
+    this._memoizedSlot?.detach(session);
   }
 
   commit(): void {
-    this._slot?.commit();
+    this._memoizedSlot?.commit();
     this._currentHooks = this._pendingHooks;
   }
 
   rollback(): void {
-    this._slot?.rollback();
+    this._memoizedSlot?.rollback();
     this._scope = Scope.Detached;
     this._currentHooks = [];
   }

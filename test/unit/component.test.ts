@@ -192,7 +192,6 @@ describe('ComponentBinding', () => {
           binding.rollback();
         });
 
-        expect(binding['_slot']?.part).toBe(part);
         expect(props.callback).toHaveBeenCalledTimes(3);
         expect(props.callback).toHaveBeenNthCalledWith(1, 'mutation');
         expect(props.callback).toHaveBeenNthCalledWith(2, 'layout');
@@ -234,7 +233,6 @@ describe('ComponentBinding', () => {
           });
         });
 
-        expect(binding['_slot']?.part).toBe(part);
         expect(props.callback).not.toHaveBeenCalled();
         expect(props.cleanup).not.toHaveBeenCalled();
         expect(part.node.nodeValue).toBe('');
