@@ -1,4 +1,4 @@
-import { createComponent, html, Repeat, shallowEqual } from 'barebind';
+import { createComponent, html, shallowEqual } from 'barebind';
 import { fetchData } from './data.js';
 
 export interface SearchResultsProps {
@@ -16,13 +16,11 @@ export const SearchResults = createComponent<SearchResultsProps>(
     }
     return html`
       <ul>
-        <${Repeat({
-          source: albums,
-          keySelector: (album) => album.id,
-          elementSelector: (album) => html`
+        <${albums.map((album) =>
+          html`
             <li>${album.title} (${album.year})</li>
-          `,
-        })}>
+          `.withKey(album.id),
+        )}>
       </ul>
     `;
   },

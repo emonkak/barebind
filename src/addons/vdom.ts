@@ -12,9 +12,9 @@ import {
 } from '../core.js';
 import { ensurePartType } from '../dom.js';
 import { BlackholeType } from '../primitive/blackhole.js';
+import { Repeat } from '../primitive/repeat.js';
 import { type StyleMap, updateStyles } from '../primitive/style.js';
 import type { Component } from '../render-context.js';
-import { Repeat } from '../repeat.js';
 import { ChildNodeTemplate } from '../template/child-node.js';
 import { ElementTemplate } from '../template/element.js';
 import { EmptyTemplate } from '../template/empty.js';

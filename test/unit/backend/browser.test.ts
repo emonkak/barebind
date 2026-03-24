@@ -26,10 +26,10 @@ import { EventType } from '@/primitive/event.js';
 import { LiveType } from '@/primitive/live.js';
 import { PropertyType } from '@/primitive/property.js';
 import { RefType } from '@/primitive/ref.js';
+import { Repeat } from '@/primitive/repeat.js';
 import { SpreadType } from '@/primitive/spread.js';
 import { StyleType } from '@/primitive/style.js';
 import { TextType } from '@/primitive/text.js';
-import { Repeat } from '@/repeat.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import { templateLiteral } from '../../test-helpers.js';
 

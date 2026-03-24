@@ -1,11 +1,4 @@
-import {
-  BrowserBackend,
-  createComponent,
-  html,
-  Repeat,
-  Root,
-  Runtime,
-} from 'barebind';
+import { BrowserBackend, createComponent, html, Root, Runtime } from 'barebind';
 import {
   ConsoleReporter,
   SessionProfiler,
@@ -51,8 +44,8 @@ const App = createComponent<AppProps>(function App({ items }, $) {
     <header class="Header">
       <nav class="Header-nav">
         <select @change=${handleSelectedIndexChange}>
-          <${Repeat({
-            elementSelector: (item, index) => html`
+          <${items.map(
+            (item, index) => html`
               <option
                 value=${index}
                 selected=${index === selectedIndex}
@@ -60,8 +53,7 @@ const App = createComponent<AppProps>(function App({ items }, $) {
                 ${item.label}
               </option>
             `,
-            source: items,
-          })}>
+          )}>
         </select>
         <input
           type="range"

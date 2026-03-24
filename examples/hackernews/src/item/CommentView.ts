@@ -1,4 +1,4 @@
-import { createComponent, html, Repeat } from 'barebind';
+import { createComponent, html } from 'barebind';
 
 import type { Comment } from '../store.js';
 
@@ -46,11 +46,7 @@ export const CommentList = createComponent<CommentListProps>(
       isOpened
         ? html`
           <ul class="comment-children">
-            <${Repeat({
-              elementSelector: (comment) => CommentView({ comment }),
-              keySelector: (comment) => comment.id,
-              source: comments,
-            })}>
+            <${comments.map((comment) => CommentView({ comment }).withKey(comment.id))}>
           </ul>
         `
         : null

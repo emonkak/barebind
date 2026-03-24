@@ -1,4 +1,4 @@
-import { createComponent, html, Repeat } from 'barebind';
+import { createComponent, html } from 'barebind';
 import { fetchData } from './data.js';
 
 export interface AlbumsProps {
@@ -12,14 +12,13 @@ export const Albums = createComponent<AlbumsProps>(function Albums({
 
   return html`
     <ul>
-      <${Repeat({
-        source: albums,
-        elementSelector: (album) => html`
+      <${albums.map(
+        (album) => html`
           <li>
             ${album.title} (${album.year})
           </li>
         `,
-      })}>
+      )}>
     </ul>
   `;
 });

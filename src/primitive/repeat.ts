@@ -1,18 +1,19 @@
 import {
   type Binding,
-  Directive,
+  type Directive,
   type DirectiveContext,
   type DirectiveType,
   PART_TYPE_CHILD_NODE,
   type Part,
   type Session,
   toDirectiveNode,
-} from './core.js';
+} from '../core.js';
 import {
   ensurePartType,
   insertChildNodePart,
   moveChildNodePart,
-} from './dom.js';
+} from '../dom.js';
+import { DirectiveError } from '../error.js';
 import {
   MUTATION_TYPE_INSERT,
   MUTATION_TYPE_REMOVE,
@@ -20,23 +21,38 @@ import {
   MUTATION_TYPE_UPDATE_AND_MOVE,
   type Mutation,
   reconcileNodes,
-} from './reconciliation.js';
-import type { Slot } from './slot.js';
+} from '../reconciliation.js';
+import type { Slot } from '../slot.js';
+import { isIterable } from './primitive.js';
 
-export function Repeat<TSource>(
-  source: Iterable<TSource>,
-): Directive.Element<Iterable<TSource>> {
-  return new Directive(Repeat, source);
+export abstract class Repeat {
+  static ensureValue(
+    value: unknown,
+    part: Part,
+  ): asserts value is Iterable<unknown> {
+    DEBUG: {
+      if (!isIterable(value)) {
+        throw new DirectiveError(
+          this,
+          value,
+          part,
+          'Repeat values must be Iterable.',
+        );
+      }
+    }
+  }
+
+  static resolveBinding<TSource>(
+    source: Iterable<TSource>,
+    part: Part,
+    _context: DirectiveContext,
+  ): RepeatBinding<TSource> {
+    DEBUG: {
+      ensurePartType(PART_TYPE_CHILD_NODE, this, source, part);
+    }
+    return new RepeatBinding(source, part);
+  }
 }
-
-Repeat.resolveBinding = function <TSource>(
-  source: Iterable<TSource>,
-  part: Part,
-  _context: DirectiveContext,
-): RepeatBinding<TSource> {
-  ensurePartType(PART_TYPE_CHILD_NODE, this, source, part);
-  return new RepeatBinding(source, part);
-};
 
 export class RepeatBinding<TSource>
   implements Binding<Iterable<TSource>, Part.ChildNodePart>

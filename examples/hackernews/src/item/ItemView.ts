@@ -1,4 +1,4 @@
-import { createComponent, html, Repeat } from 'barebind';
+import { createComponent, html } from 'barebind';
 
 import type { Item } from '../store.js';
 import { CommentView } from './CommentView.js';
@@ -26,11 +26,7 @@ export const ItemView = createComponent<ItemViewProps>(function ItemView({
           ${item.comments_count > 0 ? item.comments_count + ' comments' : 'No comments yet.'}
         </div>
         <ul class="comment-children">
-          <${Repeat({
-            elementSelector: (comment) => CommentView({ comment }),
-            keySelector: (comment) => comment.id,
-            source: item.comments,
-          })}>
+          <${item.comments.map((comment) => CommentView({ comment }).withKey(comment.id))}>
         </ul>
       </div>
     </div>

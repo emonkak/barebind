@@ -1,4 +1,4 @@
-import { createComponent, html, Repeat } from 'barebind';
+import { createComponent, html } from 'barebind';
 
 import { AppStore, type StoryType } from '../store.js';
 import { StoryView } from './StoryView.js';
@@ -62,11 +62,7 @@ export const StoriesPage = createComponent<StoriesPageProps>(
       </div>
       <div class="story-list">
         <ul>
-          <${Repeat({
-            elementSelector: (story) => StoryView({ story }),
-            keySelector: (story) => story.id,
-            source: storyState.stories,
-          })}>
+          <${storyState.stories.map((story) => StoryView({ story }).withKey(story.id))}>
         </ul>
       </div>
     </div>

@@ -4,7 +4,6 @@ import {
   html,
   type Ref,
   type RenderContext,
-  Repeat,
 } from 'barebind';
 import { EffectEvent, ImperativeHandle } from 'barebind/addons/hooks';
 
@@ -267,29 +266,28 @@ export const VirtualScroller: VirtualScroller = createComponent(
             ></div>
           `.withKey(belowSpace)
         : null;
+    const renderedItems = items
+      .slice(visibleRange.start, visibleRange.end)
+      .map((item, offset) => {
+        const index = visibleRange.start + offset;
+        const key = getItemKey(item, index);
+        return html`
+          <li
+            aria-posinset=${index + 1}
+            aria-setsize=${items.length}
+            class="VirtualScroller-item"
+            :ref=${itemRef}
+          >
+            <${renderItem(item, index)}>
+          </li>
+        `.withKey(key);
+      });
 
     return html`
       <div class="VirtualScroller">
         <${aboveSpacer}>
         <ul class="VirtualScroller-list" :style=${{ scrollMargin }}>
-          <${Repeat({
-            elementSelector: (item, offset) => {
-              const index = visibleRange.start + offset;
-              return html`
-                <li
-                  aria-posinset=${index + 1}
-                  aria-setsize=${items.length}
-                  class="VirtualScroller-item"
-                  :ref=${itemRef}
-                >
-                  <${renderItem(item, index)}>
-                </li>
-              `;
-            },
-            keySelector: (item, offset) =>
-              getItemKey(item, visibleRange.start + offset),
-            source: items.slice(visibleRange.start, visibleRange.end),
-          })}>
+          <${renderedItems}>
         </ul>
         <${belowSpacer}>
       </div>

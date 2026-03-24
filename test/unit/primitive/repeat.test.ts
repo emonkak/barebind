@@ -11,24 +11,35 @@ import {
   createTreeWalker,
   HTML_NAMESPACE_URI,
 } from '@/dom.js';
-import { Repeat, RepeatBinding } from '@/repeat.js';
-import { createRuntime } from '../mocks.js';
+import { Repeat, RepeatBinding } from '@/primitive/repeat.js';
+import { createRuntime } from '../../mocks.js';
 import {
   allCombinations,
   createElement,
   permutations,
-} from '../test-helpers.js';
-import { TestUpdater } from '../test-updater.js';
+} from '../../test-helpers.js';
+import { TestUpdater } from '../../test-updater.js';
 
 const EMPTY_COMMENT = '<!---->';
 
-describe('Repeat()', () => {
-  it('returns a new directive element with Repeat', () => {
-    const source = ['A'];
-    const bindable = Repeat(source);
+describe('Repeat', () => {
+  describe('ensureValue()', () => {
+    it('asserts values are iterable', () => {
+      const part = createChildNodePart(document.createComment(''), null);
 
-    expect(bindable.type).toBe(Repeat);
-    expect(bindable.value).toBe(source);
+      expect(() => {
+        Repeat.ensureValue!.call(Repeat, [], part);
+        Repeat.ensureValue!.call(Repeat, Iterator.from([]), part);
+      }).not.toThrow();
+    });
+
+    it('throws errors when the value is not iterable', () => {
+      const part = createChildNodePart(document.createComment(''), null);
+
+      expect(() => {
+        Repeat.ensureValue!.call(Repeat, {}, part);
+      }).toThrow('Repeat values must be Iterable.');
+    });
   });
 });
 

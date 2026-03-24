@@ -1,11 +1,4 @@
-import {
-  createComponent,
-  html,
-  Repeat,
-  shallowEqual,
-  svg,
-  text,
-} from 'barebind';
+import { createComponent, html, shallowEqual, svg, text } from 'barebind';
 import { PartialTemplate } from 'barebind/addons/partial-template';
 import { Atom, type Signal } from 'barebind/addons/signal';
 import type { VElement } from 'barebind/addons/vdom';
@@ -186,20 +179,17 @@ interface ListProps {
 
 const List = createComponent<ListProps>(
   function List({ items, onUp, onDown, onDelete }) {
-    const itemsList = Repeat({
-      elementSelector: (item, index) =>
-        Item({
-          index,
-          isFirst: index === 0,
-          isLast: index + 1 === items.length,
-          label: item,
-          onUp,
-          onDown,
-          onDelete,
-        }),
-      keySelector: (item) => item,
-      source: items,
-    });
+    const itemsList = items.map((item, index) =>
+      Item({
+        index,
+        isFirst: index === 0,
+        isLast: index + 1 === items.length,
+        label: item,
+        onUp,
+        onDown,
+        onDelete,
+      }).withKey(item),
+    );
 
     return html`
       <div class="List">

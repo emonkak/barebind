@@ -17,7 +17,7 @@ import {
   HTML_NAMESPACE_URI,
 } from '@/dom.js';
 import { BlackholeType } from '@/primitive/blackhole.js';
-import { Repeat } from '@/repeat.js';
+import { Repeat } from '@/primitive/repeat.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { ElementTemplate } from '@/template/element.js';
 import { EmptyTemplate } from '@/template/empty.js';

@@ -26,10 +26,10 @@ import { CommentType } from '../primitive/comment.js';
 import { LiveType } from '../primitive/live.js';
 import { isIterable } from '../primitive/primitive.js';
 import { PropertyType } from '../primitive/property.js';
+import { Repeat } from '../primitive/repeat.js';
 import { SpreadType } from '../primitive/spread.js';
 import { StyleType } from '../primitive/style.js';
 import { TextType } from '../primitive/text.js';
-import { Repeat } from '../repeat.js';
 import { TaggedTemplate } from '../template/tagged.js';
 
 export class ServerBackend implements Backend {

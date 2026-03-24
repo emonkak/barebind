@@ -1,4 +1,4 @@
-import { createComponent, html, Repeat } from 'barebind';
+import { createComponent, html } from 'barebind';
 
 import { TodoStore } from './state.js';
 import { TodoItem } from './TodoItem.js';
@@ -36,11 +36,7 @@ export const Main = createComponent<MainProps>(function Main(_props, $) {
           : null
       }>
       <ul class="todo-list" data-testid="todo-list">
-        <${Repeat({
-          elementSelector: (todo) => TodoItem({ todo }),
-          keySelector: (todo) => todo.id,
-          source: visibleTodos,
-        })}>
+        <${visibleTodos.map((todo) => TodoItem({ todo }).withKey(todo.id))}>
       </ul>
     </main>
   `;
