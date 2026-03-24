@@ -57,9 +57,7 @@ export class TemplateBinding<TExprs extends readonly unknown[]>
 
   private readonly _part: Part.ChildNodePart;
 
-  private _pendingResult: TemplateResult | null = null;
-
-  private _currentResult: TemplateResult | null = null;
+  private _memoizedResult: TemplateResult | null = null;
 
   constructor(
     template: Template<TExprs>,
@@ -88,12 +86,12 @@ export class TemplateBinding<TExprs extends readonly unknown[]>
   }
 
   shouldUpdate(newExprs: TExprs): boolean {
-    return this._currentResult === null || newExprs !== this._exprs;
+    return this._memoizedResult === null || newExprs !== this._exprs;
   }
 
   attach(session: Session): void {
-    if (this._pendingResult !== null) {
-      const { slots } = this._pendingResult;
+    if (this._memoizedResult !== null) {
+      const { slots } = this._memoizedResult;
 
       for (let i = 0, l = slots.length; i < l; i++) {
         slots[i]!.update(this._exprs[i]!, session);
@@ -102,14 +100,14 @@ export class TemplateBinding<TExprs extends readonly unknown[]>
       const hydrationTarget = getHydrationTarget(session.coroutine.scope);
 
       if (hydrationTarget !== null) {
-        this._pendingResult = this._template.hydrate(
+        this._memoizedResult = this._template.hydrate(
           this._exprs,
           this._part,
           hydrationTarget,
           session,
         );
       } else {
-        this._pendingResult = this._template.render(
+        this._memoizedResult = this._template.render(
           this._exprs,
           this._part,
           session,
@@ -119,8 +117,8 @@ export class TemplateBinding<TExprs extends readonly unknown[]>
   }
 
   detach(session: Session): void {
-    if (this._currentResult !== null) {
-      const { slots } = this._currentResult;
+    if (this._memoizedResult !== null) {
+      const { slots } = this._memoizedResult;
 
       for (let i = 0, l = slots.length; i < l; i++) {
         slots[i]!.detach(session);
@@ -129,10 +127,10 @@ export class TemplateBinding<TExprs extends readonly unknown[]>
   }
 
   commit(): void {
-    if (this._pendingResult !== null) {
-      const { childNodes, slots } = this._pendingResult;
+    if (this._memoizedResult !== null) {
+      const { childNodes, slots } = this._memoizedResult;
 
-      if (this._currentResult === null) {
+      if (this._part.node === this._part.sentinelNode) {
         this._part.sentinelNode.before(...childNodes);
       }
 
@@ -143,13 +141,11 @@ export class TemplateBinding<TExprs extends readonly unknown[]>
       this._part.node =
         getStartNode(childNodes, slots) ?? this._part.sentinelNode;
     }
-
-    this._currentResult = this._pendingResult;
   }
 
   rollback(): void {
-    if (this._currentResult !== null) {
-      const { childNodes, slots } = this._currentResult;
+    if (this._memoizedResult !== null) {
+      const { childNodes, slots } = this._memoizedResult;
 
       for (const slot of slots) {
         if (
@@ -168,7 +164,6 @@ export class TemplateBinding<TExprs extends readonly unknown[]>
     }
 
     this._part.node = this._part.sentinelNode;
-    this._currentResult = null;
   }
 }
 
