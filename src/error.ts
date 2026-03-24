@@ -10,11 +10,14 @@ import { emphasizeNode, formatPart } from './debug/dom.js';
 import { formatValue } from './debug/value.js';
 
 export class CoroutineError extends Error {
+  readonly coroutine: Coroutine;
+
   constructor(coroutine: Coroutine, message?: string, options?: ErrorOptions) {
     DEBUG: {
       message += '\n' + formatOwnerStack(getOwnerStack(coroutine));
     }
     super(message, options);
+    this.coroutine = coroutine;
   }
 }
 
