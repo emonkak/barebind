@@ -1,5 +1,4 @@
 export { BrowserBackend } from './backend/browser.js';
-export { ServerBackend } from './backend/server.js';
 export { sequentialEqual, shallowEqual } from './compare.js';
 export { type ComponentOptions, createComponent } from './component.js';
 export type {
