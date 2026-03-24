@@ -31,6 +31,7 @@ export {
 export { Root } from './root.js';
 export { Runtime } from './runtime.js';
 export { SharedContext } from './shared-context.js';
+export { PartialTemplate } from './template/partial.js';
 export {
   Element,
   Fragment,

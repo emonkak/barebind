@@ -1,5 +1,11 @@
-import { createComponent, html, shallowEqual, svg, text } from 'barebind';
-import { PartialTemplate } from 'barebind/addons/partial-template';
+import {
+  createComponent,
+  html,
+  PartialTemplate,
+  shallowEqual,
+  svg,
+  text,
+} from 'barebind';
 import { Atom, type Signal } from 'barebind/addons/signal';
 import type { VElement } from 'barebind/addons/vdom';
 

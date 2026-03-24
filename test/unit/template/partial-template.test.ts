@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
-
-import { PartialTemplate } from '@/addons/partial-template.js';
 import { Directive, Template } from '@/core.js';
+import { PartialTemplate } from '@/template/partial.js';
 
 describe('PartialTemplate', () => {
   describe('html()', () => {
