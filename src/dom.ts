@@ -1,3 +1,5 @@
+/// <reference path="../typings/moveBefore.d.ts" />
+
 import {
   BOUNDARY_TYPE_HYDRATION,
   type DirectiveType,
@@ -126,6 +128,20 @@ export function ensurePartType<TPartType extends Part['type']>(
   }
 }
 
+export function getChildNodes(part: Part.ChildNodePart): ChildNode[] {
+  const startNode = part.node;
+  const endNode = part.sentinelNode;
+  const childNodes = [startNode];
+  let currentNode: ChildNode | null = startNode;
+
+  while (currentNode !== endNode && currentNode.nextSibling !== null) {
+    currentNode = currentNode.nextSibling;
+    childNodes.push(currentNode);
+  }
+
+  return childNodes;
+}
+
 export function getHydrationTarget(scope: Scope): TreeWalker | null {
   for (
     let boundary = scope.boundary;
@@ -149,6 +165,35 @@ export function getNamespaceURIByTagName(tagName: string): string | null {
       return SVG_NAMESPACE_URI;
     default:
       return null;
+  }
+}
+
+export function insertChildNodePart(
+  parentPart: Part.ChildNodePart,
+  childPart: Part.ChildNodePart,
+  referencePart: Part.ChildNodePart | undefined,
+): void {
+  const referenceNode = referencePart?.node ?? parentPart.sentinelNode;
+  referenceNode.before(childPart.sentinelNode);
+}
+
+export function moveChildNodePart(
+  parentPart: Part.ChildNodePart,
+  childPart: Part.ChildNodePart,
+  referencePart: Part.ChildNodePart | undefined,
+): void {
+  const childNodes = getChildNodes(childPart);
+  const referenceNode = referencePart?.node ?? parentPart.sentinelNode;
+  const { parentNode } = referenceNode;
+
+  if (parentNode !== null) {
+    const insertOrMoveBefore =
+      /* v8 ignore next */
+      Element.prototype.moveBefore ?? Element.prototype.insertBefore;
+
+    for (const sibling of childNodes) {
+      insertOrMoveBefore.call(parentNode, sibling, referenceNode);
+    }
   }
 }
 

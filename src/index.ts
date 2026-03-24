@@ -28,10 +28,6 @@ export {
   type RefObject,
   type RenderContext,
 } from './render-context.js';
-export {
-  Repeat,
-  type RepeatProps,
-} from './repeat.js';
 export { Root } from './root.js';
 export { Runtime } from './runtime.js';
 export { SharedContext } from './shared-context.js';

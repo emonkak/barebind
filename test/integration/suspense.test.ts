@@ -1,12 +1,5 @@
 import type { RenderContext } from 'barebind';
-import {
-  createComponent,
-  html,
-  Repeat,
-  Root,
-  Runtime,
-  SharedContext,
-} from 'barebind';
+import { createComponent, html, Root, Runtime, SharedContext } from 'barebind';
 import { Suspend, Suspense } from 'barebind/addons/suspense';
 import { expect, test } from 'vitest';
 import { TestBackend } from '../test-backend.js';
@@ -36,11 +29,7 @@ const App = createComponent<AppProps>(function App(
   return Suspense({
     children: html`
       <ul>
-        <${Repeat({
-          elementSelector: (itemId) => Item({ id: itemId }),
-          keySelector: (itemId) => itemId,
-          source: itemIds,
-        })}>
+        <${itemIds.map((itemId) => Item({ id: itemId }).withKey(itemId))}>
       </ul>
     `,
     fallback: html`<p>Loading...</p>`,

@@ -53,7 +53,7 @@ test('render a component returning virtual DOM', async () => {
     await root.update(value2).finished;
 
     expect(stripComments(container).innerHTML).toBe(
-      '<div><ul><li>qux</li><li>baz</li><li>bar</li><li>foo</li></ul><p>Chao, Alternative world!</p><dt>foo</dt><dd>bar</dd><dt>baz</dt><dd>qux</dd></div>',
+      '<div><ul><li>qux</li><li>baz</li><li>bar</li><li>foo</li></ul><p>Chao, Alternative world!</p><dl><dt>foo</dt><dd>bar</dd><dt>baz</dt><dd>qux</dd></dl></div>',
     );
     expect([...container.querySelectorAll('li')]).toStrictEqual([
       expect.exact(itemElements[2]),
@@ -93,6 +93,17 @@ const App = createComponent(function App({
   items,
   name,
 }: AppProps) {
+  const footer = footerItems.length > 0 && (
+    <dl>
+      {footerItems.map((item) => (
+        <>
+          <dt>{item.title}</dt>
+          <dd>{item.content}</dd>
+        </>
+      ))}
+    </dl>
+  );
+
   return (
     <div>
       <ul>
@@ -103,13 +114,7 @@ const App = createComponent(function App({
       <p>
         {greet}, {name}!
       </p>
-      {footerItems.length > 0 &&
-        footerItems.map((item) => (
-          <>
-            <dt>{item.title}</dt>
-            <dd>{item.content}</dd>
-          </>
-        ))}
+      {footer}
     </div>
   );
 });

@@ -4,6 +4,8 @@ import {
   Directive,
   EffectQueue,
   isBindable,
+  Primitive,
+  toDirectiveNode,
 } from '@/core.js';
 import { createEffect, MockType } from '../mocks.js';
 
@@ -301,5 +303,19 @@ describe('isBindable()', () => {
 
   it('returns false when the value is not a bindable', () => {
     expect(isBindable('foo')).toBe(false);
+  });
+});
+
+describe('toDirectiveNode()', () => {
+  it('converts to directive when the source is bindable', () => {
+    const directive = new Directive(new MockType(), 'foo');
+    expect(toDirectiveNode(directive)).toBe(directive);
+  });
+
+  it('returns a primitive directive the source is primitive', () => {
+    const directive = toDirectiveNode('foo');
+    expect(directive.type).toBe(Primitive);
+    expect(directive.value).toBe('foo');
+    expect(directive.key).toBe(undefined);
   });
 });

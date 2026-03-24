@@ -124,17 +124,12 @@ describe('VElement', () => {
 
 describe('VFragment', () => {
   describe('[Directive.toDirective]()', () => {
-    it('returns a directive with the repeat directive', () => {
+    it('returns a directive with repeat type', () => {
       const children = [new VElement('foo', {}), 'bar'];
       const element = new VFragment(children);
       const directive = element[Directive.toDirective]();
 
       expect(directive.type).toBe(Repeat);
-      expect(directive.value).toStrictEqual(
-        expect.objectContaining({
-          source: children,
-        }),
-      );
     });
   });
 });

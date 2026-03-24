@@ -432,6 +432,6 @@ export function isBindable(value: unknown): value is Bindable<any> {
 
 export function toDirectiveNode(source: unknown): Directive.Node {
   return isBindable(source)
-    ? source[Directive.toDirective]()
+    ? source[toDirective]()
     : new Directive(Primitive, source);
 }

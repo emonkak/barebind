@@ -27,6 +27,7 @@ import { PropertyType } from '@/primitive/property.js';
 import { SpreadType } from '@/primitive/spread.js';
 import { StyleType } from '@/primitive/style.js';
 import { TextType } from '@/primitive/text.js';
+import { Repeat } from '@/repeat.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import { templateLiteral } from '../../test-helpers.js';
 
@@ -125,16 +126,6 @@ describe('ServerBackend', () => {
         AttributeType,
       ],
       [
-        null,
-        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
-        BlackholeType,
-      ],
-      [
-        undefined,
-        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
-        BlackholeType,
-      ],
-      [
         'foo',
         createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
         CommentType,
@@ -156,11 +147,40 @@ describe('ServerBackend', () => {
         PropertyType,
       ],
       ['foo', createTextPart(document.createTextNode(''), '', ''), TextType],
-    ])('resolves primitives from any parts', (source, part, expectedType) => {
+    ])('resolves basic primitives depending on the part', (source, part, expectedType) => {
       const backend = new ServerBackend(document);
 
       expect(backend.resolvePrimitive(source, part)).toStrictEqual(
         expectedType,
+      );
+    });
+
+    it.each<[unknown, Part, Primitive<unknown>]>([
+      [
+        null,
+        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
+        BlackholeType,
+      ],
+      [
+        undefined,
+        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
+        BlackholeType,
+      ],
+      [
+        ['foo'],
+        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
+        Repeat,
+      ],
+      [
+        Iterator.from(['foo']),
+        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
+        Repeat,
+      ],
+    ])('resolves child node primitives depending on the source', (source, part, expectedPrimitive) => {
+      const backend = new ServerBackend(document);
+
+      expect(backend.resolvePrimitive(source, part)).toStrictEqual(
+        expectedPrimitive,
       );
     });
 
@@ -185,7 +205,7 @@ describe('ServerBackend', () => {
         createAttributePart(document.createElement('div'), ':'),
         BlackholeType,
       ],
-    ])('resolves primitives from attribute parts starting with ":"', (source, part, expectedType) => {
+    ])('resolves primitives from the attribute part starting with ":"', (source, part, expectedType) => {
       const backend = new ServerBackend(document);
 
       expect(backend.resolvePrimitive(source, part)).toBe(expectedType);

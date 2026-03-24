@@ -25,11 +25,13 @@ import { ClassType } from '../primitive/class.js';
 import { CommentType } from '../primitive/comment.js';
 import { EventType } from '../primitive/event.js';
 import { LiveType } from '../primitive/live.js';
+import { isIterable } from '../primitive/primitive.js';
 import { PropertyType } from '../primitive/property.js';
 import { RefType } from '../primitive/ref.js';
 import { SpreadType } from '../primitive/spread.js';
 import { StyleType } from '../primitive/style.js';
 import { TextType } from '../primitive/text.js';
+import { Repeat } from '../repeat.js';
 import { TaggedTemplate } from '../template/tagged.js';
 
 export class BrowserBackend implements Backend {
@@ -95,7 +97,11 @@ export class BrowserBackend implements Backend {
         }
         return AttributeType;
       case PART_TYPE_CHILD_NODE:
-        return source != null ? CommentType : BlackholeType;
+        return source == null
+          ? BlackholeType
+          : typeof source !== 'string' && isIterable(source)
+            ? Repeat
+            : CommentType;
       case PART_TYPE_ELEMENT:
         return SpreadType;
       case PART_TYPE_EVENT:

@@ -16,7 +16,7 @@ export function jsx<TProps extends {}>(
   key?: unknown,
 ): VElement<TProps> | VFragment {
   return type === Fragment
-    ? new VFragment(props.children as VNode[])
+    ? new VFragment(props.children as VNode[], key)
     : new VElement(type, props, key);
 }
 
@@ -26,7 +26,7 @@ export function jsxs<TProps extends {}>(
   key?: unknown,
 ): VElement<TProps> | VStaticFragment {
   return type === Fragment
-    ? new VStaticFragment(props.children as VNode[])
+    ? new VStaticFragment(props.children as VNode[], key)
     : new VElement(type, props, key, true);
 }
 

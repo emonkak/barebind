@@ -37,6 +37,10 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
   rollback(): void {}
 }
 
+export function isIterable(value: unknown): value is Iterable<unknown> {
+  return typeof (value as Iterable<unknown>)[Symbol.iterator] === 'function';
+}
+
 export function isObject(value: unknown): value is object {
   return typeof value === 'object' && value !== null;
 }

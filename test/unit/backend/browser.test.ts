@@ -29,6 +29,7 @@ import { RefType } from '@/primitive/ref.js';
 import { SpreadType } from '@/primitive/spread.js';
 import { StyleType } from '@/primitive/style.js';
 import { TextType } from '@/primitive/text.js';
+import { Repeat } from '@/repeat.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import { templateLiteral } from '../../test-helpers.js';
 
@@ -249,16 +250,6 @@ describe('BrowserBackend', () => {
         AttributeType,
       ],
       [
-        null,
-        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
-        BlackholeType,
-      ],
-      [
-        undefined,
-        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
-        BlackholeType,
-      ],
-      [
         'foo',
         createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
         CommentType,
@@ -280,7 +271,36 @@ describe('BrowserBackend', () => {
         PropertyType,
       ],
       ['foo', createTextPart(document.createTextNode(''), '', ''), TextType],
-    ])('resolves primitives from any parts', (source, part, expectedPrimitive) => {
+    ])('resolves basic primitives depending on the part', (source, part, expectedPrimitive) => {
+      const backend = new BrowserBackend();
+
+      expect(backend.resolvePrimitive(source, part)).toStrictEqual(
+        expectedPrimitive,
+      );
+    });
+
+    it.each<[unknown, Part, Primitive<unknown>]>([
+      [
+        null,
+        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
+        BlackholeType,
+      ],
+      [
+        undefined,
+        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
+        BlackholeType,
+      ],
+      [
+        ['foo'],
+        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
+        Repeat,
+      ],
+      [
+        Iterator.from(['foo']),
+        createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
+        Repeat,
+      ],
+    ])('resolves child node primitives depending on the source', (source, part, expectedPrimitive) => {
       const backend = new BrowserBackend();
 
       expect(backend.resolvePrimitive(source, part)).toStrictEqual(
@@ -309,7 +329,7 @@ describe('BrowserBackend', () => {
         createAttributePart(document.createElement('div'), ':'),
         BlackholeType,
       ],
-    ])('resolves primitives from attribute parts starting with ":"', (source, part, expectedPrimitive) => {
+    ])('resolves special primitives from the attribute part starting with ":"', (source, part, expectedPrimitive) => {
       const backend = new BrowserBackend();
 
       expect(backend.resolvePrimitive(source, part)).toBe(expectedPrimitive);

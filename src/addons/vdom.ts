@@ -14,7 +14,7 @@ import { ensurePartType } from '../dom.js';
 import { BlackholeType } from '../primitive/blackhole.js';
 import { type StyleMap, updateStyles } from '../primitive/style.js';
 import type { Component } from '../render-context.js';
-import { Repeat, type RepeatProps } from '../repeat.js';
+import { Repeat } from '../repeat.js';
 import { ChildNodeTemplate } from '../template/child-node.js';
 import { ElementTemplate } from '../template/element.js';
 import { EmptyTemplate } from '../template/empty.js';
@@ -58,10 +58,10 @@ interface HasCleanup {
   [$cleanup]?: Cleanup | void;
 }
 
-interface TemplateDirective<TExprs extends readonly unknown[]>
-  extends Directive.Element<TExprs> {
-  type: Template<TExprs>;
-}
+type TemplateDirective<TExprs extends readonly unknown[]> = Directive<
+  Template<TExprs>,
+  TExprs
+>;
 
 /**
  * @internal
@@ -136,32 +136,32 @@ export class VElement<TProps extends {} = {}> implements Bindable {
   }
 }
 
-export class VFragment
-  implements Bindable<Directive.Element<RepeatProps<VNode>>>
-{
+export class VFragment implements Bindable<Directive.Element<unknown>> {
   readonly children: readonly VNode[];
 
-  constructor(children: readonly VNode[]) {
+  readonly key: unknown;
+
+  constructor(children: readonly VNode[], key?: unknown) {
     this.children = children;
+    this.key = key;
     DEBUG: {
       Object.freeze(this);
     }
   }
 
-  [Directive.toDirective](): Directive.Element<RepeatProps<VNode>> {
-    return new Directive(Repeat, {
-      elementSelector: resolveVChild,
-      keySelector: resolveKey,
-      source: this.children,
-    });
+  [Directive.toDirective](): Directive.Element<unknown> {
+    return new Directive(Repeat, this.children.map(resolveVChild), this.key);
   }
 }
 
 export class VStaticFragment implements Bindable {
   readonly children: readonly VNode[];
 
-  constructor(children: readonly VNode[]) {
+  readonly key: unknown;
+
+  constructor(children: readonly VNode[], key?: unknown) {
     this.children = children;
+    this.key = key;
     DEBUG: {
       Object.freeze(this);
     }
@@ -200,7 +200,7 @@ export class VStaticFragment implements Bindable {
       }
     }
 
-    return new Directive(new FragmentTemplate(templates), exprs);
+    return new Directive(new FragmentTemplate(templates), exprs, this.key);
   }
 }
 
@@ -551,10 +551,6 @@ function narrowElement<const TName extends keyof HTMLElementTagNameMap>(
   return (expectedNames as string[]).includes(element.localName);
 }
 
-function resolveKey(child: VNode, index: number): unknown {
-  return child instanceof VElement ? (child.key ?? index) : index;
-}
-
 function resolveVChild(child: VNode): Bindable {
   if (isBindable(child)) {
     return child;
@@ -581,17 +577,7 @@ function resolveVElement(
     : resolveVChild(props.children as VNode);
   const template = new ElementTemplate(type);
   const exprs = [element, children] as const;
-  if (key != null) {
-    return new Directive(template, exprs, key) as TemplateDirective<
-      readonly [unknown, unknown]
-    >;
-  } else {
-    return new Directive(
-      new ElementTemplate(type),
-      exprs,
-      key,
-    ) as TemplateDirective<readonly [unknown, unknown]>;
-  }
+  return new Directive(template, exprs, key);
 }
 
 function toStringOrEmpty(value: unknown): string {
