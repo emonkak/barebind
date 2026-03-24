@@ -2,7 +2,6 @@
 
 import { LinkedList } from './collections/linked-list.js';
 import {
-  type Backend,
   type CommitPhase,
   type Coroutine,
   Directive,
@@ -18,6 +17,7 @@ import {
   type SessionEvent,
   type SessionObserver,
   Template,
+  type TemplateMode,
   toDirectiveNode,
   type UnwrapBindable,
   type Update,
@@ -37,6 +37,27 @@ import {
   SyncLane,
   ViewTransitionLane,
 } from './lane.js';
+
+export interface Backend {
+  flushEffects(effects: EffectQueue, phase: CommitPhase): void;
+  getDefaultLanes(): Lanes;
+  getUpdatePriority(): TaskPriority;
+  requestCallback<T>(
+    callback: () => T | PromiseLike<T>,
+    options?: RequestCallbackOptions,
+  ): Promise<T>;
+  resolvePrimitive(source: unknown, part: Part): Primitive<unknown>;
+  resolveTemplate(
+    strings: readonly string[],
+    exprs: readonly unknown[],
+    mode: TemplateMode,
+    placeholder: string,
+  ): DirectiveType<readonly unknown[]>;
+  startViewTransition(callback: () => Promise<void> | void): Promise<void>;
+  yieldToMain(): Promise<void>;
+}
+
+export type RequestCallbackOptions = SchedulerPostTaskOptions;
 
 export interface RuntimeOptions {
   uniqueIdentifier?: string;

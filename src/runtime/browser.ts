@@ -1,7 +1,6 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
 import {
-  type Backend,
   type CommitPhase,
   type DirectiveType,
   type EffectQueue,
@@ -32,6 +31,7 @@ import { Repeat } from '../primitive/repeat.js';
 import { SpreadType } from '../primitive/spread.js';
 import { StyleType } from '../primitive/style.js';
 import { TextType } from '../primitive/text.js';
+import type { Backend } from '../runtime.js';
 import { TaggedTemplate } from '../template/tagged.js';
 
 export class BrowserBackend implements Backend {

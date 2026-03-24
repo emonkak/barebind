@@ -1,8 +1,6 @@
-export { BrowserBackend } from './backend/browser.js';
 export { sequentialEqual, shallowEqual } from './compare.js';
 export { type ComponentOptions, createComponent } from './component.js';
 export type {
-  Backend,
   Bindable,
   Directive,
   SessionEvent,
@@ -28,7 +26,8 @@ export {
   type RenderContext,
 } from './render-context.js';
 export { Root } from './root.js';
-export { Runtime } from './runtime.js';
+export { BrowserBackend } from './runtime/browser.js';
+export { type Backend, Runtime } from './runtime.js';
 export { SharedContext } from './shared-context.js';
 export { PartialTemplate } from './template/partial.js';
 export {

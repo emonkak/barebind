@@ -29,25 +29,6 @@ export const PART_TYPE_LIVE = 4;
 export const PART_TYPE_PROPERTY = 5;
 export const PART_TYPE_TEXT = 6;
 
-export interface Backend {
-  flushEffects(effects: EffectQueue, phase: CommitPhase): void;
-  getDefaultLanes(): Lanes;
-  getUpdatePriority(): TaskPriority;
-  requestCallback<T>(
-    callback: () => T | PromiseLike<T>,
-    options?: RequestCallbackOptions,
-  ): Promise<T>;
-  resolvePrimitive(source: unknown, part: Part): Primitive<unknown>;
-  resolveTemplate(
-    strings: readonly string[],
-    exprs: readonly unknown[],
-    mode: TemplateMode,
-    placeholder: string,
-  ): DirectiveType<readonly unknown[]>;
-  startViewTransition(callback: () => Promise<void> | void): Promise<void>;
-  yieldToMain(): Promise<void>;
-}
-
 export interface Bindable<T extends Directive.Node = Directive.Node> {
   [toDirective](): T;
 }

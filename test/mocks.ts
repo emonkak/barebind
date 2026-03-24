@@ -2,7 +2,6 @@
 
 import { vi } from 'vitest';
 import {
-  type Backend,
   type Binding,
   type CommitPhase,
   type Coroutine,
@@ -21,7 +20,6 @@ import {
   type Part,
   type Primitive,
   type RenderFrame,
-  type RequestCallbackOptions,
   Scope,
   type Session,
   type SessionEvent,
@@ -29,7 +27,12 @@ import {
   type TemplateMode,
 } from '@/core.js';
 import { SyncLane } from '@/lane.js';
-import { Runtime, type RuntimeOptions } from '@/runtime.js';
+import {
+  type Backend,
+  type RequestCallbackOptions,
+  Runtime,
+  type RuntimeOptions,
+} from '@/runtime.js';
 import { Template, type TemplateResult } from '@/template/template.js';
 
 export class MockBackend implements Backend {

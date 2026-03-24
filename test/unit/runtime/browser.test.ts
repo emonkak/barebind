@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { BrowserBackend } from '@/backend/browser.js';
 import {
   type Effect,
   EffectQueue,
@@ -30,6 +29,7 @@ import { Repeat } from '@/primitive/repeat.js';
 import { SpreadType } from '@/primitive/spread.js';
 import { StyleType } from '@/primitive/style.js';
 import { TextType } from '@/primitive/text.js';
+import { BrowserBackend } from '@/runtime/browser.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import { templateLiteral } from '../../test-helpers.js';
 
