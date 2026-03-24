@@ -133,7 +133,7 @@ export class ComponentBinding<TProps, TResult>
     const childSession: Session = { ...session, scope };
 
     if (this._slot !== null) {
-      this._slot.reconcile(result, childSession);
+      this._slot.update(result, childSession);
     } else {
       this._slot = Slot.place(result, this._part, session.context);
       this._slot.attach(childSession);

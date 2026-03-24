@@ -21,7 +21,7 @@ describe('Slot', () => {
     });
   });
 
-  describe('reconcile()', () => {
+  describe('update()', () => {
     it('update the current binding when the type is the same', () => {
       const binding = new MockBinding(
         new MockType(),
@@ -38,7 +38,7 @@ describe('Slot', () => {
 
       SESSION: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile('b', session);
+          const dirty = slot.update('b', session);
           slot.commit();
           return dirty;
         });
@@ -74,7 +74,7 @@ describe('Slot', () => {
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(
+          const dirty = slot.update(
             new Directive(new MockType('B'), 'b'),
             session,
           );
@@ -113,7 +113,7 @@ describe('Slot', () => {
 
       SESSION2: {
         const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(
+          const dirty = slot.update(
             new Directive(new MockType(), 'b', 'key2'),
             session,
           );

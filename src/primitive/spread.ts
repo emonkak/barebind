@@ -81,7 +81,7 @@ export class SpreadBinding extends PrimitiveBinding<
       }
       let slot = oldSlots?.get(key);
       if (slot !== undefined) {
-        slot.reconcile(prop, session);
+        slot.update(prop, session);
       } else {
         const part = resolveNamedPart(key, this._part.node);
         slot = Slot.place(prop, part, context);

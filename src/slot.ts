@@ -60,7 +60,7 @@ export class Slot<TSource, TPart extends Part = Part> {
     this._status = SLOT_STATUS_DETACHED;
   }
 
-  reconcile(source: TSource, session: Session): boolean {
+  update(source: TSource, session: Session): boolean {
     const { context } = session;
     const { type, value, key } = context.resolveDirective(
       source,

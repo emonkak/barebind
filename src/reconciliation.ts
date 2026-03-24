@@ -211,7 +211,7 @@ function updateSlot(
   node: Directive.Node,
   session: Session,
 ): boolean {
-  return slot.reconcile(node, session);
+  return slot.update(node, session);
 }
 
 function buildKeyToIndexMap<T>(

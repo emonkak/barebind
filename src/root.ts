@@ -92,7 +92,7 @@ export class Root<T> {
       scope,
       (session) => {
         const { frame, scope } = session;
-        if (this._slot.reconcile(source, session)) {
+        if (this._slot.update(source, session)) {
           frame.mutationEffects.push(this._slot, scope.level);
         }
       },

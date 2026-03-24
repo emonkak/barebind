@@ -154,7 +154,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   }
 
   resume(session: Session): void {
-    if (this._slot.reconcile(this._signal.value, session)) {
+    if (this._slot.update(this._signal.value, session)) {
       session.frame.mutationEffects.push(this._slot, this._scope.level);
     }
   }
@@ -171,7 +171,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     );
 
     if (this._memoizedVersion < version) {
-      this._slot.reconcile(this._signal.value, session);
+      this._slot.update(this._signal.value, session);
       this._memoizedVersion = version;
     } else {
       this._slot.attach(session);

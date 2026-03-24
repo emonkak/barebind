@@ -96,7 +96,7 @@ export class TemplateBinding<TExprs extends readonly unknown[]>
       const { slots } = this._pendingResult;
 
       for (let i = 0, l = slots.length; i < l; i++) {
-        slots[i]!.reconcile(this._exprs[i]!, session);
+        slots[i]!.update(this._exprs[i]!, session);
       }
     } else {
       const hydrationTarget = getHydrationTarget(session.coroutine.scope);
