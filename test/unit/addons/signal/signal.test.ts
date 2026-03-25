@@ -193,7 +193,7 @@ describe('Signal', () => {
       expect(renderer.callback).toHaveBeenCalledTimes(3);
       expect(renderer.callback).toHaveLastReturnedWith('qux');
 
-      renderer.finalize();
+      renderer.reset();
 
       signal.value = 'quux';
 

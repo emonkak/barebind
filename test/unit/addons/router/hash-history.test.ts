@@ -23,7 +23,7 @@ describe('HashHistory()', () => {
   });
 
   afterEach(() => {
-    renderer.finalize();
+    renderer.reset();
     renderer.reset();
     history.replaceState(originalState, '', originalURL);
     vi.restoreAllMocks();
@@ -160,7 +160,7 @@ describe('HashHistory()', () => {
       renderer.render({});
     }
 
-    renderer.finalize();
+    renderer.reset();
 
     expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
     expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -200,7 +200,7 @@ describe('HashHistory()', () => {
         renderer.render({});
       }
 
-      renderer.finalize();
+      renderer.reset();
 
       expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
       expect(addEventListenerSpy).toHaveBeenCalledWith(

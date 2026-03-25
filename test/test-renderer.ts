@@ -33,7 +33,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
     this.scope = scope;
   }
 
-  finalize(): void {
+  reset(): void {
     for (const hook of this.hooks) {
       if (
         hook.type === HOOK_TYPE_PASSIVE_EFFECT ||
@@ -44,9 +44,6 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
         hook.handler.cleanup = undefined;
       }
     }
-  }
-
-  reset(): void {
     this.hooks = [];
   }
 

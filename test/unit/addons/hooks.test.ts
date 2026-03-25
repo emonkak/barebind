@@ -211,7 +211,7 @@ describe('SyncExternalStore()', () => {
       expect(unsubscribe).not.toHaveBeenCalled();
     }
 
-    renderer.finalize();
+    renderer.reset();
 
     expect(subscribe).toHaveBeenCalledOnce();
     expect(unsubscribe).toHaveBeenCalledOnce();
@@ -265,7 +265,7 @@ describe('SyncExternalStore()', () => {
       expect(Array.from(subscribers)).toStrictEqual([expect.any(Function)]);
     }
 
-    renderer.finalize();
+    renderer.reset();
 
     expect(renderer.callback).toHaveBeenCalledTimes(3);
     expect(Array.from(subscribers)).toStrictEqual([]);
@@ -333,7 +333,7 @@ describe('SyncExternalStore()', () => {
       expect(unsubscribe2).toHaveBeenCalledTimes(0);
     }
 
-    renderer.finalize();
+    renderer.reset();
 
     expect(subscribe1).toHaveBeenCalledTimes(1);
     expect(subscribe2).toHaveBeenCalledTimes(1);

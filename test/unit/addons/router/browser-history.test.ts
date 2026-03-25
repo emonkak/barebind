@@ -24,7 +24,7 @@ describe('BrowserHistory()', () => {
   });
 
   afterEach(() => {
-    renderer.finalize();
+    renderer.reset();
     renderer.reset();
     history.replaceState(originalState, '', originalURL);
     vi.restoreAllMocks();
@@ -166,7 +166,7 @@ describe('BrowserHistory()', () => {
     vi.stubGlobal('navigation', undefined);
 
     renderer.render({});
-    renderer.finalize();
+    renderer.reset();
 
     expect(addEventListenerSpy).toHaveBeenCalledTimes(3);
     expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -211,7 +211,7 @@ describe('BrowserHistory()', () => {
       );
 
       renderer.render({});
-      renderer.finalize();
+      renderer.reset();
 
       expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
       expect(addEventListenerSpy).toHaveBeenCalledWith(

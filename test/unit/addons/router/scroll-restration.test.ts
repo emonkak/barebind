@@ -25,7 +25,7 @@ describe('ScrollRestration()', () => {
   );
 
   afterEach(() => {
-    renderer.finalize();
+    renderer.reset();
     renderer.reset();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -125,7 +125,7 @@ describe('ScrollRestration()', () => {
 
       renderer.render({ location, navigator });
 
-      renderer.finalize();
+      renderer.reset();
 
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
       expect(addEventListenerSpy).toHaveBeenCalledWith(
