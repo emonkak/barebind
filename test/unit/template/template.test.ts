@@ -130,11 +130,7 @@ describe('TemplateBinding', () => {
               new MockBinding(
                 new MockType(),
                 exprs[1],
-                createTextPart(
-                  fragment.firstChild!.nextSibling as Text,
-                  '',
-                  '',
-                ),
+                createTextPart(fragment.firstChild!.nextSibling as Text),
               ),
             ),
             new Slot(
@@ -227,7 +223,7 @@ describe('TemplateBinding', () => {
               new MockBinding(
                 new MockType(),
                 exprs[1],
-                createTextPart(fragment[1], '', ''),
+                createTextPart(fragment[1]),
               ),
             ),
             new Slot(

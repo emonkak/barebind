@@ -273,8 +273,6 @@ export namespace Part {
   export interface TextPart {
     type: typeof PART_TYPE_TEXT;
     node: Text;
-    precedingText: string;
-    followingText: string;
   }
 }
 

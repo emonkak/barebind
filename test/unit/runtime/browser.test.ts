@@ -20,15 +20,14 @@ import { ConcurrentLane } from '@/lane.js';
 import { AttributeType } from '@/primitive/attribute.js';
 import { BlackholeType } from '@/primitive/blackhole.js';
 import { ClassType } from '@/primitive/class.js';
-import { CommentType } from '@/primitive/comment.js';
 import { EventType } from '@/primitive/event.js';
 import { LiveType } from '@/primitive/live.js';
+import { NodeType } from '@/primitive/node.js';
 import { PropertyType } from '@/primitive/property.js';
 import { RefType } from '@/primitive/ref.js';
 import { Repeat } from '@/primitive/repeat.js';
 import { SpreadType } from '@/primitive/spread.js';
 import { StyleType } from '@/primitive/style.js';
-import { TextType } from '@/primitive/text.js';
 import { BrowserBackend } from '@/runtime/browser.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import { templateLiteral } from '../../test-helpers.js';
@@ -252,7 +251,7 @@ describe('BrowserBackend', () => {
       [
         'foo',
         createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
-        CommentType,
+        NodeType,
       ],
       [() => {}, createElementPart(document.createElement('div')), SpreadType],
       [
@@ -270,7 +269,7 @@ describe('BrowserBackend', () => {
         createPropertyPart(document.createElement('textarea'), 'value'),
         PropertyType,
       ],
-      ['foo', createTextPart(document.createTextNode(''), '', ''), TextType],
+      ['foo', createTextPart(document.createTextNode('')), NodeType],
     ])('resolves basic primitives depending on the part', (source, part, expectedPrimitive) => {
       const backend = new BrowserBackend();
 
@@ -356,20 +355,20 @@ describe('BrowserBackend', () => {
 
       expect(template).toBeInstanceOf(TaggedTemplate);
       expect((template as TaggedTemplate)['_template'].innerHTML).toBe(
-        '<div></div>',
+        '<div>, !</div>',
       );
       expect((template as TaggedTemplate)['_holes']).toStrictEqual([
         {
           type: PART_TYPE_TEXT,
           index: 1,
-          precedingText: '',
-          followingText: '',
+          leadingSpan: 0,
+          trailingSpan: 0,
         },
         {
           type: PART_TYPE_TEXT,
-          index: 2,
-          precedingText: ', ',
-          followingText: '!',
+          index: 1,
+          leadingSpan: 2,
+          trailingSpan: 1,
         },
       ]);
     });

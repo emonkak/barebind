@@ -45,7 +45,7 @@ describe('debugPart()', () => {
   });
 
   it('should do nothing if the part is not a child node part', () => {
-    const part = createTextPart(document.createTextNode(''), '', '');
+    const part = createTextPart(document.createTextNode(''));
 
     debugPart(part, new MockType(), 'foo');
 
@@ -450,7 +450,7 @@ describe('formatPart()', () => {
   });
 
   it('reports where a TextPart is inserted', () => {
-    const part = createTextPart(document.createTextNode('foo'), '', '');
+    const part = createTextPart(document.createTextNode('foo'));
 
     expect(formatPart(part, MAKRER)).toBe(`[[ERROR IN HERE!]]foo`);
 

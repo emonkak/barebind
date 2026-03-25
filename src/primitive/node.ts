@@ -1,30 +1,21 @@
-import {
-  type DirectiveContext,
-  PART_TYPE_CHILD_NODE,
-  type Part,
-  type Primitive,
-} from '../core.js';
-import { ensurePartType } from '../dom.js';
+import type { DirectiveContext, Part, Primitive } from '../core.js';
 import { PrimitiveBinding, toStringOrEmpty } from './primitive.js';
 
-export abstract class CommentType {
+export abstract class NodeType {
   static resolveBinding<T>(
     value: T,
     part: Part,
     _context: DirectiveContext,
-  ): CommentBinding<T> {
-    DEBUG: {
-      ensurePartType(PART_TYPE_CHILD_NODE, this, value, part);
-    }
-    return new CommentBinding(value, part);
+  ): NodeBinding<T> {
+    return new NodeBinding(value, part);
   }
 }
 
-export class CommentBinding<T> extends PrimitiveBinding<T, Part.ChildNodePart> {
+export class NodeBinding<T> extends PrimitiveBinding<T, Part> {
   private _currentValue: T | null = null;
 
   get type(): Primitive<T> {
-    return CommentType;
+    return NodeType;
   }
 
   shouldUpdate(value: T): boolean {
@@ -32,14 +23,15 @@ export class CommentBinding<T> extends PrimitiveBinding<T, Part.ChildNodePart> {
   }
 
   override commit(): void {
+    const { node } = this._part;
     const value = this._pendingValue;
-    this._part.sentinelNode.data = toStringOrEmpty(value);
+    node.nodeValue = toStringOrEmpty(value);
     this._currentValue = this._pendingValue;
   }
 
   override rollback(): void {
     if (this._currentValue !== null) {
-      this._part.sentinelNode.data = '';
+      this._part.node.nodeValue = '';
       this._currentValue = null;
     }
   }

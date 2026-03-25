@@ -37,9 +37,7 @@ export class DirectiveError<T> extends Error {
       const marker = `[[${type.name}(${formatValue(value)}) IS USED IN HERE!]]`;
       message += '\n' + formatPart(part, marker);
     }
-
     super(message);
-
     this.type = type;
     this.value = value;
     this.part = part;
@@ -47,16 +45,14 @@ export class DirectiveError<T> extends Error {
 }
 
 export class HydrationError extends Error {
-  readonly target: TreeWalker;
+  readonly node: Node;
 
-  constructor(target: TreeWalker, message: string) {
+  constructor(node: Node, message: string) {
     DEBUG: {
-      message += '\n' + emphasizeNode(target.currentNode, '[[ERROR IN HERE!]]');
+      message += '\n' + emphasizeNode(node, '[[ERROR IN HERE!]]');
     }
-
     super(message);
-
-    this.target = target;
+    this.node = node;
   }
 }
 

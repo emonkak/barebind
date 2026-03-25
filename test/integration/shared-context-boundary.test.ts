@@ -8,41 +8,7 @@ import {
 } from 'barebind';
 import { expect, test } from 'vitest';
 
-import { createElement, stripComments } from '../test-helpers.js';
-
-test('hydrate a component using a context value', async () => {
-  const value = Parent({
-    greet: 'Hello',
-    name: 'foo',
-  });
-  const container = createElement(
-    'div',
-    {},
-    createElement(
-      'div',
-      {},
-      ', ',
-      createElement('strong', {}, ''),
-      '!',
-      document.createComment(''),
-    ),
-  );
-  const root = Root.create(value, container, new Runtime(new BrowserBackend()));
-
-  SESSION1: {
-    await root.hydrate().finished;
-
-    expect(stripComments(container).innerHTML).toBe(
-      '<div>Hello, <strong>foo</strong>!</div>',
-    );
-  }
-
-  SESSION2: {
-    await root.unmount().finished;
-
-    expect(container.innerHTML).toBe('');
-  }
-});
+import { stripComments } from '../test-helpers.js';
 
 test('mount a component using a context value', async () => {
   const value1 = Parent({

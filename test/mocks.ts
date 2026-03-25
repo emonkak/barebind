@@ -162,10 +162,7 @@ export class MockBinding<T> implements Binding<T> {
         (this.part.node as any)['on' + this.part.name] = this.value;
         break;
       case PART_TYPE_TEXT:
-        this.part.node.data =
-          this.part.precedingText +
-          stringify(this.value) +
-          this.part.followingText;
+        this.part.node.data = stringify(this.value);
         break;
     }
 

@@ -14,24 +14,22 @@ import {
   PART_TYPE_TEXT,
   type Part,
   type Primitive,
-  type RequestCallbackOptions,
   type TemplateMode,
 } from '../core.js';
 import { ConcurrentLane } from '../lane.js';
 import { AttributeType } from '../primitive/attribute.js';
 import { BlackholeType } from '../primitive/blackhole.js';
 import { ClassType } from '../primitive/class.js';
-import { CommentType } from '../primitive/comment.js';
 import { EventType } from '../primitive/event.js';
 import { LiveType } from '../primitive/live.js';
+import { NodeType } from '../primitive/node.js';
 import { isIterable } from '../primitive/primitive.js';
 import { PropertyType } from '../primitive/property.js';
 import { RefType } from '../primitive/ref.js';
 import { Repeat } from '../primitive/repeat.js';
 import { SpreadType } from '../primitive/spread.js';
 import { StyleType } from '../primitive/style.js';
-import { TextType } from '../primitive/text.js';
-import type { Backend } from '../runtime.js';
+import type { Backend, RequestCallbackOptions } from '../runtime.js';
 import { TaggedTemplate } from '../template/tagged.js';
 
 export class BrowserBackend implements Backend {
@@ -101,7 +99,7 @@ export class BrowserBackend implements Backend {
           ? BlackholeType
           : typeof source !== 'string' && isIterable(source)
             ? Repeat
-            : CommentType;
+            : NodeType;
       case PART_TYPE_ELEMENT:
         return SpreadType;
       case PART_TYPE_EVENT:
@@ -111,7 +109,7 @@ export class BrowserBackend implements Backend {
       case PART_TYPE_PROPERTY:
         return PropertyType;
       case PART_TYPE_TEXT:
-        return TextType;
+        return NodeType;
     }
   }
 

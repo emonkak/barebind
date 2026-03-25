@@ -21,10 +21,8 @@ import {
   createTextPart,
   createTreeWalker,
   getNamespaceURIByTagName,
+  nextNode,
   replaceSentinelNode,
-  splitText,
-  treatNodeName,
-  treatNodeType,
 } from '../dom.js';
 import { Slot } from '../slot.js';
 import { Template, type TemplateResult } from './template.js';
@@ -76,8 +74,8 @@ export namespace Hole {
   export interface TextHole {
     type: typeof PART_TYPE_TEXT;
     index: number;
-    precedingText: string;
-    followingText: string;
+    leadingSpan: number;
+    trailingSpan: number;
   }
 }
 
@@ -97,7 +95,7 @@ const ATTRIBUTE_NAME_PATTERN = new RegExp(
 const ERROR_MAKER = '[[ERROR IN HERE!]]';
 
 const LEADING_NEWLINE_PATTERN = /^\s*\n/;
-const TAILING_NEWLINE_PATTERN = /\n\s*$/;
+const TRAILING_NEWLINE_PATTERN = /\n\s*$/;
 
 export class TaggedTemplate<
   TExprs extends readonly unknown[] = unknown[],
@@ -164,82 +162,83 @@ export class TaggedTemplate<
     const slots: Slot<unknown>[] = new Array(totalHoles);
     let nodeIndex = 0;
     let holeIndex = 0;
-    let lastHoleIndex = -1;
 
     for (
       let templateNode: Node | null;
       (templateNode = hydrationTemplate.nextNode()) !== null;
       nodeIndex++
     ) {
-      let currentPart: Part | null = null;
+      const hydratedNodes: ChildNode[] = [];
 
       for (; holeIndex < totalHoles; holeIndex++) {
         const hole = holes[holeIndex]!;
+        let part: Part;
+
         if (hole.index !== nodeIndex) {
           break;
         }
 
         if (hole.type === PART_TYPE_TEXT) {
-          currentPart = createTextPart(
-            splitText(hydrationTarget),
-            hole.precedingText,
-            hole.followingText,
+          part = hydrateTextPart(
+            hydrationTarget,
+            hole,
+            hydratedNodes.length > 0,
           );
+          hydratedNodes.push(part.node);
         } else if (hole.type === PART_TYPE_CHILD_NODE) {
-          currentPart = createChildNodePart(
+          part = createChildNodePart(
             ownerDocument.createComment(''),
             getNamespaceURI(hydrationTarget.currentNode, this._mode),
           );
+          hydratedNodes.push(part.node);
         } else {
-          const currentNode =
-            hole.index === lastHoleIndex
-              ? (hydrationTarget.currentNode as Element)
-              : treatNodeType(
-                  Node.ELEMENT_NODE,
-                  hydrationTarget.nextNode(),
-                  hydrationTarget,
-                );
+          let currentNode: Element;
+          if (hydratedNodes.length > 0) {
+            currentNode = hydrationTarget.currentNode as Element;
+          } else {
+            currentNode = nextNode(
+              templateNode.nodeName,
+              hydrationTarget,
+            ) as Element;
+            hydratedNodes.push(currentNode);
+          }
           switch (hole.type) {
             case PART_TYPE_ATTRIBUTE:
-              currentPart = createAttributePart(currentNode, hole.name);
+              part = createAttributePart(currentNode, hole.name);
               break;
             case PART_TYPE_EVENT:
-              currentPart = createEventPart(currentNode, hole.name);
+              part = createEventPart(currentNode, hole.name);
               break;
             case PART_TYPE_ELEMENT:
-              currentPart = createElementPart(currentNode);
+              part = createElementPart(currentNode);
               break;
             case PART_TYPE_LIVE:
-              currentPart = createLivePart(currentNode, hole.name);
+              part = createLivePart(currentNode, hole.name);
               break;
             case PART_TYPE_PROPERTY:
-              currentPart = createPropertyPart(currentNode, hole.name);
+              part = createPropertyPart(currentNode, hole.name);
               break;
           }
         }
 
-        const slot = Slot.place(exprs[holeIndex]!, currentPart!, context);
+        const slot = Slot.place(exprs[holeIndex]!, part, context);
         slot.attach(session);
 
-        if (currentPart.type === PART_TYPE_CHILD_NODE) {
-          replaceSentinelNode(hydrationTarget, currentPart!.sentinelNode);
+        if (part.type === PART_TYPE_CHILD_NODE) {
+          replaceSentinelNode(hydrationTarget, part.sentinelNode);
         }
 
         slots[holeIndex] = slot;
-        lastHoleIndex = hole.index;
       }
 
-      const targetNode =
-        currentPart !== null
-          ? hydrationTarget.currentNode
-          : treatNodeName(
-              templateNode.nodeName,
-              hydrationTarget.nextNode(),
-              hydrationTarget,
-            );
+      if (hydratedNodes.length === 0) {
+        hydratedNodes.push(
+          nextNode(templateNode.nodeName, hydrationTarget) as ChildNode,
+        );
+      }
 
       if (templateNode.parentNode === fragment) {
-        childNodes.push(targetNode as ChildNode);
+        childNodes.push(...hydratedNodes);
       }
     }
 
@@ -278,7 +277,7 @@ export class TaggedTemplate<
           }
         }
 
-        const { currentNode } = renderTarget;
+        const currentNode = renderTarget.currentNode;
         let currentPart: Part;
 
         switch (hole.type) {
@@ -307,11 +306,7 @@ export class TaggedTemplate<
             currentPart = createPropertyPart(currentNode as Element, hole.name);
             break;
           case PART_TYPE_TEXT:
-            currentPart = createTextPart(
-              currentNode as Text,
-              hole.precedingText,
-              hole.followingText,
-            );
+            currentPart = splitTextPart(renderTarget, hole);
             break;
         }
 
@@ -459,7 +454,6 @@ function parseChildren(
   marker: string,
   fragment: DocumentFragment,
 ): Hole[] {
-  const document = fragment.ownerDocument!;
   const sourceTree = createTreeWalker(fragment);
   const holes: Hole[] = [];
   let nextNode = sourceTree.nextNode() as ChildNode | null;
@@ -513,40 +507,44 @@ function parseChildren(
         break;
       }
       case Node.TEXT_NODE: {
-        const normalizedText = stripWhitespaces((currentNode as Text).data);
-        if (normalizedText === '') {
+        const components = (currentNode as Text).data
+          .split(marker)
+          .map(stripWhitespaces);
+        let lastComponent = components[0]!;
+        let normalizedText = lastComponent;
+
+        if (components.length > 1) {
+          const tail = components.length - 1;
+
+          for (let i = 1; i < tail; i++) {
+            const component = components[i]!;
+            holes.push({
+              type: PART_TYPE_TEXT,
+              index,
+              leadingSpan: lastComponent.length,
+              trailingSpan: 0,
+            });
+            lastComponent = component;
+            normalizedText += component;
+          }
+
+          const component = components[tail];
+          holes.push({
+            type: PART_TYPE_TEXT,
+            index,
+            leadingSpan: lastComponent.length,
+            trailingSpan: component!.length,
+          });
+          normalizedText += component;
+        }
+
+        if (normalizedText === '' && components.length === 1) {
           nextNode = sourceTree.nextNode() as ChildNode | null;
           currentNode.remove();
           continue;
         }
 
-        const components = normalizedText.split(marker);
-        if (components.length > 1) {
-          const tail = components.length - 1;
-          let lastComponent = components[0]!;
-
-          for (let i = 1; i < tail; i++) {
-            holes.push({
-              type: PART_TYPE_TEXT,
-              index,
-              precedingText: stripWhitespaces(lastComponent),
-              followingText: '',
-            });
-            currentNode.before(document.createTextNode(''));
-            lastComponent = components[i]!;
-            index++;
-          }
-
-          holes.push({
-            type: PART_TYPE_TEXT,
-            index,
-            precedingText: stripWhitespaces(lastComponent),
-            followingText: stripWhitespaces(components[tail]!),
-          });
-          (currentNode as Text).data = '';
-        } else {
-          (currentNode as Text).data = normalizedText;
-        }
+        (currentNode as Text).data = normalizedText;
 
         break;
       }
@@ -567,6 +565,47 @@ function parseChildren(
   return holes;
 }
 
+function splitTextPart(
+  treeWalker: TreeWalker,
+  hole: Hole.TextHole,
+): Part.TextPart {
+  let currentNode = treeWalker.currentNode as Text;
+  if (currentNode.previousSibling?.nodeType === Node.TEXT_NODE) {
+    currentNode = currentNode.splitText(0);
+  }
+  if (hole.leadingSpan > 0) {
+    currentNode = currentNode.splitText(hole.leadingSpan);
+  }
+  const part = createTextPart(currentNode);
+  currentNode = hole.trailingSpan > 0 ? currentNode.splitText(0) : part.node;
+  treeWalker.currentNode = currentNode;
+  return part;
+}
+
+function hydrateTextPart(
+  treeWalker: TreeWalker,
+  hole: Hole.TextHole,
+  contiguous: boolean,
+): Part.TextPart {
+  let currentNode = treeWalker.currentNode;
+  if (contiguous) {
+    currentNode = nextNode('#comment', treeWalker);
+  }
+  if (hole.leadingSpan > 0) {
+    nextNode('#text', treeWalker);
+    currentNode = nextNode('#comment', treeWalker);
+  }
+  const part = createTextPart(nextNode('#text', treeWalker));
+  if (hole.trailingSpan > 0) {
+    nextNode('#comment', treeWalker);
+    currentNode = nextNode('#text', treeWalker);
+  } else {
+    currentNode = part.node;
+  }
+  treeWalker.currentNode = currentNode;
+  return part;
+}
+
 function stripTrailingSlash(s: string): string {
   return s.at(-1) === '/' ? s.slice(0, -1) : s;
 }
@@ -575,7 +614,7 @@ function stripWhitespaces(text: string): string {
   if (LEADING_NEWLINE_PATTERN.test(text)) {
     text = text.trimStart();
   }
-  if (TAILING_NEWLINE_PATTERN.test(text)) {
+  if (TRAILING_NEWLINE_PATTERN.test(text)) {
     text = text.trimEnd();
   }
   return text;

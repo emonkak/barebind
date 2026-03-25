@@ -1,6 +1,7 @@
 import type {
   Binding,
   DirectiveContext,
+  DirectiveType,
   Part,
   Session,
   UnwrapBindable,
@@ -40,6 +41,14 @@ export class Slot<TSource, TPart extends Part = Part> {
   constructor(binding: Binding<UnwrapBindable<TSource>, TPart>, key?: unknown) {
     this._pendingBinding = binding;
     this._key = key;
+  }
+
+  get type(): DirectiveType<UnwrapBindable<TSource>, Part> {
+    return this._pendingBinding.type;
+  }
+
+  get value(): UnwrapBindable<TSource> {
+    return this._pendingBinding.value;
   }
 
   get part(): TPart {

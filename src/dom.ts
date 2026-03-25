@@ -20,12 +20,6 @@ export const HTML_NAMESPACE_URI = 'http://www.w3.org/1999/xhtml';
 export const MATH_NAMESPACE_URI = 'http://www.w3.org/1998/Math/MathML';
 export const SVG_NAMESPACE_URI = 'http://www.w3.org/2000/svg';
 
-interface NodeTypeMap {
-  [Node.COMMENT_NODE]: Comment;
-  [Node.ELEMENT_NODE]: Element;
-  [Node.TEXT_NODE]: Text;
-}
-
 export function createAttributePart<TElement extends Element>(
   node: TElement,
   name: string,
@@ -90,16 +84,10 @@ export function createPropertyPart<TElement extends Element>(
   };
 }
 
-export function createTextPart(
-  node: Text,
-  precedingText: string,
-  followingText: string,
-): Part.TextPart {
+export function createTextPart(node: Text): Part.TextPart {
   return {
     type: PART_TYPE_TEXT,
     node,
-    precedingText,
-    followingText,
   };
 }
 
@@ -201,55 +189,25 @@ export function replaceSentinelNode(
   target: TreeWalker,
   sentinelNode: Comment,
 ): void {
-  treatNodeType(Node.COMMENT_NODE, target.nextNode(), target).replaceWith(
-    sentinelNode,
-  );
+  nextNode('#comment', target).replaceWith(sentinelNode);
   target.currentNode = sentinelNode;
 }
 
-export function splitText(target: TreeWalker): Text {
-  const { currentNode } = target;
-  const nextNode = target.nextNode();
+export function nextNode(
+  expectedName: '#comment',
+  treeWalker: TreeWalker,
+): Comment;
+export function nextNode(expectedName: '#text', treeWalker: TreeWalker): Text;
+export function nextNode(expectedName: string, treeWalker: TreeWalker): Node;
+export function nextNode(expectedName: string, treeWalker: TreeWalker): Node {
+  const node = treeWalker.nextNode();
 
-  if (
-    currentNode instanceof Text &&
-    (nextNode === null || nextNode.previousSibling === currentNode)
-  ) {
-    const newText = currentNode.ownerDocument.createTextNode('');
-    currentNode.after(newText);
-    target.currentNode = newText;
-    return newText;
-  } else {
-    return treatNodeType(Node.TEXT_NODE, nextNode, target);
-  }
-}
-
-export function treatNodeName(
-  expectedName: string,
-  node: Node | null,
-  target: TreeWalker,
-): Node {
   if (node === null || node.nodeName !== expectedName) {
     throw new HydrationError(
-      target,
+      treeWalker.currentNode,
       `Hydration is failed because the node name is mismatched. ${expectedName} is expected here, but got ${node?.nodeName}.`,
     );
   }
 
   return node;
-}
-
-export function treatNodeType<TExpectedType extends keyof NodeTypeMap>(
-  expectedType: TExpectedType,
-  node: Node | null,
-  target: TreeWalker,
-): NodeTypeMap[TExpectedType] {
-  if (node === null || node.nodeType !== expectedType) {
-    throw new HydrationError(
-      target,
-      `Hydration is failed because the node type is mismatched. ${expectedType} is expected here, but got ${node?.nodeType}.`,
-    );
-  }
-
-  return node as NodeTypeMap[TExpectedType];
 }

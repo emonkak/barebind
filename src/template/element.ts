@@ -3,8 +3,8 @@ import {
   createChildNodePart,
   createElementPart,
   getNamespaceURIByTagName,
+  nextNode,
   replaceSentinelNode,
-  treatNodeName,
 } from '../dom.js';
 import { Slot } from '../slot.js';
 import { Template, type TemplateResult } from '../template/template.js';
@@ -39,11 +39,7 @@ export class ElementTemplate<
     const namespaceURI =
       getNamespaceURIByTagName(this._tagName) ?? part.namespaceURI;
     const elementPart = createElementPart(
-      treatNodeName(
-        this._tagName.toUpperCase(),
-        hydrationTarget.nextNode(),
-        hydrationTarget,
-      ) as Element,
+      nextNode(this._tagName.toUpperCase(), hydrationTarget) as Element,
     );
     const childrenPart = createChildNodePart(
       ownerDocument.createComment(''),

@@ -7,6 +7,7 @@ import {
 } from '@/dom.js';
 import { HydrationError } from '@/error.js';
 import { TextTemplate } from '@/template/text.js';
+import { MockTemplate } from '../../mocks.js';
 import { createElement } from '../../test-helpers.js';
 import { TestUpdater } from '../../test-updater.js';
 
@@ -20,20 +21,18 @@ describe('TextTemplate', () => {
   });
 
   describe('equals()', () => {
-    it('returns true if the preceding and following texts are the same', () => {
-      const template = new TextTemplate('foo', 'bar');
+    it('returns true if the value is instance of TextTemplate', () => {
+      const template = new TextTemplate();
 
       expect(template.equals(template)).toBe(true);
-      expect(template.equals(new TextTemplate('foo', 'bar'))).toBe(true);
-      expect(template.equals(new TextTemplate('foo', ''))).toBe(false);
-      expect(template.equals(new TextTemplate('', 'bar'))).toBe(false);
+      expect(template.equals(new TextTemplate())).toBe(true);
+      expect(template.equals(new MockTemplate())).toBe(false);
     });
   });
 
   describe('hydrate()', () => {
-    it('hydrates a tree containing a text part', () => {
-      const template = new TextTemplate('(', ')');
-      const exprs = ['foo'] as const;
+    it('hydrates text nodes', () => {
+      const template = new TextTemplate();
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -43,7 +42,7 @@ describe('TextTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(exprs, part, hydrationTarget, session);
+        return template.hydrate(['foo'], part, hydrationTarget, session);
       });
 
       expect(childNodes).toStrictEqual([expect.exact(container.firstChild)]);
@@ -52,36 +51,33 @@ describe('TextTemplate', () => {
           part: {
             type: PART_TYPE_TEXT,
             node: expect.exact(container.firstChild),
-            precedingText: '(',
-            followingText: ')',
           },
+          value: 'foo',
         }),
       ]);
     });
 
-    it('should throw the error if there is a tree mismatch', () => {
-      const template = new TextTemplate('(', ')');
-      const exprs = ['foo'] as const;
+    it('throws errors when mismatch node exists', () => {
+      const template = new TextTemplate();
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
       );
-      const container = createElement('div', {});
+      const container = createElement('div', {}, document.createComment('foo'));
       const hydrationTarget = createTreeWalker(container);
       const updater = new TestUpdater();
 
       expect(() => {
         updater.startUpdate((session) => {
-          template.hydrate(exprs, part, hydrationTarget, session);
+          template.hydrate(['foo'], part, hydrationTarget, session);
         });
       }).toThrow(HydrationError);
     });
   });
 
   describe('render()', () => {
-    it('renders a template containing a text part', () => {
-      const template = new TextTemplate('(', ')');
-      const exprs = ['foo'] as const;
+    it('renders text nodes', () => {
+      const template = new TextTemplate();
       const part = createChildNodePart(
         document.createComment(''),
         HTML_NAMESPACE_URI,
@@ -89,7 +85,7 @@ describe('TextTemplate', () => {
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.render(exprs, part, session);
+        return template.render(['foo'], part, session);
       });
 
       expect(childNodes).toStrictEqual([expect.any(Text)]);
@@ -98,9 +94,8 @@ describe('TextTemplate', () => {
           part: {
             type: PART_TYPE_TEXT,
             node: expect.any(Text),
-            precedingText: '(',
-            followingText: ')',
           },
+          value: 'foo',
         }),
       ]);
     });
