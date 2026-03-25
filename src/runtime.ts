@@ -108,11 +108,11 @@ export class Runtime implements SessionContext {
 
   async flushUpdates(): Promise<void> {
     for (
-      let udpate: Update | undefined;
-      (udpate = this._scheduledUpdates.front()?.value) !== undefined;
+      let update: Update | undefined;
+      (update = this._scheduledUpdates.front()?.value) !== undefined;
       this._scheduledUpdates.popFront()
     ) {
-      const { controller, coroutine, id, lanes } = udpate;
+      const { controller, coroutine, id, lanes } = update;
 
       if ((coroutine.pendingLanes & lanes) === NoLanes) {
         controller.resolve({ status: 'skipped' });
