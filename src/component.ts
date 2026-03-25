@@ -6,7 +6,6 @@ import {
   type Effect,
   type EffectQueue,
   type Lanes,
-  type Part,
   Scope,
   type Session,
 } from './core.js';
@@ -47,36 +46,36 @@ export function createComponent<TProps = {}, TResult = unknown>(
   return Component;
 }
 
-export class ComponentBinding<TProps, TResult>
-  implements Binding<TProps>, Coroutine
+export class ComponentBinding<TProps, TResult, TPart>
+  implements Binding<TProps, TPart>, Coroutine
 {
   pendingLanes: Lanes = NoLanes;
 
-  private readonly _component: Component<TProps, TResult>;
+  private readonly _component: Component<TProps, TResult, TPart>;
 
   private _props: TProps;
 
-  private readonly _part: Part;
+  private readonly _part: TPart;
 
   private _scope: Scope = Scope.Detached;
 
-  private _memoizedSlot: Slot<TResult> | null = null;
+  private _memoizedSlot: Slot<TResult, TPart> | null = null;
 
   private _pendingHooks: Hook[] = [];
 
   private _currentHooks: Hook[] = [];
 
   constructor(
-    component: Component<TProps, TResult>,
+    component: Component<TProps, TResult, TPart>,
     props: TProps,
-    part: Part,
+    part: TPart,
   ) {
     this._component = component;
     this._props = props;
     this._part = part;
   }
 
-  get type(): Component<TProps, TResult> {
+  get type(): Component<TProps, TResult, TPart> {
     return this._component;
   }
 
@@ -88,7 +87,7 @@ export class ComponentBinding<TProps, TResult>
     this._props = props;
   }
 
-  get part(): Part {
+  get part(): TPart {
     return this._part;
   }
 
@@ -212,11 +211,11 @@ function enqueueCleanupEffect(
   effects.pushBefore(new CleanupEffect(handler));
 }
 
-function resolveBinding<TProps, TResult>(
-  this: Component<TProps, TResult>,
+function resolveBinding<TProps, TResult, TPart>(
+  this: Component<TProps, TResult, TPart>,
   props: TProps,
-  part: Part,
+  part: TPart,
   _context: DirectiveContext,
-): ComponentBinding<TProps, TResult> {
+): ComponentBinding<TProps, TResult, TPart> {
   return new ComponentBinding(this, props, part);
 }

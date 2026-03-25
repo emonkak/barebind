@@ -1,15 +1,11 @@
-import {
-  type DirectiveContext,
-  PART_TYPE_ELEMENT,
-  type Part,
-  type Primitive,
-  type Session,
-} from '../core.js';
+import type { DirectiveContext, Primitive, Session } from '../core.js';
 import {
   createAttributePart,
   createEventPart,
   createLivePart,
   createPropertyPart,
+  DOM_PART_TYPE_ELEMENT,
+  type DOMPart,
   ensurePartType,
 } from '../dom.js';
 import { DirectiveError } from '../error.js';
@@ -19,7 +15,10 @@ import { isObject, PrimitiveBinding } from './primitive.js';
 export type SpreadProps = { [key: string]: unknown };
 
 export abstract class SpreadType {
-  static ensureValue(value: unknown, part: Part): asserts value is SpreadProps {
+  static ensureValue(
+    value: unknown,
+    part: DOMPart,
+  ): asserts value is SpreadProps {
     if (!isObject(value)) {
       throw new DirectiveError(
         this,
@@ -32,11 +31,11 @@ export abstract class SpreadType {
 
   static resolveBinding(
     value: SpreadProps,
-    part: Part,
+    part: DOMPart,
     _context: DirectiveContext,
   ): SpreadBinding {
     DEBUG: {
-      ensurePartType(PART_TYPE_ELEMENT, this, value, part);
+      ensurePartType(DOM_PART_TYPE_ELEMENT, this, value, part);
     }
     return new SpreadBinding(value, part);
   }
@@ -44,13 +43,13 @@ export abstract class SpreadType {
 
 export class SpreadBinding extends PrimitiveBinding<
   SpreadProps,
-  Part.ElementPart
+  DOMPart.ElementPart
 > {
-  private _pendingSlots: Map<string, Slot<unknown>> = new Map();
+  private _pendingSlots: Map<string, Slot<unknown, DOMPart>> = new Map();
 
-  private _currentSlots: Map<string, Slot<unknown>> | null = null;
+  private _currentSlots: Map<string, Slot<unknown, DOMPart>> | null = null;
 
-  get type(): Primitive<SpreadProps> {
+  get type(): Primitive<SpreadProps, DOMPart.ElementPart> {
     return SpreadType;
   }
 
@@ -128,7 +127,7 @@ export class SpreadBinding extends PrimitiveBinding<
   }
 }
 
-function resolveNamedPart(key: string, node: Element): Part {
+function resolveNamedPart(key: string, node: Element): DOMPart {
   switch (key[0]) {
     case '$':
       return createLivePart(node, key.slice(1));

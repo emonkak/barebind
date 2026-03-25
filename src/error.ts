@@ -2,12 +2,12 @@ import {
   BOUNDARY_TYPE_ERROR,
   type Coroutine,
   type DirectiveType,
-  type Part,
   type Scope,
 } from './core.js';
 import { formatOwnerStack, getOwnerStack } from './debug/coroutine.js';
 import { emphasizeNode, formatPart } from './debug/dom.js';
 import { formatValue } from './debug/value.js';
+import type { DOMPart } from './dom.js';
 
 export class CoroutineError extends Error {
   readonly coroutine: Coroutine;
@@ -30,9 +30,14 @@ export class DirectiveError<T> extends Error {
 
   readonly value: T;
 
-  readonly part: Part;
+  readonly part: DOMPart;
 
-  constructor(type: DirectiveType<T>, value: T, part: Part, message: string) {
+  constructor(
+    type: DirectiveType<T>,
+    value: T,
+    part: DOMPart,
+    message: string,
+  ) {
     DEBUG: {
       const marker = `[[${type.name}(${formatValue(value)}) IS USED IN HERE!]]`;
       message += '\n' + formatPart(part, marker);

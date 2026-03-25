@@ -2,12 +2,12 @@ import type {
   Binding,
   DirectiveContext,
   DirectiveType,
-  Part,
   Session,
   UnwrapBindable,
 } from './core.js';
 import { areDirectiveTypesEqual } from './core.js';
 import { debugPart, undebugPart } from './debug/dom.js';
+import type { DOMPart } from './dom.js';
 
 const SLOT_STATUS_IDLE = 0;
 const SLOT_STATUS_ATTACHED = 1;
@@ -18,7 +18,7 @@ type SlotStatus =
   | typeof SLOT_STATUS_ATTACHED
   | typeof SLOT_STATUS_DETACHED;
 
-export class Slot<TSource, TPart extends Part = Part> {
+export class Slot<TSource, TPart> {
   private _pendingBinding: Binding<UnwrapBindable<TSource>, TPart>;
 
   private _currentBinding: Binding<UnwrapBindable<TSource>, TPart> | null =
@@ -28,7 +28,7 @@ export class Slot<TSource, TPart extends Part = Part> {
 
   private _status: SlotStatus = SLOT_STATUS_IDLE;
 
-  static place<TSource, TPart extends Part>(
+  static place<TSource, TPart>(
     source: TSource,
     part: TPart,
     context: DirectiveContext,
@@ -43,7 +43,7 @@ export class Slot<TSource, TPart extends Part = Part> {
     this._key = key;
   }
 
-  get type(): DirectiveType<UnwrapBindable<TSource>, Part> {
+  get type(): DirectiveType<UnwrapBindable<TSource>, TPart> {
     return this._pendingBinding.type;
   }
 
@@ -119,13 +119,13 @@ export class Slot<TSource, TPart extends Part = Part> {
         oldBinding.rollback();
 
         DEBUG: {
-          undebugPart(oldBinding.part, oldBinding.type);
+          undebugPart(oldBinding.part as DOMPart, oldBinding.type);
         }
       }
     }
 
     DEBUG: {
-      debugPart(newBinding.part, newBinding.type, newBinding.value);
+      debugPart(newBinding.part as DOMPart, newBinding.type, newBinding.value);
     }
 
     newBinding.commit();
@@ -145,7 +145,7 @@ export class Slot<TSource, TPart extends Part = Part> {
       binding.rollback();
 
       DEBUG: {
-        undebugPart(binding.part, binding.type);
+        undebugPart(binding.part as DOMPart, binding.type);
       }
     }
 

@@ -1,27 +1,22 @@
-import {
-  type DirectiveContext,
-  PART_TYPE_LIVE,
-  type Part,
-  type Primitive,
-} from '../core.js';
-import { ensurePartType } from '../dom.js';
+import type { DirectiveContext, Primitive } from '../core.js';
+import { DOM_PART_TYPE_LIVE, type DOMPart, ensurePartType } from '../dom.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export abstract class LiveType {
   static resolveBinding<T>(
     value: T,
-    part: Part,
+    part: DOMPart,
     _context: DirectiveContext,
   ): LiveBinding<T> {
     DEBUG: {
-      ensurePartType(PART_TYPE_LIVE, this, value, part);
+      ensurePartType(DOM_PART_TYPE_LIVE, this, value, part);
     }
     return new LiveBinding(value, part);
   }
 }
 
-export class LiveBinding<T> extends PrimitiveBinding<T, Part.LivePart> {
-  get type(): Primitive<T> {
+export class LiveBinding<T> extends PrimitiveBinding<T, DOMPart.LivePart> {
+  get type(): Primitive<T, DOMPart.LivePart> {
     return LiveType;
   }
 

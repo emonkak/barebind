@@ -1,12 +1,12 @@
+import type { DirectiveType } from '../core.js';
 import {
-  type DirectiveType,
-  PART_TYPE_ATTRIBUTE,
-  PART_TYPE_CHILD_NODE,
-  PART_TYPE_EVENT,
-  PART_TYPE_LIVE,
-  PART_TYPE_PROPERTY,
-  type Part,
-} from '../core.js';
+  DOM_PART_TYPE_ATTRIBUTE,
+  DOM_PART_TYPE_CHILD_NODE,
+  DOM_PART_TYPE_EVENT,
+  DOM_PART_TYPE_LIVE,
+  DOM_PART_TYPE_PROPERTY,
+  type DOMPart,
+} from '../dom.js';
 import { formatValue } from './value.js';
 
 const INDENT_STRING = '  ';
@@ -15,11 +15,11 @@ const INDENT_STRING = '  ';
 const COMPLEXITY_THRESHOLD = 10;
 
 export function debugPart(
-  part: Part,
+  part: DOMPart,
   type: DirectiveType<unknown>,
   value: unknown,
 ): void {
-  if (part.type === PART_TYPE_CHILD_NODE) {
+  if (part.type === DOM_PART_TYPE_CHILD_NODE) {
     const { sentinelNode } = part;
     if (
       sentinelNode.data === '' ||
@@ -83,28 +83,28 @@ export function emphasizeNode(node: Node, marker: string): string {
   return precedingString + middleString + followingString;
 }
 
-export function formatPart(part: Part, marker: string): string {
+export function formatPart(part: DOMPart, marker: string): string {
   const node =
-    part.type === PART_TYPE_CHILD_NODE ? part.sentinelNode : part.node;
+    part.type === DOM_PART_TYPE_CHILD_NODE ? part.sentinelNode : part.node;
   switch (part.type) {
-    case PART_TYPE_ATTRIBUTE:
+    case DOM_PART_TYPE_ATTRIBUTE:
       marker = part.name + '=' + marker;
       break;
-    case PART_TYPE_EVENT:
+    case DOM_PART_TYPE_EVENT:
       marker = '@' + part.name + '=' + marker;
       break;
-    case PART_TYPE_LIVE:
+    case DOM_PART_TYPE_LIVE:
       marker = '$' + part.name + '=' + marker;
       break;
-    case PART_TYPE_PROPERTY:
+    case DOM_PART_TYPE_PROPERTY:
       marker = '.' + part.name + '=' + marker;
       break;
   }
   return emphasizeNode(node, marker);
 }
 
-export function undebugPart(part: Part, type: DirectiveType<unknown>): void {
-  if (part.type === PART_TYPE_CHILD_NODE) {
+export function undebugPart(part: DOMPart, type: DirectiveType<unknown>): void {
+  if (part.type === DOM_PART_TYPE_CHILD_NODE) {
     const { sentinelNode } = part;
     if (sentinelNode.data.startsWith('/' + type.name + '(')) {
       sentinelNode.data = '';

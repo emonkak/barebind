@@ -1,21 +1,20 @@
+import { type DirectiveContext, Primitive } from '../core.js';
 import {
-  type DirectiveContext,
-  PART_TYPE_ATTRIBUTE,
-  type Part,
-  Primitive,
-} from '../core.js';
-import { ensurePartType } from '../dom.js';
+  DOM_PART_TYPE_ATTRIBUTE,
+  type DOMPart,
+  ensurePartType,
+} from '../dom.js';
 import { PrimitiveBinding, toStringOrEmpty } from './primitive.js';
 
 export abstract class AttributeType {
   static readonly kind = Primitive;
   static resolveBinding<T>(
     value: T,
-    part: Part,
+    part: DOMPart,
     _context: DirectiveContext,
   ): AttributeBinding<T> {
     DEBUG: {
-      ensurePartType(PART_TYPE_ATTRIBUTE, this, value, part);
+      ensurePartType(DOM_PART_TYPE_ATTRIBUTE, this, value, part);
     }
     return new AttributeBinding(value, part);
   }
@@ -23,11 +22,11 @@ export abstract class AttributeType {
 
 export class AttributeBinding<T> extends PrimitiveBinding<
   T,
-  Part.AttributePart
+  DOMPart.AttributePart
 > {
   private _currentValue: T | null = null;
 
-  get type(): Primitive<T> {
+  get type(): Primitive<T, DOMPart.AttributePart> {
     return AttributeType;
   }
 

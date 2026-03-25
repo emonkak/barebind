@@ -1,21 +1,23 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
-import {
-  type CommitPhase,
-  type DirectiveType,
-  type EffectQueue,
-  type Lanes,
-  PART_TYPE_ATTRIBUTE,
-  PART_TYPE_CHILD_NODE,
-  PART_TYPE_ELEMENT,
-  PART_TYPE_EVENT,
-  PART_TYPE_LIVE,
-  PART_TYPE_PROPERTY,
-  PART_TYPE_TEXT,
-  type Part,
-  type Primitive,
-  type TemplateMode,
+import type {
+  CommitPhase,
+  DirectiveType,
+  EffectQueue,
+  Lanes,
+  Primitive,
+  TemplateMode,
 } from '../core.js';
+import {
+  DOM_PART_TYPE_ATTRIBUTE,
+  DOM_PART_TYPE_CHILD_NODE,
+  DOM_PART_TYPE_ELEMENT,
+  DOM_PART_TYPE_EVENT,
+  DOM_PART_TYPE_LIVE,
+  DOM_PART_TYPE_PROPERTY,
+  DOM_PART_TYPE_TEXT,
+  type DOMPart,
+} from '../dom.js';
 import { ConcurrentLane } from '../lane.js';
 import { AttributeType } from '../primitive/attribute.js';
 import { BlackholeType } from '../primitive/blackhole.js';
@@ -32,7 +34,7 @@ import { StyleType } from '../primitive/style.js';
 import type { Backend, RequestCallbackOptions } from '../runtime.js';
 import { TaggedTemplate } from '../template/tagged.js';
 
-export class BrowserBackend implements Backend {
+export class BrowserBackend implements Backend<DOMPart> {
   flushEffects(effects: EffectQueue, _phase: CommitPhase): void {
     effects.flush();
   }
@@ -78,9 +80,12 @@ export class BrowserBackend implements Backend {
     }
   }
 
-  resolvePrimitive(source: unknown, part: Part): Primitive<unknown> {
+  resolvePrimitive(
+    source: unknown,
+    part: DOMPart,
+  ): Primitive<unknown, DOMPart> {
     switch (part.type) {
-      case PART_TYPE_ATTRIBUTE:
+      case DOM_PART_TYPE_ATTRIBUTE:
         if (part.name[0] === ':') {
           switch (part.name.slice(1).toLowerCase()) {
             case 'class':
@@ -94,21 +99,21 @@ export class BrowserBackend implements Backend {
           }
         }
         return AttributeType;
-      case PART_TYPE_CHILD_NODE:
+      case DOM_PART_TYPE_CHILD_NODE:
         return source == null
           ? BlackholeType
           : typeof source !== 'string' && isIterable(source)
             ? Repeat
             : NodeType;
-      case PART_TYPE_ELEMENT:
+      case DOM_PART_TYPE_ELEMENT:
         return SpreadType;
-      case PART_TYPE_EVENT:
+      case DOM_PART_TYPE_EVENT:
         return EventType;
-      case PART_TYPE_LIVE:
+      case DOM_PART_TYPE_LIVE:
         return LiveType;
-      case PART_TYPE_PROPERTY:
+      case DOM_PART_TYPE_PROPERTY:
         return PropertyType;
-      case PART_TYPE_TEXT:
+      case DOM_PART_TYPE_TEXT:
         return NodeType;
     }
   }

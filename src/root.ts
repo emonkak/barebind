@@ -2,7 +2,6 @@ import {
   BOUNDARY_TYPE_HYDRATION,
   type Coroutine,
   type Effect,
-  type Part,
   Scope,
   type Session,
   type SessionContext,
@@ -12,13 +11,14 @@ import {
 import {
   createChildNodePart,
   createTreeWalker,
+  type DOMPart,
   replaceSentinelNode,
 } from './dom.js';
 import { NoLanes } from './lane.js';
 import { Slot } from './slot.js';
 
 export class Root<T> {
-  private readonly _slot: Slot<T, Part.ChildNodePart>;
+  private readonly _slot: Slot<T, DOMPart.ChildNodePart>;
 
   private readonly _container: Element;
 
@@ -39,7 +39,7 @@ export class Root<T> {
   }
 
   private constructor(
-    slot: Slot<T, Part.ChildNodePart>,
+    slot: Slot<T, DOMPart.ChildNodePart>,
     container: Element,
     context: SessionContext,
   ) {
@@ -135,11 +135,14 @@ export class Root<T> {
 }
 
 class HydrateSlot<T> implements Effect {
-  private readonly _slot: Slot<T, Part.ChildNodePart>;
+  private readonly _slot: Slot<T, DOMPart.ChildNodePart>;
 
   private readonly _hydrationTarget: TreeWalker;
 
-  constructor(slot: Slot<T, Part.ChildNodePart>, hydrationTarget: TreeWalker) {
+  constructor(
+    slot: Slot<T, DOMPart.ChildNodePart>,
+    hydrationTarget: TreeWalker,
+  ) {
     this._slot = slot;
     this._hydrationTarget = hydrationTarget;
   }
@@ -153,11 +156,11 @@ class HydrateSlot<T> implements Effect {
 }
 
 class MountSlot<T> implements Effect {
-  private readonly _slot: Slot<T, Part.ChildNodePart>;
+  private readonly _slot: Slot<T, DOMPart.ChildNodePart>;
 
   private readonly _container: Element;
 
-  constructor(slot: Slot<T, Part.ChildNodePart>, container: Element) {
+  constructor(slot: Slot<T, DOMPart.ChildNodePart>, container: Element) {
     this._slot = slot;
     this._container = container;
   }
@@ -170,9 +173,9 @@ class MountSlot<T> implements Effect {
 }
 
 class UnmountSlot<T> implements Effect {
-  private readonly _slot: Slot<T, Part.ChildNodePart>;
+  private readonly _slot: Slot<T, DOMPart.ChildNodePart>;
 
-  constructor(slot: Slot<T, Part.ChildNodePart>) {
+  constructor(slot: Slot<T, DOMPart.ChildNodePart>) {
     this._slot = slot;
   }
 

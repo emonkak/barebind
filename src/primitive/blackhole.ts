@@ -1,22 +1,25 @@
-import type { DirectiveContext, Part, Primitive } from '../core.js';
+import type { DirectiveContext, Primitive } from '../core.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export abstract class BlackholeType {
-  static resolveBinding<T>(
-    value: T,
-    part: Part,
+  static resolveBinding<TValue, TPart>(
+    value: TValue,
+    part: TPart,
     _context: DirectiveContext,
-  ): BlackholeBinding<T> {
+  ): BlackholeBinding<TValue, TPart> {
     return new BlackholeBinding(value, part);
   }
 }
 
-export class BlackholeBinding<T> extends PrimitiveBinding<T, Part> {
-  get type(): Primitive<T> {
+export class BlackholeBinding<TValue, TPart> extends PrimitiveBinding<
+  TValue,
+  TPart
+> {
+  get type(): Primitive<TValue, TPart> {
     return BlackholeType;
   }
 
-  shouldUpdate(_value: T): boolean {
+  shouldUpdate(_value: TValue): boolean {
     return false;
   }
 }

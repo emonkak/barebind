@@ -1,10 +1,9 @@
+import type { DirectiveContext, Primitive } from '../core.js';
 import {
-  type DirectiveContext,
-  PART_TYPE_PROPERTY,
-  type Part,
-  type Primitive,
-} from '../core.js';
-import { ensurePartType } from '../dom.js';
+  DOM_PART_TYPE_PROPERTY,
+  type DOMPart,
+  ensurePartType,
+} from '../dom.js';
 import { PrimitiveBinding } from './primitive.js';
 
 const NoValue = Symbol();
@@ -12,20 +11,23 @@ const NoValue = Symbol();
 export abstract class PropertyType {
   static resolveBinding<T>(
     value: T,
-    part: Part,
+    part: DOMPart,
     _context: DirectiveContext,
   ): PropertyBinding<T> {
     DEBUG: {
-      ensurePartType(PART_TYPE_PROPERTY, this, value, part);
+      ensurePartType(DOM_PART_TYPE_PROPERTY, this, value, part);
     }
     return new PropertyBinding(value, part);
   }
 }
 
-export class PropertyBinding<T> extends PrimitiveBinding<T, Part.PropertyPart> {
+export class PropertyBinding<T> extends PrimitiveBinding<
+  T,
+  DOMPart.PropertyPart
+> {
   private _currentValue: T | typeof NoValue = NoValue;
 
-  get type(): Primitive<T> {
+  get type(): Primitive<T, DOMPart.PropertyPart> {
     return PropertyType;
   }
 

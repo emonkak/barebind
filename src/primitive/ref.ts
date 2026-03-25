@@ -1,12 +1,9 @@
+import type { DirectiveContext, Effect, Primitive, Session } from '../core.js';
 import {
-  type DirectiveContext,
-  type Effect,
-  PART_TYPE_ATTRIBUTE,
-  type Part,
-  type Primitive,
-  type Session,
-} from '../core.js';
-import { ensurePartType } from '../dom.js';
+  DOM_PART_TYPE_ATTRIBUTE,
+  type DOMPart,
+  ensurePartType,
+} from '../dom.js';
 import { DirectiveError } from '../error.js';
 import type { Cleanup, Ref, RefObject } from '../render-context.js';
 import { PrimitiveBinding } from './primitive.js';
@@ -14,7 +11,7 @@ import { PrimitiveBinding } from './primitive.js';
 export abstract class RefType {
   static ensureValue(
     value: unknown,
-    part: Part,
+    part: DOMPart,
   ): asserts value is Ref<Element> {
     if (!isElementRef(value)) {
       throw new DirectiveError(
@@ -28,11 +25,11 @@ export abstract class RefType {
 
   static resolveBinding(
     value: Ref<Element>,
-    part: Part,
+    part: DOMPart,
     _context: DirectiveContext,
   ): RefBinding {
     DEBUG: {
-      ensurePartType(PART_TYPE_ATTRIBUTE, this, value, part);
+      ensurePartType(DOM_PART_TYPE_ATTRIBUTE, this, value, part);
     }
     return new RefBinding(value, part);
   }
@@ -40,13 +37,13 @@ export abstract class RefType {
 
 export class RefBinding extends PrimitiveBinding<
   Ref<Element>,
-  Part.AttributePart
+  DOMPart.AttributePart
 > {
   private _currentValue: Ref<Element>;
 
   private _currentCleanup: Cleanup | void = undefined;
 
-  get type(): Primitive<Ref<Element>> {
+  get type(): Primitive<Ref<Element>, DOMPart.AttributePart> {
     return RefType;
   }
 

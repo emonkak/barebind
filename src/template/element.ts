@@ -1,7 +1,8 @@
-import type { DirectiveType, Part, Session } from '../core.js';
+import type { DirectiveType, Session } from '../core.js';
 import {
   createChildNodePart,
   createElementPart,
+  type DOMPart,
   getNamespaceURIByTagName,
   nextNode,
   replaceSentinelNode,
@@ -30,7 +31,7 @@ export class ElementTemplate<
 
   hydrate(
     exprs: readonly [TProps, TChildren],
-    part: Part.ChildNodePart,
+    part: DOMPart.ChildNodePart,
     hydrationTarget: TreeWalker,
     session: Session,
   ): TemplateResult {
@@ -61,7 +62,7 @@ export class ElementTemplate<
 
   render(
     exprs: readonly [TProps, TChildren],
-    part: Part.ChildNodePart,
+    part: DOMPart.ChildNodePart,
     session: Session,
   ): TemplateResult {
     const { context } = session;

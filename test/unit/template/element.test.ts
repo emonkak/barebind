@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { PART_TYPE_CHILD_NODE, PART_TYPE_ELEMENT } from '@/core.js';
 import {
   createChildNodePart,
   createTreeWalker,
+  DOM_PART_TYPE_CHILD_NODE,
+  DOM_PART_TYPE_ELEMENT,
   HTML_NAMESPACE_URI,
   SVG_NAMESPACE_URI,
 } from '@/dom.js';
@@ -53,13 +54,13 @@ describe('ElementTemplate', () => {
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
-            type: PART_TYPE_ELEMENT,
+            type: DOM_PART_TYPE_ELEMENT,
             node: expect.exact(container.firstChild),
           },
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.exact(container.firstChild!.firstChild),
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
@@ -89,13 +90,13 @@ describe('ElementTemplate', () => {
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
-            type: PART_TYPE_ELEMENT,
+            type: DOM_PART_TYPE_ELEMENT,
             node: expect.any(window.Element),
           },
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
@@ -126,13 +127,13 @@ describe('ElementTemplate', () => {
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
-            type: PART_TYPE_ELEMENT,
+            type: DOM_PART_TYPE_ELEMENT,
             node: expect.any(window.Element),
           },
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             sentinelNode: expect.any(Comment),
             namespaceURI: SVG_NAMESPACE_URI,

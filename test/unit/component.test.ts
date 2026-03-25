@@ -80,7 +80,7 @@ describe('createComponent()', () => {
         props,
         part,
         runtime,
-      ) as ComponentBinding<typeof props, unknown>;
+      ) as ComponentBinding<typeof props, unknown, unknown>;
 
       expect(binding).toBeInstanceOf(ComponentBinding);
       expect(binding.name).toBe(Greet.name);

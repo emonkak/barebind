@@ -6,11 +6,9 @@ import {
   type DirectiveContext,
   type DirectiveType,
   isBindable,
-  PART_TYPE_ELEMENT,
-  type Part,
   type Session,
 } from '../core.js';
-import { ensurePartType } from '../dom.js';
+import { DOM_PART_TYPE_ELEMENT, type DOMPart, ensurePartType } from '../dom.js';
 import { BlackholeType } from '../primitive/blackhole.js';
 import { Repeat } from '../primitive/repeat.js';
 import { type StyleMap, updateStyles } from '../primitive/style.js';
@@ -69,10 +67,10 @@ type TemplateDirective<TExprs extends readonly unknown[]> = Directive<
 export abstract class ElementType {
   static resolveBinding(
     props: ElementProps,
-    part: Part,
+    part: DOMPart,
     _context: DirectiveContext,
   ): ElementBinding {
-    ensurePartType(PART_TYPE_ELEMENT, this, props, part);
+    ensurePartType(DOM_PART_TYPE_ELEMENT, this, props, part);
     return new ElementBinding(props, part);
   }
 }
@@ -207,22 +205,24 @@ export class VStaticFragment implements Bindable {
 /**
  * @internal
  */
-export class ElementBinding implements Binding<ElementProps, Part.ElementPart> {
+export class ElementBinding
+  implements Binding<ElementProps, DOMPart.ElementPart>
+{
   private _pendingProps: ElementProps;
 
   private _currentProps: ElementProps | null = null;
 
-  private readonly _part: Part.ElementPart;
+  private readonly _part: DOMPart.ElementPart;
 
   private readonly _eventListenerMap: Map<string, EventListenerWithOptions> =
     new Map();
 
-  constructor(props: ElementProps, part: Part.ElementPart) {
+  constructor(props: ElementProps, part: DOMPart.ElementPart) {
     this._pendingProps = props;
     this._part = part;
   }
 
-  get type(): DirectiveType<ElementProps> {
+  get type(): DirectiveType<ElementProps, DOMPart.ElementPart> {
     return ElementType;
   }
 
@@ -234,7 +234,7 @@ export class ElementBinding implements Binding<ElementProps, Part.ElementPart> {
     this._pendingProps = props;
   }
 
-  get part(): Part.ElementPart {
+  get part(): DOMPart.ElementPart {
     return this._part;
   }
 

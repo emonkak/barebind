@@ -1,11 +1,6 @@
 import { sequentialEqual } from '../compare.js';
-import {
-  type DirectiveContext,
-  PART_TYPE_EVENT,
-  type Part,
-  type Primitive,
-} from '../core.js';
-import { ensurePartType } from '../dom.js';
+import type { DirectiveContext, Primitive } from '../core.js';
+import { DOM_PART_TYPE_EVENT, type DOMPart, ensurePartType } from '../dom.js';
 import { DirectiveError } from '../error.js';
 import { PrimitiveBinding } from './primitive.js';
 
@@ -17,7 +12,7 @@ type EventListenerOrNullish =
 export abstract class EventType {
   static ensureValue(
     value: unknown,
-    part: Part,
+    part: DOMPart,
   ): asserts value is EventListenerOrNullish {
     if (!isEventListnerOrNullish(value)) {
       throw new DirectiveError(
@@ -31,11 +26,11 @@ export abstract class EventType {
 
   static resolveBinding(
     value: EventListenerOrNullish,
-    part: Part,
+    part: DOMPart,
     _context: DirectiveContext,
   ): EventBinding {
     DEBUG: {
-      ensurePartType(PART_TYPE_EVENT, this, value, part);
+      ensurePartType(DOM_PART_TYPE_EVENT, this, value, part);
     }
     return new EventBinding(value, part);
   }
@@ -43,11 +38,11 @@ export abstract class EventType {
 
 export class EventBinding extends PrimitiveBinding<
   EventListenerOrNullish,
-  Part.EventPart
+  DOMPart.EventPart
 > {
   private _currnetValue: EventListenerOrNullish = null;
 
-  get type(): Primitive<EventListenerOrNullish> {
+  get type(): Primitive<EventListenerOrNullish, DOMPart.EventPart> {
     return EventType;
   }
 
@@ -95,7 +90,7 @@ export class EventBinding extends PrimitiveBinding<
 }
 
 function abortEventDelegation(
-  part: Part.EventPart,
+  part: DOMPart.EventPart,
   listener: NonNullable<EventListenerOrNullish>,
   delegate: EventListenerObject,
 ): void {
@@ -133,7 +128,7 @@ function isEventListnerOrNullish(
 }
 
 function startEventDelegation(
-  part: Part.EventPart,
+  part: DOMPart.EventPart,
   listener: NonNullable<EventListenerOrNullish>,
   delegate: EventListenerObject,
 ): void {

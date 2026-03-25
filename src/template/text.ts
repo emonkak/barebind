@@ -1,5 +1,5 @@
-import type { Part, Session } from '../core.js';
-import { createTextPart, nextNode } from '../dom.js';
+import type { Session } from '../core.js';
+import { createTextPart, type DOMPart, nextNode } from '../dom.js';
 import { Slot } from '../slot.js';
 import { Template, type TemplateResult } from './template.js';
 
@@ -16,7 +16,7 @@ export class TextTemplate<T> extends Template<readonly [T]> {
 
   hydrate(
     exprs: readonly [T],
-    _part: Part.ChildNodePart,
+    _part: DOMPart.ChildNodePart,
     hydrationTarget: TreeWalker,
     session: Session,
   ): TemplateResult {
@@ -31,7 +31,7 @@ export class TextTemplate<T> extends Template<readonly [T]> {
 
   render(
     exprs: readonly [T],
-    part: Part.ChildNodePart,
+    part: DOMPart.ChildNodePart,
     session: Session,
   ): TemplateResult {
     const { context } = session;

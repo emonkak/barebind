@@ -1,4 +1,5 @@
-import type { DirectiveType, Part, Session } from '../core.js';
+import type { DirectiveType, Session } from '../core.js';
+import type { DOMPart } from '../dom.js';
 import { Template, type TemplateResult } from './template.js';
 
 export class EmptyTemplate extends Template<readonly []> {
@@ -14,7 +15,7 @@ export class EmptyTemplate extends Template<readonly []> {
 
   hydrate(
     _exprs: readonly [],
-    _part: Part.ChildNodePart,
+    _part: DOMPart.ChildNodePart,
     _hydrationTarget: TreeWalker,
     _session: Session,
   ): TemplateResult {
@@ -23,7 +24,7 @@ export class EmptyTemplate extends Template<readonly []> {
 
   render(
     _exprs: readonly [],
-    _part: Part.ChildNodePart,
+    _part: DOMPart.ChildNodePart,
     _session: Session,
   ): TemplateResult {
     return { childNodes: [], slots: [] };

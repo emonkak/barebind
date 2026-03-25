@@ -3,29 +3,144 @@
 import {
   BOUNDARY_TYPE_HYDRATION,
   type DirectiveType,
-  PART_TYPE_ATTRIBUTE,
-  PART_TYPE_CHILD_NODE,
-  PART_TYPE_ELEMENT,
-  PART_TYPE_EVENT,
-  PART_TYPE_LIVE,
-  PART_TYPE_NAMES,
-  PART_TYPE_PROPERTY,
-  PART_TYPE_TEXT,
-  type Part,
   type Scope,
 } from './core.js';
 import { DirectiveError, HydrationError } from './error.js';
+
+export const DOM_PART_TYPE_NAMES = [
+  'Attribute',
+  'ChildNode',
+  'Element',
+  'Event',
+  'Live',
+  'Property',
+  'Text',
+] as const;
+
+export const DOM_PART_TYPE_ATTRIBUTE = 0;
+export const DOM_PART_TYPE_CHILD_NODE = 1;
+export const DOM_PART_TYPE_ELEMENT = 2;
+export const DOM_PART_TYPE_EVENT = 3;
+export const DOM_PART_TYPE_LIVE = 4;
+export const DOM_PART_TYPE_PROPERTY = 5;
+export const DOM_PART_TYPE_TEXT = 6;
 
 export const HTML_NAMESPACE_URI = 'http://www.w3.org/1999/xhtml';
 export const MATH_NAMESPACE_URI = 'http://www.w3.org/1998/Math/MathML';
 export const SVG_NAMESPACE_URI = 'http://www.w3.org/2000/svg';
 
+export type DOMHole =
+  | DOMHole.AttributeHole
+  | DOMHole.ChildNodeHole
+  | DOMHole.ElementHole
+  | DOMHole.EventHole
+  | DOMHole.LiveHole
+  | DOMHole.PropertyHole
+  | DOMHole.TextHole;
+
+export namespace DOMHole {
+  export interface AttributeHole {
+    type: typeof DOM_PART_TYPE_ATTRIBUTE;
+    index: number;
+    name: string;
+  }
+
+  export interface ChildNodeHole {
+    type: typeof DOM_PART_TYPE_CHILD_NODE;
+    index: number;
+  }
+
+  export interface ElementHole {
+    type: typeof DOM_PART_TYPE_ELEMENT;
+    index: number;
+  }
+
+  export interface EventHole {
+    type: typeof DOM_PART_TYPE_EVENT;
+    index: number;
+    name: string;
+  }
+
+  export interface LiveHole {
+    type: typeof DOM_PART_TYPE_LIVE;
+    index: number;
+    name: string;
+  }
+
+  export interface PropertyHole {
+    type: typeof DOM_PART_TYPE_PROPERTY;
+    index: number;
+    name: string;
+  }
+
+  export interface TextHole {
+    type: typeof DOM_PART_TYPE_TEXT;
+    index: number;
+    leadingSpan: number;
+    trailingSpan: number;
+  }
+}
+
+export type DOMPart =
+  | DOMPart.AttributePart
+  | DOMPart.ChildNodePart
+  | DOMPart.ElementPart
+  | DOMPart.EventPart
+  | DOMPart.LivePart
+  | DOMPart.PropertyPart
+  | DOMPart.TextPart;
+
+export namespace DOMPart {
+  export interface AttributePart<TElement extends Element = Element> {
+    type: typeof DOM_PART_TYPE_ATTRIBUTE;
+    node: TElement;
+    name: string;
+  }
+
+  export interface ChildNodePart {
+    type: typeof DOM_PART_TYPE_CHILD_NODE;
+    node: ChildNode;
+    sentinelNode: Comment;
+    namespaceURI: string | null;
+  }
+
+  export interface ElementPart<TElement extends Element = Element> {
+    type: typeof DOM_PART_TYPE_ELEMENT;
+    node: TElement;
+  }
+
+  export interface EventPart<TElement extends Element = Element> {
+    type: typeof DOM_PART_TYPE_EVENT;
+    node: TElement;
+    name: string;
+  }
+
+  export interface LivePart<TElement extends Element = Element> {
+    type: typeof DOM_PART_TYPE_LIVE;
+    node: TElement;
+    name: string;
+    defaultValue: unknown;
+  }
+
+  export interface PropertyPart<TElement extends Element = Element> {
+    type: typeof DOM_PART_TYPE_PROPERTY;
+    node: TElement;
+    name: string;
+    defaultValue: unknown;
+  }
+
+  export interface TextPart {
+    type: typeof DOM_PART_TYPE_TEXT;
+    node: Text;
+  }
+}
+
 export function createAttributePart<TElement extends Element>(
   node: TElement,
   name: string,
-): Part.AttributePart<TElement> {
+): DOMPart.AttributePart<TElement> {
   return {
-    type: PART_TYPE_ATTRIBUTE,
+    type: DOM_PART_TYPE_ATTRIBUTE,
     node,
     name,
   };
@@ -34,9 +149,9 @@ export function createAttributePart<TElement extends Element>(
 export function createChildNodePart(
   node: Comment,
   namespaceURI: string | null,
-): Part.ChildNodePart {
+): DOMPart.ChildNodePart {
   return {
-    type: PART_TYPE_CHILD_NODE,
+    type: DOM_PART_TYPE_CHILD_NODE,
     node,
     sentinelNode: node,
     namespaceURI,
@@ -45,16 +160,19 @@ export function createChildNodePart(
 
 export function createElementPart<TElement extends Element>(
   node: TElement,
-): Part.ElementPart<TElement> {
+): DOMPart.ElementPart<TElement> {
   return {
-    type: PART_TYPE_ELEMENT,
+    type: DOM_PART_TYPE_ELEMENT,
     node,
   };
 }
 
-export function createEventPart(node: Element, name: string): Part.EventPart {
+export function createEventPart(
+  node: Element,
+  name: string,
+): DOMPart.EventPart {
   return {
-    type: PART_TYPE_EVENT,
+    type: DOM_PART_TYPE_EVENT,
     node,
     name,
   };
@@ -63,9 +181,9 @@ export function createEventPart(node: Element, name: string): Part.EventPart {
 export function createLivePart<TElement extends Element>(
   node: TElement,
   name: string,
-): Part.LivePart<TElement> {
+): DOMPart.LivePart<TElement> {
   return {
-    type: PART_TYPE_LIVE,
+    type: DOM_PART_TYPE_LIVE,
     node,
     name,
     defaultValue: node[name as keyof TElement],
@@ -75,18 +193,18 @@ export function createLivePart<TElement extends Element>(
 export function createPropertyPart<TElement extends Element>(
   node: TElement,
   name: string,
-): Part.PropertyPart<TElement> {
+): DOMPart.PropertyPart<TElement> {
   return {
-    type: PART_TYPE_PROPERTY,
+    type: DOM_PART_TYPE_PROPERTY,
     node,
     name,
     defaultValue: node[name as keyof TElement],
   };
 }
 
-export function createTextPart(node: Text): Part.TextPart {
+export function createTextPart(node: Text): DOMPart.TextPart {
   return {
-    type: PART_TYPE_TEXT,
+    type: DOM_PART_TYPE_TEXT,
     node,
   };
 }
@@ -100,23 +218,23 @@ export function createTreeWalker(
   );
 }
 
-export function ensurePartType<TPartType extends Part['type']>(
+export function ensurePartType<TPartType extends DOMPart['type']>(
   expectedPartType: TPartType,
   type: DirectiveType<unknown>,
   value: unknown,
-  part: Part,
-): asserts part is Part & { type: TPartType } {
+  part: DOMPart,
+): asserts part is DOMPart & { type: TPartType } {
   if (part.type !== expectedPartType) {
     throw new DirectiveError(
       type,
       value,
       part,
-      `${type.name} must be used in ${PART_TYPE_NAMES[expectedPartType]}Part.`,
+      `${type.name} must be used in ${DOM_PART_TYPE_NAMES[expectedPartType]}Part.`,
     );
   }
 }
 
-export function getChildNodes(part: Part.ChildNodePart): ChildNode[] {
+export function getChildNodes(part: DOMPart.ChildNodePart): ChildNode[] {
   const startNode = part.node;
   const endNode = part.sentinelNode;
   const childNodes = [startNode];
@@ -157,18 +275,18 @@ export function getNamespaceURIByTagName(tagName: string): string | null {
 }
 
 export function insertChildNodePart(
-  parentPart: Part.ChildNodePart,
-  childPart: Part.ChildNodePart,
-  referencePart: Part.ChildNodePart | undefined,
+  parentPart: DOMPart.ChildNodePart,
+  childPart: DOMPart.ChildNodePart,
+  referencePart: DOMPart.ChildNodePart | undefined,
 ): void {
   const referenceNode = referencePart?.node ?? parentPart.sentinelNode;
   referenceNode.before(childPart.sentinelNode);
 }
 
 export function moveChildNodePart(
-  parentPart: Part.ChildNodePart,
-  childPart: Part.ChildNodePart,
-  referencePart: Part.ChildNodePart | undefined,
+  parentPart: DOMPart.ChildNodePart,
+  childPart: DOMPart.ChildNodePart,
+  referencePart: DOMPart.ChildNodePart | undefined,
 ): void {
   const childNodes = getChildNodes(childPart);
   const referenceNode = referencePart?.node ?? parentPart.sentinelNode;
@@ -183,14 +301,6 @@ export function moveChildNodePart(
       insertOrMoveBefore.call(parentNode, sibling, referenceNode);
     }
   }
-}
-
-export function replaceSentinelNode(
-  target: TreeWalker,
-  sentinelNode: Comment,
-): void {
-  nextNode('#comment', target).replaceWith(sentinelNode);
-  target.currentNode = sentinelNode;
 }
 
 export function nextNode(
@@ -210,4 +320,12 @@ export function nextNode(expectedName: string, treeWalker: TreeWalker): Node {
   }
 
   return node;
+}
+
+export function replaceSentinelNode(
+  target: TreeWalker,
+  sentinelNode: Comment,
+): void {
+  nextNode('#comment', target).replaceWith(sentinelNode);
+  target.currentNode = sentinelNode;
 }

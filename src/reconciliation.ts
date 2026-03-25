@@ -1,6 +1,7 @@
-import type { Directive, Part, Session } from './core.js';
+import type { Directive, Session } from './core.js';
 import {
   createChildNodePart,
+  type DOMPart,
   getHydrationTarget,
   replaceSentinelNode,
 } from './dom.js';
@@ -17,27 +18,27 @@ export interface Mutation {
     | typeof MUTATION_TYPE_UPDATE
     | typeof MUTATION_TYPE_UPDATE_AND_MOVE
     | typeof MUTATION_TYPE_REMOVE;
-  slot: Slot<Directive.Node, Part.ChildNodePart>;
-  refSlot?: Slot<Directive.Node, Part.ChildNodePart> | undefined;
+  slot: Slot<Directive.Node, DOMPart.ChildNodePart>;
+  refSlot?: Slot<Directive.Node, DOMPart.ChildNodePart> | undefined;
 }
 
 export interface ReconciliationResult {
   mutations: Mutation[];
-  slots: Slot<Directive.Node, Part.ChildNodePart>[];
+  slots: Slot<Directive.Node, DOMPart.ChildNodePart>[];
 }
 
 export function reconcileNodes(
-  slots: Slot<Directive.Node, Part.ChildNodePart>[],
+  slots: Slot<Directive.Node, DOMPart.ChildNodePart>[],
   nodes: Directive.Node[],
-  part: Part.ChildNodePart,
+  part: DOMPart.ChildNodePart,
   session: Session,
 ): ReconciliationResult {
   const oldKeys = slots.map((slot, index) => slot!.key ?? index);
-  const oldSlots: (Slot<Directive.Node, Part.ChildNodePart> | undefined)[] =
+  const oldSlots: (Slot<Directive.Node, DOMPart.ChildNodePart> | undefined)[] =
     slots.slice();
   const newKeys = nodes.map((node, index) => node.key ?? index);
   const newMutations: Mutation[] = [];
-  const newSlots: Slot<Directive.Node, Part.ChildNodePart>[] = new Array(
+  const newSlots: Slot<Directive.Node, DOMPart.ChildNodePart>[] = new Array(
     nodes.length,
   );
 
@@ -182,9 +183,9 @@ export function reconcileNodes(
 
 function insertSlot(
   node: Directive.Node,
-  part: Part.ChildNodePart,
+  part: DOMPart.ChildNodePart,
   session: Session,
-): Slot<Directive.Node, Part.ChildNodePart> {
+): Slot<Directive.Node, DOMPart.ChildNodePart> {
   const { sentinelNode, namespaceURI } = part;
   const itemPart = createChildNodePart(
     sentinelNode.ownerDocument.createComment(''),
@@ -200,14 +201,14 @@ function insertSlot(
 }
 
 function removeSlot(
-  slot: Slot<Directive.Node, Part.ChildNodePart>,
+  slot: Slot<Directive.Node, DOMPart.ChildNodePart>,
   session: Session,
 ): void {
   slot.detach(session);
 }
 
 function updateSlot(
-  slot: Slot<Directive.Node, Part.ChildNodePart>,
+  slot: Slot<Directive.Node, DOMPart.ChildNodePart>,
   node: Directive.Node,
   session: Session,
 ): boolean {

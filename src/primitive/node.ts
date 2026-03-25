@@ -1,24 +1,25 @@
-import type { DirectiveContext, Part, Primitive } from '../core.js';
+import type { DirectiveContext, Primitive } from '../core.js';
+import type { DOMPart } from '../dom.js';
 import { PrimitiveBinding, toStringOrEmpty } from './primitive.js';
 
 export abstract class NodeType {
   static resolveBinding<T>(
     value: T,
-    part: Part,
+    part: DOMPart,
     _context: DirectiveContext,
   ): NodeBinding<T> {
     return new NodeBinding(value, part);
   }
 }
 
-export class NodeBinding<T> extends PrimitiveBinding<T, Part> {
-  private _currentValue: T | null = null;
+export class NodeBinding<TValue> extends PrimitiveBinding<TValue, DOMPart> {
+  private _currentValue: TValue | null = null;
 
-  get type(): Primitive<T> {
+  get type(): Primitive<TValue, DOMPart> {
     return NodeType;
   }
 
-  shouldUpdate(value: T): boolean {
+  shouldUpdate(value: TValue): boolean {
     return !Object.is(value, this._currentValue);
   }
 

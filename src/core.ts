@@ -1,45 +1,25 @@
-/// <reference path="../typings/scheduler.d.ts" />
-
 import { LinkedList } from './collections/linked-list.js';
+
+export const BOUNDARY_TYPE_ERROR = 0;
+export const BOUNDARY_TYPE_HYDRATION = 1;
+export const BOUNDARY_TYPE_SHARED_CONTEXT = 2;
 
 export const Template = Symbol('Directive.Template');
 export const Primitive = Symbol('Directive.Primitive');
 
 const toDirective: unique symbol = Symbol('Bindable.toDirective');
 
-export const BOUNDARY_TYPE_ERROR = 0;
-export const BOUNDARY_TYPE_HYDRATION = 1;
-export const BOUNDARY_TYPE_SHARED_CONTEXT = 2;
-
-export const PART_TYPE_NAMES = [
-  'Attribute',
-  'ChildNode',
-  'Element',
-  'Event',
-  'Live',
-  'Property',
-  'Text',
-] as const;
-
-export const PART_TYPE_ATTRIBUTE = 0;
-export const PART_TYPE_CHILD_NODE = 1;
-export const PART_TYPE_ELEMENT = 2;
-export const PART_TYPE_EVENT = 3;
-export const PART_TYPE_LIVE = 4;
-export const PART_TYPE_PROPERTY = 5;
-export const PART_TYPE_TEXT = 6;
-
 export interface Bindable<T extends Directive.Node = Directive.Node> {
   [toDirective](): T;
 }
 
-export interface Binding<TValue, TPart extends Part = Part>
-  extends ReversibleEffect,
-    SessionLifecycle {
-  readonly type: DirectiveType<TValue>;
+export interface Binding<TValue, TPart = unknown> extends ReversibleEffect {
+  readonly type: DirectiveType<TValue, TPart>;
   value: TValue;
   readonly part: TPart;
   shouldUpdate(value: TValue): boolean;
+  attach(session: Session): void;
+  detach(session: Session): void;
 }
 
 export type Boundary =
@@ -84,16 +64,16 @@ export namespace Directive {
     | Primitive<unknown>
     | Template<readonly unknown[]>;
 
-  export type Element<TVaue, TPart extends Part = Part> = Directive<
+  export type Element<TVaue, TPart = unknown> = Directive<
     DirectiveType<TVaue, TPart>,
     TVaue
   >;
 
-  export type Primitive<T> = Directive<typeof Primitive, T>;
+  export type Primitive<TValue> = Directive<typeof Primitive, TValue>;
 
-  export type Template<T extends readonly unknown[]> = Directive<
+  export type Template<TExprs extends readonly unknown[]> = Directive<
     typeof Template,
-    { strings: readonly string[]; exprs: T; mode: TemplateMode }
+    { strings: readonly string[]; exprs: TExprs; mode: TemplateMode }
   >;
 }
 
@@ -125,13 +105,13 @@ export class Directive<TType, TValue> {
 }
 
 export interface DirectiveContext {
-  resolveDirective<TSource, TPart extends Part>(
+  resolveDirective<TSource, TPart>(
     source: TSource,
     part: TPart,
   ): Directive.Element<UnwrapBindable<TSource>, TPart>;
 }
 
-export interface DirectiveType<TValue, TPart extends Part = Part> {
+export interface DirectiveType<TValue, TPart = unknown> {
   readonly name: string;
   equals?(other: DirectiveType<unknown>): boolean;
   resolveBinding(
@@ -222,63 +202,9 @@ export type Lane = number;
 
 export type Lanes = number;
 
-export type Part =
-  | Part.AttributePart
-  | Part.ChildNodePart
-  | Part.ElementPart
-  | Part.EventPart
-  | Part.LivePart
-  | Part.PropertyPart
-  | Part.TextPart;
-
-export namespace Part {
-  export interface AttributePart<TElement extends Element = Element> {
-    type: typeof PART_TYPE_ATTRIBUTE;
-    node: TElement;
-    name: string;
-  }
-
-  export interface ChildNodePart {
-    type: typeof PART_TYPE_CHILD_NODE;
-    node: ChildNode;
-    sentinelNode: Comment;
-    namespaceURI: string | null;
-  }
-
-  export interface ElementPart<TElement extends Element = Element> {
-    type: typeof PART_TYPE_ELEMENT;
-    node: TElement;
-  }
-
-  export interface EventPart<TElement extends Element = Element> {
-    type: typeof PART_TYPE_EVENT;
-    node: TElement;
-    name: string;
-  }
-
-  export interface LivePart<TElement extends Element = Element> {
-    type: typeof PART_TYPE_LIVE;
-    node: TElement;
-    name: string;
-    defaultValue: unknown;
-  }
-
-  export interface PropertyPart<TElement extends Element = Element> {
-    type: typeof PART_TYPE_PROPERTY;
-    node: TElement;
-    name: string;
-    defaultValue: unknown;
-  }
-
-  export interface TextPart {
-    type: typeof PART_TYPE_TEXT;
-    node: Text;
-  }
-}
-
-export interface Primitive<TValue, TPart extends Part = Part>
+export interface Primitive<TValue, TPart = unknown>
   extends DirectiveType<TValue, TPart> {
-  ensureValue?(value: unknown, part: Part): asserts value is TValue;
+  ensureValue?(value: unknown, part: TPart): asserts value is TValue;
 }
 
 export interface RenderFrame {
@@ -289,8 +215,6 @@ export interface RenderFrame {
   layoutEffects: EffectQueue;
   passiveEffects: EffectQueue;
 }
-
-export type RequestCallbackOptions = SchedulerPostTaskOptions;
 
 export interface ReversibleEffect extends Effect {
   rollback(): void;
@@ -343,11 +267,6 @@ export type SessionEvent =
       phase: CommitPhase;
       effects: EffectQueue;
     };
-
-export interface SessionLifecycle {
-  attach(session: Session): void;
-  detach(session: Session): void;
-}
 
 export interface SessionObserver {
   onSessionEvent(event: SessionEvent): void;

@@ -1,11 +1,10 @@
 import { shallowEqual } from '../compare.js';
+import type { DirectiveContext, Primitive } from '../core.js';
 import {
-  type DirectiveContext,
-  PART_TYPE_ATTRIBUTE,
-  type Part,
-  type Primitive,
-} from '../core.js';
-import { ensurePartType } from '../dom.js';
+  DOM_PART_TYPE_ATTRIBUTE,
+  type DOMPart,
+  ensurePartType,
+} from '../dom.js';
 import { DirectiveError } from '../error.js';
 import { isObject, PrimitiveBinding } from './primitive.js';
 
@@ -22,7 +21,7 @@ export type ClassValue = boolean | string | null | undefined;
 const CLASS_SEPARATOR_PATTERN = /\s+/;
 
 export abstract class ClassType {
-  static ensureValue(value: unknown, part: Part): asserts value is ClassMap {
+  static ensureValue(value: unknown, part: DOMPart): asserts value is ClassMap {
     if (!isObject(value)) {
       throw new DirectiveError(
         this,
@@ -35,11 +34,11 @@ export abstract class ClassType {
 
   static resolveBinding(
     value: ClassMap,
-    part: Part,
+    part: DOMPart,
     _context: DirectiveContext,
   ): ClassBinding {
     DEBUG: {
-      ensurePartType(PART_TYPE_ATTRIBUTE, this, value, part);
+      ensurePartType(DOM_PART_TYPE_ATTRIBUTE, this, value, part);
     }
     return new ClassBinding(value, part);
   }
@@ -47,11 +46,11 @@ export abstract class ClassType {
 
 export class ClassBinding extends PrimitiveBinding<
   ClassMap,
-  Part.AttributePart
+  DOMPart.AttributePart
 > {
   private _currentValue: ClassMap = {};
 
-  get type(): Primitive<ClassMap> {
+  get type(): Primitive<ClassMap, DOMPart.AttributePart> {
     return ClassType;
   }
 

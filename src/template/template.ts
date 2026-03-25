@@ -1,23 +1,26 @@
-import {
-  type Binding,
-  type DirectiveContext,
-  type DirectiveType,
-  type Effect,
-  PART_TYPE_CHILD_NODE,
-  PART_TYPE_TEXT,
-  type Part,
-  type Session,
+import type {
+  Binding,
+  DirectiveContext,
+  DirectiveType,
+  Effect,
+  Session,
 } from '../core.js';
-import { ensurePartType, getHydrationTarget } from '../dom.js';
+import {
+  DOM_PART_TYPE_CHILD_NODE,
+  DOM_PART_TYPE_TEXT,
+  type DOMPart,
+  ensurePartType,
+  getHydrationTarget,
+} from '../dom.js';
 import type { Slot } from '../slot.js';
 
 export interface TemplateResult {
   childNodes: readonly ChildNode[];
-  slots: readonly Slot<unknown>[];
+  slots: readonly Slot<unknown, DOMPart>[];
 }
 
 export abstract class Template<TExprs extends readonly unknown[]>
-  implements DirectiveType<TExprs>
+  implements DirectiveType<TExprs, DOMPart.ChildNodePart>
 {
   abstract get arity(): TExprs['length'];
 
@@ -27,42 +30,42 @@ export abstract class Template<TExprs extends readonly unknown[]>
 
   abstract render(
     exprs: TExprs,
-    part: Part.ChildNodePart,
+    part: DOMPart.ChildNodePart,
     session: Session,
   ): TemplateResult;
 
   abstract hydrate(
     exprs: TExprs,
-    part: Part.ChildNodePart,
+    part: DOMPart.ChildNodePart,
     hydrationTarget: TreeWalker,
     session: Session,
   ): TemplateResult;
 
   resolveBinding(
     exprs: TExprs,
-    part: Part,
+    part: DOMPart.ChildNodePart,
     _context: DirectiveContext,
-  ): Binding<TExprs> {
-    ensurePartType(PART_TYPE_CHILD_NODE, this, exprs, part);
+  ): Binding<TExprs, DOMPart.ChildNodePart> {
+    ensurePartType(DOM_PART_TYPE_CHILD_NODE, this, exprs, part);
     return new TemplateBinding(this, exprs, part);
   }
 }
 
 export class TemplateBinding<TExprs extends readonly unknown[]>
-  implements Binding<TExprs, Part.ChildNodePart>, Effect
+  implements Binding<TExprs, DOMPart.ChildNodePart>, Effect
 {
   private readonly _template: Template<TExprs>;
 
   private _exprs: TExprs;
 
-  private readonly _part: Part.ChildNodePart;
+  private readonly _part: DOMPart.ChildNodePart;
 
   private _memoizedResult: TemplateResult | null = null;
 
   constructor(
     template: Template<TExprs>,
     exprs: TExprs,
-    part: Part.ChildNodePart,
+    part: DOMPart.ChildNodePart,
   ) {
     this._template = template;
     this._exprs = exprs;
@@ -81,7 +84,7 @@ export class TemplateBinding<TExprs extends readonly unknown[]>
     this._exprs = exprs;
   }
 
-  get part(): Part.ChildNodePart {
+  get part(): DOMPart.ChildNodePart {
     return this._part;
   }
 
@@ -149,8 +152,8 @@ export class TemplateBinding<TExprs extends readonly unknown[]>
 
       for (const slot of slots) {
         if (
-          (slot.part.type === PART_TYPE_CHILD_NODE ||
-            slot.part.type === PART_TYPE_TEXT) &&
+          (slot.part.type === DOM_PART_TYPE_CHILD_NODE ||
+            slot.part.type === DOM_PART_TYPE_TEXT) &&
           childNodes.includes(getEndNode(slot.part))
         ) {
           // This binding is mounted as a child of the root, so we must rollback it.
@@ -169,7 +172,7 @@ export class TemplateBinding<TExprs extends readonly unknown[]>
 
 function getStartNode(
   childNodes: readonly ChildNode[],
-  slots: readonly Slot<unknown>[],
+  slots: readonly Slot<unknown, DOMPart>[],
 ): ChildNode | null {
   const childNode = childNodes[0];
   const slot = slots[0];
@@ -180,6 +183,6 @@ function getStartNode(
     : (childNode ?? null);
 }
 
-function getEndNode(part: Part): ChildNode {
-  return part.type === PART_TYPE_CHILD_NODE ? part.sentinelNode : part.node;
+function getEndNode(part: DOMPart): ChildNode {
+  return part.type === DOM_PART_TYPE_CHILD_NODE ? part.sentinelNode : part.node;
 }

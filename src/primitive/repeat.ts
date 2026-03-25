@@ -3,12 +3,12 @@ import {
   type Directive,
   type DirectiveContext,
   type DirectiveType,
-  PART_TYPE_CHILD_NODE,
-  type Part,
   type Session,
   toDirectiveNode,
 } from '../core.js';
 import {
+  DOM_PART_TYPE_CHILD_NODE,
+  type DOMPart,
   ensurePartType,
   insertChildNodePart,
   moveChildNodePart,
@@ -28,7 +28,7 @@ import { isIterable } from './primitive.js';
 export abstract class Repeat {
   static ensureValue(
     value: unknown,
-    part: Part,
+    part: DOMPart,
   ): asserts value is Iterable<unknown> {
     DEBUG: {
       if (!isIterable(value)) {
@@ -44,36 +44,36 @@ export abstract class Repeat {
 
   static resolveBinding<TSource>(
     source: Iterable<TSource>,
-    part: Part,
+    part: DOMPart,
     _context: DirectiveContext,
   ): RepeatBinding<TSource> {
     DEBUG: {
-      ensurePartType(PART_TYPE_CHILD_NODE, this, source, part);
+      ensurePartType(DOM_PART_TYPE_CHILD_NODE, this, source, part);
     }
     return new RepeatBinding(source, part);
   }
 }
 
 export class RepeatBinding<TSource>
-  implements Binding<Iterable<TSource>, Part.ChildNodePart>
+  implements Binding<Iterable<TSource>, DOMPart.ChildNodePart>
 {
   private _source: Iterable<TSource>;
 
-  private readonly _part: Part.ChildNodePart;
+  private readonly _part: DOMPart.ChildNodePart;
 
-  private _pendingSlots: Slot<Directive.Node, Part.ChildNodePart>[] = [];
+  private _pendingSlots: Slot<Directive.Node, DOMPart.ChildNodePart>[] = [];
 
   private _pendingMutations: Mutation[] = [];
 
-  private _currentSlots: Slot<Directive.Node, Part.ChildNodePart>[] | null =
+  private _currentSlots: Slot<Directive.Node, DOMPart.ChildNodePart>[] | null =
     null;
 
-  constructor(source: Iterable<TSource>, part: Part.ChildNodePart) {
+  constructor(source: Iterable<TSource>, part: DOMPart.ChildNodePart) {
     this._source = source;
     this._part = part;
   }
 
-  get type(): DirectiveType<Iterable<TSource>> {
+  get type(): DirectiveType<Iterable<TSource>, DOMPart.ChildNodePart> {
     return Repeat;
   }
 
@@ -85,7 +85,7 @@ export class RepeatBinding<TSource>
     this._source = source;
   }
 
-  get part(): Part.ChildNodePart {
+  get part(): DOMPart.ChildNodePart {
     return this._part;
   }
 

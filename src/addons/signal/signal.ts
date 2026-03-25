@@ -8,7 +8,6 @@ import {
   type DirectiveType,
   type Effect,
   type Lanes,
-  type Part,
   Scope,
   type Session,
 } from '../../core.js';
@@ -46,11 +45,11 @@ export abstract class Signal<T>
 
   abstract get version(): number;
 
-  static resolveBinding<T>(
-    signal: Signal<T>,
-    part: Part,
+  static resolveBinding<TValue, TPart>(
+    signal: Signal<TValue>,
+    part: TPart,
     context: DirectiveContext,
-  ): SignalBinding<T> {
+  ): SignalBinding<TValue, TPart> {
     const slot = Slot.place(signal.value, part, context);
     return new SignalBinding(signal, slot);
   }
@@ -99,12 +98,14 @@ export abstract class Signal<T>
   }
 }
 
-export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
+export class SignalBinding<TValue, TPart>
+  implements Binding<Signal<TValue>, TPart>, Coroutine
+{
   pendingLanes: Lanes = NoLanes;
 
-  private _signal: Signal<T>;
+  private _signal: Signal<TValue>;
 
-  private readonly _slot: Slot<T>;
+  private readonly _slot: Slot<TValue, TPart>;
 
   private _memoizedVersion: number;
 
@@ -114,26 +115,26 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     unsubscribe: null,
   };
 
-  constructor(signal: Signal<T>, slot: Slot<T>) {
+  constructor(signal: Signal<TValue>, slot: Slot<TValue, TPart>) {
     this._signal = signal;
     this._slot = slot;
     this._memoizedVersion = signal.version;
   }
 
-  get type(): DirectiveType<Signal<T>> {
+  get type(): DirectiveType<Signal<TValue>, TPart> {
     return Signal;
   }
 
-  get value(): Signal<T> {
+  get value(): Signal<TValue> {
     return this._signal;
   }
 
-  set value(signal: Signal<T>) {
+  set value(signal: Signal<TValue>) {
     this._signal = signal;
     this._memoizedVersion = -1;
   }
 
-  get part(): Part {
+  get part(): TPart {
     return this._slot.part;
   }
 
@@ -145,7 +146,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     return this._scope;
   }
 
-  shouldUpdate(signal: Signal<T>): boolean {
+  shouldUpdate(signal: Signal<TValue>): boolean {
     return this._subscription.unsubscribe === null || signal !== this._signal;
   }
 

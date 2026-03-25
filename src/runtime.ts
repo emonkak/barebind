@@ -1,3 +1,4 @@
+/// <reference path="../typings/scheduler.d.ts" />
 /// <reference path="../typings/upsert.d.ts" />
 
 import { LinkedList } from './collections/linked-list.js';
@@ -8,7 +9,6 @@ import {
   type DirectiveType,
   EffectQueue,
   type Lanes,
-  type Part,
   Primitive,
   type RenderFrame,
   type Scope,
@@ -38,7 +38,7 @@ import {
   ViewTransitionLane,
 } from './lane.js';
 
-export interface Backend {
+export interface Backend<TPart = unknown> {
   flushEffects(effects: EffectQueue, phase: CommitPhase): void;
   getDefaultLanes(): Lanes;
   getUpdatePriority(): TaskPriority;
@@ -46,7 +46,7 @@ export interface Backend {
     callback: () => T | PromiseLike<T>,
     options?: RequestCallbackOptions,
   ): Promise<T>;
-  resolvePrimitive(source: unknown, part: Part): Primitive<unknown>;
+  resolvePrimitive(source: unknown, part: TPart): Primitive<unknown>;
   resolveTemplate(
     strings: readonly string[],
     exprs: readonly unknown[],
@@ -168,7 +168,7 @@ export class Runtime implements SessionContext {
     return this._uniqueIdentifier + '-' + this._identifierCount++;
   }
 
-  resolveDirective<TSource, TPart extends Part>(
+  resolveDirective<TSource, TPart>(
     source: TSource,
     part: TPart,
   ): Directive.Element<UnwrapBindable<TSource>, TPart> {

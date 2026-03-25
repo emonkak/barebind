@@ -1,16 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
-  PART_TYPE_ATTRIBUTE,
-  PART_TYPE_CHILD_NODE,
-  PART_TYPE_ELEMENT,
-  PART_TYPE_EVENT,
-  PART_TYPE_LIVE,
-  PART_TYPE_PROPERTY,
-  PART_TYPE_TEXT,
-} from '@/core.js';
-import {
   createChildNodePart,
   createTreeWalker,
+  DOM_PART_TYPE_ATTRIBUTE,
+  DOM_PART_TYPE_CHILD_NODE,
+  DOM_PART_TYPE_ELEMENT,
+  DOM_PART_TYPE_EVENT,
+  DOM_PART_TYPE_LIVE,
+  DOM_PART_TYPE_PROPERTY,
+  DOM_PART_TYPE_TEXT,
   HTML_NAMESPACE_URI,
   MATH_NAMESPACE_URI,
   SVG_NAMESPACE_URI,
@@ -41,10 +39,10 @@ describe('TaggedTemplate', () => {
         '<dialog class="dialog"></dialog>',
       );
       expect(template['_holes']).toStrictEqual([
-        { type: PART_TYPE_ATTRIBUTE, name: 'id', index: 0 },
-        { type: PART_TYPE_LIVE, name: 'open', index: 0 },
-        { type: PART_TYPE_PROPERTY, name: 'innerHTML', index: 0 },
-        { type: PART_TYPE_EVENT, name: 'click', index: 0 },
+        { type: DOM_PART_TYPE_ATTRIBUTE, name: 'id', index: 0 },
+        { type: DOM_PART_TYPE_LIVE, name: 'open', index: 0 },
+        { type: DOM_PART_TYPE_PROPERTY, name: 'innerHTML', index: 0 },
+        { type: DOM_PART_TYPE_EVENT, name: 'click', index: 0 },
       ]);
     });
 
@@ -57,10 +55,10 @@ describe('TaggedTemplate', () => {
         '<dialog class="dialog"></dialog>',
       );
       expect(template['_holes']).toStrictEqual([
-        { type: PART_TYPE_ATTRIBUTE, name: 'id', index: 0 },
-        { type: PART_TYPE_LIVE, name: 'open', index: 0 },
-        { type: PART_TYPE_PROPERTY, name: 'innerHTML', index: 0 },
-        { type: PART_TYPE_EVENT, name: 'click', index: 0 },
+        { type: DOM_PART_TYPE_ATTRIBUTE, name: 'id', index: 0 },
+        { type: DOM_PART_TYPE_LIVE, name: 'open', index: 0 },
+        { type: DOM_PART_TYPE_PROPERTY, name: 'innerHTML', index: 0 },
+        { type: DOM_PART_TYPE_EVENT, name: 'click', index: 0 },
       ]);
     });
 
@@ -73,10 +71,10 @@ describe('TaggedTemplate', () => {
         '<dialog class="dialog"></dialog>',
       );
       expect(template['_holes']).toStrictEqual([
-        { type: PART_TYPE_ATTRIBUTE, name: 'id', index: 0 },
-        { type: PART_TYPE_LIVE, name: 'open', index: 0 },
-        { type: PART_TYPE_PROPERTY, name: 'innerHTML', index: 0 },
-        { type: PART_TYPE_EVENT, name: 'click', index: 0 },
+        { type: DOM_PART_TYPE_ATTRIBUTE, name: 'id', index: 0 },
+        { type: DOM_PART_TYPE_LIVE, name: 'open', index: 0 },
+        { type: DOM_PART_TYPE_PROPERTY, name: 'innerHTML', index: 0 },
+        { type: DOM_PART_TYPE_EVENT, name: 'click', index: 0 },
       ]);
     });
 
@@ -89,10 +87,10 @@ describe('TaggedTemplate', () => {
         '<dialog class="dialog"></dialog>',
       );
       expect(template['_holes']).toStrictEqual([
-        { type: PART_TYPE_ATTRIBUTE, name: 'id', index: 0 },
-        { type: PART_TYPE_LIVE, name: 'open', index: 0 },
-        { type: PART_TYPE_PROPERTY, name: 'innerHTML', index: 0 },
-        { type: PART_TYPE_EVENT, name: 'click', index: 0 },
+        { type: DOM_PART_TYPE_ATTRIBUTE, name: 'id', index: 0 },
+        { type: DOM_PART_TYPE_LIVE, name: 'open', index: 0 },
+        { type: DOM_PART_TYPE_PROPERTY, name: 'innerHTML', index: 0 },
+        { type: DOM_PART_TYPE_EVENT, name: 'click', index: 0 },
       ]);
     });
 
@@ -108,10 +106,10 @@ describe('TaggedTemplate', () => {
         '<!----><!----><!----><!---->',
       );
       expect(template['_holes']).toStrictEqual([
-        { type: PART_TYPE_CHILD_NODE, index: 0 },
-        { type: PART_TYPE_CHILD_NODE, index: 1 },
-        { type: PART_TYPE_CHILD_NODE, index: 2 },
-        { type: PART_TYPE_CHILD_NODE, index: 3 },
+        { type: DOM_PART_TYPE_CHILD_NODE, index: 0 },
+        { type: DOM_PART_TYPE_CHILD_NODE, index: 1 },
+        { type: DOM_PART_TYPE_CHILD_NODE, index: 2 },
+        { type: DOM_PART_TYPE_CHILD_NODE, index: 3 },
       ]);
     });
 
@@ -126,9 +124,9 @@ describe('TaggedTemplate', () => {
         '<div id="foo"></div><div id="foo"></div><div id="foo" class="bar"></div>',
       );
       expect(template['_holes']).toStrictEqual([
-        { type: PART_TYPE_ELEMENT, index: 0 },
-        { type: PART_TYPE_ELEMENT, index: 1 },
-        { type: PART_TYPE_ELEMENT, index: 2 },
+        { type: DOM_PART_TYPE_ELEMENT, index: 0 },
+        { type: DOM_PART_TYPE_ELEMENT, index: 1 },
+        { type: DOM_PART_TYPE_ELEMENT, index: 2 },
       ]);
     });
 
@@ -145,13 +143,13 @@ describe('TaggedTemplate', () => {
       );
       expect(template['_holes']).toStrictEqual([
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 2,
           leadingSpan: 0,
           trailingSpan: 0,
         },
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 4,
           leadingSpan: 0,
           trailingSpan: 0,
@@ -176,49 +174,49 @@ describe('TaggedTemplate', () => {
       );
       expect(template['_holes']).toStrictEqual([
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 3,
           leadingSpan: 1,
           trailingSpan: 0,
         },
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 3,
           leadingSpan: 1,
           trailingSpan: 1,
         },
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 5,
           leadingSpan: 1,
           trailingSpan: 0,
         },
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 5,
           leadingSpan: 1,
           trailingSpan: 1,
         },
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 7,
           leadingSpan: 0,
           trailingSpan: 0,
         },
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 7,
           leadingSpan: 1,
           trailingSpan: 0,
         },
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 9,
           leadingSpan: 0,
           trailingSpan: 0,
         },
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 9,
           leadingSpan: 0,
           trailingSpan: 0,
@@ -239,10 +237,10 @@ describe('TaggedTemplate', () => {
         '<!----><!----><!----><!----><!---->',
       );
       expect(template['_holes']).toStrictEqual([
-        { type: PART_TYPE_CHILD_NODE, index: 1 },
-        { type: PART_TYPE_CHILD_NODE, index: 2 },
-        { type: PART_TYPE_CHILD_NODE, index: 3 },
-        { type: PART_TYPE_CHILD_NODE, index: 4 },
+        { type: DOM_PART_TYPE_CHILD_NODE, index: 1 },
+        { type: DOM_PART_TYPE_CHILD_NODE, index: 2 },
+        { type: DOM_PART_TYPE_CHILD_NODE, index: 3 },
+        { type: DOM_PART_TYPE_CHILD_NODE, index: 4 },
       ]);
     });
 
@@ -252,13 +250,13 @@ describe('TaggedTemplate', () => {
       expect(template['_template'].innerHTML).toBe(' &lt; &gt;&lt; /&gt; ');
       expect(template['_holes']).toStrictEqual([
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 0,
           leadingSpan: 3,
           trailingSpan: 0,
         },
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 0,
           leadingSpan: 3,
           trailingSpan: 3,
@@ -272,13 +270,13 @@ describe('TaggedTemplate', () => {
       expect(template['_template'].innerHTML).toBe('   ');
       expect(template['_holes']).toStrictEqual([
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 0,
           leadingSpan: 1,
           trailingSpan: 0,
         },
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 0,
           leadingSpan: 1,
           trailingSpan: 1,
@@ -305,9 +303,9 @@ describe('TaggedTemplate', () => {
         template['_template'].content.firstElementChild?.namespaceURI,
       ).toBe(SVG_NAMESPACE_URI);
       expect(template['_holes']).toStrictEqual([
-        { type: PART_TYPE_ATTRIBUTE, name: 'cx', index: 0 },
-        { type: PART_TYPE_ATTRIBUTE, name: 'cy', index: 0 },
-        { type: PART_TYPE_ATTRIBUTE, name: 'r', index: 0 },
+        { type: DOM_PART_TYPE_ATTRIBUTE, name: 'cx', index: 0 },
+        { type: DOM_PART_TYPE_ATTRIBUTE, name: 'cy', index: 0 },
+        { type: DOM_PART_TYPE_ATTRIBUTE, name: 'r', index: 0 },
       ]);
     });
 
@@ -324,13 +322,13 @@ describe('TaggedTemplate', () => {
       ).toBe(MATH_NAMESPACE_URI);
       expect(template['_holes']).toStrictEqual([
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 2,
           leadingSpan: 0,
           trailingSpan: 0,
         },
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 4,
           leadingSpan: 0,
           trailingSpan: 0,
@@ -348,7 +346,7 @@ describe('TaggedTemplate', () => {
       );
       expect(template['_holes']).toStrictEqual([
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 0,
           leadingSpan: 19,
           trailingSpan: 6,
@@ -514,14 +512,14 @@ describe('TaggedTemplate', () => {
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
-            type: PART_TYPE_ATTRIBUTE,
+            type: DOM_PART_TYPE_ATTRIBUTE,
             node: expect.exact(container.querySelector('div')),
             name: 'class',
           },
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
@@ -529,19 +527,19 @@ describe('TaggedTemplate', () => {
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_ELEMENT,
+            type: DOM_PART_TYPE_ELEMENT,
             node: expect.exact(container.querySelector('label')),
           },
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_TEXT,
+            type: DOM_PART_TYPE_TEXT,
             node: expect.exact(container.querySelector('label')?.firstChild),
           },
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_LIVE,
+            type: DOM_PART_TYPE_LIVE,
             node: expect.exact(container.querySelector('input')),
             name: 'value',
             defaultValue: '',
@@ -549,7 +547,7 @@ describe('TaggedTemplate', () => {
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_PROPERTY,
+            type: DOM_PART_TYPE_PROPERTY,
             node: expect.exact(container.querySelector('input')),
             name: 'disabled',
             defaultValue: false,
@@ -557,20 +555,20 @@ describe('TaggedTemplate', () => {
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_EVENT,
+            type: DOM_PART_TYPE_EVENT,
             node: expect.exact(container.querySelector('input')),
             name: 'onchange',
           },
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_ELEMENT,
+            type: DOM_PART_TYPE_ELEMENT,
             node: expect.exact(container.querySelector('input')),
           },
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
@@ -661,7 +659,7 @@ describe('TaggedTemplate', () => {
       expect(slots[0]).toStrictEqual(
         expect.objectContaining({
           part: {
-            type: PART_TYPE_TEXT,
+            type: DOM_PART_TYPE_TEXT,
             node: expect.exact(container.childNodes[2]), // A
           },
           value: 'A',
@@ -670,7 +668,7 @@ describe('TaggedTemplate', () => {
       expect(slots[1]).toStrictEqual(
         expect.objectContaining({
           part: {
-            type: PART_TYPE_TEXT,
+            type: DOM_PART_TYPE_TEXT,
             node: expect.exact(container.childNodes[6]), // B
           },
           value: 'B',
@@ -679,7 +677,7 @@ describe('TaggedTemplate', () => {
       expect(slots[2]).toStrictEqual(
         expect.objectContaining({
           part: {
-            type: PART_TYPE_TEXT,
+            type: DOM_PART_TYPE_TEXT,
             node: expect.exact(container.childNodes[10]), // C
           },
           value: 'C',
@@ -688,7 +686,7 @@ describe('TaggedTemplate', () => {
       expect(slots[3]).toStrictEqual(
         expect.objectContaining({
           part: {
-            type: PART_TYPE_TEXT,
+            type: DOM_PART_TYPE_TEXT,
             node: expect.exact(container.lastChild!.childNodes[2]), // D
           },
           value: 'D',
@@ -697,7 +695,7 @@ describe('TaggedTemplate', () => {
       expect(slots[4]).toStrictEqual(
         expect.objectContaining({
           part: {
-            type: PART_TYPE_TEXT,
+            type: DOM_PART_TYPE_TEXT,
             node: expect.exact(container.lastChild!.childNodes[6]), // E
           },
           value: 'E',
@@ -728,7 +726,7 @@ describe('TaggedTemplate', () => {
         document.createElement('template'),
         [
           {
-            type: PART_TYPE_ELEMENT,
+            type: DOM_PART_TYPE_ELEMENT,
             index: 0,
           },
         ],
@@ -808,14 +806,14 @@ describe('TaggedTemplate', () => {
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
-            type: PART_TYPE_ATTRIBUTE,
+            type: DOM_PART_TYPE_ATTRIBUTE,
             node: expect.any(HTMLDivElement),
             name: 'class',
           },
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
@@ -823,19 +821,19 @@ describe('TaggedTemplate', () => {
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_ELEMENT,
+            type: DOM_PART_TYPE_ELEMENT,
             node: expect.any(HTMLLabelElement),
           },
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_TEXT,
+            type: DOM_PART_TYPE_TEXT,
             node: expect.any(Text),
           },
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_LIVE,
+            type: DOM_PART_TYPE_LIVE,
             node: expect.any(HTMLInputElement),
             name: 'value',
             defaultValue: '',
@@ -843,7 +841,7 @@ describe('TaggedTemplate', () => {
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_PROPERTY,
+            type: DOM_PART_TYPE_PROPERTY,
             node: expect.any(HTMLInputElement),
             name: 'disabled',
             defaultValue: false,
@@ -851,20 +849,20 @@ describe('TaggedTemplate', () => {
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_EVENT,
+            type: DOM_PART_TYPE_EVENT,
             node: expect.any(HTMLInputElement),
             name: 'onchange',
           },
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_ELEMENT,
+            type: DOM_PART_TYPE_ELEMENT,
             node: expect.any(HTMLInputElement),
           },
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
@@ -925,31 +923,31 @@ describe('TaggedTemplate', () => {
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
-            type: PART_TYPE_TEXT,
+            type: DOM_PART_TYPE_TEXT,
             node: expect.any(Text),
           },
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_TEXT,
+            type: DOM_PART_TYPE_TEXT,
             node: expect.any(Text),
           },
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_TEXT,
+            type: DOM_PART_TYPE_TEXT,
             node: expect.any(Text),
           },
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_TEXT,
+            type: DOM_PART_TYPE_TEXT,
             node: expect.any(Text),
           },
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_TEXT,
+            type: DOM_PART_TYPE_TEXT,
             node: expect.any(Text),
           },
         }),
@@ -977,7 +975,7 @@ describe('TaggedTemplate', () => {
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
@@ -985,7 +983,7 @@ describe('TaggedTemplate', () => {
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             sentinelNode: expect.any(Comment),
             namespaceURI: MATH_NAMESPACE_URI,
@@ -993,7 +991,7 @@ describe('TaggedTemplate', () => {
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             sentinelNode: expect.any(Comment),
             namespaceURI: SVG_NAMESPACE_URI,
@@ -1023,7 +1021,7 @@ describe('TaggedTemplate', () => {
         document.createElement('template'),
         [
           {
-            type: PART_TYPE_ELEMENT,
+            type: DOM_PART_TYPE_ELEMENT,
             index: 0,
           },
         ],

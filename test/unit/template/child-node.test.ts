@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { PART_TYPE_CHILD_NODE } from '@/core.js';
 import {
   createChildNodePart,
   createTreeWalker,
+  DOM_PART_TYPE_CHILD_NODE,
   HTML_NAMESPACE_URI,
 } from '@/dom.js';
 import { HydrationError } from '@/error.js';
@@ -49,7 +49,7 @@ describe('ChildNodeTemplate', () => {
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.exact(container.firstChild),
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
@@ -95,7 +95,7 @@ describe('ChildNodeTemplate', () => {
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,

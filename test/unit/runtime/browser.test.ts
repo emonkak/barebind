@@ -1,11 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import {
-  type Effect,
-  EffectQueue,
-  PART_TYPE_TEXT,
-  type Part,
-  type Primitive,
-} from '@/core.js';
+import { type Effect, EffectQueue, type Primitive } from '@/core.js';
 import {
   createAttributePart,
   createChildNodePart,
@@ -14,6 +8,8 @@ import {
   createLivePart,
   createPropertyPart,
   createTextPart,
+  DOM_PART_TYPE_TEXT,
+  type DOMPart,
   HTML_NAMESPACE_URI,
 } from '@/dom.js';
 import { ConcurrentLane } from '@/lane.js';
@@ -242,7 +238,7 @@ describe('BrowserBackend', () => {
   });
 
   describe('resolvePrimitive()', () => {
-    it.each<[unknown, Part, Primitive<unknown>]>([
+    it.each<[unknown, DOMPart, Primitive<unknown>]>([
       [
         'foo',
         createAttributePart(document.createElement('div'), 'class'),
@@ -278,7 +274,7 @@ describe('BrowserBackend', () => {
       );
     });
 
-    it.each<[unknown, Part, Primitive<unknown>]>([
+    it.each<[unknown, DOMPart, Primitive<unknown>]>([
       [
         null,
         createChildNodePart(document.createComment(''), HTML_NAMESPACE_URI),
@@ -307,7 +303,7 @@ describe('BrowserBackend', () => {
       );
     });
 
-    it.each<[unknown, Part.AttributePart, Primitive<unknown>]>([
+    it.each<[unknown, DOMPart.AttributePart, Primitive<unknown>]>([
       [
         [],
         createAttributePart(document.createElement('div'), ':class'),
@@ -359,13 +355,13 @@ describe('BrowserBackend', () => {
       );
       expect((template as TaggedTemplate)['_holes']).toStrictEqual([
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 1,
           leadingSpan: 0,
           trailingSpan: 0,
         },
         {
-          type: PART_TYPE_TEXT,
+          type: DOM_PART_TYPE_TEXT,
           index: 1,
           leadingSpan: 2,
           trailingSpan: 1,

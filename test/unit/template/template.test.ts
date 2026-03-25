@@ -47,7 +47,7 @@ describe('Template', () => {
     it('should throw the error if the part is not a child node part', () => {
       const template = new MockTemplate();
       const exprs = ['foo'] as const;
-      const part = createElementPart(document.createElement('div'));
+      const part = createElementPart(document.createElement('div')) as any;
       const runtime = createRuntime();
 
       expect(() => template.resolveBinding(exprs, part, runtime)).toThrow(

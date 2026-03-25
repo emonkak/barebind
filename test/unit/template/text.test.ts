@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { PART_TYPE_TEXT } from '@/core.js';
 import {
   createChildNodePart,
   createTreeWalker,
+  DOM_PART_TYPE_TEXT,
   HTML_NAMESPACE_URI,
 } from '@/dom.js';
 import { HydrationError } from '@/error.js';
@@ -49,7 +49,7 @@ describe('TextTemplate', () => {
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
-            type: PART_TYPE_TEXT,
+            type: DOM_PART_TYPE_TEXT,
             node: expect.exact(container.firstChild),
           },
           value: 'foo',
@@ -92,7 +92,7 @@ describe('TextTemplate', () => {
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
-            type: PART_TYPE_TEXT,
+            type: DOM_PART_TYPE_TEXT,
             node: expect.any(Text),
           },
           value: 'foo',

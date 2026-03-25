@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PART_TYPE_CHILD_NODE } from '@/core.js';
 import {
   createChildNodePart,
   createTreeWalker,
+  DOM_PART_TYPE_CHILD_NODE,
   HTML_NAMESPACE_URI,
 } from '@/dom.js';
 import { Slot } from '@/slot.js';
@@ -92,7 +92,7 @@ describe('FragmentTemplate', () => {
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
@@ -100,7 +100,7 @@ describe('FragmentTemplate', () => {
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
@@ -108,7 +108,7 @@ describe('FragmentTemplate', () => {
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.any(Comment),
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
@@ -183,7 +183,7 @@ describe('FragmentTemplate', () => {
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.exact(childNodes[0]),
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
@@ -191,7 +191,7 @@ describe('FragmentTemplate', () => {
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.exact(childNodes[1]),
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,
@@ -199,7 +199,7 @@ describe('FragmentTemplate', () => {
         }),
         expect.objectContaining({
           part: {
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             node: expect.exact(childNodes[2]),
             sentinelNode: expect.any(Comment),
             namespaceURI: HTML_NAMESPACE_URI,

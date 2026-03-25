@@ -10,14 +10,6 @@ import {
   type Effect,
   EffectQueue,
   type Lanes,
-  PART_TYPE_ATTRIBUTE,
-  PART_TYPE_CHILD_NODE,
-  PART_TYPE_ELEMENT,
-  PART_TYPE_EVENT,
-  PART_TYPE_LIVE,
-  PART_TYPE_PROPERTY,
-  PART_TYPE_TEXT,
-  type Part,
   type Primitive,
   type RenderFrame,
   Scope,
@@ -26,6 +18,16 @@ import {
   type SessionObserver,
   type TemplateMode,
 } from '@/core.js';
+import {
+  DOM_PART_TYPE_ATTRIBUTE,
+  DOM_PART_TYPE_CHILD_NODE,
+  DOM_PART_TYPE_ELEMENT,
+  DOM_PART_TYPE_EVENT,
+  DOM_PART_TYPE_LIVE,
+  DOM_PART_TYPE_PROPERTY,
+  DOM_PART_TYPE_TEXT,
+  type DOMPart,
+} from '@/dom.js';
 import { SyncLane } from '@/lane.js';
 import {
   type Backend,
@@ -85,7 +87,7 @@ export class MockBackend implements Backend {
       : promise;
   }
 
-  resolvePrimitive(_value: unknown, _part: Part): Primitive<unknown> {
+  resolvePrimitive(_value: unknown, _part: DOMPart): Primitive<unknown> {
     return new MockType();
   }
 
@@ -107,26 +109,28 @@ export class MockBackend implements Backend {
   }
 }
 
-export class MockBinding<T> implements Binding<T> {
-  readonly type: DirectiveType<T>;
+export class MockBinding<TValue, TPart extends DOMPart>
+  implements Binding<TValue, TPart>
+{
+  readonly type: DirectiveType<TValue, TPart>;
 
-  value: T;
+  value: TValue;
 
-  readonly part: Part;
+  readonly part: TPart;
 
-  memoizedValue: T | null = null;
+  memoizedValue: TValue | null = null;
 
   dirty: boolean = false;
 
   committed: boolean = false;
 
-  constructor(type: DirectiveType<T>, value: T, part: Part) {
+  constructor(type: DirectiveType<TValue, TPart>, value: TValue, part: TPart) {
     this.type = type;
     this.value = value;
     this.part = part;
   }
 
-  shouldUpdate(value: T): boolean {
+  shouldUpdate(value: TValue): boolean {
     return !Object.is(value, this.memoizedValue);
   }
 
@@ -140,28 +144,28 @@ export class MockBinding<T> implements Binding<T> {
 
   commit(): void {
     switch (this.part.type) {
-      case PART_TYPE_ATTRIBUTE:
+      case DOM_PART_TYPE_ATTRIBUTE:
         this.part.node.setAttribute(
           this.part.name,
           this.value?.toString() ?? '',
         );
         break;
-      case PART_TYPE_CHILD_NODE:
+      case DOM_PART_TYPE_CHILD_NODE:
         this.part.sentinelNode.data = stringify(this.value);
         break;
-      case PART_TYPE_ELEMENT:
+      case DOM_PART_TYPE_ELEMENT:
         for (const name in this.value) {
           this.part.node.setAttribute(name, stringify(this.value[name]));
         }
         break;
-      case PART_TYPE_LIVE:
-      case PART_TYPE_PROPERTY:
+      case DOM_PART_TYPE_LIVE:
+      case DOM_PART_TYPE_PROPERTY:
         (this.part.node as any)[this.part.name] = this.value;
         break;
-      case PART_TYPE_EVENT:
+      case DOM_PART_TYPE_EVENT:
         (this.part.node as any)['on' + this.part.name] = this.value;
         break;
-      case PART_TYPE_TEXT:
+      case DOM_PART_TYPE_TEXT:
         this.part.node.data = stringify(this.value);
         break;
     }
@@ -173,27 +177,27 @@ export class MockBinding<T> implements Binding<T> {
 
   rollback(): void {
     switch (this.part.type) {
-      case PART_TYPE_ATTRIBUTE:
+      case DOM_PART_TYPE_ATTRIBUTE:
         this.part.node.removeAttribute(this.part.name);
         break;
-      case PART_TYPE_ELEMENT:
+      case DOM_PART_TYPE_ELEMENT:
         for (const name in this.value) {
           this.part.node.removeAttribute(name);
         }
         break;
-      case PART_TYPE_LIVE:
-      case PART_TYPE_PROPERTY:
+      case DOM_PART_TYPE_LIVE:
+      case DOM_PART_TYPE_PROPERTY:
         (this.part.node as any)[this.part.name] = this.part.defaultValue;
         break;
-      case PART_TYPE_EVENT:
+      case DOM_PART_TYPE_EVENT:
         (this.part.node as any)['on' + this.part.name] = null;
         break;
-      case PART_TYPE_CHILD_NODE:
+      case DOM_PART_TYPE_CHILD_NODE:
         if (this.part.sentinelNode.data === this.memoizedValue) {
           this.part.sentinelNode.data = '';
         }
         break;
-      case PART_TYPE_TEXT:
+      case DOM_PART_TYPE_TEXT:
         this.part.node.data = '';
         break;
     }
@@ -234,12 +238,12 @@ export class MockCoroutine implements Coroutine {
 
 export abstract class MockPrimitive {
   static ensureValue<T>(_value: unknown): asserts _value is T {}
-  static resolveBinding<T>(
-    value: T,
-    part: Part,
+  static resolveBinding<TValue, TPart extends DOMPart>(
+    value: TValue,
+    part: TPart,
     _context: DirectiveContext,
-  ): Binding<T> {
-    return new MockBinding<T>(this, value, part);
+  ): Binding<TValue, TPart> {
+    return new MockBinding<TValue, TPart>(this, value, part);
   }
 }
 
@@ -285,7 +289,7 @@ export class MockTemplate extends Template<readonly unknown[]> {
 
   render(
     _exprs: readonly unknown[],
-    _part: Part.ChildNodePart,
+    _part: DOMPart.ChildNodePart,
     _session: Session,
   ): TemplateResult {
     return {
@@ -296,7 +300,7 @@ export class MockTemplate extends Template<readonly unknown[]> {
 
   hydrate(
     _exprs: readonly unknown[],
-    _part: Part.ChildNodePart,
+    _part: DOMPart.ChildNodePart,
     _hydrationTarget: TreeWalker,
     _session: Session,
   ): TemplateResult {
@@ -307,7 +311,9 @@ export class MockTemplate extends Template<readonly unknown[]> {
   }
 }
 
-export class MockType<T> implements DirectiveType<T> {
+export class MockType<TValue, TPart extends DOMPart>
+  implements DirectiveType<TValue, TPart>
+{
   readonly name: string;
 
   constructor(name: string = MockType.name) {
@@ -318,7 +324,11 @@ export class MockType<T> implements DirectiveType<T> {
     return other instanceof MockType && other.name === this.name;
   }
 
-  resolveBinding(value: T, part: Part, _context: DirectiveContext): Binding<T> {
+  resolveBinding(
+    value: TValue,
+    part: TPart,
+    _context: DirectiveContext,
+  ): Binding<TValue, TPart> {
     return new MockBinding(this, value, part);
   }
 }

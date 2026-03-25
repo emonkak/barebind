@@ -1,6 +1,6 @@
-import type { Binding, Part, Primitive, Session } from '../core.js';
+import type { Binding, Primitive, Session } from '../core.js';
 
-export abstract class PrimitiveBinding<TValue, TPart extends Part>
+export abstract class PrimitiveBinding<TValue, TPart>
   implements Binding<TValue, TPart>
 {
   protected _pendingValue: TValue;
@@ -12,7 +12,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
     this._part = part;
   }
 
-  abstract get type(): Primitive<TValue>;
+  abstract get type(): Primitive<TValue, TPart>;
 
   get value(): TValue {
     return this._pendingValue;

@@ -1,15 +1,4 @@
-import {
-  PART_TYPE_ATTRIBUTE,
-  PART_TYPE_CHILD_NODE,
-  PART_TYPE_ELEMENT,
-  PART_TYPE_EVENT,
-  PART_TYPE_LIVE,
-  PART_TYPE_PROPERTY,
-  PART_TYPE_TEXT,
-  type Part,
-  type Session,
-  type TemplateMode,
-} from '../core.js';
+import type { Session, TemplateMode } from '../core.js';
 import { emphasizeNode, formatPart } from '../debug/dom.js';
 import {
   createAttributePart,
@@ -20,64 +9,21 @@ import {
   createPropertyPart,
   createTextPart,
   createTreeWalker,
+  DOM_PART_TYPE_ATTRIBUTE,
+  DOM_PART_TYPE_CHILD_NODE,
+  DOM_PART_TYPE_ELEMENT,
+  DOM_PART_TYPE_EVENT,
+  DOM_PART_TYPE_LIVE,
+  DOM_PART_TYPE_PROPERTY,
+  DOM_PART_TYPE_TEXT,
+  type DOMHole,
+  type DOMPart,
   getNamespaceURIByTagName,
   nextNode,
   replaceSentinelNode,
 } from '../dom.js';
 import { Slot } from '../slot.js';
 import { Template, type TemplateResult } from './template.js';
-
-export type Hole =
-  | Hole.AttributeHole
-  | Hole.ChildNodeHole
-  | Hole.ElementHole
-  | Hole.EventHole
-  | Hole.LiveHole
-  | Hole.PropertyHole
-  | Hole.TextHole;
-
-export namespace Hole {
-  export interface AttributeHole {
-    type: typeof PART_TYPE_ATTRIBUTE;
-    index: number;
-    name: string;
-  }
-
-  export interface ChildNodeHole {
-    type: typeof PART_TYPE_CHILD_NODE;
-    index: number;
-  }
-
-  export interface ElementHole {
-    type: typeof PART_TYPE_ELEMENT;
-    index: number;
-  }
-
-  export interface EventHole {
-    type: typeof PART_TYPE_EVENT;
-    index: number;
-    name: string;
-  }
-
-  export interface LiveHole {
-    type: typeof PART_TYPE_LIVE;
-    index: number;
-    name: string;
-  }
-
-  export interface PropertyHole {
-    type: typeof PART_TYPE_PROPERTY;
-    index: number;
-    name: string;
-  }
-
-  export interface TextHole {
-    type: typeof PART_TYPE_TEXT;
-    index: number;
-    leadingSpan: number;
-    trailingSpan: number;
-  }
-}
 
 const PLACEHOLDER_PATTERN = /^[0-9a-z_-]+$/;
 
@@ -102,7 +48,7 @@ export class TaggedTemplate<
 > extends Template<TExprs> {
   private readonly _template: HTMLTemplateElement;
 
-  private readonly _holes: Hole[];
+  private readonly _holes: DOMHole[];
 
   private readonly _mode: TemplateMode;
 
@@ -133,7 +79,7 @@ export class TaggedTemplate<
 
   constructor(
     template: HTMLTemplateElement,
-    holes: Hole[],
+    holes: DOMHole[],
     mode: TemplateMode,
   ) {
     super();
@@ -148,7 +94,7 @@ export class TaggedTemplate<
 
   hydrate(
     exprs: TExprs,
-    part: Part.ChildNodePart,
+    part: DOMPart.ChildNodePart,
     hydrationTarget: TreeWalker,
     session: Session,
   ): TemplateResult {
@@ -159,7 +105,7 @@ export class TaggedTemplate<
     const holes = this._holes;
     const totalHoles = holes.length;
     const childNodes: ChildNode[] = [];
-    const slots: Slot<unknown>[] = new Array(totalHoles);
+    const slots: Slot<unknown, DOMPart>[] = new Array(totalHoles);
     let nodeIndex = 0;
     let holeIndex = 0;
 
@@ -172,20 +118,20 @@ export class TaggedTemplate<
 
       for (; holeIndex < totalHoles; holeIndex++) {
         const hole = holes[holeIndex]!;
-        let part: Part;
+        let part: DOMPart;
 
         if (hole.index !== nodeIndex) {
           break;
         }
 
-        if (hole.type === PART_TYPE_TEXT) {
+        if (hole.type === DOM_PART_TYPE_TEXT) {
           part = hydrateTextPart(
             hydrationTarget,
             hole,
             hydratedNodes.length > 0,
           );
           hydratedNodes.push(part.node);
-        } else if (hole.type === PART_TYPE_CHILD_NODE) {
+        } else if (hole.type === DOM_PART_TYPE_CHILD_NODE) {
           part = createChildNodePart(
             ownerDocument.createComment(''),
             getNamespaceURI(hydrationTarget.currentNode, this._mode),
@@ -203,19 +149,19 @@ export class TaggedTemplate<
             hydratedNodes.push(currentNode);
           }
           switch (hole.type) {
-            case PART_TYPE_ATTRIBUTE:
+            case DOM_PART_TYPE_ATTRIBUTE:
               part = createAttributePart(currentNode, hole.name);
               break;
-            case PART_TYPE_EVENT:
+            case DOM_PART_TYPE_EVENT:
               part = createEventPart(currentNode, hole.name);
               break;
-            case PART_TYPE_ELEMENT:
+            case DOM_PART_TYPE_ELEMENT:
               part = createElementPart(currentNode);
               break;
-            case PART_TYPE_LIVE:
+            case DOM_PART_TYPE_LIVE:
               part = createLivePart(currentNode, hole.name);
               break;
-            case PART_TYPE_PROPERTY:
+            case DOM_PART_TYPE_PROPERTY:
               part = createPropertyPart(currentNode, hole.name);
               break;
           }
@@ -224,7 +170,7 @@ export class TaggedTemplate<
         const slot = Slot.place(exprs[holeIndex]!, part, context);
         slot.attach(session);
 
-        if (part.type === PART_TYPE_CHILD_NODE) {
+        if (part.type === DOM_PART_TYPE_CHILD_NODE) {
           replaceSentinelNode(hydrationTarget, part.sentinelNode);
         }
 
@@ -253,14 +199,14 @@ export class TaggedTemplate<
 
   render(
     exprs: TExprs,
-    part: Part.ChildNodePart,
+    part: DOMPart.ChildNodePart,
     session: Session,
   ): TemplateResult {
     const { context } = session;
     const { ownerDocument } = part.sentinelNode;
     const fragment = ownerDocument.importNode(this._template.content, true);
     const holes = this._holes;
-    const slots: Slot<unknown>[] = new Array(holes.length);
+    const slots: Slot<unknown, DOMPart>[] = new Array(holes.length);
 
     if (holes.length > 0) {
       const renderTarget = createTreeWalker(fragment);
@@ -278,34 +224,34 @@ export class TaggedTemplate<
         }
 
         const currentNode = renderTarget.currentNode;
-        let currentPart: Part;
+        let currentPart: DOMPart;
 
         switch (hole.type) {
-          case PART_TYPE_ATTRIBUTE:
+          case DOM_PART_TYPE_ATTRIBUTE:
             currentPart = createAttributePart(
               currentNode as Element,
               hole.name,
             );
             break;
-          case PART_TYPE_EVENT:
+          case DOM_PART_TYPE_EVENT:
             currentPart = createEventPart(currentNode as Element, hole.name);
             break;
-          case PART_TYPE_CHILD_NODE:
+          case DOM_PART_TYPE_CHILD_NODE:
             currentPart = createChildNodePart(
               currentNode as Comment,
               getNamespaceURI(currentNode, this._mode),
             );
             break;
-          case PART_TYPE_ELEMENT:
+          case DOM_PART_TYPE_ELEMENT:
             currentPart = createElementPart(currentNode as Element);
             break;
-          case PART_TYPE_LIVE:
+          case DOM_PART_TYPE_LIVE:
             currentPart = createLivePart(currentNode as Element, hole.name);
             break;
-          case PART_TYPE_PROPERTY:
+          case DOM_PART_TYPE_PROPERTY:
             currentPart = createPropertyPart(currentNode as Element, hole.name);
             break;
-          case PART_TYPE_TEXT:
+          case DOM_PART_TYPE_TEXT:
             currentPart = splitTextPart(renderTarget, hole);
             break;
         }
@@ -349,18 +295,18 @@ function parseAttribtues(
   element: Element,
   strings: readonly string[],
   marker: string,
-  holes: Hole[],
+  holes: DOMHole[],
   index: number,
 ): void {
   const names = element.getAttributeNames();
 
   for (const name of names) {
     const value = element.getAttribute(name)!;
-    let hole: Hole;
+    let hole: DOMHole;
 
     if (name === marker && value === '') {
       hole = {
-        type: PART_TYPE_ELEMENT,
+        type: DOM_PART_TYPE_ELEMENT,
         index,
       };
     } else if (value === marker) {
@@ -373,7 +319,7 @@ function parseAttribtues(
           throw new Error(
             `The attribute name must be "${name}", but got "${caseSensitiveName}". There may be an unclosed tag or a duplicate attribute:\n` +
               formatPart(
-                { type: PART_TYPE_ATTRIBUTE, name, node: element },
+                { type: DOM_PART_TYPE_ATTRIBUTE, name, node: element },
                 ERROR_MAKER,
               ),
           );
@@ -383,28 +329,28 @@ function parseAttribtues(
       switch (caseSensitiveName[0]) {
         case '@':
           hole = {
-            type: PART_TYPE_EVENT,
+            type: DOM_PART_TYPE_EVENT,
             index,
             name: caseSensitiveName.slice(1),
           };
           break;
         case '$':
           hole = {
-            type: PART_TYPE_LIVE,
+            type: DOM_PART_TYPE_LIVE,
             index,
             name: caseSensitiveName.slice(1),
           };
           break;
         case '.':
           hole = {
-            type: PART_TYPE_PROPERTY,
+            type: DOM_PART_TYPE_PROPERTY,
             index,
             name: caseSensitiveName.slice(1),
           };
           break;
         default:
           hole = {
-            type: PART_TYPE_ATTRIBUTE,
+            type: DOM_PART_TYPE_ATTRIBUTE,
             index,
             name: caseSensitiveName,
           };
@@ -417,7 +363,7 @@ function parseAttribtues(
             'Expressions are not allowed as an attribute name:\n' +
               formatPart(
                 {
-                  type: PART_TYPE_ATTRIBUTE,
+                  type: DOM_PART_TYPE_ATTRIBUTE,
                   name,
                   node: element,
                 },
@@ -431,7 +377,7 @@ function parseAttribtues(
             'Expressions inside an attribute must make up the entire attribute value:\n' +
               formatPart(
                 {
-                  type: PART_TYPE_ATTRIBUTE,
+                  type: DOM_PART_TYPE_ATTRIBUTE,
                   name,
                   node: element,
                 },
@@ -453,9 +399,9 @@ function parseChildren(
   exprs: readonly unknown[],
   marker: string,
   fragment: DocumentFragment,
-): Hole[] {
+): DOMHole[] {
   const sourceTree = createTreeWalker(fragment);
-  const holes: Hole[] = [];
+  const holes: DOMHole[] = [];
   let nextNode = sourceTree.nextNode() as ChildNode | null;
   let index = 0;
 
@@ -468,7 +414,7 @@ function parseChildren(
             throw new Error(
               'Expressions are not allowed as a tag name:\n' +
                 formatPart(
-                  { type: PART_TYPE_ELEMENT, node: currentNode as Element },
+                  { type: DOM_PART_TYPE_ELEMENT, node: currentNode as Element },
                   ERROR_MAKER,
                 ),
             );
@@ -490,7 +436,7 @@ function parseChildren(
           stripTrailingSlash((currentNode as Comment).data).trim() === marker
         ) {
           holes.push({
-            type: PART_TYPE_CHILD_NODE,
+            type: DOM_PART_TYPE_CHILD_NODE,
             index,
           });
           (currentNode as Comment).data = '';
@@ -519,7 +465,7 @@ function parseChildren(
           for (let i = 1; i < tail; i++) {
             const component = components[i]!;
             holes.push({
-              type: PART_TYPE_TEXT,
+              type: DOM_PART_TYPE_TEXT,
               index,
               leadingSpan: lastComponent.length,
               trailingSpan: 0,
@@ -530,7 +476,7 @@ function parseChildren(
 
           const component = components[tail];
           holes.push({
-            type: PART_TYPE_TEXT,
+            type: DOM_PART_TYPE_TEXT,
             index,
             leadingSpan: lastComponent.length,
             trailingSpan: component!.length,
@@ -567,8 +513,8 @@ function parseChildren(
 
 function splitTextPart(
   treeWalker: TreeWalker,
-  hole: Hole.TextHole,
-): Part.TextPart {
+  hole: DOMHole.TextHole,
+): DOMPart.TextPart {
   let currentNode = treeWalker.currentNode as Text;
   if (currentNode.previousSibling?.nodeType === Node.TEXT_NODE) {
     currentNode = currentNode.splitText(0);
@@ -584,9 +530,9 @@ function splitTextPart(
 
 function hydrateTextPart(
   treeWalker: TreeWalker,
-  hole: Hole.TextHole,
+  hole: DOMHole.TextHole,
   contiguous: boolean,
-): Part.TextPart {
+): DOMPart.TextPart {
   let currentNode = treeWalker.currentNode;
   if (contiguous) {
     currentNode = nextNode('#comment', treeWalker);

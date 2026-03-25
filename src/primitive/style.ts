@@ -1,11 +1,10 @@
 import { shallowEqual } from '../compare.js';
+import type { DirectiveContext, Primitive } from '../core.js';
 import {
-  type DirectiveContext,
-  PART_TYPE_ATTRIBUTE,
-  type Part,
-  type Primitive,
-} from '../core.js';
-import { ensurePartType } from '../dom.js';
+  DOM_PART_TYPE_ATTRIBUTE,
+  type DOMPart,
+  ensurePartType,
+} from '../dom.js';
 import { DirectiveError } from '../error.js';
 import { isObject, PrimitiveBinding } from './primitive.js';
 
@@ -27,7 +26,7 @@ const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
 const UPPERCASE_LETTER_PATTERN = /[A-Z]/g;
 
 export abstract class StyleType {
-  static ensureValue(value: unknown, part: Part): asserts value is StyleMap {
+  static ensureValue(value: unknown, part: DOMPart): asserts value is StyleMap {
     if (!isObject(value)) {
       throw new DirectiveError(
         this,
@@ -40,11 +39,11 @@ export abstract class StyleType {
 
   static resolveBinding(
     value: StyleMap,
-    part: Part,
+    part: DOMPart,
     _context: DirectiveContext,
   ): StyleBinding {
     DEBUG: {
-      ensurePartType(PART_TYPE_ATTRIBUTE, this, value, part);
+      ensurePartType(DOM_PART_TYPE_ATTRIBUTE, this, value, part);
     }
     return new StyleBinding(value, part);
   }
@@ -52,11 +51,11 @@ export abstract class StyleType {
 
 export class StyleBinding extends PrimitiveBinding<
   StyleMap,
-  Part.AttributePart
+  DOMPart.AttributePart
 > {
   private _currentValue: StyleMap = {};
 
-  get type(): Primitive<StyleMap> {
+  get type(): Primitive<StyleMap, DOMPart.AttributePart> {
     return StyleType;
   }
 

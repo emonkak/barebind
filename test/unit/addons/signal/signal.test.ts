@@ -48,11 +48,7 @@ describe('SignalBinding', () => {
       const signal = new Atom('foo');
       const part = createTextPart(document.createTextNode(''));
       const updater = new TestUpdater();
-      const binding = Signal.resolveBinding(
-        signal,
-        part,
-        updater.runtime,
-      ) as SignalBinding<string>;
+      const binding = Signal.resolveBinding(signal, part, updater.runtime);
 
       SESSION: {
         updater.startUpdate((session) => {
@@ -78,11 +74,7 @@ describe('SignalBinding', () => {
       const signal2 = new Atom('bar');
       const part = createTextPart(document.createTextNode(''));
       const updater = new TestUpdater();
-      const binding = Signal.resolveBinding(
-        signal1,
-        part,
-        updater.runtime,
-      ) as SignalBinding<string>;
+      const binding = Signal.resolveBinding(signal1, part, updater.runtime);
 
       SESSION1: {
         updater.startUpdate((session) => {
@@ -120,11 +112,7 @@ describe('SignalBinding', () => {
       const signal = new Atom('foo');
       const part = createTextPart(document.createTextNode(''));
       const updater = new TestUpdater();
-      const binding = Signal.resolveBinding(
-        signal,
-        part,
-        updater.runtime,
-      ) as SignalBinding<string>;
+      const binding = Signal.resolveBinding(signal, part, updater.runtime);
 
       SESSION1: {
         updater.startUpdate((session) => {
@@ -162,11 +150,7 @@ describe('Signal', () => {
       const signal = new Atom('foo');
       const part = createTextPart(document.createTextNode(''));
       const runtime = createRuntime();
-      const binding = Signal.resolveBinding(
-        signal,
-        part,
-        runtime,
-      ) as SignalBinding<unknown>;
+      const binding = Signal.resolveBinding(signal, part, runtime);
 
       expect(binding).toBeInstanceOf(SignalBinding);
       expect(binding.name).toBe('Signal');
