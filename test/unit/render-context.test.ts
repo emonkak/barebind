@@ -150,20 +150,18 @@ describe('RenderSession', () => {
     });
 
     it('skips update if the coroutine is detached', async () => {
-      let handle: UpdateHandle | undefined;
-
-      const renderer = new TestRenderer((_props, session) => {
-        const [count, setCount] = session.useState(0);
-
-        session.useEffect(() => {
-          handle = setCount(1);
-        }, []);
-
-        return count;
-      }, Scope.Detached);
+      const renderer = new TestRenderer((_props, context) => {
+        const [_count, setCount] = context.useState(0);
+        return setCount;
+      });
       const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
+      const setCount = renderer.render({});
 
-      expect(renderer.render({})).toBe(0);
+      expect(setCount).toBeTypeOf('function');
+
+      renderer.scope = Scope.Orphan;
+      const handle = setCount(1);
+
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
       expect(await handle?.scheduled).toStrictEqual({
         status: 'skipped',

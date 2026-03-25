@@ -211,13 +211,13 @@ export class RenderContext {
     // Refuse to mutate scope after finalization.
     Object.freeze(this._scope);
 
-    this._scope = Scope.Detached;
+    this._scope = Scope.Orphan;
     this._hooks = DETACHED_HOOKS;
     this._hookIndex = 0;
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    if (isDetachedScope(this._coroutine.scope)) {
+    if (!this._coroutine.scope.isConnected()) {
       const skipped = Promise.resolve<UpdateResult>({ status: 'skipped' });
       return {
         id: -1,
@@ -274,7 +274,7 @@ export class RenderContext {
           return boundary.value as T;
         }
       }
-      if (currentScope.owner === null) {
+      if (!currentScope.isChild()) {
         break;
       }
       currentScope = currentScope.owner.scope;
@@ -638,15 +638,4 @@ function getInitialState<TState>(initialState: InitialState<TState>): TState {
   return typeof initialState === 'function'
     ? (initialState as () => TState)()
     : initialState;
-}
-
-function isDetachedScope(scope: Scope): boolean {
-  let currentScope: Scope | undefined = scope;
-  do {
-    if (currentScope === Scope.Detached) {
-      return true;
-    }
-    currentScope = currentScope.owner?.scope;
-  } while (currentScope !== undefined);
-  return false;
 }

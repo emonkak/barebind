@@ -14,7 +14,7 @@ export class TestUpdater {
 
   readonly runtime: Runtime = createRuntime();
 
-  constructor(scope: Scope = new Scope()) {
+  constructor(scope: Scope = Scope.Root({})) {
     this.scope = scope;
   }
 

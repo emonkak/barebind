@@ -57,7 +57,7 @@ export class ComponentBinding<TProps, TResult, TPart>
 
   private readonly _part: TPart;
 
-  private _scope: Scope = Scope.Detached;
+  private _scope: Scope = Scope.Orphan;
 
   private _memoizedSlot: Slot<TResult, TPart> | null = null;
 
@@ -101,7 +101,7 @@ export class ComponentBinding<TProps, TResult, TPart>
 
   shouldUpdate(props: TProps): boolean {
     return (
-      this._scope === Scope.Detached ||
+      this._scope === Scope.Orphan ||
       !this._component.arePropsEqual(props, this._props)
     );
   }
@@ -115,7 +115,7 @@ export class ComponentBinding<TProps, TResult, TPart>
 
   resume(session: Session): void {
     const hooks = this._pendingHooks.slice();
-    const scope = new Scope(this);
+    const scope = Scope.Child(this);
 
     const component = this._component;
     const context = new RenderContext(
@@ -178,7 +178,7 @@ export class ComponentBinding<TProps, TResult, TPart>
 
   rollback(): void {
     this._memoizedSlot?.rollback();
-    this._scope = Scope.Detached;
+    this._scope = Scope.Orphan;
     this._currentHooks = [];
   }
 }

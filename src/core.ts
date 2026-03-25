@@ -7,19 +7,22 @@ export const BOUNDARY_TYPE_SHARED_CONTEXT = 2;
 export const Template = Symbol('Directive.Template');
 export const Primitive = Symbol('Directive.Primitive');
 
+export const Orphan = Symbol('Scope.Orphan');
+
 const toDirective: unique symbol = Symbol('Bindable.toDirective');
 
 export interface Bindable<T extends Directive.Node = Directive.Node> {
   [toDirective](): T;
 }
 
-export interface Binding<TValue, TPart = unknown> extends ReversibleEffect {
-  readonly type: DirectiveType<TValue, TPart>;
+export interface Binding<TValue, TPart = unknown, TRoot = unknown>
+  extends ReversibleEffect {
+  readonly type: DirectiveType<TValue, TPart, TRoot>;
   value: TValue;
   readonly part: TPart;
   shouldUpdate(value: TValue): boolean;
-  attach(session: Session): void;
-  detach(session: Session): void;
+  attach(session: Session<TRoot>): void;
+  detach(session: Session<TRoot>): void;
 }
 
 export type Boundary =
@@ -50,12 +53,12 @@ export namespace Boundary {
 
 export type CommitPhase = 'mutation' | 'layout' | 'passive';
 
-export interface Coroutine {
+export interface Coroutine<TRoot = unknown> {
   readonly name: string;
-  readonly scope: Scope;
+  readonly scope: Scope<TRoot>;
   pendingLanes: Lanes;
-  start(session: Session): void;
-  resume(session: Session): void;
+  start(session: Session<TRoot>): void;
+  resume(session: Session<TRoot>): void;
 }
 
 export namespace Directive {
@@ -64,8 +67,8 @@ export namespace Directive {
     | Primitive<unknown>
     | Template<readonly unknown[]>;
 
-  export type Element<TVaue, TPart = unknown> = Directive<
-    DirectiveType<TVaue, TPart>,
+  export type Element<TVaue, TPart = unknown, TRoot = unknown> = Directive<
+    DirectiveType<TVaue, TPart, TRoot>,
     TVaue
   >;
 
@@ -104,21 +107,21 @@ export class Directive<TType, TValue> {
   }
 }
 
-export interface DirectiveContext {
+export interface DirectiveContext<TRoot = unknown> {
   resolveDirective<TSource, TPart>(
     source: TSource,
     part: TPart,
-  ): Directive.Element<UnwrapBindable<TSource>, TPart>;
+  ): Directive.Element<UnwrapBindable<TSource>, TPart, TRoot>;
 }
 
-export interface DirectiveType<TValue, TPart = unknown> {
+export interface DirectiveType<TValue, TPart = unknown, TRoot = unknown> {
   readonly name: string;
   equals?(other: DirectiveType<unknown>): boolean;
   resolveBinding(
     value: TValue,
     part: TPart,
-    context: DirectiveContext,
-  ): Binding<TValue, TPart>;
+    context: DirectiveContext<TRoot>,
+  ): Binding<TValue, TPart, TRoot>;
 }
 
 export interface Effect {
@@ -202,15 +205,15 @@ export type Lane = number;
 
 export type Lanes = number;
 
-export interface Primitive<TValue, TPart = unknown>
-  extends DirectiveType<TValue, TPart> {
+export interface Primitive<TValue, TPart = unknown, TRoot = unknown>
+  extends DirectiveType<TValue, TPart, TRoot> {
   ensureValue?(value: unknown, part: TPart): asserts value is TValue;
 }
 
-export interface RenderFrame {
+export interface RenderFrame<TRoot = unknown> {
   id: number;
   lanes: Lanes;
-  coroutines: Coroutine[];
+  coroutines: Coroutine<TRoot>[];
   mutationEffects: EffectQueue;
   layoutEffects: EffectQueue;
   passiveEffects: EffectQueue;
@@ -220,19 +223,24 @@ export interface ReversibleEffect extends Effect {
   rollback(): void;
 }
 
-export interface Session {
-  frame: RenderFrame;
-  scope: Scope;
-  coroutine: Coroutine;
+export interface Session<TRoot = unknown> {
+  root: TRoot;
+  frame: RenderFrame<TRoot>;
+  scope: Scope<TRoot>;
+  coroutine: Coroutine<TRoot>;
   context: SessionContext;
 }
 
-export interface SessionContext extends DirectiveContext {
+export interface SessionContext<TRoot = unknown>
+  extends DirectiveContext<TRoot> {
   addObserver(observer: SessionObserver): () => void;
-  getScheduledUpdates(): Update[];
+  getScheduledUpdates(): Update<TRoot>[];
   startTransition<T>(action: (transition: number) => T): T;
   nextIdentifier(): string;
-  scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateHandle;
+  scheduleUpdate(
+    coroutine: Coroutine<TRoot>,
+    options?: UpdateOptions,
+  ): UpdateHandle;
 }
 
 export type SessionEvent =
@@ -272,17 +280,64 @@ export interface SessionObserver {
   onSessionEvent(event: SessionEvent): void;
 }
 
-export class Scope {
-  owner: Coroutine | null;
+export namespace Scope {
+  export type Root<TRoot> = Scope<TRoot> & { owner: TRoot };
+  export type Child<TRoot> = Scope<TRoot> & { owner: Coroutine<TRoot> };
+  export type Orphan<TRoot> = Scope<TRoot> & { owner: typeof Orphan };
+}
+
+export class Scope<TRoot = unknown> {
+  owner: TRoot | Coroutine<TRoot> | typeof Orphan;
   level: number;
-  boundary: Boundary | null;
+  boundary: Boundary | null = null;
 
-  static Detached: Scope = Object.freeze(new Scope());
+  static readonly Orphan: Scope.Orphan<any> = Object.freeze(
+    new Scope(Orphan, 0),
+  ) as Scope.Orphan<any>;
 
-  constructor(owner: Coroutine | null = null) {
+  static Root<TRoot>(root: TRoot): Scope.Root<TRoot> {
+    return new Scope(root, 0) as Scope.Root<TRoot>;
+  }
+
+  static Child<TRoot>(coroutine: Coroutine<TRoot>): Scope.Child<TRoot> {
+    return new Scope(
+      coroutine,
+      coroutine.scope.level + 1,
+    ) as Scope.Child<TRoot>;
+  }
+
+  private constructor(
+    owner: TRoot | Coroutine<TRoot> | typeof Orphan,
+    level: number,
+  ) {
     this.owner = owner;
-    this.level = owner !== null ? owner.scope.level + 1 : 0;
-    this.boundary = null;
+    this.level = level;
+  }
+
+  getRoot(): Scope.Root<TRoot> | null {
+    let currentScope: Scope<TRoot> | undefined = this;
+    while (currentScope.level > 0) {
+      currentScope = (currentScope.owner as Coroutine<TRoot>).scope;
+    }
+    return currentScope.owner !== Orphan
+      ? (currentScope as Scope.Root<TRoot>)
+      : null;
+  }
+
+  isChild(): this is Scope.Child<TRoot> {
+    return this.level > 0;
+  }
+
+  isConnected(): this is Scope.Root<TRoot> | Scope.Child<TRoot> {
+    return this.getRoot() !== null;
+  }
+
+  isOrphan(): this is Scope.Orphan<TRoot> {
+    return this.owner === Orphan;
+  }
+
+  isRoot(): this is Scope.Root<TRoot> {
+    return this.owner !== Orphan && this.level === 0;
   }
 }
 
@@ -290,10 +345,10 @@ export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
 export type UnwrapBindable<T> = T extends Bindable<infer Value> ? Value : T;
 
-export interface Update {
+export interface Update<TRoot> {
   id: number;
   lanes: Lanes;
-  coroutine: Coroutine;
+  coroutine: Coroutine<TRoot>;
   controller: PromiseWithResolvers<UpdateResult>;
 }
 

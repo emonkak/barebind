@@ -347,7 +347,7 @@ describe('RepeatBinding', () => {
         document.createComment('C'),
         part.sentinelNode,
       );
-      const scope = new Scope();
+      const scope = Scope.Root({});
       const hydrationTarget = createTreeWalker(container);
       const updater = new TestUpdater(scope);
 

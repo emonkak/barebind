@@ -63,14 +63,13 @@ export class HydrationError extends Error {
 
 export function handleError(error: unknown, scope: Scope): Scope {
   let currentScope = scope;
-  let nextOwner = currentScope.owner;
-  let nextBoundary = currentScope.boundary;
+  let currentBoundary = currentScope.boundary;
 
   const handleError = (error: unknown) => {
     while (true) {
-      while (nextBoundary !== null) {
-        const boundary = nextBoundary;
-        nextBoundary = nextBoundary.next;
+      while (currentBoundary !== null) {
+        const boundary = currentBoundary;
+        currentBoundary = currentBoundary.next;
         if (boundary.type === BOUNDARY_TYPE_ERROR) {
           const { handler } = boundary;
           handler(error, handleError);
@@ -78,11 +77,9 @@ export function handleError(error: unknown, scope: Scope): Scope {
         }
       }
 
-      if (nextOwner !== null) {
-        const { owner, boundary } = nextOwner.scope;
-        currentScope = nextOwner.scope;
-        nextOwner = owner;
-        nextBoundary = boundary;
+      if (currentScope.isChild()) {
+        currentScope = currentScope.owner.scope;
+        currentBoundary = currentScope.boundary;
       } else {
         throw error;
       }

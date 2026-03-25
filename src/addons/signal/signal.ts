@@ -109,7 +109,7 @@ export class SignalBinding<TValue, TPart>
 
   private _memoizedVersion: number;
 
-  private _scope: Scope = Scope.Detached;
+  private _scope: Scope = Scope.Orphan;
 
   private _subscription: Subscription = {
     unsubscribe: null,
@@ -147,7 +147,7 @@ export class SignalBinding<TValue, TPart>
   }
 
   shouldUpdate(signal: Signal<TValue>): boolean {
-    return this._subscription.unsubscribe === null || signal !== this._signal;
+    return this._scope === Scope.Orphan || signal !== this._signal;
   }
 
   start(session: Session): void {
@@ -195,7 +195,7 @@ export class SignalBinding<TValue, TPart>
 
   rollback(): void {
     this._slot.rollback();
-    this._scope = Scope.Detached;
+    this._scope = Scope.Orphan;
   }
 }
 

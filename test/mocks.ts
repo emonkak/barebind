@@ -217,7 +217,7 @@ export class MockCoroutine implements Coroutine {
 
   constructor(
     name: string = MockCoroutine.name,
-    scope: Scope = new Scope(),
+    scope: Scope = Scope.Root({}),
     callback: (this: Coroutine, session: Session) => void = () => {},
   ) {
     this.name = name;

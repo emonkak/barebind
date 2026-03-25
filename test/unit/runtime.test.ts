@@ -65,14 +65,14 @@ describe('Runtime', () => {
         SESSION: {
           const coroutine = new MockCoroutine(
             'Coroutine1',
-            new Scope(),
+            Scope.Root({}),
             (session) => {
               session.frame.coroutines.push(subcoroutine);
             },
           );
           const subcoroutine = new MockCoroutine(
             'Coroutine2',
-            new Scope(coroutine),
+            Scope.Child(coroutine),
             (session) => {
               session.frame.mutationEffects.push(
                 mutationEffect,
@@ -193,14 +193,14 @@ describe('Runtime', () => {
         SESSION: {
           const coroutine = new MockCoroutine(
             'coroutine1',
-            new Scope(),
+            Scope.Root({}),
             (session) => {
               session.frame.coroutines.push(subcoroutine);
             },
           );
           const subcoroutine = new MockCoroutine(
             'coroutine2',
-            new Scope(coroutine),
+            Scope.Child(coroutine),
             (session) => {
               session.frame.mutationEffects.push(
                 mutationEffect,
@@ -323,7 +323,7 @@ describe('Runtime', () => {
         SESSION: {
           const coroutine = new MockCoroutine(
             'Coroutine',
-            new Scope(),
+            Scope.Root({}),
             (session) => {
               session.frame.mutationEffects.push(
                 mutationEffect,
@@ -408,9 +408,13 @@ describe('Runtime', () => {
         runtime.addObserver(observer);
 
         SESSION: {
-          const coroutine = new MockCoroutine('coroutine', new Scope(), () => {
-            throw error;
-          });
+          const coroutine = new MockCoroutine(
+            'coroutine',
+            Scope.Root({}),
+            () => {
+              throw error;
+            },
+          );
 
           const handle = runtime.scheduleUpdate(coroutine);
 
@@ -462,7 +466,7 @@ describe('Runtime', () => {
         runtime.addObserver(observer);
 
         SESSION: {
-          const scope = new Scope();
+          const scope = Scope.Root({});
           scope.boundary = {
             type: BOUNDARY_TYPE_ERROR,
             next: null,
@@ -471,7 +475,7 @@ describe('Runtime', () => {
           const parentCoroutine = new MockCoroutine('coroutine1', scope);
           const childCoroutine = new MockCoroutine(
             'coroutine2',
-            new Scope(parentCoroutine),
+            Scope.Child(parentCoroutine),
             () => {
               throw error;
             },
@@ -539,14 +543,14 @@ describe('Runtime', () => {
         SESSION: {
           const coroutine = new MockCoroutine(
             'Coroutine1',
-            new Scope(),
+            Scope.Root({}),
             (session) => {
               session.frame.coroutines.push(subcoroutine);
             },
           );
           const subcoroutine = new MockCoroutine(
             'Coroutine2',
-            new Scope(coroutine),
+            Scope.Child(coroutine),
             (session) => {
               session.frame.mutationEffects.push(
                 mutationEffect,
@@ -657,9 +661,13 @@ describe('Runtime', () => {
         runtime.addObserver(observer);
 
         SESSION: {
-          const coroutine = new MockCoroutine('coroutine', new Scope(), () => {
-            throw error;
-          });
+          const coroutine = new MockCoroutine(
+            'coroutine',
+            Scope.Root({}),
+            () => {
+              throw error;
+            },
+          );
 
           try {
             await runtime.scheduleUpdate(coroutine).finished;
@@ -709,7 +717,7 @@ describe('Runtime', () => {
         runtime.addObserver(observer);
 
         SESSION: {
-          const scope = new Scope();
+          const scope = Scope.Root({});
           scope.boundary = {
             type: BOUNDARY_TYPE_ERROR,
             next: null,
@@ -718,7 +726,7 @@ describe('Runtime', () => {
           const parentCoroutine = new MockCoroutine('Coroutine1', scope);
           const childCoroutine = new MockCoroutine(
             'Coroutine2',
-            new Scope(parentCoroutine),
+            Scope.Child(parentCoroutine),
             () => {
               throw error;
             },

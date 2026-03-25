@@ -50,7 +50,7 @@ export class Root<T> {
 
   hydrate(options?: UpdateOptions): UpdateHandle {
     const hydrationTarget = createTreeWalker(this._container);
-    const scope = new Scope();
+    const scope = Scope.Root(this);
     scope.boundary = {
       type: BOUNDARY_TYPE_HYDRATION,
       next: null,
@@ -71,7 +71,7 @@ export class Root<T> {
   }
 
   mount(options?: UpdateOptions): UpdateHandle {
-    const scope = new Scope();
+    const scope = Scope.Root(this);
     return this._startSession(
       scope,
       (session) => {
@@ -87,7 +87,7 @@ export class Root<T> {
   }
 
   update(source: T, options?: UpdateOptions): UpdateHandle {
-    const scope = new Scope();
+    const scope = Scope.Root(this);
     return this._startSession(
       scope,
       (session) => {
@@ -101,7 +101,7 @@ export class Root<T> {
   }
 
   unmount(options?: UpdateOptions): UpdateHandle {
-    const scope = new Scope();
+    const scope = Scope.Root(this);
     return this._startSession(
       scope,
       (session) => {
@@ -114,7 +114,7 @@ export class Root<T> {
   }
 
   private _startSession(
-    scope: Scope,
+    scope: Scope.Root<this>,
     resume: (session: Session) => void,
     options?: UpdateOptions,
   ): UpdateHandle {

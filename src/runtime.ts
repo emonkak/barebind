@@ -64,7 +64,7 @@ export interface RuntimeOptions {
   maxCoroutinesPerYield?: number;
 }
 
-export class Runtime implements SessionContext {
+export class Runtime<TRoot = unknown> implements SessionContext<TRoot> {
   private readonly _backend: Backend;
 
   private readonly _cachedTemplates: WeakMap<
@@ -78,7 +78,8 @@ export class Runtime implements SessionContext {
 
   private readonly _maxCoroutinesPerYield: number;
 
-  private readonly _scheduledUpdates: LinkedList<Update> = new LinkedList();
+  private readonly _scheduledUpdates: LinkedList<Update<TRoot>> =
+    new LinkedList();
 
   private _transitionCount: number = 0;
 
@@ -108,19 +109,21 @@ export class Runtime implements SessionContext {
 
   async flushUpdates(): Promise<void> {
     for (
-      let update: Update | undefined;
+      let update: Update<TRoot> | undefined;
       (update = this._scheduledUpdates.front()?.value) !== undefined;
       this._scheduledUpdates.popFront()
     ) {
       const { controller, coroutine, id, lanes } = update;
+      const root = coroutine.scope.getRoot();
 
-      if ((coroutine.pendingLanes & lanes) === NoLanes) {
+      if (root === null || (coroutine.pendingLanes & lanes) === NoLanes) {
         controller.resolve({ status: 'skipped' });
         continue;
       }
 
-      const frame = createRenderFrame(id, lanes);
-      const session: Session = {
+      const frame = createRenderFrame<TRoot>(id, lanes);
+      const session: Session<TRoot> = {
+        root: root.owner,
         frame,
         scope: coroutine.scope,
         coroutine,
@@ -159,7 +162,7 @@ export class Runtime implements SessionContext {
     }
   }
 
-  getScheduledUpdates(): Update[] {
+  getScheduledUpdates(): Update<TRoot>[] {
     return Array.from(this._scheduledUpdates);
   }
 
@@ -171,7 +174,7 @@ export class Runtime implements SessionContext {
   resolveDirective<TSource, TPart>(
     source: TSource,
     part: TPart,
-  ): Directive.Element<UnwrapBindable<TSource>, TPart> {
+  ): Directive.Element<UnwrapBindable<TSource>, TPart, TRoot> {
     const directive = toDirectiveNode(source);
     switch (directive.type) {
       case Primitive: {
@@ -180,7 +183,8 @@ export class Runtime implements SessionContext {
         type.ensureValue?.(value, part);
         return new Directive(type, value, key) as Directive.Element<
           UnwrapBindable<TSource>,
-          TPart
+          TPart,
+          TRoot
         >;
       }
       case Template: {
@@ -196,16 +200,21 @@ export class Runtime implements SessionContext {
         });
         return new Directive(type, exprs, key) as Directive.Element<
           UnwrapBindable<TSource>,
-          TPart
+          TPart,
+          TRoot
         >;
       }
       default:
-        return directive as Directive.Element<UnwrapBindable<TSource>, TPart>;
+        return directive as Directive.Element<
+          UnwrapBindable<TSource>,
+          TPart,
+          TRoot
+        >;
     }
   }
 
   scheduleUpdate(
-    coroutine: Coroutine,
+    coroutine: Coroutine<TRoot>,
     options: UpdateOptions = {},
   ): UpdateHandle {
     const controller = Promise.withResolvers<UpdateResult>();
@@ -314,7 +323,10 @@ export class Runtime implements SessionContext {
       });
     }
 
-    if ((handlingScope.owner?.pendingLanes ?? NoLanes) === NoLanes) {
+    if (
+      !handlingScope.isChild() ||
+      handlingScope.owner.pendingLanes === NoLanes
+    ) {
       throw new InterruptError(
         coroutine,
         'An error was captured by an error boundary, but no recovery was scheduled.',
@@ -414,7 +426,7 @@ export class Runtime implements SessionContext {
     }
   }
 
-  private async _runRenderAsync(session: Session): Promise<void> {
+  private async _runRenderAsync(session: Session<TRoot>): Promise<void> {
     const { frame } = session;
     const { id, lanes, coroutines } = frame;
 
@@ -467,7 +479,7 @@ export class Runtime implements SessionContext {
     }
   }
 
-  private _runRenderSync(session: Session): void {
+  private _runRenderSync(session: Session<TRoot>): void {
     const { frame } = session;
     const { id, lanes, coroutines } = frame;
 
@@ -512,7 +524,10 @@ export class Runtime implements SessionContext {
   }
 }
 
-function createRenderFrame(id: number, lanes: Lanes): RenderFrame {
+function createRenderFrame<TRoot>(
+  id: number,
+  lanes: Lanes,
+): RenderFrame<TRoot> {
   return {
     id,
     lanes,
@@ -542,7 +557,7 @@ function notifyObservers(
   }
 }
 
-function resetRenderFrame(frame: RenderFrame): void {
+function resetRenderFrame<TRoot>(frame: RenderFrame<TRoot>): void {
   frame.coroutines.length = 0;
   frame.mutationEffects.clear();
   frame.layoutEffects.clear();

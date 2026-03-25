@@ -27,7 +27,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
 
   constructor(
     callback: (props: TProps, session: RenderContext) => TResult,
-    scope: Scope = new Scope(),
+    scope: Scope = Scope.Root({}),
   ) {
     this.callback = vi.fn(callback);
     this.scope = scope;
@@ -48,11 +48,12 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
   }
 
   render(props: TProps, options?: UpdateOptions): TResult {
+    const renderer = this;
     const previousBoundary = this.scope.boundary;
     let returnValue: TResult;
     let thrownError: unknown;
 
-    if (this.scope !== Scope.Detached) {
+    if (this.scope.isConnected()) {
       this.scope.boundary = {
         type: BOUNDARY_TYPE_ERROR,
         next: previousBoundary,
@@ -67,15 +68,19 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
     }
 
     const coroutine: Coroutine = {
-      name: this.callback.name,
       pendingLanes: NoLanes,
-      scope: this.scope,
+      get name() {
+        return renderer.callback.name;
+      },
+      get scope() {
+        return renderer.scope;
+      },
       start({ frame }) {
         frame.coroutines.push(this);
       },
-      resume: ({ frame, context }) => {
-        const scope = new Scope(coroutine);
-        const hooks = this.hooks.slice();
+      resume({ frame, context }) {
+        const scope = Scope.Child(coroutine);
+        const hooks = renderer.hooks.slice();
         const session = new RenderContext(
           hooks,
           frame,
@@ -84,11 +89,11 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
           context,
         );
 
-        returnValue = this.callback.call(undefined, props, session);
+        returnValue = renderer.callback.call(undefined, props, session);
 
         session.finalize();
 
-        this.hooks = hooks;
+        renderer.hooks = hooks;
       },
     };
 
@@ -100,7 +105,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
 
     this.runtime.flushUpdates();
 
-    if (this.scope !== Scope.Detached) {
+    if (this.scope.isConnected()) {
       this.scope.boundary = previousBoundary;
     }
 

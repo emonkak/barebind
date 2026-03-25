@@ -292,7 +292,7 @@ describe('TemplateBinding', () => {
       );
       const binding = new TemplateBinding(template, exprs, part);
       const container = createElement('div', {}, 'foo', part.node);
-      const scope = new Scope();
+      const scope = Scope.Root({});
       const hydrationTarget = createTreeWalker(container);
       const updater = new TestUpdater(scope);
 
