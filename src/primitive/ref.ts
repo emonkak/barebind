@@ -13,7 +13,7 @@ export abstract class RefType {
     value: unknown,
     part: DOMPart,
   ): asserts value is Ref<Element> {
-    if (!isElementRef(value)) {
+    if (!isRef(value)) {
       throw new DirectiveError(
         this,
         value,
@@ -97,7 +97,7 @@ export class RefBinding extends PrimitiveBinding<
   }
 }
 
-function isElementRef(value: unknown): value is Ref<Element> {
+function isRef(value: unknown): value is Ref<unknown> {
   return (
     value == null ||
     typeof value === 'function' ||
