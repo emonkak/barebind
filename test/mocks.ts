@@ -118,7 +118,7 @@ export class MockBinding<TValue, TPart extends DOMPart>
 
   readonly part: TPart;
 
-  memoizedValue: TValue | null = null;
+  currentValue: TValue | null = null;
 
   dirty: boolean = false;
 
@@ -131,7 +131,7 @@ export class MockBinding<TValue, TPart extends DOMPart>
   }
 
   shouldUpdate(value: TValue): boolean {
-    return !Object.is(value, this.memoizedValue);
+    return !Object.is(value, this.currentValue);
   }
 
   attach(_session: Session): void {
@@ -170,7 +170,7 @@ export class MockBinding<TValue, TPart extends DOMPart>
         break;
     }
 
-    this.memoizedValue = this.value;
+    this.currentValue = this.value;
     this.dirty = false;
     this.committed = true;
   }
@@ -193,16 +193,14 @@ export class MockBinding<TValue, TPart extends DOMPart>
         (this.part.node as any)['on' + this.part.name] = null;
         break;
       case DOM_PART_TYPE_CHILD_NODE:
-        if (this.part.sentinelNode.data === this.memoizedValue) {
-          this.part.sentinelNode.data = '';
-        }
+        this.part.sentinelNode.data = '';
         break;
       case DOM_PART_TYPE_TEXT:
         this.part.node.data = '';
         break;
     }
 
-    this.memoizedValue = null;
+    this.currentValue = null;
     this.dirty = false;
     this.committed = false;
   }
