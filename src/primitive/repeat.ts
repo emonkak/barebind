@@ -108,11 +108,12 @@ export class RepeatBinding<TSource>
   }
 
   detach(session: Session): void {
-    if (this._currentSlots !== null) {
-      for (const slot of this._currentSlots) {
-        slot.detach(session);
-      }
+    for (const slot of this._pendingSlots) {
+      slot.detach(session);
     }
+
+    this._pendingSlots = [];
+    this._pendingMutations = [];
   }
 
   commit(): void {
