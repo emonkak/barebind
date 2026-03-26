@@ -186,20 +186,15 @@ export class ComponentBinding<TProps, TResult, TPart>
 class CleanupEffect implements Effect {
   private readonly _handler: EffectHandler;
 
-  private readonly _epoch: number;
-
   constructor(handler: EffectHandler) {
     this._handler = handler;
-    this._epoch = handler.epoch;
   }
 
   commit(): void {
-    const { cleanup, epoch } = this._handler;
-
-    if (epoch === this._epoch) {
-      cleanup?.();
-      this._handler.cleanup = undefined;
-    }
+    const { cleanup } = this._handler;
+    cleanup?.();
+    this._handler.setup = null;
+    this._handler.cleanup = undefined;
   }
 }
 
@@ -207,7 +202,7 @@ function enqueueCleanupEffect(
   handler: EffectHandler,
   effects: EffectQueue,
 ): void {
-  handler.epoch++;
+  handler.setup = null;
   effects.pushBefore(new CleanupEffect(handler));
 }
 

@@ -63,9 +63,8 @@ export interface DispatchOptions<TState> extends UpdateOptions {
 }
 
 export interface EffectHandler {
-  setup: () => Cleanup | void;
+  setup: (() => Cleanup | void) | null;
   cleanup: Cleanup | void;
-  epoch: number;
 }
 
 export type Hook =
@@ -479,7 +478,6 @@ export class RenderContext {
       ensureHookType<Hook.EffectHook>(type, currentHook);
       const { handler, memoizedDependencies } = currentHook;
       if (areDependenciesChanged(dependencies, memoizedDependencies)) {
-        handler.epoch++;
         queue.push(new InvokeEffect(handler), this._scope.level);
         currentHook = {
           type,
@@ -492,7 +490,6 @@ export class RenderContext {
       const handler: EffectHandler = {
         setup,
         cleanup: undefined,
-        epoch: 0,
       };
       currentHook = {
         type,
@@ -606,20 +603,15 @@ export class RenderContext {
 class InvokeEffect implements Effect {
   private readonly _handler: EffectHandler;
 
-  private readonly _epoch: number;
-
   constructor(handler: EffectHandler) {
     this._handler = handler;
-    this._epoch = handler.epoch;
   }
 
   commit(): void {
-    const { cleanup, epoch, setup } = this._handler;
-
-    if (epoch === this._epoch) {
-      cleanup?.();
-      this._handler.cleanup = setup();
-    }
+    const { cleanup, setup } = this._handler;
+    cleanup?.();
+    this._handler.setup = null;
+    this._handler.cleanup = setup?.();
   }
 }
 
