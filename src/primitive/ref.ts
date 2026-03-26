@@ -8,6 +8,12 @@ import { DirectiveError } from '../error.js';
 import type { Cleanup, Ref, RefObject } from '../render-context.js';
 import { PrimitiveBinding } from './primitive.js';
 
+interface RefHandler<T> {
+  pendingRef: Ref<T>;
+  currentRef: Ref<T>;
+  cleanup: Cleanup | void;
+}
+
 export abstract class RefType {
   static ensureValue(
     value: unknown,
@@ -39,61 +45,89 @@ export class RefBinding extends PrimitiveBinding<
   Ref<Element>,
   DOMPart.AttributePart
 > {
-  private _currentValue: Ref<Element>;
-
-  private _currentCleanup: Cleanup | void = undefined;
+  private _handler: RefHandler<Element> = {
+    pendingRef: null,
+    currentRef: null,
+    cleanup: undefined,
+  };
 
   get type(): Primitive<Ref<Element>, DOMPart.AttributePart> {
     return RefType;
   }
 
-  shouldUpdate(value: Ref<Element>): boolean {
-    return value !== this._currentValue;
+  shouldUpdate(newRef: Ref<Element>): boolean {
+    return newRef !== this._handler.currentRef;
   }
 
   override attach(session: Session): void {
-    session.frame.layoutEffects.pushBefore(new InvokeRef(this));
+    session.frame.layoutEffects.pushBefore(
+      new InvokeRef(this._handler, this._part),
+    );
+    this._handler.pendingRef = this._pendingValue;
   }
 
   override detach(session: Session): void {
-    session.frame.mutationEffects.pushAfter(new CleanupRef(this));
+    session.frame.mutationEffects.pushAfter(new CleanupRef(this._handler));
+    this._handler.pendingRef = null;
+  }
+}
+
+class CleanupRef implements Effect {
+  private readonly _handler: RefHandler<Element>;
+
+  constructor(handler: RefHandler<Element>) {
+    this._handler = handler;
   }
 
-  invokeRef(): void {
-    const newRef = this._pendingValue;
-    const oldRef = this._currentValue;
+  commit(): void {
+    const ref = this._handler.currentRef;
+
+    if (ref != null) {
+      if (typeof ref === 'function') {
+        const { cleanup } = this._handler;
+        cleanup?.();
+        this._handler.cleanup = undefined;
+      } else {
+        ref.current = null;
+      }
+    }
+  }
+}
+
+class InvokeRef implements Effect {
+  private readonly _handler: RefHandler<Element>;
+
+  private readonly _part: DOMPart.AttributePart;
+
+  constructor(handler: RefHandler<Element>, part: DOMPart.AttributePart) {
+    this._handler = handler;
+    this._part = part;
+  }
+
+  commit(): void {
+    const newRef = this._handler.pendingRef;
+    const oldRef = this._handler.currentRef;
 
     if (newRef !== oldRef) {
+      const element = this._part.node;
+
       if (typeof oldRef === 'function') {
-        this._currentCleanup?.();
-        this._currentCleanup = undefined;
+        const { cleanup } = this._handler;
+        cleanup?.();
+        this._handler.cleanup = undefined;
       } else if (oldRef != null) {
         oldRef.current = null;
       }
 
       if (typeof newRef === 'function') {
-        this._currentCleanup = newRef(this.part.node);
+        this._handler.cleanup = newRef(element);
       } else if (newRef != null) {
-        newRef.current = this.part.node;
+        newRef.current = element;
       }
     }
 
-    this._currentValue = this.value;
-  }
-
-  cleanupRef(): void {
-    const ref = this._currentValue;
-
-    if (ref != null) {
-      if (typeof ref === 'function') {
-        this._currentCleanup?.();
-        this._currentCleanup = undefined;
-      } else {
-        ref.current = null;
-      }
-    }
-
-    this._currentValue = null;
+    this._handler.pendingRef = null;
+    this._handler.currentRef = newRef;
   }
 }
 
@@ -103,28 +137,4 @@ function isRef(value: unknown): value is Ref<unknown> {
     typeof value === 'function' ||
     (value as RefObject<unknown>).current !== undefined
   );
-}
-
-class CleanupRef implements Effect {
-  private readonly _binding: RefBinding;
-
-  constructor(binding: RefBinding) {
-    this._binding = binding;
-  }
-
-  commit(): void {
-    this._binding.cleanupRef();
-  }
-}
-
-class InvokeRef implements Effect {
-  private readonly _binding: RefBinding;
-
-  constructor(binding: RefBinding) {
-    this._binding = binding;
-  }
-
-  commit(): void {
-    this._binding.invokeRef();
-  }
 }
