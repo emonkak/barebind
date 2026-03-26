@@ -87,7 +87,7 @@ export class Reactive<T> extends Signal<T> {
     return takeSnapshot(this._node);
   }
 
-  set value(value: T) {
+  set value(newValue: T) {
     if (!(this._node.signal instanceof Atom)) {
       throw new TypeError('Cannot set value on a read-only signal.');
     }
@@ -95,7 +95,7 @@ export class Reactive<T> extends Signal<T> {
     this._node.children = null;
     this._node.flags |= FLAG_PENGING_VALUE;
     this._node.flags &= ~FLAG_NEEDS_SNAPSHOT;
-    this._node.signal.value = value;
+    this._node.signal.value = newValue;
   }
 
   get version(): number {

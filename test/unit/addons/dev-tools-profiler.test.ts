@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 import { DevToolsProfiler } from '@/addons/dev-tools-profiler.js';
-import { EffectQueue } from '@/core.js';
+import { type CommitPhase, EffectQueue } from '@/core.js';
 import { MockCoroutine } from '../../mocks.js';
 
 interface MockPerformance {
@@ -205,11 +205,11 @@ describe('DevToolsProfiler', () => {
   });
 
   describe('effect-commit-start / effect-commit-end', () => {
-    it.for([
+    it.for<CommitPhase>([
       'mutation',
       'layout',
       'passive',
-    ] as const)('records marks and a measure for %s phase', (phase) => {
+    ])('records marks and a measure for %s phase', (phase) => {
       profiler.onSessionEvent({
         type: 'effect-commit-start',
         id: 0,

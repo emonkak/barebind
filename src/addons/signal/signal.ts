@@ -50,7 +50,7 @@ export abstract class Signal<T>
   static resolveBinding<TValue, TPart>(
     signal: Signal<TValue>,
     part: TPart,
-    context: DirectiveContext,
+    context: DirectiveContext<TPart>,
   ): SignalBinding<TValue, TPart> {
     const slot = Slot.place(signal.value, part, context);
     return new SignalBinding(signal, slot);
@@ -101,15 +101,15 @@ export abstract class Signal<T>
 }
 
 export class SignalBinding<TValue, TPart>
-  implements Binding<Signal<TValue>, TPart>, Coroutine
+  implements Binding<Signal<TValue>, TPart>, Coroutine<TPart>
 {
-  pendingLanes: Lanes = NoLanes;
+  private _pendingSignal: Signal<TValue>;
 
-  private _signal: Signal<TValue>;
-
-  private readonly _slot: Slot<TValue, TPart>;
+  private _currentSignal: Signal<TValue> | null = null;
 
   private _memoizedVersion: number;
+
+  private readonly _slot: Slot<TValue, TPart>;
 
   private _scope: Scope = Scope.Orphan;
 
@@ -118,10 +118,12 @@ export class SignalBinding<TValue, TPart>
     unsubscribe: undefined,
   };
 
+  pendingLanes: Lanes = NoLanes;
+
   constructor(signal: Signal<TValue>, slot: Slot<TValue, TPart>) {
-    this._signal = signal;
-    this._slot = slot;
+    this._pendingSignal = signal;
     this._memoizedVersion = signal.version;
+    this._slot = slot;
   }
 
   get type(): DirectiveType<Signal<TValue>, TPart> {
@@ -129,11 +131,11 @@ export class SignalBinding<TValue, TPart>
   }
 
   get value(): Signal<TValue> {
-    return this._signal;
+    return this._pendingSignal;
   }
 
-  set value(signal: Signal<TValue>) {
-    this._signal = signal;
+  set value(newSignal: Signal<TValue>) {
+    this._pendingSignal = newSignal;
     this._memoizedVersion = -1;
   }
 
@@ -150,7 +152,7 @@ export class SignalBinding<TValue, TPart>
   }
 
   shouldUpdate(newSignal: Signal<TValue>): boolean {
-    return this._scope === Scope.Orphan || newSignal !== this._signal;
+    return this._currentSignal === null || newSignal !== this._currentSignal;
   }
 
   start(session: Session): void {
@@ -158,14 +160,14 @@ export class SignalBinding<TValue, TPart>
   }
 
   resume(session: Session): void {
-    if (this._slot.update(this._signal.value, session)) {
+    if (this._slot.update(this._pendingSignal.value, session)) {
       session.frame.mutationEffects.push(this._slot, this._scope.level);
     }
   }
 
   attach(session: Session): void {
     const { frame, scope, context } = session;
-    const { version } = this._signal;
+    const { version } = this._pendingSignal;
 
     frame.layoutEffects.push(
       new SubscribeSignal(this._handler, this, context),
@@ -173,14 +175,14 @@ export class SignalBinding<TValue, TPart>
     );
 
     if (this._memoizedVersion < version) {
-      this._slot.update(this._signal.value, session);
+      this._slot.update(this._pendingSignal.value, session);
       this._memoizedVersion = version;
     } else {
       this._slot.attach(session);
     }
 
     this._scope = scope;
-    this._handler.signal = this._signal;
+    this._handler.signal = this._pendingSignal;
   }
 
   detach(session: Session): void {
@@ -195,10 +197,12 @@ export class SignalBinding<TValue, TPart>
 
   commit(): void {
     this._slot.commit();
+    this._currentSignal = this._pendingSignal;
   }
 
   rollback(): void {
     this._slot.rollback();
+    this._currentSignal = null;
   }
 }
 

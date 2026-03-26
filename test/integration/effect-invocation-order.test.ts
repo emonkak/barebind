@@ -1,180 +1,7 @@
-import {
-  BrowserBackend,
-  createComponent,
-  Fragment,
-  type HookFunction,
-  html,
-  Root,
-  Runtime,
-} from 'barebind';
+import { createComponent, type HookFunction, html } from 'barebind';
 import { expect, test } from 'vitest';
-
-import { stripComments, waitUntil } from '../test-helpers.js';
-
-test('invokes effects from child to parent', async () => {
-  const logs: string[] = [];
-  const container = document.createElement('div');
-  const root = Root.create<unknown>(
-    Foo({ logs }),
-    container,
-    new Runtime(new BrowserBackend()),
-  );
-
-  SESSION1: {
-    await root.mount().finished;
-    await waitUntil('background');
-
-    expect(stripComments(container).innerHTML).toBe(
-      '<div class="Foo"><div class="Foo.0"><div class="Foo.0.0"></div></div><div class="Foo.1"><div class="Foo.1.0"></div></div></div>',
-    );
-    expect(logs).toStrictEqual([
-      'render Foo',
-      'render Foo.0',
-      'render Foo.1',
-      'render Foo.0.0',
-      'render Foo.1.0',
-      'invoke #0 mutation effect in Foo.0.0',
-      'invoke #1 mutation effect in Foo.0.0',
-      'invoke #0 mutation effect in Foo.1.0',
-      'invoke #1 mutation effect in Foo.1.0',
-      'invoke #0 mutation effect in Foo.0',
-      'invoke #1 mutation effect in Foo.0',
-      'invoke #0 mutation effect in Foo.1',
-      'invoke #1 mutation effect in Foo.1',
-      'invoke #0 mutation effect in Foo',
-      'invoke #1 mutation effect in Foo',
-      'invoke ref in Foo',
-      'invoke ref in Foo.0',
-      'invoke ref in Foo.1',
-      'invoke ref in Foo.0.0',
-      'invoke ref in Foo.1.0',
-      'invoke #0 layout effect in Foo.0.0',
-      'invoke #1 layout effect in Foo.0.0',
-      'invoke #0 layout effect in Foo.1.0',
-      'invoke #1 layout effect in Foo.1.0',
-      'invoke #0 layout effect in Foo.0',
-      'invoke #1 layout effect in Foo.0',
-      'invoke #0 layout effect in Foo.1',
-      'invoke #1 layout effect in Foo.1',
-      'invoke #0 layout effect in Foo',
-      'invoke #1 layout effect in Foo',
-      'invoke #0 passive effect in Foo.0.0',
-      'invoke #1 passive effect in Foo.0.0',
-      'invoke #0 passive effect in Foo.1.0',
-      'invoke #1 passive effect in Foo.1.0',
-      'invoke #0 passive effect in Foo.0',
-      'invoke #1 passive effect in Foo.0',
-      'invoke #0 passive effect in Foo.1',
-      'invoke #1 passive effect in Foo.1',
-      'invoke #0 passive effect in Foo',
-      'invoke #1 passive effect in Foo',
-    ]);
-  }
-
-  logs.length = 0;
-
-  SESSION2: {
-    await root.update(Bar({ logs })).finished;
-    await waitUntil('background');
-
-    expect(stripComments(container).innerHTML).toBe(
-      '<div class="Bar"><div class="Bar.0"><div class="Bar.0.0"></div></div></div>',
-    );
-    expect(logs).toStrictEqual([
-      'render Bar',
-      'render Bar.0',
-      'render Bar.0.0',
-      'clean #0 mutation effect in Foo',
-      'clean #1 mutation effect in Foo',
-      'clean #0 mutation effect in Foo.0',
-      'clean #1 mutation effect in Foo.0',
-      'clean #0 mutation effect in Foo.0.0',
-      'clean #1 mutation effect in Foo.0.0',
-      'clean #0 mutation effect in Foo.1',
-      'clean #1 mutation effect in Foo.1',
-      'clean #0 mutation effect in Foo.1.0',
-      'clean #1 mutation effect in Foo.1.0',
-      'invoke #0 mutation effect in Bar.0.0',
-      'invoke #1 mutation effect in Bar.0.0',
-      'invoke #0 mutation effect in Bar.0',
-      'invoke #1 mutation effect in Bar.0',
-      'invoke #0 mutation effect in Bar',
-      'invoke #1 mutation effect in Bar',
-      'clean ref in Foo',
-      'clean ref in Foo.0',
-      'clean ref in Foo.0.0',
-      'clean ref in Foo.1',
-      'clean ref in Foo.1.0',
-      'clean #0 layout effect in Foo',
-      'clean #1 layout effect in Foo',
-      'clean #0 layout effect in Foo.0',
-      'clean #1 layout effect in Foo.0',
-      'clean #0 layout effect in Foo.0.0',
-      'clean #1 layout effect in Foo.0.0',
-      'clean #0 layout effect in Foo.1',
-      'clean #1 layout effect in Foo.1',
-      'clean #0 layout effect in Foo.1.0',
-      'clean #1 layout effect in Foo.1.0',
-      'invoke ref in Bar',
-      'invoke ref in Bar.0',
-      'invoke ref in Bar.0.0',
-      'invoke #0 layout effect in Bar.0.0',
-      'invoke #1 layout effect in Bar.0.0',
-      'invoke #0 layout effect in Bar.0',
-      'invoke #1 layout effect in Bar.0',
-      'invoke #0 layout effect in Bar',
-      'invoke #1 layout effect in Bar',
-      'clean #0 passive effect in Foo',
-      'clean #1 passive effect in Foo',
-      'clean #0 passive effect in Foo.0',
-      'clean #1 passive effect in Foo.0',
-      'clean #0 passive effect in Foo.0.0',
-      'clean #1 passive effect in Foo.0.0',
-      'clean #0 passive effect in Foo.1',
-      'clean #1 passive effect in Foo.1',
-      'clean #0 passive effect in Foo.1.0',
-      'clean #1 passive effect in Foo.1.0',
-      'invoke #0 passive effect in Bar.0.0',
-      'invoke #1 passive effect in Bar.0.0',
-      'invoke #0 passive effect in Bar.0',
-      'invoke #1 passive effect in Bar.0',
-      'invoke #0 passive effect in Bar',
-      'invoke #1 passive effect in Bar',
-    ]);
-  }
-
-  logs.length = 0;
-
-  SESSION3: {
-    await root.unmount().finished;
-    await waitUntil('background');
-
-    expect(container.innerHTML).toBe('');
-    expect(logs).toStrictEqual([
-      'clean #0 mutation effect in Bar',
-      'clean #1 mutation effect in Bar',
-      'clean #0 mutation effect in Bar.0',
-      'clean #1 mutation effect in Bar.0',
-      'clean #0 mutation effect in Bar.0.0',
-      'clean #1 mutation effect in Bar.0.0',
-      'clean ref in Bar',
-      'clean ref in Bar.0',
-      'clean ref in Bar.0.0',
-      'clean #0 layout effect in Bar',
-      'clean #1 layout effect in Bar',
-      'clean #0 layout effect in Bar.0',
-      'clean #1 layout effect in Bar.0',
-      'clean #0 layout effect in Bar.0.0',
-      'clean #1 layout effect in Bar.0.0',
-      'clean #0 passive effect in Bar',
-      'clean #1 passive effect in Bar',
-      'clean #0 passive effect in Bar.0',
-      'clean #1 passive effect in Bar.0',
-      'clean #0 passive effect in Bar.0.0',
-      'clean #1 passive effect in Bar.0.0',
-    ]);
-  }
-});
+import { createTestRoot } from '../adapter.js';
+import { stripComments } from '../helpers.js';
 
 const Foo = createComponent<{
   logs: string[];
@@ -182,7 +9,7 @@ const Foo = createComponent<{
   return Node({
     name: 'Foo',
     logs,
-    children: Fragment([
+    children: [
       Node({
         name: 'Foo.0',
         logs,
@@ -193,7 +20,7 @@ const Foo = createComponent<{
         logs,
         children: Node({ name: 'Foo.1.0', logs }),
       }),
-    ]),
+    ],
   });
 });
 
@@ -218,7 +45,7 @@ const Node = createComponent<{
 }>(function Node({ name, logs, children }, $) {
   logs.push(`render ${name}`);
 
-  $.use(TestEffects(name, logs));
+  $.use(TestEffectInvocationOrder(name, logs));
 
   const ref = (element: Element) => {
     logs.push(`invoke ref in ${element.className}`);
@@ -234,7 +61,158 @@ const Node = createComponent<{
   `;
 });
 
-function TestEffects(name: unknown, logs: string[]): HookFunction<void> {
+test('invokes effects from child to parent', async () => {
+  const logs: string[] = [];
+  const container = document.createElement('div');
+  const root = createTestRoot<unknown>(Foo({ logs }), container);
+
+  await root.mount().finished;
+
+  expect(stripComments(container).innerHTML).toBe(
+    '<div class="Foo"><div class="Foo.0"><div class="Foo.0.0"></div></div><div class="Foo.1"><div class="Foo.1.0"></div></div></div>',
+  );
+  expect(logs.splice(0)).toStrictEqual([
+    'render Foo',
+    'render Foo.0',
+    'render Foo.1',
+    'render Foo.0.0',
+    'render Foo.1.0',
+    'invoke #0 mutation effect in Foo.0.0',
+    'invoke #1 mutation effect in Foo.0.0',
+    'invoke #0 mutation effect in Foo.1.0',
+    'invoke #1 mutation effect in Foo.1.0',
+    'invoke #0 mutation effect in Foo.0',
+    'invoke #1 mutation effect in Foo.0',
+    'invoke #0 mutation effect in Foo.1',
+    'invoke #1 mutation effect in Foo.1',
+    'invoke #0 mutation effect in Foo',
+    'invoke #1 mutation effect in Foo',
+    'invoke ref in Foo',
+    'invoke ref in Foo.0',
+    'invoke ref in Foo.1',
+    'invoke ref in Foo.0.0',
+    'invoke ref in Foo.1.0',
+    'invoke #0 layout effect in Foo.0.0',
+    'invoke #1 layout effect in Foo.0.0',
+    'invoke #0 layout effect in Foo.1.0',
+    'invoke #1 layout effect in Foo.1.0',
+    'invoke #0 layout effect in Foo.0',
+    'invoke #1 layout effect in Foo.0',
+    'invoke #0 layout effect in Foo.1',
+    'invoke #1 layout effect in Foo.1',
+    'invoke #0 layout effect in Foo',
+    'invoke #1 layout effect in Foo',
+    'invoke #0 passive effect in Foo.0.0',
+    'invoke #1 passive effect in Foo.0.0',
+    'invoke #0 passive effect in Foo.1.0',
+    'invoke #1 passive effect in Foo.1.0',
+    'invoke #0 passive effect in Foo.0',
+    'invoke #1 passive effect in Foo.0',
+    'invoke #0 passive effect in Foo.1',
+    'invoke #1 passive effect in Foo.1',
+    'invoke #0 passive effect in Foo',
+    'invoke #1 passive effect in Foo',
+  ]);
+
+  await root.update(Bar({ logs })).finished;
+
+  expect(stripComments(container).innerHTML).toBe(
+    '<div class="Bar"><div class="Bar.0"><div class="Bar.0.0"></div></div></div>',
+  );
+  expect(logs.splice(0)).toStrictEqual([
+    'render Bar',
+    'render Bar.0',
+    'render Bar.0.0',
+    'clean #0 mutation effect in Foo',
+    'clean #1 mutation effect in Foo',
+    'clean #0 mutation effect in Foo.0',
+    'clean #1 mutation effect in Foo.0',
+    'clean #0 mutation effect in Foo.0.0',
+    'clean #1 mutation effect in Foo.0.0',
+    'clean #0 mutation effect in Foo.1',
+    'clean #1 mutation effect in Foo.1',
+    'clean #0 mutation effect in Foo.1.0',
+    'clean #1 mutation effect in Foo.1.0',
+    'invoke #0 mutation effect in Bar.0.0',
+    'invoke #1 mutation effect in Bar.0.0',
+    'invoke #0 mutation effect in Bar.0',
+    'invoke #1 mutation effect in Bar.0',
+    'invoke #0 mutation effect in Bar',
+    'invoke #1 mutation effect in Bar',
+    'clean ref in Foo',
+    'clean ref in Foo.0',
+    'clean ref in Foo.0.0',
+    'clean ref in Foo.1',
+    'clean ref in Foo.1.0',
+    'clean #0 layout effect in Foo',
+    'clean #1 layout effect in Foo',
+    'clean #0 layout effect in Foo.0',
+    'clean #1 layout effect in Foo.0',
+    'clean #0 layout effect in Foo.0.0',
+    'clean #1 layout effect in Foo.0.0',
+    'clean #0 layout effect in Foo.1',
+    'clean #1 layout effect in Foo.1',
+    'clean #0 layout effect in Foo.1.0',
+    'clean #1 layout effect in Foo.1.0',
+    'invoke ref in Bar',
+    'invoke ref in Bar.0',
+    'invoke ref in Bar.0.0',
+    'invoke #0 layout effect in Bar.0.0',
+    'invoke #1 layout effect in Bar.0.0',
+    'invoke #0 layout effect in Bar.0',
+    'invoke #1 layout effect in Bar.0',
+    'invoke #0 layout effect in Bar',
+    'invoke #1 layout effect in Bar',
+    'clean #0 passive effect in Foo',
+    'clean #1 passive effect in Foo',
+    'clean #0 passive effect in Foo.0',
+    'clean #1 passive effect in Foo.0',
+    'clean #0 passive effect in Foo.0.0',
+    'clean #1 passive effect in Foo.0.0',
+    'clean #0 passive effect in Foo.1',
+    'clean #1 passive effect in Foo.1',
+    'clean #0 passive effect in Foo.1.0',
+    'clean #1 passive effect in Foo.1.0',
+    'invoke #0 passive effect in Bar.0.0',
+    'invoke #1 passive effect in Bar.0.0',
+    'invoke #0 passive effect in Bar.0',
+    'invoke #1 passive effect in Bar.0',
+    'invoke #0 passive effect in Bar',
+    'invoke #1 passive effect in Bar',
+  ]);
+
+  await root.unmount().finished;
+
+  expect(container.innerHTML).toBe('');
+  expect(logs.splice(0)).toStrictEqual([
+    'clean #0 mutation effect in Bar',
+    'clean #1 mutation effect in Bar',
+    'clean #0 mutation effect in Bar.0',
+    'clean #1 mutation effect in Bar.0',
+    'clean #0 mutation effect in Bar.0.0',
+    'clean #1 mutation effect in Bar.0.0',
+    'clean ref in Bar',
+    'clean ref in Bar.0',
+    'clean ref in Bar.0.0',
+    'clean #0 layout effect in Bar',
+    'clean #1 layout effect in Bar',
+    'clean #0 layout effect in Bar.0',
+    'clean #1 layout effect in Bar.0',
+    'clean #0 layout effect in Bar.0.0',
+    'clean #1 layout effect in Bar.0.0',
+    'clean #0 passive effect in Bar',
+    'clean #1 passive effect in Bar',
+    'clean #0 passive effect in Bar.0',
+    'clean #1 passive effect in Bar.0',
+    'clean #0 passive effect in Bar.0.0',
+    'clean #1 passive effect in Bar.0.0',
+  ]);
+});
+
+function TestEffectInvocationOrder(
+  name: unknown,
+  logs: string[],
+): HookFunction<void> {
   return ($) => {
     for (let i = 0; i < 2; i++) {
       $.useInsertionEffect(() => {

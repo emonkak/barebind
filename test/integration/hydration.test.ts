@@ -1,20 +1,17 @@
-import { BrowserBackend, createComponent, html, Root, Runtime } from 'barebind';
+import { createComponent, createHydrationRoot, html } from 'barebind';
 import { expect, test } from 'vitest';
 
-import { createElement, stripComments } from '../test-helpers.js';
+import { createElement, stripComments } from '../helpers.js';
 
-interface GreetProps {
+interface AppProps {
   name: string;
 }
 
-const Greet = createComponent<GreetProps>(function Greet({ name }): unknown {
+const App = createComponent<AppProps>(function App({ name }) {
   return html`<p>Hello, ${name}!</p>`;
 });
 
-test('hydrates a template that contain split text nodes', async () => {
-  const value = Greet({
-    name: 'JavaScript',
-  });
+test('hydrates a template containing split text nodes', async () => {
   const container = createElement(
     'div',
     {},
@@ -22,26 +19,25 @@ test('hydrates a template that contain split text nodes', async () => {
       'p',
       {},
       'Hello, ',
-      document.createComment('#comment'),
+      document.createComment(''),
       'JavaScript',
-      document.createComment('#comment'),
+      document.createComment(''),
       '!',
       document.createComment(''),
     ),
   );
-  const root = Root.create(value, container, new Runtime(new BrowserBackend()));
+  const root = createHydrationRoot(
+    App({
+      name: 'JavaScript',
+    }),
+    container,
+  );
 
-  SESSION1: {
-    await root.hydrate().finished;
+  await root.mount().finished;
 
-    expect(stripComments(container).innerHTML).toBe(
-      '<p>Hello, JavaScript!</p>',
-    );
-  }
+  expect(stripComments(container).innerHTML).toBe('<p>Hello, JavaScript!</p>');
 
-  SESSION2: {
-    await root.unmount().finished;
+  await root.unmount().finished;
 
-    expect(container.innerHTML).toBe('');
-  }
+  expect(container.innerHTML).toBe('');
 });

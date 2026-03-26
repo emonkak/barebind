@@ -7,14 +7,24 @@ export type {
   SessionObserver,
 } from './core.js';
 export {
-  AbortError,
-  CoroutineError,
+  ClientAdapter,
+  DOMAdapter,
+  HydrationAdapter,
+} from './dom/adapter.js';
+export {
   DirectiveError,
   HydrationError,
+} from './dom/error.js';
+export {
+  createCilentRoot,
+  createHydrationRoot,
+  createRoot,
+} from './dom/root.js';
+export {
+  AbortError,
+  CoroutineError,
   InterruptError,
 } from './error.js';
-export type { ClassMap } from './primitive/class.js';
-export type { StyleMap } from './primitive/style.js';
 export {
   $hook,
   type Component,
@@ -25,16 +35,11 @@ export {
   type RefObject,
   type RenderContext,
 } from './render-context.js';
-export { Root } from './root.js';
-export { BrowserBackend } from './runtime/browser.js';
-export { type Backend, Runtime } from './runtime.js';
 export { SharedContext } from './shared-context.js';
-export { PartialTemplate } from './template/partial.js';
 export {
-  Element,
-  Fragment,
   html,
   math,
+  Partial,
   svg,
   text,
 } from './template.js';

@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
-  areDirectiveTypesEqual,
   Directive,
   EffectQueue,
   isBindable,
   Primitive,
+  Scope,
   toDirectiveNode,
 } from '@/core.js';
-import { createEffect, MockType } from '../mocks.js';
+import { NoLanes } from '@/lane.js';
+import { createEffect, MockCoroutine, MockType } from '../mocks.js';
 
 describe('Directive', () => {
   describe('constructor()', () => {
@@ -284,15 +285,96 @@ describe('EffectQueue', () => {
   });
 });
 
-describe('areDirectiveTypesEqual()', () => {
-  it('returns the result from Directive.equals() if it is definied', () => {
-    const type1 = new MockType('A');
-    const type2 = new MockType('B');
+describe('Scope', () => {
+  describe('Orphan', () => {
+    it('is frozen', () => {
+      expect(Object.isFrozen(Scope.Orphan)).toBe(true);
+    });
 
-    expect(areDirectiveTypesEqual(type1, type1)).toBe(true);
-    expect(areDirectiveTypesEqual(type1, type2)).toBe(false);
-    expect(areDirectiveTypesEqual(type2, type1)).toBe(false);
-    expect(areDirectiveTypesEqual(type2, type2)).toBe(true);
+    it('has level 0', () => {
+      expect(Scope.Orphan.level).toBe(0);
+    });
+
+    it('has symbol as owner', () => {
+      expect(Scope.Orphan.owner).toBeTypeOf('symbol');
+    });
+  });
+
+  describe('Child()', () => {
+    it('has the given coroutine as owner', () => {
+      const coroutine = new MockCoroutine();
+      expect(Scope.Child(coroutine).owner).toBe(coroutine);
+    });
+
+    it('has one level higher than the parent scope', () => {
+      expect(Scope.Child(new MockCoroutine()).level).toBe(1);
+    });
+  });
+
+  describe('Root()', () => {
+    it('returns a Scope with level 0', () => {
+      expect(Scope.Root().level).toBe(0);
+    });
+
+    it('has symbol as owner', () => {
+      expect(Scope.Root().owner).toBeTypeOf('symbol');
+    });
+  });
+
+  describe('getPendingAncestor()', () => {
+    it('returns null when called on a root scope', () => {
+      expect(Scope.Root().getPendingAncestor(NoLanes)).toBe(null);
+    });
+
+    it('returns the scope when its coroutine has all requested lanes pending', () => {
+      const scope = Scope.Child(new MockCoroutine());
+      expect(scope.getPendingAncestor(0)).toBe(scope);
+      expect(scope.getPendingAncestor(-1)).toBe(scope);
+    });
+
+    it('walks up to an ancestor scope that matches the lanes', () => {
+      const parent = Scope.Child(new MockCoroutine('Parent'));
+      const child = Scope.Child(new MockCoroutine('Child', parent, 0));
+      expect(child.getPendingAncestor(0)).toBe(child);
+      expect(child.getPendingAncestor(-1)).toBe(parent);
+    });
+
+    it('returns null when no ancestor has all requested lanes pending', () => {
+      const parent = Scope.Child(new MockCoroutine('Parent', Scope.Root(), 0));
+      const child = Scope.Child(new MockCoroutine('Child', parent, 0));
+      expect(parent.getPendingAncestor(-1)).toBe(null);
+      expect(child.getPendingAncestor(-1)).toBe(null);
+    });
+  });
+
+  describe('isChild()', () => {
+    it.each<[Scope, boolean]>([
+      [Scope.Orphan, false],
+      [Scope.Root(), false],
+      [Scope.Child(new MockCoroutine()), true],
+    ])('returns whether the scope is Scope.Child', (scope, expectedResult) => {
+      expect(scope.isChild()).toBe(expectedResult);
+    });
+  });
+
+  describe('isOrphan()', () => {
+    it.each<[Scope, boolean]>([
+      [Scope.Orphan, true],
+      [Scope.Root(), false],
+      [Scope.Child(new MockCoroutine()), false],
+    ])('returns whether the scope is Scope.Orphan', (scope, expectedResult) => {
+      expect(scope.isOrphan()).toBe(expectedResult);
+    });
+  });
+
+  describe('isRoot()', () => {
+    it.each<[Scope, boolean]>([
+      [Scope.Orphan, false],
+      [Scope.Root(), true],
+      [Scope.Child(new MockCoroutine()), false],
+    ])('returns whether the scope is Scope.Root', (scope, expectedResult) => {
+      expect(scope.isRoot()).toBe(expectedResult);
+    });
   });
 });
 
