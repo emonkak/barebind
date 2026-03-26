@@ -5,9 +5,8 @@ import type {
   Session,
   UnwrapBindable,
 } from './core.js';
-import { areDirectiveTypesEqual } from './core.js';
-import { debugPart, undebugPart } from './debug/dom.js';
-import type { DOMPart } from './dom.js';
+import { debugPart, undebugPart } from './dom/debug.js';
+import type { DOMPart } from './dom/part.js';
 
 const SLOT_STATUS_IDLE = 0;
 const SLOT_STATUS_ATTACHED = 1;
@@ -18,32 +17,38 @@ type SlotStatus =
   | typeof SLOT_STATUS_ATTACHED
   | typeof SLOT_STATUS_DETACHED;
 
-export class Slot<TSource, TPart> {
-  private _pendingBinding: Binding<UnwrapBindable<TSource>, TPart>;
+export class Slot<TSource, TPart = unknown, TRenderer = unknown> {
+  private _pendingBinding: Binding<UnwrapBindable<TSource>, TPart, TRenderer>;
 
-  private _currentBinding: Binding<UnwrapBindable<TSource>, TPart> | null =
-    null;
+  private _currentBinding: Binding<
+    UnwrapBindable<TSource>,
+    TPart,
+    TRenderer
+  > | null = null;
 
   private _key: unknown;
 
   private _status: SlotStatus = SLOT_STATUS_IDLE;
 
-  static place<TSource, TPart>(
+  static place<TSource, TPart, TRenderer>(
     source: TSource,
     part: TPart,
-    context: DirectiveContext,
-  ): Slot<TSource, TPart> {
+    context: DirectiveContext<TPart, TRenderer>,
+  ): Slot<TSource, TPart, TRenderer> {
     const { type, value, key } = context.resolveDirective(source, part);
     const binding = type.resolveBinding(value, part, context);
     return new Slot(binding, key);
   }
 
-  constructor(binding: Binding<UnwrapBindable<TSource>, TPart>, key?: unknown) {
+  constructor(
+    binding: Binding<UnwrapBindable<TSource>, TPart, TRenderer>,
+    key?: unknown,
+  ) {
     this._pendingBinding = binding;
     this._key = key;
   }
 
-  get type(): DirectiveType<UnwrapBindable<TSource>, TPart> {
+  get type(): DirectiveType<UnwrapBindable<TSource>, TPart, TRenderer> {
     return this._pendingBinding.type;
   }
 
@@ -59,17 +64,17 @@ export class Slot<TSource, TPart> {
     return this._key;
   }
 
-  attach(session: Session): void {
+  attach(session: Session<TPart, TRenderer>): void {
     this._pendingBinding.attach(session);
     this._status = SLOT_STATUS_ATTACHED;
   }
 
-  detach(session: Session): void {
+  detach(session: Session<TPart, TRenderer>): void {
     this._pendingBinding.detach(session);
     this._status = SLOT_STATUS_DETACHED;
   }
 
-  update(source: TSource, session: Session): boolean {
+  update(source: TSource, session: Session<TPart, TRenderer>): boolean {
     const { context } = session;
     const { type, value, key } = context.resolveDirective(
       source,
@@ -77,10 +82,7 @@ export class Slot<TSource, TPart> {
     );
     let dirty: boolean;
 
-    if (
-      areDirectiveTypesEqual(type, this._pendingBinding.type) &&
-      this._key === key
-    ) {
+    if (type === this._pendingBinding.type && key === this._key) {
       dirty =
         this._status !== SLOT_STATUS_IDLE ||
         this._pendingBinding.shouldUpdate(value);

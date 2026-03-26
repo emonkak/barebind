@@ -6,7 +6,7 @@ import {
   type SessionProfile,
   SessionProfiler,
 } from '@/addons/session-profiler.js';
-import type { SessionEvent } from '@/core.js';
+import type { Lanes, SessionEvent } from '@/core.js';
 import { InterruptError } from '@/error.js';
 import {
   BackgroundLane,
@@ -30,12 +30,9 @@ describe('SessionProfiler', () => {
       };
       const profiler = new SessionProfiler(reporter);
 
-      const mutationEffects = createEffectQueue([
-        createEffect(),
-        createEffect(),
-      ]);
-      const layoutEffects = createEffectQueue([createEffect()]);
-      const passiveEffects = createEffectQueue([createEffect()]);
+      const mutationEffects = createEffectQueue(createEffect(), createEffect());
+      const layoutEffects = createEffectQueue(createEffect());
+      const passiveEffects = createEffectQueue(createEffect());
       const events: SessionEvent[] = [
         {
           type: 'render-start',
@@ -340,11 +337,8 @@ describe('SessionProfiler', () => {
       };
       const profiler = new SessionProfiler(reporter);
 
-      const mutationEffects = createEffectQueue([
-        createEffect(),
-        createEffect(),
-      ]);
-      const passiveEffects = createEffectQueue([createEffect()]);
+      const mutationEffects = createEffectQueue(createEffect(), createEffect());
+      const passiveEffects = createEffectQueue(createEffect());
       const events: SessionEvent[] = [
         {
           type: 'render-start',
@@ -449,11 +443,8 @@ describe('SessionProfiler', () => {
       };
       const profiler = new SessionProfiler(reporter);
 
-      const mutationEffects = createEffectQueue([
-        createEffect(),
-        createEffect(),
-      ]);
-      const passiveEffects = createEffectQueue([createEffect()]);
+      const mutationEffects = createEffectQueue(createEffect(), createEffect());
+      const passiveEffects = createEffectQueue(createEffect());
       const events: SessionEvent[] = [
         {
           type: 'render-start',
@@ -628,7 +619,7 @@ describe('ConsoleReporter', () => {
       ]);
     });
 
-    it.each([
+    it.each<[Lanes, TaskPriority]>([
       [ConcurrentLane | UserBlockingLane, 'user-blocking'],
       [ConcurrentLane | UserVisibleLane, 'user-visible'],
       [ConcurrentLane | BackgroundLane, 'background'],
@@ -659,7 +650,7 @@ describe('ConsoleReporter', () => {
       ]);
     });
 
-    it.each([
+    it.each<[Lanes, string]>([
       [ConcurrentLane, 'concurrent'],
       [SyncLane, 'sync'],
       [NoLanes, 'no'],

@@ -47,11 +47,9 @@ export function createComponent<TProps = {}, TResult = unknown>(
 }
 
 export class ComponentBinding<TProps, TResult, TPart>
-  implements Binding<TProps, TPart>, Coroutine
+  implements Binding<TProps>, Coroutine<TPart>
 {
-  pendingLanes: Lanes = NoLanes;
-
-  private readonly _component: Component<TProps, TResult, TPart>;
+  private readonly _component: Component<TProps, TResult>;
 
   private _props: TProps;
 
@@ -59,14 +57,16 @@ export class ComponentBinding<TProps, TResult, TPart>
 
   private _scope: Scope = Scope.Orphan;
 
-  private _memoizedSlot: Slot<TResult, TPart> | null = null;
+  private _memoizedSlot: Slot<TResult> | null = null;
 
   private _pendingHooks: Hook[] = [];
 
   private _currentHooks: Hook[] = [];
 
+  pendingLanes: Lanes = NoLanes;
+
   constructor(
-    component: Component<TProps, TResult, TPart>,
+    component: Component<TProps, TResult>,
     props: TProps,
     part: TPart,
   ) {
@@ -75,7 +75,7 @@ export class ComponentBinding<TProps, TResult, TPart>
     this._part = part;
   }
 
-  get type(): Component<TProps, TResult, TPart> {
+  get type(): Component<TProps, TResult> {
     return this._component;
   }
 
@@ -83,8 +83,8 @@ export class ComponentBinding<TProps, TResult, TPart>
     return this._props;
   }
 
-  set value(props: TProps) {
-    this._props = props;
+  set value(newProps: TProps) {
+    this._props = newProps;
   }
 
   get part(): TPart {
@@ -99,10 +99,10 @@ export class ComponentBinding<TProps, TResult, TPart>
     return this._scope;
   }
 
-  shouldUpdate(props: TProps): boolean {
+  shouldUpdate(newProps: TProps): boolean {
     return (
       this._scope === Scope.Orphan ||
-      !this._component.arePropsEqual(props, this._props)
+      !this._component.arePropsEqual(newProps, this._props)
     );
   }
 
@@ -207,10 +207,10 @@ function enqueueCleanupEffect(
 }
 
 function resolveBinding<TProps, TResult, TPart>(
-  this: Component<TProps, TResult, TPart>,
+  this: Component<TProps, TResult>,
   props: TProps,
   part: TPart,
-  _context: DirectiveContext,
+  _context: DirectiveContext<TPart>,
 ): ComponentBinding<TProps, TResult, TPart> {
   return new ComponentBinding(this, props, part);
 }

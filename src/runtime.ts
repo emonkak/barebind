@@ -1,6 +1,6 @@
-/// <reference path="../typings/scheduler.d.ts" />
 /// <reference path="../typings/upsert.d.ts" />
 
+import type { HostAdapter } from './adapter.js';
 import { LinkedList } from './collections/linked-list.js';
 import {
   type CommitPhase,
@@ -17,7 +17,6 @@ import {
   type SessionEvent,
   type SessionObserver,
   Template,
-  type TemplateMode,
   toDirectiveNode,
   type UnwrapBindable,
   type Update,
@@ -38,63 +37,43 @@ import {
   ViewTransitionLane,
 } from './lane.js';
 
-export interface Backend<TPart = unknown> {
-  flushEffects(effects: EffectQueue, phase: CommitPhase): void;
-  getDefaultLanes(): Lanes;
-  getUpdatePriority(): TaskPriority;
-  requestCallback<T>(
-    callback: () => T | PromiseLike<T>,
-    options?: RequestCallbackOptions,
-  ): Promise<T>;
-  resolvePrimitive(source: unknown, part: TPart): Primitive<unknown>;
-  resolveTemplate(
-    strings: readonly string[],
-    exprs: readonly unknown[],
-    mode: TemplateMode,
-    placeholder: string,
-  ): DirectiveType<readonly unknown[]>;
-  startViewTransition(callback: () => Promise<void> | void): Promise<void>;
-  yieldToMain(): Promise<void>;
-}
-
-export type RequestCallbackOptions = SchedulerPostTaskOptions;
-
 export interface RuntimeOptions {
   uniqueIdentifier?: string;
   maxCoroutinesPerYield?: number;
 }
 
-export class Runtime<TRoot = unknown> implements SessionContext<TRoot> {
-  private readonly _backend: Backend;
+export class Runtime<TPart = unknown, TRenderer = unknown>
+  implements SessionContext<TPart, TRenderer>
+{
+  private readonly _adapter: HostAdapter<TPart, TRenderer>;
 
   private readonly _cachedTemplates: WeakMap<
     readonly string[],
     DirectiveType<readonly unknown[]>
   > = new WeakMap();
+  private readonly _maxCoroutinesPerYield: number;
 
   private readonly _observers: LinkedList<SessionObserver> = new LinkedList();
 
-  private _identifierCount: number = 0;
-
-  private readonly _maxCoroutinesPerYield: number;
-
-  private readonly _scheduledUpdates: LinkedList<Update<TRoot>> =
+  private readonly _scheduledUpdates: LinkedList<Update<TPart, TRenderer>> =
     new LinkedList();
 
-  private _transitionCount: number = 0;
-
   private readonly _uniqueIdentifier: string;
+
+  private _identifierCount: number = 0;
+
+  private _transitionCount: number = 0;
 
   private _updateCount: number = 0;
 
   constructor(
-    backend: Backend,
+    adapter: HostAdapter<TPart, TRenderer>,
     {
       maxCoroutinesPerYield = 64,
       uniqueIdentifier = generateUniqueIdentifier(8),
     }: RuntimeOptions = {},
   ) {
-    this._backend = backend;
+    this._adapter = adapter;
     this._maxCoroutinesPerYield = maxCoroutinesPerYield;
     this._uniqueIdentifier = uniqueIdentifier;
   }
@@ -109,21 +88,23 @@ export class Runtime<TRoot = unknown> implements SessionContext<TRoot> {
 
   async flushUpdates(): Promise<void> {
     for (
-      let update: Update<TRoot> | undefined;
+      let update: Update<TPart, TRenderer> | undefined;
       (update = this._scheduledUpdates.front()?.value) !== undefined;
       this._scheduledUpdates.popFront()
     ) {
       const { controller, coroutine, id, lanes } = update;
-      const root = coroutine.scope.getRoot();
 
-      if (root === null || (coroutine.pendingLanes & lanes) === NoLanes) {
+      if (
+        (coroutine.pendingLanes & lanes) === NoLanes ||
+        coroutine.scope.getPendingAncestor(lanes) !== null
+      ) {
         controller.resolve({ status: 'skipped' });
         continue;
       }
 
-      const frame = createRenderFrame<TRoot>(id, lanes);
-      const session: Session<TRoot> = {
-        root: root.owner,
+      const frame = createRenderFrame<TPart, TRenderer>(id, lanes);
+      const session: Session<TPart, TRenderer> = {
+        renderer: this._adapter.requestRenderer(coroutine.scope),
         frame,
         scope: coroutine.scope,
         coroutine,
@@ -162,7 +143,7 @@ export class Runtime<TRoot = unknown> implements SessionContext<TRoot> {
     }
   }
 
-  getScheduledUpdates(): Update<TRoot>[] {
+  getScheduledUpdates(): Update<TPart, TRenderer>[] {
     return Array.from(this._scheduledUpdates);
   }
 
@@ -171,27 +152,27 @@ export class Runtime<TRoot = unknown> implements SessionContext<TRoot> {
     return this._uniqueIdentifier + '-' + this._identifierCount++;
   }
 
-  resolveDirective<TSource, TPart>(
+  resolveDirective<TSource, TBindingPart extends TPart>(
     source: TSource,
-    part: TPart,
-  ): Directive.Element<UnwrapBindable<TSource>, TPart, TRoot> {
+    part: TBindingPart,
+  ): Directive.Element<UnwrapBindable<TSource>, TBindingPart, TRenderer> {
     const directive = toDirectiveNode(source);
     switch (directive.type) {
       case Primitive: {
         const { value, key } = directive;
-        const type = this._backend.resolvePrimitive(value, part);
+        const type = this._adapter.resolvePrimitive(value, part);
         type.ensureValue?.(value, part);
         return new Directive(type, value, key) as Directive.Element<
           UnwrapBindable<TSource>,
-          TPart,
-          TRoot
+          TBindingPart,
+          TRenderer
         >;
       }
       case Template: {
         const { value, key } = directive;
         const { strings, exprs, mode } = value;
         const type = this._cachedTemplates.getOrInsertComputed(strings, () => {
-          return this._backend.resolveTemplate(
+          return this._adapter.resolveTemplate(
             strings,
             exprs,
             mode,
@@ -200,21 +181,21 @@ export class Runtime<TRoot = unknown> implements SessionContext<TRoot> {
         });
         return new Directive(type, exprs, key) as Directive.Element<
           UnwrapBindable<TSource>,
-          TPart,
-          TRoot
+          TBindingPart,
+          TRenderer
         >;
       }
       default:
         return directive as Directive.Element<
           UnwrapBindable<TSource>,
-          TPart,
-          TRoot
+          TBindingPart,
+          TRenderer
         >;
     }
   }
 
   scheduleUpdate(
-    coroutine: Coroutine<TRoot>,
+    coroutine: Coroutine<TPart, TRenderer>,
     options: UpdateOptions = {},
   ): UpdateHandle {
     const controller = Promise.withResolvers<UpdateResult>();
@@ -224,10 +205,10 @@ export class Runtime<TRoot = unknown> implements SessionContext<TRoot> {
     options.priority ??=
       options.transition !== undefined
         ? 'background'
-        : this._backend.getUpdatePriority();
+        : this._adapter.getUpdatePriority();
 
     const id = this._updateCount++;
-    const lanes = this._backend.getDefaultLanes() | getSchedulingLanes(options);
+    const lanes = this._adapter.getDefaultLanes() | getSchedulingLanes(options);
     const callback = (): UpdateResult => {
       const shouldTriggerFlush =
         (options.triggerFlush ?? true) && this._scheduledUpdates.isEmpty();
@@ -254,7 +235,7 @@ export class Runtime<TRoot = unknown> implements SessionContext<TRoot> {
       scheduled = promise;
       resolve(callback());
     } else {
-      scheduled = this._backend
+      scheduled = this._adapter
         .requestCallback(callback, options)
         .catch((error) => {
           // callback() is guaranteed not to throw anything; rejection here only
@@ -291,7 +272,7 @@ export class Runtime<TRoot = unknown> implements SessionContext<TRoot> {
       effects,
     });
 
-    this._backend.flushEffects(effects, phase);
+    this._adapter.flushEffects(effects, phase);
 
     notifyObservers(this._observers, {
       type: 'effect-commit-end',
@@ -359,16 +340,16 @@ export class Runtime<TRoot = unknown> implements SessionContext<TRoot> {
         };
 
         if (lanes & ViewTransitionLane) {
-          await this._backend.startViewTransition(callback);
+          await this._adapter.startViewTransition(callback);
         } else {
-          await this._backend.requestCallback(callback, {
+          await this._adapter.requestCallback(callback, {
             priority: 'user-blocking',
           });
         }
       }
 
       if (passiveEffects.size > 0) {
-        this._backend.requestCallback(
+        this._adapter.requestCallback(
           () => {
             try {
               this._flushEffects(id, passiveEffects, 'passive');
@@ -426,7 +407,9 @@ export class Runtime<TRoot = unknown> implements SessionContext<TRoot> {
     }
   }
 
-  private async _runRenderAsync(session: Session<TRoot>): Promise<void> {
+  private async _runRenderAsync(
+    session: Session<TPart, TRenderer>,
+  ): Promise<void> {
     const { frame } = session;
     const { id, lanes, coroutines } = frame;
 
@@ -450,9 +433,10 @@ export class Runtime<TRoot = unknown> implements SessionContext<TRoot> {
 
           try {
             coroutine.resume(session);
-            coroutine.pendingLanes &= ~frame.lanes;
           } catch (error) {
             this._handleRenderError(id, error, coroutine);
+          } finally {
+            coroutine.pendingLanes &= ~frame.lanes;
           }
 
           notifyObservers(this._observers, {
@@ -466,7 +450,7 @@ export class Runtime<TRoot = unknown> implements SessionContext<TRoot> {
           break;
         }
 
-        await this._backend.yieldToMain();
+        await this._adapter.yieldToMain();
       }
     } finally {
       frame.lanes = NoLanes;
@@ -479,7 +463,7 @@ export class Runtime<TRoot = unknown> implements SessionContext<TRoot> {
     }
   }
 
-  private _runRenderSync(session: Session<TRoot>): void {
+  private _runRenderSync(session: Session<TPart, TRenderer>): void {
     const { frame } = session;
     const { id, lanes, coroutines } = frame;
 
@@ -500,9 +484,10 @@ export class Runtime<TRoot = unknown> implements SessionContext<TRoot> {
 
           try {
             coroutine.resume(session);
-            coroutine.pendingLanes &= ~frame.lanes;
           } catch (error) {
             this._handleRenderError(id, error, coroutine);
+          } finally {
+            coroutine.pendingLanes &= ~frame.lanes;
           }
 
           notifyObservers(this._observers, {
@@ -524,10 +509,10 @@ export class Runtime<TRoot = unknown> implements SessionContext<TRoot> {
   }
 }
 
-function createRenderFrame<TRoot>(
+function createRenderFrame<TPart, TRenderer>(
   id: number,
   lanes: Lanes,
-): RenderFrame<TRoot> {
+): RenderFrame<TPart, TRenderer> {
   return {
     id,
     lanes,
@@ -557,7 +542,9 @@ function notifyObservers(
   }
 }
 
-function resetRenderFrame<TRoot>(frame: RenderFrame<TRoot>): void {
+function resetRenderFrame<TPart, TRenderer>(
+  frame: RenderFrame<TPart, TRenderer>,
+): void {
   frame.coroutines.length = 0;
   frame.mutationEffects.clear();
   frame.layoutEffects.clear();

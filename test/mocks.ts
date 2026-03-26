@@ -1,6 +1,7 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
 import { vi } from 'vitest';
+import type { HostAdapter, RequestCallbackOptions } from '@/adapter.js';
 import {
   type Binding,
   type CommitPhase,
@@ -18,26 +19,10 @@ import {
   type SessionObserver,
   type TemplateMode,
 } from '@/core.js';
-import {
-  DOM_PART_TYPE_ATTRIBUTE,
-  DOM_PART_TYPE_CHILD_NODE,
-  DOM_PART_TYPE_ELEMENT,
-  DOM_PART_TYPE_EVENT,
-  DOM_PART_TYPE_LIVE,
-  DOM_PART_TYPE_PROPERTY,
-  DOM_PART_TYPE_TEXT,
-  type DOMPart,
-} from '@/dom.js';
 import { SyncLane } from '@/lane.js';
-import {
-  type Backend,
-  type RequestCallbackOptions,
-  Runtime,
-  type RuntimeOptions,
-} from '@/runtime.js';
-import { Template, type TemplateResult } from '@/template/template.js';
+import { Runtime, type RuntimeOptions } from '@/runtime.js';
 
-export class MockBackend implements Backend {
+export class MockAdapter implements HostAdapter {
   readonly defaultLanes: Lanes;
 
   constructor(defaultLanes: Lanes = SyncLane) {
@@ -53,51 +38,52 @@ export class MockBackend implements Backend {
   }
 
   getUpdatePriority(): TaskPriority {
-    return 'user-blocking';
+    return 'user-visible';
+  }
+
+  requestRenderer(_scope: Scope): unknown {
+    return {};
   }
 
   requestCallback<T>(
     callback: () => T | PromiseLike<T>,
     options: RequestCallbackOptions = {},
   ): Promise<T> {
-    let promise: Promise<T>;
-
-    const runCallbackIfNotCanceled = () => {
-      options.signal?.throwIfAborted();
-      return callback();
-    };
+    let bssePromise: Promise<T | void>;
 
     switch (options?.priority) {
       case 'user-visible':
-        promise = new Promise((resolve) => setTimeout(resolve)).then(
-          runCallbackIfNotCanceled,
-        );
+        bssePromise = new Promise((resolve) => setTimeout(resolve));
         break;
       case 'background':
-        promise = new Promise((resolve) => setTimeout(resolve, 1)).then(
-          runCallbackIfNotCanceled,
-        );
+        bssePromise = new Promise((resolve) => setTimeout(resolve, 1));
         break;
       default:
-        promise = Promise.resolve().then(runCallbackIfNotCanceled);
+        bssePromise = Promise.resolve();
         break;
     }
+
+    const promise = bssePromise.then(() => {
+      options.signal?.throwIfAborted();
+      return callback();
+    });
+
     return options.signal !== undefined
       ? Promise.race([promise, waitForAbort<T>(options.signal)])
       : promise;
   }
 
-  resolvePrimitive(_value: unknown, _part: DOMPart): Primitive<unknown> {
-    return new MockType();
+  resolvePrimitive(_value: unknown, _part: unknown): Primitive<unknown> {
+    return MockPrimitive;
   }
 
   resolveTemplate(
-    strings: readonly string[],
-    exprs: readonly unknown[],
-    mode: TemplateMode,
-    placeholder: string,
+    _strings: readonly string[],
+    _exprs: readonly unknown[],
+    _mode: TemplateMode,
+    _placeholder: string,
   ): DirectiveType<readonly unknown[]> {
-    return new MockTemplate(strings, exprs, mode, placeholder);
+    return new MockType();
   }
 
   startViewTransition(callback: () => void | Promise<void>): Promise<void> {
@@ -109,22 +95,16 @@ export class MockBackend implements Backend {
   }
 }
 
-export class MockBinding<TValue, TPart extends DOMPart>
-  implements Binding<TValue, TPart>
-{
-  readonly type: DirectiveType<TValue, TPart>;
+export class MockBinding<TValue> implements Binding<TValue> {
+  readonly type: DirectiveType<TValue>;
 
   value: TValue;
 
-  readonly part: TPart;
+  readonly part: unknown;
 
   currentValue: TValue | null = null;
 
-  dirty: boolean = false;
-
-  committed: boolean = false;
-
-  constructor(type: DirectiveType<TValue, TPart>, value: TValue, part: TPart) {
+  constructor(type: DirectiveType<TValue>, value: TValue, part: unknown) {
     this.type = type;
     this.value = value;
     this.part = part;
@@ -134,75 +114,16 @@ export class MockBinding<TValue, TPart extends DOMPart>
     return !Object.is(value, this.currentValue);
   }
 
-  attach(_session: Session): void {
-    this.dirty = true;
-  }
+  attach(_session: Session): void {}
 
-  detach(_session: Session): void {
-    this.dirty = true;
-  }
+  detach(_session: Session): void {}
 
   commit(): void {
-    switch (this.part.type) {
-      case DOM_PART_TYPE_ATTRIBUTE:
-        this.part.node.setAttribute(
-          this.part.name,
-          this.value?.toString() ?? '',
-        );
-        break;
-      case DOM_PART_TYPE_CHILD_NODE:
-        this.part.sentinelNode.data = stringify(this.value);
-        break;
-      case DOM_PART_TYPE_ELEMENT:
-        for (const name in this.value) {
-          this.part.node.setAttribute(name, stringify(this.value[name]));
-        }
-        break;
-      case DOM_PART_TYPE_LIVE:
-      case DOM_PART_TYPE_PROPERTY:
-        (this.part.node as any)[this.part.name] = this.value;
-        break;
-      case DOM_PART_TYPE_EVENT:
-        (this.part.node as any)['on' + this.part.name] = this.value;
-        break;
-      case DOM_PART_TYPE_TEXT:
-        this.part.node.data = stringify(this.value);
-        break;
-    }
-
     this.currentValue = this.value;
-    this.dirty = false;
-    this.committed = true;
   }
 
   rollback(): void {
-    switch (this.part.type) {
-      case DOM_PART_TYPE_ATTRIBUTE:
-        this.part.node.removeAttribute(this.part.name);
-        break;
-      case DOM_PART_TYPE_ELEMENT:
-        for (const name in this.value) {
-          this.part.node.removeAttribute(name);
-        }
-        break;
-      case DOM_PART_TYPE_LIVE:
-      case DOM_PART_TYPE_PROPERTY:
-        (this.part.node as any)[this.part.name] = this.part.defaultValue;
-        break;
-      case DOM_PART_TYPE_EVENT:
-        (this.part.node as any)['on' + this.part.name] = null;
-        break;
-      case DOM_PART_TYPE_CHILD_NODE:
-        this.part.sentinelNode.data = '';
-        break;
-      case DOM_PART_TYPE_TEXT:
-        this.part.node.data = '';
-        break;
-    }
-
     this.currentValue = null;
-    this.dirty = false;
-    this.committed = false;
   }
 }
 
@@ -211,17 +132,19 @@ export class MockCoroutine implements Coroutine {
 
   scope: Scope;
 
-  callback: (this: Coroutine, session: Session) => void;
+  pendingLanes: Lanes;
 
-  pendingLanes: Lanes = -1;
+  callback: (this: Coroutine, session: Session) => void;
 
   constructor(
     name: string = MockCoroutine.name,
-    scope: Scope = Scope.Root({}),
+    scope: Scope = Scope.Root(),
+    pendingLanes: Lanes = -1,
     callback: (this: Coroutine, session: Session) => void = () => {},
   ) {
     this.name = name;
     this.scope = scope;
+    this.pendingLanes = pendingLanes;
     this.callback = callback;
   }
 
@@ -236,12 +159,12 @@ export class MockCoroutine implements Coroutine {
 
 export abstract class MockPrimitive {
   static ensureValue<T>(_value: unknown): asserts _value is T {}
-  static resolveBinding<TValue, TPart extends DOMPart>(
+  static resolveBinding<TValue>(
     value: TValue,
-    part: TPart,
+    part: unknown,
     _context: DirectiveContext,
-  ): Binding<TValue, TPart> {
-    return new MockBinding<TValue, TPart>(this, value, part);
+  ): MockBinding<TValue> {
+    return new MockBinding<TValue>(this, value, part);
   }
 }
 
@@ -253,80 +176,22 @@ export class MockObserver implements SessionObserver {
   }
 
   flushEvents(): SessionEvent[] {
-    const events = this.events;
-    this.events = [];
-    return events;
+    return this.events.splice(0);
   }
 }
 
-export class MockTemplate extends Template<readonly unknown[]> {
-  readonly strings: readonly string[];
-
-  readonly exprs: readonly unknown[];
-
-  readonly mode: TemplateMode;
-
-  readonly placeholder: string;
-
-  constructor(
-    strings: readonly string[] = [],
-    exprs: readonly unknown[] = [],
-    mode: TemplateMode = 'html',
-    placeholder = '',
-  ) {
-    super();
-    this.strings = strings;
-    this.exprs = exprs;
-    this.mode = mode;
-    this.placeholder = placeholder;
-  }
-
-  get arity(): number {
-    return this.exprs.length;
-  }
-
-  render(
-    _exprs: readonly unknown[],
-    _part: DOMPart.ChildNodePart,
-    _session: Session,
-  ): TemplateResult {
-    return {
-      childNodes: [],
-      slots: [],
-    };
-  }
-
-  hydrate(
-    _exprs: readonly unknown[],
-    _part: DOMPart.ChildNodePart,
-    _hydrationTarget: TreeWalker,
-    _session: Session,
-  ): TemplateResult {
-    return {
-      childNodes: [],
-      slots: [],
-    };
-  }
-}
-
-export class MockType<TValue, TPart extends DOMPart>
-  implements DirectiveType<TValue, TPart>
-{
+export class MockType<TValue> implements DirectiveType<TValue> {
   readonly name: string;
 
   constructor(name: string = MockType.name) {
     this.name = name;
   }
 
-  equals(other: unknown) {
-    return other instanceof MockType && other.name === this.name;
-  }
-
   resolveBinding(
     value: TValue,
-    part: TPart,
+    part: unknown,
     _context: DirectiveContext,
-  ): Binding<TValue, TPart> {
+  ): Binding<TValue> {
     return new MockBinding(this, value, part);
   }
 }
@@ -335,7 +200,7 @@ export function createEffect(callback: () => void = () => {}): Effect {
   return { commit: vi.fn(callback) };
 }
 
-export function createEffectQueue(effects: Effect[]): EffectQueue {
+export function createEffectQueue(...effects: Effect[]): EffectQueue {
   return effects.reduce((effects, effect) => {
     effects.push(effect, 0);
     return effects;
@@ -353,15 +218,11 @@ export function createRenderFrame(id: number, lanes: Lanes): RenderFrame {
   };
 }
 
-export function createRuntime({
-  defaultLanes,
-  ...options
-}: RuntimeOptions & { defaultLanes?: Lanes } = {}): Runtime {
-  return new Runtime(new MockBackend(defaultLanes), options);
-}
-
-function stringify(value: unknown): string {
-  return value?.toString() ?? '';
+export function createMockRuntime(
+  defaultLanes?: Lanes,
+  options: RuntimeOptions = {},
+): Runtime {
+  return new Runtime(new MockAdapter(defaultLanes), options);
 }
 
 function waitForAbort<T>(signal: AbortSignal): Promise<T> {

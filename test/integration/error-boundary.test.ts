@@ -1,14 +1,7 @@
-import {
-  AbortError,
-  BrowserBackend,
-  createComponent,
-  html,
-  Root,
-  Runtime,
-} from 'barebind';
+import { AbortError, createComponent, html } from 'barebind';
 import { expect, test } from 'vitest';
-
-import { stripComments } from '../test-helpers.js';
+import { createTestRoot } from '../adapter.js';
+import { stripComments } from '../helpers.js';
 
 const App = createComponent<{ children: unknown }>(function App({ children }) {
   return children;
@@ -54,17 +47,15 @@ const FailOnRender = createComponent(function FailOnRender() {
 });
 
 test('renders the fallback when an error occurs during rendering', async () => {
-  const source = App({
-    children: ErrorBoundary({
-      children: FailOnRender({}),
-      getFallback: (error) => html`<p>${String(error)}</p>`,
-    }),
-  });
   const container = document.createElement('div');
-  const root = Root.create(
-    source,
+  const root = createTestRoot(
+    App({
+      children: ErrorBoundary({
+        children: FailOnRender({}),
+        getFallback: (error) => html`<p>${String(error)}</p>`,
+      }),
+    }),
     container,
-    new Runtime(new BrowserBackend()),
   );
 
   await root.mount().finished;
@@ -77,17 +68,15 @@ test('renders the fallback when an error occurs during rendering', async () => {
 });
 
 test('renders the fallback when an error occurs on effect', async () => {
-  const source = App({
-    children: ErrorBoundary({
-      children: FailOnEffect({}),
-      getFallback: (error) => html`<p>${String(error)}</p>`,
-    }),
-  });
   const container = document.createElement('div');
-  const root = Root.create(
-    source,
+  const root = createTestRoot(
+    App({
+      children: ErrorBoundary({
+        children: FailOnEffect({}),
+        getFallback: (error) => html`<p>${String(error)}</p>`,
+      }),
+    }),
     container,
-    new Runtime(new BrowserBackend()),
   );
 
   await root.mount().finished;
@@ -102,16 +91,14 @@ test('renders the fallback when an error occurs on effect', async () => {
 });
 
 test('treates errors as interrupts when there is no fallback', async () => {
-  const source = App({
-    children: ErrorBoundary({
-      children: FailOnRender({}),
-    }),
-  });
   const container = document.createElement('div');
-  const root = Root.create(
-    source,
+  const root = createTestRoot(
+    App({
+      children: ErrorBoundary({
+        children: FailOnRender({}),
+      }),
+    }),
     container,
-    new Runtime(new BrowserBackend()),
   );
 
   expect(await root.mount().finished).toStrictEqual({
@@ -123,39 +110,29 @@ test('treates errors as interrupts when there is no fallback', async () => {
 });
 
 test('throws uncaught errors during rendering as AbortError', async () => {
-  const source = App({ children: FailOnRender({}) });
   const container = document.createElement('div');
-  const root = Root.create(
-    source,
-    container,
-    new Runtime(new BrowserBackend()),
-  );
+  const root = createTestRoot(App({ children: FailOnRender({}) }), container);
 
-  try {
-    await root.mount().finished;
-    expect.unreachable();
-  } catch (error) {
-    expect(error).toBeInstanceOf(AbortError);
-    expect((error as AbortError).message).toContain(
-      'An error occurred during rendering.',
-    );
-    expect((error as AbortError).cause).toStrictEqual(
-      expect.objectContaining({
+  const handle = root.mount();
+
+  await expect(handle.finished).rejects.toThrow(AbortError);
+  await expect(handle.finished).rejects.toThrow(
+    expect.objectContaining({
+      message: expect.stringContaining('An error occurred during rendering.'),
+      cause: expect.objectContaining({
         message: 'fail',
       }),
-    );
-  }
+    }),
+  );
 });
 
 test('treates errors thrown by interrupt() as InterruptError when captured', async () => {
-  const source = App({
-    children: ErrorBoundary({ children: FailOnEffect({}) }),
-  });
   const container = document.createElement('div');
-  const root = Root.create(
-    source,
+  const root = createTestRoot(
+    App({
+      children: ErrorBoundary({ children: FailOnEffect({}) }),
+    }),
     container,
-    new Runtime(new BrowserBackend()),
   );
 
   expect(await root.mount().finished).toStrictEqual({
@@ -167,14 +144,12 @@ test('treates errors thrown by interrupt() as InterruptError when captured', asy
 });
 
 test('treates errors thrown by interrupt() as AbortError when not captured', async () => {
-  const source = App({
-    children: FailOnEffect({}),
-  });
   const container = document.createElement('div');
-  const root = Root.create(
-    source,
+  const root = createTestRoot(
+    App({
+      children: FailOnEffect({}),
+    }),
     container,
-    new Runtime(new BrowserBackend()),
   );
 
   await expect(root.mount().finished).rejects.toThrow(AbortError);

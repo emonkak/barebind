@@ -1,9 +1,8 @@
-import type { RenderContext } from 'barebind';
-import { createComponent, html, Root, Runtime, SharedContext } from 'barebind';
+import { createComponent, html, SharedContext } from 'barebind';
 import { Suspend, Suspense } from 'barebind/addons/suspense';
 import { expect, test } from 'vitest';
-import { TestBackend } from '../test-backend.js';
-import { stripComments, waitForTimeout } from '../test-helpers.js';
+import { createTestRoot } from '../adapter.js';
+import { stripComments, waitForTimeout } from '../helpers.js';
 
 interface AppProps {
   itemIds: string[];
@@ -13,7 +12,7 @@ interface AppProps {
 const App = createComponent<AppProps>(function App(
   { itemIds, itemStorage },
   $,
-): unknown {
+) {
   const [error, setError] = $.useState<unknown>(null);
 
   $.use(itemStorage);
@@ -36,10 +35,7 @@ const App = createComponent<AppProps>(function App(
   });
 });
 
-const Item = createComponent<Item>(function Item(
-  { id },
-  $: RenderContext,
-): unknown {
+const Item = createComponent<Item>(function Item({ id }, $) {
   const item = $.use(ItemStorage).loadItem(id).unwrap();
 
   return html`<li>${item.id}</li>`;
@@ -83,40 +79,38 @@ interface Item {
 
 test('awaits a single promise in a child component', async () => {
   const itemStorage = new ItemStorage();
-  const source = App({
-    itemIds: ['foo'],
-    itemStorage,
-  });
   const container = document.createElement('div');
-  const root = Root.create(source, container, new Runtime(new TestBackend()));
+  const root = createTestRoot(
+    App({
+      itemIds: ['foo'],
+      itemStorage,
+    }),
+    container,
+  );
 
-  SESSION1: {
-    await root.mount().finished;
+  await root.mount().finished;
 
-    expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
-  }
+  expect(stripComments(container).innerHTML).toBe('<p>Loading...</p>');
 
-  SESSION2: {
-    await waitForTimeout(1);
+  await waitForTimeout(1);
 
-    expect(stripComments(container).innerHTML).toBe('<ul><li>foo</li></ul>');
-  }
+  expect(stripComments(container).innerHTML).toBe('<ul><li>foo</li></ul>');
 
-  SESSION3: {
-    await root.unmount().finished;
+  await root.unmount().finished;
 
-    expect(container.innerHTML).toBe('');
-  }
+  expect(container.innerHTML).toBe('');
 });
 
 test('awaits promises in parallel across child components', async () => {
   const itemStorage = new ItemStorage();
-  const source = App({
-    itemIds: ['foo', 'bar'],
-    itemStorage,
-  });
   const container = document.createElement('div');
-  const root = Root.create(source, container, new Runtime(new TestBackend()));
+  const root = createTestRoot(
+    App({
+      itemIds: ['foo', 'bar'],
+      itemStorage,
+    }),
+    container,
+  );
 
   SESSION1: {
     await root.mount().finished;
@@ -160,12 +154,14 @@ test('awaits promises in parallel across child components', async () => {
 
 test('throws the rejection reason when a suspended promise rejects', async () => {
   const itemStorage = new ItemStorage();
-  const source = App({
-    itemIds: ['foo', ''],
-    itemStorage,
-  });
   const container = document.createElement('div');
-  const root = Root.create(source, container, new Runtime(new TestBackend()));
+  const root = createTestRoot(
+    App({
+      itemIds: ['foo', ''],
+      itemStorage,
+    }),
+    container,
+  );
 
   SESSION1: {
     await root.mount().finished;
@@ -188,12 +184,14 @@ test('throws the rejection reason when a suspended promise rejects', async () =>
 
 test('aborts pending items on unmount', async () => {
   const itemStorage = new ItemStorage();
-  const source = App({
-    itemIds: ['foo'],
-    itemStorage,
-  });
   const container = document.createElement('div');
-  const root = Root.create(source, container, new Runtime(new TestBackend()));
+  const root = createTestRoot(
+    App({
+      itemIds: ['foo'],
+      itemStorage,
+    }),
+    container,
+  );
 
   SESSION1: {
     await root.mount().finished;

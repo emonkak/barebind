@@ -50,9 +50,9 @@ export interface ActionProposal<TAction> {
 
 export type Cleanup = () => void;
 
-export interface Component<TProps = {}, TResult = unknown, TPart = unknown>
-  extends DirectiveType<TProps, TPart> {
-  (props: TProps): Directive.Element<TProps, TPart>;
+export interface Component<TProps = {}, TResult = unknown>
+  extends DirectiveType<TProps> {
+  (props: TProps): Directive.Element<TProps>;
   render(props: TProps, context: RenderContext): TResult;
   arePropsEqual(nextProps: TProps, prevProps: TProps): boolean;
 }

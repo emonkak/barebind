@@ -1,159 +1,26 @@
 import { describe, expect, it, vi } from 'vitest';
-
 import {
   Atom,
   Computed,
   type InvalidateEvent,
   Signal,
-  SignalBinding,
 } from '@/addons/signal/signal.js';
 import { Directive } from '@/core.js';
-import { createTextPart } from '@/dom.js';
+import { createTextPart } from '@/dom/part.js';
 import { NoLanes, SyncLane, UserBlockingLane } from '@/lane.js';
-import { createRuntime } from '../../../mocks.js';
-import { waitForMicrotasks } from '../../../test-helpers.js';
-import { TestRenderer } from '../../../test-renderer.js';
-import { TestUpdater } from '../../../test-updater.js';
-
-describe('SignalBinding', () => {
-  describe('shouldUpdate()', () => {
-    it('returns true if the subscribed value does not exist', () => {
-      const signal = new Atom('foo');
-      const part = createTextPart(document.createTextNode(''));
-      const runtime = createRuntime();
-      const binding = Signal.resolveBinding(signal, part, runtime);
-
-      expect(binding.shouldUpdate(signal)).toBe(true);
-    });
-
-    it('returns true if the signal is different from the new one', () => {
-      const signal1 = new Atom('foo');
-      const signal2 = new Atom('bar');
-      const part = createTextPart(document.createTextNode(''));
-      const updater = new TestUpdater();
-      const binding = Signal.resolveBinding(signal1, part, updater.runtime);
-
-      updater.startUpdate((session) => {
-        binding.attach(session);
-        binding.commit();
-      });
-
-      expect(binding.shouldUpdate(signal1)).toBe(false);
-      expect(binding.shouldUpdate(signal2)).toBe(true);
-    });
-  });
-
-  describe('attach()', () => {
-    it('schedule an update when the signal value has been changed', async () => {
-      const signal = new Atom('foo');
-      const part = createTextPart(document.createTextNode(''));
-      const updater = new TestUpdater();
-      const binding = Signal.resolveBinding(signal, part, updater.runtime);
-
-      SESSION: {
-        updater.startUpdate((session) => {
-          binding.attach(session);
-          binding.commit();
-        });
-
-        expect(part.node.nodeValue).toBe(signal.value);
-      }
-
-      signal.value = 'bar';
-
-      expect(binding.pendingLanes).toBe(SyncLane | UserBlockingLane);
-
-      await waitForMicrotasks(2);
-
-      expect(binding.pendingLanes).toBe(NoLanes);
-      expect(part.node.nodeValue).toBe(signal.value);
-    });
-
-    it('schedule an update when the signal itself has been changed', async () => {
-      const signal1 = new Atom('foo');
-      const signal2 = new Atom('bar');
-      const part = createTextPart(document.createTextNode(''));
-      const updater = new TestUpdater();
-      const binding = Signal.resolveBinding(signal1, part, updater.runtime);
-
-      SESSION1: {
-        updater.startUpdate((session) => {
-          binding.attach(session);
-          binding.commit();
-        });
-
-        expect(part.node.nodeValue).toBe(signal1.value);
-      }
-
-      SESSION2: {
-        updater.startUpdate((session) => {
-          binding.value = signal2;
-          binding.attach(session);
-          binding.commit();
-        });
-
-        expect(part.node.nodeValue).toBe(signal2.value);
-      }
-
-      signal1.value = 'baz';
-      signal2.value = 'qux';
-
-      expect(binding.pendingLanes).toBe(SyncLane | UserBlockingLane);
-
-      await waitForMicrotasks(2);
-
-      expect(part.node.nodeValue).toBe('qux');
-      expect(binding.pendingLanes).toBe(NoLanes);
-    });
-  });
-
-  describe('detach()', () => {
-    it('unsubscribes the signal', async () => {
-      const signal = new Atom('foo');
-      const part = createTextPart(document.createTextNode(''));
-      const updater = new TestUpdater();
-      const binding = Signal.resolveBinding(signal, part, updater.runtime);
-
-      SESSION1: {
-        updater.startUpdate((session) => {
-          binding.attach(session);
-          binding.commit();
-        });
-
-        expect(part.node.nodeValue).toBe(signal.value);
-      }
-
-      SESSION2: {
-        updater.startUpdate((session) => {
-          binding.detach(session);
-          binding.rollback();
-        });
-
-        expect(part.node.nodeValue).toBe('');
-      }
-
-      signal.value = 'bar';
-
-      expect(binding.pendingLanes).toBe(NoLanes);
-
-      await waitForMicrotasks(2);
-
-      expect(part.node.nodeValue).toBe('');
-      expect(binding.pendingLanes).toBe(NoLanes);
-    });
-  });
-});
+import { createTestRuntime } from '../../../adapter.js';
+import { waitForMicrotasks } from '../../../helpers.js';
+import { SessionLauncher } from '../../../session-launcher.js';
 
 describe('Signal', () => {
+  const runtime = createTestRuntime();
+
   describe('static resolveBinding()', () => {
-    it('constructs a new SignalBinding', () => {
+    it('constructs a new Binding with Signal type', () => {
       const signal = new Atom('foo');
       const part = createTextPart(document.createTextNode(''));
-      const runtime = createRuntime();
       const binding = Signal.resolveBinding(signal, part, runtime);
 
-      expect(binding).toBeInstanceOf(SignalBinding);
-      expect(binding.name).toBe('Signal');
       expect(binding.type).toBe(Signal);
       expect(binding.value).toBe(signal);
       expect(binding.part).toBe(part);
@@ -203,7 +70,7 @@ describe('Signal', () => {
 
   describe('[$directive]()', () => {
     it('returns a Directive with the signal', () => {
-      const signal = new Atom('foo');
+      const signal = new Atom('a');
       const directive = signal[Directive.toDirective]();
 
       expect(directive.type).toBe(Signal);
@@ -226,10 +93,135 @@ describe('Signal', () => {
 
   describe('valueOf()', () => {
     it('returns the signal value', () => {
-      const value = 'foo';
-      const signal = new Atom(value);
+      const signal = new Atom('a');
+      expect(signal.valueOf()).toBe('a');
+    });
+  });
+});
 
-      expect(signal.valueOf()).toBe(value);
+describe('SignalBinding', () => {
+  const runtime = createTestRuntime();
+  const launcher = new SessionLauncher(runtime);
+
+  describe('shouldUpdate()', () => {
+    it('returns true when there is no current signal', () => {
+      const signal = new Atom('foo');
+      const part = createTextPart(document.createTextNode(''));
+      const binding = Signal.resolveBinding(signal, part, runtime);
+
+      expect(binding.shouldUpdate(signal)).toBe(true);
+    });
+
+    it('returns true when the signal differs from the current one', () => {
+      const signal = new Atom('a');
+      const part = createTextPart(document.createTextNode(''));
+      const binding = Signal.resolveBinding(signal, part, launcher.runtime);
+
+      launcher.launchSession((session) => {
+        binding.attach(session);
+        binding.commit();
+      });
+
+      expect(binding.shouldUpdate(signal)).toBe(false);
+      expect(binding.shouldUpdate(new Atom('a'))).toBe(true);
+      expect(binding.shouldUpdate(new Atom('b'))).toBe(true);
+    });
+  });
+
+  describe('attach()', () => {
+    it('schedule an update when the signal value has been changed', async () => {
+      const signal = new Atom('foo');
+      const part = createTextPart(document.createTextNode(''));
+      const binding = Signal.resolveBinding(signal, part, launcher.runtime);
+
+      SESSION: {
+        launcher.launchSession((session) => {
+          binding.attach(session);
+          binding.commit();
+        });
+
+        expect(part.node.nodeValue).toBe(signal.value);
+      }
+
+      signal.value = 'bar';
+
+      expect(binding.pendingLanes).toBe(SyncLane | UserBlockingLane);
+
+      await waitForMicrotasks(2);
+
+      expect(binding.pendingLanes).toBe(NoLanes);
+      expect(part.node.nodeValue).toBe(signal.value);
+    });
+
+    it('schedule an update when the signal itself has been changed', async () => {
+      const signal1 = new Atom('foo');
+      const signal2 = new Atom('bar');
+      const part = createTextPart(document.createTextNode(''));
+      const binding = Signal.resolveBinding(signal1, part, launcher.runtime);
+
+      SESSION1: {
+        launcher.launchSession((session) => {
+          binding.attach(session);
+          binding.commit();
+        });
+
+        expect(part.node.nodeValue).toBe(signal1.value);
+      }
+
+      SESSION2: {
+        launcher.launchSession((session) => {
+          binding.value = signal2;
+          binding.attach(session);
+          binding.commit();
+        });
+
+        expect(part.node.nodeValue).toBe(signal2.value);
+      }
+
+      signal1.value = 'baz';
+      signal2.value = 'qux';
+
+      expect(binding.pendingLanes).toBe(SyncLane | UserBlockingLane);
+
+      await waitForMicrotasks(2);
+
+      expect(part.node.nodeValue).toBe('qux');
+      expect(binding.pendingLanes).toBe(NoLanes);
+    });
+  });
+
+  describe('detach()', () => {
+    it('unsubscribes the signal', async () => {
+      const signal = new Atom('foo');
+      const part = createTextPart(document.createTextNode(''));
+      const binding = Signal.resolveBinding(signal, part, launcher.runtime);
+
+      SESSION1: {
+        launcher.launchSession((session) => {
+          binding.attach(session);
+          binding.commit();
+        });
+
+        expect(part.node.nodeValue).toBe(signal.value);
+      }
+
+      SESSION2: {
+        launcher.launchSession((session) => {
+          binding.detach(session);
+          binding.rollback();
+        });
+
+        expect(part.node.nodeValue).toBe('');
+      }
+
+      signal.value = 'bar';
+
+      expect(binding.pendingLanes).toBe(NoLanes);
+
+      await waitForMicrotasks(2);
+
+      expect(part.node.nodeValue).toBe('');
+      expect(binding.pendingLanes).toBe(NoLanes);
     });
   });
 });
@@ -271,7 +263,7 @@ describe('Atom', () => {
   });
 
   describe('subscribe()', () => {
-    it('invokes the subscriber on update', () => {
+    it('invokes subscribers on update', () => {
       const signal = new Atom('foo');
       const subscriber = vi.fn();
 
@@ -297,7 +289,7 @@ describe('Atom', () => {
       });
     });
 
-    it('does not invoke the invalidated subscriber', () => {
+    it('does not invoke invalidated subscribers', () => {
       const signal = new Atom('foo');
       const subscriber = vi.fn();
 
@@ -313,7 +305,7 @@ describe('Atom', () => {
   });
 
   describe('poke()', () => {
-    it('updates the value without notifications', () => {
+    it('updates values without events', () => {
       const signal = new Atom('foo');
       const subscriber = vi.fn();
 
@@ -329,11 +321,33 @@ describe('Atom', () => {
       expect(signal.version).toBe(0);
     });
   });
+
+  describe('map()', () => {
+    it('returns a computed signal that depend on itself', () => {
+      const signal = new Atom(100);
+      const computedSignal = signal.map((count) => count * 2);
+
+      expect(computedSignal).toBeInstanceOf(Computed);
+      expect(computedSignal.value).toBe(200);
+      expect(
+        (computedSignal as Computed<number>)['_dependencies'],
+      ).toStrictEqual([signal]);
+    });
+  });
+
+  describe('valueOf()', () => {
+    it('returns the signal value', () => {
+      const value = 'foo';
+      const signal = new Atom(value);
+
+      expect(signal.valueOf()).toBe(value);
+    });
+  });
 });
 
 describe('Computed', () => {
   describe('value', () => {
-    it('computes a memoized value by dependent signals', () => {
+    it('computes new values by dependent signals', () => {
       const foo = new Atom(1);
       const bar = new Atom(2);
       const baz = new Atom(3);
@@ -354,7 +368,7 @@ describe('Computed', () => {
   });
 
   describe('version', () => {
-    it('increments the version when any dependent signals have been updated', () => {
+    it('increments the version when any dependent signals update', () => {
       const foo = new Atom(1);
       const bar = new Atom(2);
       const baz = new Atom(3);
@@ -383,7 +397,7 @@ describe('Computed', () => {
   });
 
   describe('subscribe()', () => {
-    it('invokes the subscriber when any dependent signals have been updated', () => {
+    it('invokes subscribers when any dependent signals update', () => {
       const foo = new Atom(1);
       const bar = new Atom(2);
       const baz = new Atom(3);
@@ -434,7 +448,7 @@ describe('Computed', () => {
       });
     });
 
-    it('does not invoke the invalidated subscriber', () => {
+    it('does not invoke invalidated subscribers', () => {
       const foo = new Atom(1);
       const bar = new Atom(2);
       const baz = new Atom(3);
