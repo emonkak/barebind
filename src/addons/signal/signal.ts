@@ -10,6 +10,7 @@ import {
   type Lanes,
   Scope,
   type Session,
+  type SessionContext,
 } from '../../core.js';
 import { NoLanes } from '../../lane.js';
 import {
@@ -34,8 +35,9 @@ export type UnwrapSignals<T> = {
   [K in keyof T]: T[K] extends Signal<infer Value> ? Value : never;
 };
 
-interface Subscription {
-  unsubscribe: Unsubscribe | null;
+interface SignalHandler<T> {
+  signal: Signal<T> | null;
+  unsubscribe: Unsubscribe | undefined;
 }
 
 export abstract class Signal<T>
@@ -111,8 +113,9 @@ export class SignalBinding<TValue, TPart>
 
   private _scope: Scope = Scope.Orphan;
 
-  private _subscription: Subscription = {
-    unsubscribe: null,
+  private _handler: SignalHandler<TValue> = {
+    signal: null,
+    unsubscribe: undefined,
   };
 
   constructor(signal: Signal<TValue>, slot: Slot<TValue, TPart>) {
@@ -146,8 +149,8 @@ export class SignalBinding<TValue, TPart>
     return this._scope;
   }
 
-  shouldUpdate(signal: Signal<TValue>): boolean {
-    return this._scope === Scope.Orphan || signal !== this._signal;
+  shouldUpdate(newSignal: Signal<TValue>): boolean {
+    return this._scope === Scope.Orphan || newSignal !== this._signal;
   }
 
   start(session: Session): void {
@@ -165,9 +168,7 @@ export class SignalBinding<TValue, TPart>
     const { version } = this._signal;
 
     frame.layoutEffects.push(
-      new SubscribeSignal(this._signal, this._subscription, () => {
-        context.scheduleUpdate(this);
-      }),
+      new SubscribeSignal(this._handler, this, context),
       scope.level,
     );
 
@@ -179,14 +180,17 @@ export class SignalBinding<TValue, TPart>
     }
 
     this._scope = scope;
+    this._handler.signal = this._signal;
   }
 
   detach(session: Session): void {
     const { frame } = session;
 
-    frame.layoutEffects.pushBefore(new UnsubscribeSignal(this._subscription));
-
+    frame.layoutEffects.pushBefore(new UnsubscribeSignal(this._handler));
     this._slot.detach(session);
+
+    this._scope = Scope.Orphan;
+    this._handler.signal = null;
   }
 
   commit(): void {
@@ -195,7 +199,6 @@ export class SignalBinding<TValue, TPart>
 
   rollback(): void {
     this._slot.rollback();
-    this._scope = Scope.Orphan;
   }
 }
 
@@ -338,36 +341,44 @@ export class Computed<
 }
 
 class SubscribeSignal<T> implements Effect {
-  private readonly _signal: Signal<T>;
+  private readonly _handler: SignalHandler<T>;
 
-  private readonly _subscription: Subscription;
+  private readonly _coroutine: Coroutine;
 
-  private readonly _subscriber: Subscriber;
+  private readonly _context: SessionContext;
 
   constructor(
-    signal: Signal<T>,
-    subscription: Subscription,
-    subscriber: Subscriber,
+    handler: SignalHandler<T>,
+    coroutine: Coroutine,
+    context: SessionContext,
   ) {
-    this._signal = signal;
-    this._subscription = subscription;
-    this._subscriber = subscriber;
+    this._handler = handler;
+    this._coroutine = coroutine;
+    this._context = context;
   }
 
   commit(): void {
-    this._subscription.unsubscribe?.();
-    this._subscription.unsubscribe = this._signal.subscribe(this._subscriber);
+    const { signal, unsubscribe } = this._handler;
+    const coroutine = this._coroutine;
+    const context = this._context;
+    unsubscribe?.();
+    this._handler.signal = null;
+    this._handler.unsubscribe = signal?.subscribe(() => {
+      context.scheduleUpdate(coroutine);
+    });
   }
 }
 
-class UnsubscribeSignal implements Effect {
-  private readonly _subscription: Subscription;
+class UnsubscribeSignal<T> implements Effect {
+  private readonly _handler: SignalHandler<T>;
 
-  constructor(subscription: Subscription) {
-    this._subscription = subscription;
+  constructor(handler: SignalHandler<T>) {
+    this._handler = handler;
   }
 
   commit(): void {
-    this._subscription.unsubscribe?.();
+    const { unsubscribe } = this._handler;
+    unsubscribe?.();
+    this._handler.unsubscribe = undefined;
   }
 }
