@@ -46,9 +46,9 @@ const Item = createComponent<Item>(function Item(
 });
 
 class ItemStorage extends SharedContext {
-  cache: Map<string, Suspend<Item>> = new Map();
+  cache: Map<string, Suspend.Awaited<Item>> = new Map();
 
-  loadItem(id: string): Suspend<Item> {
+  loadItem(id: string): Suspend.Awaited<Item> {
     let suspend = this.cache.get(id);
 
     if (suspend === undefined) {

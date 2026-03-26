@@ -4,7 +4,7 @@ import { Suspend } from 'barebind/addons/suspense';
 // the framework that you use together with Suspense.
 // Normally, the caching logic would be inside a framework.
 
-const cache = new Map<string, Suspend<any>>();
+const cache = new Map<string, Suspend.Awaited<any>>();
 
 export interface Album {
   id: number;
@@ -12,8 +12,8 @@ export interface Album {
   year: number;
 }
 
-export function fetchData(url: `/search?q=${string}`): Suspend<Album[]>;
-export function fetchData(url: string): Suspend<any> {
+export function fetchData(url: `/search?q=${string}`): Suspend.Awaited<Album[]>;
+export function fetchData(url: string): Suspend.Awaited<any> {
   if (!cache.has(url)) {
     const promise = getData(url);
     const suspend = Suspend.await(promise);

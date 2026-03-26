@@ -3,29 +3,37 @@ const STATUS_FULFILLED = 'fulfilled';
 const STATUS_REJECTED = 'rejected';
 const STATUS_ABORTED = 'aborted';
 
-export type Suspend<T> = SuspendInternal<T> & SuspendInvariant<T>;
-
-type SuspendClass = typeof SuspendInternal & {
-  [Symbol.hasInstance](value: any): value is Suspend<any>;
-};
-
-type SuspendInvariant<T> = Readonly<
-  | { status: typeof STATUS_PENDING; value: never; reason: never }
-  | { status: typeof STATUS_FULFILLED; value: T; reason: never }
-  | {
-      status: typeof STATUS_REJECTED | typeof STATUS_ABORTED;
-      value: never;
-      reason: unknown;
-    }
->;
-
 type SuspendStatus =
   | typeof STATUS_PENDING
   | typeof STATUS_FULFILLED
   | typeof STATUS_REJECTED
   | typeof STATUS_ABORTED;
 
-class SuspendInternal<T> implements Promise<T> {
+export namespace Suspend {
+  export type Awaited<T> = Pending<T> | Fulfilled<T> | Rejected<T> | Aborted<T>;
+  export type Pending<T> = Suspend<T> & {
+    status: typeof STATUS_PENDING;
+    value: never;
+    reason: never;
+  };
+  export type Fulfilled<T> = Suspend<T> & {
+    status: typeof STATUS_FULFILLED;
+    value: T;
+    reason: never;
+  };
+  export type Rejected<T> = Suspend<T> & {
+    status: typeof STATUS_REJECTED;
+    value: never;
+    reason: never;
+  };
+  export type Aborted<T> = Suspend<T> & {
+    status: typeof STATUS_ABORTED;
+    value: never;
+    reason: never;
+  };
+}
+
+export class Suspend<T> implements Promise<T> {
   private _status: SuspendStatus;
 
   private _value: T | undefined;
@@ -37,8 +45,8 @@ class SuspendInternal<T> implements Promise<T> {
   static await<T>(
     promise: PromiseLike<T>,
     controller?: AbortController,
-  ): Suspend<T> {
-    const suspend = new SuspendInternal<T>(
+  ): Suspend.Awaited<T> {
+    const suspend = new Suspend<T>(
       STATUS_PENDING,
       undefined,
       undefined,
@@ -76,23 +84,23 @@ class SuspendInternal<T> implements Promise<T> {
       signal.addEventListener('abort', abortWhenPending, { once: true });
     }
 
-    return suspend as Suspend<T>;
+    return suspend as Suspend.Awaited<T>;
   }
 
-  static reject<T>(reason: unknown): Suspend<T> {
-    return new SuspendInternal(
+  static reject<T>(reason: unknown): Suspend.Rejected<T> {
+    return new Suspend(
       STATUS_REJECTED,
       undefined,
       reason,
-    ) as Suspend<T>;
+    ) as Suspend.Rejected<T>;
   }
 
-  static resolve<T>(value: T): Suspend<T> {
-    return new SuspendInternal(
+  static resolve<T>(value: T): Suspend.Fulfilled<T> {
+    return new Suspend(
       STATUS_FULFILLED,
       value,
       undefined,
-    ) as Suspend<T>;
+    ) as Suspend.Fulfilled<T>;
   }
 
   private constructor(
@@ -180,8 +188,6 @@ class SuspendInternal<T> implements Promise<T> {
     }
   }
 }
-
-export const Suspend: SuspendClass = SuspendInternal as SuspendClass;
 
 function waitUntilSettled<T>(signal: AbortSignal): Promise<T> {
   return new Promise<T>((resolve, reject) => {
