@@ -53,7 +53,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
     let returnValue: TResult;
     let thrownError: unknown;
 
-    if (this.scope.isConnected()) {
+    if (!this.scope.isOrphan()) {
       this.scope.boundary = {
         type: BOUNDARY_TYPE_ERROR,
         next: previousBoundary,
@@ -105,7 +105,7 @@ export class TestRenderer<TProps = {}, TResult = unknown> {
 
     this.runtime.flushUpdates();
 
-    if (this.scope.isConnected()) {
+    if (!this.scope.isOrphan()) {
       this.scope.boundary = previousBoundary;
     }
 

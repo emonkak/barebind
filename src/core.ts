@@ -328,10 +328,6 @@ export class Scope<TRoot = unknown> {
     return this.level > 0;
   }
 
-  isConnected(): this is Scope.Root<TRoot> | Scope.Child<TRoot> {
-    return this.getRoot() !== null;
-  }
-
   isOrphan(): this is Scope.Orphan<TRoot> {
     return this.owner === Orphan;
   }

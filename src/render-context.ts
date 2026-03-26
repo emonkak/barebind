@@ -216,7 +216,7 @@ export class RenderContext {
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    if (!this._coroutine.scope.isConnected()) {
+    if (this._coroutine.scope.isOrphan()) {
       const skipped = Promise.resolve<UpdateResult>({ status: 'skipped' });
       return {
         id: -1,

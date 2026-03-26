@@ -169,6 +169,8 @@ export class ComponentBinding<TProps, TResult, TPart>
     }
 
     this._memoizedSlot?.detach(session);
+    this._scope = Scope.Orphan;
+    this._pendingHooks = [];
   }
 
   commit(): void {
@@ -178,7 +180,6 @@ export class ComponentBinding<TProps, TResult, TPart>
 
   rollback(): void {
     this._memoizedSlot?.rollback();
-    this._scope = Scope.Orphan;
     this._currentHooks = [];
   }
 }
@@ -193,7 +194,6 @@ class CleanupEffect implements Effect {
   commit(): void {
     const { cleanup } = this._handler;
     cleanup?.();
-    this._handler.setup = null;
     this._handler.cleanup = undefined;
   }
 }
