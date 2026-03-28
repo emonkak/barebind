@@ -1,45 +1,30 @@
 export { sequentialEqual, shallowEqual } from './compare.js';
-export { type ComponentOptions, createComponent } from './component.js';
-export type {
-  Bindable,
-  Directive,
-  SessionEvent,
-  SessionObserver,
-} from './core.js';
+export {
+  createFunctionComponent,
+  type FunctionComponent,
+  type FunctionComponentContext,
+  type FunctionComponentOptions,
+} from './component/function.js';
+export {
+  createIteratorComponent,
+  type IteratorComponent,
+  type IteratorComponentContext,
+  type IteratorComponentOptions,
+} from './component/iterator.js';
 export {
   ClientAdapter,
-  DOMAdapter,
+  type DOMAdapter,
+  type DOMAdapterOptions,
   HydrationAdapter,
 } from './dom/adapter.js';
 export {
-  DirectiveError,
-  HydrationError,
-} from './dom/error.js';
-export {
-  createCilentRoot,
+  createClientRoot,
+  createDOMRoot,
   createHydrationRoot,
-  createRoot,
+  type DOMRoot,
+  type DOMRootOptions,
 } from './dom/root.js';
-export {
-  AbortError,
-  CoroutineError,
-  InterruptError,
-} from './error.js';
-export {
-  $hook,
-  type Component,
-  type HookFunction,
-  type HookObject,
-  type Ref,
-  type RefCallback,
-  type RefObject,
-  type RenderContext,
-} from './render-context.js';
-export { SharedContext } from './shared-context.js';
-export {
-  html,
-  math,
-  Partial,
-  svg,
-  text,
-} from './template.js';
+export { AbortError, InterruptError, RenderError } from './error.js';
+export { Runtime } from './runtime.js';
+export { Partial } from './template/partial.js';
+export { html, math, svg, text } from './template/template.js';

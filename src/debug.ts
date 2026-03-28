@@ -1,4 +1,4 @@
-import { type Coroutine, Directive, type Scope } from './core.js';
+import { Directive, type Scope, type Slot } from './core.js';
 
 export const MAX_ARRAY_LENGTH = 16;
 export const MAX_OBJECT_DEPTH = 3;
@@ -6,13 +6,13 @@ export const MAX_STRING_LENGTH = 128;
 
 const UNQUOTED_PROPERTY_PATTERN = /^[A-Za-z$_][0-9A-Za-z$_]*$/;
 
-export function formatOwnerStack(owners: Coroutine[]): string {
-  const tail = owners.length - 1;
-  return owners
-    .map((coroutine, i) => {
+export function formatOnwerStack(ownerStack: Slot[]): string {
+  const tail = ownerStack.length - 1;
+  return ownerStack
+    .map((owner, i) => {
       const prefix = i === tail ? '' : '   '.repeat(tail - i - 1) + '`- ';
       const suffix = i === 0 ? ' <- ERROR occurred here!' : '';
-      return prefix + coroutine.name + suffix;
+      return prefix + nameOf(owner.directive.type) + suffix;
     })
     .reverse()
     .join('\n');
@@ -97,14 +97,24 @@ export function formatValue(value: unknown, stack: object[] = []): string {
   }
 }
 
-export function getOwnerStack(coroutine: Coroutine): Coroutine[] {
-  const stack: Coroutine[] = [coroutine];
-  let current: Scope | null = coroutine.scope;
+export function getOwnerStack(scope: Scope): Slot[] {
+  const ownerStack: Slot[] = [];
 
-  while (current.isChild()) {
-    stack.push(current.owner);
-    current = current.owner.scope;
+  while (scope.isChild()) {
+    ownerStack.push(scope.owner);
+    scope = scope.owner.scope;
   }
 
-  return stack;
+  return ownerStack;
+}
+
+export function nameOf(type: Directive.ElementDirective['type']): string {
+  switch (typeof type) {
+    case 'function':
+      return type.name;
+    case 'symbol':
+      return type.description!;
+    default:
+      return 'Template';
+  }
 }

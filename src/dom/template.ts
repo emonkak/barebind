@@ -1,22 +1,13 @@
-import type {
-  Binding,
-  DirectiveContext,
-  DirectiveType,
-  Effect,
-  Session,
-  TemplateMode,
-} from '../core.js';
-import { Slot } from '../slot.js';
-import { emphasizeNode, formatPart } from './debug.js';
-import { ensurePartType, HydrationError } from './error.js';
 import {
-  createAttributePart,
-  createChildNodePart,
-  createElementPart,
-  createEventPart,
-  createLivePart,
-  createPropertyPart,
-  createTextPart,
+  type DirectiveHandler,
+  type Scope,
+  type Session,
+  type Slot,
+  type Template,
+  type TemplateMode,
+  wrap,
+} from '../core.js';
+import {
   type DOMPart,
   PART_TYPE_ATTRIBUTE,
   PART_TYPE_CHILD_NODE,
@@ -42,60 +33,51 @@ const ATTRIBUTE_NAME_PATTERN = new RegExp(
   'u',
 );
 
-const ERROR_MAKER = '[[ERROR IN HERE!]]';
-
-const NAMESPACE_URI_MAP: Record<TemplateMode, string | null> = {
-  html: 'http://www.w3.org/1999/xhtml',
-  math: 'http://www.w3.org/1998/Math/MathML',
-  svg: 'http://www.w3.org/2000/svg',
-  textarea: null,
-};
-
 export type DOMHole =
-  | DOMHole.Attribute
-  | DOMHole.ChildNode
-  | DOMHole.Element
-  | DOMHole.Event
-  | DOMHole.Live
-  | DOMHole.Property
-  | DOMHole.Text;
+  | DOMHole.AttributeHole
+  | DOMHole.ChildNodeHole
+  | DOMHole.ElementHole
+  | DOMHole.EventHole
+  | DOMHole.LiveHole
+  | DOMHole.PropertyHole
+  | DOMHole.TextHole;
 
 export namespace DOMHole {
-  export interface Attribute {
+  export interface AttributeHole {
     type: typeof PART_TYPE_ATTRIBUTE;
     index: number;
     name: string;
   }
 
-  export interface ChildNode {
+  export interface ChildNodeHole {
     type: typeof PART_TYPE_CHILD_NODE;
     index: number;
   }
 
-  export interface Element {
+  export interface ElementHole {
     type: typeof PART_TYPE_ELEMENT;
     index: number;
   }
 
-  export interface Event {
+  export interface EventHole {
     type: typeof PART_TYPE_EVENT;
     index: number;
     name: string;
   }
 
-  export interface Live {
+  export interface LiveHole {
     type: typeof PART_TYPE_LIVE;
     index: number;
     name: string;
   }
 
-  export interface Property {
+  export interface PropertyHole {
     type: typeof PART_TYPE_PROPERTY;
     index: number;
     name: string;
   }
 
-  export interface Text {
+  export interface TextHole {
     type: typeof PART_TYPE_TEXT;
     index: number;
     leadingSpan: number;
@@ -103,45 +85,38 @@ export namespace DOMHole {
   }
 }
 
-export interface DOMRenderer {
-  readonly container: Element;
-  renderChildNodePart(namespaceURI: string | null): DOMPart.ChildNode;
+export interface DOMTemplateRenderer {
   renderTemplate(
     template: DOMTemplate,
     exprs: readonly unknown[],
-    session: Session<DOMPart, DOMRenderer>,
+    scope: Scope<DOMPart, DOMTemplateRenderer>,
   ): DOMTemplateResult;
 }
 
 export interface DOMTemplateResult {
-  childNodes: readonly ChildNode[];
-  slots: readonly Slot<unknown, DOMPart, DOMRenderer>[];
+  childNodes: ChildNode[];
+  slots: Slot<DOMPart>[];
 }
 
-export class DOMTemplate<TExprs extends readonly unknown[] = readonly unknown[]>
-  implements DirectiveType<TExprs, DOMPart.ChildNode, DOMRenderer>
-{
+export class DOMTemplate {
   readonly element: HTMLTemplateElement;
-
   readonly holes: DOMHole[];
-
   readonly mode: TemplateMode;
 
-  static parse<TExprs extends readonly unknown[]>(
+  static parse(
     strings: readonly string[],
-    exprs: TExprs,
+    exprs: readonly unknown[],
     mode: TemplateMode,
     placeholder: string,
-    document: Document,
-  ): DOMTemplate<TExprs> {
+  ) {
     const element = document.createElement('template');
     const marker = createMarker(placeholder);
-    const htmlString = stripWhitespaces(strings.join(marker));
+    const html = stripWhitespaces(strings.join(marker));
 
     if (mode === 'html') {
-      element.setHTMLUnsafe(htmlString);
+      element.setHTMLUnsafe(html);
     } else {
-      element.setHTMLUnsafe(`<${mode}>${htmlString}</${mode}>`);
+      element.setHTMLUnsafe(`<${mode}>${html}</${mode}>`);
       element.content.replaceChildren(
         ...element.content.firstChild!.childNodes,
       );
@@ -160,375 +135,129 @@ export class DOMTemplate<TExprs extends readonly unknown[] = readonly unknown[]>
     this.element = element;
     this.holes = holes;
     this.mode = mode;
-    DEBUG: {
-      Object.freeze(this);
-    }
-  }
-
-  get name(): string {
-    return DOMTemplate.name;
-  }
-
-  resolveBinding(
-    exprs: TExprs,
-    part: DOMPart.ChildNode,
-    _context: DirectiveContext<DOMPart, DOMRenderer>,
-  ): DOMTemplateBinding<TExprs> {
-    ensurePartType(PART_TYPE_CHILD_NODE, this, exprs, part);
-    return new DOMTemplateBinding(this, exprs, part);
   }
 }
 
-export class DOMTemplateBinding<TExprs extends readonly unknown[]>
-  implements Binding<TExprs, DOMPart.ChildNode>, Effect
+export class DOMTemplateHandler
+  implements DirectiveHandler<Template, DOMPart, DOMTemplateRenderer>
 {
-  private readonly _template: DOMTemplate<TExprs>;
+  private readonly _template: DOMTemplate;
+  private _childNodes: ChildNode[] = [];
+  private _slots: Slot<DOMPart>[] = [];
 
-  private _pendingExprs: TExprs;
-
-  private _currentExprs: TExprs | null = null;
-
-  private readonly _part: DOMPart.ChildNode;
-
-  private _memoizedResult: DOMTemplateResult | null = null;
-
-  constructor(
-    template: DOMTemplate<TExprs>,
-    exprs: TExprs,
-    part: DOMPart.ChildNode,
-  ) {
+  constructor(template: DOMTemplate) {
     this._template = template;
-    this._pendingExprs = exprs;
-    this._part = part;
   }
 
-  get type(): DOMTemplate<TExprs> {
-    return this._template;
+  shouldUpdate(newTemplate: Template, oldTemplate: Template): boolean {
+    return newTemplate.exprs !== oldTemplate.exprs;
   }
 
-  get value(): TExprs {
-    return this._pendingExprs;
-  }
-
-  set value(newExprs: TExprs) {
-    this._pendingExprs = newExprs;
-  }
-
-  get part(): DOMPart.ChildNode {
-    return this._part;
-  }
-
-  shouldUpdate(newExprs: readonly unknown[]): boolean {
-    return this._currentExprs === null || newExprs !== this._currentExprs;
-  }
-
-  attach(session: Session<DOMPart, DOMRenderer>): void {
-    if (this._memoizedResult !== null) {
-      const { slots } = this._memoizedResult;
-      for (let i = 0, l = slots.length; i < l; i++) {
-        slots[i]!.update(this._pendingExprs[i]!, session);
-      }
-    } else {
-      this._memoizedResult = session.renderer.renderTemplate(
-        this._template,
-        this._pendingExprs,
-        session,
-      );
-    }
-  }
-
-  detach(session: Session<DOMPart, DOMRenderer>): void {
-    if (this._memoizedResult !== null) {
-      const { slots } = this._memoizedResult;
-
-      for (let i = 0, l = slots.length; i < l; i++) {
-        slots[i]!.detach(session);
-      }
-    }
-  }
-
-  commit(): void {
-    if (this._memoizedResult !== null) {
-      const { childNodes, slots } = this._memoizedResult;
-
-      if (this._currentExprs === null) {
-        this._part.sentinelNode.before(...childNodes);
-      }
-
-      for (const slot of slots) {
-        slot.commit();
-      }
-
-      this._currentExprs = this._pendingExprs;
-      this._part.node =
-        getStartNode(childNodes, slots) ?? this._part.sentinelNode;
-    }
-  }
-
-  rollback(): void {
-    if (this._memoizedResult !== null) {
-      const { childNodes, slots } = this._memoizedResult;
-
-      for (const slot of slots) {
-        if (
-          (slot.part.type === PART_TYPE_CHILD_NODE ||
-            slot.part.type === PART_TYPE_TEXT) &&
-          childNodes.includes(getEndNode(slot.part))
-        ) {
-          // This binding is mounted as a child of the root, so we must rollback it.
-          slot.rollback();
-        }
-      }
-
-      for (const child of childNodes) {
-        child.remove();
-      }
-
-      this._currentExprs = null;
-      this._part.node = this._part.sentinelNode;
-    }
-  }
-}
-
-export class ClientRenderer implements DOMRenderer {
-  private readonly _container: Element;
-
-  constructor(container: Element) {
-    this._container = container;
-  }
-
-  get container(): Element {
-    return this._container;
-  }
-
-  renderTemplate(
-    template: DOMTemplate,
-    exprs: readonly unknown[],
-    session: Session<DOMPart, DOMRenderer>,
-  ): DOMTemplateResult {
-    const { context } = session;
-    const fragment = this._container.ownerDocument.importNode(
-      template.element.content,
-      true,
-    );
-    const holes = template.holes;
-    const slots: Slot<unknown, DOMPart, DOMRenderer>[] = new Array(
-      holes.length,
-    );
-
-    if (holes.length > 0) {
-      const renderTarget = createTreeWalker(fragment);
-      let nodeIndex = 0;
-
-      for (let i = 0, l = holes.length; i < l; i++) {
-        const hole = holes[i]!;
-
-        for (; nodeIndex <= hole.index; nodeIndex++) {
-          if (renderTarget.nextNode() === null) {
-            throw new Error(
-              'There is no node that the hole indicates. The template may have been modified.',
-            );
-          }
-        }
-
-        const currentNode = renderTarget.currentNode;
-        let currentPart: DOMPart;
-
-        switch (hole.type) {
-          case PART_TYPE_ATTRIBUTE:
-            currentPart = createAttributePart(
-              currentNode as Element,
-              hole.name,
-            );
-            break;
-          case PART_TYPE_EVENT:
-            currentPart = createEventPart(currentNode as Element, hole.name);
-            break;
-          case PART_TYPE_CHILD_NODE:
-            currentPart = createChildNodePart(
-              currentNode as Comment,
-              getNamespaceURI(currentNode, template.mode),
-            );
-            break;
-          case PART_TYPE_ELEMENT:
-            currentPart = createElementPart(currentNode as Element);
-            break;
-          case PART_TYPE_LIVE:
-            currentPart = createLivePart(currentNode as Element, hole.name);
-            break;
-          case PART_TYPE_PROPERTY:
-            currentPart = createPropertyPart(currentNode as Element, hole.name);
-            break;
-          case PART_TYPE_TEXT:
-            currentPart = splitTextPart(renderTarget, hole);
-            break;
-        }
-
-        const slot = Slot.place(exprs[i]!, currentPart, context);
-        slot.attach(session);
-
-        slots[i] = slot;
-      }
-    }
-
-    const childNodes = Array.from(fragment.childNodes);
-
-    return { childNodes, slots };
-  }
-
-  renderChildNodePart(namespaceURI: string | null): DOMPart.ChildNode {
-    return createChildNodePart(
-      this._container.ownerDocument.createComment(''),
-      namespaceURI ?? this._container.namespaceURI,
-    );
-  }
-}
-
-export class HydrationRenderer implements DOMRenderer {
-  private readonly _target: TreeWalker;
-
-  constructor(container: Element) {
-    this._target = createTreeWalker(container);
-  }
-
-  get container(): Element {
-    return this._target.root as Element;
-  }
-
-  renderTemplate(
-    template: DOMTemplate,
-    exprs: readonly unknown[],
-    session: Session<DOMPart, DOMRenderer>,
-  ): DOMTemplateResult {
-    const { context } = session;
-    const fragment = template.element.content;
-    const hydrationTemplate = createTreeWalker(fragment);
-    const holes = template.holes;
-    const totalHoles = holes.length;
-    const childNodes: ChildNode[] = [];
-    const slots: Slot<unknown, DOMPart, DOMRenderer>[] = new Array(totalHoles);
-    let nodeIndex = 0;
-    let holeIndex = 0;
-
-    for (
-      let templateNode: Node | null;
-      (templateNode = hydrationTemplate.nextNode()) !== null;
-      nodeIndex++
+  render(
+    template: Template,
+    _part: DOMPart.ChildNodePart,
+    scope: Scope.ChildScope<DOMPart.ChildNodePart, DOMTemplateRenderer>,
+    session: Session<DOMPart.ChildNodePart, DOMTemplateRenderer>,
+  ): Iterable<Slot> {
+    if (
+      this._childNodes.length === 0 &&
+      this._template.element.content.firstChild !== null
     ) {
-      const hydratedNodes: ChildNode[] = [];
-
-      for (; holeIndex < totalHoles; holeIndex++) {
-        const hole = holes[holeIndex]!;
-        let currentPart: DOMPart;
-
-        if (hole.index !== nodeIndex) {
-          break;
-        }
-
-        if (hole.type === PART_TYPE_TEXT) {
-          currentPart = hydrateTextPart(this._target, hole, hydratedNodes);
-        } else if (hole.type === PART_TYPE_CHILD_NODE) {
-          currentPart = createChildNodePart(
-            popNode('#comment', this._target),
-            getNamespaceURI(this._target.currentNode, template.mode),
-          );
-          hydratedNodes.push(currentPart.node);
-        } else {
-          if (hydratedNodes.length === 0) {
-            hydratedNodes.push(
-              popNode(templateNode.nodeName, this._target) as Element,
-            );
-          }
-          const currentNode = this._target.currentNode as Element;
-          switch (hole.type) {
-            case PART_TYPE_ATTRIBUTE:
-              currentPart = createAttributePart(currentNode, hole.name);
-              break;
-            case PART_TYPE_EVENT:
-              currentPart = createEventPart(currentNode, hole.name);
-              break;
-            case PART_TYPE_ELEMENT:
-              currentPart = createElementPart(currentNode);
-              break;
-            case PART_TYPE_LIVE:
-              currentPart = createLivePart(currentNode, hole.name);
-              break;
-            case PART_TYPE_PROPERTY:
-              currentPart = createPropertyPart(currentNode, hole.name);
-              break;
-          }
-        }
-
-        const slot = Slot.place(exprs[holeIndex]!, currentPart, context);
-        slot.attach(session);
-
-        slots[holeIndex] = slot;
-      }
-
-      if (hydratedNodes.length === 0) {
-        hydratedNodes.push(
-          popNode(templateNode.nodeName, this._target) as ChildNode,
-        );
-      }
-
-      if (templateNode.parentNode === fragment) {
-        childNodes.push(...hydratedNodes);
-      }
-    }
-
-    if (holeIndex < totalHoles) {
-      throw new Error(
-        'There is no node that the hole indicates. The template may have been modified.',
+      const { childNodes, slots } = session.renderer.renderTemplate(
+        this._template,
+        template.exprs,
+        scope,
+      );
+      this._childNodes = childNodes;
+      this._slots = slots;
+    } else {
+      this._slots = this._slots.map((slot, i) =>
+        slot.update(wrap(template.exprs[i]), scope),
       );
     }
-
-    return { childNodes, slots };
+    return this._slots;
   }
 
-  renderChildNodePart(namespaceURI: string | null): DOMPart.ChildNode {
-    return createChildNodePart(
-      popNode('#comment', this._target),
-      namespaceURI ?? (this._target.root as Element).namespaceURI,
-    );
+  discard(
+    _template: Template,
+    _part: DOMPart.ChildNodePart,
+    _scope: Scope<DOMPart.ChildNodePart, DOMTemplateRenderer>,
+    session: Session<DOMPart.ChildNodePart, DOMTemplateRenderer>,
+  ): void {
+    for (const slot of this._slots) {
+      slot.discard(session);
+    }
+  }
+
+  complete(
+    _template: Template,
+    _part: DOMPart.ChildNodePart,
+    _scope: Scope<DOMPart.ChildNodePart, DOMTemplateRenderer>,
+    _session: Session<DOMPart.ChildNodePart, DOMTemplateRenderer>,
+  ): void {}
+
+  commit(
+    _newTemplate: Template,
+    _oldTemplate: Template | null,
+    part: DOMPart.ChildNodePart,
+  ): void {
+    if (part.node === part.sentinelNode) {
+      part.sentinelNode.before(...this._childNodes);
+    }
+
+    for (const slot of this._slots) {
+      slot.commit();
+    }
+
+    part.node =
+      getStartNode(this._childNodes, this._slots) ?? part.sentinelNode;
+  }
+
+  revert(_template: Template, part: DOMPart.ChildNodePart): void {
+    for (const slot of this._slots) {
+      if (
+        (slot.part.type === PART_TYPE_CHILD_NODE ||
+          slot.part.type === PART_TYPE_TEXT) &&
+        this._childNodes.includes(getEndNode(slot.part))
+      ) {
+        // This slot is mounted as a child of the root, so we must revert it.
+        slot.revert();
+      }
+    }
+
+    part.node = part.sentinelNode;
   }
 }
 
-function createMarker(placeholder: string): string {
-  // Marker requirements:
-  // - Makers start with "?" to detect when it is used as a tag name. In
-  //   that case, the tag is treated as a comment.
-  //   https://html.spec.whatwg.org/multipage/parsing.html#parse-error-unexpected-question-mark-instead-of-tag-name
-  // - Makers are all lowercase to match attribute names.
-  if (!PLACEHOLDER_PATTERN.test(placeholder)) {
-    throw new Error(
-      `Placeholders must match pattern ${PLACEHOLDER_PATTERN}, but got ${JSON.stringify(placeholder)}.`,
-    );
-  }
-  return '??' + placeholder + '??';
-}
-
-function createTreeWalker(container: DocumentFragment | Element): TreeWalker {
+export function createTreeWalker(
+  container: DocumentFragment | Element,
+): TreeWalker {
   return container.ownerDocument.createTreeWalker(
     container,
     NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
   );
 }
 
-function extractCaseSensitiveAttributeName(s: string): string | undefined {
-  return s.match(ATTRIBUTE_NAME_PATTERN)?.[0];
+function createMarker(placeholder: string): string {
+  if (!PLACEHOLDER_PATTERN.test(placeholder)) {
+    throw new Error(
+      `Placeholders must match pattern ${PLACEHOLDER_PATTERN}, but got "${placeholder}".`,
+    );
+  }
+  return '??' + placeholder + '??';
+}
+
+function extractRawAttributeName(span: string): string | undefined {
+  return span.match(ATTRIBUTE_NAME_PATTERN)?.[0];
 }
 
 function getEndNode(part: DOMPart): ChildNode {
   return part.type === PART_TYPE_CHILD_NODE ? part.sentinelNode : part.node;
 }
 
-function getNamespaceURI(node: Node, mode: TemplateMode): string | null {
-  return node.lookupNamespaceURI(null) ?? NAMESPACE_URI_MAP[mode] ?? null;
-}
-
 function getStartNode(
   childNodes: readonly ChildNode[],
-  slots: readonly Slot<unknown, DOMPart, DOMRenderer>[],
+  slots: readonly Slot<DOMPart>[],
 ): ChildNode | null {
   const childNode = childNodes[0];
   const slot = slots[0];
@@ -539,29 +268,6 @@ function getStartNode(
     : (childNode ?? null);
 }
 
-function hydrateTextPart(
-  treeWalker: TreeWalker,
-  hole: DOMHole.Text,
-  hydratedNodes: ChildNode[],
-): DOMPart.Text {
-  if (hydratedNodes.length > 0) {
-    popNode('#comment', treeWalker);
-  }
-  if (hole.leadingSpan > 0) {
-    hydratedNodes.push(popNode('#text', treeWalker));
-    popNode('#comment', treeWalker);
-  }
-  const part = createTextPart(popNode('#text', treeWalker));
-  hydratedNodes.push(part.node);
-  if (hole.trailingSpan > 0) {
-    popNode('#comment', treeWalker);
-    hydratedNodes.push(popNode('#text', treeWalker));
-  } else {
-    treeWalker.currentNode = part.node;
-  }
-  return part;
-}
-
 function parseAttribtues(
   element: Element,
   strings: readonly string[],
@@ -569,91 +275,64 @@ function parseAttribtues(
   holes: DOMHole[],
   index: number,
 ): void {
-  const names = element.getAttributeNames();
-
-  for (const name of names) {
-    const value = element.getAttribute(name)!;
+  for (const attribute of Array.from(element.attributes)) {
     let hole: DOMHole;
 
-    if (name === marker && value === '') {
+    if (attribute.name === marker && attribute.value === '') {
       hole = {
         type: PART_TYPE_ELEMENT,
         index,
       };
-    } else if (value === marker) {
-      const caseSensitiveName = extractCaseSensitiveAttributeName(
-        strings[holes.length]!,
-      );
+    } else if (attribute.value === marker) {
+      const rawName = extractRawAttributeName(strings[holes.length]!);
 
       DEBUG: {
-        if (caseSensitiveName?.toLowerCase() !== name) {
+        if (rawName?.toLowerCase() !== attribute.name) {
           throw new Error(
-            `The attribute name must be "${name}", but got "${caseSensitiveName}". There are unclosed tags or duplicate attributes':\n` +
-              formatPart(
-                { type: PART_TYPE_ATTRIBUTE, name, node: element },
-                ERROR_MAKER,
-              ),
+            `The attribute name must be "${attribute.name}", but got "${rawName}". There are unclosed tags or duplicate attributes.`,
           );
         }
       }
 
-      switch (caseSensitiveName[0]) {
+      switch (rawName![0]) {
         case '@':
           hole = {
             type: PART_TYPE_EVENT,
             index,
-            name: caseSensitiveName.slice(1),
+            name: rawName!.slice(1),
           };
           break;
         case '$':
           hole = {
             type: PART_TYPE_LIVE,
             index,
-            name: caseSensitiveName.slice(1),
+            name: rawName!.slice(1),
           };
           break;
         case '.':
           hole = {
             type: PART_TYPE_PROPERTY,
             index,
-            name: caseSensitiveName.slice(1),
+            name: rawName!.slice(1),
           };
           break;
         default:
           hole = {
             type: PART_TYPE_ATTRIBUTE,
             index,
-            name: caseSensitiveName,
+            name: rawName!,
           };
           break;
       }
     } else {
       DEBUG: {
-        if (name.includes(marker)) {
-          throw new Error(
-            'Expressions are not allowed as an attribute name:\n' +
-              formatPart(
-                {
-                  type: PART_TYPE_ATTRIBUTE,
-                  name,
-                  node: element,
-                },
-                ERROR_MAKER,
-              ),
-          );
+        if (attribute.name.includes(marker)) {
+          throw new Error('Expressions are not allowed as an attribute name.');
         }
 
-        if (value.includes(marker)) {
+        if (attribute.value.includes(marker)) {
           throw new Error(
-            'Expressions inside an attribute must make up the entire attribute value:\n' +
-              formatPart(
-                {
-                  type: PART_TYPE_ATTRIBUTE,
-                  name,
-                  node: element,
-                },
-                ERROR_MAKER,
-              ),
+            'Expressions inside an attribute must make up the entire attribute value.',
           );
         }
       }
@@ -661,7 +340,7 @@ function parseAttribtues(
     }
 
     holes.push(hole);
-    element.removeAttribute(name);
+    element.removeAttribute(attribute.name);
   }
 }
 
@@ -673,7 +352,7 @@ function parseChildren(
 ): DOMHole[] {
   const sourceTree = createTreeWalker(fragment);
   const holes: DOMHole[] = [];
-  let nextNode = sourceTree.nextNode() as ChildNode | null;
+  let nextNode = sourceTree.nextNode();
   let index = 0;
 
   while (nextNode !== null) {
@@ -682,13 +361,7 @@ function parseChildren(
       case Node.ELEMENT_NODE: {
         DEBUG: {
           if ((currentNode as Element).localName.includes(marker)) {
-            throw new Error(
-              'Expressions are not allowed as a tag name:\n' +
-                formatPart(
-                  { type: PART_TYPE_ELEMENT, node: currentNode as Element },
-                  ERROR_MAKER,
-                ),
-            );
+            throw new Error('Expressions are not allowed as a tag name.');
           }
         }
         if ((currentNode as Element).hasAttributes()) {
@@ -715,8 +388,7 @@ function parseChildren(
           DEBUG: {
             if ((currentNode as Comment).data.includes(marker)) {
               throw new Error(
-                'Expressions inside a comment must make up the entire comment value:\n' +
-                  emphasizeNode(currentNode, ERROR_MAKER),
+                'Expressions inside a comment must make up the entire comment value.',
               );
             }
           }
@@ -745,19 +417,19 @@ function parseChildren(
             normalizedText += component;
           }
 
-          const component = components[tail];
+          const component = components[tail]!;
           holes.push({
             type: PART_TYPE_TEXT,
             index,
             leadingSpan: lastComponent.length,
-            trailingSpan: component!.length,
+            trailingSpan: component.length,
           });
           normalizedText += component;
         }
 
         if (normalizedText === '' && components.length === 1) {
-          nextNode = sourceTree.nextNode() as ChildNode | null;
-          currentNode.remove();
+          nextNode = sourceTree.nextNode();
+          (currentNode as Text).remove();
           continue;
         }
 
@@ -767,7 +439,7 @@ function parseChildren(
       }
     }
 
-    nextNode = sourceTree.nextNode() as ChildNode | null;
+    nextNode = sourceTree.nextNode();
     index++;
   }
 
@@ -782,49 +454,16 @@ function parseChildren(
   return holes;
 }
 
-function popNode(expectedName: '#comment', treeWalker: TreeWalker): Comment;
-function popNode(expectedName: '#text', treeWalker: TreeWalker): Text;
-function popNode(expectedName: string, treeWalker: TreeWalker): Node;
-function popNode(expectedName: string, treeWalker: TreeWalker): Node {
-  const node = treeWalker.nextNode();
-
-  if (node === null || node.nodeName !== expectedName) {
-    throw new HydrationError(
-      treeWalker.currentNode,
-      `Hydration failed because the node name mismatches. ${expectedName} is expected here, but got ${node?.nodeName}.`,
-    );
-  }
-
-  return node;
-}
-
-function splitTextPart(
-  treeWalker: TreeWalker,
-  hole: DOMHole.Text,
-): DOMPart.Text {
-  let currentNode = treeWalker.currentNode as Text;
-  if (currentNode.previousSibling?.nodeType === Node.TEXT_NODE) {
-    currentNode = currentNode.splitText(0);
-  }
-  if (hole.leadingSpan > 0) {
-    currentNode = currentNode.splitText(hole.leadingSpan);
-  }
-  const part = createTextPart(currentNode);
-  currentNode = hole.trailingSpan > 0 ? currentNode.splitText(0) : part.node;
-  treeWalker.currentNode = currentNode;
-  return part;
-}
-
 function stripTrailingSlash(s: string): string {
   return s.at(-1) === '/' ? s.slice(0, -1) : s;
 }
 
-function stripWhitespaces(text: string): string {
-  if (LEADING_NEWLINE_PATTERN.test(text)) {
-    text = text.trimStart();
+function stripWhitespaces(s: string): string {
+  if (LEADING_NEWLINE_PATTERN.test(s)) {
+    s = s.trimStart();
   }
-  if (TRAILING_NEWLINE_PATTERN.test(text)) {
-    text = text.trimEnd();
+  if (TRAILING_NEWLINE_PATTERN.test(s)) {
+    s = s.trimEnd();
   }
-  return text;
+  return s;
 }

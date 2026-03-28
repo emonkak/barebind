@@ -1,334 +1,169 @@
-import { LinkedList } from './collections/linked-list.js';
+/// <reference path="../typings/scheduler.d.ts" />
 
-export const BOUNDARY_TYPE_ERROR = 0;
-export const BOUNDARY_TYPE_SHARED_CONTEXT = 1;
+import type { LinkedList } from './collections/linked-list.js';
+import { AbortError, handleError, InterruptError } from './error.js';
 
-export const Template = Symbol('Directive.Template');
-export const Primitive = Symbol('Directive.Primitive');
+export const ErrorBoundary = 0;
+export const SharedContextBoundary = 1;
 
-const Root = Symbol('Scope.Root');
-const Orphan = Symbol('Scope.Orphan');
+export const NoLanes: Lanes /*           */ = 0;
+export const AllLanes: Lanes /*          */ = -1;
+export const SyncLane: Lane /*           */ = 0b0000000000000001;
+export const ViewTransitionLane: Lane /* */ = 0b0000000000000010;
+export const ConcurrentLane: Lane /*     */ = 0b0000000000000100;
+export const UserBlockingLane: Lane /*   */ = 0b0000000000001000;
+export const UserVisibleLane: Lane /*    */ = 0b0000000000010000;
+export const BackgroundLane: Lane /*     */ = 0b0000000000100000;
+export const TransitionLanes: Lanes /*   */ = 0b11111111111111110000000000000000;
+export const TransitionLane1: Lane /*    */ = 0b00000000000000010000000000000000;
+export const TransitionLength: number /* */ = 16;
 
-const toDirective: unique symbol = Symbol('Bindable.toDirective');
+export const MutationPhase /* */ = 0b001;
+export const LayoutPhase /*   */ = 0b010;
+export const PassivePhase /*  */ = 0b100;
 
-export interface Bindable<T extends Directive.Node = Directive.Node> {
-  [toDirective](): T;
-}
+const Repeat = Symbol('Repeat');
+const Primitive = Symbol('Primitive');
 
-export interface Binding<TValue, TPart = unknown, TRenderer = unknown>
-  extends ReversibleEffect {
-  readonly type: DirectiveType<TValue, TPart, TRenderer>;
-  value: TValue;
-  readonly part: TPart;
-  shouldUpdate(newValue: TValue): boolean;
-  attach(session: Session<TPart, TRenderer>): void;
-  detach(session: Session<TPart, TRenderer>): void;
-}
+const IdleStatus = 0;
+const StagedStatus = 1;
+const StaleStatus = 2;
+
+type SlotStatus = typeof IdleStatus | typeof StagedStatus | typeof StaleStatus;
 
 export type Boundary = Boundary.ErrorBoundary | Boundary.SharedContextBoundary;
 
 export namespace Boundary {
   export interface ErrorBoundary {
-    type: typeof BOUNDARY_TYPE_ERROR;
+    type: typeof ErrorBoundary;
     next: Boundary | null;
     handler: ErrorHandler;
   }
 
   export interface SharedContextBoundary {
-    type: typeof BOUNDARY_TYPE_SHARED_CONTEXT;
+    type: typeof SharedContextBoundary;
     next: Boundary | null;
     key: unknown;
     value: unknown;
   }
 }
 
-export type CommitPhase = 'mutation' | 'layout' | 'passive';
-
-export interface Coroutine<TPart = unknown, TRenderer = unknown> {
-  readonly name: string;
-  readonly scope: Scope;
-  pendingLanes: Lanes;
-  start(session: Session<TPart, TRenderer>): void;
-  resume(session: Session<TPart, TRenderer>): void;
+export interface Component<TProps> {
+  resolveComponent(
+    directive: Directive.ComponentDirective<TProps>,
+  ): DirectiveHandler<TProps>;
+  (props: TProps): Directive.ComponentDirective<TProps>;
 }
 
 export namespace Directive {
-  export type Node =
-    | Element<unknown>
-    | Primitive<unknown>
-    | Template<readonly unknown[]>;
+  export type ElementDirective =
+    | ComponentDirective<unknown>
+    | PrimitiveDirective<unknown>
+    | RepeatDirective<unknown>
+    | TemplateDirective;
 
-  export type Element<TVaue, TPart = unknown, TRenderer = unknown> = Directive<
-    DirectiveType<TVaue, TPart, TRenderer>,
-    TVaue
+  export type ComponentDirective<TProps> = Directive<Component<TProps>, TProps>;
+
+  export type PrimitiveDirective<TValue> = Directive<typeof Primitive, TValue>;
+
+  export type RepeatDirective<TSource> = Directive<
+    typeof Repeat,
+    Iterable<TSource>
   >;
 
-  export type Primitive<TValue> = Directive<typeof Primitive, TValue>;
-
-  export type Template<TExprs extends readonly unknown[]> = Directive<
-    typeof Template,
-    { strings: readonly string[]; exprs: TExprs; mode: TemplateMode }
-  >;
+  export type TemplateDirective = Directive<readonly string[], Template>;
 }
 
-export class Directive<TType, TValue> {
-  static readonly toDirective: typeof toDirective = toDirective;
-
-  readonly type: TType;
-
-  readonly value: TValue;
-
-  readonly key: unknown;
-
-  constructor(type: TType, value: TValue, key?: unknown) {
-    this.type = type;
-    this.value = value;
-    this.key = key;
-    DEBUG: {
-      Object.freeze(this);
-    }
-  }
-
-  [toDirective](): Directive<TType, TValue> {
-    return this;
-  }
-
-  withKey(key: unknown): Directive<TType, TValue> {
-    return new Directive(this.type, this.value, key);
-  }
-}
-
-export interface DirectiveContext<TPart = unknown, TRenderer = unknown> {
-  resolveDirective<TSource, TBindingPart extends TPart>(
-    source: TSource,
-    part: TBindingPart,
-  ): Directive.Element<UnwrapBindable<TSource>, TBindingPart, TRenderer>;
-}
-
-export interface DirectiveType<TValue, TPart = unknown, TRenderer = unknown> {
-  readonly name: string;
-  resolveBinding(
+export interface DirectiveHandler<
+  TValue,
+  TPart = unknown,
+  TRenderer = unknown,
+> {
+  shouldUpdate(newValue: TValue, oldValue: TValue): boolean;
+  render(
     value: TValue,
     part: TPart,
-    context: DirectiveContext<TPart, TRenderer>,
-  ): Binding<TValue, TPart, TRenderer>;
+    scope: Scope.ChildScope<TPart, TRenderer>,
+    session: Session<TPart, TRenderer>,
+  ): Iterable<Slot>;
+  complete(
+    value: TValue,
+    part: TPart,
+    scope: Scope<TPart, TRenderer>,
+    session: Session<TPart, TRenderer>,
+  ): void;
+  discard(
+    value: TValue,
+    part: TPart,
+    scope: Scope<TPart, TRenderer>,
+    session: Session<TPart, TRenderer>,
+  ): void;
+  commit(oldValue: TValue, newValue: TValue | null, part: TPart): void;
+  revert(value: TValue, part: TPart): void;
 }
 
 export interface Effect {
+  scope: Scope;
   commit(): void;
 }
 
-export class EffectQueue {
-  private _headEffects: LinkedList<Effect> = new LinkedList();
+export type EffectPhase =
+  | typeof MutationPhase
+  | typeof LayoutPhase
+  | typeof PassivePhase;
 
-  private _middleEffects: LinkedList<Effect> = new LinkedList();
-
-  private _tailEffects: LinkedList<Effect> = new LinkedList();
-
-  private _lastLevel = 0;
-
-  private _size = 0;
-
-  get size(): number {
-    return this._size;
-  }
-
-  clear(): void {
-    this._headEffects.clear();
-    this._middleEffects.clear();
-    this._tailEffects.clear();
-    this._lastLevel = 0;
-    this._size = 0;
-  }
-
-  flush(): void {
-    try {
-      for (const effect of this._headEffects) {
-        effect.commit();
-      }
-      for (const effect of this._middleEffects) {
-        effect.commit();
-      }
-      for (const effect of this._tailEffects) {
-        effect.commit();
-      }
-    } finally {
-      this.clear();
-    }
-  }
-
-  push(effect: Effect, level: number): void {
-    if (level > this._lastLevel) {
-      this._tailEffects = LinkedList.concat(
-        this._middleEffects,
-        this._tailEffects,
-      );
-    } else if (level < this._lastLevel) {
-      this._headEffects = LinkedList.concat(
-        this._headEffects,
-        this._middleEffects,
-        this._tailEffects,
-      );
-    }
-    this._middleEffects.pushBack(effect);
-    this._lastLevel = level;
-    this._size++;
-  }
-
-  pushAfter(effect: Effect): void {
-    this._tailEffects.pushBack(effect);
-    this._size++;
-  }
-
-  pushBefore(effect: Effect): void {
-    this._headEffects.pushBack(effect);
-    this._size++;
-  }
-}
+export type EffectPhases = number;
 
 export type ErrorHandler = (
   error: unknown,
   handleError: (error: unknown) => void,
 ) => void;
 
+export interface HostAdapter<TPart, TRenderer> {
+  getCommitPhases(): EffectPhases;
+  getDefaultLanes(): Lanes;
+  getIdentifier(): string;
+  getTaskPriority(): TaskPriority;
+  requestCallback<T>(
+    callback: () => T | PromiseLike<T>,
+    options?: SchedulerPostTaskOptions,
+  ): Promise<T>;
+  requestRenderer(scope: Scope): TRenderer;
+  resolvePrimitive(
+    directive: Directive.PrimitiveDirective<unknown>,
+    part: TPart,
+  ): PrimitiveHandler<unknown, TPart, TRenderer>;
+  resolveRepeat(
+    directive: Directive.RepeatDirective<unknown>,
+    part: TPart,
+  ): DirectiveHandler<Iterable<unknown>, TPart, TRenderer>;
+  resolveTemplate(
+    directive: Directive.TemplateDirective,
+    part: TPart,
+  ): DirectiveHandler<Template, TPart, TRenderer>;
+  startViewTransition(callback: () => PromiseLike<void> | void): Promise<void>;
+  yieldToMain(): Promise<void>;
+}
+
 export type Lane = number;
 
 export type Lanes = number;
 
-export interface Primitive<TValue, TPart = unknown, TRenderer = unknown>
-  extends DirectiveType<TValue, TPart, TRenderer> {
-  ensureValue?(value: unknown, part: TPart): asserts value is TValue;
+export interface Root<TPart> {
+  part: TPart;
+  idPrefix: string;
+  idSeq: number;
 }
 
-export interface RenderFrame<TPart = unknown, TRenderer = unknown> {
-  id: number;
-  lanes: Lanes;
-  coroutines: Coroutine<TPart, TRenderer>[];
-  mutationEffects: EffectQueue;
-  layoutEffects: EffectQueue;
-  passiveEffects: EffectQueue;
+export interface PrimitiveHandler<TValue, TPart = unknown, TRenderer = unknown>
+  extends DirectiveHandler<TValue, TPart, TRenderer> {
+  ensureValue(value: unknown): void;
 }
-
-export interface ReversibleEffect extends Effect {
-  rollback(): void;
-}
-
-export interface Session<TPart = unknown, TRenderer = unknown> {
-  renderer: TRenderer;
-  frame: RenderFrame<TPart, TRenderer>;
-  scope: Scope;
-  coroutine: Coroutine<TPart, TRenderer>;
-  context: SessionContext<TPart, TRenderer>;
-}
-
-export interface SessionContext<TPart = unknown, TRenderer = unknown>
-  extends DirectiveContext<TPart, TRenderer> {
-  addObserver(observer: SessionObserver): () => void;
-  getScheduledUpdates(): Update<TPart, TRenderer>[];
-  startTransition<T>(action: (transition: number) => T): T;
-  nextIdentifier(): string;
-  scheduleUpdate(
-    coroutine: Coroutine<TPart, TRenderer>,
-    options?: UpdateOptions,
-  ): UpdateHandle;
-}
-
-export type SessionEvent =
-  | {
-      type: 'render-start' | 'render-end';
-      id: number;
-      lanes: Lanes;
-    }
-  | {
-      type: 'render-error';
-      id: number;
-      error: unknown;
-      captured: boolean;
-    }
-  | {
-      type: 'coroutine-start' | 'coroutine-end';
-      id: number;
-      coroutine: Coroutine;
-    }
-  | {
-      type: 'commit-start' | 'commit-end';
-      id: number;
-    }
-  | {
-      type: 'commit-cancel';
-      id: number;
-      reason: unknown;
-    }
-  | {
-      type: 'effect-commit-start' | 'effect-commit-end';
-      id: number;
-      phase: CommitPhase;
-      effects: EffectQueue;
-    };
-
-export interface SessionObserver {
-  onSessionEvent(event: SessionEvent): void;
-}
-
-export namespace Scope {
-  export type Root = Scope<typeof Root>;
-  export type Child = Scope<Coroutine>;
-  export type Orphan = Scope<typeof Orphan>;
-}
-
-export class Scope<TOwner = unknown> {
-  owner: TOwner;
-  level: number;
-  boundary: Boundary | null = null;
-
-  static readonly Orphan: Scope.Orphan = Object.freeze(new Scope(Orphan, 0));
-
-  static Child(coroutine: Coroutine): Scope.Child {
-    return new Scope(coroutine, coroutine.scope.level + 1);
-  }
-
-  static Root(): Scope.Root {
-    return new Scope(Root, 0);
-  }
-
-  private constructor(owner: TOwner, level: number) {
-    this.owner = owner;
-    this.level = level;
-  }
-
-  getPendingAncestor(lanes: Lanes): Scope.Child | null {
-    let currentScope: Scope | undefined = this;
-    while (currentScope.level > 0) {
-      const coroutine = currentScope.owner as Coroutine;
-      if ((coroutine.pendingLanes & lanes) === lanes) {
-        return currentScope as Scope.Child;
-      }
-      currentScope = coroutine.scope;
-    }
-    return null;
-  }
-
-  isChild(): this is Scope.Child {
-    return this.level > 0;
-  }
-
-  isOrphan(): this is Scope.Orphan {
-    return this.owner === Orphan;
-  }
-
-  isRoot(): this is Scope.Root {
-    return this.owner === Root;
-  }
-}
-
-export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
-
-export type UnwrapBindable<T> = T extends Bindable<infer Value> ? Value : T;
 
 export interface Update<TPart, TRenderer> {
   id: number;
   lanes: Lanes;
-  coroutine: Coroutine<TPart, TRenderer>;
+  task: UpdateTask<TPart, TRenderer>;
   controller: PromiseWithResolvers<UpdateResult>;
 }
 
@@ -350,14 +185,453 @@ export interface UpdateOptions extends SchedulerPostTaskOptions {
 export type UpdateResult =
   | { status: 'done' }
   | { status: 'skipped' }
-  | { status: 'canceled'; reason: unknown };
+  | { status: 'aborted'; reason: unknown };
 
-export function isBindable(value: unknown): value is Bindable<any> {
-  return typeof (value as Bindable)?.[toDirective] === 'function';
+export interface UpdateScheduler<TPart = unknown, TRenderer = unknown> {
+  get updateQueue(): LinkedList<Update<TPart, TRenderer>>;
+  nextTransition(): number;
+  observe(observer: SessionObserver): () => void;
+  schedule(task: UpdateTask, options?: UpdateOptions): UpdateHandle;
 }
 
-export function toDirectiveNode(source: unknown): Directive.Node {
-  return isBindable(source)
-    ? source[toDirective]()
-    : new Directive(Primitive, source);
+export interface UpdateTask<TPart = unknown, TRenderer = unknown> {
+  readonly scope: Scope<TPart, TRenderer>;
+  readonly pendingLanes: Lanes;
+  start(session: Session<TPart, TRenderer>): Generator<Slot>;
+}
+
+export namespace Scope {
+  export type ChildScope<TPart = unknown, TRenderer = unknown> = Scope<
+    TPart,
+    TRenderer
+  > & {
+    owner: Slot<TPart, TRenderer>;
+  };
+
+  export type RootScope<TPart = unknown, TRenderer = unknown> = Scope<
+    TPart,
+    TRenderer
+  > & {
+    owner: Root<TPart>;
+  };
+
+  export type OrphanScope<TPart = unknown, TRenderer = unknown> = Scope<
+    TPart,
+    TRenderer
+  > & {
+    owner: null;
+  };
+}
+
+export interface Session<TPart = unknown, TRenderer = unknown> {
+  id: number;
+  lanes: Lanes;
+  mutationEffects: Effect[];
+  layoutEffects: Effect[];
+  passiveEffects: Effect[];
+  adapter: HostAdapter<TPart, TRenderer>;
+  renderer: TRenderer;
+  scheduler: UpdateScheduler<TPart, TRenderer>;
+}
+
+export type SessionEvent =
+  | {
+      type: 'render-start' | 'render-end';
+      id: number;
+      lanes: Lanes;
+    }
+  | {
+      type: 'render-error';
+      id: number;
+      error: unknown;
+      captured: boolean;
+    }
+  | {
+      type: 'slot-render-start' | 'slot-render-end';
+      id: number;
+      slot: Slot;
+    }
+  | {
+      type: 'commit-start' | 'commit-end';
+      id: number;
+    }
+  | {
+      type: 'commit-abort';
+      id: number;
+      reason: unknown;
+    }
+  | {
+      type: 'effect-commit-start' | 'effect-commit-end';
+      id: number;
+      phase: EffectPhase;
+      effects: Effect[];
+    };
+
+export interface SessionObserver {
+  onSessionEvent(event: SessionEvent): void;
+}
+
+export interface Template {
+  strings: readonly string[];
+  exprs: readonly unknown[];
+  mode: TemplateMode;
+}
+
+export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
+
+export class Directive<TType, TValue> {
+  readonly type: TType;
+  readonly value: TValue;
+  readonly key: unknown;
+
+  constructor(type: TType, value: TValue, key?: unknown) {
+    this.type = type;
+    this.value = value;
+    this.key = key;
+  }
+
+  withKey(key: unknown): Directive<TType, TValue> {
+    return new Directive(this.type, this.value, key);
+  }
+}
+
+export class Scope<TPart = unknown, TRenderer = unknown> {
+  readonly owner: TPart | Slot<TPart, TRenderer> | null;
+  readonly level: number;
+  boundary: Boundary | null = null;
+
+  static readonly orphan: Scope.OrphanScope<any, any> = Object.freeze(
+    new Scope(null, 0),
+  ) as Scope.OrphanScope<any, any>;
+
+  static root<TPart, TRenderer>(
+    root: Root<TPart>,
+  ): Scope.RootScope<TPart, TRenderer> {
+    return new Scope(root, 0) as Scope.RootScope<TPart, TRenderer>;
+  }
+
+  static child<TPart, TRenderer>(
+    owner: Slot<TPart, TRenderer>,
+  ): Scope.ChildScope<TPart, TRenderer> {
+    return new Scope(owner, owner.scope.level + 1) as Scope.ChildScope<
+      TPart,
+      TRenderer
+    >;
+  }
+
+  private constructor(
+    owner: TPart | Slot<TPart, TRenderer> | null,
+    level: number,
+  ) {
+    this.owner = owner;
+    this.level = level;
+  }
+
+  contains(scope: Scope): boolean {
+    while (scope.level <= this.level) {
+      if (scope === this) {
+        return true;
+      }
+      if (!scope.isChild()) {
+        break;
+      }
+      scope = scope.owner.scope;
+    }
+    return false;
+  }
+
+  getPendingAncestor(lanes: Lanes): Scope.ChildScope<TPart, TRenderer> | null {
+    let scope: Scope<TPart, TRenderer> | undefined = this;
+    while (scope.isChild()) {
+      const owner = scope.owner as Slot<TPart, TRenderer>;
+      if ((owner.pendingLanes & lanes) === lanes) {
+        return scope;
+      }
+      scope = owner.scope;
+    }
+    return null;
+  }
+
+  getRoot(): Scope.RootScope<TPart, TRenderer> | null {
+    let scope: Scope<TPart, TRenderer> = this;
+    while (scope.isChild()) {
+      scope = scope.owner.scope;
+    }
+    return scope.isRoot() ? scope : null;
+  }
+
+  isChild(): this is Scope.ChildScope<TPart, TRenderer> {
+    return this.level > 0;
+  }
+
+  isRoot(): this is Scope.RootScope<TPart, TRenderer> {
+    return this.level === 0 && this !== Scope.orphan;
+  }
+}
+
+export class Slot<TPart = unknown, TRenderer = unknown>
+  implements UpdateTask<TPart, TRenderer>, Effect
+{
+  private readonly _part: TPart;
+  private _directive: Directive.ElementDirective;
+  private _scope: Scope<TPart, TRenderer>;
+  private _pendingLanes: Lanes = NoLanes;
+  private _handler: DirectiveHandler<unknown> | null = null;
+  private _snapshot: Slot<TPart, TRenderer> | null = null;
+  private _status: SlotStatus = IdleStatus;
+
+  constructor(
+    part: TPart,
+    directive: Directive.ElementDirective,
+    scope: Scope<TPart, TRenderer>,
+    pendingLanes: Lanes = NoLanes,
+    handler: DirectiveHandler<unknown> | null = null,
+    snapshot: Slot<TPart, TRenderer> | null = null,
+  ) {
+    this._part = part;
+    this._directive = directive;
+    this._scope = scope;
+    this._pendingLanes = pendingLanes;
+    this._handler = handler;
+    this._snapshot = snapshot;
+  }
+
+  get part(): TPart {
+    return this._part;
+  }
+
+  get directive(): Directive.ElementDirective {
+    return this._directive;
+  }
+
+  get scope(): Scope<TPart, TRenderer> {
+    return this._scope;
+  }
+
+  get pendingLanes(): Lanes {
+    return this._pendingLanes;
+  }
+
+  set pendingLanes(lanes: Lanes) {
+    this._pendingLanes = lanes;
+  }
+
+  clone(): Slot<TPart, TRenderer> {
+    return new Slot(
+      this._part,
+      this._directive,
+      this._scope,
+      this._pendingLanes,
+      this._handler,
+      this._snapshot,
+    );
+  }
+
+  shouldUpdate(lanes: Lanes): boolean {
+    return (
+      (this._pendingLanes & lanes) !== NoLanes ||
+      this._snapshot === null ||
+      this._handler === null ||
+      this._handler.shouldUpdate(
+        this._directive.value,
+        this._snapshot._directive.value,
+      )
+    );
+  }
+
+  update(
+    directive: Directive.ElementDirective,
+    scope: Scope<TPart, TRenderer>,
+  ): Slot<TPart, TRenderer> {
+    const alternate = this._snapshot?.clone() ?? this;
+
+    alternate._directive = directive;
+    alternate._scope = scope;
+    alternate._handler =
+      directive.type === alternate._directive.type &&
+      directive.key === alternate._directive.key
+        ? alternate._handler
+        : null;
+
+    return alternate;
+  }
+
+  *start(session: Session<TPart, TRenderer>): Generator<Slot> {
+    yield this;
+    session.mutationEffects.push(this);
+  }
+
+  *render(session: Session<TPart, TRenderer>): Generator<Slot> {
+    const { type, value } = this._directive;
+    const { adapter } = session;
+
+    if (type === Primitive) {
+      this._handler ??= adapter.resolvePrimitive(this._directive, this._part);
+      (this._handler as PrimitiveHandler<unknown>).ensureValue(value);
+    } else if (type === Repeat) {
+      this._handler ??= adapter.resolveRepeat(this._directive, this._part);
+    } else if (typeof type === 'object') {
+      this._handler ??= adapter.resolveTemplate(this._directive, this._part);
+    } else {
+      this._handler ??= this._directive.type.resolveComponent(this._directive);
+    }
+
+    if (this._snapshot !== null && this._handler !== this._snapshot._handler) {
+      this._snapshot.discard(session);
+    }
+
+    while (true) {
+      const scope = Scope.child(this);
+      let childSlots: Iterable<Slot>;
+
+      this._pendingLanes &= ~session.lanes;
+
+      try {
+        childSlots = this._handler.render(value, this._part, scope, session);
+      } catch (error) {
+        let handlingScope: Scope;
+        try {
+          handlingScope = handleError(this._scope, error);
+        } catch (error) {
+          throw new AbortError(scope, 'An error occurred during rendering.', {
+            cause: error,
+          });
+        }
+        if (Object.isFrozen(handlingScope)) {
+          throw new InterruptError(
+            scope,
+            'An error was captured by an error boundary outside origin scope.',
+          );
+        }
+        childSlots = [];
+      }
+
+      if ((this._pendingLanes & session.lanes) === NoLanes) {
+        for (const childSlot of childSlots) {
+          if (childSlot.shouldUpdate(session.lanes)) {
+            yield childSlot;
+          }
+        }
+      }
+
+      Object.freeze(scope);
+
+      if ((this._pendingLanes & session.lanes) === NoLanes) {
+        break;
+      }
+
+      restartRender(session, scope);
+    }
+
+    this._handler.complete(value, this._part, this._scope, session);
+
+    this._status = StagedStatus;
+  }
+
+  discard(session: Session<TPart, TRenderer>): void {
+    this._handler?.discard(
+      this._directive.value,
+      this._part,
+      this._scope,
+      session,
+    );
+    this._scope = Scope.orphan;
+    this._status = StaleStatus;
+  }
+
+  commit(): void {
+    if (this._status === StagedStatus) {
+      if (
+        this._snapshot !== null &&
+        this._handler !== this._snapshot._handler
+      ) {
+        this._snapshot.revert();
+      }
+      const newValue = this._directive.value;
+      const oldValue = this._snapshot?._directive.value ?? null;
+      this._handler?.commit(newValue, oldValue, this._part);
+    }
+    this._status = IdleStatus;
+    this._snapshot = this;
+  }
+
+  revert(): void {
+    if (this._status === StaleStatus) {
+      this._handler?.revert(this._directive.value, this._part);
+      this._handler = null;
+    }
+    this._status = IdleStatus;
+    this._snapshot = null;
+  }
+}
+
+export function wrap(value: unknown): Directive.ElementDirective {
+  return value instanceof Directive
+    ? value
+    : typeof value === 'object' && isIterable(value)
+      ? new Directive(Repeat, value)
+      : new Directive(Primitive, value);
+}
+
+export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
+  if (lanes & BackgroundLane) {
+    return 'background';
+  } else if (lanes & UserVisibleLane) {
+    return 'user-visible';
+  } else if (lanes & UserBlockingLane) {
+    return 'user-blocking';
+  } else {
+    return null;
+  }
+}
+
+export function getRenderLanes(options: UpdateOptions): Lanes {
+  let lanes = 0;
+
+  if (options.flushSync) {
+    lanes |= SyncLane;
+  }
+
+  if (options.viewTransition) {
+    lanes |= ViewTransitionLane;
+  }
+
+  switch (options.priority) {
+    case 'user-blocking':
+      lanes |= UserBlockingLane;
+      break;
+    case 'user-visible':
+      lanes |= UserVisibleLane;
+      break;
+    case 'background':
+      lanes |= BackgroundLane;
+      break;
+  }
+
+  if (options.transition !== undefined) {
+    lanes |= TransitionLane1 << (options.transition % TransitionLength);
+  }
+
+  return lanes;
+}
+
+export function getTranstionIndex(lanes: Lanes): number {
+  return 31 - Math.clz32(lanes >>> TransitionLength);
+}
+
+function invalidateEffects(effects: Effect[], scope: Scope): void {
+  const index = effects.findLastIndex(
+    (effect) => !scope.contains(effect.scope),
+  );
+  effects.splice(index + 1);
+}
+
+function isIterable(value: any): value is Iterable<unknown> {
+  return typeof value?.[Symbol.iterator] === 'function';
+}
+
+function restartRender(session: Session, scope: Scope): void {
+  invalidateEffects(session.mutationEffects, scope);
+  invalidateEffects(session.layoutEffects, scope);
+  invalidateEffects(session.passiveEffects, scope);
 }
