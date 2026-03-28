@@ -1,4 +1,7 @@
-import type { TemplateMode } from '../core.js';
+/// <reference path="../../typings/moveBefore.d.ts" />
+
+import type { Directive } from '../core.js';
+import { nameOf } from '../debug.js';
 
 export const PART_TYPE_NAMES = [
   'Attribute',
@@ -18,78 +21,60 @@ export const PART_TYPE_LIVE = 4;
 export const PART_TYPE_PROPERTY = 5;
 export const PART_TYPE_TEXT = 6;
 
-export const NAMESPACE_URI_MAP: Record<TemplateMode, string | null> = {
-  html: 'http://www.w3.org/1999/xhtml',
-  math: 'http://www.w3.org/1998/Math/MathML',
-  svg: 'http://www.w3.org/2000/svg',
-  textarea: null,
-};
-
 export type DOMPart =
-  | DOMPart.Attribute
-  | DOMPart.ChildNode
-  | DOMPart.Element
-  | DOMPart.Event
-  | DOMPart.Live
-  | DOMPart.Property
-  | DOMPart.Text;
+  | DOMPart.AttributePart
+  | DOMPart.ChildNodePart
+  | DOMPart.ElementPart
+  | DOMPart.EventPart
+  | DOMPart.LivePart
+  | DOMPart.PropertyPart
+  | DOMPart.TextPart;
 
 export namespace DOMPart {
-  export interface Attribute<
-    TElement extends globalThis.Element = globalThis.Element,
-  > {
+  export interface AttributePart {
     type: typeof PART_TYPE_ATTRIBUTE;
-    node: TElement;
+    node: Element;
     name: string;
   }
 
-  export interface ChildNode {
+  export interface ChildNodePart {
     type: typeof PART_TYPE_CHILD_NODE;
-    node: globalThis.ChildNode;
+    node: ChildNode;
     sentinelNode: Comment;
-    namespaceURI: string | null;
   }
 
-  export interface Element<
-    TElement extends globalThis.Element = globalThis.Element,
-  > {
+  export interface ElementPart {
     type: typeof PART_TYPE_ELEMENT;
-    node: TElement;
+    node: Element;
   }
 
-  export interface Event<
-    TElement extends globalThis.Element = globalThis.Element,
-  > {
+  export interface EventPart {
     type: typeof PART_TYPE_EVENT;
-    node: TElement;
+    node: Element;
     name: string;
   }
 
-  export interface Live<
-    TElement extends globalThis.Element = globalThis.Element,
-  > {
+  export interface LivePart {
     type: typeof PART_TYPE_LIVE;
-    node: TElement;
+    node: Element;
     name: string;
     defaultValue: unknown;
   }
 
-  export interface Property<
-    TElement extends globalThis.Element = globalThis.Element,
-  > {
+  export interface PropertyPart {
     type: typeof PART_TYPE_PROPERTY;
-    node: TElement;
+    node: Element;
     name: string;
     defaultValue: unknown;
   }
 
-  export interface Text {
+  export interface TextPart {
     type: typeof PART_TYPE_TEXT;
-    node: globalThis.Text;
+    node: Text;
   }
 }
 
-export function getChildNodes(part: DOMPart.ChildNode): ChildNode[] {
+export function getChildNodes(part: DOMPart.ChildNodePart): ChildNode[] {
   const startNode = part.node;
   const endNode = part.sentinelNode;
   const childNodes = [startNode];
@@ -104,18 +89,18 @@ export function getChildNodes(part: DOMPart.ChildNode): ChildNode[] {
 }
 
 export function insertChildNodePart(
-  containerPart: DOMPart.ChildNode,
-  childPart: DOMPart.ChildNode,
-  referencePart: DOMPart.ChildNode | undefined,
+  containerPart: DOMPart.ChildNodePart,
+  childPart: DOMPart.ChildNodePart,
+  referencePart: DOMPart.ChildNodePart | undefined,
 ): void {
   const referenceNode = referencePart?.node ?? containerPart.sentinelNode;
   referenceNode.before(childPart.sentinelNode);
 }
 
 export function moveChildNodePart(
-  containerPart: DOMPart.ChildNode,
-  childPart: DOMPart.ChildNode,
-  referencePart: DOMPart.ChildNode | undefined,
+  containerPart: DOMPart.ChildNodePart,
+  childPart: DOMPart.ChildNodePart,
+  referencePart: DOMPart.ChildNodePart | undefined,
 ): void {
   const childNodes = getChildNodes(childPart);
   const referenceNode = referencePart?.node ?? containerPart.sentinelNode;
@@ -132,10 +117,10 @@ export function moveChildNodePart(
   }
 }
 
-export function createAttributePart<TElement extends Element>(
-  node: TElement,
+export function createAttributePart(
+  node: Element,
   name: string,
-): DOMPart.Attribute<TElement> {
+): DOMPart.AttributePart {
   return {
     type: PART_TYPE_ATTRIBUTE,
     node,
@@ -143,28 +128,25 @@ export function createAttributePart<TElement extends Element>(
   };
 }
 
-export function createChildNodePart(
-  node: Comment,
-  namespaceURI: string | null,
-): DOMPart.ChildNode {
+export function createChildNodePart(node: Comment): DOMPart.ChildNodePart {
   return {
     type: PART_TYPE_CHILD_NODE,
     node,
     sentinelNode: node,
-    namespaceURI,
   };
 }
 
-export function createElementPart<TElement extends Element>(
-  node: TElement,
-): DOMPart.Element<TElement> {
+export function createElementPart(node: Element): DOMPart.ElementPart {
   return {
     type: PART_TYPE_ELEMENT,
     node,
   };
 }
 
-export function createEventPart(node: Element, name: string): DOMPart.Event {
+export function createEventPart(
+  node: Element,
+  name: string,
+): DOMPart.EventPart {
   return {
     type: PART_TYPE_EVENT,
     node,
@@ -172,33 +154,42 @@ export function createEventPart(node: Element, name: string): DOMPart.Event {
   };
 }
 
-export function createLivePart<TElement extends Element>(
-  node: TElement,
-  name: string,
-): DOMPart.Live<TElement> {
+export function createLivePart(node: Element, name: string): DOMPart.LivePart {
   return {
     type: PART_TYPE_LIVE,
     node,
     name,
-    defaultValue: node[name as keyof TElement],
+    defaultValue: (node as any)[name],
   };
 }
 
-export function createPropertyPart<TElement extends Element>(
-  node: TElement,
+export function createPropertyPart(
+  node: Element,
   name: string,
-): DOMPart.Property<TElement> {
+): DOMPart.PropertyPart {
   return {
     type: PART_TYPE_PROPERTY,
     node,
     name,
-    defaultValue: node[name as keyof TElement],
+    defaultValue: (node as any)[name],
   };
 }
 
-export function createTextPart(node: Text): DOMPart.Text {
+export function createTextPart(node: Text): DOMPart.TextPart {
   return {
     type: PART_TYPE_TEXT,
     node,
   };
+}
+
+export function ensurePartType<TPartType extends DOMPart['type']>(
+  expectedPartType: TPartType,
+  directive: Directive.ElementDirective,
+  part: DOMPart,
+): asserts part is DOMPart & { type: TPartType } {
+  if (part.type !== expectedPartType) {
+    throw new Error(
+      `${nameOf(directive.type)} must be used in ${PART_TYPE_NAMES[expectedPartType]}Part.`,
+    );
+  }
 }

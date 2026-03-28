@@ -1,23 +1,23 @@
-import { BOUNDARY_TYPE_ERROR, type Coroutine, type Scope } from './core.js';
-import { formatOwnerStack, getOwnerStack } from './debug.js';
+import { ErrorBoundary, type Scope } from './core.js';
+import { formatOnwerStack, getOwnerStack } from './debug.js';
 
-export class CoroutineError extends Error {
-  readonly coroutine: Coroutine;
+export abstract class RenderError extends Error {
+  readonly scope: Scope;
 
-  constructor(coroutine: Coroutine, message?: string, options?: ErrorOptions) {
+  constructor(scope: Scope, message?: string, options?: ErrorOptions) {
     DEBUG: {
-      message += '\n' + formatOwnerStack(getOwnerStack(coroutine));
+      message += '\n' + formatOnwerStack(getOwnerStack(scope));
     }
     super(message, options);
-    this.coroutine = coroutine;
+    this.scope = scope;
   }
 }
 
-export class AbortError extends CoroutineError {}
+export class AbortError extends RenderError {}
 
-export class InterruptError extends CoroutineError {}
+export class InterruptError extends RenderError {}
 
-export function handleError(error: unknown, scope: Scope): Scope {
+export function handleError(scope: Scope, error: unknown): Scope {
   let currentScope = scope;
   let currentBoundary = currentScope.boundary;
 
@@ -26,7 +26,7 @@ export function handleError(error: unknown, scope: Scope): Scope {
       while (currentBoundary !== null) {
         const boundary = currentBoundary;
         currentBoundary = currentBoundary.next;
-        if (boundary.type === BOUNDARY_TYPE_ERROR) {
+        if (boundary.type === ErrorBoundary) {
           const { handler } = boundary;
           handler(error, handleError);
           return;

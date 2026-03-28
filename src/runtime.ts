@@ -1,141 +1,131 @@
 /// <reference path="../typings/upsert.d.ts" />
 
-import type { HostAdapter } from './adapter.js';
 import { LinkedList } from './collections/linked-list.js';
 import {
-  type CommitPhase,
-  type Coroutine,
-  Directive,
-  type DirectiveType,
-  EffectQueue,
-  type Lanes,
-  Primitive,
-  type RenderFrame,
-  type Scope,
+  type Effect,
+  type EffectPhase,
+  type EffectPhases,
+  getRenderLanes,
+  type HostAdapter,
+  LayoutPhase,
+  MutationPhase,
+  NoLanes,
+  PassivePhase,
   type Session,
-  type SessionContext,
   type SessionEvent,
   type SessionObserver,
-  Template,
-  toDirectiveNode,
-  type UnwrapBindable,
+  type Slot,
+  SyncLane,
   type Update,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
-} from './core.js';
-import {
-  AbortError,
-  CoroutineError,
-  handleError,
-  InterruptError,
-} from './error.js';
-import {
-  getSchedulingLanes,
-  NoLanes,
-  SyncLane,
+  type UpdateScheduler,
+  type UpdateTask,
   ViewTransitionLane,
-} from './lane.js';
-
-export interface RuntimeOptions {
-  uniqueIdentifier?: string;
-  maxCoroutinesPerYield?: number;
-}
+} from './core.js';
+import { InterruptError } from './error.js';
 
 export class Runtime<TPart = unknown, TRenderer = unknown>
-  implements SessionContext<TPart, TRenderer>
+  implements UpdateScheduler<TPart, TRenderer>
 {
   private readonly _adapter: HostAdapter<TPart, TRenderer>;
 
-  private readonly _cachedTemplates: WeakMap<
-    readonly string[],
-    DirectiveType<readonly unknown[]>
-  > = new WeakMap();
-  private readonly _maxCoroutinesPerYield: number;
-
   private readonly _observers: LinkedList<SessionObserver> = new LinkedList();
 
-  private readonly _scheduledUpdates: LinkedList<Update<TPart, TRenderer>> =
+  private readonly _updateQueue: LinkedList<Update<TPart, TRenderer>> =
     new LinkedList();
-
-  private readonly _uniqueIdentifier: string;
-
-  private _identifierCount: number = 0;
 
   private _transitionCount: number = 0;
 
   private _updateCount: number = 0;
 
-  constructor(
-    adapter: HostAdapter<TPart, TRenderer>,
-    {
-      maxCoroutinesPerYield = 64,
-      uniqueIdentifier = generateUniqueIdentifier(8),
-    }: RuntimeOptions = {},
-  ) {
+  constructor(adapter: HostAdapter<TPart, TRenderer>) {
     this._adapter = adapter;
-    this._maxCoroutinesPerYield = maxCoroutinesPerYield;
-    this._uniqueIdentifier = uniqueIdentifier;
   }
 
-  addObserver(observer: SessionObserver): () => void {
-    const observers = this._observers;
-    const node = observers.pushBack(observer);
-    return () => {
-      observers.remove(node);
-    };
+  get adapter(): HostAdapter<TPart, TRenderer> {
+    return this._adapter;
   }
 
-  async flushUpdates(): Promise<void> {
+  get updateQueue(): LinkedList<Update<TPart, TRenderer>> {
+    return this._updateQueue;
+  }
+
+  async flush(): Promise<void> {
     for (
       let update: Update<TPart, TRenderer> | undefined;
-      (update = this._scheduledUpdates.front()?.value) !== undefined;
-      this._scheduledUpdates.popFront()
+      (update = this._updateQueue.front()?.value) !== undefined;
+      this._updateQueue.popFront()
     ) {
-      const { controller, coroutine, id, lanes } = update;
+      const { controller, task, id, lanes } = update;
 
       if (
-        (coroutine.pendingLanes & lanes) === NoLanes ||
-        coroutine.scope.getPendingAncestor(lanes) !== null
+        (task.pendingLanes & lanes) === NoLanes ||
+        task.scope.getPendingAncestor(lanes) !== null
       ) {
         controller.resolve({ status: 'skipped' });
         continue;
       }
 
-      const frame = createRenderFrame<TPart, TRenderer>(id, lanes);
       const session: Session<TPart, TRenderer> = {
-        renderer: this._adapter.requestRenderer(coroutine.scope),
-        frame,
-        scope: coroutine.scope,
-        coroutine,
-        context: this,
+        id,
+        lanes,
+        mutationEffects: [],
+        layoutEffects: [],
+        passiveEffects: [],
+        adapter: this._adapter,
+        renderer: this._adapter.requestRenderer(task.scope),
+        scheduler: this,
       };
+      const phases = this._adapter.getCommitPhases();
 
       try {
-        coroutine.start(session);
+        notifyObservers(this._observers, {
+          type: 'render-start',
+          id,
+          lanes,
+        });
 
         if (lanes & SyncLane) {
-          this._runRenderSync(session);
-          this._runCommitSync(frame);
+          this._runRenderSync(task.start(session), session);
         } else {
-          await this._runRenderAsync(session);
-          await this._runCommitAsync(frame, lanes);
+          await this._runRenderAsync(task.start(session), session);
         }
+
+        notifyObservers(this._observers, {
+          type: 'render-end',
+          id,
+          lanes,
+        });
+
+        notifyObservers(this._observers, {
+          type: 'commit-start',
+          id,
+        });
+
+        if (lanes & SyncLane) {
+          this._runCommitSync(session, phases);
+        } else {
+          await this._runCommitAsync(session, phases);
+        }
+
+        this._completeCommit(session, phases);
 
         controller.resolve({ status: 'done' });
       } catch (error) {
-        resetRenderFrame(frame);
+        session.mutationEffects.length = 0;
+        session.layoutEffects.length = 0;
+        session.passiveEffects.length = 0;
 
-        if (error instanceof CoroutineError) {
-          notifyObservers(this._observers, {
-            type: 'commit-cancel',
-            id,
-            reason: error,
-          });
-        }
+        notifyObservers(this._observers, {
+          type: 'commit-abort',
+          id,
+          reason: error,
+        });
 
         if (error instanceof InterruptError) {
-          controller.resolve({ status: 'canceled', reason: error.cause });
+          controller.resolve({ status: 'aborted', reason: error.cause });
         } else {
           controller.reject(error);
         }
@@ -143,86 +133,44 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     }
   }
 
-  getScheduledUpdates(): Update<TPart, TRenderer>[] {
-    return Array.from(this._scheduledUpdates);
+  nextTransition(): number {
+    return this._transitionCount++;
   }
 
-  nextIdentifier(): string {
-    // The identifier is also valid as a view transition name.
-    return this._uniqueIdentifier + '-' + this._identifierCount++;
+  observe(observer: SessionObserver): () => void {
+    const observers = this._observers;
+    const node = observers.pushBack(observer);
+    return () => {
+      observers.remove(node);
+    };
   }
 
-  resolveDirective<TSource, TBindingPart extends TPart>(
-    source: TSource,
-    part: TBindingPart,
-  ): Directive.Element<UnwrapBindable<TSource>, TBindingPart, TRenderer> {
-    const directive = toDirectiveNode(source);
-    switch (directive.type) {
-      case Primitive: {
-        const { value, key } = directive;
-        const type = this._adapter.resolvePrimitive(value, part);
-        type.ensureValue?.(value, part);
-        return new Directive(type, value, key) as Directive.Element<
-          UnwrapBindable<TSource>,
-          TBindingPart,
-          TRenderer
-        >;
-      }
-      case Template: {
-        const { value, key } = directive;
-        const { strings, exprs, mode } = value;
-        const type = this._cachedTemplates.getOrInsertComputed(strings, () => {
-          return this._adapter.resolveTemplate(
-            strings,
-            exprs,
-            mode,
-            this._uniqueIdentifier,
-          );
-        });
-        return new Directive(type, exprs, key) as Directive.Element<
-          UnwrapBindable<TSource>,
-          TBindingPart,
-          TRenderer
-        >;
-      }
-      default:
-        return directive as Directive.Element<
-          UnwrapBindable<TSource>,
-          TBindingPart,
-          TRenderer
-        >;
-    }
-  }
-
-  scheduleUpdate(
-    coroutine: Coroutine<TPart, TRenderer>,
+  schedule(
+    task: UpdateTask<TPart, TRenderer>,
     options: UpdateOptions = {},
   ): UpdateHandle {
-    const controller = Promise.withResolvers<UpdateResult>();
-
-    // Clone options for mutations.
-    options = { ...options };
     options.priority ??=
       options.transition !== undefined
         ? 'background'
-        : this._adapter.getUpdatePriority();
+        : this._adapter.getTaskPriority();
 
+    const controller = Promise.withResolvers<UpdateResult>();
     const id = this._updateCount++;
-    const lanes = this._adapter.getDefaultLanes() | getSchedulingLanes(options);
+    const lanes = this._adapter.getDefaultLanes() | getRenderLanes(options);
     const callback = (): UpdateResult => {
-      const shouldTriggerFlush =
-        (options.triggerFlush ?? true) && this._scheduledUpdates.isEmpty();
+      const willTriggerFlush =
+        (options.triggerFlush ?? true) && this._updateQueue.isEmpty();
 
-      this._scheduledUpdates.pushBack({
+      this._updateQueue.pushBack({
         id,
         lanes,
-        coroutine,
+        task,
         controller,
       });
 
-      if (shouldTriggerFlush) {
+      if (willTriggerFlush) {
         scheduled.then(() => {
-          this.flushUpdates();
+          this.flush();
         });
       }
 
@@ -240,13 +188,11 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
         .catch((error) => {
           // callback() is guaranteed not to throw anything; rejection here only
           // indicates AbortSignal cancellation.
-          const canceled: UpdateResult = { status: 'canceled', reason: error };
+          const canceled: UpdateResult = { status: 'aborted', reason: error };
           controller.resolve(canceled);
           return canceled;
         });
     }
-
-    coroutine.pendingLanes |= lanes;
 
     return {
       id,
@@ -256,14 +202,38 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     };
   }
 
-  startTransition<T>(action: (transition: number) => T): T {
-    return action(this._transitionCount++);
+  private _completeCommit(
+    session: Session<TPart, TRenderer>,
+    phases: EffectPhases,
+  ): void {
+    const { id, passiveEffects } = session;
+
+    if (phases & PassivePhase && passiveEffects.length > 0) {
+      this._adapter
+        .requestCallback(
+          () => {
+            this._flushEffects(id, passiveEffects, PassivePhase);
+          },
+          { priority: 'background' },
+        )
+        .finally(() => {
+          notifyObservers(this._observers, {
+            type: 'commit-end',
+            id,
+          });
+        });
+    } else {
+      notifyObservers(this._observers, {
+        type: 'commit-end',
+        id,
+      });
+    }
   }
 
   private _flushEffects(
     id: number,
-    effects: EffectQueue,
-    phase: CommitPhase,
+    effects: Effect[],
+    phase: EffectPhase,
   ): void {
     notifyObservers(this._observers, {
       type: 'effect-commit-start',
@@ -272,7 +242,9 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
       effects,
     });
 
-    this._adapter.flushEffects(effects, phase);
+    for (const effect of effects.splice(0)) {
+      effect.commit();
+    }
 
     notifyObservers(this._observers, {
       type: 'effect-commit-end',
@@ -282,255 +254,109 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     });
   }
 
-  private _handleRenderError(
-    id: number,
-    error: unknown,
-    coroutine: Coroutine,
-  ): void {
-    let handlingScope: Scope | null = null;
-
-    try {
-      handlingScope = handleError(error, coroutine.scope);
-    } catch (error) {
-      throw new AbortError(coroutine, 'An error occurred during rendering.', {
-        cause: error,
-      });
-    } finally {
-      notifyObservers(this._observers, {
-        type: 'render-error',
-        id,
-        error,
-        captured: handlingScope !== null,
-      });
-    }
+  private async _runCommitAsync(
+    session: Session<TPart, TRenderer>,
+    phases: EffectPhases,
+  ): Promise<void> {
+    const { id, layoutEffects, mutationEffects } = session;
 
     if (
-      !handlingScope.isChild() ||
-      handlingScope.owner.pendingLanes === NoLanes
+      phases & (MutationPhase | LayoutPhase) &&
+      (mutationEffects.length > 0 || layoutEffects.length > 0)
     ) {
-      throw new InterruptError(
-        coroutine,
-        'An error was captured by an error boundary, but no recovery was scheduled.',
-        { cause: error },
-      );
-    }
-  }
-
-  private async _runCommitAsync(
-    frame: RenderFrame,
-    lanes: Lanes,
-  ): Promise<void> {
-    const { id, layoutEffects, mutationEffects, passiveEffects } = frame;
-
-    notifyObservers(this._observers, {
-      type: 'commit-start',
-      id,
-    });
-
-    try {
-      if (mutationEffects.size > 0 || layoutEffects.size > 0) {
-        const callback = () => {
-          if (mutationEffects.size > 0) {
-            this._flushEffects(id, mutationEffects, 'mutation');
-          }
-
-          if (layoutEffects.size > 0) {
-            this._flushEffects(id, layoutEffects, 'layout');
-          }
-        };
-
-        if (lanes & ViewTransitionLane) {
-          await this._adapter.startViewTransition(callback);
-        } else {
-          await this._adapter.requestCallback(callback, {
-            priority: 'user-blocking',
-          });
+      const callback = () => {
+        if (phases & MutationPhase && mutationEffects.length > 0) {
+          this._flushEffects(id, mutationEffects, MutationPhase);
         }
-      }
 
-      if (passiveEffects.size > 0) {
-        this._adapter.requestCallback(
-          () => {
-            try {
-              this._flushEffects(id, passiveEffects, 'passive');
-            } finally {
-              notifyObservers(this._observers, {
-                type: 'commit-end',
-                id,
-              });
-            }
-          },
-          { priority: 'background' },
-        );
-      }
-    } finally {
-      // Commit Phase ends when effects indicate failure to flush or when no
-      // passive effects were scheduled.
-      if (
-        mutationEffects.size > 0 ||
-        layoutEffects.size > 0 ||
-        passiveEffects.size === 0
-      ) {
-        notifyObservers(this._observers, {
-          type: 'commit-end',
-          id,
+        if (phases & LayoutPhase && layoutEffects.length > 0) {
+          this._flushEffects(id, layoutEffects, LayoutPhase);
+        }
+      };
+
+      if (session.lanes & ViewTransitionLane) {
+        await this._adapter.startViewTransition(callback);
+      } else {
+        await this._adapter.requestCallback(callback, {
+          priority: 'user-blocking',
         });
       }
     }
   }
 
-  private _runCommitSync(frame: RenderFrame): void {
-    const { id, layoutEffects, mutationEffects, passiveEffects } = frame;
+  private _runCommitSync(
+    session: Session<TPart, TRenderer>,
+    phases: EffectPhases,
+  ): void {
+    const { id, layoutEffects, mutationEffects } = session;
 
-    notifyObservers(this._observers, {
-      type: 'commit-start',
-      id,
-    });
+    if (phases & MutationPhase && mutationEffects.length > 0) {
+      this._flushEffects(id, mutationEffects, MutationPhase);
+    }
 
-    try {
-      if (mutationEffects.size > 0) {
-        this._flushEffects(id, mutationEffects, 'mutation');
-      }
-
-      if (layoutEffects.size > 0) {
-        this._flushEffects(id, layoutEffects, 'layout');
-      }
-
-      if (passiveEffects.size > 0) {
-        this._flushEffects(id, passiveEffects, 'passive');
-      }
-    } finally {
-      notifyObservers(this._observers, {
-        type: 'commit-end',
-        id,
-      });
+    if (phases & LayoutPhase && layoutEffects.length > 0) {
+      this._flushEffects(id, layoutEffects, LayoutPhase);
     }
   }
 
   private async _runRenderAsync(
+    renerLoop: Generator<Slot>,
     session: Session<TPart, TRenderer>,
-  ): Promise<void> {
-    const { frame } = session;
-    const { id, lanes, coroutines } = frame;
+    lastLevel: number = 0,
+  ): Promise<number> {
+    const { id } = session;
 
-    notifyObservers(this._observers, {
-      type: 'render-start',
-      id,
-      lanes,
-    });
+    for (const slot of renerLoop) {
+      const currentLevel = slot.scope.level;
 
-    try {
-      while (true) {
-        for (const coroutine of coroutines.splice(
-          0,
-          this._maxCoroutinesPerYield,
-        )) {
-          notifyObservers(this._observers, {
-            type: 'coroutine-start',
-            id,
-            coroutine,
-          });
-
-          try {
-            coroutine.resume(session);
-          } catch (error) {
-            this._handleRenderError(id, error, coroutine);
-          } finally {
-            coroutine.pendingLanes &= ~frame.lanes;
-          }
-
-          notifyObservers(this._observers, {
-            type: 'coroutine-end',
-            id,
-            coroutine,
-          });
-        }
-
-        if (coroutines.length === 0) {
-          break;
-        }
-
+      if (currentLevel < lastLevel) {
         await this._adapter.yieldToMain();
       }
-    } finally {
-      frame.lanes = NoLanes;
 
       notifyObservers(this._observers, {
-        type: 'render-end',
+        type: 'slot-render-start',
         id,
-        lanes,
+        slot,
+      });
+
+      lastLevel = await this._runRenderAsync(
+        slot.render(session),
+        session,
+        currentLevel,
+      );
+
+      notifyObservers(this._observers, {
+        type: 'slot-render-end',
+        id,
+        slot,
+      });
+    }
+
+    return lastLevel;
+  }
+
+  private _runRenderSync(
+    renderLoop: Generator<Slot>,
+    session: Session<TPart, TRenderer>,
+  ): void {
+    const { id } = session;
+
+    for (const slot of renderLoop) {
+      notifyObservers(this._observers, {
+        type: 'slot-render-start',
+        id,
+        slot,
+      });
+
+      this._runRenderSync(slot.render(session), session);
+
+      notifyObservers(this._observers, {
+        type: 'slot-render-end',
+        id,
+        slot,
       });
     }
   }
-
-  private _runRenderSync(session: Session<TPart, TRenderer>): void {
-    const { frame } = session;
-    const { id, lanes, coroutines } = frame;
-
-    notifyObservers(this._observers, {
-      type: 'render-start',
-      id,
-      lanes,
-    });
-
-    try {
-      do {
-        for (const coroutine of coroutines.splice(0)) {
-          notifyObservers(this._observers, {
-            type: 'coroutine-start',
-            id,
-            coroutine,
-          });
-
-          try {
-            coroutine.resume(session);
-          } catch (error) {
-            this._handleRenderError(id, error, coroutine);
-          } finally {
-            coroutine.pendingLanes &= ~frame.lanes;
-          }
-
-          notifyObservers(this._observers, {
-            type: 'coroutine-end',
-            id,
-            coroutine,
-          });
-        }
-      } while (coroutines.length > 0);
-    } finally {
-      frame.lanes = NoLanes;
-
-      notifyObservers(this._observers, {
-        type: 'render-end',
-        id,
-        lanes,
-      });
-    }
-  }
-}
-
-function createRenderFrame<TPart, TRenderer>(
-  id: number,
-  lanes: Lanes,
-): RenderFrame<TPart, TRenderer> {
-  return {
-    id,
-    lanes,
-    coroutines: [],
-    mutationEffects: new EffectQueue(),
-    layoutEffects: new EffectQueue(),
-    passiveEffects: new EffectQueue(),
-  };
-}
-
-function generateUniqueIdentifier(length: number): string {
-  return Array.from(
-    crypto.getRandomValues(new Uint8Array(length)),
-    (byte, i) =>
-      i === 0
-        ? String.fromCharCode(0x61 + (byte % 26))
-        : (byte % 36).toString(36),
-  ).join('');
 }
 
 function notifyObservers(
@@ -540,13 +366,4 @@ function notifyObservers(
   for (let node = observers.front(); node !== null; node = node.next) {
     node.value.onSessionEvent(event);
   }
-}
-
-function resetRenderFrame<TPart, TRenderer>(
-  frame: RenderFrame<TPart, TRenderer>,
-): void {
-  frame.coroutines.length = 0;
-  frame.mutationEffects.clear();
-  frame.layoutEffects.clear();
-  frame.passiveEffects.clear();
 }
