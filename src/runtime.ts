@@ -25,6 +25,7 @@ import {
   ViewTransitionLane,
 } from './core.js';
 import { InterruptError } from './error.js';
+import { getPendingAncestor } from './scope.js';
 
 export class Runtime<TPart = unknown, TRenderer = unknown>
   implements UpdateScheduler<TPart, TRenderer>
@@ -62,7 +63,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
 
       if (
         (task.pendingLanes & lanes) === NoLanes ||
-        task.scope.getPendingAncestor(lanes) !== null
+        getPendingAncestor(task.scope, lanes) !== null
       ) {
         controller.resolve({ status: 'skipped' });
         continue;

@@ -11,6 +11,7 @@ import {
   type Scope,
   type Template,
 } from '../core.js';
+import { isRootScope } from '../scope.js';
 import {
   type DOMPart,
   ensurePartType,
@@ -152,8 +153,8 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
 
   resolveTemplate(
     directive: Directive.TemplateDirective,
-    part: DOMPart,
-  ): DirectiveHandler<Template, DOMPart, DOMRenderer> {
+    part: DOMPart.ChildNodePart,
+  ): DirectiveHandler<Template, DOMPart.ChildNodePart, DOMRenderer> {
     ensurePartType(PART_TYPE_CHILD_NODE, directive, part);
     const template = this._templateCache.getOrInsertComputed(
       directive.type,
@@ -196,7 +197,8 @@ export class ClientAdapter extends DOMAdapter {
 
 export class HydrationAdapter extends DOMAdapter {
   requestRenderer(scope: Scope<DOMPart, DOMRenderer>): DOMRenderer {
-    return scope.isRoot() && !this._container.contains(scope.owner.part.node)
+    return isRootScope(scope) &&
+      !this._container.contains(scope.owner.part.node)
       ? new HydrationRenderer(this._container)
       : new ClientRenderer(this._container);
   }

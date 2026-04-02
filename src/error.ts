@@ -1,5 +1,6 @@
 import { ErrorBoundary, type Scope } from './core.js';
 import { formatOnwerStack, getOwnerStack } from './debug.js';
+import { isChildScope } from './scope.js';
 
 export abstract class RenderError extends Error {
   readonly scope: Scope;
@@ -33,7 +34,7 @@ export function handleError(scope: Scope, error: unknown): Scope {
         }
       }
 
-      if (currentScope.isChild()) {
+      if (isChildScope(currentScope)) {
         currentScope = currentScope.owner.scope;
         currentBoundary = currentScope.boundary;
       } else {

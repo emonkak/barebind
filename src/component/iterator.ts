@@ -3,7 +3,7 @@ import {
   Directive,
   type DirectiveHandler,
   NoLanes,
-  Scope,
+  type Scope,
   type Session,
   Slot,
   type UpdateHandle,
@@ -11,6 +11,7 @@ import {
   type UpdateResult,
   wrap,
 } from '../core.js';
+import { isChildScope, OrphanScope } from '../scope.js';
 
 export interface IteratorComponentOptions<TProps> {
   arePropsEqual?: (newProps: TProps, oldProps: TProps) => boolean;
@@ -97,7 +98,7 @@ export class IteratorComponentHandler<TProps, TReturn, TPart, TRenderer>
     session: Session<TPart, TRenderer>,
   ): void {
     if (this._context !== null) {
-      resetContext(this._context, Scope.orphan, session);
+      resetContext(this._context, OrphanScope, session);
     }
     this._iterator?.return?.();
     this._iterator = null;
@@ -127,13 +128,13 @@ export class IteratorComponentContext<TProps> {
   }
 
   *[Symbol.iterator](): Generator<TProps> {
-    while (this._scope.isChild()) {
+    while (isChildScope(this._scope)) {
       yield this._scope.owner.directive.value as TProps;
     }
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    if (!this._scope.isChild()) {
+    if (!isChildScope(this._scope)) {
       const skipped: Promise<UpdateResult> = Promise.resolve({
         status: 'skipped',
       });

@@ -8,7 +8,7 @@ import {
   type ErrorHandler,
   type Lanes,
   NoLanes,
-  Scope,
+  type Scope,
   type Session,
   SharedContextBoundary,
   Slot,
@@ -18,6 +18,7 @@ import {
   wrap,
 } from '../core.js';
 import { AbortError, handleError } from '../error.js';
+import { getRootScope, isChildScope, OrphanScope } from '../scope.js';
 
 const FinalizerType = 0;
 const PassiveEffectType = 1;
@@ -262,7 +263,7 @@ export class FunctionComponentContext {
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    if (!this._scope.isChild()) {
+    if (!isChildScope(this._scope)) {
       const skipped: Promise<UpdateResult> = Promise.resolve({
         status: 'skipped',
       });
@@ -292,10 +293,10 @@ export class FunctionComponentContext {
   }
 
   getSharedContext<T>(key: unknown): T | undefined {
-    let currentScope: Scope | null = this._scope;
+    let scope: Scope | null = this._scope;
     while (true) {
       for (
-        let boundary = currentScope.boundary;
+        let boundary = scope.boundary;
         boundary !== null;
         boundary = boundary.next
       ) {
@@ -306,10 +307,10 @@ export class FunctionComponentContext {
           return boundary.value as T;
         }
       }
-      if (!currentScope.isChild()) {
+      if (!isChildScope(scope)) {
         break;
       }
-      currentScope = currentScope.owner.scope;
+      scope = scope.owner.scope;
     }
     return undefined;
   }
@@ -377,7 +378,7 @@ export class FunctionComponentContext {
     if (currentHook !== undefined) {
       ensureHookType(IdType, currentHook);
     } else {
-      const root = this._scope.getRoot();
+      const root = getRootScope(this._scope);
       const id =
         root !== null ? root.owner.idPrefix + '-' + root.owner.idSeq++ : '';
       currentHook = {
@@ -705,7 +706,7 @@ function discardContext(
     }
   }
 
-  context._scope = Scope.orphan;
+  context._scope = OrphanScope;
   context._session = session;
   context._hooks = [];
   context._hookIndex = 0;
