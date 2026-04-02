@@ -1,4 +1,4 @@
-import { areDependenciesChanged } from '../compare.js';
+import { areDepsChanged } from '../compare.js';
 import {
   type Component,
   Directive,
@@ -78,8 +78,8 @@ namespace Hook {
       | typeof InsertionEffectType;
     setup: (() => Cleanup | void) | null;
     cleanup: Cleanup | void;
-    pendingDependencies: readonly unknown[] | null;
-    memoizedDependencies: readonly unknown[] | null;
+    pendingDeps: readonly unknown[] | null;
+    currentDeps: readonly unknown[] | null;
   }
 
   export interface IdHook {
@@ -90,7 +90,7 @@ namespace Hook {
   export interface MemoHook<TResult> {
     type: typeof MemoType;
     memoizedResult: TResult;
-    memoizedDependencies: readonly unknown[] | null;
+    memoizedDeps: readonly unknown[] | null;
   }
 
   export interface ReducerHook<TState, TAction> {
@@ -359,16 +359,16 @@ export class FunctionComponentContext {
 
   useCallback<TCallback extends (...args: any[]) => any>(
     callback: TCallback,
-    dependencies: readonly unknown[],
+    deps: readonly unknown[],
   ): TCallback {
-    return this.useMemo(() => callback, dependencies);
+    return this.useMemo(() => callback, deps);
   }
 
   useEffect(
     setup: () => Cleanup | void,
-    dependencies: readonly unknown[] | null = null,
+    deps: readonly unknown[] | null = null,
   ): void {
-    createEffectHook(this, setup, dependencies, PassiveEffectType);
+    createEffectHook(this, setup, deps, PassiveEffectType);
   }
 
   useId(): string {
@@ -394,41 +394,39 @@ export class FunctionComponentContext {
 
   useInsertionEffect(
     setup: () => Cleanup | void,
-    dependencies: readonly unknown[] | null = null,
+    deps: readonly unknown[] | null = null,
   ): void {
-    createEffectHook(this, setup, dependencies, InsertionEffectType);
+    createEffectHook(this, setup, deps, InsertionEffectType);
   }
 
   useLayoutEffect(
     setup: () => Cleanup | void,
-    dependencies: readonly unknown[] | null = null,
+    deps: readonly unknown[] | null = null,
   ): void {
-    createEffectHook(this, setup, dependencies, LayoutEffectType);
+    createEffectHook(this, setup, deps, LayoutEffectType);
   }
 
   useMemo<TResult>(
     computation: () => TResult,
-    dependencies: readonly unknown[],
+    deps: readonly unknown[],
   ): TResult {
     let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType(MemoType, currentHook);
 
-      if (
-        areDependenciesChanged(dependencies, currentHook.memoizedDependencies)
-      ) {
+      if (areDepsChanged(deps, currentHook.memoizedDeps)) {
         currentHook = {
           type: MemoType,
           memoizedResult: computation(),
-          memoizedDependencies: dependencies,
+          memoizedDeps: deps,
         };
       }
     } else {
       currentHook = {
         type: MemoType,
         memoizedResult: computation(),
-        memoizedDependencies: dependencies,
+        memoizedDeps: deps,
       };
     }
 
@@ -562,28 +560,28 @@ function completeContext(
 function createEffectHook(
   context: FunctionComponentContext,
   setup: () => Cleanup | void,
-  dependencies: readonly unknown[] | null,
+  deps: readonly unknown[] | null,
   type: Hook.EffectHook['type'],
 ): void {
   let currentHook = context._hooks[context._hookIndex];
 
   if (currentHook !== undefined) {
     ensureHookType(type, currentHook);
-    const { cleanup, memoizedDependencies } = currentHook;
+    const { cleanup, currentDeps } = currentHook;
     currentHook = {
       type,
       setup,
       cleanup,
-      pendingDependencies: dependencies,
-      memoizedDependencies,
+      pendingDeps: deps,
+      currentDeps,
     };
   } else {
     currentHook = {
       type,
       setup,
       cleanup: undefined,
-      pendingDependencies: dependencies,
-      memoizedDependencies: null,
+      pendingDeps: deps,
+      currentDeps: null,
     };
   }
 
@@ -726,9 +724,7 @@ function enqueueInvokeEffect(
   effects: Effect[],
   scope: Scope,
 ): void {
-  if (
-    areDependenciesChanged(hook.pendingDependencies, hook.memoizedDependencies)
-  ) {
+  if (areDepsChanged(hook.pendingDeps, hook.currentDeps)) {
     effects.push(new InvokeEffect(hook, scope));
   }
 }
