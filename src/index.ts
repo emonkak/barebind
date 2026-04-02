@@ -19,8 +19,8 @@ export {
 } from './dom/adapter.js';
 export {
   createClientRoot,
-  createDOMRoot,
   createHydrationRoot,
+  createRoot,
   type DOMRoot,
   type DOMRootOptions,
 } from './dom/root.js';

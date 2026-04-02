@@ -4,6 +4,7 @@ import {
   type Scope,
   type Session,
   type UpdateHandle,
+  type UpdateScheduler,
   type UpdateTask,
   wrap,
 } from '../core.js';
@@ -25,30 +26,30 @@ export interface DOMRootOptions {
 
 export class DOMRoot {
   private readonly _slot: Slot<DOMPart.ChildNodePart, DOMRenderer>;
-  private readonly _runtime: Runtime<DOMPart, DOMRenderer>;
+  private readonly _scheduler: UpdateScheduler<DOMPart, DOMRenderer>;
 
   constructor(
     slot: Slot<DOMPart.ChildNodePart, DOMRenderer>,
-    runtime: Runtime<DOMPart, DOMRenderer>,
+    scheduler: UpdateScheduler<DOMPart, DOMRenderer>,
   ) {
     this._slot = slot;
-    this._runtime = runtime;
+    this._scheduler = scheduler;
   }
 
   mount(): UpdateHandle {
     const task = new MountTask(
       this._slot,
-      (this._runtime.adapter as DOMAdapter).container,
+      (this._scheduler.adapter as DOMAdapter).container,
     );
-    return this._runtime.schedule(task);
+    return this._scheduler.schedule(task);
   }
 
   unmount(): UpdateHandle {
     const task = new UnmountTask(
       this._slot,
-      (this._runtime.adapter as DOMAdapter).container,
+      (this._scheduler.adapter as DOMAdapter).container,
     );
-    return this._runtime.schedule(task);
+    return this._scheduler.schedule(task);
   }
 }
 
@@ -59,22 +60,7 @@ export function createClientRoot(
 ) {
   const adapter = new ClientAdapter(container, options);
   const runtime = new Runtime<DOMPart, DOMRenderer>(adapter);
-  return createDOMRoot(source, runtime, options);
-}
-
-export function createDOMRoot(
-  source: unknown,
-  runtime: Runtime<DOMPart, DOMRenderer>,
-  options: DOMRootOptions = {},
-): DOMRoot {
-  const part = createChildNodePart(document.createComment(''));
-  const scope = createRootScope({
-    part,
-    idPrefix: options.idPrefix ?? runtime.adapter.getIdentifier(),
-    idSeq: 0,
-  });
-  const slot = new Slot(part, wrap(source), Object.freeze(scope));
-  return new DOMRoot(slot, runtime);
+  return createRoot(source, runtime, options);
 }
 
 export function createHydrationRoot(
@@ -84,7 +70,22 @@ export function createHydrationRoot(
 ): DOMRoot {
   const adapter = new HydrationAdapter(container, options);
   const runtime = new Runtime<DOMPart, DOMRenderer>(adapter);
-  return createDOMRoot(source, runtime, options);
+  return createRoot(source, runtime, options);
+}
+
+export function createRoot(
+  source: unknown,
+  scheduler: UpdateScheduler<DOMPart, DOMRenderer>,
+  options: DOMRootOptions = {},
+): DOMRoot {
+  const part = createChildNodePart(document.createComment(''));
+  const scope = createRootScope({
+    part,
+    idPrefix: options.idPrefix ?? scheduler.adapter.getIdentifier(),
+    idSeq: 0,
+  });
+  const slot = new Slot(part, wrap(source), Object.freeze(scope));
+  return new DOMRoot(slot, scheduler);
 }
 
 class MountTask implements Effect, UpdateTask<DOMPart, DOMRenderer> {
