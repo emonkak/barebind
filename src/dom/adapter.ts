@@ -62,6 +62,10 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
     this._identifier = identifier;
   }
 
+  get container(): Element {
+    return this._container;
+  }
+
   getCommitPhases(): EffectPhases {
     return -1;
   }
