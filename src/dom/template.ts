@@ -398,32 +398,19 @@ function parseChildren(
         const components = (currentNode as Text).data
           .split(marker)
           .map(stripWhitespaces);
+        const normalizedText = components.join('');
+        const tail = components.length - 1;
         let lastComponent = components[0]!;
-        let normalizedText = lastComponent;
 
-        if (components.length > 1) {
-          const tail = components.length - 1;
-
-          for (let i = 1; i < tail; i++) {
-            const component = components[i]!;
-            holes.push({
-              type: TextType,
-              index,
-              leadingSpan: lastComponent.length,
-              trailingSpan: 0,
-            });
-            lastComponent = component;
-            normalizedText += component;
-          }
-
-          const component = components[tail]!;
+        for (let i = 1; i <= tail; i++) {
+          const component = components[i]!;
           holes.push({
             type: TextType,
             index,
             leadingSpan: lastComponent.length,
-            trailingSpan: component.length,
+            trailingSpan: i === tail ? component.length : 0,
           });
-          normalizedText += component;
+          lastComponent = component;
         }
 
         if (normalizedText === '' && components.length === 1) {
