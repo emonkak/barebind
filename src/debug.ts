@@ -1,4 +1,4 @@
-import { Directive, type Scope, type Slot } from './core.js';
+import { Directive, type Scope, type UpdateUnit } from './core.js';
 import { isChildScope } from './scope.js';
 
 export const MAX_ARRAY_LENGTH = 16;
@@ -7,7 +7,7 @@ export const MAX_STRING_LENGTH = 128;
 
 const UNQUOTED_PROPERTY_PATTERN = /^[A-Za-z$_][0-9A-Za-z$_]*$/;
 
-export function formatOnwerStack(ownerStack: Slot[]): string {
+export function formatOnwerStack(ownerStack: UpdateUnit[]): string {
   const tail = ownerStack.length - 1;
   return ownerStack
     .map((owner, i) => {
@@ -98,8 +98,8 @@ export function formatValue(value: unknown, stack: object[] = []): string {
   }
 }
 
-export function getOwnerStack(scope: Scope): Slot[] {
-  const ownerStack: Slot[] = [];
+export function getOwnerStack(scope: Scope): UpdateUnit[] {
+  const ownerStack: UpdateUnit[] = [];
 
   while (isChildScope(scope)) {
     ownerStack.push(scope.owner);

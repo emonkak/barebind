@@ -3,9 +3,9 @@ import {
   type DirectiveHandler,
   type Scope,
   type Session,
-  Slot,
   wrap,
 } from '../core.js';
+import { Slot } from '../slot.js';
 import {
   type DOMPart,
   insertChildNodePart,

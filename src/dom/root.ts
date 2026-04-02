@@ -1,16 +1,15 @@
 import {
-  AllLanes,
   type Effect,
   type Lanes,
   type Scope,
   type Session,
-  Slot,
   type UpdateHandle,
   type UpdateTask,
   wrap,
 } from '../core.js';
 import { Runtime } from '../runtime.js';
 import { createRootScope } from '../scope.js';
+import { Slot } from '../slot.js';
 import {
   ClientAdapter,
   type DOMAdapterOptions,
@@ -115,7 +114,7 @@ class MountTask implements UpdateTask<DOMPart, DOMRenderer> {
   }
 
   get pendingLanes(): Lanes {
-    return AllLanes;
+    return -1;
   }
 
   *start(
@@ -162,7 +161,7 @@ class UnmountTask implements UpdateTask<DOMPart, DOMRenderer> {
   }
 
   get pendingLanes(): Lanes {
-    return AllLanes;
+    return -1;
   }
 
   *start(

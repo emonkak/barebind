@@ -2,16 +2,15 @@ import {
   type Component,
   Directive,
   type DirectiveHandler,
-  NoLanes,
   type Scope,
   type Session,
-  Slot,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
   wrap,
 } from '../core.js';
 import { isChildScope, OrphanScope } from '../scope.js';
+import { Slot } from '../slot.js';
 
 export interface IteratorComponentOptions<TProps> {
   arePropsEqual?: (newProps: TProps, oldProps: TProps) => boolean;
@@ -140,7 +139,7 @@ export class IteratorComponentContext<TProps> {
       });
       return {
         id: -1,
-        lanes: NoLanes,
+        lanes: 0,
         scheduled: skipped,
         finished: skipped,
       };

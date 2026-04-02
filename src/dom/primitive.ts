@@ -4,9 +4,9 @@ import {
   type PrimitiveHandler,
   type Scope,
   type Session,
-  Slot,
   wrap,
 } from '../core.js';
+import { Slot } from '../slot.js';
 import {
   createAttributePart,
   createEventPart,

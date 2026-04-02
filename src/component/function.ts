@@ -7,11 +7,9 @@ import {
   ErrorBoundary,
   type ErrorHandler,
   type Lanes,
-  NoLanes,
   type Scope,
   type Session,
   SharedContextBoundary,
-  Slot,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
@@ -19,6 +17,7 @@ import {
 } from '../core.js';
 import { AbortError, handleError } from '../error.js';
 import { getRootScope, isChildScope, OrphanScope } from '../scope.js';
+import { Slot } from '../slot.js';
 
 const FinalizerType = 0;
 const PassiveEffectType = 1;
@@ -269,7 +268,7 @@ export class FunctionComponentContext {
       });
       return {
         id: -1,
-        lanes: NoLanes,
+        lanes: 0,
         scheduled: skipped,
         finished: skipped,
       };
@@ -608,7 +607,7 @@ function createReducerHook<TState, TAction>(
     let newState = options.passthrough
       ? getInitialState(initialState)
       : memoizedState;
-    let skipLanes = NoLanes;
+    let skipLanes = 0;
 
     memoizedActions.push(...dispatcher.pendingActions);
 
@@ -616,14 +615,14 @@ function createReducerHook<TState, TAction>(
       const { payload, lanes, revertLanes } = action;
       if ((lanes & renderLanes) === lanes) {
         newState = reducer(newState, payload);
-        action.lanes = NoLanes;
+        action.lanes = 0;
       } else if ((revertLanes & renderLanes) === revertLanes) {
         skipLanes |= lanes;
-        action.revertLanes = NoLanes;
+        action.revertLanes = 0;
       }
     }
 
-    if (skipLanes === NoLanes) {
+    if (skipLanes === 0) {
       currentHook = {
         type: ReducerType,
         dispatcher,
@@ -650,7 +649,7 @@ function createReducerHook<TState, TAction>(
             });
             return {
               id: -1,
-              lanes: NoLanes,
+              lanes: 0,
               scheduled: skipped,
               finished: skipped,
             };
@@ -661,7 +660,7 @@ function createReducerHook<TState, TAction>(
         pendingActions.push({
           payload,
           lanes: handle.lanes,
-          revertLanes: options.transient ? handle.lanes : NoLanes,
+          revertLanes: options.transient ? handle.lanes : 0,
         });
         return handle;
       },
