@@ -13,15 +13,15 @@ import type {
 import { ConcurrentLane } from '../lane.js';
 import { isRootScope } from '../scope.js';
 import {
+  AttributeType,
+  ChildNodeType,
   type DOMPart,
+  ElementType,
+  EventType,
   ensurePartType,
-  PART_TYPE_ATTRIBUTE,
-  PART_TYPE_CHILD_NODE,
-  PART_TYPE_ELEMENT,
-  PART_TYPE_EVENT,
-  PART_TYPE_LIVE,
-  PART_TYPE_PROPERTY,
-  PART_TYPE_TEXT,
+  LiveType,
+  PropertyType,
+  TextType,
 } from './part.js';
 import {
   DOMAttributeHandler,
@@ -116,7 +116,7 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
     part: DOMPart,
   ): PrimitiveHandler<unknown, DOMPart, DOMRenderer> {
     switch (part.type) {
-      case PART_TYPE_ATTRIBUTE:
+      case AttributeType:
         switch (part.name) {
           case ':class':
             return new DOMClassHandler();
@@ -127,16 +127,16 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
           default:
             return new DOMAttributeHandler();
         }
-      case PART_TYPE_CHILD_NODE:
-      case PART_TYPE_TEXT:
+      case ChildNodeType:
+      case TextType:
         return new DOMNodeHandler();
-      case PART_TYPE_ELEMENT:
+      case ElementType:
         return new DOMElementHandler();
-      case PART_TYPE_EVENT:
+      case EventType:
         return new DOMEventHandler();
-      case PART_TYPE_LIVE:
+      case LiveType:
         return new DOMLiveHandler();
-      case PART_TYPE_PROPERTY:
+      case PropertyType:
         return new DOMPropertyHandler();
     }
   }
@@ -145,7 +145,7 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
     directive: Directive.RepeatDirective<unknown>,
     part: DOMPart,
   ): DirectiveHandler<Iterable<unknown>, DOMPart, DOMRenderer> {
-    ensurePartType(PART_TYPE_CHILD_NODE, directive, part);
+    ensurePartType(ChildNodeType, directive, part);
     return new DOMRepeatHandler();
   }
 
@@ -155,7 +155,7 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
     directive: Directive.TemplateDirective,
     part: DOMPart.ChildNodePart,
   ): DirectiveHandler<Template, DOMPart.ChildNodePart, DOMRenderer> {
-    ensurePartType(PART_TYPE_CHILD_NODE, directive, part);
+    ensurePartType(ChildNodeType, directive, part);
     const template = this._templateCache.getOrInsertComputed(
       directive.type,
       () =>
