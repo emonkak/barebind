@@ -420,6 +420,7 @@ export function createFunctionComponent<TProps = {}, TReturn = unknown>(
 
   Component.resolveComponent = (
     _directive: Directive.ComponentDirective<TProps>,
+    _part: unknown,
   ): DirectiveHandler<TProps> =>
     new FunctionComponentHandler(componentFn, arePropsEqual);
 

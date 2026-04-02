@@ -168,6 +168,7 @@ export function createIteratorComponent<
 
   Component.resolveComponent = (
     _directive: Directive.ComponentDirective<TProps>,
+    _part: unknown,
   ): DirectiveHandler<TProps> =>
     new IteratorComponentHandler(componentFn, arePropsEqual);
 
