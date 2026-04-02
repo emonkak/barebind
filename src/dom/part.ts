@@ -3,16 +3,6 @@
 import type { Directive } from '../core.js';
 import { nameOf } from '../debug.js';
 
-export const PART_TYPE_NAMES = [
-  'Attribute',
-  'ChildNode',
-  'Element',
-  'Event',
-  'Live',
-  'Property',
-  'Text',
-] as const;
-
 export const AttributeType = 0;
 export const ChildNodeType = 1;
 export const ElementType = 2;
@@ -188,8 +178,29 @@ export function ensurePartType<TPartType extends DOMPart['type']>(
   part: DOMPart,
 ): asserts part is DOMPart & { type: TPartType } {
   if (part.type !== expectedPartType) {
-    throw new Error(
-      `${nameOf(directive.type)} must be used in ${PART_TYPE_NAMES[expectedPartType]}Part.`,
-    );
+    let message = 'The part type mismatches.';
+    DEBUG: {
+      message += ` ${nameOf(directive.type)} must be used in ${getPartName(expectedPartType)}Part.`;
+    }
+    throw new Error(message);
+  }
+}
+
+function getPartName(type: DOMPart['type']): string {
+  switch (type) {
+    case AttributeType:
+      return 'Attribute';
+    case ChildNodeType:
+      return 'ChildNode';
+    case ElementType:
+      return 'Element';
+    case EventType:
+      return 'Event';
+    case LiveType:
+      return 'Live';
+    case PropertyType:
+      return 'Property';
+    case TextType:
+      return 'Text';
   }
 }
