@@ -22,14 +22,14 @@ export function handleError(scope: Scope, error: unknown): Scope {
   let currentScope = scope;
   let currentBoundary = currentScope.boundary;
 
-  const handleError = (error: unknown) => {
+  const forwardError = (error: unknown) => {
     while (true) {
       while (currentBoundary !== null) {
         const boundary = currentBoundary;
         currentBoundary = currentBoundary.next;
         if (boundary.type === ErrorBoundary) {
           const { handler } = boundary;
-          handler(error, handleError);
+          handler.handleError(error, forwardError);
           return;
         }
       }
@@ -43,7 +43,7 @@ export function handleError(scope: Scope, error: unknown): Scope {
     }
   };
 
-  handleError(error);
+  forwardError(error);
 
   return currentScope;
 }

@@ -2,6 +2,7 @@ import {
   type Component,
   Directive,
   type DirectiveHandler,
+  type ErrorHandler,
   type Scope,
   type Session,
   type UpdateHandle,
@@ -26,7 +27,7 @@ interface Action {
 }
 
 export class IteratorComponentHandler<TProps, TReturn, TPart, TRenderer>
-  implements DirectiveHandler<TProps, TPart>
+  implements DirectiveHandler<TProps, TPart>, ErrorHandler
 {
   private readonly _componentFn: IteratorComponent<TProps, TReturn, TPart>;
 
@@ -67,8 +68,9 @@ export class IteratorComponentHandler<TProps, TReturn, TPart, TRenderer>
       this._context = new IteratorComponentContext<TProps>(scope, session);
     }
 
-    this._iterator ??= this._componentFn.call(this._context, props);
+    this._context.addErrorHandler(this);
 
+    this._iterator ??= this._componentFn.call(this._context, props);
     const iteration = this._iterator.next(part);
 
     if (iteration.done) {
@@ -76,7 +78,6 @@ export class IteratorComponentHandler<TProps, TReturn, TPart, TRenderer>
     }
 
     const directive = wrap(iteration.value);
-
     this._slot =
       this._slot?.update(directive, scope) ?? new Slot(part, directive, scope);
 
@@ -110,6 +111,27 @@ export class IteratorComponentHandler<TProps, TReturn, TPart, TRenderer>
 
   revert(_value: TProps, _part: TPart): void {
     this._slot?.revert();
+  }
+
+  handleError(error: unknown, forwardError: (error: unknown) => void): void {
+    if (this._iterator?.throw !== undefined && this._slot !== null) {
+      try {
+        const iteration = this._iterator.throw(error);
+        if (iteration.done) {
+          this._iterator = null;
+        }
+        const slot = this._slot;
+        const context = this._context!;
+        const directive = wrap(iteration.value);
+        slot.update(directive, context._scope as Scope.ChildScope<TPart>);
+        context._session.scheduler.schedule(slot);
+      } catch (error) {
+        this._iterator = null;
+        forwardError(error);
+      }
+    } else {
+      forwardError(error);
+    }
   }
 }
 

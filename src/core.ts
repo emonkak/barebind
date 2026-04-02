@@ -99,10 +99,9 @@ export type EffectPhase =
 
 export type EffectPhases = number;
 
-export type ErrorHandler = (
-  error: unknown,
-  handleError: (error: unknown) => void,
-) => void;
+export interface ErrorHandler {
+  handleError(error: unknown, forwardError: (error: unknown) => void): void;
+}
 
 export interface HostAdapter<TPart, TRenderer> {
   getCommitPhases(): EffectPhases;

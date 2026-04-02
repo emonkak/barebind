@@ -53,7 +53,7 @@ export class ComponentContext {
     this._session = session;
   }
 
-  catchError(handler: ErrorHandler): void {
+  addErrorHandler(handler: ErrorHandler): void {
     this._scope.boundary = {
       type: ErrorBoundary,
       next: this._scope.boundary,
@@ -91,6 +91,18 @@ export class ComponentContext {
     return handle;
   }
 
+  forwardError(error: unknown): void {
+    try {
+      handleError(this._scope, error);
+    } catch (error) {
+      throw new AbortError(
+        this._scope,
+        'No error boundary handled the error.',
+        { cause: error },
+      );
+    }
+  }
+
   getSharedContext<T>(key: unknown): T | undefined {
     let scope: Scope | null = this._scope;
     while (true) {
@@ -114,18 +126,6 @@ export class ComponentContext {
     return undefined;
   }
 
-  throwError(error: unknown): void {
-    try {
-      handleError(this._scope, error);
-    } catch (error) {
-      throw new AbortError(
-        this._scope,
-        'No error boundary captured the error.',
-        { cause: error },
-      );
-    }
-  }
-
   setSharedContext<T>(key: unknown, value: T): void {
     this._scope.boundary = {
       type: SharedContextBoundary,
@@ -140,7 +140,7 @@ export class ComponentContext {
     const result = action(transition);
     if (result instanceof Promise) {
       result.catch((error) => {
-        this.throwError(error);
+        this.forwardError(error);
       });
     }
     return result;
