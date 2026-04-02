@@ -148,7 +148,7 @@ function reconcileDirectives(
   scope: Scope.ChildScope<DOMPart.ChildNodePart, DOMRenderer>,
   session: Session<DOMPart.ChildNodePart, DOMRenderer>,
 ): ReconciliationResult {
-  const oldKeys = slots.map((slot, index) => slot!.directive.key ?? index);
+  const oldKeys = slots.map((slot, index) => slot.directive.key ?? index);
   const oldSlots: (Slot<DOMPart.ChildNodePart> | undefined)[] = slots.slice();
   const newKeys = directives.map((node, index) => node.key ?? index);
   const newMutations: Mutation[] = [];

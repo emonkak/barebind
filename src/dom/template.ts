@@ -293,33 +293,33 @@ function parseAttribtues(
         }
       }
 
-      switch (rawName![0]) {
+      switch (rawName[0]) {
         case '@':
           hole = {
             type: EventType,
             index,
-            name: rawName!.slice(1),
+            name: rawName.slice(1),
           };
           break;
         case '$':
           hole = {
             type: LiveType,
             index,
-            name: rawName!.slice(1),
+            name: rawName.slice(1),
           };
           break;
         case '.':
           hole = {
             type: PropertyType,
             index,
-            name: rawName!.slice(1),
+            name: rawName.slice(1),
           };
           break;
         default:
           hole = {
             type: AttributeType,
             index,
-            name: rawName!,
+            name: rawName,
           };
           break;
       }
