@@ -1,4 +1,8 @@
 export { sequentialEqual, shallowEqual } from './compare.js';
+export type {
+  ComponentContext,
+  Usable,
+} from './component/component.js';
 export {
   createFunctionComponent,
   type FunctionComponent,

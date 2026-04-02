@@ -6,11 +6,11 @@ import {
   type Session,
   type UpdateHandle,
   type UpdateOptions,
-  type UpdateResult,
   wrap,
 } from '../core.js';
 import { isChildScope, OrphanScope } from '../scope.js';
 import { Slot } from '../slot.js';
+import { ComponentContext } from './component.js';
 
 export interface IteratorComponentOptions<TProps> {
   arePropsEqual?: (newProps: TProps, oldProps: TProps) => boolean;
@@ -62,7 +62,7 @@ export class IteratorComponentHandler<TProps, TReturn, TPart, TRenderer>
   ): Iterable<Slot<TPart, TRenderer>> {
     if (this._context !== null) {
       resetContext(this._context, scope, session);
-      applyPendingActions(this._context);
+      flushContext(this._context);
     } else {
       this._context = new IteratorComponentContext<TProps>(scope, session);
     }
@@ -113,53 +113,14 @@ export class IteratorComponentHandler<TProps, TReturn, TPart, TRenderer>
   }
 }
 
-export class IteratorComponentContext<TProps> {
-  /** @internal */
-  _scope: Scope;
-  /** @internal */
-  _session: Session;
+export class IteratorComponentContext<TProps> extends ComponentContext {
   /** @internal */
   readonly _actionQueue: Action[] = [];
-
-  constructor(scope: Scope.ChildScope, session: Session) {
-    this._scope = scope;
-    this._session = session;
-  }
 
   *[Symbol.iterator](): Generator<TProps> {
     while (isChildScope(this._scope)) {
       yield this._scope.owner.directive.value as TProps;
     }
-  }
-
-  forceUpdate(options?: UpdateOptions): UpdateHandle {
-    if (!isChildScope(this._scope)) {
-      const skipped: Promise<UpdateResult> = Promise.resolve({
-        status: 'skipped',
-      });
-      return {
-        id: -1,
-        lanes: 0,
-        scheduled: skipped,
-        finished: skipped,
-      };
-    }
-    if (!Object.isFrozen(this._scope)) {
-      for (const update of this._session.scheduler.updateQueue) {
-        if (update.id === this._session.id) {
-          this._scope.owner.pendingLanes |= update.lanes;
-          return {
-            id: update.id,
-            lanes: update.lanes,
-            scheduled: Promise.resolve({ status: 'done' }),
-            finished: update.controller.promise,
-          };
-        }
-      }
-    }
-    const handle = this._session.scheduler.schedule(this._scope.owner, options);
-    this._scope.owner.pendingLanes |= handle.lanes;
-    return handle;
   }
 
   update(callback: () => void, options?: UpdateOptions): UpdateHandle {
@@ -197,9 +158,7 @@ export function createIteratorComponent<
   return Component;
 }
 
-function applyPendingActions<TProps>(
-  context: IteratorComponentContext<TProps>,
-): void {
+function flushContext<TProps>(context: IteratorComponentContext<TProps>): void {
   for (const { callback } of context._actionQueue.splice(0)) {
     callback();
   }
