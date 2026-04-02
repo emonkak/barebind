@@ -36,6 +36,23 @@ export type FunctionComponent<TProps, TReturn> = (
   props: TProps,
 ) => TReturn;
 
+/**
+ * Represents a class with static [$hook] method. never[] and NoInfer<T> ensure
+ * T is inferred solely from the constructor.
+ */
+export interface HookClass<T> {
+  new (...args: never[]): T;
+  onUse(context: FunctionComponentContext): NoInfer<T>;
+}
+
+export type HookFunction<T> = (context: FunctionComponentContext) => T;
+
+export interface HookObject<T> {
+  onUse(context: FunctionComponentContext): T;
+}
+
+export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;
+
 interface Action<TPayload> {
   payload: TPayload;
   lanes: Lanes;
@@ -101,21 +118,6 @@ namespace Hook {
   }
 }
 
-/**
- * Represents a class with static [$hook] method. never[] and NoInfer<T> ensure
- * T is inferred solely from the constructor.
- */
-interface HookClass<T> {
-  new (...args: never[]): T;
-  onUse(context: FunctionComponentContext): NoInfer<T>;
-}
-
-type HookFunction<T> = (context: FunctionComponentContext) => T;
-
-interface HookObject<T> {
-  onUse(context: FunctionComponentContext): T;
-}
-
 type InitialState<T> = (T extends Function ? never : T) | (() => T);
 
 type NextState<T> = (T extends Function ? never : T) | ((state: T) => T);
@@ -124,27 +126,9 @@ interface RefObject<T> {
   current: T;
 }
 
-type ReducerReturn<TState, TAction> = [
-  state: TState,
-  dispatch: (
-    action: TAction,
-    options?: DispatchOptions<TState>,
-  ) => UpdateHandle,
-];
-
 interface StateOptions {
   passthrough?: boolean;
 }
-
-type StateReturn<TState> = [
-  state: TState,
-  setState: (
-    nextState: NextState<TState>,
-    options?: DispatchOptions<TState>,
-  ) => UpdateHandle,
-];
-
-type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;
 
 export class FunctionComponentHandler<TProps, TReturn, TPart>
   implements DirectiveHandler<TProps, TPart>
@@ -438,7 +422,13 @@ export class FunctionComponentContext {
     reducer: (state: TState, action: TAction) => TState,
     initialState: InitialState<TState>,
     options: StateOptions = {},
-  ): ReducerReturn<TState, TAction> {
+  ): [
+    state: TState,
+    dispatch: (
+      action: TAction,
+      options?: DispatchOptions<TState>,
+    ) => UpdateHandle,
+  ] {
     let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
@@ -535,7 +525,13 @@ export class FunctionComponentContext {
   useState<TState>(
     initialState: InitialState<TState>,
     options?: StateOptions,
-  ): StateReturn<TState> {
+  ): [
+    state: TState,
+    setState: (
+      nextState: NextState<TState>,
+      options?: DispatchOptions<TState>,
+    ) => UpdateHandle,
+  ] {
     return this.useReducer<TState, NextState<TState>>(
       (state, action) =>
         typeof action === 'function'
