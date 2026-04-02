@@ -386,8 +386,7 @@ export class FunctionComponentContext {
       };
     }
 
-    this._hooks[this._hookIndex] = currentHook;
-    this._hookIndex++;
+    this._hooks[this._hookIndex++] = currentHook;
 
     return currentHook.id;
   }
@@ -430,8 +429,7 @@ export class FunctionComponentContext {
       };
     }
 
-    this._hooks[this._hookIndex] = currentHook;
-    this._hookIndex++;
+    this._hooks[this._hookIndex++] = currentHook;
 
     return currentHook.memoizedResult as TResult;
   }
@@ -439,15 +437,95 @@ export class FunctionComponentContext {
   useReducer<TState, TAction>(
     reducer: (state: TState, action: TAction) => TState,
     initialState: InitialState<TState>,
-    options?: StateOptions,
+    options: StateOptions = {},
   ): ReducerReturn<TState, TAction> {
-    const { dispatcher } = createReducerHook(
-      this,
-      reducer,
-      initialState,
-      options,
-    );
-    return [dispatcher.pendingState, dispatcher.dispatch];
+    let currentHook = this._hooks[this._hookIndex];
+
+    if (currentHook !== undefined) {
+      ensureHookType(ReducerType, currentHook);
+
+      const { dispatcher, memoizedState, memoizedActions } = currentHook;
+      const renderLanes = this._session.lanes;
+      let newState = options.passthrough
+        ? getInitialState(initialState)
+        : memoizedState;
+      let skipLanes = 0;
+
+      memoizedActions.push(...dispatcher.pendingActions);
+
+      for (const action of memoizedActions) {
+        const { payload, lanes, revertLanes } = action;
+        if ((lanes & renderLanes) === lanes) {
+          newState = reducer(newState, payload);
+          action.lanes = 0;
+        } else if ((revertLanes & renderLanes) === revertLanes) {
+          skipLanes |= lanes;
+          action.revertLanes = 0;
+        }
+      }
+
+      if (skipLanes === 0) {
+        currentHook = {
+          type: ReducerType,
+          dispatcher,
+          memoizedState: newState,
+          memoizedActions: [],
+        };
+      }
+
+      dispatcher.pendingState = newState;
+      dispatcher.pendingActions = [];
+      dispatcher.reducer = reducer;
+    } else {
+      const context = this;
+      const dispatcher: ActionDispatcher<TState, TAction> = {
+        dispatch(payload, options = {}) {
+          const { pendingActions, pendingState, reducer } = this;
+
+          if (pendingActions.length === 0) {
+            const areStatesEqual = options.areStatesEqual ?? Object.is;
+            const newState = reducer(pendingState, payload);
+
+            if (areStatesEqual(newState, pendingState)) {
+              const skipped = Promise.resolve<UpdateResult>({
+                status: 'skipped',
+              });
+              return {
+                id: -1,
+                lanes: 0,
+                scheduled: skipped,
+                finished: skipped,
+              };
+            }
+          }
+
+          const handle = context.forceUpdate(options);
+          pendingActions.push({
+            payload,
+            lanes: handle.lanes,
+            revertLanes: options.transient ? handle.lanes : 0,
+          });
+          return handle;
+        },
+        pendingActions: [],
+        pendingState: getInitialState(initialState),
+        reducer,
+      };
+      dispatcher.dispatch = dispatcher.dispatch.bind(dispatcher);
+      currentHook = {
+        type: ReducerType,
+        memoizedState: dispatcher.pendingState,
+        memoizedActions: [],
+        dispatcher,
+      };
+    }
+
+    this._hooks[this._hookIndex++] = currentHook;
+
+    return [
+      currentHook.dispatcher.pendingState,
+      currentHook.dispatcher.dispatch,
+    ];
   }
 
   useRef<T>(initialValue: T): RefObject<T> {
@@ -458,8 +536,7 @@ export class FunctionComponentContext {
     initialState: InitialState<TState>,
     options?: StateOptions,
   ): StateReturn<TState> {
-    const { dispatcher } = createReducerHook<TState, NextState<TState>>(
-      this,
+    return this.useReducer<TState, NextState<TState>>(
       (state, action) =>
         typeof action === 'function'
           ? (action as (prevState: TState) => TState)(state)
@@ -467,7 +544,6 @@ export class FunctionComponentContext {
       initialState,
       options,
     );
-    return [dispatcher.pendingState, dispatcher.dispatch];
   }
 }
 
@@ -585,100 +661,7 @@ function createEffectHook(
     };
   }
 
-  context._hooks[context._hookIndex] = currentHook;
-  context._hookIndex++;
-}
-
-function createReducerHook<TState, TAction>(
-  context: FunctionComponentContext,
-  reducer: (state: TState, action: TAction) => TState,
-  initialState: InitialState<TState>,
-  options: StateOptions = {},
-): Hook.ReducerHook<TState, TAction> {
-  let currentHook = context._hooks[context._hookIndex];
-
-  if (currentHook !== undefined) {
-    ensureHookType(ReducerType, currentHook);
-
-    const { dispatcher, memoizedState, memoizedActions } = currentHook;
-    const renderLanes = context._session.lanes;
-    let newState = options.passthrough
-      ? getInitialState(initialState)
-      : memoizedState;
-    let skipLanes = 0;
-
-    memoizedActions.push(...dispatcher.pendingActions);
-
-    for (const action of memoizedActions) {
-      const { payload, lanes, revertLanes } = action;
-      if ((lanes & renderLanes) === lanes) {
-        newState = reducer(newState, payload);
-        action.lanes = 0;
-      } else if ((revertLanes & renderLanes) === revertLanes) {
-        skipLanes |= lanes;
-        action.revertLanes = 0;
-      }
-    }
-
-    if (skipLanes === 0) {
-      currentHook = {
-        type: ReducerType,
-        dispatcher,
-        memoizedState: newState,
-        memoizedActions: [],
-      };
-    }
-
-    dispatcher.pendingState = newState;
-    dispatcher.pendingActions = [];
-    dispatcher.reducer = reducer;
-  } else {
-    const dispatcher: ActionDispatcher<TState, TAction> = {
-      dispatch(payload, options = {}) {
-        const { pendingActions, pendingState, reducer } = this;
-
-        if (pendingActions.length === 0) {
-          const areStatesEqual = options.areStatesEqual ?? Object.is;
-          const newState = reducer(pendingState, payload);
-
-          if (areStatesEqual(newState, pendingState)) {
-            const skipped = Promise.resolve<UpdateResult>({
-              status: 'skipped',
-            });
-            return {
-              id: -1,
-              lanes: 0,
-              scheduled: skipped,
-              finished: skipped,
-            };
-          }
-        }
-
-        const handle = context.forceUpdate(options);
-        pendingActions.push({
-          payload,
-          lanes: handle.lanes,
-          revertLanes: options.transient ? handle.lanes : 0,
-        });
-        return handle;
-      },
-      pendingActions: [],
-      pendingState: getInitialState(initialState),
-      reducer,
-    };
-    dispatcher.dispatch = dispatcher.dispatch.bind(dispatcher);
-    currentHook = {
-      type: ReducerType,
-      memoizedState: dispatcher.pendingState,
-      memoizedActions: [],
-      dispatcher,
-    };
-  }
-
-  context._hooks[context._hookIndex] = currentHook;
-  context._hookIndex++;
-
-  return currentHook;
+  context._hooks[context._hookIndex++] = currentHook;
 }
 
 function discardContext(
