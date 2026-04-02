@@ -123,7 +123,10 @@ export class Slot<TPart = unknown, TRenderer = unknown>
     } else if (typeof type === 'object') {
       this._handler ??= adapter.resolveTemplate(this._directive, this._part);
     } else {
-      this._handler ??= this._directive.type.resolveComponent(this._directive);
+      this._handler ??= this._directive.type.resolveComponent(
+        this._directive,
+        this._part,
+      );
     }
 
     if (this._snapshot !== null && this._handler !== this._snapshot._handler) {

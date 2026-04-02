@@ -32,6 +32,7 @@ export namespace Boundary {
 export interface Component<TProps> {
   resolveComponent(
     directive: Directive.ComponentDirective<TProps>,
+    part: unknown,
   ): DirectiveHandler<TProps>;
   (props: TProps): Directive.ComponentDirective<TProps>;
 }
