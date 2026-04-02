@@ -1,11 +1,11 @@
-export function areDependenciesChanged(
-  nextDependencies: readonly unknown[] | null,
-  prevDependencies: readonly unknown[] | null,
+export function areDepsChanged(
+  nextDeps: readonly unknown[] | null,
+  prevDeps: readonly unknown[] | null,
 ): boolean {
   return (
-    nextDependencies === null ||
-    prevDependencies === null ||
-    !sequentialEqual(nextDependencies, prevDependencies)
+    nextDeps === null ||
+    prevDeps === null ||
+    !sequentialEqual(nextDeps, prevDeps)
   );
 }
 
