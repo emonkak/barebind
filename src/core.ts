@@ -12,6 +12,8 @@ export const PassivePhase /*  */ = 0b100;
 
 export type Boundary = Boundary.ErrorBoundary | Boundary.SharedContextBoundary;
 
+export const toDirective: unique symbol = Symbol('Directive.toDirective');
+
 export namespace Boundary {
   export interface ErrorBoundary {
     type: typeof ErrorBoundary;
@@ -32,6 +34,10 @@ export interface Component<TProps> {
     directive: Directive.ComponentDirective<TProps>,
   ): DirectiveHandler<TProps>;
   (props: TProps): Directive.ComponentDirective<TProps>;
+}
+
+export interface Directable {
+  [toDirective](): Directive.ElementDirective;
 }
 
 export namespace Directive {
@@ -232,7 +238,7 @@ export interface Template {
 
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
-export class Directive<TType, TValue> {
+export class Directive<TType, TValue> implements Directable {
   readonly type: TType;
   readonly value: TValue;
   readonly key: unknown;
@@ -243,17 +249,25 @@ export class Directive<TType, TValue> {
     this.key = key;
   }
 
+  [toDirective](this: Directive.ElementDirective): Directive.ElementDirective {
+    return this;
+  }
+
   withKey(key: unknown): Directive<TType, TValue> {
     return new Directive(this.type, this.value, key);
   }
 }
 
 export function wrap(value: unknown): Directive.ElementDirective {
-  return value instanceof Directive
-    ? value
+  return isDirectable(value)
+    ? value[toDirective]()
     : typeof value === 'object' && isIterable(value)
       ? new Directive(Repeat, value)
       : new Directive(Primitive, value);
+}
+
+function isDirectable(value: any): value is Directable {
+  return typeof value?.[toDirective] === 'function';
 }
 
 function isIterable(value: any): value is Iterable<unknown> {
