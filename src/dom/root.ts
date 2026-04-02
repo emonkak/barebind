@@ -2,7 +2,7 @@ import {
   AllLanes,
   type Effect,
   type Lanes,
-  Scope,
+  type Scope,
   type Session,
   Slot,
   type UpdateHandle,
@@ -10,6 +10,7 @@ import {
   wrap,
 } from '../core.js';
 import { Runtime } from '../runtime.js';
+import { createRootScope } from '../scope.js';
 import {
   ClientAdapter,
   type DOMAdapterOptions,
@@ -61,7 +62,7 @@ export function createDOMRoot(
   options: DOMRootOptions = {},
 ): DOMRoot {
   const part = createChildNodePart(document.createComment(''));
-  const scope = Scope.root({
+  const scope = createRootScope({
     part,
     idPrefix: options.idPrefix ?? runtime.adapter.getIdentifier(),
     idSeq: 0,

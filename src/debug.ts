@@ -1,4 +1,5 @@
 import { Directive, type Scope, type Slot } from './core.js';
+import { isChildScope } from './scope.js';
 
 export const MAX_ARRAY_LENGTH = 16;
 export const MAX_OBJECT_DEPTH = 3;
@@ -100,7 +101,7 @@ export function formatValue(value: unknown, stack: object[] = []): string {
 export function getOwnerStack(scope: Scope): Slot[] {
   const ownerStack: Slot[] = [];
 
-  while (scope.isChild()) {
+  while (isChildScope(scope)) {
     ownerStack.push(scope.owner);
     scope = scope.owner.scope;
   }

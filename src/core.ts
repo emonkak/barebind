@@ -2,6 +2,7 @@
 
 import type { LinkedList } from './collections/linked-list.js';
 import { AbortError, handleError, InterruptError } from './error.js';
+import { containsScope, createChildScope, OrphanScope } from './scope.js';
 
 export const ErrorBoundary = 0;
 export const SharedContextBoundary = 1;
@@ -200,26 +201,28 @@ export interface UpdateTask<TPart = unknown, TRenderer = unknown> {
   start(session: Session<TPart, TRenderer>): Generator<Slot>;
 }
 
+export type Scope<TPart = unknown, TRenderer = unknown> =
+  | Scope.ChildScope<TPart, TRenderer>
+  | Scope.OrphanScope
+  | Scope.RootScope<TPart>;
+
 export namespace Scope {
-  export type ChildScope<TPart = unknown, TRenderer = unknown> = Scope<
-    TPart,
-    TRenderer
-  > & {
+  export type ChildScope<TPart = unknown, TRenderer = unknown> = {
     owner: Slot<TPart, TRenderer>;
+    level: number;
+    boundary: Boundary | null;
   };
 
-  export type RootScope<TPart = unknown, TRenderer = unknown> = Scope<
-    TPart,
-    TRenderer
-  > & {
+  export type RootScope<TPart = unknown> = {
     owner: Root<TPart>;
+    level: 0;
+    boundary: Boundary | null;
   };
 
-  export type OrphanScope<TPart = unknown, TRenderer = unknown> = Scope<
-    TPart,
-    TRenderer
-  > & {
+  export type OrphanScope = {
     owner: null;
+    level: 0;
+    boundary: null;
   };
 }
 
@@ -292,80 +295,6 @@ export class Directive<TType, TValue> {
 
   withKey(key: unknown): Directive<TType, TValue> {
     return new Directive(this.type, this.value, key);
-  }
-}
-
-export class Scope<TPart = unknown, TRenderer = unknown> {
-  readonly owner: TPart | Slot<TPart, TRenderer> | null;
-  readonly level: number;
-  boundary: Boundary | null = null;
-
-  static readonly orphan: Scope.OrphanScope<any, any> = Object.freeze(
-    new Scope(null, 0),
-  ) as Scope.OrphanScope<any, any>;
-
-  static root<TPart, TRenderer>(
-    root: Root<TPart>,
-  ): Scope.RootScope<TPart, TRenderer> {
-    return new Scope(root, 0) as Scope.RootScope<TPart, TRenderer>;
-  }
-
-  static child<TPart, TRenderer>(
-    owner: Slot<TPart, TRenderer>,
-  ): Scope.ChildScope<TPart, TRenderer> {
-    return new Scope(owner, owner.scope.level + 1) as Scope.ChildScope<
-      TPart,
-      TRenderer
-    >;
-  }
-
-  private constructor(
-    owner: TPart | Slot<TPart, TRenderer> | null,
-    level: number,
-  ) {
-    this.owner = owner;
-    this.level = level;
-  }
-
-  contains(scope: Scope): boolean {
-    while (scope.level <= this.level) {
-      if (scope === this) {
-        return true;
-      }
-      if (!scope.isChild()) {
-        break;
-      }
-      scope = scope.owner.scope;
-    }
-    return false;
-  }
-
-  getPendingAncestor(lanes: Lanes): Scope.ChildScope<TPart, TRenderer> | null {
-    let scope: Scope<TPart, TRenderer> | undefined = this;
-    while (scope.isChild()) {
-      const owner = scope.owner as Slot<TPart, TRenderer>;
-      if ((owner.pendingLanes & lanes) === lanes) {
-        return scope;
-      }
-      scope = owner.scope;
-    }
-    return null;
-  }
-
-  getRoot(): Scope.RootScope<TPart, TRenderer> | null {
-    let scope: Scope<TPart, TRenderer> = this;
-    while (scope.isChild()) {
-      scope = scope.owner.scope;
-    }
-    return scope.isRoot() ? scope : null;
-  }
-
-  isChild(): this is Scope.ChildScope<TPart, TRenderer> {
-    return this.level > 0;
-  }
-
-  isRoot(): this is Scope.RootScope<TPart, TRenderer> {
-    return this.level === 0 && this !== Scope.orphan;
   }
 }
 
@@ -481,7 +410,7 @@ export class Slot<TPart = unknown, TRenderer = unknown>
     }
 
     while (true) {
-      const scope = Scope.child(this);
+      const scope = createChildScope(this);
       let childSlots: Iterable<Slot>;
 
       this._pendingLanes &= ~session.lanes;
@@ -535,7 +464,7 @@ export class Slot<TPart = unknown, TRenderer = unknown>
       this._scope,
       session,
     );
-    this._scope = Scope.orphan;
+    this._scope = OrphanScope;
     this._status = StaleStatus;
   }
 
@@ -621,7 +550,7 @@ export function getTranstionIndex(lanes: Lanes): number {
 
 function invalidateEffects(effects: Effect[], scope: Scope): void {
   const index = effects.findLastIndex(
-    (effect) => !scope.contains(effect.scope),
+    (effect) => !containsScope(scope, effect.scope),
   );
   effects.splice(index + 1);
 }
