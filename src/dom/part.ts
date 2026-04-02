@@ -13,13 +13,13 @@ export const PART_TYPE_NAMES = [
   'Text',
 ] as const;
 
-export const PART_TYPE_ATTRIBUTE = 0;
-export const PART_TYPE_CHILD_NODE = 1;
-export const PART_TYPE_ELEMENT = 2;
-export const PART_TYPE_EVENT = 3;
-export const PART_TYPE_LIVE = 4;
-export const PART_TYPE_PROPERTY = 5;
-export const PART_TYPE_TEXT = 6;
+export const AttributeType = 0;
+export const ChildNodeType = 1;
+export const ElementType = 2;
+export const EventType = 3;
+export const LiveType = 4;
+export const PropertyType = 5;
+export const TextType = 6;
 
 export type DOMPart =
   | DOMPart.AttributePart
@@ -32,44 +32,44 @@ export type DOMPart =
 
 export namespace DOMPart {
   export interface AttributePart {
-    type: typeof PART_TYPE_ATTRIBUTE;
+    type: typeof AttributeType;
     node: Element;
     name: string;
   }
 
   export interface ChildNodePart {
-    type: typeof PART_TYPE_CHILD_NODE;
+    type: typeof ChildNodeType;
     node: ChildNode;
     sentinelNode: Comment;
   }
 
   export interface ElementPart {
-    type: typeof PART_TYPE_ELEMENT;
+    type: typeof ElementType;
     node: Element;
   }
 
   export interface EventPart {
-    type: typeof PART_TYPE_EVENT;
+    type: typeof EventType;
     node: Element;
     name: string;
   }
 
   export interface LivePart {
-    type: typeof PART_TYPE_LIVE;
+    type: typeof LiveType;
     node: Element;
     name: string;
     defaultValue: unknown;
   }
 
   export interface PropertyPart {
-    type: typeof PART_TYPE_PROPERTY;
+    type: typeof PropertyType;
     node: Element;
     name: string;
     defaultValue: unknown;
   }
 
   export interface TextPart {
-    type: typeof PART_TYPE_TEXT;
+    type: typeof TextType;
     node: Text;
   }
 }
@@ -122,7 +122,7 @@ export function createAttributePart(
   name: string,
 ): DOMPart.AttributePart {
   return {
-    type: PART_TYPE_ATTRIBUTE,
+    type: AttributeType,
     node,
     name,
   };
@@ -130,7 +130,7 @@ export function createAttributePart(
 
 export function createChildNodePart(node: Comment): DOMPart.ChildNodePart {
   return {
-    type: PART_TYPE_CHILD_NODE,
+    type: ChildNodeType,
     node,
     sentinelNode: node,
   };
@@ -138,7 +138,7 @@ export function createChildNodePart(node: Comment): DOMPart.ChildNodePart {
 
 export function createElementPart(node: Element): DOMPart.ElementPart {
   return {
-    type: PART_TYPE_ELEMENT,
+    type: ElementType,
     node,
   };
 }
@@ -148,7 +148,7 @@ export function createEventPart(
   name: string,
 ): DOMPart.EventPart {
   return {
-    type: PART_TYPE_EVENT,
+    type: EventType,
     node,
     name,
   };
@@ -156,7 +156,7 @@ export function createEventPart(
 
 export function createLivePart(node: Element, name: string): DOMPart.LivePart {
   return {
-    type: PART_TYPE_LIVE,
+    type: LiveType,
     node,
     name,
     defaultValue: (node as any)[name],
@@ -168,7 +168,7 @@ export function createPropertyPart(
   name: string,
 ): DOMPart.PropertyPart {
   return {
-    type: PART_TYPE_PROPERTY,
+    type: PropertyType,
     node,
     name,
     defaultValue: (node as any)[name],
@@ -177,7 +177,7 @@ export function createPropertyPart(
 
 export function createTextPart(node: Text): DOMPart.TextPart {
   return {
-    type: PART_TYPE_TEXT,
+    type: TextType,
     node,
   };
 }

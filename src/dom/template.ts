@@ -8,14 +8,14 @@ import {
 } from '../core.js';
 import type { Slot } from '../slot.js';
 import {
+  AttributeType,
+  ChildNodeType,
   type DOMPart,
-  PART_TYPE_ATTRIBUTE,
-  PART_TYPE_CHILD_NODE,
-  PART_TYPE_ELEMENT,
-  PART_TYPE_EVENT,
-  PART_TYPE_LIVE,
-  PART_TYPE_PROPERTY,
-  PART_TYPE_TEXT,
+  ElementType,
+  EventType,
+  LiveType,
+  PropertyType,
+  TextType,
 } from './part.js';
 
 const PLACEHOLDER_PATTERN = /^[0-9a-z_-]+$/;
@@ -44,41 +44,41 @@ export type DOMHole =
 
 export namespace DOMHole {
   export interface AttributeHole {
-    type: typeof PART_TYPE_ATTRIBUTE;
+    type: typeof AttributeType;
     index: number;
     name: string;
   }
 
   export interface ChildNodeHole {
-    type: typeof PART_TYPE_CHILD_NODE;
+    type: typeof ChildNodeType;
     index: number;
   }
 
   export interface ElementHole {
-    type: typeof PART_TYPE_ELEMENT;
+    type: typeof ElementType;
     index: number;
   }
 
   export interface EventHole {
-    type: typeof PART_TYPE_EVENT;
+    type: typeof EventType;
     index: number;
     name: string;
   }
 
   export interface LiveHole {
-    type: typeof PART_TYPE_LIVE;
+    type: typeof LiveType;
     index: number;
     name: string;
   }
 
   export interface PropertyHole {
-    type: typeof PART_TYPE_PROPERTY;
+    type: typeof PropertyType;
     index: number;
     name: string;
   }
 
   export interface TextHole {
-    type: typeof PART_TYPE_TEXT;
+    type: typeof TextType;
     index: number;
     leadingSpan: number;
     trailingSpan: number;
@@ -216,8 +216,7 @@ export class DOMTemplateHandler
   revert(_template: Template, part: DOMPart.ChildNodePart): void {
     for (const slot of this._slots) {
       if (
-        (slot.part.type === PART_TYPE_CHILD_NODE ||
-          slot.part.type === PART_TYPE_TEXT) &&
+        (slot.part.type === ChildNodeType || slot.part.type === TextType) &&
         this._childNodes.includes(getEndNode(slot.part))
       ) {
         // This slot is mounted as a child of the root, so we must revert it.
@@ -252,7 +251,7 @@ function extractRawAttributeName(span: string): string | undefined {
 }
 
 function getEndNode(part: DOMPart): ChildNode {
-  return part.type === PART_TYPE_CHILD_NODE ? part.sentinelNode : part.node;
+  return part.type === ChildNodeType ? part.sentinelNode : part.node;
 }
 
 function getStartNode(
@@ -280,7 +279,7 @@ function parseAttribtues(
 
     if (attribute.name === marker && attribute.value === '') {
       hole = {
-        type: PART_TYPE_ELEMENT,
+        type: ElementType,
         index,
       };
     } else if (attribute.value === marker) {
@@ -297,28 +296,28 @@ function parseAttribtues(
       switch (rawName![0]) {
         case '@':
           hole = {
-            type: PART_TYPE_EVENT,
+            type: EventType,
             index,
             name: rawName!.slice(1),
           };
           break;
         case '$':
           hole = {
-            type: PART_TYPE_LIVE,
+            type: LiveType,
             index,
             name: rawName!.slice(1),
           };
           break;
         case '.':
           hole = {
-            type: PART_TYPE_PROPERTY,
+            type: PropertyType,
             index,
             name: rawName!.slice(1),
           };
           break;
         default:
           hole = {
-            type: PART_TYPE_ATTRIBUTE,
+            type: AttributeType,
             index,
             name: rawName!,
           };
@@ -380,7 +379,7 @@ function parseChildren(
           stripTrailingSlash((currentNode as Comment).data).trim() === marker
         ) {
           holes.push({
-            type: PART_TYPE_CHILD_NODE,
+            type: ChildNodeType,
             index,
           });
           (currentNode as Comment).data = '';
@@ -408,7 +407,7 @@ function parseChildren(
           for (let i = 1; i < tail; i++) {
             const component = components[i]!;
             holes.push({
-              type: PART_TYPE_TEXT,
+              type: TextType,
               index,
               leadingSpan: lastComponent.length,
               trailingSpan: 0,
@@ -419,7 +418,7 @@ function parseChildren(
 
           const component = components[tail]!;
           holes.push({
-            type: PART_TYPE_TEXT,
+            type: TextType,
             index,
             leadingSpan: lastComponent.length,
             trailingSpan: component.length,

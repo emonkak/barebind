@@ -1,6 +1,8 @@
 import { type Scope, wrap } from '../core.js';
 import { Slot } from '../slot.js';
 import {
+  AttributeType,
+  ChildNodeType,
   createAttributePart,
   createChildNodePart,
   createElementPart,
@@ -9,13 +11,11 @@ import {
   createPropertyPart,
   createTextPart,
   type DOMPart,
-  PART_TYPE_ATTRIBUTE,
-  PART_TYPE_CHILD_NODE,
-  PART_TYPE_ELEMENT,
-  PART_TYPE_EVENT,
-  PART_TYPE_LIVE,
-  PART_TYPE_PROPERTY,
-  PART_TYPE_TEXT,
+  ElementType,
+  EventType,
+  LiveType,
+  PropertyType,
+  TextType,
 } from './part.js';
 import {
   createTreeWalker,
@@ -116,9 +116,9 @@ function hydrateTemplate(
       }
 
       let part: DOMPart;
-      if (hole.type === PART_TYPE_TEXT) {
+      if (hole.type === TextType) {
         part = hydrateTextPart(targetWalker, hole, hydratedNodes);
-      } else if (hole.type === PART_TYPE_CHILD_NODE) {
+      } else if (hole.type === ChildNodeType) {
         part = createChildNodePart(popNode(COMMENT_NODE, targetWalker));
         hydratedNodes.push(part.node);
       } else {
@@ -129,19 +129,19 @@ function hydrateTemplate(
         }
         const currentNode = targetWalker.currentNode as Element;
         switch (hole.type) {
-          case PART_TYPE_ATTRIBUTE:
+          case AttributeType:
             part = createAttributePart(currentNode, hole.name);
             break;
-          case PART_TYPE_EVENT:
+          case EventType:
             part = createEventPart(currentNode, hole.name);
             break;
-          case PART_TYPE_ELEMENT:
+          case ElementType:
             part = createElementPart(currentNode);
             break;
-          case PART_TYPE_LIVE:
+          case LiveType:
             part = createLivePart(currentNode, hole.name);
             break;
-          case PART_TYPE_PROPERTY:
+          case PropertyType:
             part = createPropertyPart(currentNode, hole.name);
             break;
         }
@@ -221,25 +221,25 @@ function renderTemplate(
       let part: DOMPart;
 
       switch (hole.type) {
-        case PART_TYPE_ATTRIBUTE:
+        case AttributeType:
           part = createAttributePart(currentNode as Element, hole.name);
           break;
-        case PART_TYPE_EVENT:
+        case EventType:
           part = createEventPart(currentNode as Element, hole.name);
           break;
-        case PART_TYPE_CHILD_NODE:
+        case ChildNodeType:
           part = createChildNodePart(currentNode as Comment);
           break;
-        case PART_TYPE_ELEMENT:
+        case ElementType:
           part = createElementPart(currentNode as Element);
           break;
-        case PART_TYPE_LIVE:
+        case LiveType:
           part = createLivePart(currentNode as Element, hole.name);
           break;
-        case PART_TYPE_PROPERTY:
+        case PropertyType:
           part = createPropertyPart(currentNode as Element, hole.name);
           break;
-        case PART_TYPE_TEXT:
+        case TextType:
           part = splitTextPart(templateWalker, hole);
           break;
       }
