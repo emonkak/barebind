@@ -4,20 +4,17 @@ import {
   Directive,
   type DirectiveHandler,
   type Effect,
-  ErrorBoundary,
-  type ErrorHandler,
   type Lanes,
   type Scope,
   type Session,
-  SharedContextBoundary,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
   wrap,
 } from '../core.js';
-import { AbortError, handleError } from '../error.js';
-import { getRootScope, isChildScope, OrphanScope } from '../scope.js';
+import { getRootScope, OrphanScope } from '../scope.js';
 import { Slot } from '../slot.js';
+import { ComponentContext } from './component.js';
 
 const FinalizerType = 0;
 const PassiveEffectType = 1;
@@ -35,23 +32,6 @@ export type FunctionComponent<TProps, TReturn> = (
   this: FunctionComponentContext,
   props: TProps,
 ) => TReturn;
-
-/**
- * Represents a class with static [$hook] method. never[] and NoInfer<T> ensure
- * T is inferred solely from the constructor.
- */
-export interface HookClass<T> {
-  new (...args: never[]): T;
-  onUse(context: FunctionComponentContext): NoInfer<T>;
-}
-
-export type HookFunction<T> = (context: FunctionComponentContext) => T;
-
-export interface HookObject<T> {
-  onUse(context: FunctionComponentContext): T;
-}
-
-export type Usable<T> = HookClass<T> | HookObject<T> | HookFunction<T>;
 
 interface Action<TPayload> {
   payload: TPayload;
@@ -222,124 +202,11 @@ export class FunctionComponentHandler<TProps, TReturn, TPart>
   }
 }
 
-export class FunctionComponentContext {
-  /** @internal */
-  _scope: Scope;
-  /** @internal */
-  _session: Session;
+export class FunctionComponentContext extends ComponentContext {
   /** @internal */
   _hooks: Hook[] = [];
   /** @internal */
   _hookIndex = 0;
-
-  constructor(scope: Scope, session: Session) {
-    this._scope = scope;
-    this._session = session;
-  }
-
-  catchError(handler: ErrorHandler): void {
-    this._scope.boundary = {
-      type: ErrorBoundary,
-      next: this._scope.boundary,
-      handler,
-    };
-  }
-
-  forceUpdate(options?: UpdateOptions): UpdateHandle {
-    if (!isChildScope(this._scope)) {
-      const skipped: Promise<UpdateResult> = Promise.resolve({
-        status: 'skipped',
-      });
-      return {
-        id: -1,
-        lanes: 0,
-        scheduled: skipped,
-        finished: skipped,
-      };
-    }
-    if (!Object.isFrozen(this._scope)) {
-      for (const update of this._session.scheduler.updateQueue) {
-        if (update.id === this._session.id) {
-          this._scope.owner.pendingLanes |= update.lanes;
-          return {
-            id: update.id,
-            lanes: update.lanes,
-            scheduled: Promise.resolve({ status: 'done' }),
-            finished: update.controller.promise,
-          };
-        }
-      }
-    }
-    const handle = this._session.scheduler.schedule(this._scope.owner, options);
-    this._scope.owner.pendingLanes |= handle.lanes;
-    return handle;
-  }
-
-  getSharedContext<T>(key: unknown): T | undefined {
-    let scope: Scope | null = this._scope;
-    while (true) {
-      for (
-        let boundary = scope.boundary;
-        boundary !== null;
-        boundary = boundary.next
-      ) {
-        if (
-          boundary.type === SharedContextBoundary &&
-          Object.is(boundary.key, key)
-        ) {
-          return boundary.value as T;
-        }
-      }
-      if (!isChildScope(scope)) {
-        break;
-      }
-      scope = scope.owner.scope;
-    }
-    return undefined;
-  }
-
-  throwError(error: unknown): void {
-    try {
-      handleError(this._scope, error);
-    } catch (error) {
-      throw new AbortError(
-        this._scope,
-        'No error boundary captured the error.',
-        { cause: error },
-      );
-    }
-  }
-
-  setSharedContext<T>(key: unknown, value: T): void {
-    this._scope.boundary = {
-      type: SharedContextBoundary,
-      next: this._scope.boundary,
-      key,
-      value,
-    };
-  }
-
-  startTransition<T>(action: (transition: number) => T): T {
-    const transition = this._session.scheduler.nextTransition();
-    const result = action(transition);
-    if (result instanceof Promise) {
-      result.catch((error) => {
-        this.throwError(error);
-      });
-    }
-    return result;
-  }
-
-  use<T>(usable: HookClass<T>): T;
-  use<T>(usable: HookObject<T>): T;
-  use<T>(usable: HookFunction<T>): T;
-  use<T>(usable: Usable<T>): T {
-    if ('onUse' in usable) {
-      return usable.onUse(this);
-    } else {
-      return usable(this);
-    }
-  }
 
   useCallback<TCallback extends (...args: any[]) => any>(
     callback: TCallback,
