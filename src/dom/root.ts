@@ -12,6 +12,7 @@ import { createRootScope } from '../scope.js';
 import { Slot } from '../slot.js';
 import {
   ClientAdapter,
+  type DOMAdapter,
   type DOMAdapterOptions,
   HydrationAdapter,
 } from './adapter.js';
@@ -35,12 +36,18 @@ export class DOMRoot {
   }
 
   mount(): UpdateHandle {
-    const task = new MountTask(this._slot);
+    const task = new MountTask(
+      this._slot,
+      (this._runtime.adapter as DOMAdapter).container,
+    );
     return this._runtime.schedule(task);
   }
 
   unmount(): UpdateHandle {
-    const task = new UnmountTask(this._slot);
+    const task = new UnmountTask(
+      this._slot,
+      (this._runtime.adapter as DOMAdapter).container,
+    );
     return this._runtime.schedule(task);
   }
 }
@@ -80,33 +87,16 @@ export function createHydrationRoot(
   return createDOMRoot(source, runtime, options);
 }
 
-class MountSlot implements Effect {
-  private _container: Element;
+class MountTask implements Effect, UpdateTask<DOMPart, DOMRenderer> {
   private _slot: Slot<DOMPart.ChildNodePart, DOMRenderer>;
+  private _container: Element;
 
   constructor(
-    container: Element,
     slot: Slot<DOMPart.ChildNodePart, DOMRenderer>,
+    container: Element,
   ) {
+    this._slot = slot;
     this._container = container;
-    this._slot = slot;
-  }
-
-  get scope(): Scope<DOMPart.ChildNodePart, DOMRenderer> {
-    return this._slot.scope;
-  }
-
-  commit(): void {
-    this._container.appendChild(this._slot.part.sentinelNode);
-    this._slot.commit();
-  }
-}
-
-class MountTask implements UpdateTask<DOMPart, DOMRenderer> {
-  private _slot: Slot<DOMPart.ChildNodePart, DOMRenderer>;
-
-  constructor(slot: Slot<DOMPart.ChildNodePart, DOMRenderer>) {
-    this._slot = slot;
   }
 
   get scope(): Scope<DOMPart.ChildNodePart, DOMRenderer> {
@@ -121,39 +111,25 @@ class MountTask implements UpdateTask<DOMPart, DOMRenderer> {
     session: Session<DOMPart.ChildNodePart, DOMRenderer>,
   ): Generator<Slot> {
     yield this._slot;
-    session.mutationEffects.push(
-      new MountSlot(session.renderer.container, this._slot),
-    );
-  }
-}
-
-class UnmountSlot implements Effect {
-  private _container: Element;
-  private _slot: Slot<DOMPart.ChildNodePart, DOMRenderer>;
-
-  constructor(
-    container: Element,
-    slot: Slot<DOMPart.ChildNodePart, DOMRenderer>,
-  ) {
-    this._container = container;
-    this._slot = slot;
-  }
-
-  get scope(): Scope<DOMPart.ChildNodePart, DOMRenderer> {
-    return this._slot.scope;
+    session.mutationEffects.push(this);
   }
 
   commit(): void {
-    this._container.removeChild(this._slot.part.sentinelNode);
-    this._slot.revert();
+    this._container.appendChild(this._slot.part.sentinelNode);
+    this._slot.commit();
   }
 }
 
-class UnmountTask implements UpdateTask<DOMPart, DOMRenderer> {
+class UnmountTask implements Effect, UpdateTask<DOMPart, DOMRenderer> {
   private _slot: Slot<DOMPart.ChildNodePart, DOMRenderer>;
+  private _container: Element;
 
-  constructor(slot: Slot<DOMPart.ChildNodePart, DOMRenderer>) {
+  constructor(
+    slot: Slot<DOMPart.ChildNodePart, DOMRenderer>,
+    container: Element,
+  ) {
     this._slot = slot;
+    this._container = container;
   }
 
   get scope(): Scope<DOMPart.ChildNodePart, DOMRenderer> {
@@ -168,8 +144,11 @@ class UnmountTask implements UpdateTask<DOMPart, DOMRenderer> {
     session: Session<DOMPart.ChildNodePart, DOMRenderer>,
   ): Generator<Slot> {
     this._slot.discard(session);
-    session.mutationEffects.push(
-      new UnmountSlot(session.renderer.container, this._slot),
-    );
+    session.mutationEffects.push(this);
+  }
+
+  commit(): void {
+    this._container.removeChild(this._slot.part.sentinelNode);
+    this._slot.revert();
   }
 }
