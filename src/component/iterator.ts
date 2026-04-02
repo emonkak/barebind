@@ -2,6 +2,7 @@ import {
   type Component,
   Directive,
   type DirectiveHandler,
+  type Effect,
   type ErrorHandler,
   type Scope,
   type Session,
@@ -13,6 +14,12 @@ import { isChildScope, OrphanScope } from '../scope.js';
 import { Slot } from '../slot.js';
 import { ComponentContext } from './component.js';
 
+type Action = () => void;
+
+type Cleanup = () => void;
+
+type Setup = () => Cleanup | void;
+
 export interface IteratorComponentOptions<TProps> {
   arePropsEqual?: (newProps: TProps, oldProps: TProps) => boolean;
 }
@@ -22,11 +29,7 @@ export type IteratorComponent<TProps, TReturn, TPart> = (
   props: TProps,
 ) => Iterator<TReturn, TReturn, TPart>;
 
-interface Action {
-  callback: () => void;
-}
-
-export class IteratorComponentHandler<TProps, TReturn, TPart, TRenderer>
+export class IteratorComponentHandler<TProps, TReturn, TPart>
   implements DirectiveHandler<TProps, TPart>, ErrorHandler
 {
   private readonly _componentFn: IteratorComponent<TProps, TReturn, TPart>;
@@ -58,12 +61,11 @@ export class IteratorComponentHandler<TProps, TReturn, TPart, TRenderer>
   render(
     props: TProps,
     part: TPart,
-    scope: Scope.ChildScope<TPart, TRenderer>,
-    session: Session<TPart, TRenderer>,
-  ): Iterable<Slot<TPart, TRenderer>> {
+    scope: Scope.ChildScope<TPart>,
+    session: Session<TPart>,
+  ): Iterable<Slot<TPart>> {
     if (this._context !== null) {
-      resetContext(this._context, scope, session);
-      flushContext(this._context);
+      flushContext(this._context, scope, session);
     } else {
       this._context = new IteratorComponentContext<TProps>(scope, session);
     }
@@ -87,18 +89,22 @@ export class IteratorComponentHandler<TProps, TReturn, TPart, TRenderer>
   complete(
     _props: TProps,
     _part: TPart,
-    _scope: Scope<TPart, TRenderer>,
-    _session: Session<TPart, TRenderer>,
-  ): void {}
+    scope: Scope<TPart>,
+    session: Session<TPart>,
+  ): void {
+    if (this._context !== null) {
+      completeContext(this._context, scope, session);
+    }
+  }
 
   discard(
     _props: TProps,
     _part: TPart,
-    _scope: Scope<TPart, TRenderer>,
-    session: Session<TPart, TRenderer>,
+    scope: Scope<TPart>,
+    session: Session<TPart>,
   ): void {
     if (this._context !== null) {
-      resetContext(this._context, OrphanScope, session);
+      discardContext(this._context, scope, session);
     }
     this._iterator?.return?.();
     this._iterator = null;
@@ -137,7 +143,15 @@ export class IteratorComponentHandler<TProps, TReturn, TPart, TRenderer>
 
 export class IteratorComponentContext<TProps> extends ComponentContext {
   /** @internal */
-  readonly _actionQueue: Action[] = [];
+  readonly _insertionSetups: Setup[] = [];
+  /** @internal */
+  readonly _layoutSetups: Setup[] = [];
+  /** @internal */
+  readonly _passiveSetups: Setup[] = [];
+  /** @internal */
+  readonly _pendingActions: Action[] = [];
+  /** @internal */
+  readonly _pendingCleanups: Cleanup[] = [];
 
   *[Symbol.iterator](): Generator<TProps> {
     while (isChildScope(this._scope)) {
@@ -145,11 +159,21 @@ export class IteratorComponentContext<TProps> extends ComponentContext {
     }
   }
 
-  update(callback: () => void, options?: UpdateOptions): UpdateHandle {
+  postEffect(setup: Setup): void {
+    this._passiveSetups.push(setup);
+  }
+
+  postInsertionEffect(setup: Setup): void {
+    this._insertionSetups.push(setup);
+  }
+
+  postLayoutEffect(setup: Setup): void {
+    this._layoutSetups.push(setup);
+  }
+
+  update(action: Action, options?: UpdateOptions): UpdateHandle {
     const handle = this.forceUpdate(options);
-    this._actionQueue.push({
-      callback,
-    });
+    this._pendingActions.push(action);
     return handle;
   }
 }
@@ -181,17 +205,98 @@ export function createIteratorComponent<
   return Component;
 }
 
-function flushContext<TProps>(context: IteratorComponentContext<TProps>): void {
-  for (const { callback } of context._actionQueue.splice(0)) {
-    callback();
+class FlushCleanups implements Effect {
+  private readonly _pendingCleanups: Cleanup[];
+  private readonly _scope: Scope;
+
+  constructor(pendingCleanups: (() => void)[], scope: Scope) {
+    this._pendingCleanups = pendingCleanups;
+    this._scope = scope;
+  }
+
+  get scope(): Scope {
+    return this._scope;
+  }
+
+  commit(): void {
+    for (const cleaup of this._pendingCleanups.splice(0)) {
+      cleaup();
+    }
   }
 }
 
-function resetContext<TProps>(
+class PostEffects implements Effect {
+  private readonly _setups: Setup[];
+  private readonly _pendingCleanups: Cleanup[];
+  private readonly _scope: Scope;
+
+  constructor(setups: Setup[], pendingCleanups: Cleanup[], scope: Scope) {
+    this._setups = setups;
+    this._pendingCleanups = pendingCleanups;
+    this._scope = scope;
+  }
+
+  get scope(): Scope {
+    return this._scope;
+  }
+
+  commit(): void {
+    for (const setup of this._setups) {
+      const cleanup = setup();
+      if (cleanup !== undefined) {
+        this._pendingCleanups.push(cleanup);
+      }
+    }
+  }
+}
+
+function completeContext<TProps, TPart>(
   context: IteratorComponentContext<TProps>,
-  scope: Scope,
-  session: Session,
+  scope: Scope<TPart>,
+  session: Session<TPart>,
 ): void {
+  const insertionSetups = context._insertionSetups;
+  const layoutSetups = context._layoutSetups;
+  const passiveSetups = context._passiveSetups;
+  const pendingCleanups = context._pendingCleanups;
+  if (insertionSetups.length > 0) {
+    session.mutationEffects.push(
+      new PostEffects(insertionSetups.splice(0), pendingCleanups, scope),
+    );
+  }
+  if (layoutSetups.length > 0) {
+    session.layoutEffects.push(
+      new PostEffects(layoutSetups.splice(0), pendingCleanups, scope),
+    );
+  }
+  if (passiveSetups.length > 0) {
+    session.passiveEffects.push(
+      new PostEffects(passiveSetups.splice(0), pendingCleanups, scope),
+    );
+  }
+}
+
+function discardContext<TProps, TPart>(
+  context: IteratorComponentContext<TProps>,
+  scope: Scope<TPart>,
+  session: Session<TPart>,
+): void {
+  const pendingCleanups = context._pendingCleanups;
+  if (pendingCleanups.length > 0) {
+    session.mutationEffects.push(new FlushCleanups(pendingCleanups, scope));
+  }
+  context._scope = OrphanScope;
+  context._session = session;
+}
+
+function flushContext<TProps, TPart>(
+  context: IteratorComponentContext<TProps>,
+  scope: Scope<TPart>,
+  session: Session<TPart>,
+): void {
+  for (const action of context._pendingActions.splice(0)) {
+    action();
+  }
   context._scope = scope;
   context._session = session;
 }
