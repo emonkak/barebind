@@ -5,27 +5,60 @@ import {
   type Effect,
   type EffectPhase,
   type EffectPhases,
-  getRenderLanes,
   type HostAdapter,
+  type Lanes,
   LayoutPhase,
   MutationPhase,
-  NoLanes,
   PassivePhase,
   type Session,
-  type SessionEvent,
-  type SessionObserver,
-  type Slot,
-  SyncLane,
   type Update,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
   type UpdateScheduler,
   type UpdateTask,
-  ViewTransitionLane,
+  type UpdateUnit,
 } from './core.js';
 import { InterruptError } from './error.js';
+import { getRenderLanes, SyncLane, ViewTransitionLane } from './lane.js';
 import { getPendingAncestor } from './scope.js';
+
+export type SessionEvent =
+  | {
+      type: 'render-start' | 'render-end';
+      id: number;
+      lanes: Lanes;
+    }
+  | {
+      type: 'render-error';
+      id: number;
+      error: unknown;
+      captured: boolean;
+    }
+  | {
+      type: 'slot-render-start' | 'slot-render-end';
+      id: number;
+      slot: UpdateUnit;
+    }
+  | {
+      type: 'commit-start' | 'commit-end';
+      id: number;
+    }
+  | {
+      type: 'commit-abort';
+      id: number;
+      reason: unknown;
+    }
+  | {
+      type: 'effect-commit-start' | 'effect-commit-end';
+      id: number;
+      phase: EffectPhase;
+      effects: Effect[];
+    };
+
+export interface SessionObserver {
+  onSessionEvent(event: SessionEvent): void;
+}
 
 export class Runtime<TPart = unknown, TRenderer = unknown>
   implements UpdateScheduler<TPart, TRenderer>
@@ -62,7 +95,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
       const { controller, task, id, lanes } = update;
 
       if (
-        (task.pendingLanes & lanes) === NoLanes ||
+        (task.pendingLanes & lanes) === 0 ||
         getPendingAncestor(task.scope, lanes) !== null
       ) {
         controller.resolve({ status: 'skipped' });
@@ -301,7 +334,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
   }
 
   private async _runRenderAsync(
-    renerLoop: Generator<Slot>,
+    renerLoop: Generator<UpdateUnit>,
     session: Session<TPart, TRenderer>,
     lastLevel: number = 0,
   ): Promise<number> {
@@ -337,7 +370,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
   }
 
   private _runRenderSync(
-    renderLoop: Generator<Slot>,
+    renderLoop: Generator<UpdateUnit>,
     session: Session<TPart, TRenderer>,
   ): void {
     const { id } = session;

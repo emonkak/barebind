@@ -1,4 +1,5 @@
-import { type Scope, Slot, wrap } from '../core.js';
+import { type Scope, wrap } from '../core.js';
+import { Slot } from '../slot.js';
 import {
   createAttributePart,
   createChildNodePart,

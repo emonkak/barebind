@@ -2,11 +2,11 @@ import {
   type DirectiveHandler,
   type Scope,
   type Session,
-  type Slot,
   type Template,
   type TemplateMode,
   wrap,
 } from '../core.js';
+import type { Slot } from '../slot.js';
 import {
   type DOMPart,
   PART_TYPE_ATTRIBUTE,
@@ -95,7 +95,7 @@ export interface DOMTemplateRenderer {
 
 export interface DOMTemplateResult {
   childNodes: ChildNode[];
-  slots: Slot<DOMPart>[];
+  slots: Slot<DOMPart, DOMTemplateRenderer>[];
 }
 
 export class DOMTemplate {

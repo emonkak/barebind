@@ -1,16 +1,16 @@
 /// <reference path="../../typings/upsert.d.ts" />
 
-import {
-  ConcurrentLane,
-  type Directive,
-  type DirectiveHandler,
-  type EffectPhases,
-  type HostAdapter,
-  type Lanes,
-  type PrimitiveHandler,
-  type Scope,
-  type Template,
+import type {
+  Directive,
+  DirectiveHandler,
+  EffectPhases,
+  HostAdapter,
+  Lanes,
+  PrimitiveHandler,
+  Scope,
+  Template,
 } from '../core.js';
+import { ConcurrentLane } from '../lane.js';
 import { isRootScope } from '../scope.js';
 import {
   type DOMPart,

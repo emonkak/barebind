@@ -1,4 +1,4 @@
-import type { Lanes, Root, Scope, Slot } from './core.js';
+import type { Lanes, Root, Scope, UpdateUnit } from './core.js';
 
 export const OrphanScope: Scope.OrphanScope = Object.freeze({
   owner: null,
@@ -20,7 +20,7 @@ export function containsScope(origin: Scope, scope: Scope): boolean {
 }
 
 export function createChildScope<TPart, TRenderer>(
-  owner: Slot<TPart, TRenderer>,
+  owner: UpdateUnit<TPart, TRenderer>,
 ): Scope.ChildScope<TPart, TRenderer> {
   return {
     owner,
@@ -44,7 +44,7 @@ export function getPendingAncestor<TPart, TRenderer>(
   lanes: Lanes,
 ): Scope<TPart, TRenderer> | null {
   while (isChildScope(scope)) {
-    const owner = scope.owner as Slot<TPart, TRenderer>;
+    const owner = scope.owner as UpdateUnit<TPart, TRenderer>;
     if ((owner.pendingLanes & lanes) === lanes) {
       return scope;
     }
