@@ -1,6 +1,5 @@
 /// <reference path="../typings/upsert.d.ts" />
 
-import { LinkedList } from './collections/linked-list.js';
 import {
   type Effect,
   type EffectPhase,
@@ -21,6 +20,7 @@ import {
 } from './core.js';
 import { InterruptError } from './error.js';
 import { getRenderLanes, SyncLane, ViewTransitionLane } from './lane.js';
+import { Queue } from './queue.js';
 import { getPendingAncestor } from './scope.js';
 
 export type SessionEvent =
@@ -65,10 +65,9 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
 {
   private readonly _adapter: HostAdapter<TPart, TRenderer>;
 
-  private readonly _observers: LinkedList<SessionObserver> = new LinkedList();
+  private readonly _observers: Set<SessionObserver> = new Set();
 
-  private readonly _updateQueue: LinkedList<Update<TPart, TRenderer>> =
-    new LinkedList();
+  private readonly _updateQueue: Queue<Update<TPart, TRenderer>> = new Queue();
 
   private _transitionCount: number = 0;
 
@@ -82,15 +81,15 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     return this._adapter;
   }
 
-  get updateQueue(): LinkedList<Update<TPart, TRenderer>> {
+  get updateQueue(): Queue<Update<TPart, TRenderer>> {
     return this._updateQueue;
   }
 
   async flush(): Promise<void> {
     for (
       let update: Update<TPart, TRenderer> | undefined;
-      (update = this._updateQueue.front()?.value) !== undefined;
-      this._updateQueue.popFront()
+      (update = this._updateQueue.peek()) !== undefined;
+      this._updateQueue.dequeue()
     ) {
       const { controller, task, id, lanes } = update;
 
@@ -173,9 +172,9 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
 
   observe(observer: SessionObserver): () => void {
     const observers = this._observers;
-    const node = observers.pushBack(observer);
+    observers.add(observer);
     return () => {
-      observers.remove(node);
+      observers.delete(observer);
     };
   }
 
@@ -192,17 +191,18 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     const id = this._updateCount++;
     const lanes = this._adapter.getDefaultLanes() | getRenderLanes(options);
     const callback = (): UpdateResult => {
-      const willTriggerFlush =
-        (options.triggerFlush ?? true) && this._updateQueue.isEmpty();
+      const needsFlush =
+        (options.triggerFlush ?? true) &&
+        this._updateQueue.peek() === undefined;
 
-      this._updateQueue.pushBack({
+      this._updateQueue.enqueue({
         id,
         lanes,
         task,
         controller,
       });
 
-      if (willTriggerFlush) {
+      if (needsFlush) {
         scheduled.then(() => {
           this.flush();
         });
@@ -394,10 +394,10 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
 }
 
 function notifyObservers(
-  observers: LinkedList<SessionObserver>,
+  observers: Set<SessionObserver>,
   event: SessionEvent,
 ): void {
-  for (let node = observers.front(); node !== null; node = node.next) {
-    node.value.onSessionEvent(event);
+  for (const observer of observers) {
+    observer.onSessionEvent(event);
   }
 }
