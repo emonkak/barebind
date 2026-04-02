@@ -106,6 +106,8 @@ interface RefObject<T> {
   current: T;
 }
 
+type Setup = () => Cleanup | void;
+
 interface StateOptions {
   passthrough?: boolean;
 }
@@ -215,10 +217,7 @@ export class FunctionComponentContext extends ComponentContext {
     return this.useMemo(() => callback, deps);
   }
 
-  useEffect(
-    setup: () => Cleanup | void,
-    deps: readonly unknown[] | null = null,
-  ): void {
+  useEffect(setup: Setup, deps: readonly unknown[] | null = null): void {
     createEffectHook(this, setup, deps, PassiveEffectType);
   }
 
@@ -243,16 +242,13 @@ export class FunctionComponentContext extends ComponentContext {
   }
 
   useInsertionEffect(
-    setup: () => Cleanup | void,
+    setup: Setup,
     deps: readonly unknown[] | null = null,
   ): void {
     createEffectHook(this, setup, deps, InsertionEffectType);
   }
 
-  useLayoutEffect(
-    setup: () => Cleanup | void,
-    deps: readonly unknown[] | null = null,
-  ): void {
+  useLayoutEffect(setup: Setup, deps: readonly unknown[] | null = null): void {
     createEffectHook(this, setup, deps, LayoutEffectType);
   }
 

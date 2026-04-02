@@ -23,6 +23,10 @@ const Counter = createIteratorComponent<CountProps>(function* Counter({
   }
 
   for ({} of this) {
+    this.postEffect(() => {
+      console.log(count);
+    });
+
     yield html`
       <button type="button" @click=${increment} :ref=${ref}>Count: ${count}</button>
     `;
