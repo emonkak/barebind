@@ -16,9 +16,9 @@ import { ComponentContext } from './component.js';
 
 type Action = () => void;
 
-type Cleanup = () => void;
+type EffectCleanup = () => void;
 
-type Setup = () => Cleanup | void;
+type EffectSetup = () => EffectCleanup | void;
 
 export interface IteratorComponentOptions<TProps> {
   arePropsEqual?: (newProps: TProps, oldProps: TProps) => boolean;
@@ -143,15 +143,15 @@ export class IteratorComponentHandler<TProps, TReturn>
 
 export class IteratorComponentContext<TProps> extends ComponentContext {
   /** @internal */
-  readonly _insertionSetups: Setup[] = [];
+  readonly _insertionEffects: EffectSetup[] = [];
   /** @internal */
-  readonly _layoutSetups: Setup[] = [];
+  readonly _layoutEffects: EffectSetup[] = [];
   /** @internal */
-  readonly _passiveSetups: Setup[] = [];
+  readonly _passiveEffects: EffectSetup[] = [];
   /** @internal */
   readonly _pendingActions: Action[] = [];
   /** @internal */
-  readonly _pendingCleanups: Cleanup[] = [];
+  readonly _pendingCleanups: EffectCleanup[] = [];
 
   *[Symbol.iterator](): Generator<TProps> {
     while (isChildScope(this._scope)) {
@@ -159,16 +159,16 @@ export class IteratorComponentContext<TProps> extends ComponentContext {
     }
   }
 
-  postEffect(setup: Setup): void {
-    this._passiveSetups.push(setup);
+  postEffect(setup: EffectSetup): void {
+    this._passiveEffects.push(setup);
   }
 
-  postInsertionEffect(setup: Setup): void {
-    this._insertionSetups.push(setup);
+  postInsertionEffect(setup: EffectSetup): void {
+    this._insertionEffects.push(setup);
   }
 
-  postLayoutEffect(setup: Setup): void {
-    this._layoutSetups.push(setup);
+  postLayoutEffect(setup: EffectSetup): void {
+    this._layoutEffects.push(setup);
   }
 
   update(action: Action, options?: UpdateOptions): UpdateHandle {
@@ -202,11 +202,11 @@ export function createIteratorComponent<TProps = {}, TReturn = unknown>(
 }
 
 class FlushCleanups implements Effect {
-  private readonly _pendingCleanups: Cleanup[];
+  private readonly _cleanups: EffectCleanup[];
   private readonly _scope: Scope;
 
-  constructor(pendingCleanups: (() => void)[], scope: Scope) {
-    this._pendingCleanups = pendingCleanups;
+  constructor(cleanups: (() => void)[], scope: Scope) {
+    this._cleanups = cleanups;
     this._scope = scope;
   }
 
@@ -215,20 +215,20 @@ class FlushCleanups implements Effect {
   }
 
   commit(): void {
-    for (const cleaup of this._pendingCleanups.splice(0)) {
+    for (const cleaup of this._cleanups.splice(0)) {
       cleaup();
     }
   }
 }
 
-class PostEffects implements Effect {
-  private readonly _setups: Setup[];
-  private readonly _pendingCleanups: Cleanup[];
+class SetupEffects implements Effect {
+  private readonly _setups: EffectSetup[];
+  private readonly _cleanups: EffectCleanup[];
   private readonly _scope: Scope;
 
-  constructor(setups: Setup[], pendingCleanups: Cleanup[], scope: Scope) {
+  constructor(setups: EffectSetup[], cleanups: EffectCleanup[], scope: Scope) {
     this._setups = setups;
-    this._pendingCleanups = pendingCleanups;
+    this._cleanups = cleanups;
     this._scope = scope;
   }
 
@@ -240,7 +240,7 @@ class PostEffects implements Effect {
     for (const setup of this._setups) {
       const cleanup = setup();
       if (cleanup !== undefined) {
-        this._pendingCleanups.push(cleanup);
+        this._cleanups.push(cleanup);
       }
     }
   }
@@ -251,23 +251,23 @@ function completeContext<TProps>(
   scope: Scope,
   session: Session,
 ): void {
-  const insertionSetups = context._insertionSetups;
-  const layoutSetups = context._layoutSetups;
-  const passiveSetups = context._passiveSetups;
+  const insertionEffects = context._insertionEffects;
+  const layoutEffects = context._layoutEffects;
+  const passiveEffects = context._passiveEffects;
   const pendingCleanups = context._pendingCleanups;
-  if (insertionSetups.length > 0) {
+  if (insertionEffects.length > 0) {
     session.mutationEffects.push(
-      new PostEffects(insertionSetups.splice(0), pendingCleanups, scope),
+      new SetupEffects(insertionEffects.splice(0), pendingCleanups, scope),
     );
   }
-  if (layoutSetups.length > 0) {
+  if (layoutEffects.length > 0) {
     session.layoutEffects.push(
-      new PostEffects(layoutSetups.splice(0), pendingCleanups, scope),
+      new SetupEffects(layoutEffects.splice(0), pendingCleanups, scope),
     );
   }
-  if (passiveSetups.length > 0) {
+  if (passiveEffects.length > 0) {
     session.passiveEffects.push(
-      new PostEffects(passiveSetups.splice(0), pendingCleanups, scope),
+      new SetupEffects(passiveEffects.splice(0), pendingCleanups, scope),
     );
   }
 }
