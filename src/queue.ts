@@ -19,7 +19,7 @@ export class Queue<T> {
   enqueue(value: T): void {
     const item: Item<T> = {
       value: value,
-      next: this._head,
+      next: null,
     };
     if (this._tail !== null) {
       this._tail.next = item;
@@ -34,12 +34,9 @@ export class Queue<T> {
       return undefined;
     }
     const { value, next } = this._head;
-    if (this._head === this._tail) {
-      this._head = null;
+    this._head = next;
+    if (next === null) {
       this._tail = null;
-    } else {
-      this._head = next;
-      this._tail!.next = next;
     }
     return value;
   }
