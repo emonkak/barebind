@@ -25,7 +25,7 @@ interface Mutation {
     | typeof UpdateAndMoveType
     | typeof RemoveType;
   slot: Slot<DOMPart.ChildNodePart>;
-  refSlot?: Slot<DOMPart.ChildNodePart> | undefined;
+  afterSlot?: Slot<DOMPart.ChildNodePart> | undefined;
 }
 
 interface ReconciliationResult {
@@ -95,17 +95,17 @@ export class DOMRepeatHandler<TSource>
     _oldSource: Iterable<TSource> | null,
     part: DOMPart.ChildNodePart,
   ): void {
-    for (const { type, slot, refSlot } of this._pendingMutations.splice(0)) {
+    for (const { type, slot, afterSlot } of this._pendingMutations.splice(0)) {
       switch (type) {
         case InsertType:
-          insertChildNodePart(part, slot.part, refSlot?.part);
+          insertChildNodePart(part, slot.part, afterSlot?.part);
           slot.commit();
           break;
         case UpdateType:
           slot.commit();
           break;
         case UpdateAndMoveType:
-          moveChildNodePart(part, slot.part, refSlot?.part);
+          moveChildNodePart(part, slot.part, afterSlot?.part);
           slot.commit();
           break;
         case RemoveType:
@@ -185,7 +185,7 @@ function reconcileDirectives(
         newMutations.push({
           type: InsertType,
           slot: newSlot,
-          refSlot: newSlots[newTail + 1],
+          afterSlot: newSlots[newTail + 1],
         });
         newSlots[newHead] = newSlot;
         newHead++;
@@ -222,12 +222,12 @@ function reconcileDirectives(
       newMutations.push({
         type: UpdateAndMoveType,
         slot: tailSlot,
-        refSlot: oldSlots[oldHead],
+        afterSlot: oldSlots[oldHead],
       });
       newMutations.push({
         type: UpdateAndMoveType,
         slot: headSlot,
-        refSlot: newSlots[newTail + 1],
+        afterSlot: newSlots[newTail + 1],
       });
       newSlots[newHead] = tailSlot;
       newSlots[newTail] = headSlot;
@@ -268,7 +268,7 @@ function reconcileDirectives(
           newMutations.push({
             type: UpdateAndMoveType,
             slot,
-            refSlot: newSlots[newTail + 1],
+            afterSlot: newSlots[newTail + 1],
           });
           newSlots[newTail] = slot;
           oldSlots[oldIndex] = undefined;
@@ -281,7 +281,7 @@ function reconcileDirectives(
           newMutations.push({
             type: InsertType,
             slot: newSlot,
-            refSlot: newSlots[newTail + 1],
+            afterSlot: newSlots[newTail + 1],
           });
           newSlots[newTail] = newSlot;
         }
