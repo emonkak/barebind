@@ -218,9 +218,14 @@ export class DOMTemplateHandler
         (slot.part.type === ChildNodeType || slot.part.type === TextType) &&
         this._childNodes.includes(getEndNode(slot.part))
       ) {
-        // This slot is mounted as a child of the root, so we must revert it.
+        // The slot is mounted as a child of the root, so it needs to be
+        // reverted.
         slot.revert();
       }
+    }
+
+    for (const childNode of this._childNodes) {
+      childNode.remove();
     }
 
     part.node = part.sentinelNode;
