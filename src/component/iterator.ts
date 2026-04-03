@@ -24,15 +24,15 @@ export interface IteratorComponentOptions<TProps> {
   arePropsEqual?: (newProps: TProps, oldProps: TProps) => boolean;
 }
 
-export type IteratorComponent<TProps, TReturn, TPart> = (
+export type IteratorComponent<TProps, TReturn> = (
   this: IteratorComponentContext<TProps>,
   props: TProps,
-) => Iterator<TReturn, TReturn, TPart>;
+) => Iterator<TReturn, TReturn>;
 
-export class IteratorComponentHandler<TProps, TReturn, TPart>
-  implements DirectiveHandler<TProps, TPart>, ErrorHandler
+export class IteratorComponentHandler<TProps, TReturn>
+  implements DirectiveHandler<TProps>, ErrorHandler
 {
-  private readonly _componentFn: IteratorComponent<TProps, TReturn, TPart>;
+  private readonly _componentFn: IteratorComponent<TProps, TReturn>;
 
   private readonly _arePropsEqual: (
     newProps: TProps,
@@ -41,12 +41,12 @@ export class IteratorComponentHandler<TProps, TReturn, TPart>
 
   private _context: IteratorComponentContext<TProps> | null = null;
 
-  private _iterator: Iterator<TReturn, TReturn, TPart> | null = null;
+  private _iterator: Iterator<TReturn, TReturn> | null = null;
 
-  private _slot: Slot<TPart> | null = null;
+  private _slot: Slot | null = null;
 
   constructor(
-    componentFn: IteratorComponent<TProps, TReturn, TPart>,
+    componentFn: IteratorComponent<TProps, TReturn>,
     arePropsEqual: (newProps: TProps, oldProps: TProps) => boolean,
   ) {
     this._componentFn = componentFn;
@@ -60,10 +60,10 @@ export class IteratorComponentHandler<TProps, TReturn, TPart>
 
   render(
     props: TProps,
-    part: TPart,
-    scope: Scope.ChildScope<TPart>,
-    session: Session<TPart>,
-  ): Iterable<Slot<TPart>> {
+    part: unknown,
+    scope: Scope.ChildScope,
+    session: Session,
+  ): Iterable<Slot> {
     if (this._context !== null) {
       flushContext(this._context, scope, session);
     } else {
@@ -88,9 +88,9 @@ export class IteratorComponentHandler<TProps, TReturn, TPart>
 
   complete(
     _props: TProps,
-    _part: TPart,
-    scope: Scope<TPart>,
-    session: Session<TPart>,
+    _part: unknown,
+    scope: Scope,
+    session: Session,
   ): void {
     if (this._context !== null) {
       completeContext(this._context, scope, session);
@@ -99,9 +99,9 @@ export class IteratorComponentHandler<TProps, TReturn, TPart>
 
   discard(
     _props: TProps,
-    _part: TPart,
-    scope: Scope<TPart>,
-    session: Session<TPart>,
+    _part: unknown,
+    scope: Scope,
+    session: Session,
   ): void {
     if (this._context !== null) {
       discardContext(this._context, scope, session);
@@ -111,11 +111,11 @@ export class IteratorComponentHandler<TProps, TReturn, TPart>
     this._slot?.discard(session);
   }
 
-  mount(_newValue: TProps, _oldValue: TProps | null, _part: TPart): void {
+  mount(_newValue: TProps, _oldValue: TProps | null, _part: unknown): void {
     this._slot?.commit();
   }
 
-  unmount(_value: TProps, _part: TPart): void {
+  unmount(_value: TProps, _part: unknown): void {
     this._slot?.revert();
   }
 
@@ -129,7 +129,7 @@ export class IteratorComponentHandler<TProps, TReturn, TPart>
         const slot = this._slot;
         const context = this._context!;
         const directive = wrap(iteration.value);
-        slot.update(directive, context._scope as Scope.ChildScope<TPart>);
+        slot.update(directive, context._scope);
         context._session.scheduler.schedule(slot);
       } catch (error) {
         this._iterator = null;
@@ -178,12 +178,8 @@ export class IteratorComponentContext<TProps> extends ComponentContext {
   }
 }
 
-export function createIteratorComponent<
-  TProps = {},
-  TReturn = unknown,
-  TPart = unknown,
->(
-  componentFn: IteratorComponent<TProps, TReturn, TPart>,
+export function createIteratorComponent<TProps = {}, TReturn = unknown>(
+  componentFn: IteratorComponent<TProps, TReturn>,
   { arePropsEqual = Object.is }: IteratorComponentOptions<TProps> = {},
 ): Component<TProps> {
   function Component(props: TProps): Directive.ComponentDirective<TProps> {
@@ -250,10 +246,10 @@ class PostEffects implements Effect {
   }
 }
 
-function completeContext<TProps, TPart>(
+function completeContext<TProps>(
   context: IteratorComponentContext<TProps>,
-  scope: Scope<TPart>,
-  session: Session<TPart>,
+  scope: Scope,
+  session: Session,
 ): void {
   const insertionSetups = context._insertionSetups;
   const layoutSetups = context._layoutSetups;
@@ -276,10 +272,10 @@ function completeContext<TProps, TPart>(
   }
 }
 
-function discardContext<TProps, TPart>(
+function discardContext<TProps>(
   context: IteratorComponentContext<TProps>,
-  scope: Scope<TPart>,
-  session: Session<TPart>,
+  scope: Scope,
+  session: Session,
 ): void {
   const pendingCleanups = context._pendingCleanups;
   if (pendingCleanups.length > 0) {
@@ -289,10 +285,10 @@ function discardContext<TProps, TPart>(
   context._session = session;
 }
 
-function flushContext<TProps, TPart>(
+function flushContext<TProps>(
   context: IteratorComponentContext<TProps>,
-  scope: Scope<TPart>,
-  session: Session<TPart>,
+  scope: Scope,
+  session: Session,
 ): void {
   for (const action of context._pendingActions.splice(0)) {
     action();

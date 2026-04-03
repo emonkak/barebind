@@ -112,8 +112,8 @@ interface StateOptions {
   passthrough?: boolean;
 }
 
-export class FunctionComponentHandler<TProps, TReturn, TPart>
-  implements DirectiveHandler<TProps, TPart>
+export class FunctionComponentHandler<TProps, TReturn>
+  implements DirectiveHandler<TProps>
 {
   private readonly _componentFn: FunctionComponent<TProps, TReturn>;
 
@@ -124,7 +124,7 @@ export class FunctionComponentHandler<TProps, TReturn, TPart>
 
   private _context: FunctionComponentContext | null = null;
 
-  private _slot: Slot<TPart> | null = null;
+  private _slot: Slot | null = null;
 
   private _currentHooks: Hook[] = [];
 
@@ -143,10 +143,10 @@ export class FunctionComponentHandler<TProps, TReturn, TPart>
 
   render(
     props: TProps,
-    part: TPart,
-    scope: Scope.ChildScope<TPart>,
-    session: Session<TPart>,
-  ): Iterable<Slot<TPart>> {
+    part: unknown,
+    scope: Scope.ChildScope,
+    session: Session,
+  ): Iterable<Slot> {
     if (this._context !== null) {
       const hooks =
         scope.owner === this._context._scope.owner
@@ -170,9 +170,9 @@ export class FunctionComponentHandler<TProps, TReturn, TPart>
 
   complete(
     _props: TProps,
-    _part: TPart,
-    scope: Scope<TPart>,
-    session: Session<TPart>,
+    _part: unknown,
+    scope: Scope,
+    session: Session,
   ): void {
     if (this._context !== null) {
       completeContext(this._context, scope, session);
@@ -181,9 +181,9 @@ export class FunctionComponentHandler<TProps, TReturn, TPart>
 
   discard(
     _props: TProps,
-    _part: TPart,
-    scope: Scope<TPart>,
-    session: Session<TPart>,
+    _part: unknown,
+    scope: Scope,
+    session: Session,
   ): void {
     if (this._context !== null) {
       discardContext(this._context, scope, session);
@@ -191,14 +191,14 @@ export class FunctionComponentHandler<TProps, TReturn, TPart>
     this._slot?.discard(session);
   }
 
-  mount(_newValue: TProps, _oldValue: TProps | null, _part: TPart): void {
+  mount(_newValue: TProps, _oldValue: TProps | null, _part: unknown): void {
     this._slot?.commit();
     if (this._context !== null) {
       this._currentHooks = this._context?._hooks;
     }
   }
 
-  unmount(_value: TProps, _part: TPart): void {
+  unmount(_value: TProps, _part: unknown): void {
     this._slot?.revert();
     this._currentHooks = [];
   }
