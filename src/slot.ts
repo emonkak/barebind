@@ -203,18 +203,18 @@ export class Slot<TPart = unknown, TRenderer = unknown>
       const newValue = this._directive.value;
       const oldValue = this._snapshot?._directive.value ?? null;
       this._handler?.mount(newValue, oldValue, this._part);
+      this._status = IdleStatus;
+      this._snapshot = this;
     }
-    this._status = IdleStatus;
-    this._snapshot = this;
   }
 
   revert(): void {
     if (this._status === StaleStatus) {
       this._handler?.unmount(this._directive.value, this._part);
       this._handler = null;
+      this._status = IdleStatus;
+      this._snapshot = null;
     }
-    this._status = IdleStatus;
-    this._snapshot = null;
   }
 }
 
