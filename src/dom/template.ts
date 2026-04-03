@@ -7,6 +7,7 @@ import {
   wrap,
 } from '../core.js';
 import type { Slot } from '../slot.js';
+import { generateNodeFrame } from './debug.js';
 import {
   AttributeType,
   ChildNodeType,
@@ -298,7 +299,12 @@ function parseAttribtues(
       DEBUG: {
         if (rawName?.toLowerCase() !== attribute.name) {
           throw new Error(
-            `The attribute name must be "${attribute.name}", but got "${rawName}". There are unclosed tags or duplicate attributes.`,
+            `The attribute name must be "${attribute.name}", but got "${rawName}". There are unclosed tags or duplicate attributes:\n` +
+              generateNodeFrame({
+                type: 'attribute',
+                node: element,
+                name: attribute.name,
+              }),
           );
         }
       }
@@ -336,12 +342,24 @@ function parseAttribtues(
     } else {
       DEBUG: {
         if (attribute.name.includes(marker)) {
-          throw new Error('Expressions are not allowed as an attribute name.');
+          throw new Error(
+            'Expressions are not allowed as an attribute name:\n' +
+              generateNodeFrame({
+                type: 'attribute',
+                node: element,
+                name: attribute.name,
+              }),
+          );
         }
 
         if (attribute.value.includes(marker)) {
           throw new Error(
-            'Expressions inside an attribute must make up the entire attribute value.',
+            'Expressions inside an attribute must make up the entire attribute value:\n' +
+              generateNodeFrame({
+                type: 'attribute',
+                node: element,
+                name: attribute.name,
+              }),
           );
         }
       }
@@ -370,7 +388,13 @@ function parseChildren(
       case Node.ELEMENT_NODE: {
         DEBUG: {
           if ((currentNode as Element).localName.includes(marker)) {
-            throw new Error('Expressions are not allowed as a tag name.');
+            throw new Error(
+              'Expressions are not allowed as a tag name:\n' +
+                generateNodeFrame({
+                  type: 'tagName',
+                  node: currentNode as Element,
+                }),
+            );
           }
         }
         if ((currentNode as Element).hasAttributes()) {
@@ -397,7 +421,11 @@ function parseChildren(
           DEBUG: {
             if ((currentNode as Comment).data.includes(marker)) {
               throw new Error(
-                'Expressions inside a comment must make up the entire comment value.',
+                'Expressions inside a comment must make up the entire comment value:\n' +
+                  generateNodeFrame({
+                    type: 'comment',
+                    node: currentNode as Comment,
+                  }),
               );
             }
           }
@@ -442,7 +470,6 @@ function parseChildren(
   if (exprs.length !== holes.length) {
     throw new Error(
       `The number of holes must be ${exprs.length}, but got ${holes.length}. Multiple holes indicate the same attribute:\n` +
-        // biome-ignore lint/suspicious/noTemplateCurlyInString: "${...}" represents a template literal hole
         strings.join('${...}').trim(),
     );
   }
