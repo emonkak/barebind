@@ -92,7 +92,7 @@ export class DOMRepeatHandler<TSource>
 
   mount(
     _newSource: Iterable<TSource>,
-    _oldSource: Iterable<TSource>,
+    _oldSource: Iterable<TSource> | null,
     part: DOMPart.ChildNodePart,
   ): void {
     for (const { type, slot, refSlot } of this._pendingMutations.splice(0)) {
