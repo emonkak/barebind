@@ -49,7 +49,9 @@ interface ActionDispatcher<TState, TPayload> {
   reducer: (state: TState, action: TPayload) => TState;
 }
 
-type Cleanup = () => void;
+type EffectCleanup = () => void;
+
+type EffectSetup = () => EffectCleanup | void;
 
 interface DispatchOptions<TState> extends UpdateOptions {
   areStatesEqual?: (nextState: TState, prevState: TState) => boolean;
@@ -73,8 +75,8 @@ namespace Hook {
       | typeof PassiveEffectType
       | typeof LayoutEffectType
       | typeof InsertionEffectType;
-    setup: (() => Cleanup | void) | null;
-    cleanup: Cleanup | void;
+    setup: EffectSetup | null;
+    cleanup: EffectCleanup | void;
     pendingDeps: readonly unknown[] | null;
     currentDeps: readonly unknown[] | null;
   }
@@ -105,8 +107,6 @@ type NextState<T> = (T extends Function ? never : T) | ((state: T) => T);
 interface RefObject<T> {
   current: T;
 }
-
-type Setup = () => Cleanup | void;
 
 interface StateOptions {
   passthrough?: boolean;
@@ -217,7 +217,7 @@ export class FunctionComponentContext extends ComponentContext {
     return this.useMemo(() => callback, deps);
   }
 
-  useEffect(setup: Setup, deps: readonly unknown[] | null = null): void {
+  useEffect(setup: EffectSetup, deps: readonly unknown[] | null = null): void {
     createEffectHook(this, setup, deps, PassiveEffectType);
   }
 
@@ -242,13 +242,16 @@ export class FunctionComponentContext extends ComponentContext {
   }
 
   useInsertionEffect(
-    setup: Setup,
+    setup: EffectSetup,
     deps: readonly unknown[] | null = null,
   ): void {
     createEffectHook(this, setup, deps, InsertionEffectType);
   }
 
-  useLayoutEffect(setup: Setup, deps: readonly unknown[] | null = null): void {
+  useLayoutEffect(
+    setup: EffectSetup,
+    deps: readonly unknown[] | null = null,
+  ): void {
     createEffectHook(this, setup, deps, LayoutEffectType);
   }
 
@@ -493,7 +496,7 @@ function completeContext(
 
 function createEffectHook(
   context: FunctionComponentContext,
-  setup: () => Cleanup | void,
+  setup: EffectSetup,
   deps: readonly unknown[] | null,
   type: Hook.EffectHook['type'],
 ): void {
