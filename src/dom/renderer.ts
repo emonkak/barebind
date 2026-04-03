@@ -21,8 +21,8 @@ import {
   createTreeWalker,
   type DOMHole,
   type DOMTemplate,
+  type DOMTemplateBlock,
   type DOMTemplateRenderer,
-  type DOMTemplateResult,
 } from './template.js';
 
 const TEXT_NODE = '#text';
@@ -52,7 +52,7 @@ export class ClientRenderer implements DOMRenderer {
     template: DOMTemplate,
     exprs: readonly unknown[],
     scope: Scope<DOMPart>,
-  ): DOMTemplateResult {
+  ): DOMTemplateBlock {
     return renderTemplate(
       template,
       exprs,
@@ -77,7 +77,7 @@ export class HydrationRenderer implements DOMRenderer {
     template: DOMTemplate,
     exprs: readonly unknown[],
     scope: Scope<DOMPart>,
-  ): DOMTemplateResult {
+  ): DOMTemplateBlock {
     return hydrateTemplate(template, exprs, scope, this._targetWalker);
   }
 
@@ -91,7 +91,7 @@ function hydrateTemplate(
   exprs: readonly unknown[],
   scope: Scope<DOMPart>,
   targetWalker: TreeWalker,
-): DOMTemplateResult {
+): DOMTemplateBlock {
   const templateWalker = createTreeWalker(
     targetWalker.root.ownerDocument!.importNode(template.element.content),
   );
@@ -196,7 +196,7 @@ function renderTemplate(
   exprs: readonly unknown[],
   scope: Scope<DOMPart>,
   ownerDocument: Document,
-): DOMTemplateResult {
+): DOMTemplateBlock {
   const root = ownerDocument.importNode(template.element.content, true);
   const holes = template.holes;
   const slots: Slot<DOMPart>[] = new Array(holes.length);
