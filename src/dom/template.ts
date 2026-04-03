@@ -196,7 +196,7 @@ export class DOMTemplateHandler
     _session: Session<DOMPart.ChildNodePart, DOMTemplateRenderer>,
   ): void {}
 
-  commit(
+  mount(
     _newTemplate: Template,
     _oldTemplate: Template | null,
     part: DOMPart.ChildNodePart,
@@ -213,7 +213,7 @@ export class DOMTemplateHandler
       getStartNode(this._childNodes, this._slots) ?? part.sentinelNode;
   }
 
-  revert(_template: Template, part: DOMPart.ChildNodePart): void {
+  unmount(_template: Template, part: DOMPart.ChildNodePart): void {
     for (const slot of this._slots) {
       if (
         (slot.part.type === ChildNodeType || slot.part.type === TextType) &&

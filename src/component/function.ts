@@ -191,14 +191,14 @@ export class FunctionComponentHandler<TProps, TReturn, TPart>
     this._slot?.discard(session);
   }
 
-  commit(_newValue: TProps, _oldValue: TProps | null, _part: TPart): void {
+  mount(_newValue: TProps, _oldValue: TProps | null, _part: TPart): void {
     this._slot?.commit();
     if (this._context !== null) {
       this._currentHooks = this._context?._hooks;
     }
   }
 
-  revert(_value: TProps, _part: TPart): void {
+  unmount(_value: TProps, _part: TPart): void {
     this._slot?.revert();
     this._currentHooks = [];
   }

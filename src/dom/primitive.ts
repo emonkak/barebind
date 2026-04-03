@@ -92,16 +92,16 @@ export class DOMPrimitiveHandler<TValue, TPart extends DOMPart>
     _session: Session<TPart, DOMRenderer>,
   ): void {}
 
-  commit(_newValue: TValue, _oldValue: TValue, _part: TPart): void {}
+  mount(_newValue: TValue, _oldValue: TValue, _part: TPart): void {}
 
-  revert(_value: TValue, _part: TPart): void {}
+  unmount(_value: TValue, _part: TPart): void {}
 }
 
 export class DOMAttributeHandler<TValue> extends DOMPrimitiveHandler<
   TValue,
   DOMPart.AttributePart
 > {
-  override commit(
+  override mount(
     newValue: TValue,
     _oldValue: TValue | null,
     part: DOMPart.AttributePart,
@@ -116,7 +116,7 @@ export class DOMAttributeHandler<TValue> extends DOMPrimitiveHandler<
     }
   }
 
-  override revert(_value: TValue, part: DOMPart.AttributePart): void {
+  override unmount(_value: TValue, part: DOMPart.AttributePart): void {
     const { node, name } = part;
     node.removeAttribute(name);
   }
@@ -136,7 +136,7 @@ export class DOMClassHandler extends DOMPrimitiveHandler<
     return !shallowEqual(newTokens, oldTokens);
   }
 
-  override commit(
+  override mount(
     newTokens: ClassMap,
     oldTokens: ClassMap | null,
     part: DOMPart.AttributePart,
@@ -144,7 +144,7 @@ export class DOMClassHandler extends DOMPrimitiveHandler<
     updateClass(part.node.classList, oldTokens ?? {}, newTokens);
   }
 
-  override revert(tokens: ClassMap, part: DOMPart.AttributePart): void {
+  override unmount(tokens: ClassMap, part: DOMPart.AttributePart): void {
     updateClass(part.node.classList, tokens, {});
   }
 }
@@ -207,7 +207,7 @@ export class DOMElementHandler extends DOMPrimitiveHandler<
     this._pendingSlots = new Map();
   }
 
-  override commit(
+  override mount(
     _newProps: ElementProps,
     _oldProps: ElementProps | null,
     _part: DOMPart.ElementPart,
@@ -230,7 +230,7 @@ export class DOMElementHandler extends DOMPrimitiveHandler<
     this._currentSlots = this._pendingSlots;
   }
 
-  override revert(_props: ElementProps, _part: DOMPart.ElementPart): void {
+  override unmount(_props: ElementProps, _part: DOMPart.ElementPart): void {
     for (const slot of this._currentSlots.values()) {
       slot.revert();
     }
@@ -255,7 +255,7 @@ export class DOMEventHandler extends DOMPrimitiveHandler<
     }
   }
 
-  override commit(
+  override mount(
     newListener: EventListenerOrNullish,
     oldListener: EventListenerOrNullish,
     part: DOMPart.EventPart,
@@ -275,7 +275,7 @@ export class DOMEventHandler extends DOMPrimitiveHandler<
     this._memoizedListener = newListener;
   }
 
-  override revert(
+  override unmount(
     listener: EventListenerOrNullish,
     part: DOMPart.EventPart,
   ): void {
@@ -302,7 +302,7 @@ export class DOMLiveHandler<TValue> extends DOMPrimitiveHandler<
     return true;
   }
 
-  override commit(
+  override mount(
     newValue: TValue,
     _oldValue: TValue | null,
     part: DOMPart.LivePart,
@@ -315,18 +315,18 @@ export class DOMLiveHandler<TValue> extends DOMPrimitiveHandler<
     }
   }
 
-  override revert(_value: TValue, part: DOMPart.LivePart): void {
+  override unmount(_value: TValue, part: DOMPart.LivePart): void {
     const { node, name, defaultValue } = part;
     (node as any)[name] = defaultValue;
   }
 }
 
 export class DOMNodeHandler<T> extends DOMPrimitiveHandler<T, DOMPart> {
-  override commit(newValue: T, _oldValue: T | null, part: DOMPart): void {
+  override mount(newValue: T, _oldValue: T | null, part: DOMPart): void {
     part.node.nodeValue = toStringOrEmpty(newValue);
   }
 
-  override revert(_value: T, part: DOMPart): void {
+  override unmount(_value: T, part: DOMPart): void {
     part.node.nodeValue = '';
   }
 }
@@ -335,7 +335,7 @@ export class DOMPropertyHandler<T> extends DOMPrimitiveHandler<
   T,
   DOMPart.PropertyPart
 > {
-  override commit(
+  override mount(
     newValue: T,
     _oldValue: T | null,
     part: DOMPart.PropertyPart,
@@ -344,7 +344,7 @@ export class DOMPropertyHandler<T> extends DOMPrimitiveHandler<
     (node as any)[name] = newValue;
   }
 
-  override revert(_value: T, part: DOMPart.PropertyPart): void {
+  override unmount(_value: T, part: DOMPart.PropertyPart): void {
     const { node, name, defaultValue } = part;
     (node as any)[name] = defaultValue;
   }
@@ -401,7 +401,7 @@ export class DOMStyleHandler extends DOMPrimitiveHandler<
     return !shallowEqual(newProps, oldProps);
   }
 
-  override commit(
+  override mount(
     newProps: StyleMap,
     oldProps: StyleMap | null,
     part: DOMPart.AttributePart,
@@ -410,7 +410,7 @@ export class DOMStyleHandler extends DOMPrimitiveHandler<
     updateStyle(declaration, oldProps ?? {}, newProps);
   }
 
-  override revert(props: StyleMap, part: DOMPart.AttributePart): void {
+  override unmount(props: StyleMap, part: DOMPart.AttributePart): void {
     const declaration = (part.node as HTMLElement).style;
     updateStyle(declaration, props, {});
   }

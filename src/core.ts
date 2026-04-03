@@ -84,8 +84,8 @@ export interface DirectiveHandler<
     scope: Scope<TPart, TRenderer>,
     session: Session<TPart, TRenderer>,
   ): void;
-  commit(oldValue: TValue, newValue: TValue | null, part: TPart): void;
-  revert(value: TValue, part: TPart): void;
+  mount(oldValue: TValue, newValue: TValue | null, part: TPart): void;
+  unmount(value: TValue, part: TPart): void;
 }
 
 export interface Effect {
