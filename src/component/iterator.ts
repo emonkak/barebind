@@ -120,14 +120,18 @@ export class IteratorComponentHandler<TProps, TReturn>
   }
 
   handleError(error: unknown, forwardError: (error: unknown) => void): void {
-    if (this._iterator?.throw !== undefined && this._slot !== null) {
+    if (
+      this._iterator?.throw !== undefined &&
+      this._slot !== null &&
+      this._context !== null
+    ) {
       try {
         const iteration = this._iterator.throw(error);
         if (iteration.done) {
           this._iterator = null;
         }
         const slot = this._slot;
-        const context = this._context!;
+        const context = this._context;
         const directive = wrap(iteration.value);
         slot.update(directive, context._scope);
         context._session.scheduler.schedule(slot);
