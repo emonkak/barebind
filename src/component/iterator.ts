@@ -111,11 +111,11 @@ export class IteratorComponentHandler<TProps, TReturn, TPart>
     this._slot?.discard(session);
   }
 
-  commit(_newValue: TProps, _oldValue: TProps | null, _part: TPart): void {
+  mount(_newValue: TProps, _oldValue: TProps | null, _part: TPart): void {
     this._slot?.commit();
   }
 
-  revert(_value: TProps, _part: TPart): void {
+  unmount(_value: TProps, _part: TPart): void {
     this._slot?.revert();
   }
 

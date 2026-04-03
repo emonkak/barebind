@@ -90,7 +90,7 @@ export class DOMRepeatHandler<TSource>
     this._pendingSlots = [];
   }
 
-  commit(
+  mount(
     _newSource: Iterable<TSource>,
     _oldSource: Iterable<TSource>,
     part: DOMPart.ChildNodePart,
@@ -119,7 +119,7 @@ export class DOMRepeatHandler<TSource>
     this._currentSlots = this._pendingSlots;
   }
 
-  revert(_source: Iterable<TSource>, part: DOMPart.ChildNodePart): void {
+  unmount(_source: Iterable<TSource>, part: DOMPart.ChildNodePart): void {
     for (const slot of this._currentSlots) {
       slot.revert();
       slot.part.sentinelNode.remove();
