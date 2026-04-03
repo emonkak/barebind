@@ -108,6 +108,7 @@ export class DOMTemplate {
     exprs: readonly unknown[],
     mode: TemplateMode,
     placeholder: string,
+    document: Document,
   ) {
     const element = document.createElement('template');
     const marker = createMarker(placeholder);

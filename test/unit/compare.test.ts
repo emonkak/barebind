@@ -87,6 +87,7 @@ describe('shallowEqual()', () => {
   });
 
   it('uses a custom equals function when provided', () => {
+    // biome-ignore lint/suspicious/noDoubleEquals: intentional use for test
     const loose = (x: unknown, y: unknown) => x == y;
     expect(shallowEqual({ a: 1 }, { a: '1' } as any, loose)).toBe(true);
     expect(shallowEqual({ a: 1 }, { a: '2' } as any, loose)).toBe(false);

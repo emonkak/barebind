@@ -45,11 +45,7 @@
   },
   "overrides": [
     {
-      "includes": [
-        "src/**",
-        "!src/addons/router/*.ts",
-        "!src/runtime/browser.ts"
-      ],
+      "includes": ["src/**"],
       "linter": {
         "rules": {
           "style": {
@@ -57,8 +53,7 @@
               "level": "error",
               "options": {
                 "deniedGlobals": {
-                  "document": "document is not allowed.",
-                  "window": "window is not allowed."
+                  "document": "document is not allowed."
                 }
               }
             }

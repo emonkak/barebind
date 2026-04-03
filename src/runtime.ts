@@ -334,7 +334,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
   }
 
   private async _runRenderAsync(
-    renerLoop: Generator<UpdateUnit>,
+    renerLoop: Iterable<UpdateUnit>,
     session: Session<TPart, TRenderer>,
     lastLevel: number = 0,
   ): Promise<number> {
@@ -370,7 +370,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
   }
 
   private _runRenderSync(
-    renderLoop: Generator<UpdateUnit>,
+    renderLoop: Iterable<UpdateUnit>,
     session: Session<TPart, TRenderer>,
   ): void {
     const { id } = session;
