@@ -90,10 +90,10 @@ export interface DOMTemplateRenderer {
     template: DOMTemplate,
     exprs: readonly unknown[],
     scope: Scope<DOMPart, DOMTemplateRenderer>,
-  ): DOMTemplateResult;
+  ): DOMTemplateBlock;
 }
 
-export interface DOMTemplateResult {
+export interface DOMTemplateBlock {
   childNodes: ChildNode[];
   slots: Slot<DOMPart, DOMTemplateRenderer>[];
 }
@@ -142,8 +142,7 @@ export class DOMTemplateHandler
   implements DirectiveHandler<Template, DOMPart, DOMTemplateRenderer>
 {
   private readonly _template: DOMTemplate;
-  private _childNodes: ChildNode[] = [];
-  private _slots: Slot<DOMPart>[] = [];
+  private _block: DOMTemplateBlock | null = null;
 
   constructor(template: DOMTemplate) {
     this._template = template;
@@ -159,23 +158,18 @@ export class DOMTemplateHandler
     scope: Scope.ChildScope<DOMPart.ChildNodePart, DOMTemplateRenderer>,
     session: Session<DOMPart.ChildNodePart, DOMTemplateRenderer>,
   ): Iterable<Slot> {
-    if (
-      this._childNodes.length === 0 &&
-      this._template.element.content.firstChild !== null
-    ) {
-      const { childNodes, slots } = session.renderer.renderTemplate(
+    if (this._block === null) {
+      this._block = session.renderer.renderTemplate(
         this._template,
         template.exprs,
         scope,
       );
-      this._childNodes = childNodes;
-      this._slots = slots;
     } else {
-      this._slots = this._slots.map((slot, i) =>
+      this._block.slots = this._block.slots.map((slot, i) =>
         slot.update(wrap(template.exprs[i]), scope),
       );
     }
-    return this._slots;
+    return this._block.slots;
   }
 
   discard(
@@ -184,8 +178,10 @@ export class DOMTemplateHandler
     _scope: Scope<DOMPart.ChildNodePart, DOMTemplateRenderer>,
     session: Session<DOMPart.ChildNodePart, DOMTemplateRenderer>,
   ): void {
-    for (const slot of this._slots) {
-      slot.discard(session);
+    if (this._block !== null) {
+      for (const slot of this._block.slots) {
+        slot.discard(session);
+      }
     }
   }
 
@@ -201,34 +197,42 @@ export class DOMTemplateHandler
     _oldTemplate: Template | null,
     part: DOMPart.ChildNodePart,
   ): void {
-    if (part.node === part.sentinelNode) {
-      part.sentinelNode.before(...this._childNodes);
-    }
+    if (this._block !== null) {
+      const { childNodes, slots } = this._block;
 
-    for (const slot of this._slots) {
-      slot.commit();
-    }
+      if (part.node === part.sentinelNode) {
+        part.sentinelNode.before(...childNodes);
+      }
 
-    part.node = getStartNode(this._childNodes, this._slots, part.sentinelNode);
+      for (const slot of slots) {
+        slot.commit();
+      }
+
+      part.node = getStartNode(childNodes, slots, part.sentinelNode);
+    }
   }
 
   unmount(_template: Template, part: DOMPart.ChildNodePart): void {
-    for (const slot of this._slots) {
-      if (
-        (slot.part.type === ChildNodeType || slot.part.type === TextType) &&
-        this._childNodes.includes(getEndNode(slot.part))
-      ) {
-        // The slot is mounted as a child of the root, so it needs to be
-        // reverted.
-        slot.revert();
+    if (this._block !== null) {
+      const { childNodes, slots } = this._block;
+
+      for (const slot of slots) {
+        if (
+          (slot.part.type === ChildNodeType || slot.part.type === TextType) &&
+          childNodes.includes(getEndNode(slot.part))
+        ) {
+          // The slot is mounted as a child of the root, so it needs to be
+          // reverted.
+          slot.revert();
+        }
       }
-    }
 
-    for (const childNode of this._childNodes) {
-      childNode.remove();
-    }
+      for (const childNode of childNodes) {
+        childNode.remove();
+      }
 
-    part.node = part.sentinelNode;
+      part.node = part.sentinelNode;
+    }
   }
 }
 
