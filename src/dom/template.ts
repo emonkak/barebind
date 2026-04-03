@@ -209,8 +209,7 @@ export class DOMTemplateHandler
       slot.commit();
     }
 
-    part.node =
-      getStartNode(this._childNodes, this._slots) ?? part.sentinelNode;
+    part.node = getStartNode(this._childNodes, this._slots, part.sentinelNode);
   }
 
   unmount(_template: Template, part: DOMPart.ChildNodePart): void {
@@ -257,14 +256,15 @@ function getEndNode(part: DOMPart): ChildNode {
 function getStartNode(
   childNodes: readonly ChildNode[],
   slots: readonly Slot<DOMPart>[],
-): ChildNode | null {
+  sentinelNode: Comment,
+): ChildNode {
   const childNode = childNodes[0];
   const slot = slots[0];
   return childNode !== undefined &&
     slot !== undefined &&
     childNode === getEndNode(slot.part)
     ? slot.part.node
-    : (childNode ?? null);
+    : (childNode ?? sentinelNode);
 }
 
 function parseAttribtues(
