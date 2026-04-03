@@ -182,7 +182,7 @@ export interface UpdateScheduler<TPart = unknown, TRenderer = unknown> {
 export interface UpdateTask<TPart = unknown, TRenderer = unknown> {
   readonly scope: Scope<TPart, TRenderer>;
   readonly pendingLanes: Lanes;
-  start(session: Session<TPart, TRenderer>): Generator<UpdateUnit>;
+  start(session: Session<TPart, TRenderer>): Iterable<UpdateUnit>;
 }
 
 export interface UpdateUnit<TPart = unknown, TRenderer = unknown>
@@ -192,7 +192,7 @@ export interface UpdateUnit<TPart = unknown, TRenderer = unknown>
   readonly scope: Scope<TPart, TRenderer>;
   pendingLanes: Lanes;
   needsRender(lanes: Lanes): boolean;
-  render(session: Session<TPart, TRenderer>): Generator<UpdateUnit>;
+  render(session: Session<TPart, TRenderer>): Iterable<UpdateUnit>;
 }
 
 export type Scope<TPart = unknown, TRenderer = unknown> =

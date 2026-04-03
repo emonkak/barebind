@@ -79,7 +79,7 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
   }
 
   getTaskPriority(): TaskPriority {
-    const { event } = window;
+    const event = window.event;
     return event !== undefined && !isContinuousEvent(event)
       ? 'user-blocking'
       : 'user-visible';
@@ -168,6 +168,7 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
           directive.value.exprs,
           directive.value.mode,
           this._identifier,
+          this._container.ownerDocument,
         ),
     );
     return new DOMTemplateHandler(template);

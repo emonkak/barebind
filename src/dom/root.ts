@@ -78,6 +78,7 @@ export function createRoot(
   scheduler: UpdateScheduler<DOMPart, DOMRenderer>,
   options: DOMRootOptions = {},
 ): DOMRoot {
+  const document = (scheduler.adapter as DOMAdapter).container.ownerDocument;
   const part = createChildNodePart(document.createComment(''));
   const scope = createRootScope({
     part,
@@ -141,11 +142,10 @@ class UnmountTask implements Effect, UpdateTask<DOMPart, DOMRenderer> {
     return -1;
   }
 
-  *start(
-    session: Session<DOMPart.ChildNodePart, DOMRenderer>,
-  ): Generator<Slot> {
+  start(session: Session<DOMPart.ChildNodePart, DOMRenderer>): Iterable<Slot> {
     this._slot.discard(session);
     session.mutationEffects.push(this);
+    return [];
   }
 
   commit(): void {
