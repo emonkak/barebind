@@ -330,10 +330,9 @@ export class FunctionComponentContext extends ComponentContext {
       dispatcher.pendingActions = [];
       dispatcher.reducer = reducer;
     } else {
-      const context = this;
       const dispatcher: ActionDispatcher<TState, TAction> = {
-        dispatch(payload, options = {}) {
-          const { pendingActions, pendingState, reducer } = this;
+        dispatch: (payload, options = {}) => {
+          const { pendingActions, pendingState, reducer } = dispatcher;
 
           if (pendingActions.length === 0) {
             const areStatesEqual = options.areStatesEqual ?? Object.is;
@@ -352,7 +351,7 @@ export class FunctionComponentContext extends ComponentContext {
             }
           }
 
-          const handle = context.forceUpdate(options);
+          const handle = this.forceUpdate(options);
           pendingActions.push({
             payload,
             lanes: handle.lanes,
@@ -364,7 +363,6 @@ export class FunctionComponentContext extends ComponentContext {
         pendingState: getInitialState(initialState),
         reducer,
       };
-      dispatcher.dispatch = dispatcher.dispatch.bind(dispatcher);
       currentHook = {
         type: ReducerType,
         memoizedState: dispatcher.pendingState,
