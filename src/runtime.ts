@@ -341,9 +341,9 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     const { id } = session;
 
     for (const slot of renerLoop) {
-      const currentLevel = slot.scope.level;
+      const level = slot.scope.level;
 
-      if (currentLevel < lastLevel) {
+      if (level < lastLevel) {
         await this._adapter.yieldToMain();
       }
 
@@ -356,7 +356,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
       lastLevel = await this._runRenderAsync(
         slot.render(session),
         session,
-        currentLevel,
+        level,
       );
 
       notifyObservers(this._observers, {
