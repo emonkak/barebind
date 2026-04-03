@@ -36,9 +36,9 @@ export type SessionEvent =
       captured: boolean;
     }
   | {
-      type: 'slot-render-start' | 'slot-render-end';
+      type: 'unit-render-start' | 'unit-render-end';
       id: number;
-      slot: UpdateUnit;
+      unit: UpdateUnit;
     }
   | {
       type: 'commit-start' | 'commit-end';
@@ -340,29 +340,29 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
   ): Promise<number> {
     const { id } = session;
 
-    for (const slot of renerLoop) {
-      const level = slot.scope.level;
+    for (const unit of renerLoop) {
+      const level = unit.scope.level;
 
       if (level < lastLevel) {
         await this._adapter.yieldToMain();
       }
 
       notifyObservers(this._observers, {
-        type: 'slot-render-start',
+        type: 'unit-render-start',
         id,
-        slot,
+        unit,
       });
 
       lastLevel = await this._runRenderAsync(
-        slot.render(session),
+        unit.render(session),
         session,
         level,
       );
 
       notifyObservers(this._observers, {
-        type: 'slot-render-end',
+        type: 'unit-render-end',
         id,
-        slot,
+        unit,
       });
     }
 
@@ -375,19 +375,19 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
   ): void {
     const { id } = session;
 
-    for (const slot of renderLoop) {
+    for (const unit of renderLoop) {
       notifyObservers(this._observers, {
-        type: 'slot-render-start',
+        type: 'unit-render-start',
         id,
-        slot,
+        unit,
       });
 
-      this._runRenderSync(slot.render(session), session);
+      this._runRenderSync(unit.render(session), session);
 
       notifyObservers(this._observers, {
-        type: 'slot-render-end',
+        type: 'unit-render-end',
         id,
-        slot,
+        unit,
       });
     }
   }
