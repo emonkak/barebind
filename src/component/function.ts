@@ -12,7 +12,7 @@ import {
   type UpdateResult,
   wrap,
 } from '../core.js';
-import { getRootScope, OrphanScope } from '../scope.js';
+import { OrphanScope } from '../scope.js';
 import { Slot } from '../slot.js';
 import { ComponentContext } from './component.js';
 
@@ -227,12 +227,9 @@ export class FunctionComponentContext extends ComponentContext {
     if (currentHook !== undefined) {
       ensureHookType(IdType, currentHook);
     } else {
-      const root = getRootScope(this._scope);
-      const id =
-        root !== null ? root.owner.idPrefix + '-' + root.owner.idSeq++ : '';
       currentHook = {
         type: IdType,
-        id,
+        id: this.nextId(),
       };
     }
 
