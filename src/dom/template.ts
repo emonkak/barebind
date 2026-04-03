@@ -255,12 +255,12 @@ function createMarker(placeholder: string): string {
   return '??' + placeholder + '??';
 }
 
-function extractRawAttributeName(span: string): string | undefined {
-  return span.match(ATTRIBUTE_NAME_PATTERN)?.[0];
-}
-
 function getEndNode(part: DOMPart): ChildNode {
   return part.type === ChildNodeType ? part.sentinelNode : part.node;
+}
+
+function getRawAttributeName(s: string): string | undefined {
+  return s.match(ATTRIBUTE_NAME_PATTERN)?.[0];
 }
 
 function getStartNode(
@@ -293,7 +293,7 @@ function parseAttribtues(
         index,
       };
     } else if (attribute.value === marker) {
-      const rawName = extractRawAttributeName(strings[holes.length]!);
+      const rawName = getRawAttributeName(strings[holes.length]!);
 
       DEBUG: {
         if (rawName?.toLowerCase() !== attribute.name) {
