@@ -7,7 +7,7 @@ import {
   wrap,
 } from '../core.js';
 import type { Slot } from '../slot.js';
-import { generateNodeFrame } from './debug.js';
+import { DOMRenderError } from './error.js';
 import {
   AttributeType,
   ChildNodeType,
@@ -90,6 +90,7 @@ export interface DOMTemplateRenderer {
   renderTemplate(
     template: DOMTemplate,
     exprs: readonly unknown[],
+    part: DOMPart.ChildNodePart,
     scope: Scope<DOMPart, DOMTemplateRenderer>,
   ): DOMTemplateBlock;
 }
@@ -124,7 +125,7 @@ export class DOMTemplate {
       );
     }
 
-    const holes = parseChildren(strings, exprs, marker, element.content);
+    const holes = parseChildren(strings, exprs, marker, element);
 
     return new DOMTemplate(element, holes, mode);
   }
@@ -156,7 +157,7 @@ export class DOMTemplateHandler
 
   render(
     template: Template,
-    _part: DOMPart.ChildNodePart,
+    part: DOMPart.ChildNodePart,
     scope: Scope.ChildScope<DOMPart.ChildNodePart, DOMTemplateRenderer>,
     session: Session<DOMPart.ChildNodePart, DOMTemplateRenderer>,
   ): Iterable<Slot> {
@@ -164,6 +165,7 @@ export class DOMTemplateHandler
       this._block = session.renderer.renderTemplate(
         this._template,
         template.exprs,
+        part,
         scope,
       );
     } else {
@@ -250,7 +252,7 @@ export function createTreeWalker(
 function createMarker(placeholder: string): string {
   if (!PLACEHOLDER_PATTERN.test(placeholder)) {
     throw new Error(
-      `Placeholders must match pattern ${PLACEHOLDER_PATTERN}, but got "${placeholder}".`,
+      `Placeholders must match pattern ${PLACEHOLDER_PATTERN.source}, but got "${placeholder}".`,
     );
   }
   return '??' + placeholder + '??';
@@ -298,13 +300,13 @@ function parseAttribtues(
 
       DEBUG: {
         if (rawName?.toLowerCase() !== attribute.name) {
-          throw new Error(
-            `The attribute name must be "${attribute.name}", but got "${rawName}". There are unclosed tags or duplicate attributes:\n` +
-              generateNodeFrame({
-                type: 'attribute',
-                node: element,
-                name: attribute.name,
-              }),
+          throw DOMRenderError.fromPlace(
+            {
+              type: AttributeType,
+              node: element,
+              name: attribute.name,
+            },
+            `The attribute name must be "${attribute.name}", but got "${rawName}". There are unclosed tags or duplicate attributes.`,
           );
         }
       }
@@ -342,24 +344,24 @@ function parseAttribtues(
     } else {
       DEBUG: {
         if (attribute.name.includes(marker)) {
-          throw new Error(
-            'Expressions are not allowed as an attribute name:\n' +
-              generateNodeFrame({
-                type: 'attribute',
-                node: element,
-                name: attribute.name,
-              }),
+          throw DOMRenderError.fromPlace(
+            {
+              type: AttributeType,
+              node: element,
+              name: attribute.name,
+            },
+            'Expressions are not allowed as an attribute name.',
           );
         }
 
         if (attribute.value.includes(marker)) {
-          throw new Error(
-            'Expressions inside an attribute must make up the entire attribute value:\n' +
-              generateNodeFrame({
-                type: 'attribute',
-                node: element,
-                name: attribute.name,
-              }),
+          throw DOMRenderError.fromPlace(
+            {
+              type: AttributeType,
+              node: element,
+              name: attribute.name,
+            },
+            'Expressions inside an attribute must make up the entire attribute value.',
           );
         }
       }
@@ -375,9 +377,9 @@ function parseChildren(
   strings: readonly string[],
   exprs: readonly unknown[],
   marker: string,
-  fragment: DocumentFragment,
+  template: HTMLTemplateElement,
 ): DOMHole[] {
-  const sourceTree = createTreeWalker(fragment);
+  const sourceTree = createTreeWalker(template.content);
   const holes: DOMHole[] = [];
   let nextNode = sourceTree.nextNode();
   let index = 0;
@@ -388,12 +390,13 @@ function parseChildren(
       case Node.ELEMENT_NODE: {
         DEBUG: {
           if ((currentNode as Element).localName.includes(marker)) {
-            throw new Error(
-              'Expressions are not allowed as a tag name:\n' +
-                generateNodeFrame({
-                  type: 'tagName',
-                  node: currentNode as Element,
-                }),
+            throw DOMRenderError.fromPlace(
+              {
+                type: ElementType,
+                node: currentNode as Element,
+                unknown: true,
+              },
+              'Expressions are not allowed as a tag name.',
             );
           }
         }
@@ -420,12 +423,12 @@ function parseChildren(
         } else {
           DEBUG: {
             if ((currentNode as Comment).data.includes(marker)) {
-              throw new Error(
-                'Expressions inside a comment must make up the entire comment value:\n' +
-                  generateNodeFrame({
-                    type: 'comment',
-                    node: currentNode as Comment,
-                  }),
+              throw DOMRenderError.fromPlace(
+                {
+                  type: ChildNodeType,
+                  node: currentNode as Comment,
+                },
+                'Expressions inside a comment must make up the entire comment value.',
               );
             }
           }
@@ -468,9 +471,9 @@ function parseChildren(
   }
 
   if (exprs.length !== holes.length) {
-    throw new Error(
-      `The number of holes must be ${exprs.length}, but got ${holes.length}. Multiple holes indicate the same attribute:\n` +
-        strings.join('${...}').trim(),
+    throw DOMRenderError.fromNode(
+      template.content,
+      `The number of holes must be ${exprs.length}, but got ${holes.length}. Multiple holes indicate the same attribute.`,
     );
   }
 

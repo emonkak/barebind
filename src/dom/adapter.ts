@@ -12,13 +12,13 @@ import type {
 } from '../core.js';
 import { ConcurrentLane } from '../lane.js';
 import { isRootScope } from '../scope.js';
+import { ensurePartType } from './error.js';
 import {
   AttributeType,
   ChildNodeType,
   type DOMPart,
   ElementType,
   EventType,
-  ensurePartType,
   LiveType,
   PropertyType,
   TextType,

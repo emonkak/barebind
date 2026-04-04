@@ -1,8 +1,5 @@
 /// <reference path="../../typings/moveBefore.d.ts" />
 
-import type { Directive } from '../core.js';
-import { nameOf } from '../debug.js';
-
 export const AttributeType = 0;
 export const ChildNodeType = 1;
 export const ElementType = 2;
@@ -170,37 +167,4 @@ export function createTextPart(node: Text): DOMPart.TextPart {
     type: TextType,
     node,
   };
-}
-
-export function ensurePartType<TPartType extends DOMPart['type']>(
-  expectedPartType: TPartType,
-  directive: Directive.ElementDirective,
-  part: DOMPart,
-): asserts part is DOMPart & { type: TPartType } {
-  if (part.type !== expectedPartType) {
-    let message = 'The part type mismatches.';
-    DEBUG: {
-      message += ` ${nameOf(directive.type)} must be used in ${getPartName(expectedPartType)}Part.`;
-    }
-    throw new Error(message);
-  }
-}
-
-function getPartName(type: DOMPart['type']): string {
-  switch (type) {
-    case AttributeType:
-      return 'Attribute';
-    case ChildNodeType:
-      return 'ChildNode';
-    case ElementType:
-      return 'Element';
-    case EventType:
-      return 'Event';
-    case LiveType:
-      return 'Live';
-    case PropertyType:
-      return 'Property';
-    case TextType:
-      return 'Text';
-  }
 }

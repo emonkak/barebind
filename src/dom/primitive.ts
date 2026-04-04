@@ -7,6 +7,7 @@ import {
   wrap,
 } from '../core.js';
 import { Slot } from '../slot.js';
+import { DOMRenderError } from './error.js';
 import {
   createAttributePart,
   createEventPart,
@@ -63,7 +64,7 @@ type ExtractStringKeys<T> = {
 export class DOMPrimitiveHandler<TValue, TPart extends DOMPart>
   implements PrimitiveHandler<TValue, TPart, DOMRenderer>
 {
-  ensureValue(_value: unknown): void {}
+  ensureValue(_value: unknown, _part: TPart): void {}
 
   shouldUpdate(newValue: TValue, oldValue: TValue): boolean {
     return !Object.is(newValue, oldValue);
@@ -126,9 +127,9 @@ export class DOMClassHandler extends DOMPrimitiveHandler<
   ClassMap,
   DOMPart.AttributePart
 > {
-  override ensureValue(value: unknown): void {
+  override ensureValue(value: unknown, part: DOMPart.AttributePart): void {
     if (!isObject(value)) {
-      throw new Error('Class values must be object.');
+      throw DOMRenderError.fromPlace(part, 'Class values must be object.');
     }
   }
 
@@ -157,9 +158,9 @@ export class DOMElementHandler extends DOMPrimitiveHandler<
 
   private _currentSlots: Map<string, Slot<DOMPart>> = new Map();
 
-  override ensureValue(value: unknown): void {
+  override ensureValue(value: unknown, part: DOMPart.ElementPart): void {
     if (!isObject(value)) {
-      throw new Error('Element values must be object.');
+      throw DOMRenderError.fromPlace(part, 'Element values must be object.');
     }
   }
 
@@ -245,9 +246,10 @@ export class DOMEventHandler extends DOMPrimitiveHandler<
 > {
   private _memoizedListener: EventListenerOrNullish;
 
-  override ensureValue(value: unknown): void {
+  override ensureValue(value: unknown, part: DOMPart.EventPart): void {
     if (!(isEventListener(value) || value == null)) {
-      throw new Error(
+      throw DOMRenderError.fromPlace(
+        part,
         'Event values must be EventListener, EventListenerObject, null or undefined.',
       );
     }
@@ -358,9 +360,10 @@ export class DOMRefHandler extends DOMPrimitiveHandler<
   /** @internal */
   _memoizedCleanup: Cleanup | void | undefined;
 
-  override ensureValue(value: unknown): void {
+  override ensureValue(value: unknown, part: DOMPart.AttributePart): void {
     if (!isRef(value) || value == null) {
-      throw new Error(
+      throw DOMRenderError.fromPlace(
+        part,
         'Ref values must be RefFuction, RefObject, null or undefined.',
       );
     }
@@ -389,9 +392,9 @@ export class DOMStyleHandler extends DOMPrimitiveHandler<
   StyleMap,
   DOMPart.AttributePart
 > {
-  override ensureValue(value: unknown): void {
+  override ensureValue(value: unknown, part: DOMPart.AttributePart): void {
     if (!isObject(value)) {
-      throw new Error('Style values must be object.');
+      throw DOMRenderError.fromPlace(part, 'Style values must be object.');
     }
   }
 
