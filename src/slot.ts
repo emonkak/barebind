@@ -10,8 +10,13 @@ import {
   type Session,
   type UpdateUnit,
 } from './core.js';
-import { AbortError, handleError, InterruptError } from './error.js';
-import { containsScope, createChildScope, OrphanScope } from './scope.js';
+import { AbortError, InterruptError } from './error.js';
+import {
+  containsScope,
+  createChildScope,
+  handleError,
+  OrphanScope,
+} from './scope.js';
 
 const IdleStatus = 0;
 const StagedStatus = 1;

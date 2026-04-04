@@ -1,4 +1,10 @@
-import type { Lanes, Root, Scope, UpdateUnit } from './core.js';
+import {
+  ErrorBoundary,
+  type Lanes,
+  type Root,
+  type Scope,
+  type UpdateUnit,
+} from './core.js';
 
 export const OrphanScope: Scope.OrphanScope = Object.freeze({
   owner: null,
@@ -60,6 +66,36 @@ export function getRootScope<TPart, TRenderer>(
     scope = scope.owner.scope;
   }
   return isRootScope(scope) ? scope : null;
+}
+
+export function handleError(scope: Scope, error: unknown): Scope {
+  let currentScope = scope;
+  let currentBoundary = currentScope.boundary;
+
+  const forwardError = (error: unknown) => {
+    while (true) {
+      while (currentBoundary !== null) {
+        const boundary = currentBoundary;
+        currentBoundary = currentBoundary.next;
+        if (boundary.type === ErrorBoundary) {
+          const { handler } = boundary;
+          handler.handleError(error, forwardError);
+          return;
+        }
+      }
+
+      if (isChildScope(currentScope)) {
+        currentScope = currentScope.owner.scope;
+        currentBoundary = currentScope.boundary;
+      } else {
+        throw error;
+      }
+    }
+  };
+
+  forwardError(error);
+
+  return currentScope;
 }
 
 export function isChildScope<TPart, TRenderer>(

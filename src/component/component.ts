@@ -8,8 +8,8 @@ import {
   type UpdateOptions,
   type UpdateResult,
 } from '../core.js';
-import { AbortError, handleError } from '../error.js';
-import { getRootScope, isChildScope } from '../scope.js';
+import { AbortError } from '../error.js';
+import { getRootScope, handleError, isChildScope } from '../scope.js';
 
 export type Usable<TContext extends ComponentContext, TReturn> =
   | Usable.UsableClass<TContext, TReturn>
