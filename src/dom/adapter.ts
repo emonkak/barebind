@@ -80,9 +80,11 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
 
   getTaskPriority(): TaskPriority {
     const event = window.event;
-    return event !== undefined && !isContinuousEvent(event)
-      ? 'user-blocking'
-      : 'user-visible';
+    return event === undefined
+      ? 'background'
+      : isContinuousEvent(event)
+        ? 'user-blocking'
+        : 'user-visible';
   }
 
   requestCallback<T>(
