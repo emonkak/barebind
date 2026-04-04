@@ -78,19 +78,19 @@ export function getChildNodes(part: DOMPart.ChildNodePart): ChildNode[] {
 export function insertChildNodePart(
   containerPart: DOMPart.ChildNodePart,
   childPart: DOMPart.ChildNodePart,
-  referencePart: DOMPart.ChildNodePart | undefined,
+  afterPart: DOMPart.ChildNodePart | undefined,
 ): void {
-  const referenceNode = referencePart?.node ?? containerPart.sentinelNode;
+  const referenceNode = afterPart?.node ?? containerPart.sentinelNode;
   referenceNode.before(childPart.sentinelNode);
 }
 
 export function moveChildNodePart(
   containerPart: DOMPart.ChildNodePart,
   childPart: DOMPart.ChildNodePart,
-  referencePart: DOMPart.ChildNodePart | undefined,
+  afterPart: DOMPart.ChildNodePart | undefined,
 ): void {
   const childNodes = getChildNodes(childPart);
-  const referenceNode = referencePart?.node ?? containerPart.sentinelNode;
+  const referenceNode = afterPart?.node ?? containerPart.sentinelNode;
   const { parentNode } = referenceNode;
 
   if (parentNode !== null) {
