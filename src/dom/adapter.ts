@@ -178,21 +178,17 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
 
   startViewTransition(callback: () => PromiseLike<void> | void): Promise<void> {
     const document = this._container.ownerDocument;
-    if (typeof document.startViewTransition === 'function') {
-      return document.startViewTransition(callback).updateCallbackDone;
-    } else {
-      return Promise.resolve().then(callback);
-    }
+    return typeof document.startViewTransition === 'function'
+      ? document.startViewTransition(callback).updateCallbackDone
+      : Promise.resolve().then(callback);
   }
 
   yieldToMain(): Promise<void> {
-    if (typeof window.scheduler?.yield === 'function') {
-      return scheduler.yield();
-    } else {
-      return new Promise((resolve) => {
-        setTimeout(resolve);
-      });
-    }
+    return typeof window.scheduler?.yield === 'function'
+      ? scheduler.yield()
+      : new Promise((resolve) => {
+          setTimeout(resolve);
+        });
   }
 }
 
