@@ -113,7 +113,7 @@ export class Slot<TPart = unknown, TRenderer = unknown>
 
   *render(session: Session<TPart, TRenderer>): Generator<UpdateUnit> {
     const { type, value } = this._directive;
-    const { adapter } = session;
+    const { adapter, lanes } = session;
 
     if (type === Primitive) {
       this._handler ??= adapter.resolvePrimitive(this._directive, this._part);
@@ -137,7 +137,7 @@ export class Slot<TPart = unknown, TRenderer = unknown>
       const scope = createChildScope(this);
       let childSlots: Iterable<UpdateUnit>;
 
-      this._pendingLanes &= ~session.lanes;
+      this._pendingLanes &= ~lanes;
 
       try {
         childSlots = this._handler.render(value, this._part, scope, session);
@@ -159,9 +159,9 @@ export class Slot<TPart = unknown, TRenderer = unknown>
         childSlots = [];
       }
 
-      if ((this._pendingLanes & session.lanes) === 0) {
+      if ((this._pendingLanes & lanes) === 0) {
         for (const childSlot of childSlots) {
-          if (childSlot.needsRender(session.lanes)) {
+          if (childSlot.needsRender(lanes)) {
             yield childSlot;
           }
         }
@@ -169,7 +169,7 @@ export class Slot<TPart = unknown, TRenderer = unknown>
 
       Object.freeze(scope);
 
-      if ((this._pendingLanes & session.lanes) === 0) {
+      if ((this._pendingLanes & lanes) === 0) {
         this._handler.complete(value, this._part, scope, session);
         break;
       }
