@@ -1,5 +1,6 @@
 import { type Scope, wrap } from '../core.js';
 import { Slot } from '../slot.js';
+import { DOMRenderError } from './error.js';
 import {
   AttributeType,
   ChildNodeType,
@@ -51,11 +52,13 @@ export class ClientRenderer implements DOMRenderer {
   renderTemplate(
     template: DOMTemplate,
     exprs: readonly unknown[],
+    part: DOMPart.ChildNodePart,
     scope: Scope<DOMPart>,
   ): DOMTemplateBlock {
     return renderTemplate(
       template,
       exprs,
+      part,
       scope,
       this._container.ownerDocument,
     );
@@ -76,9 +79,10 @@ export class HydrationRenderer implements DOMRenderer {
   renderTemplate(
     template: DOMTemplate,
     exprs: readonly unknown[],
+    part: DOMPart.ChildNodePart,
     scope: Scope<DOMPart>,
   ): DOMTemplateBlock {
-    return hydrateTemplate(template, exprs, scope, this._targetWalker);
+    return hydrateTemplate(template, exprs, part, scope, this._targetWalker);
   }
 
   renderChildNodePart(): DOMPart.ChildNodePart {
@@ -89,6 +93,7 @@ export class HydrationRenderer implements DOMRenderer {
 function hydrateTemplate(
   template: DOMTemplate,
   exprs: readonly unknown[],
+  part: DOMPart.ChildNodePart,
   scope: Scope<DOMPart>,
   targetWalker: TreeWalker,
 ): DOMTemplateBlock {
@@ -162,7 +167,8 @@ function hydrateTemplate(
   }
 
   if (holeIndex < totalHoles) {
-    throw new Error(
+    throw DOMRenderError.fromPlace(
+      part,
       'There is no node that the hole indicates. The template may have been modified.',
     );
   }
@@ -194,6 +200,7 @@ function hydrateTextPart(
 function renderTemplate(
   template: DOMTemplate,
   exprs: readonly unknown[],
+  part: DOMPart.ChildNodePart,
   scope: Scope<DOMPart>,
   ownerDocument: Document,
 ): DOMTemplateBlock {
@@ -211,40 +218,41 @@ function renderTemplate(
 
       for (; nodeIndex <= hole.index; nodeIndex++) {
         if (templateWalker.nextNode() === null) {
-          throw new Error(
+          throw DOMRenderError.fromPlace(
+            part,
             'There is no node that the hole indicates. The template may have been modified.',
           );
         }
       }
 
       const currentNode = templateWalker.currentNode;
-      let part: DOMPart;
+      let currentPart: DOMPart;
 
       switch (hole.type) {
         case AttributeType:
-          part = createAttributePart(currentNode as Element, hole.name);
+          currentPart = createAttributePart(currentNode as Element, hole.name);
           break;
         case EventType:
-          part = createEventPart(currentNode as Element, hole.name);
+          currentPart = createEventPart(currentNode as Element, hole.name);
           break;
         case ChildNodeType:
-          part = createChildNodePart(currentNode as Comment);
+          currentPart = createChildNodePart(currentNode as Comment);
           break;
         case ElementType:
-          part = createElementPart(currentNode as Element);
+          currentPart = createElementPart(currentNode as Element);
           break;
         case LiveType:
-          part = createLivePart(currentNode as Element, hole.name);
+          currentPart = createLivePart(currentNode as Element, hole.name);
           break;
         case PropertyType:
-          part = createPropertyPart(currentNode as Element, hole.name);
+          currentPart = createPropertyPart(currentNode as Element, hole.name);
           break;
         case TextType:
-          part = splitTextPart(templateWalker, hole);
+          currentPart = splitTextPart(templateWalker, hole);
           break;
       }
 
-      slots[i] = new Slot(part, wrap(exprs[i]!), scope);
+      slots[i] = new Slot(currentPart, wrap(exprs[i]!), scope);
     }
   }
 
@@ -261,7 +269,8 @@ function popNode(expectedName: string, treeWalker: TreeWalker): Node {
   const node = treeWalker.nextNode();
 
   if (node === null || node.nodeName !== expectedName) {
-    throw new Error(
+    throw DOMRenderError.fromNode(
+      treeWalker.currentNode,
       `Hydration failed because the node name mismatches. ${expectedName} is expected here, but got ${node?.nodeName}.`,
     );
   }

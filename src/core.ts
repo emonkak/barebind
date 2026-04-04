@@ -142,7 +142,7 @@ export interface Root<TPart> {
 
 export interface PrimitiveHandler<TValue, TPart = unknown, TRenderer = unknown>
   extends DirectiveHandler<TValue, TPart, TRenderer> {
-  ensureValue(value: unknown): void;
+  ensureValue(value: unknown, part: TPart): void;
 }
 
 export interface Update<TPart, TRenderer> {

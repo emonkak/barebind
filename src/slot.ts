@@ -117,7 +117,10 @@ export class Slot<TPart = unknown, TRenderer = unknown>
 
     if (type === Primitive) {
       this._handler ??= adapter.resolvePrimitive(this._directive, this._part);
-      (this._handler as PrimitiveHandler<unknown>).ensureValue(value);
+      (this._handler as PrimitiveHandler<unknown>).ensureValue(
+        value,
+        this._part,
+      );
     } else if (type === Repeat) {
       this._handler ??= adapter.resolveRepeat(this._directive, this._part);
     } else if (typeof type === 'object') {
