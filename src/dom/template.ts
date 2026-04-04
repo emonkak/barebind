@@ -212,7 +212,7 @@ export class DOMTemplateHandler
         slot.commit();
       }
 
-      part.node = getStartNode(childNodes, slots, part.sentinelNode);
+      part.node = getStartNode(part, childNodes, slots);
     }
   }
 
@@ -267,17 +267,15 @@ function getRawAttributeName(s: string): string | undefined {
 }
 
 function getStartNode(
+  part: DOMPart.ChildNodePart,
   childNodes: readonly ChildNode[],
   slots: readonly Slot<DOMPart>[],
-  sentinelNode: Comment,
 ): ChildNode {
-  const childNode = childNodes[0];
-  const slot = slots[0];
-  return childNode !== undefined &&
-    slot !== undefined &&
-    childNode === getEndNode(slot.part)
-    ? slot.part.node
-    : (childNode ?? sentinelNode);
+  const firstChild = childNodes[0];
+  const firstSlot = slots[0];
+  return firstSlot !== undefined && getEndNode(firstSlot.part) === firstChild
+    ? firstSlot.part.node
+    : (firstChild ?? part.sentinelNode);
 }
 
 function parseAttribtues(
