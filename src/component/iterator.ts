@@ -89,7 +89,7 @@ export class IteratorComponentHandler<TProps, TReturn>
   complete(
     _props: TProps,
     _part: unknown,
-    scope: Scope,
+    scope: Scope.ChildScope,
     session: Session,
   ): void {
     if (this._context !== null) {

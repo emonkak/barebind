@@ -81,7 +81,7 @@ export class DOMPrimitiveHandler<TValue, TPart extends DOMPart>
   complete(
     _value: TValue,
     _part: TPart,
-    _scope: Scope<TPart, DOMRenderer>,
+    _scope: Scope.ChildScope<TPart, DOMRenderer>,
     _session: Session<TPart, DOMRenderer>,
   ): void {}
 
@@ -371,7 +371,7 @@ export class DOMRefHandler extends DOMPrimitiveHandler<
   override complete(
     ref: Ref<Element>,
     part: DOMPart.AttributePart,
-    scope: Scope<DOMPart.AttributePart, DOMRenderer>,
+    scope: Scope.ChildScope<DOMPart.AttributePart, DOMRenderer>,
     session: Session<DOMPart.AttributePart, DOMRenderer>,
   ): void {
     session.layoutEffects.push(new InvokeRef(this, ref, part, scope));

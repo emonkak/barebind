@@ -171,7 +171,7 @@ export class FunctionComponentHandler<TProps, TReturn>
   complete(
     _props: TProps,
     _part: unknown,
-    scope: Scope,
+    scope: Scope.ChildScope,
     session: Session,
   ): void {
     if (this._context !== null) {
@@ -470,7 +470,7 @@ class InvokeEffect implements Effect {
 
 function completeContext(
   context: FunctionComponentContext,
-  scope: Scope,
+  scope: Scope.ChildScope,
   session: Session,
 ): void {
   // Cleanup effects follow the same declaration order within a component,
