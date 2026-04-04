@@ -173,7 +173,6 @@ export type UpdateResult =
   | { status: 'aborted'; reason: unknown };
 
 export interface UpdateScheduler<TPart = unknown, TRenderer = unknown> {
-  get adapter(): HostAdapter<TPart, TRenderer>;
   get updateQueue(): Iterable<Update<TPart, TRenderer>>;
   nextTransition(): number;
   schedule(task: UpdateTask, options?: UpdateOptions): UpdateHandle;

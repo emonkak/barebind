@@ -4,7 +4,6 @@ import {
   type Scope,
   type Session,
   type UpdateHandle,
-  type UpdateScheduler,
   type UpdateTask,
   wrap,
 } from '../core.js';
@@ -26,35 +25,35 @@ export interface DOMRootOptions {
 
 export class DOMRoot {
   private readonly _slot: Slot<DOMPart.ChildNodePart, DOMRenderer>;
-  private readonly _scheduler: UpdateScheduler<DOMPart, DOMRenderer>;
+  private readonly _runtime: Runtime<DOMPart, DOMRenderer>;
 
   constructor(
     slot: Slot<DOMPart.ChildNodePart, DOMRenderer>,
-    scheduler: UpdateScheduler<DOMPart, DOMRenderer>,
+    runtime: Runtime<DOMPart, DOMRenderer>,
   ) {
     this._slot = slot;
-    this._scheduler = scheduler;
+    this._runtime = runtime;
   }
 
   update(source: unknown): UpdateHandle {
     this._slot.update(wrap(source), this._slot.scope);
-    return this._scheduler.schedule(this._slot);
+    return this._runtime.schedule(this._slot);
   }
 
   mount(): UpdateHandle {
     const task = new MountTask(
       this._slot,
-      (this._scheduler.adapter as DOMAdapter).container,
+      (this._runtime.adapter as DOMAdapter).container,
     );
-    return this._scheduler.schedule(task);
+    return this._runtime.schedule(task);
   }
 
   unmount(): UpdateHandle {
     const task = new UnmountTask(
       this._slot,
-      (this._scheduler.adapter as DOMAdapter).container,
+      (this._runtime.adapter as DOMAdapter).container,
     );
-    return this._scheduler.schedule(task);
+    return this._runtime.schedule(task);
   }
 }
 
@@ -80,18 +79,18 @@ export function createHydrationRoot(
 
 export function createRoot(
   source: unknown,
-  scheduler: UpdateScheduler<DOMPart, DOMRenderer>,
+  runtime: Runtime<DOMPart, DOMRenderer>,
   options: DOMRootOptions = {},
 ): DOMRoot {
-  const document = (scheduler.adapter as DOMAdapter).container.ownerDocument;
+  const document = (runtime.adapter as DOMAdapter).container.ownerDocument;
   const part = createChildNodePart(document.createComment(''));
   const scope = createRootScope({
     part,
-    idPrefix: options.idPrefix ?? scheduler.adapter.getIdentifier(),
+    idPrefix: options.idPrefix ?? runtime.adapter.getIdentifier(),
     idSeq: 0,
   });
   const slot = new Slot(part, wrap(source), Object.freeze(scope));
-  return new DOMRoot(slot, scheduler);
+  return new DOMRoot(slot, runtime);
 }
 
 class MountTask implements Effect, UpdateTask<DOMPart, DOMRenderer> {
