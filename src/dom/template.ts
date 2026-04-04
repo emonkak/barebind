@@ -25,12 +25,12 @@ const LEADING_NEWLINE_PATTERN = /^\s*\n/;
 const TRAILING_NEWLINE_PATTERN = /\n\s*$/;
 
 // https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
-const ATTRIBUTE_NAME_CHARS = String.raw`[^ "'>/=\p{Control}\p{Noncharacter_Code_Point}]`;
+const ATTRIBUTE_NAME_CLASS = String.raw`[^ "'>/=\p{Control}\p{Noncharacter_Code_Point}]`;
 // https://infra.spec.whatwg.org/#ascii-whitespace
-const WHITESPACE_CHARS = String.raw`[\t\n\f\r ]`;
-const QUOTE_CHARS = `["']`;
+const WHITESPACE_CLASS = String.raw`[\t\n\f\r ]`;
+const QUOTE_CLASS = `["']`;
 const ATTRIBUTE_NAME_PATTERN = new RegExp(
-  `${ATTRIBUTE_NAME_CHARS}+(?=${WHITESPACE_CHARS}*=${WHITESPACE_CHARS}*${QUOTE_CHARS}?$)`,
+  `${ATTRIBUTE_NAME_CLASS}+(?=${WHITESPACE_CLASS}*=${WHITESPACE_CLASS}*${QUOTE_CLASS}?$)`,
   'u',
 );
 
