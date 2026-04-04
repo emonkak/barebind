@@ -240,7 +240,8 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     session: Session<TPart, TRenderer>,
     phases: EffectPhases,
   ): void {
-    const { id, passiveEffects } = session;
+    const { id } = session;
+    const passiveEffects = session.passiveEffects.splice(0);
 
     if (phases & PassivePhase && passiveEffects.length > 0) {
       this._adapter
@@ -276,7 +277,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
       effects,
     });
 
-    for (const effect of effects.splice(0)) {
+    for (const effect of effects) {
       effect.commit();
     }
 
@@ -292,7 +293,9 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     session: Session<TPart, TRenderer>,
     phases: EffectPhases,
   ): Promise<void> {
-    const { id, layoutEffects, mutationEffects } = session;
+    const { id } = session;
+    const mutationEffects = session.mutationEffects.splice(0);
+    const layoutEffects = session.layoutEffects.splice(0);
 
     if (
       phases & (MutationPhase | LayoutPhase) &&
@@ -322,7 +325,9 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     session: Session<TPart, TRenderer>,
     phases: EffectPhases,
   ): void {
-    const { id, layoutEffects, mutationEffects } = session;
+    const { id } = session;
+    const mutationEffects = session.mutationEffects.splice(0);
+    const layoutEffects = session.layoutEffects.splice(0);
 
     if (phases & MutationPhase && mutationEffects.length > 0) {
       this._flushEffects(id, mutationEffects, MutationPhase);
