@@ -75,7 +75,7 @@ export interface DirectiveHandler<
   complete(
     value: TValue,
     part: TPart,
-    scope: Scope<TPart, TRenderer>,
+    scope: Scope.ChildScope<TPart, TRenderer>,
     session: Session<TPart, TRenderer>,
   ): void;
   discard(

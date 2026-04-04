@@ -72,7 +72,7 @@ export class DOMRepeatHandler<TSource>
   complete(
     _source: Iterable<TSource>,
     _part: DOMPart.ChildNodePart,
-    _scope: Scope<DOMPart.ChildNodePart, DOMRenderer>,
+    _scope: Scope.ChildScope<DOMPart.ChildNodePart, DOMRenderer>,
     _session: Session<DOMPart.ChildNodePart, DOMRenderer>,
   ): void {}
 

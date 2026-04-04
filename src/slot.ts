@@ -170,13 +170,12 @@ export class Slot<TPart = unknown, TRenderer = unknown>
       Object.freeze(scope);
 
       if ((this._pendingLanes & session.lanes) === 0) {
+        this._handler.complete(value, this._part, scope, session);
         break;
       }
 
       restartRender(session, scope);
     }
-
-    this._handler.complete(value, this._part, this._scope, session);
 
     this._status = StagedStatus;
   }

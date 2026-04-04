@@ -190,7 +190,7 @@ export class DOMTemplateHandler
   complete(
     _template: Template,
     _part: DOMPart.ChildNodePart,
-    _scope: Scope<DOMPart.ChildNodePart, DOMTemplateRenderer>,
+    _scope: Scope.ChildScope<DOMPart.ChildNodePart, DOMTemplateRenderer>,
     _session: Session<DOMPart.ChildNodePart, DOMTemplateRenderer>,
   ): void {}
 
