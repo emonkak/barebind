@@ -36,6 +36,11 @@ export class DOMRoot {
     this._scheduler = scheduler;
   }
 
+  update(source: unknown): UpdateHandle {
+    this._slot.update(wrap(source), this._slot.scope);
+    return this._scheduler.schedule(this._slot);
+  }
+
   mount(): UpdateHandle {
     const task = new MountTask(
       this._slot,
