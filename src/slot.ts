@@ -218,10 +218,26 @@ export class Slot<TPart = unknown, TRenderer = unknown>
 }
 
 function invalidateEffects(effects: Effect[], scope: Scope): void {
-  const index = effects.findLastIndex(
-    (effect) => !containsScope(scope, effect.scope),
+  const index = lowerBound(effects, (effect) =>
+    containsScope(scope, effect.scope) ? 1 : -1,
   );
-  effects.splice(index + 1);
+  effects.splice(index);
+}
+
+function lowerBound<T>(xs: readonly T[], compare: (x: T) => number): number {
+  let low = 0;
+  let high = xs.length;
+
+  while (low < high) {
+    const mid = (low + high) >>> 1;
+    if (compare(xs[mid]!) < 0) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+
+  return low;
 }
 
 function restartRender(session: Session, scope: Scope): void {
