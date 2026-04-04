@@ -245,9 +245,7 @@ export class DOMEventHandler extends DOMPrimitiveHandler<
 > {
   private _memoizedListener: EventListenerOrNullish;
 
-  override ensureValue(
-    value: unknown,
-  ): asserts value is EventListenerOrNullish {
+  override ensureValue(value: unknown): void {
     if (!(isEventListener(value) || value == null)) {
       throw new Error(
         'Event values must be EventListener, EventListenerObject, null or undefined.',
