@@ -1,32 +1,32 @@
-interface Item<T> {
+interface Node<T> {
   value: T;
-  next: Item<T> | null;
+  next: Node<T> | null;
 }
 
 export class Queue<T> {
-  private _head: Item<T> | null = null;
-  private _tail: Item<T> | null = null;
+  private _head: Node<T> | null = null;
+  private _tail: Node<T> | null = null;
 
   *[Symbol.iterator](): Generator<T> {
-    for (let item = this._head; item !== null; item = item.next) {
-      yield item.value;
-      if (item === this._tail) {
+    for (let node = this._head; node !== null; node = node.next) {
+      yield node.value;
+      if (node === this._tail) {
         break;
       }
     }
   }
 
   enqueue(value: T): void {
-    const item: Item<T> = {
+    const node: Node<T> = {
       value: value,
       next: null,
     };
     if (this._tail !== null) {
-      this._tail.next = item;
+      this._tail.next = node;
     } else {
-      this._head = item;
+      this._head = node;
     }
-    this._tail = item;
+    this._tail = node;
   }
 
   dequeue(): T | undefined {
