@@ -29,6 +29,13 @@ export namespace Boundary {
   }
 }
 
+export type CommitPhase =
+  | typeof MutationPhase
+  | typeof LayoutPhase
+  | typeof PassivePhase;
+
+export type CommitPhases = number;
+
 export interface Component<TProps> {
   resolveComponent(
     directive: Directive.ComponentDirective<TProps>,
@@ -93,19 +100,12 @@ export interface Effect {
   commit(): void;
 }
 
-export type EffectPhase =
-  | typeof MutationPhase
-  | typeof LayoutPhase
-  | typeof PassivePhase;
-
-export type EffectPhases = number;
-
 export interface ErrorHandler {
   handleError(error: unknown, forwardError: (error: unknown) => void): void;
 }
 
 export interface HostAdapter<TPart, TRenderer> {
-  getCommitPhases(): EffectPhases;
+  getCommitPhases(): CommitPhases;
   getDefaultLanes(): Lanes;
   getIdentifier(): string;
   getTaskPriority(): TaskPriority;
@@ -222,6 +222,7 @@ export namespace Scope {
 export interface Session<TPart = unknown, TRenderer = unknown> {
   id: number;
   lanes: Lanes;
+  commitPhases: CommitPhases;
   mutationEffects: Effect[];
   layoutEffects: Effect[];
   passiveEffects: Effect[];
