@@ -10,7 +10,6 @@ import type {
   Scope,
   Template,
 } from '../core.js';
-import { ConcurrentLane } from '../lane.js';
 import { isRootScope } from '../scope.js';
 import { ensurePartType } from './error.js';
 import {
@@ -71,7 +70,7 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
   }
 
   getDefaultLanes(): Lanes {
-    return ConcurrentLane;
+    return 0;
   }
 
   getIdentifier(): string {
