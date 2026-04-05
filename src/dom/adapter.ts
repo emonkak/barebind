@@ -1,9 +1,9 @@
 /// <reference path="../../typings/upsert.d.ts" />
 
 import type {
+  CommitPhases,
   Directive,
   DirectiveHandler,
-  EffectPhases,
   HostAdapter,
   Lanes,
   PrimitiveHandler,
@@ -65,7 +65,7 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
     return this._container;
   }
 
-  getCommitPhases(): EffectPhases {
+  getCommitPhases(): CommitPhases {
     return -1;
   }
 
