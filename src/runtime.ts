@@ -1,9 +1,8 @@
 /// <reference path="../typings/upsert.d.ts" />
 
 import {
+  type CommitPhase,
   type Effect,
-  type EffectPhase,
-  type EffectPhases,
   type HostAdapter,
   type Lanes,
   LayoutPhase,
@@ -52,7 +51,7 @@ export type SessionEvent =
   | {
       type: 'effect-commit-start' | 'effect-commit-end';
       id: number;
-      phase: EffectPhase;
+      phase: CommitPhase;
       effects: Effect[];
     };
 
@@ -104,6 +103,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
       const session: Session<TPart, TRenderer> = {
         id,
         lanes,
+        commitPhases: this._adapter.getCommitPhases(),
         mutationEffects: [],
         layoutEffects: [],
         passiveEffects: [],
@@ -111,7 +111,6 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
         renderer: this._adapter.requestRenderer(task.scope),
         scheduler: this,
       };
-      const phases = this._adapter.getCommitPhases();
 
       try {
         notifyObservers(this._observers, {
@@ -138,12 +137,12 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
         });
 
         if (lanes & SyncLane) {
-          this._runCommitSync(session, phases);
+          this._runCommitSync(session);
         } else {
-          await this._runCommitAsync(session, phases);
+          await this._runCommitAsync(session);
         }
 
-        this._completeCommit(session, phases);
+        this._completeCommit(session);
 
         controller.resolve({ status: 'done' });
       } catch (error) {
@@ -236,14 +235,11 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     };
   }
 
-  private _completeCommit(
-    session: Session<TPart, TRenderer>,
-    phases: EffectPhases,
-  ): void {
-    const { id } = session;
+  private _completeCommit(session: Session<TPart, TRenderer>): void {
+    const { id, commitPhases } = session;
     const passiveEffects = session.passiveEffects.splice(0);
 
-    if (phases & PassivePhase && passiveEffects.length > 0) {
+    if (commitPhases & PassivePhase && passiveEffects.length > 0) {
       this._adapter
         .requestCallback(
           () => {
@@ -268,7 +264,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
   private _flushEffects(
     id: number,
     effects: Effect[],
-    phase: EffectPhase,
+    phase: CommitPhase,
   ): void {
     notifyObservers(this._observers, {
       type: 'effect-commit-start',
@@ -291,22 +287,21 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
 
   private async _runCommitAsync(
     session: Session<TPart, TRenderer>,
-    phases: EffectPhases,
   ): Promise<void> {
-    const { id } = session;
+    const { id, commitPhases } = session;
     const mutationEffects = session.mutationEffects.splice(0);
     const layoutEffects = session.layoutEffects.splice(0);
 
     if (
-      phases & (MutationPhase | LayoutPhase) &&
+      commitPhases & (MutationPhase | LayoutPhase) &&
       (mutationEffects.length > 0 || layoutEffects.length > 0)
     ) {
       const callback = () => {
-        if (phases & MutationPhase && mutationEffects.length > 0) {
+        if (commitPhases & MutationPhase && mutationEffects.length > 0) {
           this._flushEffects(id, mutationEffects, MutationPhase);
         }
 
-        if (phases & LayoutPhase && layoutEffects.length > 0) {
+        if (commitPhases & LayoutPhase && layoutEffects.length > 0) {
           this._flushEffects(id, layoutEffects, LayoutPhase);
         }
       };
@@ -321,19 +316,16 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     }
   }
 
-  private _runCommitSync(
-    session: Session<TPart, TRenderer>,
-    phases: EffectPhases,
-  ): void {
-    const { id } = session;
+  private _runCommitSync(session: Session<TPart, TRenderer>): void {
+    const { id, commitPhases } = session;
     const mutationEffects = session.mutationEffects.splice(0);
     const layoutEffects = session.layoutEffects.splice(0);
 
-    if (phases & MutationPhase && mutationEffects.length > 0) {
+    if (commitPhases & MutationPhase && mutationEffects.length > 0) {
       this._flushEffects(id, mutationEffects, MutationPhase);
     }
 
-    if (phases & LayoutPhase && layoutEffects.length > 0) {
+    if (commitPhases & LayoutPhase && layoutEffects.length > 0) {
       this._flushEffects(id, layoutEffects, LayoutPhase);
     }
   }
