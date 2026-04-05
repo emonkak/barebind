@@ -143,12 +143,12 @@ export class Slot<TPart = unknown, TRenderer = unknown>
 
     while (true) {
       const scope = createChildScope(this);
-      let childSlots: Iterable<UpdateUnit>;
+      let childUnits: Iterable<UpdateUnit>;
 
       this._pendingLanes &= ~lanes;
 
       try {
-        childSlots = this._handler.render(value, this._part, scope, session);
+        childUnits = this._handler.render(value, this._part, scope, session);
       } catch (error) {
         let handlingScope: Scope;
         try {
@@ -164,13 +164,13 @@ export class Slot<TPart = unknown, TRenderer = unknown>
             'An error was captured by an error boundary outside origin scope.',
           );
         }
-        childSlots = [];
+        childUnits = [];
       }
 
       if ((this._pendingLanes & lanes) === 0) {
-        for (const childSlot of childSlots) {
-          if (childSlot.needsRender(lanes)) {
-            yield childSlot;
+        for (const childUnit of childUnits) {
+          if (childUnit.needsRender(lanes)) {
+            yield childUnit;
           }
         }
       }
