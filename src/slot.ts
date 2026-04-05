@@ -11,6 +11,7 @@ import {
   type UpdateUnit,
 } from './core.js';
 import { AbortError, InterruptError } from './error.js';
+import { getHighestPriorityLane } from './lane.js';
 import {
   containsScope,
   createChildScope,
@@ -180,6 +181,16 @@ export class Slot<TPart = unknown, TRenderer = unknown>
       if ((this._pendingLanes & lanes) === 0) {
         this._handler.complete(value, this._part, scope, session);
         break;
+      }
+
+      if (
+        getHighestPriorityLane(this._pendingLanes) >
+        getHighestPriorityLane(lanes)
+      ) {
+        throw new InterruptError(
+          scope,
+          'Interrupted by a higher-priority update.',
+        );
       }
 
       restartRender(session, scope);
