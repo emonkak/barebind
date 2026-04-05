@@ -149,7 +149,7 @@ export class FunctionComponentHandler<TProps, TReturn>
   ): Iterable<Slot> {
     if (this._context !== null) {
       const hooks =
-        scope.owner === this._context._scope.owner
+        session === this._context._session
           ? this._context._hooks
           : this._currentHooks;
       resetContext(this._context, hooks, scope, session);
