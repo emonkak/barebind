@@ -134,7 +134,8 @@ export class IteratorComponentHandler<TProps, TReturn>
         const context = this._context;
         const directive = wrap(iteration.value);
         slot.update(directive, context._scope);
-        context._session.scheduler.schedule(slot);
+        const handle = context._session.scheduler.schedule(slot);
+        slot.pendingLanes |= handle.lanes;
       } catch (error) {
         this._iterator = null;
         forwardError(error);
