@@ -161,16 +161,16 @@ export class DOMTemplateHandler
     scope: Scope.ChildScope<DOMPart.ChildNodePart, DOMTemplateRenderer>,
     session: Session<DOMPart.ChildNodePart, DOMTemplateRenderer>,
   ): Iterable<Slot> {
-    if (this._block === null) {
+    if (this._block !== null) {
+      this._block.slots = this._block.slots.map((slot, i) =>
+        slot.update(wrap(template.exprs[i]), scope),
+      );
+    } else {
       this._block = session.renderer.renderTemplate(
         this._template,
         template.exprs,
         part,
         scope,
-      );
-    } else {
-      this._block.slots = this._block.slots.map((slot, i) =>
-        slot.update(wrap(template.exprs[i]), scope),
       );
     }
     return this._block.slots;
