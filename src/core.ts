@@ -170,7 +170,7 @@ export type UpdateResult =
   | { status: 'aborted'; reason: unknown };
 
 export interface UpdateScheduler {
-  get updateQueue(): Iterable<Update>;
+  getPendingUpdates(): Iterable<Update>;
   nextTransition(): number;
   schedule(task: UpdateTask, options?: UpdateOptions): UpdateHandle;
 }

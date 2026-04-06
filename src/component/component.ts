@@ -71,7 +71,7 @@ export class ComponentContext {
       };
     }
     if (!Object.isFrozen(this._scope)) {
-      for (const update of this._session.scheduler.updateQueue) {
+      for (const update of this._session.scheduler.getPendingUpdates()) {
         if (update.id === this._session.id) {
           this._scope.owner.pendingLanes |= update.lanes;
           return {
