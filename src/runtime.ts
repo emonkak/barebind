@@ -63,13 +63,12 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
   implements UpdateScheduler
 {
   private readonly _adapter: HostAdapter<TPart, TRenderer>;
-
   private readonly _observers: Set<SessionObserver> = new Set();
-
-  private readonly _updateQueue: Queue<Update> = new Queue();
-
+  private _currentQueue: Queue<Update> = new Queue();
+  private _alternateQueue: Queue<Update> = new Queue();
+  private _flushLanes: number = 0;
+  private _pendingLanes: number = 0;
   private _transitionCount: number = 0;
-
   private _updateCount: number = 0;
 
   constructor(adapter: HostAdapter<TPart, TRenderer>) {
@@ -80,87 +79,106 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     return this._adapter;
   }
 
-  get updateQueue(): Queue<Update> {
-    return this._updateQueue;
+  get updateQueue(): Iterable<Update> {
+    return this._currentQueue;
   }
 
   async flush(): Promise<void> {
-    for (
-      let update;
-      (update = this._updateQueue.peek()) !== undefined;
-      this._updateQueue.dequeue()
-    ) {
-      const { controller, task, id, lanes } = update;
+    while (true) {
+      const currentQueue = this._currentQueue;
+      const alternateQueue = this._alternateQueue;
+      const flushLanes = this._flushLanes;
 
-      if (
-        (task.pendingLanes & lanes) === 0 ||
-        getPendingAncestor(task.scope, lanes) !== null
+      for (
+        let update: Update | undefined;
+        (update = currentQueue.peek()) !== undefined;
+        currentQueue.dequeue()
       ) {
-        controller.resolve({ status: 'skipped' });
-        continue;
+        const { controller, task, id, lanes } = update;
+
+        if ((lanes & flushLanes) !== lanes) {
+          alternateQueue.enqueue(update);
+          continue;
+        }
+
+        if (
+          (task.pendingLanes & lanes) === 0 ||
+          getPendingAncestor(task.scope, lanes) !== null
+        ) {
+          controller.resolve({ status: 'skipped' });
+          continue;
+        }
+
+        const session: Session<TPart, TRenderer> = {
+          id,
+          lanes,
+          commitPhases: this._adapter.getCommitPhases(),
+          mutationEffects: [],
+          layoutEffects: [],
+          passiveEffects: [],
+          adapter: this._adapter,
+          renderer: this._adapter.requestRenderer(task.scope),
+          scheduler: this,
+        };
+
+        try {
+          notifyObservers(this._observers, {
+            type: 'render-start',
+            id,
+            lanes,
+          });
+
+          if (lanes & SyncLane) {
+            this._runRenderSync(task.start(session), session);
+          } else {
+            await this._runRenderAsync(task.start(session), session);
+          }
+
+          notifyObservers(this._observers, {
+            type: 'render-end',
+            id,
+            lanes,
+          });
+
+          notifyObservers(this._observers, {
+            type: 'commit-start',
+            id,
+          });
+
+          if (lanes & SyncLane) {
+            this._runCommitSync(session);
+          } else {
+            await this._runCommitAsync(session);
+          }
+
+          this._completeCommit(session);
+
+          controller.resolve({ status: 'done' });
+        } catch (error) {
+          session.mutationEffects.length = 0;
+          session.layoutEffects.length = 0;
+          session.passiveEffects.length = 0;
+
+          notifyObservers(this._observers, {
+            type: 'commit-abort',
+            id,
+            reason: error,
+          });
+
+          if (error instanceof InterruptError) {
+            controller.resolve({ status: 'aborted', reason: error.cause });
+          } else {
+            controller.reject(error);
+          }
+        }
       }
 
-      const session: Session<TPart, TRenderer> = {
-        id,
-        lanes,
-        commitPhases: this._adapter.getCommitPhases(),
-        mutationEffects: [],
-        layoutEffects: [],
-        passiveEffects: [],
-        adapter: this._adapter,
-        renderer: this._adapter.requestRenderer(task.scope),
-        scheduler: this,
-      };
+      this._currentQueue = alternateQueue;
+      this._alternateQueue = currentQueue;
 
-      try {
-        notifyObservers(this._observers, {
-          type: 'render-start',
-          id,
-          lanes,
-        });
-
-        if (lanes & SyncLane) {
-          this._runRenderSync(task.start(session), session);
-        } else {
-          await this._runRenderAsync(task.start(session), session);
-        }
-
-        notifyObservers(this._observers, {
-          type: 'render-end',
-          id,
-          lanes,
-        });
-
-        notifyObservers(this._observers, {
-          type: 'commit-start',
-          id,
-        });
-
-        if (lanes & SyncLane) {
-          this._runCommitSync(session);
-        } else {
-          await this._runCommitAsync(session);
-        }
-
-        this._completeCommit(session);
-
-        controller.resolve({ status: 'done' });
-      } catch (error) {
-        session.mutationEffects.length = 0;
-        session.layoutEffects.length = 0;
-        session.passiveEffects.length = 0;
-
-        notifyObservers(this._observers, {
-          type: 'commit-abort',
-          id,
-          reason: error,
-        });
-
-        if (error instanceof InterruptError) {
-          controller.resolve({ status: 'aborted', reason: error.cause });
-        } else {
-          controller.reject(error);
-        }
+      if (this._flushLanes === flushLanes) {
+        this._flushLanes = 0;
+        break;
       }
     }
   }
@@ -186,48 +204,32 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     const controller = Promise.withResolvers<UpdateResult>();
     const id = this._updateCount++;
     const lanes = this._adapter.getDefaultLanes() | getRenderLanes(options);
-    const callback = (): UpdateResult => {
-      const needsFlush =
-        (options.triggerFlush ?? true) &&
-        this._updateQueue.peek() === undefined;
 
-      this._updateQueue.enqueue({
-        id,
-        lanes,
-        task,
-        controller,
-      });
+    this._currentQueue.enqueue({
+      id,
+      lanes,
+      task,
+      controller,
+    });
 
-      if (needsFlush) {
-        scheduled.then(() => {
-          this.flush();
+    if ((this._pendingLanes & lanes) !== lanes) {
+      this._adapter
+        .requestCallback(() => {
+          const needsFlush = this._flushLanes === 0;
+          this._flushLanes |= lanes;
+          if (needsFlush) {
+            this.flush();
+          }
+        }, options)
+        .finally(() => {
+          this._pendingLanes &= ~lanes;
         });
-      }
-
-      return { status: 'done' };
-    };
-    let scheduled: Promise<UpdateResult>;
-
-    if (options.immediate) {
-      const { promise, resolve } = Promise.withResolvers<UpdateResult>();
-      scheduled = promise;
-      resolve(callback());
-    } else {
-      scheduled = this._adapter
-        .requestCallback(callback, options)
-        .catch((error) => {
-          // callback() is guaranteed not to throw anything; rejection here only
-          // indicates AbortSignal cancellation.
-          const canceled: UpdateResult = { status: 'aborted', reason: error };
-          controller.resolve(canceled);
-          return canceled;
-        });
+      this._pendingLanes |= lanes;
     }
 
     return {
       id,
       lanes,
-      scheduled,
       finished: controller.promise,
     };
   }
