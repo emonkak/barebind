@@ -60,13 +60,13 @@ export interface SessionObserver {
 }
 
 export class Runtime<TPart = unknown, TRenderer = unknown>
-  implements UpdateScheduler<TPart, TRenderer>
+  implements UpdateScheduler
 {
   private readonly _adapter: HostAdapter<TPart, TRenderer>;
 
   private readonly _observers: Set<SessionObserver> = new Set();
 
-  private readonly _updateQueue: Queue<Update<TPart, TRenderer>> = new Queue();
+  private readonly _updateQueue: Queue<Update> = new Queue();
 
   private _transitionCount: number = 0;
 
@@ -80,13 +80,13 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     return this._adapter;
   }
 
-  get updateQueue(): Queue<Update<TPart, TRenderer>> {
+  get updateQueue(): Queue<Update> {
     return this._updateQueue;
   }
 
   async flush(): Promise<void> {
     for (
-      let update: Update<TPart, TRenderer> | undefined;
+      let update;
       (update = this._updateQueue.peek()) !== undefined;
       this._updateQueue.dequeue()
     ) {
@@ -177,10 +177,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     };
   }
 
-  schedule(
-    task: UpdateTask<TPart, TRenderer>,
-    options: UpdateOptions = {},
-  ): UpdateHandle {
+  schedule(task: UpdateTask, options: UpdateOptions = {}): UpdateHandle {
     options.priority ??=
       options.transition !== undefined
         ? 'background'

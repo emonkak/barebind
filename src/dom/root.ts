@@ -93,7 +93,7 @@ export function createRoot(
   return new DOMRoot(slot, runtime);
 }
 
-class MountTask implements Effect, UpdateTask<DOMPart, DOMRenderer> {
+class MountTask implements Effect, UpdateTask {
   private _slot: Slot<DOMPart.ChildNodePart, DOMRenderer>;
   private _container: Element;
 
@@ -126,7 +126,7 @@ class MountTask implements Effect, UpdateTask<DOMPart, DOMRenderer> {
   }
 }
 
-class UnmountTask implements Effect, UpdateTask<DOMPart, DOMRenderer> {
+class UnmountTask implements Effect, UpdateTask {
   private _slot: Slot<DOMPart.ChildNodePart, DOMRenderer>;
   private _container: Element;
 

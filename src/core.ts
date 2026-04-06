@@ -145,10 +145,10 @@ export interface PrimitiveHandler<TValue, TPart = unknown, TRenderer = unknown>
   ensureValue(value: unknown, part: TPart): void;
 }
 
-export interface Update<TPart, TRenderer> {
+export interface Update {
   id: number;
   lanes: Lanes;
-  task: UpdateTask<TPart, TRenderer>;
+  task: UpdateTask;
   controller: PromiseWithResolvers<UpdateResult>;
 }
 
@@ -172,16 +172,16 @@ export type UpdateResult =
   | { status: 'skipped' }
   | { status: 'aborted'; reason: unknown };
 
-export interface UpdateScheduler<TPart = unknown, TRenderer = unknown> {
-  get updateQueue(): Iterable<Update<TPart, TRenderer>>;
+export interface UpdateScheduler {
+  get updateQueue(): Iterable<Update>;
   nextTransition(): number;
   schedule(task: UpdateTask, options?: UpdateOptions): UpdateHandle;
 }
 
-export interface UpdateTask<TPart = unknown, TRenderer = unknown> {
-  readonly scope: Scope<TPart, TRenderer>;
+export interface UpdateTask {
+  readonly scope: Scope;
   readonly pendingLanes: Lanes;
-  start(session: Session<TPart, TRenderer>): Iterable<UpdateUnit>;
+  start(session: Session): Iterable<UpdateUnit>;
 }
 
 export interface UpdateUnit<TPart = unknown, TRenderer = unknown>
@@ -228,7 +228,7 @@ export interface Session<TPart = unknown, TRenderer = unknown> {
   passiveEffects: Effect[];
   adapter: HostAdapter<TPart, TRenderer>;
   renderer: TRenderer;
-  scheduler: UpdateScheduler<TPart, TRenderer>;
+  scheduler: UpdateScheduler;
 }
 
 export interface Template {
