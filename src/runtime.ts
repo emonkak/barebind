@@ -216,17 +216,14 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     });
 
     if ((this._pendingLanes & lanes) !== lanes) {
-      this._adapter
-        .requestCallback(() => {
-          const needsFlush = this._flushLanes === 0;
-          this._flushLanes |= lanes;
-          if (needsFlush) {
-            this.flush();
-          }
-        }, options)
-        .finally(() => {
-          this._pendingLanes &= ~lanes;
-        });
+      this._adapter.requestCallback(() => {
+        const needsFlush = this._flushLanes === 0;
+        this._flushLanes |= lanes;
+        this._pendingLanes &= ~lanes;
+        if (needsFlush) {
+          this.flush();
+        }
+      }, options);
       this._pendingLanes |= lanes;
     }
 

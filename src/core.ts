@@ -158,7 +158,8 @@ export interface UpdateHandle {
   finished: Promise<UpdateResult>;
 }
 
-export interface UpdateOptions extends SchedulerPostTaskOptions {
+export interface UpdateOptions
+  extends Pick<SchedulerPostTaskOptions, 'delay' | 'priority'> {
   flushSync?: boolean;
   transition?: number;
   viewTransition?: boolean;
