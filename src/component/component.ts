@@ -6,7 +6,6 @@ import {
   SharedContextBoundary,
   type UpdateHandle,
   type UpdateOptions,
-  type UpdateResult,
 } from '../core.js';
 import { AbortError } from '../error.js';
 import { getRootScope, handleError, isChildScope } from '../scope.js';
@@ -63,14 +62,12 @@ export class ComponentContext {
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
     if (!isChildScope(this._scope)) {
-      const skipped: Promise<UpdateResult> = Promise.resolve({
-        status: 'skipped',
-      });
       return {
         id: -1,
         lanes: 0,
-        scheduled: skipped,
-        finished: skipped,
+        finished: Promise.resolve({
+          status: 'skipped',
+        }),
       };
     }
     if (!Object.isFrozen(this._scope)) {
@@ -80,7 +77,6 @@ export class ComponentContext {
           return {
             id: update.id,
             lanes: update.lanes,
-            scheduled: Promise.resolve({ status: 'done' }),
             finished: update.controller.promise,
           };
         }

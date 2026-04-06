@@ -155,15 +155,12 @@ export interface Update {
 export interface UpdateHandle {
   id: number;
   lanes: Lanes;
-  scheduled: Promise<UpdateResult>;
   finished: Promise<UpdateResult>;
 }
 
 export interface UpdateOptions extends SchedulerPostTaskOptions {
   flushSync?: boolean;
-  immediate?: boolean;
   transition?: number;
-  triggerFlush?: boolean;
   viewTransition?: boolean;
 }
 

@@ -339,14 +339,12 @@ export class FunctionComponentContext extends ComponentContext {
             const newState = reducer(pendingState, payload);
 
             if (areStatesEqual(newState, pendingState)) {
-              const skipped = Promise.resolve<UpdateResult>({
-                status: 'skipped',
-              });
               return {
                 id: -1,
                 lanes: 0,
-                scheduled: skipped,
-                finished: skipped,
+                finished: Promise.resolve<UpdateResult>({
+                  status: 'skipped',
+                }),
               };
             }
           }
