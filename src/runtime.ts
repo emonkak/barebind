@@ -198,9 +198,11 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
 
   schedule(task: UpdateTask, options: UpdateOptions = {}): UpdateHandle {
     options.priority ??=
-      options.transition !== undefined
+      options.transition !== undefined || options.delay !== undefined
         ? 'background'
-        : this._adapter.getTaskPriority();
+        : options.flushSync
+          ? 'user-blocking'
+          : this._adapter.getTaskPriority();
 
     const controller = Promise.withResolvers<UpdateResult>();
     const id = this._updateCount++;
