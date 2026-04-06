@@ -84,7 +84,110 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     yield* this._alternateQueue;
   }
 
-  async flush(): Promise<void> {
+  nextTransition(): number {
+    return this._transitionCount++;
+  }
+
+  observe(observer: SessionObserver): () => void {
+    const observers = this._observers;
+    observers.add(observer);
+    return () => {
+      observers.delete(observer);
+    };
+  }
+
+  schedule(task: UpdateTask, options: UpdateOptions = {}): UpdateHandle {
+    options.priority ??=
+      options.transition !== undefined || options.delay !== undefined
+        ? 'background'
+        : options.flushSync
+          ? 'user-blocking'
+          : this._adapter.getTaskPriority();
+
+    const controller = Promise.withResolvers<UpdateResult>();
+    const id = this._updateCount++;
+    const lanes = this._adapter.getDefaultLanes() | getRenderLanes(options);
+
+    this._currentQueue.enqueue({
+      id,
+      lanes,
+      task,
+      controller,
+    });
+
+    if (
+      (this._pendingLanes & lanes) !== lanes &&
+      (this._flushLanes & lanes) !== lanes
+    ) {
+      this._adapter.requestCallback(() => {
+        const needsFlush = this._flushLanes === 0;
+        this._flushLanes |= lanes;
+        this._pendingLanes &= ~lanes;
+        if (needsFlush) {
+          this._flushQueue();
+        }
+      }, options);
+      this._pendingLanes |= lanes;
+    }
+
+    return {
+      id,
+      lanes,
+      finished: controller.promise,
+    };
+  }
+
+  private _completeCommit(session: Session<TPart, TRenderer>): void {
+    const { id, commitPhases } = session;
+    const passiveEffects = session.passiveEffects.splice(0);
+
+    if (commitPhases & PassivePhase && passiveEffects.length > 0) {
+      this._adapter
+        .requestCallback(
+          () => {
+            this._flushEffects(id, passiveEffects, PassivePhase);
+          },
+          { priority: 'background' },
+        )
+        .finally(() => {
+          notifyObservers(this._observers, {
+            type: 'commit-end',
+            id,
+          });
+        });
+    } else {
+      notifyObservers(this._observers, {
+        type: 'commit-end',
+        id,
+      });
+    }
+  }
+
+  private _flushEffects(
+    id: number,
+    effects: Effect[],
+    phase: CommitPhase,
+  ): void {
+    notifyObservers(this._observers, {
+      type: 'effect-commit-start',
+      id,
+      phase,
+      effects,
+    });
+
+    for (const effect of effects) {
+      effect.commit();
+    }
+
+    notifyObservers(this._observers, {
+      type: 'effect-commit-end',
+      id,
+      phase,
+      effects,
+    });
+  }
+
+  private async _flushQueue(): Promise<void> {
     while (true) {
       const currentQueue = this._currentQueue;
       const alternateQueue = this._alternateQueue;
@@ -182,109 +285,6 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
         break;
       }
     }
-  }
-
-  nextTransition(): number {
-    return this._transitionCount++;
-  }
-
-  observe(observer: SessionObserver): () => void {
-    const observers = this._observers;
-    observers.add(observer);
-    return () => {
-      observers.delete(observer);
-    };
-  }
-
-  schedule(task: UpdateTask, options: UpdateOptions = {}): UpdateHandle {
-    options.priority ??=
-      options.transition !== undefined || options.delay !== undefined
-        ? 'background'
-        : options.flushSync
-          ? 'user-blocking'
-          : this._adapter.getTaskPriority();
-
-    const controller = Promise.withResolvers<UpdateResult>();
-    const id = this._updateCount++;
-    const lanes = this._adapter.getDefaultLanes() | getRenderLanes(options);
-
-    this._currentQueue.enqueue({
-      id,
-      lanes,
-      task,
-      controller,
-    });
-
-    if (
-      (this._pendingLanes & lanes) !== lanes &&
-      (this._flushLanes & lanes) !== lanes
-    ) {
-      this._adapter.requestCallback(() => {
-        const needsFlush = this._flushLanes === 0;
-        this._flushLanes |= lanes;
-        this._pendingLanes &= ~lanes;
-        if (needsFlush) {
-          this.flush();
-        }
-      }, options);
-      this._pendingLanes |= lanes;
-    }
-
-    return {
-      id,
-      lanes,
-      finished: controller.promise,
-    };
-  }
-
-  private _completeCommit(session: Session<TPart, TRenderer>): void {
-    const { id, commitPhases } = session;
-    const passiveEffects = session.passiveEffects.splice(0);
-
-    if (commitPhases & PassivePhase && passiveEffects.length > 0) {
-      this._adapter
-        .requestCallback(
-          () => {
-            this._flushEffects(id, passiveEffects, PassivePhase);
-          },
-          { priority: 'background' },
-        )
-        .finally(() => {
-          notifyObservers(this._observers, {
-            type: 'commit-end',
-            id,
-          });
-        });
-    } else {
-      notifyObservers(this._observers, {
-        type: 'commit-end',
-        id,
-      });
-    }
-  }
-
-  private _flushEffects(
-    id: number,
-    effects: Effect[],
-    phase: CommitPhase,
-  ): void {
-    notifyObservers(this._observers, {
-      type: 'effect-commit-start',
-      id,
-      phase,
-      effects,
-    });
-
-    for (const effect of effects) {
-      effect.commit();
-    }
-
-    notifyObservers(this._observers, {
-      type: 'effect-commit-end',
-      id,
-      phase,
-      effects,
-    });
   }
 
   private async _runCommitAsync(
