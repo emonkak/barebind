@@ -79,8 +79,9 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     return this._adapter;
   }
 
-  get updateQueue(): Iterable<Update> {
-    return this._currentQueue;
+  *getPendingUpdates(): Iterable<Update> {
+    yield* this._currentQueue;
+    yield* this._alternateQueue;
   }
 
   async flush(): Promise<void> {
