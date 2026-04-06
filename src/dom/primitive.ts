@@ -216,11 +216,9 @@ export class DOMElementHandler extends DOMPrimitiveHandler<
     const oldSlots = this._currentSlots;
     const newSlots = this._pendingSlots;
 
-    if (oldSlots !== null) {
-      for (const [name, slot] of oldSlots) {
-        if (!newSlots.has(name)) {
-          slot.revert();
-        }
+    for (const [name, slot] of oldSlots) {
+      if (!newSlots.has(name)) {
+        slot.revert();
       }
     }
 
