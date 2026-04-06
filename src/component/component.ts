@@ -8,6 +8,7 @@ import {
   type UpdateOptions,
 } from '../core.js';
 import { AbortError } from '../error.js';
+import { getRenderLanes } from '../lane.js';
 import { getRootScope, handleError, isChildScope } from '../scope.js';
 
 export type Usable<TContext extends ComponentContext, TReturn> =
@@ -71,14 +72,20 @@ export class ComponentContext {
       };
     }
     if (!Object.isFrozen(this._scope)) {
+      const renderLanes = getRenderLanes(options ?? {});
       for (const update of this._session.scheduler.getPendingUpdates()) {
-        if (update.id === this._session.id) {
+        if (
+          update.id === this._session.id &&
+          (update.lanes & renderLanes) === renderLanes
+        ) {
           this._scope.owner.pendingLanes |= update.lanes;
           return {
             id: update.id,
             lanes: update.lanes,
             finished: update.controller.promise,
           };
+        } else {
+          break;
         }
       }
     }
