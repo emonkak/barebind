@@ -215,7 +215,10 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
       controller,
     });
 
-    if ((this._pendingLanes & lanes) !== lanes) {
+    if (
+      (this._pendingLanes & lanes) !== lanes &&
+      (this._flushLanes & lanes) !== lanes
+    ) {
       this._adapter.requestCallback(() => {
         const needsFlush = this._flushLanes === 0;
         this._flushLanes |= lanes;
