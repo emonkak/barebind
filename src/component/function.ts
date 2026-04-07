@@ -126,8 +126,6 @@ export class FunctionComponentHandler<TProps, TReturn>
 
   private _slot: Slot | null = null;
 
-  private _currentHooks: Hook[] = [];
-
   constructor(
     componentFn: FunctionComponent<TProps, TReturn>,
     arePropsEqual: (newProps: TProps, oldProps: TProps) => boolean,
@@ -148,11 +146,7 @@ export class FunctionComponentHandler<TProps, TReturn>
     session: Session,
   ): Iterable<Slot> {
     if (this._context !== null) {
-      const hooks =
-        session === this._context._session
-          ? this._context._hooks
-          : this._currentHooks;
-      resetContext(this._context, hooks, scope, session);
+      resetContext(this._context, scope, session);
     } else {
       this._context = new FunctionComponentContext(scope, session);
     }
@@ -194,19 +188,23 @@ export class FunctionComponentHandler<TProps, TReturn>
   mount(_newValue: TProps, _oldValue: TProps | null, _part: unknown): void {
     this._slot?.commit();
     if (this._context !== null) {
-      this._currentHooks = this._context?._hooks;
+      this._context._currentHooks = this._context._pendingHooks;
     }
   }
 
   unmount(_value: TProps, _part: unknown): void {
     this._slot?.revert();
-    this._currentHooks = [];
+    if (this._context !== null) {
+      this._context._currentHooks = [];
+    }
   }
 }
 
 export class FunctionComponentContext extends ComponentContext {
   /** @internal */
-  _hooks: Hook[] = [];
+  _pendingHooks: Hook[] = [];
+  /** @internal */
+  _currentHooks: Hook[] = [];
   /** @internal */
   _hookIndex = 0;
 
@@ -222,7 +220,7 @@ export class FunctionComponentContext extends ComponentContext {
   }
 
   useId(): string {
-    let currentHook = this._hooks[this._hookIndex];
+    let currentHook = this._pendingHooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType(IdType, currentHook);
@@ -233,7 +231,7 @@ export class FunctionComponentContext extends ComponentContext {
       };
     }
 
-    this._hooks[this._hookIndex++] = currentHook;
+    this._pendingHooks[this._hookIndex++] = currentHook;
 
     return currentHook.id;
   }
@@ -256,7 +254,7 @@ export class FunctionComponentContext extends ComponentContext {
     computation: () => TResult,
     deps: readonly unknown[],
   ): TResult {
-    let currentHook = this._hooks[this._hookIndex];
+    let currentHook = this._pendingHooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType(MemoType, currentHook);
@@ -276,7 +274,7 @@ export class FunctionComponentContext extends ComponentContext {
       };
     }
 
-    this._hooks[this._hookIndex++] = currentHook;
+    this._pendingHooks[this._hookIndex++] = currentHook;
 
     return currentHook.memoizedResult as TResult;
   }
@@ -292,7 +290,7 @@ export class FunctionComponentContext extends ComponentContext {
       options?: DispatchOptions<TState>,
     ) => UpdateHandle,
   ] {
-    let currentHook = this._hooks[this._hookIndex];
+    let currentHook = this._pendingHooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType(ReducerType, currentHook);
@@ -369,7 +367,7 @@ export class FunctionComponentContext extends ComponentContext {
       };
     }
 
-    this._hooks[this._hookIndex++] = currentHook;
+    this._pendingHooks[this._hookIndex++] = currentHook;
 
     return [
       currentHook.dispatcher.pendingState,
@@ -474,7 +472,7 @@ function completeContext(
   // Cleanup effects follow the same declaration order within a component,
   // but must run from parent to child. Therefore, we collect cleanup effects
   // before all children are detached and then register them.
-  for (const hook of context._hooks) {
+  for (const hook of context._pendingHooks) {
     switch (hook.type) {
       case PassiveEffectType:
         enqueueInvokeEffect(hook, session.passiveEffects, scope);
@@ -495,7 +493,7 @@ function createEffectHook(
   deps: readonly unknown[] | null,
   type: Hook.EffectHook['type'],
 ): void {
-  let currentHook = context._hooks[context._hookIndex];
+  let currentHook = context._pendingHooks[context._hookIndex];
 
   if (currentHook !== undefined) {
     ensureHookType(type, currentHook);
@@ -517,7 +515,7 @@ function createEffectHook(
     };
   }
 
-  context._hooks[context._hookIndex++] = currentHook;
+  context._pendingHooks[context._hookIndex++] = currentHook;
 }
 
 function discardContext(
@@ -528,7 +526,7 @@ function discardContext(
   // Cleanup effects follow the same declaration order within a component,
   // but must run from parent to child. Therefore, we collect cleanup effects
   // before all children are detached and then register them.
-  for (const hook of context._hooks) {
+  for (const hook of context._pendingHooks) {
     switch (hook.type) {
       case PassiveEffectType:
         enqueueCleanupEffect(hook, session.passiveEffects, scope);
@@ -544,7 +542,7 @@ function discardContext(
 
   context._scope = OrphanScope;
   context._session = session;
-  context._hooks = [];
+  context._pendingHooks = [];
   context._hookIndex = 0;
 }
 
@@ -580,7 +578,7 @@ function ensureHookType<TExpectedType extends Hook['type']>(
 }
 
 function finalizeContext(context: FunctionComponentContext): void {
-  let currentHook = context._hooks[context._hookIndex];
+  let currentHook = context._pendingHooks[context._hookIndex];
 
   if (currentHook !== undefined) {
     ensureHookType(FinalizerType, currentHook);
@@ -588,10 +586,10 @@ function finalizeContext(context: FunctionComponentContext): void {
     currentHook = { type: FinalizerType };
   }
 
-  context._hooks[context._hookIndex] = currentHook;
+  context._pendingHooks[context._hookIndex] = currentHook;
 
   // Refuse to use new hooks after finalization.
-  Object.freeze(context._hooks);
+  Object.freeze(context._pendingHooks);
 }
 
 function getInitialState<TState>(initialState: InitialState<TState>): TState {
@@ -602,12 +600,15 @@ function getInitialState<TState>(initialState: InitialState<TState>): TState {
 
 function resetContext(
   context: FunctionComponentContext,
-  hooks: Hook[],
   scope: Scope,
   session: Session,
 ): void {
+  const baseHooks =
+    session === context._session
+      ? context._pendingHooks
+      : context._currentHooks;
   context._scope = scope;
   context._session = session;
-  context._hooks = hooks.slice();
+  context._pendingHooks = baseHooks.slice();
   context._hookIndex = 0;
 }
