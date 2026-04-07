@@ -19,11 +19,15 @@ const COMPLEXITY_THRESHOLD = 10;
 const serializer = new XMLSerializer();
 
 export function annotateNode(node: Node): string[] {
-  return prettyPrintNode(node).flatMap((line) => {
-    const caretSpan = line.trimStart().length;
-    const spaceSpan = line.length - caretSpan;
-    return [line, ' '.repeat(spaceSpan) + CARET_CHAR.repeat(caretSpan)];
-  });
+  if (node instanceof Element) {
+    return annotateElementHead(node, node.localName);
+  } else {
+    return prettyPrintNode(node).flatMap((line) => {
+      const caretSpan = line.trimStart().length;
+      const spaceSpan = line.length - caretSpan;
+      return [line, ' '.repeat(spaceSpan) + CARET_CHAR.repeat(caretSpan)];
+    });
+  }
 }
 
 export function annotatePlace(place: DOMPlace): string[] {

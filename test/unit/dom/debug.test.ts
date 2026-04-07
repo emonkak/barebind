@@ -197,15 +197,11 @@ describe('generateNodeFrame()', () => {
     // biome-ignore format: keep expected lines
     const expectedLines = [
       '<div>',
-      '^^^^^',
+      ' ^^^',
       '  <input>',
-      '  ^^^^^^^',
       '  A',
-      '  ^',
       '  <!--B-->',
-      '  ^^^^^^^^',
       '</div>',
-      '^^^^^^',
     ];
     expect(generateNodeFrame(node, annotateNode(node))).toBe(
       expectedLines.join('\n'),
