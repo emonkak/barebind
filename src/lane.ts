@@ -37,11 +37,11 @@ export function getRenderLanes(options: UpdateOptions): Lanes {
     case 'user-blocking':
       lanes |= UserBlockingLane;
       break;
+    case 'user-visible':
+      lanes |= UserVisibleLane;
+      break;
     case 'background':
       lanes |= BackgroundLane;
-      break;
-    default:
-      lanes |= UserVisibleLane;
       break;
   }
 
@@ -53,7 +53,7 @@ export function getRenderLanes(options: UpdateOptions): Lanes {
     lanes |= TransitionLane1 << (options.transition % TransitionLength);
   }
 
-  return lanes;
+  return lanes > 0 ? lanes : UserVisibleLane;
 }
 
 export function getTranstionIndex(lanes: Lanes): number {
