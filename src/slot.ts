@@ -161,6 +161,9 @@ export class Slot<TPart = unknown, TRenderer = unknown>
           throw new InterruptError(
             scope,
             'An error was captured by an error boundary outside origin scope.',
+            {
+              cause: error,
+            },
           );
         }
         childUnits = [];
