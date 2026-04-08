@@ -1,36 +1,25 @@
-import { createClientRoot, createIteratorComponent, html } from 'barebind';
+import { createClientRoot, createComponent, html } from 'barebind';
 
 interface CountProps {
   initialCount?: number;
 }
 
-const Counter = createIteratorComponent<CountProps>(function* Counter({
+const Counter = createComponent<CountProps>(function Counter({
   initialCount = 0,
 }) {
-  const ref = { current: null };
-  let count = initialCount;
+  const [count, setCount] = this.useState(initialCount);
 
   const increment = () => {
-    this.update(() => {
-      count++;
-    });
+    setCount((count) => count + 1);
   };
 
-  if (initialCount === 100) {
-    this.update(() => {
-      count++;
-    });
+  if (count === 100) {
+    setCount((count) => count + 1);
   }
 
-  for ({} of this) {
-    this.postEffect(() => {
-      console.log(count);
-    });
-
-    yield html`
-      <button type="button" @click=${increment} :ref=${ref}>Count: ${count}</button>
-    `;
-  }
+  return html`
+    <button type="button" @click=${increment}>Count: ${count}</button>
+  `;
 });
 
 createClientRoot(Counter({ initialCount: 100 }), document.body).mount();

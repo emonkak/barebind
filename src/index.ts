@@ -1,20 +1,11 @@
 export { sequentialEqual, shallowEqual } from './compare.js';
-export type {
-  ComponentContext,
-  Usable,
-} from './component/component.js';
 export {
-  createFunctionComponent,
-  type FunctionComponent,
-  type FunctionComponentContext,
-  type FunctionComponentOptions,
-} from './component/function.js';
-export {
-  createIteratorComponent,
-  type IteratorComponent,
-  type IteratorComponentContext,
-  type IteratorComponentOptions,
-} from './component/iterator.js';
+  type ComponentFunction,
+  type ComponentFunctionOptions,
+  createComponent,
+  type RenderContext,
+  type Usable,
+} from './component.js';
 export {
   ClientAdapter,
   type DOMAdapter,
