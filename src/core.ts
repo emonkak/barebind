@@ -3,30 +3,20 @@
 export const Repeat = Symbol('Repeat');
 export const Primitive = Symbol('Primitive');
 
-export const ErrorBoundary = 0;
-export const SharedContextBoundary = 1;
-
 export const MutationPhase /* */ = 0b001;
 export const LayoutPhase /*   */ = 0b010;
 export const PassivePhase /*  */ = 0b100;
 
-export type Boundary = Boundary.ErrorBoundary | Boundary.SharedContextBoundary;
-
 export const toDirective: unique symbol = Symbol('Directive.toDirective');
 
-export namespace Boundary {
-  export interface ErrorBoundary {
-    type: typeof ErrorBoundary;
-    next: Boundary | null;
-    handler: ErrorHandler;
-  }
+export interface Boundary<T> {
+  instance: T;
+  next: Boundary<unknown> | null;
+}
 
-  export interface SharedContextBoundary {
-    type: typeof SharedContextBoundary;
-    next: Boundary | null;
-    key: unknown;
-    value: unknown;
-  }
+export interface BoundaryType<TInstance, TDefault> {
+  new (...args: never[]): TInstance;
+  getDefault?(): TDefault;
 }
 
 export type CommitPhase =
@@ -98,10 +88,6 @@ export interface DirectiveHandler<
 export interface Effect {
   scope: Scope;
   commit(): void;
-}
-
-export interface ErrorHandler {
-  handleError(error: unknown, forwardError: (error: unknown) => void): void;
 }
 
 export interface HostAdapter<TPart, TRenderer> {
@@ -201,13 +187,13 @@ export namespace Scope {
   export type ChildScope<TPart = unknown, TRenderer = unknown> = {
     owner: UpdateUnit<TPart, TRenderer>;
     level: number;
-    boundary: Boundary | null;
+    boundary: Boundary<unknown> | null;
   };
 
   export type RootScope<TPart = unknown> = {
     owner: Root<TPart>;
     level: 0;
-    boundary: Boundary | null;
+    boundary: Boundary<unknown> | null;
   };
 
   export type OrphanScope = {

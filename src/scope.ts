@@ -1,10 +1,5 @@
-import {
-  ErrorBoundary,
-  type Lanes,
-  type Root,
-  type Scope,
-  type UpdateUnit,
-} from './core.js';
+import type { Lanes, Root, Scope, UpdateUnit } from './core.js';
+import { ErrorBoundary } from './error.js';
 
 export const OrphanScope: Scope.OrphanScope = Object.freeze({
   owner: null,
@@ -77,9 +72,8 @@ export function handleError(scope: Scope, error: unknown): Scope {
       while (currentBoundary !== null) {
         const boundary = currentBoundary;
         currentBoundary = currentBoundary.next;
-        if (boundary.type === ErrorBoundary) {
-          const { handler } = boundary;
-          handler.handleError(error, forwardError);
+        if (boundary.instance instanceof ErrorBoundary) {
+          boundary.instance.handleError(error, forwardError);
           return;
         }
       }

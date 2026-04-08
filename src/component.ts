@@ -1,15 +1,13 @@
 import { areDepsChanged } from './compare.js';
 import {
+  type BoundaryType,
   type Component,
   Directive,
   type DirectiveHandler,
   type Effect,
-  ErrorBoundary,
-  type ErrorHandler,
   type Lanes,
   type Scope,
   type Session,
-  SharedContextBoundary,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
@@ -43,20 +41,10 @@ export type ComponentFunction<TProps, TReturn> = (
 ) => TReturn;
 
 export type Usable<TReturn> =
-  | Usable.UsableClass<TReturn>
   | Usable.UsableObject<TReturn>
   | Usable.UsableFunction<TReturn>;
 
 export namespace Usable {
-  /**
-   * Represents a class with static [$hook] method. never[] and NoInfer<T> ensure
-   * T is inferred solely from the constructor.
-   */
-  export interface UsableClass<TReturn = void> {
-    new (...args: never[]): TReturn;
-    onUse(context: RenderContext): NoInfer<TReturn>;
-  }
-
   export type UsableFunction<TReturn = void> = (
     context: RenderContext,
   ) => TReturn;
@@ -250,12 +238,38 @@ export class RenderContext {
     this._session = session;
   }
 
-  addErrorHandler(handler: ErrorHandler): void {
+  addBoundary<T>(instance: T): void {
     this._scope.boundary = {
-      type: ErrorBoundary,
+      instance,
       next: this._scope.boundary,
-      handler,
     };
+  }
+
+  getBoundary<TInstance, TDefault = never>(
+    type: BoundaryType<TInstance, TDefault>,
+  ): TInstance | TDefault {
+    let scope: Scope | null = this._scope;
+    while (true) {
+      for (
+        let boundary = scope.boundary;
+        boundary !== null;
+        boundary = boundary.next
+      ) {
+        if (boundary.instance instanceof type) {
+          return boundary.instance;
+        }
+      }
+      if (!isChildScope(scope)) {
+        break;
+      }
+      scope = scope.owner.scope;
+    }
+    if (type.getDefault !== undefined) {
+      return type.getDefault();
+    }
+    throw new Error(
+      `No ${type.name} found. Make sure to register its instance with context.addBoundary() before using it.`,
+    );
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
@@ -303,41 +317,9 @@ export class RenderContext {
     }
   }
 
-  getSharedContext<T>(key: unknown): T | undefined {
-    let scope: Scope | null = this._scope;
-    while (true) {
-      for (
-        let boundary = scope.boundary;
-        boundary !== null;
-        boundary = boundary.next
-      ) {
-        if (
-          boundary.type === SharedContextBoundary &&
-          Object.is(boundary.key, key)
-        ) {
-          return boundary.value as T;
-        }
-      }
-      if (!isChildScope(scope)) {
-        break;
-      }
-      scope = scope.owner.scope;
-    }
-    return undefined;
-  }
-
   nextId(): string {
     const root = getRootScope(this._scope);
     return root !== null ? root.owner.idPrefix + '-' + root.owner.idSeq++ : '';
-  }
-
-  setSharedContext<T>(key: unknown, value: T): void {
-    this._scope.boundary = {
-      type: SharedContextBoundary,
-      next: this._scope.boundary,
-      key,
-      value,
-    };
   }
 
   startTransition<T>(action: (transition: number) => T): T {
@@ -351,9 +333,6 @@ export class RenderContext {
     return result;
   }
 
-  use<TReturn>(usable: Usable.UsableClass<TReturn>): TReturn;
-  use<TReturn>(usable: Usable.UsableObject<TReturn>): TReturn;
-  use<TReturn>(usable: Usable.UsableFunction<TReturn>): TReturn;
   use<TReturn>(usable: Usable<TReturn>): TReturn {
     return 'onUse' in usable ? usable.onUse(this) : usable(this);
   }
