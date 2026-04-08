@@ -200,16 +200,16 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
       ) {
         const { controller, task, id, lanes } = update;
 
-        if ((lanes & flushLanes) !== lanes) {
-          alternateQueue.enqueue(update);
+        if ((task.pendingLanes & lanes) === 0) {
+          controller.resolve({ status: 'skipped' });
           continue;
         }
 
         if (
-          (task.pendingLanes & lanes) === 0 ||
+          (lanes & flushLanes) !== lanes ||
           getPendingAncestor(task.scope, lanes) !== null
         ) {
-          controller.resolve({ status: 'skipped' });
+          alternateQueue.enqueue(update);
           continue;
         }
 
