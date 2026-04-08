@@ -21,6 +21,7 @@ import { InterruptError } from './error.js';
 import {
   getHighestPriorityLane,
   getRenderLanes,
+  NoLanes,
   SyncLane,
   ViewTransitionLane,
 } from './lane.js';
@@ -69,11 +70,12 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
 {
   private readonly _adapter: HostAdapter<TPart, TRenderer>;
   private readonly _observers: Set<SessionObserver> = new Set();
+  private _currentUpdate: Update | undefined;
   private _currentQueue: Queue<Update> = new Queue();
   private _alternateQueue: Queue<Update> = new Queue();
-  private _pendingLanes: number = 0;
-  private _renderLanes: number = 0;
-  private _suspendedLanes: number = 0;
+  private _pendingLanes: number = NoLanes;
+  private _renderLanes: number = NoLanes;
+  private _suspendedLanes: number = NoLanes;
   private _transitionCount: number = 0;
   private _updateCount: number = 0;
 
@@ -85,9 +87,8 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     return this._adapter;
   }
 
-  *getPendingUpdates(): Iterable<Update> {
-    yield* this._currentQueue;
-    yield* this._alternateQueue;
+  get currentUpdate(): Update | undefined {
+    return this._currentUpdate;
   }
 
   nextTransition(): number {
@@ -112,36 +113,39 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
 
     const controller = Promise.withResolvers<UpdateResult>();
     const id = this._updateCount++;
-    const lanes = this._adapter.getDefaultLanes() | getRenderLanes(options);
-    const resumeLanes = options.resume ? lanes : 0;
+    const currentLanes = options.inherit
+      ? (this._currentUpdate?.lanes ?? NoLanes)
+      : NoLanes;
+    const renderLanes =
+      this._adapter.getDefaultLanes() | getRenderLanes(options) | currentLanes;
+    const resumeLanes = options.resume ? renderLanes : currentLanes;
 
     this._currentQueue.enqueue({
       id,
-      lanes,
+      lanes: renderLanes,
       task,
       controller,
     });
 
     if (
-      (this._pendingLanes & lanes) !== lanes ||
-      (this._renderLanes & lanes) !== lanes ||
-      (this._suspendedLanes & resumeLanes) !== 0
+      (this._pendingLanes & renderLanes) !== renderLanes ||
+      (this._renderLanes & renderLanes) !== renderLanes ||
+      (this._suspendedLanes & resumeLanes) !== NoLanes
     ) {
       this._adapter.requestCallback(() => {
-        const needsFlush = this._renderLanes === 0;
-        this._pendingLanes &= ~lanes;
-        this._renderLanes |= lanes;
+        this._pendingLanes &= ~renderLanes;
+        this._renderLanes |= renderLanes;
         this._suspendedLanes &= ~resumeLanes;
-        if (needsFlush) {
+        if (this._currentUpdate === null) {
           this._flushQueue();
         }
       }, options);
-      this._pendingLanes |= lanes;
+      this._pendingLanes |= renderLanes;
     }
 
     return {
       id,
-      lanes,
+      lanes: renderLanes,
       finished: controller.promise,
     };
   }
@@ -171,33 +175,28 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
   }
 
   private async _flushQueue(): Promise<void> {
-    while ((this._renderLanes & ~this._suspendedLanes) !== 0) {
+    let unblockedLanes: Lanes;
+
+    while (
+      (unblockedLanes = this._renderLanes & ~this._suspendedLanes) !== NoLanes
+    ) {
       const currentQueue = this._currentQueue;
       const alternateQueue = this._alternateQueue;
-      const flushLanes = getHighestPriorityLane(
-        this._renderLanes & ~this._suspendedLanes,
-      );
+      const flushLanes = getHighestPriorityLane(unblockedLanes);
 
-      this._currentQueue = alternateQueue;
-      this._alternateQueue = currentQueue;
+      while ((this._currentUpdate = currentQueue.dequeue()) !== undefined) {
+        const { controller, task, id, lanes } = this._currentUpdate;
 
-      for (
-        let update: Update | undefined;
-        (update = currentQueue.peek()) !== undefined;
-        currentQueue.dequeue()
-      ) {
-        const { controller, task, id, lanes } = update;
-
-        if ((task.pendingLanes & lanes) === 0) {
+        if ((task.pendingLanes & lanes) === NoLanes) {
           controller.resolve({ status: 'skipped' });
           continue;
         }
 
         if (
-          (flushLanes & lanes) === 0 ||
+          (flushLanes & lanes) === NoLanes ||
           getPendingAncestor(task.scope, lanes) !== null
         ) {
-          alternateQueue.enqueue(update);
+          alternateQueue.enqueue(this._currentUpdate);
           continue;
         }
 
@@ -220,10 +219,14 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
             lanes,
           });
 
-          if (lanes & SyncLane) {
-            this._runRenderSync(task.start(session), session);
-          } else {
-            await this._runRenderAsync(task.start(session), session);
+          try {
+            if (lanes & SyncLane) {
+              this._runRenderSync(task.start(session), session);
+            } else {
+              await this._runRenderAsync(task.start(session), session);
+            }
+          } finally {
+            session.lanes = NoLanes;
           }
 
           notifyObservers(this._observers, {
@@ -240,7 +243,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
           if (lanes & SyncLane) {
             this._runCommitSync(session);
           } else {
-            await this._runCommitAsync(session);
+            await this._runCommitAsync(session, lanes);
           }
 
           controller.resolve({ status: 'done' });
@@ -265,12 +268,15 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
         }
       }
 
+      this._currentQueue = alternateQueue;
+      this._alternateQueue = currentQueue;
       this._renderLanes &= ~flushLanes;
     }
   }
 
   private async _runCommitAsync(
     session: Session<TPart, TRenderer>,
+    lanes: Lanes,
   ): Promise<void> {
     const { id, commitPhases } = session;
     const mutationEffects = session.mutationEffects.splice(0);
@@ -291,7 +297,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
         }
       };
 
-      if (session.lanes & ViewTransitionLane) {
+      if (lanes & ViewTransitionLane) {
         await this._adapter.startViewTransition(callback);
       } else {
         await this._adapter.requestCallback(callback, {
