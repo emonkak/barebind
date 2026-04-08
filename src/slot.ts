@@ -82,9 +82,8 @@ export class Slot<TPart = unknown, TRenderer = unknown>
     );
   }
 
-  needsRender(lanes: Lanes): boolean {
+  needsRender(): boolean {
     return (
-      (this._pendingLanes & lanes) !== 0 ||
       this._snapshot === null ||
       this._handler === null ||
       this._handler.shouldUpdate(
@@ -169,7 +168,7 @@ export class Slot<TPart = unknown, TRenderer = unknown>
 
       if ((this._pendingLanes & lanes) === 0) {
         for (const childUnit of childUnits) {
-          if (childUnit.needsRender(lanes)) {
+          if (childUnit.needsRender()) {
             yield childUnit;
           }
         }

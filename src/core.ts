@@ -188,7 +188,7 @@ export interface UpdateUnit<TPart = unknown, TRenderer = unknown>
   readonly directive: Directive.ElementDirective;
   readonly scope: Scope<TPart, TRenderer>;
   pendingLanes: Lanes;
-  needsRender(lanes: Lanes): boolean;
+  needsRender(): boolean;
   render(session: Session<TPart, TRenderer>): Iterable<UpdateUnit>;
 }
 
