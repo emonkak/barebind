@@ -147,6 +147,7 @@ export interface UpdateHandle {
 export interface UpdateOptions
   extends Pick<SchedulerPostTaskOptions, 'delay' | 'priority'> {
   flushSync?: boolean;
+  inherit?: boolean;
   resume?: boolean;
   transition?: number;
   viewTransition?: boolean;
@@ -158,7 +159,7 @@ export type UpdateResult =
   | { status: 'intrupted'; reason: unknown };
 
 export interface UpdateScheduler {
-  getPendingUpdates(): Iterable<Update>;
+  readonly currentUpdate: Update | undefined;
   nextTransition(): number;
   schedule(task: UpdateTask, options?: UpdateOptions): UpdateHandle;
 }

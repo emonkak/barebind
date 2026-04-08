@@ -14,7 +14,7 @@ import {
   wrap,
 } from './core.js';
 import { AbortError } from './error.js';
-import { getRenderLanes } from './lane.js';
+import { getRenderLanes, NoLanes } from './lane.js';
 import {
   getRootScope,
   handleError,
@@ -276,7 +276,7 @@ export class RenderContext {
     if (!isChildScope(this._scope)) {
       return {
         id: -1,
-        lanes: 0,
+        lanes: NoLanes,
         finished: Promise.resolve({
           status: 'skipped',
         }),
@@ -284,20 +284,18 @@ export class RenderContext {
     }
     if (!Object.isFrozen(this._scope)) {
       const renderLanes = getRenderLanes(options ?? {});
-      for (const update of this._session.scheduler.getPendingUpdates()) {
-        if (
-          update.id === this._session.id &&
-          (update.lanes & renderLanes) === renderLanes
-        ) {
-          this._scope.owner.pendingLanes |= update.lanes;
-          return {
-            id: update.id,
-            lanes: update.lanes,
-            finished: update.controller.promise,
-          };
-        } else {
-          break;
-        }
+      const currentUpdate = this._session.scheduler.currentUpdate;
+      if (
+        currentUpdate !== undefined &&
+        currentUpdate.id === this._session.id &&
+        (currentUpdate.lanes & renderLanes) === renderLanes
+      ) {
+        this._scope.owner.pendingLanes |= currentUpdate.lanes;
+        return {
+          id: currentUpdate.id,
+          lanes: currentUpdate.lanes,
+          finished: currentUpdate.controller.promise,
+        };
       }
     }
     const handle = this._session.scheduler.schedule(this._scope.owner, options);
@@ -429,7 +427,7 @@ export class RenderContext {
       let newState = options.passthrough
         ? getInitialState(initialState)
         : memoizedState;
-      let skipLanes = 0;
+      let skipLanes = NoLanes;
 
       memoizedActions.push(...dispatcher.pendingActions);
 
@@ -437,14 +435,14 @@ export class RenderContext {
         const { payload, lanes, revertLanes } = action;
         if ((lanes & renderLanes) === lanes) {
           newState = reducer(newState, payload);
-          action.lanes = 0;
+          action.lanes = NoLanes;
         } else if ((revertLanes & renderLanes) === revertLanes) {
           skipLanes |= lanes;
-          action.revertLanes = 0;
+          action.revertLanes = NoLanes;
         }
       }
 
-      if (skipLanes === 0) {
+      if (skipLanes === NoLanes) {
         currentHook = {
           type: ReducerType,
           dispatcher,

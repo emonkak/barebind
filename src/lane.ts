@@ -1,5 +1,6 @@
 import type { Lane, Lanes, UpdateOptions } from './core.js';
 
+export const NoLanes: Lanes /*           */ = 0b0000000000000000;
 export const SyncLane: Lane /*           */ = 0b0000000000000001;
 export const ViewTransitionLane: Lane /* */ = 0b0000000000000010;
 export const UserBlockingLane: Lane /*   */ = 0b0000000000000100;
