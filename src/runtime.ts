@@ -137,32 +137,6 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     };
   }
 
-  private _completeCommit(session: Session<TPart, TRenderer>): void {
-    const { id, commitPhases } = session;
-    const passiveEffects = session.passiveEffects.splice(0);
-
-    if (commitPhases & PassivePhase && passiveEffects.length > 0) {
-      this._adapter
-        .requestCallback(
-          () => {
-            this._flushEffects(id, passiveEffects, PassivePhase);
-          },
-          { priority: 'background' },
-        )
-        .finally(() => {
-          notifyObservers(this._observers, {
-            type: 'commit-end',
-            id,
-          });
-        });
-    } else {
-      notifyObservers(this._observers, {
-        type: 'commit-end',
-        id,
-      });
-    }
-  }
-
   private _flushEffects(
     id: number,
     effects: Effect[],
@@ -255,8 +229,6 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
             await this._runCommitAsync(session);
           }
 
-          this._completeCommit(session);
-
           controller.resolve({ status: 'done' });
         } catch (error) {
           session.mutationEffects.length = 0;
@@ -293,6 +265,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     const { id, commitPhases } = session;
     const mutationEffects = session.mutationEffects.splice(0);
     const layoutEffects = session.layoutEffects.splice(0);
+    const passiveEffects = session.passiveEffects.splice(0);
 
     if (
       commitPhases & (MutationPhase | LayoutPhase) &&
@@ -316,12 +289,34 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
         });
       }
     }
+
+    if (commitPhases & PassivePhase && passiveEffects.length > 0) {
+      this._adapter
+        .requestCallback(
+          () => {
+            this._flushEffects(id, passiveEffects, PassivePhase);
+          },
+          { priority: 'background' },
+        )
+        .finally(() => {
+          notifyObservers(this._observers, {
+            type: 'commit-end',
+            id,
+          });
+        });
+    } else {
+      notifyObservers(this._observers, {
+        type: 'commit-end',
+        id,
+      });
+    }
   }
 
   private _runCommitSync(session: Session<TPart, TRenderer>): void {
     const { id, commitPhases } = session;
     const mutationEffects = session.mutationEffects.splice(0);
     const layoutEffects = session.layoutEffects.splice(0);
+    const passiveEffects = session.passiveEffects.splice(0);
 
     if (commitPhases & MutationPhase && mutationEffects.length > 0) {
       this._flushEffects(id, mutationEffects, MutationPhase);
@@ -329,6 +324,10 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
 
     if (commitPhases & LayoutPhase && layoutEffects.length > 0) {
       this._flushEffects(id, layoutEffects, LayoutPhase);
+    }
+
+    if (commitPhases & PassivePhase && passiveEffects.length > 0) {
+      this._flushEffects(id, passiveEffects, PassivePhase);
     }
   }
 
