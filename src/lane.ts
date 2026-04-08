@@ -10,6 +10,10 @@ export const TransitionLanes: Lanes /*   */ = 0b11111111111111110000000000000000
 export const TransitionLane1: Lane /*    */ = 0b00000000000000010000000000000000;
 export const TransitionLength: number /* */ = 16;
 
+export function getHighestPriorityLane(lanes: Lanes): Lane {
+  return lanes & -lanes;
+}
+
 export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
   if (lanes & BackgroundLane) {
     return 'background';

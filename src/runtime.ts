@@ -18,7 +18,12 @@ import {
   type UpdateUnit,
 } from './core.js';
 import { InterruptError } from './error.js';
-import { getRenderLanes, SyncLane, ViewTransitionLane } from './lane.js';
+import {
+  getHighestPriorityLane,
+  getRenderLanes,
+  SyncLane,
+  ViewTransitionLane,
+} from './lane.js';
 import { Queue } from './queue.js';
 import { getPendingAncestor } from './scope.js';
 
@@ -66,8 +71,9 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
   private readonly _observers: Set<SessionObserver> = new Set();
   private _currentQueue: Queue<Update> = new Queue();
   private _alternateQueue: Queue<Update> = new Queue();
-  private _flushLanes: number = 0;
   private _pendingLanes: number = 0;
+  private _renderLanes: number = 0;
+  private _suspendedLanes: number = 0;
   private _transitionCount: number = 0;
   private _updateCount: number = 0;
 
@@ -107,6 +113,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     const controller = Promise.withResolvers<UpdateResult>();
     const id = this._updateCount++;
     const lanes = this._adapter.getDefaultLanes() | getRenderLanes(options);
+    const resumeLanes = options.resume ? lanes : 0;
 
     this._currentQueue.enqueue({
       id,
@@ -116,13 +123,15 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     });
 
     if (
-      (this._pendingLanes & lanes) !== lanes &&
-      (this._flushLanes & lanes) !== lanes
+      (this._pendingLanes & lanes) !== lanes ||
+      (this._renderLanes & lanes) !== lanes ||
+      (this._suspendedLanes & resumeLanes) !== 0
     ) {
       this._adapter.requestCallback(() => {
-        const needsFlush = this._flushLanes === 0;
-        this._flushLanes |= lanes;
+        const needsFlush = this._renderLanes === 0;
         this._pendingLanes &= ~lanes;
+        this._renderLanes |= lanes;
+        this._suspendedLanes &= ~resumeLanes;
         if (needsFlush) {
           this._flushQueue();
         }
@@ -162,10 +171,15 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
   }
 
   private async _flushQueue(): Promise<void> {
-    while (true) {
+    while ((this._renderLanes & ~this._suspendedLanes) !== 0) {
       const currentQueue = this._currentQueue;
       const alternateQueue = this._alternateQueue;
-      const flushLanes = this._flushLanes;
+      const flushLanes = getHighestPriorityLane(
+        this._renderLanes & ~this._suspendedLanes,
+      );
+
+      this._currentQueue = alternateQueue;
+      this._alternateQueue = currentQueue;
 
       for (
         let update: Update | undefined;
@@ -180,7 +194,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
         }
 
         if (
-          (lanes & flushLanes) !== lanes ||
+          (flushLanes & lanes) === 0 ||
           getPendingAncestor(task.scope, lanes) !== null
         ) {
           alternateQueue.enqueue(update);
@@ -235,6 +249,8 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
           session.layoutEffects.length = 0;
           session.passiveEffects.length = 0;
 
+          this._suspendedLanes |= lanes;
+
           notifyObservers(this._observers, {
             type: 'commit-abort',
             id,
@@ -242,20 +258,14 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
           });
 
           if (error instanceof InterruptError) {
-            controller.resolve({ status: 'aborted', reason: error.cause });
+            controller.resolve({ status: 'intrupted', reason: error.cause });
           } else {
             controller.reject(error);
           }
         }
       }
 
-      this._currentQueue = alternateQueue;
-      this._alternateQueue = currentQueue;
-
-      if (this._flushLanes === flushLanes) {
-        this._flushLanes = 0;
-        break;
-      }
+      this._renderLanes &= ~flushLanes;
     }
   }
 
