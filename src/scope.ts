@@ -1,4 +1,4 @@
-import type { Lanes, Root, Scope, UpdateUnit } from './core.js';
+import type { Root, Scope, UpdateUnit } from './core.js';
 import { ErrorBoundary } from './error.js';
 
 export const OrphanScope: Scope.OrphanScope = Object.freeze({
@@ -40,20 +40,6 @@ export function createRootScope<TPart>(
   };
 }
 
-export function getPendingAncestor<TPart, TRenderer>(
-  scope: Scope<TPart, TRenderer>,
-  lanes: Lanes,
-): Scope<TPart, TRenderer> | null {
-  while (isChildScope(scope)) {
-    const owner = scope.owner as UpdateUnit<TPart, TRenderer>;
-    if ((owner.pendingLanes & lanes) === lanes) {
-      return scope;
-    }
-    scope = owner.scope;
-  }
-  return null;
-}
-
 export function getRootScope<TPart, TRenderer>(
   scope: Scope<TPart, TRenderer>,
 ): Scope.RootScope<TPart> | null {
@@ -67,13 +53,13 @@ export function handleError(scope: Scope, error: unknown): Scope {
   let currentScope = scope;
   let currentBoundary = currentScope.boundary;
 
-  const forwardError = (error: unknown) => {
+  const propagate = (error: unknown) => {
     while (true) {
       while (currentBoundary !== null) {
         const boundary = currentBoundary;
         currentBoundary = currentBoundary.next;
         if (boundary.instance instanceof ErrorBoundary) {
-          boundary.instance.handleError(error, forwardError);
+          boundary.instance.handleError(error, propagate);
           return;
         }
       }
@@ -87,7 +73,7 @@ export function handleError(scope: Scope, error: unknown): Scope {
     }
   };
 
-  forwardError(error);
+  propagate(error);
 
   return currentScope;
 }

@@ -1,6 +1,5 @@
 import { sequentialEqual, shallowEqual } from '../compare.js';
 import {
-  type Effect,
   type PrimitiveHandler,
   type Scope,
   type Session,
@@ -79,21 +78,15 @@ export class DOMPrimitiveHandler<TValue, TPart extends DOMPart>
     return [];
   }
 
-  complete(
-    _value: TValue,
-    _part: TPart,
-    _scope: Scope.ChildScope<TPart, DOMRenderer>,
-    _session: Session<TPart, DOMRenderer>,
-  ): void {}
+  mount(_value: TValue, _part: TPart): void {}
 
-  discard(
-    _value: TValue,
-    _part: TPart,
-    _scope: Scope<TPart, DOMRenderer>,
-    _session: Session<TPart, DOMRenderer>,
-  ): void {}
+  remount(_oldValue: TValue, newValue: TValue, part: TPart): void {
+    this.mount(newValue, part);
+  }
 
-  mount(_newValue: TValue, _oldValue: TValue, _part: TPart): void {}
+  afterMount(_value: TValue, _part: TPart): void {}
+
+  beforeUnmount(_value: TValue, _part: TPart): void {}
 
   unmount(_value: TValue, _part: TPart): void {}
 }
@@ -102,11 +95,7 @@ export class DOMAttributeHandler<TValue> extends DOMPrimitiveHandler<
   TValue,
   DOMPart.AttributePart
 > {
-  override mount(
-    newValue: TValue,
-    _oldValue: TValue | null,
-    part: DOMPart.AttributePart,
-  ): void {
+  override mount(newValue: TValue, part: DOMPart.AttributePart): void {
     const { node, name } = part;
     if (typeof newValue === 'boolean') {
       node.toggleAttribute(name, newValue);
@@ -137,12 +126,16 @@ export class DOMClassHandler extends DOMPrimitiveHandler<
     return !shallowEqual(newTokens, oldTokens);
   }
 
-  override mount(
+  override mount(tokens: ClassMap, part: DOMPart.AttributePart): void {
+    updateClass(part.node.classList, {}, tokens);
+  }
+
+  override remount(
+    oldTokens: ClassMap,
     newTokens: ClassMap,
-    oldTokens: ClassMap | null,
     part: DOMPart.AttributePart,
   ): void {
-    updateClass(part.node.classList, oldTokens ?? {}, newTokens);
+    updateClass(part.node.classList, oldTokens, newTokens);
   }
 
   override unmount(tokens: ClassMap, part: DOMPart.AttributePart): void {
@@ -168,22 +161,16 @@ export class DOMElementHandler extends DOMPrimitiveHandler<
     props: ElementProps,
     part: DOMPart.ElementPart,
     scope: Scope.ChildScope<DOMPart.ElementPart, DOMRenderer>,
-    session: Session<DOMPart.ElementPart, DOMRenderer>,
+    _session: Session<DOMPart.ElementPart, DOMRenderer>,
   ): Iterable<Slot> {
     const oldSlots = this._currentSlots;
     const newSlots = new Map();
-
-    for (const [key, slot] of oldSlots.entries()) {
-      if (!Object.hasOwn(props, key)) {
-        slot.discard(session);
-      }
-    }
 
     for (const propName of Object.keys(props)) {
       const directive = wrap(props[propName]);
       let slot = oldSlots?.get(propName);
       if (slot !== undefined) {
-        slot = slot.update(directive, scope);
+        slot.update(directive, scope);
       } else {
         const propPart = resolveNamedPart(propName, part.node);
         slot = new Slot(propPart, directive, scope);
@@ -196,28 +183,13 @@ export class DOMElementHandler extends DOMPrimitiveHandler<
     return newSlots.values();
   }
 
-  override discard(
-    _props: ElementProps,
-    _part: DOMPart.ElementPart,
-    _scope: Scope<DOMPart.ElementPart, DOMRenderer>,
-    session: Session<DOMPart.ElementPart, DOMRenderer>,
-  ): void {
-    for (const slot of this._currentSlots.values()) {
-      slot.discard(session);
-    }
-    this._pendingSlots = new Map();
-  }
-
-  override mount(
-    _newProps: ElementProps,
-    _oldProps: ElementProps | null,
-    _part: DOMPart.ElementPart,
-  ): void {
+  override mount(_newProps: ElementProps, _part: DOMPart.ElementPart): void {
     const oldSlots = this._currentSlots;
     const newSlots = this._pendingSlots;
 
     for (const [name, slot] of oldSlots) {
       if (!newSlots.has(name)) {
+        slot.beforeRevert();
         slot.revert();
       }
     }
@@ -229,11 +201,25 @@ export class DOMElementHandler extends DOMPrimitiveHandler<
     this._currentSlots = this._pendingSlots;
   }
 
+  override afterMount(_props: ElementProps, _part: DOMPart.ElementPart): void {
+    for (const slot of this._currentSlots.values()) {
+      slot.afterCommit();
+    }
+  }
+
+  override beforeUnmount(
+    _props: ElementProps,
+    _part: DOMPart.ElementPart,
+  ): void {
+    for (const slot of this._currentSlots.values()) {
+      slot.beforeRevert();
+    }
+  }
+
   override unmount(_props: ElementProps, _part: DOMPart.ElementPart): void {
     for (const slot of this._currentSlots.values()) {
       slot.revert();
     }
-
     this._currentSlots = new Map();
   }
 }
@@ -254,10 +240,12 @@ export class DOMEventHandler extends DOMPrimitiveHandler<
   }
 
   override mount(
-    newListener: EventListenerOrNullish,
-    oldListener: EventListenerOrNullish,
+    listener: EventListenerOrNullish,
     part: DOMPart.EventPart,
   ): void {
+    const newListener = listener;
+    const oldListener = this._memoizedListener;
+
     if (
       newListener == null ||
       oldListener == null ||
@@ -300,11 +288,7 @@ export class DOMLiveHandler<TValue> extends DOMPrimitiveHandler<
     return true;
   }
 
-  override mount(
-    newValue: TValue,
-    _oldValue: TValue | null,
-    part: DOMPart.LivePart,
-  ): void {
+  override mount(newValue: TValue, part: DOMPart.LivePart): void {
     const { node, name } = part;
     const currentValue = node[name as keyof Element];
 
@@ -320,7 +304,7 @@ export class DOMLiveHandler<TValue> extends DOMPrimitiveHandler<
 }
 
 export class DOMNodeHandler<T> extends DOMPrimitiveHandler<T, DOMPart> {
-  override mount(newValue: T, _oldValue: T | null, part: DOMPart): void {
+  override mount(newValue: T, part: DOMPart): void {
     part.node.nodeValue = toStringOrEmpty(newValue);
   }
 
@@ -333,11 +317,7 @@ export class DOMPropertyHandler<T> extends DOMPrimitiveHandler<
   T,
   DOMPart.PropertyPart
 > {
-  override mount(
-    newValue: T,
-    _oldValue: T | null,
-    part: DOMPart.PropertyPart,
-  ): void {
+  override mount(newValue: T, part: DOMPart.PropertyPart): void {
     const { node, name } = part;
     (node as any)[name] = newValue;
   }
@@ -352,11 +332,9 @@ export class DOMRefHandler extends DOMPrimitiveHandler<
   Ref<Element>,
   DOMPart.AttributePart
 > {
-  /** @internal */
-  _memoizedRef: Ref<Element>;
+  private _memoizedRef: Ref<Element>;
 
-  /** @internal */
-  _memoizedCleanup: Cleanup | void | undefined;
+  private _memoizedCleanup: Cleanup | void | undefined;
 
   override ensureValue(value: unknown, part: DOMPart.AttributePart): void {
     if (!isRef(value) || value == null) {
@@ -367,22 +345,44 @@ export class DOMRefHandler extends DOMPrimitiveHandler<
     }
   }
 
-  override complete(
-    ref: Ref<Element>,
-    part: DOMPart.AttributePart,
-    scope: Scope.ChildScope<DOMPart.AttributePart, DOMRenderer>,
-    session: Session<DOMPart.AttributePart, DOMRenderer>,
-  ): void {
-    session.layoutEffects.push(new InvokeRef(this, ref, part, scope));
+  override afterMount(ref: Ref<Element>, part: DOMPart.AttributePart): void {
+    const newRef = ref;
+    const oldRef = this._memoizedRef;
+
+    if (newRef !== oldRef) {
+      if (oldRef != null) {
+        if (typeof oldRef === 'function') {
+          this._memoizedCleanup?.();
+        } else {
+          oldRef.current = null;
+        }
+      }
+
+      if (newRef != null) {
+        if (typeof newRef === 'function') {
+          this._memoizedCleanup = newRef(part.node);
+        } else {
+          newRef.current = part.node;
+        }
+      }
+    }
+
+    this._memoizedRef = newRef;
   }
 
-  override discard(
+  override beforeUnmount(
     _ref: Ref<Element>,
     _part: DOMPart.AttributePart,
-    scope: Scope<DOMPart.AttributePart, DOMRenderer>,
-    session: Session<DOMPart.AttributePart, DOMRenderer>,
   ): void {
-    session.mutationEffects.push(new CleanupRef(this, scope));
+    const ref = this._memoizedRef;
+
+    if (ref != null) {
+      if (typeof ref === 'function') {
+        this._memoizedCleanup?.();
+      } else {
+        ref.current = null;
+      }
+    }
   }
 }
 
@@ -400,18 +400,20 @@ export class DOMStyleHandler extends DOMPrimitiveHandler<
     return !shallowEqual(newProps, oldProps);
   }
 
-  override mount(
+  override mount(props: StyleMap, part: DOMPart.AttributePart): void {
+    updateStyle((part.node as HTMLElement).style, {}, props);
+  }
+
+  override remount(
+    oldProps: StyleMap,
     newProps: StyleMap,
-    oldProps: StyleMap | null,
     part: DOMPart.AttributePart,
   ): void {
-    const declaration = (part.node as HTMLElement).style;
-    updateStyle(declaration, oldProps ?? {}, newProps);
+    updateStyle((part.node as HTMLElement).style, oldProps, newProps);
   }
 
   override unmount(props: StyleMap, part: DOMPart.AttributePart): void {
-    const declaration = (part.node as HTMLElement).style;
-    updateStyle(declaration, props, {});
+    updateStyle((part.node as HTMLElement).style, props, {});
   }
 }
 
@@ -571,78 +573,4 @@ function isRef(value: any): value is Ref<unknown> {
   return (
     value == null || typeof value === 'function' || value?.current !== undefined
   );
-}
-
-class CleanupRef implements Effect {
-  private _handler: DOMRefHandler;
-  private _scope: Scope;
-
-  constructor(handler: DOMRefHandler, scope: Scope) {
-    this._handler = handler;
-    this._scope = scope;
-  }
-
-  get scope(): Scope {
-    return this._scope;
-  }
-
-  commit(): void {
-    const ref = this._handler._memoizedRef;
-
-    if (ref != null) {
-      if (typeof ref === 'function') {
-        this._handler._memoizedCleanup?.();
-      } else {
-        ref.current = null;
-      }
-    }
-  }
-}
-
-class InvokeRef implements Effect {
-  private _handler: DOMRefHandler;
-  private _ref: Ref<Element>;
-  private _part: DOMPart.AttributePart;
-  private _scope: Scope;
-
-  constructor(
-    handler: DOMRefHandler,
-    ref: Ref<Element>,
-    part: DOMPart.AttributePart,
-    scope: Scope,
-  ) {
-    this._handler = handler;
-    this._ref = ref;
-    this._part = part;
-    this._scope = scope;
-  }
-
-  get scope(): Scope {
-    return this._scope;
-  }
-
-  commit(): void {
-    const newRef = this._ref;
-    const oldRef = this._handler._memoizedRef;
-
-    if (newRef !== oldRef) {
-      if (oldRef != null) {
-        if (typeof oldRef === 'function') {
-          this._handler._memoizedCleanup?.();
-        } else {
-          oldRef.current = null;
-        }
-      }
-
-      if (newRef != null) {
-        if (typeof newRef === 'function') {
-          this._handler._memoizedCleanup = newRef(this._part.node);
-        } else {
-          newRef.current = this._part.node;
-        }
-      }
-    }
-
-    this._handler._memoizedRef = newRef;
-  }
 }

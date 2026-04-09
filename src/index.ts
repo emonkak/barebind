@@ -19,7 +19,7 @@ export {
   type DOMRoot,
   type DOMRootOptions,
 } from './dom/root.js';
-export { AbortError, InterruptError, RenderError } from './error.js';
+export { RenderError } from './error.js';
 export { Runtime } from './runtime.js';
 export { Partial } from './template/partial.js';
 export { html, math, svg, text } from './template/template.js';

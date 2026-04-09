@@ -19,13 +19,6 @@ export interface BoundaryType<TInstance, TDefault> {
   getDefault?(): TDefault;
 }
 
-export type CommitPhase =
-  | typeof MutationPhase
-  | typeof LayoutPhase
-  | typeof PassivePhase;
-
-export type CommitPhases = number;
-
 export interface Component<TProps> {
   resolveComponent(
     directive: Directive.ComponentDirective<TProps>,
@@ -69,29 +62,14 @@ export interface DirectiveHandler<
     scope: Scope.ChildScope<TPart, TRenderer>,
     session: Session<TPart, TRenderer>,
   ): Iterable<UpdateUnit>;
-  complete(
-    value: TValue,
-    part: TPart,
-    scope: Scope.ChildScope<TPart, TRenderer>,
-    session: Session<TPart, TRenderer>,
-  ): void;
-  discard(
-    value: TValue,
-    part: TPart,
-    scope: Scope<TPart, TRenderer>,
-    session: Session<TPart, TRenderer>,
-  ): void;
-  mount(oldValue: TValue, newValue: TValue | null, part: TPart): void;
+  mount(value: TValue | null, part: TPart): void;
+  remount(oldValue: TValue, newValue: TValue, part: TPart): void;
+  afterMount(value: TValue, part: TPart): void;
+  beforeUnmount(value: TValue, part: TPart): void;
   unmount(value: TValue, part: TPart): void;
 }
 
-export interface Effect {
-  scope: Scope;
-  commit(): void;
-}
-
 export interface HostAdapter<TPart, TRenderer> {
-  getCommitPhases(): CommitPhases;
   getDefaultLanes(): Lanes;
   getIdentifier(): string;
   getTaskPriority(): TaskPriority;
@@ -167,7 +145,8 @@ export interface UpdateScheduler {
 export interface UpdateTask {
   readonly scope: Scope;
   readonly pendingLanes: Lanes;
-  start(session: Session): Iterable<UpdateUnit>;
+  render(session: Session): Iterable<UpdateUnit>;
+  complete(): void;
 }
 
 export interface UpdateUnit<TPart = unknown, TRenderer = unknown>
@@ -177,7 +156,6 @@ export interface UpdateUnit<TPart = unknown, TRenderer = unknown>
   readonly scope: Scope<TPart, TRenderer>;
   pendingLanes: Lanes;
   needsRender(): boolean;
-  render(session: Session<TPart, TRenderer>): Iterable<UpdateUnit>;
 }
 
 export type Scope<TPart = unknown, TRenderer = unknown> =
@@ -208,10 +186,6 @@ export namespace Scope {
 export interface Session<TPart = unknown, TRenderer = unknown> {
   id: number;
   lanes: Lanes;
-  commitPhases: CommitPhases;
-  mutationEffects: Effect[];
-  layoutEffects: Effect[];
-  passiveEffects: Effect[];
   adapter: HostAdapter<TPart, TRenderer>;
   renderer: TRenderer;
   scheduler: UpdateScheduler;

@@ -3,7 +3,7 @@ import { formatOnwerStack, getOwnerStack } from './debug.js';
 
 export type ErrorHandler = (
   error: unknown,
-  forwardError: (error: unknown) => void,
+  propagate: (error: unknown) => void,
 ) => void;
 
 export class ErrorBoundary {
@@ -13,13 +13,13 @@ export class ErrorBoundary {
     this._handler = handler;
   }
 
-  handleError(error: unknown, forwardError: (error: unknown) => void): void {
+  handleError(error: unknown, propagate: (error: unknown) => void): void {
     const handler = this._handler;
-    handler(error, forwardError);
+    handler(error, propagate);
   }
 }
 
-export abstract class RenderError extends Error {
+export class RenderError extends Error {
   readonly scope: Scope;
 
   constructor(scope: Scope, message?: string, options?: ErrorOptions) {
@@ -30,7 +30,3 @@ export abstract class RenderError extends Error {
     this.scope = scope;
   }
 }
-
-export class AbortError extends RenderError {}
-
-export class InterruptError extends RenderError {}
