@@ -283,8 +283,8 @@ export class RenderContext {
       };
     }
     if (!Object.isFrozen(this._scope)) {
-      const renderLanes = getRenderLanes(options ?? {});
       const currentUpdate = this._session.scheduler.currentUpdate;
+      const renderLanes = getRenderLanes(options ?? {});
       if (
         currentUpdate !== undefined &&
         currentUpdate.id === this._session.id &&
