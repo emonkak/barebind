@@ -1,10 +1,10 @@
 import {
-  type Effect,
   type Lanes,
   type Scope,
   type Session,
   type UpdateHandle,
   type UpdateTask,
+  type UpdateUnit,
   wrap,
 } from '../core.js';
 import { Runtime } from '../runtime.js';
@@ -49,10 +49,7 @@ export class DOMRoot {
   }
 
   unmount(): UpdateHandle {
-    const task = new UnmountTask(
-      this._slot,
-      (this._runtime.adapter as DOMAdapter).container,
-    );
+    const task = new UnmountTask(this._slot);
     return this._runtime.schedule(task);
   }
 }
@@ -93,7 +90,7 @@ export function createRoot(
   return new DOMRoot(slot, runtime);
 }
 
-class MountTask implements Effect, UpdateTask {
+class MountTask implements UpdateTask {
   private _slot: Slot<DOMPart.ChildNodePart, DOMRenderer>;
   private _container: Element;
 
@@ -113,29 +110,22 @@ class MountTask implements Effect, UpdateTask {
     return -1;
   }
 
-  *start(
-    session: Session<DOMPart.ChildNodePart, DOMRenderer>,
-  ): Generator<Slot> {
-    yield this._slot;
-    session.mutationEffects.push(this);
+  render(session: Session): Iterable<UpdateUnit> {
+    return this._slot.render(session);
   }
 
-  commit(): void {
+  complete(): void {
     this._container.appendChild(this._slot.part.sentinelNode);
     this._slot.commit();
+    this._slot.afterCommit();
   }
 }
 
-class UnmountTask implements Effect, UpdateTask {
+class UnmountTask implements UpdateTask {
   private _slot: Slot<DOMPart.ChildNodePart, DOMRenderer>;
-  private _container: Element;
 
-  constructor(
-    slot: Slot<DOMPart.ChildNodePart, DOMRenderer>,
-    container: Element,
-  ) {
+  constructor(slot: Slot<DOMPart.ChildNodePart, DOMRenderer>) {
     this._slot = slot;
-    this._container = container;
   }
 
   get scope(): Scope<DOMPart.ChildNodePart, DOMRenderer> {
@@ -146,14 +136,13 @@ class UnmountTask implements Effect, UpdateTask {
     return -1;
   }
 
-  start(session: Session<DOMPart.ChildNodePart, DOMRenderer>): Iterable<Slot> {
-    this._slot.discard(session);
-    session.mutationEffects.push(this);
+  render(_session: Session): Iterable<UpdateUnit> {
     return [];
   }
 
-  commit(): void {
-    this._container.removeChild(this._slot.part.sentinelNode);
+  complete(): void {
+    this._slot.part.sentinelNode.remove();
+    this._slot.beforeRevert();
     this._slot.revert();
   }
 }

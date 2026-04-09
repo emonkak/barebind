@@ -162,9 +162,9 @@ export class DOMTemplateHandler
     session: Session<DOMPart.ChildNodePart, DOMTemplateRenderer>,
   ): Iterable<Slot> {
     if (this._block !== null) {
-      this._block.slots = this._block.slots.map((slot, i) =>
-        slot.update(wrap(template.exprs[i]), scope),
-      );
+      this._block.slots.forEach((slot, i) => {
+        slot.update(wrap(template.exprs[i]), scope);
+      });
     } else {
       this._block = session.renderer.renderTemplate(
         this._template,
@@ -176,43 +176,41 @@ export class DOMTemplateHandler
     return this._block.slots;
   }
 
-  discard(
-    _template: Template,
-    _part: DOMPart.ChildNodePart,
-    _scope: Scope<DOMPart.ChildNodePart, DOMTemplateRenderer>,
-    session: Session<DOMPart.ChildNodePart, DOMTemplateRenderer>,
+  mount(_template: Template, part: DOMPart.ChildNodePart): void {
+    if (this._block !== null) {
+      if (part.node === part.sentinelNode) {
+        part.sentinelNode.before(...this._block.childNodes);
+      }
+
+      for (const slot of this._block.slots) {
+        slot.commit();
+      }
+
+      part.node = getStartNode(part, this._block);
+    }
+  }
+
+  remount(
+    _oldTemplate: Template,
+    newTemplate: Template,
+    part: DOMPart.ChildNodePart,
   ): void {
+    this.mount(newTemplate, part);
+  }
+
+  afterMount(_template: Template, _part: DOMPart.ChildNodePart): void {
     if (this._block !== null) {
       for (const slot of this._block.slots) {
-        slot.discard(session);
+        slot.afterCommit();
       }
     }
   }
 
-  complete(
-    _template: Template,
-    _part: DOMPart.ChildNodePart,
-    _scope: Scope.ChildScope<DOMPart.ChildNodePart, DOMTemplateRenderer>,
-    _session: Session<DOMPart.ChildNodePart, DOMTemplateRenderer>,
-  ): void {}
-
-  mount(
-    _newTemplate: Template,
-    _oldTemplate: Template | null,
-    part: DOMPart.ChildNodePart,
-  ): void {
+  beforeUnmount(_template: Template, _part: DOMPart.ChildNodePart): void {
     if (this._block !== null) {
-      const { childNodes, slots } = this._block;
-
-      if (part.node === part.sentinelNode) {
-        part.sentinelNode.before(...childNodes);
+      for (const slot of this._block.slots) {
+        slot.beforeRevert();
       }
-
-      for (const slot of slots) {
-        slot.commit();
-      }
-
-      part.node = getStartNode(part, childNodes, slots);
     }
   }
 
@@ -268,11 +266,10 @@ function getRawAttributeName(s: string): string | undefined {
 
 function getStartNode(
   part: DOMPart.ChildNodePart,
-  childNodes: readonly ChildNode[],
-  slots: readonly Slot<DOMPart>[],
+  block: DOMTemplateBlock,
 ): ChildNode {
-  const firstChild = childNodes[0];
-  const firstSlot = slots[0];
+  const firstChild = block.childNodes[0];
+  const firstSlot = block.slots[0];
   return firstSlot !== undefined && getEndNode(firstSlot.part) === firstChild
     ? firstSlot.part.node
     : (firstChild ?? part.sentinelNode);

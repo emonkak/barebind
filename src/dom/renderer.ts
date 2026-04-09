@@ -30,7 +30,6 @@ const TEXT_NODE = '#text';
 const COMMENT_NODE = '#comment';
 
 export interface DOMRenderer extends DOMTemplateRenderer {
-  readonly container: Element;
   renderChildNodePart(): DOMPart.ChildNodePart;
 }
 
@@ -39,10 +38,6 @@ export class ClientRenderer implements DOMRenderer {
 
   constructor(container: Element) {
     this._container = container;
-  }
-
-  get container(): Element {
-    return this._container;
   }
 
   renderChildNodePart(): DOMPart.ChildNodePart {
@@ -72,8 +67,8 @@ export class HydrationRenderer implements DOMRenderer {
     this._targetWalker = createTreeWalker(container);
   }
 
-  get container(): Element {
-    return this._targetWalker.root as Element;
+  renderChildNodePart(): DOMPart.ChildNodePart {
+    return createChildNodePart(popNode(COMMENT_NODE, this._targetWalker));
   }
 
   renderTemplate(
@@ -83,10 +78,6 @@ export class HydrationRenderer implements DOMRenderer {
     scope: Scope<DOMPart>,
   ): DOMTemplateBlock {
     return hydrateTemplate(template, exprs, part, scope, this._targetWalker);
-  }
-
-  renderChildNodePart(): DOMPart.ChildNodePart {
-    return createChildNodePart(popNode(COMMENT_NODE, this._targetWalker));
   }
 }
 

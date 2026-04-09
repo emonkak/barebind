@@ -4,7 +4,6 @@ import {
   type Component,
   Directive,
   type DirectiveHandler,
-  type Effect,
   type Lanes,
   type Scope,
   type Session,
@@ -13,23 +12,15 @@ import {
   type UpdateResult,
   wrap,
 } from './core.js';
-import { AbortError } from './error.js';
-import { getRenderLanes, NoLanes } from './lane.js';
-import {
-  getRootScope,
-  handleError,
-  isChildScope,
-  OrphanScope,
-} from './scope.js';
+import { NoLanes } from './lane.js';
+import { getRootScope, isChildScope, OrphanScope } from './scope.js';
 import { Slot } from './slot.js';
 
 const FinalizerType = 0;
-const PassiveEffectType = 1;
-const LayoutEffectType = 2;
-const InsertionEffectType = 3;
-const IdType = 4;
-const MemoType = 5;
-const ReducerType = 6;
+const EffectType = 1;
+const IdType = 2;
+const MemoType = 3;
+const ReducerType = 4;
 
 export interface ComponentFunctionOptions<TProps> {
   arePropsEqual?: (newProps: TProps, oldProps: TProps) => boolean;
@@ -92,14 +83,10 @@ namespace Hook {
   }
 
   export interface EffectHook {
-    type:
-      | typeof PassiveEffectType
-      | typeof LayoutEffectType
-      | typeof InsertionEffectType;
+    type: typeof EffectType;
     setup: EffectSetup | null;
     cleanup: EffectCleanup | void;
-    pendingDeps: readonly unknown[] | null;
-    currentDeps: readonly unknown[] | null;
+    deps: readonly unknown[] | null;
   }
 
   export interface IdHook {
@@ -177,47 +164,54 @@ export class ComponentHandler<TProps, TReturn>
 
     finalizeContext(this._context);
 
-    this._slot =
-      this._slot?.update(directive, scope) ?? new Slot(part, directive, scope);
+    if (this._slot !== null) {
+      this._slot.update(directive, scope);
+    } else {
+      this._slot = new Slot(part, directive, scope);
+    }
 
     return [this._slot];
   }
 
-  complete(
-    _props: TProps,
-    _part: unknown,
-    scope: Scope.ChildScope,
-    session: Session,
-  ): void {
-    if (this._context !== null) {
-      completeContext(this._context, scope, session);
-    }
-  }
-
-  discard(
-    _props: TProps,
-    _part: unknown,
-    scope: Scope,
-    session: Session,
-  ): void {
-    if (this._context !== null) {
-      discardContext(this._context, scope, session);
-    }
-    this._slot?.discard(session);
-  }
-
-  mount(_newValue: TProps, _oldValue: TProps | null, _part: unknown): void {
+  mount(_value: TProps, _part: unknown): void {
     this._slot?.commit();
+  }
+
+  remount(_oldValue: TProps, _newValue: TProps, _part: unknown): void {
+    this._slot?.commit();
+  }
+
+  afterMount(_props: TProps, _part: unknown): void {
+    this._slot?.afterCommit();
     if (this._context !== null) {
-      this._context._currentHooks = this._context._pendingHooks;
+      for (const hook of this._context._hooks) {
+        if (hook.type === EffectType && hook.setup !== null) {
+          hook.cleanup?.();
+          hook.cleanup = hook.setup();
+          hook.setup = null;
+        }
+      }
     }
+  }
+
+  beforeUnmount(_props: TProps, _part: unknown): void {
+    if (this._context !== null) {
+      for (const hook of this._context._hooks) {
+        if (hook.type === EffectType && hook.cleanup !== undefined) {
+          hook.cleanup();
+          hook.cleanup = undefined;
+        }
+      }
+
+      this._context._scope = OrphanScope;
+      this._context._hooks = [];
+      this._context._hookIndex = 0;
+    }
+    this._slot?.beforeRevert();
   }
 
   unmount(_value: TProps, _part: unknown): void {
     this._slot?.revert();
-    if (this._context !== null) {
-      this._context._currentHooks = [];
-    }
   }
 }
 
@@ -227,9 +221,7 @@ export class RenderContext {
   /** @internal */
   _session: Session;
   /** @internal */
-  _pendingHooks: Hook[] = [];
-  /** @internal */
-  _currentHooks: Hook[] = [];
+  _hooks: Hook[] = [];
   /** @internal */
   _hookIndex = 0;
 
@@ -238,14 +230,22 @@ export class RenderContext {
     this._session = session;
   }
 
-  addBoundary<T>(instance: T): void {
-    this._scope.boundary = {
-      instance,
-      next: this._scope.boundary,
-    };
+  forceUpdate(options?: UpdateOptions): UpdateHandle {
+    if (!isChildScope(this._scope)) {
+      return {
+        id: -1,
+        lanes: NoLanes,
+        finished: Promise.resolve({
+          status: 'skipped',
+        }),
+      };
+    }
+    const handle = this._session.scheduler.schedule(this._scope.owner, options);
+    this._scope.owner.pendingLanes |= handle.lanes;
+    return handle;
   }
 
-  getBoundary<TInstance, TDefault = never>(
+  inject<TInstance, TDefault = never>(
     type: BoundaryType<TInstance, TDefault>,
   ): TInstance | TDefault {
     let scope: Scope | null = this._scope;
@@ -268,67 +268,20 @@ export class RenderContext {
       return type.getDefault();
     }
     throw new Error(
-      `No ${type.name} found. Make sure to register its instance with context.addBoundary() before using it.`,
+      `${type.name} could not be resolved in the current component hierarchy.`,
     );
   }
 
-  forceUpdate(options?: UpdateOptions): UpdateHandle {
-    if (!isChildScope(this._scope)) {
-      return {
-        id: -1,
-        lanes: NoLanes,
-        finished: Promise.resolve({
-          status: 'skipped',
-        }),
-      };
-    }
-    if (!Object.isFrozen(this._scope)) {
-      const currentUpdate = this._session.scheduler.currentUpdate;
-      const renderLanes = getRenderLanes(options ?? {});
-      if (
-        currentUpdate !== undefined &&
-        currentUpdate.id === this._session.id &&
-        (currentUpdate.lanes & renderLanes) === renderLanes
-      ) {
-        this._scope.owner.pendingLanes |= currentUpdate.lanes;
-        return {
-          id: currentUpdate.id,
-          lanes: currentUpdate.lanes,
-          finished: currentUpdate.controller.promise,
-        };
-      }
-    }
-    const handle = this._session.scheduler.schedule(this._scope.owner, options);
-    this._scope.owner.pendingLanes |= handle.lanes;
-    return handle;
+  provide<T>(instance: T): void {
+    this._scope.boundary = {
+      instance,
+      next: this._scope.boundary,
+    };
   }
 
-  forwardError(error: unknown): void {
-    try {
-      handleError(this._scope, error);
-    } catch (error) {
-      throw new AbortError(
-        this._scope,
-        'No error boundary handled the error.',
-        { cause: error },
-      );
-    }
-  }
-
-  nextId(): string {
-    const root = getRootScope(this._scope);
-    return root !== null ? root.owner.idPrefix + '-' + root.owner.idSeq++ : '';
-  }
-
-  startTransition<T>(action: (transition: number) => T): T {
+  startTransition<T>(callback: (transition: number) => T): T {
     const transition = this._session.scheduler.nextTransition();
-    const result = action(transition);
-    if (result instanceof Promise) {
-      result.catch((error) => {
-        this.forwardError(error);
-      });
-    }
-    return result;
+    return callback(transition);
   }
 
   use<TReturn>(usable: Usable<TReturn>): TReturn {
@@ -343,55 +296,56 @@ export class RenderContext {
   }
 
   useEffect(setup: EffectSetup, deps: readonly unknown[] | null = null): void {
-    createEffectHook(this, setup, deps, PassiveEffectType);
+    let currentHook = this._hooks[this._hookIndex++];
+
+    if (currentHook !== undefined) {
+      ensureHookType(EffectType, currentHook);
+      if (areDepsChanged(deps, currentHook.deps)) {
+        currentHook.setup = setup;
+        currentHook.deps = deps;
+      }
+    } else {
+      currentHook = {
+        type: EffectType,
+        setup,
+        cleanup: undefined,
+        deps,
+      };
+      this._hooks.push(currentHook);
+    }
   }
 
   useId(): string {
-    let currentHook = this._pendingHooks[this._hookIndex];
+    let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
       ensureHookType(IdType, currentHook);
     } else {
+      const root = getRootScope(this._scope);
+      const id =
+        root !== null ? root.owner.idPrefix + '-' + root.owner.idSeq++ : '';
       currentHook = {
         type: IdType,
-        id: this.nextId(),
+        id,
       };
+      this._hooks.push(currentHook);
     }
 
-    this._pendingHooks[this._hookIndex++] = currentHook;
-
     return currentHook.id;
-  }
-
-  useInsertionEffect(
-    setup: EffectSetup,
-    deps: readonly unknown[] | null = null,
-  ): void {
-    createEffectHook(this, setup, deps, InsertionEffectType);
-  }
-
-  useLayoutEffect(
-    setup: EffectSetup,
-    deps: readonly unknown[] | null = null,
-  ): void {
-    createEffectHook(this, setup, deps, LayoutEffectType);
   }
 
   useMemo<TResult>(
     computation: () => TResult,
     deps: readonly unknown[],
   ): TResult {
-    let currentHook = this._pendingHooks[this._hookIndex];
+    let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
       ensureHookType(MemoType, currentHook);
 
       if (areDepsChanged(deps, currentHook.memoizedDeps)) {
-        currentHook = {
-          type: MemoType,
-          memoizedResult: computation(),
-          memoizedDeps: deps,
-        };
+        currentHook.memoizedResult = computation();
+        currentHook.memoizedDeps = deps;
       }
     } else {
       currentHook = {
@@ -399,9 +353,8 @@ export class RenderContext {
         memoizedResult: computation(),
         memoizedDeps: deps,
       };
+      this._hooks.push(currentHook);
     }
-
-    this._pendingHooks[this._hookIndex++] = currentHook;
 
     return currentHook.memoizedResult as TResult;
   }
@@ -417,7 +370,7 @@ export class RenderContext {
       options?: DispatchOptions<TState>,
     ) => UpdateHandle,
   ] {
-    let currentHook = this._pendingHooks[this._hookIndex];
+    let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
       ensureHookType(ReducerType, currentHook);
@@ -443,12 +396,8 @@ export class RenderContext {
       }
 
       if (skipLanes === NoLanes) {
-        currentHook = {
-          type: ReducerType,
-          dispatcher,
-          memoizedState: newState,
-          memoizedActions: [],
-        };
+        currentHook.memoizedActions = [];
+        currentHook.memoizedState = newState;
       }
 
       dispatcher.pendingState = newState;
@@ -492,9 +441,8 @@ export class RenderContext {
         memoizedActions: [],
         dispatcher,
       };
+      this._hooks.push(currentHook);
     }
-
-    this._pendingHooks[this._hookIndex++] = currentHook;
 
     return [
       currentHook.dispatcher.pendingState,
@@ -527,47 +475,6 @@ export class RenderContext {
   }
 }
 
-class CleanupEffect implements Effect {
-  private readonly _hook: Hook.EffectHook;
-  private readonly _scope: Scope;
-
-  constructor(hook: Hook.EffectHook, scope: Scope) {
-    this._hook = hook;
-    this._scope = scope;
-  }
-
-  get scope(): Scope {
-    return this._scope;
-  }
-
-  commit(): void {
-    const { cleanup } = this._hook;
-    cleanup?.();
-    this._hook.cleanup = undefined;
-  }
-}
-
-class InvokeEffect implements Effect {
-  private readonly _hook: Hook.EffectHook;
-  private readonly _scope: Scope;
-
-  constructor(hook: Hook.EffectHook, scope: Scope) {
-    this._hook = hook;
-    this._scope = scope;
-  }
-
-  get scope(): Scope {
-    return this._scope;
-  }
-
-  commit(): void {
-    const { cleanup, setup } = this._hook;
-    cleanup?.();
-    this._hook.setup = null;
-    this._hook.cleanup = setup?.();
-  }
-}
-
 export function createComponent<TProps = {}, TReturn = unknown>(
   componentFn: ComponentFunction<TProps, TReturn>,
   { arePropsEqual = Object.is }: ComponentFunctionOptions<TProps> = {},
@@ -591,108 +498,6 @@ export function createComponent<TProps = {}, TReturn = unknown>(
   return Component;
 }
 
-function completeContext(
-  context: RenderContext,
-  scope: Scope.ChildScope,
-  session: Session,
-): void {
-  // Cleanup effects follow the same declaration order within a component,
-  // but must run from parent to child. Therefore, we collect cleanup effects
-  // before all children are detached and then register them.
-  for (const hook of context._pendingHooks) {
-    switch (hook.type) {
-      case PassiveEffectType:
-        enqueueInvokeEffect(hook, session.passiveEffects, scope);
-        break;
-      case LayoutEffectType:
-        enqueueInvokeEffect(hook, session.layoutEffects, scope);
-        break;
-      case InsertionEffectType:
-        enqueueInvokeEffect(hook, session.mutationEffects, scope);
-        break;
-    }
-  }
-}
-
-function createEffectHook(
-  context: RenderContext,
-  setup: EffectSetup,
-  deps: readonly unknown[] | null,
-  type: Hook.EffectHook['type'],
-): void {
-  let currentHook = context._pendingHooks[context._hookIndex];
-
-  if (currentHook !== undefined) {
-    ensureHookType(type, currentHook);
-    const { cleanup, currentDeps } = currentHook;
-    currentHook = {
-      type,
-      setup,
-      cleanup,
-      pendingDeps: deps,
-      currentDeps,
-    };
-  } else {
-    currentHook = {
-      type,
-      setup,
-      cleanup: undefined,
-      pendingDeps: deps,
-      currentDeps: null,
-    };
-  }
-
-  context._pendingHooks[context._hookIndex++] = currentHook;
-}
-
-function discardContext(
-  context: RenderContext,
-  scope: Scope,
-  session: Session,
-): void {
-  // Cleanup effects follow the same declaration order within a component,
-  // but must run from parent to child. Therefore, we collect cleanup effects
-  // before all children are detached and then register them.
-  for (const hook of context._pendingHooks) {
-    switch (hook.type) {
-      case PassiveEffectType:
-        enqueueCleanupEffect(hook, session.passiveEffects, scope);
-        break;
-      case LayoutEffectType:
-        enqueueCleanupEffect(hook, session.layoutEffects, scope);
-        break;
-      case InsertionEffectType:
-        enqueueCleanupEffect(hook, session.mutationEffects, scope);
-        break;
-    }
-  }
-
-  context._scope = OrphanScope;
-  context._session = session;
-  context._pendingHooks = [];
-  context._hookIndex = 0;
-}
-
-function enqueueCleanupEffect(
-  hook: Hook.EffectHook,
-  effects: Effect[],
-  scope: Scope,
-): void {
-  if (hook.cleanup !== undefined) {
-    effects.push(new CleanupEffect(hook, scope));
-  }
-}
-
-function enqueueInvokeEffect(
-  hook: Hook.EffectHook,
-  effects: Effect[],
-  scope: Scope,
-): void {
-  if (areDepsChanged(hook.pendingDeps, hook.currentDeps)) {
-    effects.push(new InvokeEffect(hook, scope));
-  }
-}
-
 function ensureHookType<TExpectedType extends Hook['type']>(
   expectedType: TExpectedType,
   hook: Hook,
@@ -705,18 +510,15 @@ function ensureHookType<TExpectedType extends Hook['type']>(
 }
 
 function finalizeContext(context: RenderContext): void {
-  let currentHook = context._pendingHooks[context._hookIndex];
+  let currentHook = context._hooks[context._hookIndex++];
 
   if (currentHook !== undefined) {
     ensureHookType(FinalizerType, currentHook);
   } else {
     currentHook = { type: FinalizerType };
+    context._hooks.push(currentHook);
+    Object.freeze(context._hooks);
   }
-
-  context._pendingHooks[context._hookIndex] = currentHook;
-
-  // Refuse to use new hooks after finalization.
-  Object.freeze(context._pendingHooks);
 }
 
 function getInitialState<TState>(initialState: InitialState<TState>): TState {
@@ -730,12 +532,7 @@ function resetContext(
   scope: Scope,
   session: Session,
 ): void {
-  const baseHooks =
-    session === context._session
-      ? context._pendingHooks
-      : context._currentHooks;
   context._scope = scope;
   context._session = session;
-  context._pendingHooks = baseHooks.slice();
   context._hookIndex = 0;
 }

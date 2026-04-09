@@ -1,23 +1,17 @@
 /// <reference path="../typings/upsert.d.ts" />
 
-import {
-  type CommitPhase,
-  type Effect,
-  type HostAdapter,
-  type Lanes,
-  LayoutPhase,
-  MutationPhase,
-  PassivePhase,
-  type Session,
-  type Update,
-  type UpdateHandle,
-  type UpdateOptions,
-  type UpdateResult,
-  type UpdateScheduler,
-  type UpdateTask,
-  type UpdateUnit,
+import type {
+  HostAdapter,
+  Lanes,
+  Session,
+  Update,
+  UpdateHandle,
+  UpdateOptions,
+  UpdateResult,
+  UpdateScheduler,
+  UpdateTask,
+  UpdateUnit,
 } from './core.js';
-import { InterruptError } from './error.js';
 import {
   getHighestPriorityLane,
   getRenderLanes,
@@ -34,17 +28,6 @@ export type SessionEvent =
       lanes: Lanes;
     }
   | {
-      type: 'render-error';
-      id: number;
-      error: unknown;
-      captured: boolean;
-    }
-  | {
-      type: 'unit-render-start' | 'unit-render-end';
-      id: number;
-      unit: UpdateUnit;
-    }
-  | {
       type: 'commit-start' | 'commit-end';
       id: number;
     }
@@ -54,10 +37,9 @@ export type SessionEvent =
       reason: unknown;
     }
   | {
-      type: 'effect-commit-start' | 'effect-commit-end';
+      type: 'unit-start' | 'unit-end';
       id: number;
-      phase: CommitPhase;
-      effects: Effect[];
+      unit: UpdateUnit;
     };
 
 export interface SessionObserver {
@@ -129,7 +111,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
         this._pendingLanes &= ~lanes;
         this._flushLanes |= lanes;
         if (this._currentUpdate === undefined) {
-          this._flushUpdates();
+          this._flush();
         }
       }, options);
       this._pendingLanes |= lanes;
@@ -142,35 +124,11 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     };
   }
 
-  private _flushEffects(
-    id: number,
-    effects: Effect[],
-    phase: CommitPhase,
-  ): void {
-    notifyObservers(this._observers, {
-      type: 'effect-commit-start',
-      id,
-      phase,
-      effects,
-    });
-
-    for (const effect of effects) {
-      effect.commit();
-    }
-
-    notifyObservers(this._observers, {
-      type: 'effect-commit-end',
-      id,
-      phase,
-      effects,
-    });
-  }
-
-  private async _flushUpdates(): Promise<void> {
+  private async _flush(): Promise<void> {
     while ((this._currentUpdate = this._updateQueue.peek()) !== undefined) {
       const { controller, task, id, lanes } = this._currentUpdate;
 
-      if ((this._flushLanes & lanes) === NoLanes) {
+      if ((this._flushLanes & lanes) !== lanes) {
         this._currentUpdate = undefined;
         break;
       }
@@ -185,10 +143,6 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
       const session: Session<TPart, TRenderer> = {
         id,
         lanes,
-        commitPhases: this._adapter.getCommitPhases(),
-        mutationEffects: [],
-        layoutEffects: [],
-        passiveEffects: [],
         adapter: this._adapter,
         renderer: this._adapter.requestRenderer(task.scope),
         scheduler: this,
@@ -201,10 +155,12 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
           lanes,
         });
 
+        const loop = task.render(session);
+
         if (lanes & SyncLane) {
-          this._runRenderSync(task.start(session), session);
+          this._renderSync(loop, session);
         } else {
-          await this._runRenderAsync(task.start(session), session);
+          await this._renderAsync(loop, session);
         }
 
         notifyObservers(this._observers, {
@@ -218,113 +174,40 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
           id,
         });
 
-        if (lanes & SyncLane) {
-          this._runCommitSync(session);
+        if (lanes & ViewTransitionLane) {
+          await this._adapter.startViewTransition(() => {
+            task.complete();
+          });
         } else {
-          await this._runCommitAsync(session);
+          task.complete();
         }
+
+        notifyObservers(this._observers, {
+          type: 'commit-end',
+          id,
+        });
 
         controller.resolve({ status: 'done' });
       } catch (error) {
-        session.mutationEffects.length = 0;
-        session.layoutEffects.length = 0;
-        session.passiveEffects.length = 0;
-
         notifyObservers(this._observers, {
           type: 'commit-abort',
           id,
           reason: error,
         });
 
-        if (error instanceof InterruptError) {
-          controller.resolve({ status: 'intrupted', reason: error.cause });
-        } else {
-          controller.reject(error);
-        }
+        controller.reject(error);
       }
     }
   }
 
-  private async _runCommitAsync(
-    session: Session<TPart, TRenderer>,
-  ): Promise<void> {
-    const { id, commitPhases, lanes } = session;
-    const mutationEffects = session.mutationEffects.splice(0);
-    const layoutEffects = session.layoutEffects.splice(0);
-    const passiveEffects = session.passiveEffects.splice(0);
-
-    if (
-      commitPhases & (MutationPhase | LayoutPhase) &&
-      (mutationEffects.length > 0 || layoutEffects.length > 0)
-    ) {
-      const callback = () => {
-        if (commitPhases & MutationPhase && mutationEffects.length > 0) {
-          this._flushEffects(id, mutationEffects, MutationPhase);
-        }
-
-        if (commitPhases & LayoutPhase && layoutEffects.length > 0) {
-          this._flushEffects(id, layoutEffects, LayoutPhase);
-        }
-      };
-
-      if (lanes & ViewTransitionLane) {
-        await this._adapter.startViewTransition(callback);
-      } else {
-        await this._adapter.requestCallback(callback, {
-          priority: 'user-blocking',
-        });
-      }
-    }
-
-    if (commitPhases & PassivePhase && passiveEffects.length > 0) {
-      this._adapter
-        .requestCallback(
-          () => {
-            this._flushEffects(id, passiveEffects, PassivePhase);
-          },
-          { priority: 'background' },
-        )
-        .finally(() => {
-          notifyObservers(this._observers, {
-            type: 'commit-end',
-            id,
-          });
-        });
-    } else {
-      notifyObservers(this._observers, {
-        type: 'commit-end',
-        id,
-      });
-    }
-  }
-
-  private _runCommitSync(session: Session<TPart, TRenderer>): void {
-    const { id, commitPhases } = session;
-    const mutationEffects = session.mutationEffects.splice(0);
-    const layoutEffects = session.layoutEffects.splice(0);
-    const passiveEffects = session.passiveEffects.splice(0);
-
-    if (commitPhases & MutationPhase && mutationEffects.length > 0) {
-      this._flushEffects(id, mutationEffects, MutationPhase);
-    }
-
-    if (commitPhases & LayoutPhase && layoutEffects.length > 0) {
-      this._flushEffects(id, layoutEffects, LayoutPhase);
-    }
-
-    if (commitPhases & PassivePhase && passiveEffects.length > 0) {
-      this._flushEffects(id, passiveEffects, PassivePhase);
-    }
-  }
-
-  private async _runRenderAsync(
-    renerLoop: Iterable<UpdateUnit>,
+  private async _renderAsync(
+    loop: Iterable<UpdateUnit>,
     session: Session<TPart, TRenderer>,
     lastLevel: number = 0,
   ): Promise<number> {
     const { id } = session;
 
-    for (const unit of renerLoop) {
+    for (const unit of loop) {
       const level = unit.scope.level;
 
       if (level < lastLevel) {
@@ -332,19 +215,15 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
       }
 
       notifyObservers(this._observers, {
-        type: 'unit-render-start',
+        type: 'unit-start',
         id,
         unit,
       });
 
-      lastLevel = await this._runRenderAsync(
-        unit.render(session),
-        session,
-        level,
-      );
+      lastLevel = await this._renderAsync(unit.render(session), session, level);
 
       notifyObservers(this._observers, {
-        type: 'unit-render-end',
+        type: 'unit-end',
         id,
         unit,
       });
@@ -353,23 +232,23 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     return lastLevel;
   }
 
-  private _runRenderSync(
-    renderLoop: Iterable<UpdateUnit>,
+  private _renderSync(
+    loop: Iterable<UpdateUnit>,
     session: Session<TPart, TRenderer>,
   ): void {
     const { id } = session;
 
-    for (const unit of renderLoop) {
+    for (const unit of loop) {
       notifyObservers(this._observers, {
-        type: 'unit-render-start',
+        type: 'unit-start',
         id,
         unit,
       });
 
-      this._runRenderSync(unit.render(session), session);
+      this._renderSync(unit.render(session), session);
 
       notifyObservers(this._observers, {
-        type: 'unit-render-end',
+        type: 'unit-end',
         id,
         unit,
       });
@@ -379,7 +258,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
 
 function compareUpdates(x: Update, y: Update): number {
   const p1 = getHighestPriorityLane(x.lanes);
-  const p2 = getHighestPriorityLane(x.lanes);
+  const p2 = getHighestPriorityLane(y.lanes);
   return p1 !== p2 ? p1 - p2 : x.task.scope.level - y.task.scope.level;
 }
 
