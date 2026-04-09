@@ -72,7 +72,7 @@ export class DOMPrimitiveHandler<TValue, TPart extends DOMPart>
   render(
     _value: TValue,
     _part: TPart,
-    _scope: Scope.ChildScope<TPart, DOMRenderer>,
+    _scope: Scope.ChildScope<TPart>,
     _session: Session<TPart, DOMRenderer>,
   ): Iterable<Slot> {
     return [];
@@ -160,7 +160,7 @@ export class DOMElementHandler extends DOMPrimitiveHandler<
   override render(
     props: ElementProps,
     part: DOMPart.ElementPart,
-    scope: Scope.ChildScope<DOMPart.ElementPart, DOMRenderer>,
+    scope: Scope.ChildScope<DOMPart.ElementPart>,
     _session: Session<DOMPart.ElementPart, DOMRenderer>,
   ): Iterable<Slot> {
     const oldSlots = this._currentSlots;

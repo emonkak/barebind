@@ -13,22 +13,20 @@ import { RenderError } from './error.js';
 import { NoLanes } from './lane.js';
 import { createChildScope, handleError } from './scope.js';
 
-export class Slot<TPart = unknown, TRenderer = unknown>
-  implements UpdateUnit<TPart, TRenderer>
-{
+export class Slot<TPart = unknown> implements UpdateUnit<TPart> {
   private readonly _part: TPart;
   private _pendingDirective: Directive.ElementDirective;
   private _currentDirective: Directive.ElementDirective;
   private _pendingHandler: DirectiveHandler<unknown> | null = null;
   private _currentHandler: DirectiveHandler<unknown> | null = null;
-  private _scope: Scope<TPart, TRenderer>;
+  private _scope: Scope<TPart>;
   private _pendingLanes: Lanes = 0;
   private _dirty: boolean = false;
 
   constructor(
     part: TPart,
     directive: Directive.ElementDirective,
-    scope: Scope<TPart, TRenderer>,
+    scope: Scope<TPart>,
   ) {
     this._part = part;
     this._pendingDirective = directive;
@@ -44,7 +42,7 @@ export class Slot<TPart = unknown, TRenderer = unknown>
     return this._pendingDirective;
   }
 
-  get scope(): Scope<TPart, TRenderer> {
+  get scope(): Scope<TPart> {
     return this._scope;
   }
 
@@ -68,10 +66,7 @@ export class Slot<TPart = unknown, TRenderer = unknown>
     );
   }
 
-  update(
-    directive: Directive.ElementDirective,
-    scope: Scope<TPart, TRenderer>,
-  ): void {
+  update(directive: Directive.ElementDirective, scope: Scope<TPart>): void {
     this._pendingDirective = directive;
     this._pendingHandler =
       directive.type === this._currentDirective.type &&

@@ -91,13 +91,13 @@ export interface DOMTemplateRenderer {
     template: DOMTemplate,
     exprs: readonly unknown[],
     part: DOMPart.ChildNodePart,
-    scope: Scope<DOMPart, DOMTemplateRenderer>,
+    scope: Scope<DOMPart>,
   ): DOMTemplateBlock;
 }
 
 export interface DOMTemplateBlock {
   childNodes: ChildNode[];
-  slots: Slot<DOMPart, DOMTemplateRenderer>[];
+  slots: Slot<DOMPart>[];
 }
 
 export class DOMTemplate {
@@ -158,7 +158,7 @@ export class DOMTemplateHandler
   render(
     template: Template,
     part: DOMPart.ChildNodePart,
-    scope: Scope.ChildScope<DOMPart.ChildNodePart, DOMTemplateRenderer>,
+    scope: Scope.ChildScope<DOMPart.ChildNodePart>,
     session: Session<DOMPart.ChildNodePart, DOMTemplateRenderer>,
   ): Iterable<Slot> {
     if (this._block !== null) {

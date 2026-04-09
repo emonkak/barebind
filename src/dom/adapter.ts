@@ -148,7 +148,7 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
     return new DOMRepeatHandler();
   }
 
-  abstract requestRenderer(scope: Scope<DOMPart, DOMRenderer>): DOMRenderer;
+  abstract requestRenderer(scope: Scope<DOMPart>): DOMRenderer;
 
   resolveTemplate(
     directive: Directive.TemplateDirective,
@@ -186,13 +186,13 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
 }
 
 export class ClientAdapter extends DOMAdapter {
-  requestRenderer(_scope: Scope<DOMPart, DOMRenderer>): DOMRenderer {
+  requestRenderer(_scope: Scope<DOMPart>): DOMRenderer {
     return new ClientRenderer(this._container);
   }
 }
 
 export class HydrationAdapter extends DOMAdapter {
-  requestRenderer(scope: Scope<DOMPart, DOMRenderer>): DOMRenderer {
+  requestRenderer(scope: Scope<DOMPart>): DOMRenderer {
     return isRootScope(scope) &&
       !this._container.contains(scope.owner.part.node)
       ? new HydrationRenderer(this._container)
