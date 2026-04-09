@@ -40,15 +40,6 @@ export function createRootScope<TPart>(
   };
 }
 
-export function getRootScope<TPart, TRenderer>(
-  scope: Scope<TPart, TRenderer>,
-): Scope.RootScope<TPart> | null {
-  while (isChildScope(scope)) {
-    scope = scope.owner.scope;
-  }
-  return isRootScope(scope) ? scope : null;
-}
-
 export function handleError(scope: Scope, error: unknown): Scope {
   let currentScope = scope;
   let currentBoundary = currentScope.boundary;

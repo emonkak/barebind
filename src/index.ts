@@ -17,7 +17,6 @@ export {
   createHydrationRoot,
   createRoot,
   type DOMRoot,
-  type DOMRootOptions,
 } from './dom/root.js';
 export { RenderError } from './error.js';
 export { Runtime } from './runtime.js';
