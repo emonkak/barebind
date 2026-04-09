@@ -109,7 +109,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     });
 
     if (
-      (this._pendingLanes & lanes) !== lanes ||
+      (this._pendingLanes & lanes) !== lanes &&
       (this._flushLanes & lanes) !== lanes
     ) {
       this._adapter.requestCallback(() => {
@@ -203,6 +203,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
         controller.reject(error);
       }
     }
+    this._flushLanes = NoLanes;
   }
 
   private async _renderAsync(
