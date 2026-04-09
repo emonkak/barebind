@@ -100,8 +100,6 @@ export type Lanes = number;
 
 export interface Root<TPart> {
   part: TPart;
-  idPrefix: string;
-  idSeq: number;
 }
 
 export interface PrimitiveHandler<TValue, TPart = unknown, TRenderer = unknown>
@@ -138,6 +136,7 @@ export type UpdateResult =
 
 export interface UpdateScheduler {
   readonly currentUpdate: Update | undefined;
+  nextIdentifier(): string;
   nextTransition(): number;
   schedule(task: UpdateTask, options?: UpdateOptions): UpdateHandle;
 }

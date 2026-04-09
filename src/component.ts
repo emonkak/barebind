@@ -13,7 +13,7 @@ import {
   wrap,
 } from './core.js';
 import { NoLanes } from './lane.js';
-import { getRootScope, isChildScope, OrphanScope } from './scope.js';
+import { isChildScope, OrphanScope } from './scope.js';
 import { Slot } from './slot.js';
 
 const FinalizerType = 0;
@@ -321,12 +321,9 @@ export class RenderContext {
     if (currentHook !== undefined) {
       ensureHookType(IdType, currentHook);
     } else {
-      const root = getRootScope(this._scope);
-      const id =
-        root !== null ? root.owner.idPrefix + '-' + root.owner.idSeq++ : '';
       currentHook = {
         type: IdType,
-        id,
+        id: this._session.scheduler.nextIdentifier(),
       };
       this._hooks.push(currentHook);
     }

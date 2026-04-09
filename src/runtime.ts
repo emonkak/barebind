@@ -57,6 +57,7 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
   );
   private _pendingLanes: number = NoLanes;
   private _flushLanes: number = NoLanes;
+  private _identifierCount: number = 0;
   private _transitionCount: number = 0;
   private _updateCount: number = 0;
 
@@ -70,6 +71,10 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
 
   get currentUpdate(): Update | undefined {
     return this._currentUpdate;
+  }
+
+  nextIdentifier(): string {
+    return this._adapter.getIdentifier() + '-' + this._identifierCount++;
   }
 
   nextTransition(): number {

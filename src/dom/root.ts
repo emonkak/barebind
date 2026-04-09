@@ -19,10 +19,6 @@ import {
 import { createChildNodePart, type DOMPart } from './part.js';
 import type { DOMRenderer } from './renderer.js';
 
-export interface DOMRootOptions {
-  idPrefix?: string;
-}
-
 export class DOMRoot {
   private readonly _slot: Slot<DOMPart.ChildNodePart, DOMRenderer>;
   private readonly _runtime: Runtime<DOMPart, DOMRenderer>;
@@ -57,34 +53,31 @@ export class DOMRoot {
 export function createClientRoot(
   source: unknown,
   container: Element,
-  options?: DOMRootOptions & DOMAdapterOptions,
+  options?: DOMAdapterOptions,
 ) {
   const adapter = new ClientAdapter(container, options);
   const runtime = new Runtime<DOMPart, DOMRenderer>(adapter);
-  return createRoot(source, runtime, options);
+  return createRoot(source, runtime);
 }
 
 export function createHydrationRoot(
   source: unknown,
   container: Element,
-  options?: DOMRootOptions & DOMAdapterOptions,
+  options?: DOMAdapterOptions,
 ): DOMRoot {
   const adapter = new HydrationAdapter(container, options);
   const runtime = new Runtime<DOMPart, DOMRenderer>(adapter);
-  return createRoot(source, runtime, options);
+  return createRoot(source, runtime);
 }
 
 export function createRoot(
   source: unknown,
   runtime: Runtime<DOMPart, DOMRenderer>,
-  options: DOMRootOptions = {},
 ): DOMRoot {
   const document = (runtime.adapter as DOMAdapter).container.ownerDocument;
   const part = createChildNodePart(document.createComment(''));
   const scope = createRootScope({
     part,
-    idPrefix: options.idPrefix ?? runtime.adapter.getIdentifier(),
-    idSeq: 0,
   });
   const slot = new Slot(part, wrap(source), Object.freeze(scope));
   return new DOMRoot(slot, runtime);
