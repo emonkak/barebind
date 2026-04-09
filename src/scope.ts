@@ -20,9 +20,9 @@ export function containsScope(origin: Scope, scope: Scope): boolean {
   return false;
 }
 
-export function createChildScope<TPart, TRenderer>(
-  owner: UpdateUnit<TPart, TRenderer>,
-): Scope.ChildScope<TPart, TRenderer> {
+export function createChildScope<TPart>(
+  owner: UpdateUnit<TPart>,
+): Scope.ChildScope<TPart> {
   return {
     owner,
     level: owner.scope.level + 1,
@@ -69,9 +69,9 @@ export function handleError(scope: Scope, error: unknown): Scope {
   return currentScope;
 }
 
-export function isChildScope<TPart, TRenderer>(
-  scope: Scope<TPart, TRenderer>,
-): scope is Scope.ChildScope<TPart, TRenderer> {
+export function isChildScope<TPart>(
+  scope: Scope<TPart>,
+): scope is Scope.ChildScope<TPart> {
   return scope.level > 0;
 }
 

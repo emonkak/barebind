@@ -47,7 +47,7 @@ export class DOMRepeatHandler<TSource>
   render(
     source: Iterable<TSource>,
     _part: DOMPart.ChildNodePart,
-    scope: Scope.ChildScope<DOMPart.ChildNodePart, DOMRenderer>,
+    scope: Scope.ChildScope<DOMPart.ChildNodePart>,
     session: Session<DOMPart.ChildNodePart, DOMRenderer>,
   ): Iterable<Slot> {
     const oldKeys = this._currentSlots.map(

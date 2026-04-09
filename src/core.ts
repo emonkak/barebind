@@ -59,7 +59,7 @@ export interface DirectiveHandler<
   render(
     value: TValue,
     part: TPart,
-    scope: Scope.ChildScope<TPart, TRenderer>,
+    scope: Scope.ChildScope<TPart>,
     session: Session<TPart, TRenderer>,
   ): Iterable<UpdateUnit>;
   mount(value: TValue | null, part: TPart): void;
@@ -148,23 +148,21 @@ export interface UpdateTask {
   complete(): void;
 }
 
-export interface UpdateUnit<TPart = unknown, TRenderer = unknown>
-  extends UpdateTask {
+export interface UpdateUnit<TPart = unknown> extends UpdateTask {
   readonly part: TPart;
   readonly directive: Directive.ElementDirective;
-  readonly scope: Scope<TPart, TRenderer>;
   pendingLanes: Lanes;
   needsRender(): boolean;
 }
 
-export type Scope<TPart = unknown, TRenderer = unknown> =
-  | Scope.ChildScope<TPart, TRenderer>
+export type Scope<TPart = unknown> =
+  | Scope.ChildScope<TPart>
   | Scope.OrphanScope
   | Scope.RootScope<TPart>;
 
 export namespace Scope {
-  export type ChildScope<TPart = unknown, TRenderer = unknown> = {
-    owner: UpdateUnit<TPart, TRenderer>;
+  export type ChildScope<TPart = unknown> = {
+    owner: UpdateUnit<TPart>;
     level: number;
     boundary: Boundary<unknown> | null;
   };

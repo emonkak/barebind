@@ -20,11 +20,11 @@ import { createChildNodePart, type DOMPart } from './part.js';
 import type { DOMRenderer } from './renderer.js';
 
 export class DOMRoot {
-  private readonly _slot: Slot<DOMPart.ChildNodePart, DOMRenderer>;
+  private readonly _slot: Slot<DOMPart.ChildNodePart>;
   private readonly _runtime: Runtime<DOMPart, DOMRenderer>;
 
   constructor(
-    slot: Slot<DOMPart.ChildNodePart, DOMRenderer>,
+    slot: Slot<DOMPart.ChildNodePart>,
     runtime: Runtime<DOMPart, DOMRenderer>,
   ) {
     this._slot = slot;
@@ -84,18 +84,15 @@ export function createRoot(
 }
 
 class MountTask implements UpdateTask {
-  private _slot: Slot<DOMPart.ChildNodePart, DOMRenderer>;
+  private _slot: Slot<DOMPart.ChildNodePart>;
   private _container: Element;
 
-  constructor(
-    slot: Slot<DOMPart.ChildNodePart, DOMRenderer>,
-    container: Element,
-  ) {
+  constructor(slot: Slot<DOMPart.ChildNodePart>, container: Element) {
     this._slot = slot;
     this._container = container;
   }
 
-  get scope(): Scope<DOMPart.ChildNodePart, DOMRenderer> {
+  get scope(): Scope<DOMPart.ChildNodePart> {
     return this._slot.scope;
   }
 
@@ -115,13 +112,13 @@ class MountTask implements UpdateTask {
 }
 
 class UnmountTask implements UpdateTask {
-  private _slot: Slot<DOMPart.ChildNodePart, DOMRenderer>;
+  private _slot: Slot<DOMPart.ChildNodePart>;
 
-  constructor(slot: Slot<DOMPart.ChildNodePart, DOMRenderer>) {
+  constructor(slot: Slot<DOMPart.ChildNodePart>) {
     this._slot = slot;
   }
 
-  get scope(): Scope<DOMPart.ChildNodePart, DOMRenderer> {
+  get scope(): Scope<DOMPart.ChildNodePart> {
     return this._slot.scope;
   }
 
