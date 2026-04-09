@@ -50,13 +50,7 @@ export class ClientRenderer implements DOMRenderer {
     part: DOMPart.ChildNodePart,
     scope: Scope<DOMPart>,
   ): DOMTemplateBlock {
-    return renderTemplate(
-      template,
-      exprs,
-      part,
-      scope,
-      this._container.ownerDocument,
-    );
+    return renderTemplate(template, exprs, part, scope);
   }
 }
 
@@ -89,7 +83,7 @@ function hydrateTemplate(
   targetWalker: TreeWalker,
 ): DOMTemplateBlock {
   const templateWalker = createTreeWalker(
-    targetWalker.root.ownerDocument!.importNode(template.element.content),
+    part.sentinelNode.ownerDocument.importNode(template.element.content),
   );
   const holes = template.holes;
   const totalHoles = holes.length;
@@ -193,9 +187,11 @@ function renderTemplate(
   exprs: readonly unknown[],
   part: DOMPart.ChildNodePart,
   scope: Scope<DOMPart>,
-  ownerDocument: Document,
 ): DOMTemplateBlock {
-  const root = ownerDocument.importNode(template.element.content, true);
+  const root = part.sentinelNode.ownerDocument.importNode(
+    template.element.content,
+    true,
+  );
   const holes = template.holes;
   const slots: Slot<DOMPart>[] = new Array(holes.length);
   const childNodes = Array.from(root.childNodes);
