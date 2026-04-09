@@ -1,47 +1,83 @@
-interface Node<T> {
-  value: T;
-  next: Node<T> | null;
-}
+export class PriorityQueue<T> {
+  private readonly _heap: T[] = [];
 
-export class Queue<T> {
-  private _head: Node<T> | null = null;
-  private _tail: Node<T> | null = null;
+  private readonly _compare: (x: T, y: T) => number;
 
-  *[Symbol.iterator](): Generator<T> {
-    for (let node = this._head; node !== null; node = node.next) {
-      yield node.value;
-      if (node === this._tail) {
-        break;
-      }
-    }
-  }
-
-  enqueue(value: T): void {
-    const node: Node<T> = {
-      value: value,
-      next: null,
-    };
-    if (this._tail !== null) {
-      this._tail.next = node;
-    } else {
-      this._head = node;
-    }
-    this._tail = node;
+  constructor(compare: (x: T, y: T) => number) {
+    this._compare = compare;
   }
 
   dequeue(): T | undefined {
-    if (this._head === null) {
+    if (this._heap.length === 0) {
       return undefined;
     }
-    const { value, next } = this._head;
-    this._head = next;
-    if (next === null) {
-      this._tail = null;
+
+    const first = this._heap[0];
+    const last = this._heap.pop()!;
+
+    if (this._heap.length > 0) {
+      this._heap[0] = last;
+      this._shiftDown(0);
     }
-    return value;
+
+    return first;
+  }
+
+  enqueue(value: T): void {
+    this._heap.push(value);
+    this._shiftUp(this._heap.length - 1);
   }
 
   peek(): T | undefined {
-    return this._head?.value;
+    return this._heap[0];
   }
+
+  private _shiftDown(index: number): void {
+    const length = this._heap.length;
+    const compare = this._compare;
+
+    while (true) {
+      const left = 2 * index + 1;
+      const right = 2 * index + 2;
+      let smallest = index;
+
+      if (
+        left < length &&
+        compare(this._heap[left]!, this._heap[smallest]!) < 0
+      ) {
+        smallest = left;
+      }
+      if (
+        right < length &&
+        compare(this._heap[right]!, this._heap[smallest]!) < 0
+      ) {
+        smallest = right;
+      }
+
+      if (smallest === index) {
+        break;
+      }
+
+      swap(this._heap, index, smallest);
+      index = smallest;
+    }
+  }
+
+  private _shiftUp(index: number): void {
+    const compare = this._compare;
+    while (index > 0) {
+      const parent = (index - 1) >> 1;
+      if (compare(this._heap[index]!, this._heap[parent]!) >= 0) {
+        break;
+      }
+      swap(this._heap, index, parent);
+      index = parent;
+    }
+  }
+}
+
+function swap<T>(heap: T[], i: number, j: number): void {
+  const tmp = heap[i]!;
+  heap[i] = heap[j]!;
+  heap[j] = tmp;
 }

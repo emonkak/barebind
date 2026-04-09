@@ -1,97 +1,100 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { Queue } from '@/queue.js';
+import { PriorityQueue } from '@/queue.js';
 
-describe('Queue', () => {
-  let queue: Queue<number>;
+const ascending = (a: number, b: number) => a - b;
+const descending = (a: number, b: number) => b - a;
+
+describe('PriorityQueue', () => {
+  let minQueue: PriorityQueue<number>;
 
   beforeEach(() => {
-    queue = new Queue<number>();
-  });
-
-  describe('enqueue()', () => {
-    it('adds a value to an empty queue', () => {
-      queue.enqueue(1);
-      expect(queue.peek()).toBe(1);
-    });
-
-    it('preserves insertion order for multiple values', () => {
-      queue.enqueue(1);
-      queue.enqueue(2);
-      queue.enqueue(3);
-      expect(queue.peek()).toBe(1);
-    });
+    minQueue = new PriorityQueue(ascending);
   });
 
   describe('dequeue()', () => {
     it('returns undefined when the queue is empty', () => {
-      expect(queue.dequeue()).toBeUndefined();
+      expect(minQueue.dequeue()).toBe(undefined);
     });
 
-    it('returns the front value', () => {
-      queue.enqueue(1);
-      expect(queue.dequeue()).toBe(1);
+    it('removes and returns the minimum element', () => {
+      minQueue.enqueue(3);
+      minQueue.enqueue(1);
+      minQueue.enqueue(2);
+      expect(minQueue.dequeue()).toBe(1);
     });
 
-    it('removes the front value', () => {
-      queue.enqueue(1);
-      queue.enqueue(2);
-      queue.dequeue();
-      expect(queue.peek()).toBe(2);
+    it('yields elements in ascending order when drained', () => {
+      [4, 2, 7, 1, 9, 3].forEach((n) => {
+        minQueue.enqueue(n);
+      });
+      const items = [];
+      while (minQueue.peek() !== undefined) {
+        items.push(minQueue.dequeue());
+      }
+      expect(items).toStrictEqual([1, 2, 3, 4, 7, 9]);
     });
 
-    it('returns values in FIFO order', () => {
-      queue.enqueue(1);
-      queue.enqueue(2);
-      queue.enqueue(3);
-      expect(queue.dequeue()).toBe(1);
-      expect(queue.dequeue()).toBe(2);
-      expect(queue.dequeue()).toBe(3);
+    it('leaves the queue empty after all elements are removed', () => {
+      minQueue.enqueue(1);
+      minQueue.enqueue(2);
+      minQueue.dequeue();
+      minQueue.dequeue();
+      expect(minQueue.dequeue()).toBe(undefined);
     });
 
-    it('returns undefined after all values are removed', () => {
-      queue.enqueue(1);
-      queue.dequeue();
-      expect(queue.dequeue()).toBeUndefined();
+    it('maintains the heap invariant after repeated removals', () => {
+      [5, 3, 8, 1, 4, 2].forEach((n) => {
+        minQueue.enqueue(n);
+      });
+      minQueue.dequeue();
+      minQueue.dequeue();
+      expect(minQueue.peek()).toBe(3);
+    });
+  });
+
+  describe('enqueue()', () => {
+    it('maintains the heap invariant across multiple insertions', () => {
+      [5, 3, 8, 1, 4].forEach((n) => {
+        minQueue.enqueue(n);
+      });
+      expect(minQueue.peek()).toBe(1);
+    });
+
+    it('handles duplicate values without error', () => {
+      minQueue.enqueue(2);
+      minQueue.enqueue(2);
+      minQueue.enqueue(2);
+      expect(minQueue.dequeue()).toBe(2);
+      expect(minQueue.dequeue()).toBe(2);
+      expect(minQueue.dequeue()).toBe(2);
+    });
+
+    it('respects a custom comparator ordering', () => {
+      const maxQueue = new PriorityQueue(descending);
+      [3, 1, 4, 1, 5].forEach((n) => {
+        maxQueue.enqueue(n);
+      });
+      expect(maxQueue.peek()).toBe(5);
     });
   });
 
   describe('peek()', () => {
     it('returns undefined when the queue is empty', () => {
-      expect(queue.peek()).toBeUndefined();
+      expect(minQueue.peek()).toBe(undefined);
     });
 
-    it('returns the front value without removing it', () => {
-      queue.enqueue(1);
-      queue.enqueue(2);
-      expect(queue.peek()).toBe(1);
-      expect(queue.peek()).toBe(1);
-    });
-  });
-
-  describe('[Symbol.iterator]()', () => {
-    it('yields nothing for an empty queue', () => {
-      expect([...queue]).toStrictEqual([]);
+    it('returns the minimum element without removing it', () => {
+      minQueue.enqueue(3);
+      minQueue.enqueue(1);
+      minQueue.enqueue(2);
+      expect(minQueue.peek()).toBe(1);
     });
 
-    it('yields all values in FIFO order', () => {
-      queue.enqueue(1);
-      queue.enqueue(2);
-      queue.enqueue(3);
-      expect([...queue]).toStrictEqual([1, 2, 3]);
-    });
-
-    it('does not consume the queue', () => {
-      queue.enqueue(1);
-      queue.enqueue(2);
-      [...queue];
-      expect(queue.peek()).toBe(1);
-    });
-
-    it('reflects the current state after mutations', () => {
-      queue.enqueue(1);
-      queue.enqueue(2);
-      queue.dequeue();
-      expect([...queue]).toStrictEqual([2]);
+    it('reflects the new minimum after a smaller element is enqueued', () => {
+      minQueue.enqueue(5);
+      expect(minQueue.peek()).toBe(5);
+      minQueue.enqueue(2);
+      expect(minQueue.peek()).toBe(2);
     });
   });
 });

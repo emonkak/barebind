@@ -25,8 +25,7 @@ import {
   SyncLane,
   ViewTransitionLane,
 } from './lane.js';
-import { Queue } from './queue.js';
-import { getPendingAncestor } from './scope.js';
+import { PriorityQueue } from './queue.js';
 
 export type SessionEvent =
   | {
@@ -71,11 +70,11 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
   private readonly _adapter: HostAdapter<TPart, TRenderer>;
   private readonly _observers: Set<SessionObserver> = new Set();
   private _currentUpdate: Update | undefined;
-  private _currentQueue: Queue<Update> = new Queue();
-  private _alternateQueue: Queue<Update> = new Queue();
+  private _updateQueue: PriorityQueue<Update> = new PriorityQueue(
+    compareUpdates,
+  );
   private _pendingLanes: number = NoLanes;
-  private _renderLanes: number = NoLanes;
-  private _suspendedLanes: number = NoLanes;
+  private _flushLanes: number = NoLanes;
   private _transitionCount: number = 0;
   private _updateCount: number = 0;
 
@@ -113,39 +112,32 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
 
     const controller = Promise.withResolvers<UpdateResult>();
     const id = this._updateCount++;
-    const currentLanes = options.inherit
-      ? (this._currentUpdate?.lanes ?? NoLanes)
-      : NoLanes;
-    const renderLanes =
-      this._adapter.getDefaultLanes() | getRenderLanes(options) | currentLanes;
-    const resumeLanes = options.resume ? renderLanes : currentLanes;
+    const lanes = this._adapter.getDefaultLanes() | getRenderLanes(options);
 
-    this._currentQueue.enqueue({
+    this._updateQueue.enqueue({
       id,
-      lanes: renderLanes,
+      lanes,
       task,
       controller,
     });
 
     if (
-      (this._pendingLanes & renderLanes) !== renderLanes ||
-      (this._renderLanes & renderLanes) !== renderLanes ||
-      (this._suspendedLanes & resumeLanes) !== NoLanes
+      (this._pendingLanes & lanes) !== lanes ||
+      (this._flushLanes & lanes) !== lanes
     ) {
       this._adapter.requestCallback(() => {
-        this._pendingLanes &= ~renderLanes;
-        this._renderLanes |= renderLanes;
-        this._suspendedLanes &= ~resumeLanes;
-        if (this._currentUpdate === null) {
-          this._flushQueue();
+        this._pendingLanes &= ~lanes;
+        this._flushLanes |= lanes;
+        if (this._currentUpdate === undefined) {
+          this._flushUpdates();
         }
       }, options);
-      this._pendingLanes |= renderLanes;
+      this._pendingLanes |= lanes;
     }
 
     return {
       id,
-      lanes: renderLanes,
+      lanes,
       finished: controller.promise,
     };
   }
@@ -174,111 +166,89 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
     });
   }
 
-  private async _flushQueue(): Promise<void> {
-    let unblockedLanes: Lanes;
+  private async _flushUpdates(): Promise<void> {
+    while ((this._currentUpdate = this._updateQueue.peek()) !== undefined) {
+      const { controller, task, id, lanes } = this._currentUpdate;
 
-    while (
-      (unblockedLanes = this._renderLanes & ~this._suspendedLanes) !== NoLanes
-    ) {
-      const currentQueue = this._currentQueue;
-      const alternateQueue = this._alternateQueue;
-      const flushLanes = getHighestPriorityLane(unblockedLanes);
-
-      while ((this._currentUpdate = currentQueue.dequeue()) !== undefined) {
-        const { controller, task, id, lanes } = this._currentUpdate;
-
-        if ((task.pendingLanes & lanes) === NoLanes) {
-          controller.resolve({ status: 'skipped' });
-          continue;
-        }
-
-        if (
-          (flushLanes & lanes) === NoLanes ||
-          getPendingAncestor(task.scope, lanes) !== null
-        ) {
-          alternateQueue.enqueue(this._currentUpdate);
-          continue;
-        }
-
-        const session: Session<TPart, TRenderer> = {
-          id,
-          lanes,
-          commitPhases: this._adapter.getCommitPhases(),
-          mutationEffects: [],
-          layoutEffects: [],
-          passiveEffects: [],
-          adapter: this._adapter,
-          renderer: this._adapter.requestRenderer(task.scope),
-          scheduler: this,
-        };
-
-        try {
-          notifyObservers(this._observers, {
-            type: 'render-start',
-            id,
-            lanes,
-          });
-
-          try {
-            if (lanes & SyncLane) {
-              this._runRenderSync(task.start(session), session);
-            } else {
-              await this._runRenderAsync(task.start(session), session);
-            }
-          } finally {
-            session.lanes = NoLanes;
-          }
-
-          notifyObservers(this._observers, {
-            type: 'render-end',
-            id,
-            lanes,
-          });
-
-          notifyObservers(this._observers, {
-            type: 'commit-start',
-            id,
-          });
-
-          if (lanes & SyncLane) {
-            this._runCommitSync(session);
-          } else {
-            await this._runCommitAsync(session, lanes);
-          }
-
-          controller.resolve({ status: 'done' });
-        } catch (error) {
-          session.mutationEffects.length = 0;
-          session.layoutEffects.length = 0;
-          session.passiveEffects.length = 0;
-
-          this._suspendedLanes |= lanes;
-
-          notifyObservers(this._observers, {
-            type: 'commit-abort',
-            id,
-            reason: error,
-          });
-
-          if (error instanceof InterruptError) {
-            controller.resolve({ status: 'intrupted', reason: error.cause });
-          } else {
-            controller.reject(error);
-          }
-        }
+      if ((this._flushLanes & lanes) === NoLanes) {
+        this._currentUpdate = undefined;
+        break;
       }
 
-      this._currentQueue = alternateQueue;
-      this._alternateQueue = currentQueue;
-      this._renderLanes &= ~flushLanes;
+      this._updateQueue.dequeue();
+
+      if ((task.pendingLanes & lanes) === NoLanes) {
+        controller.resolve({ status: 'skipped' });
+        continue;
+      }
+
+      const session: Session<TPart, TRenderer> = {
+        id,
+        lanes,
+        commitPhases: this._adapter.getCommitPhases(),
+        mutationEffects: [],
+        layoutEffects: [],
+        passiveEffects: [],
+        adapter: this._adapter,
+        renderer: this._adapter.requestRenderer(task.scope),
+        scheduler: this,
+      };
+
+      try {
+        notifyObservers(this._observers, {
+          type: 'render-start',
+          id,
+          lanes,
+        });
+
+        if (lanes & SyncLane) {
+          this._runRenderSync(task.start(session), session);
+        } else {
+          await this._runRenderAsync(task.start(session), session);
+        }
+
+        notifyObservers(this._observers, {
+          type: 'render-end',
+          id,
+          lanes,
+        });
+
+        notifyObservers(this._observers, {
+          type: 'commit-start',
+          id,
+        });
+
+        if (lanes & SyncLane) {
+          this._runCommitSync(session);
+        } else {
+          await this._runCommitAsync(session);
+        }
+
+        controller.resolve({ status: 'done' });
+      } catch (error) {
+        session.mutationEffects.length = 0;
+        session.layoutEffects.length = 0;
+        session.passiveEffects.length = 0;
+
+        notifyObservers(this._observers, {
+          type: 'commit-abort',
+          id,
+          reason: error,
+        });
+
+        if (error instanceof InterruptError) {
+          controller.resolve({ status: 'intrupted', reason: error.cause });
+        } else {
+          controller.reject(error);
+        }
+      }
     }
   }
 
   private async _runCommitAsync(
     session: Session<TPart, TRenderer>,
-    lanes: Lanes,
   ): Promise<void> {
-    const { id, commitPhases } = session;
+    const { id, commitPhases, lanes } = session;
     const mutationEffects = session.mutationEffects.splice(0);
     const layoutEffects = session.layoutEffects.splice(0);
     const passiveEffects = session.passiveEffects.splice(0);
@@ -405,6 +375,12 @@ export class Runtime<TPart = unknown, TRenderer = unknown>
       });
     }
   }
+}
+
+function compareUpdates(x: Update, y: Update): number {
+  const p1 = getHighestPriorityLane(x.lanes);
+  const p2 = getHighestPriorityLane(x.lanes);
+  return p1 !== p2 ? p1 - p2 : x.task.scope.level - y.task.scope.level;
 }
 
 function notifyObservers(
