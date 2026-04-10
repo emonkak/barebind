@@ -331,7 +331,7 @@ export class DOMRefHandler extends DOMPrimitiveHandler<
   private _memoizedCleanup: Cleanup | void | undefined;
 
   override ensureValue(value: unknown, part: DOMPart.AttributePart): void {
-    if (!isRef(value) || value == null) {
+    if (!isRef(value)) {
       throw DOMRenderError.fromPlace(
         part,
         'Ref values must be RefFuction, RefObject, null or undefined.',
@@ -339,25 +339,20 @@ export class DOMRefHandler extends DOMPrimitiveHandler<
     }
   }
 
-  override afterMount(ref: Ref<Element>, part: DOMPart.AttributePart): void {
-    const newRef = ref;
+  override afterMount(newRef: Ref<Element>, part: DOMPart.AttributePart): void {
     const oldRef = this._memoizedRef;
 
     if (newRef !== oldRef) {
-      if (oldRef != null) {
-        if (typeof oldRef === 'function') {
-          this._memoizedCleanup?.();
-        } else {
-          oldRef.current = null;
-        }
+      if (typeof oldRef === 'function') {
+        this._memoizedCleanup?.();
+      } else if (oldRef != null) {
+        oldRef.current = null;
       }
 
-      if (newRef != null) {
-        if (typeof newRef === 'function') {
-          this._memoizedCleanup = newRef(part.node);
-        } else {
-          newRef.current = part.node;
-        }
+      if (typeof newRef === 'function') {
+        this._memoizedCleanup = newRef(part.node);
+      } else if (newRef != null) {
+        newRef.current = part.node;
       }
     }
 
@@ -370,12 +365,10 @@ export class DOMRefHandler extends DOMPrimitiveHandler<
   ): void {
     const ref = this._memoizedRef;
 
-    if (ref != null) {
-      if (typeof ref === 'function') {
-        this._memoizedCleanup?.();
-      } else {
-        ref.current = null;
-      }
+    if (typeof ref === 'function') {
+      this._memoizedCleanup?.();
+    } else if (ref != null) {
+      ref.current = null;
     }
   }
 }
