@@ -3,10 +3,6 @@
 export const Repeat = Symbol('Repeat');
 export const Primitive = Symbol('Primitive');
 
-export const MutationPhase /* */ = 0b001;
-export const LayoutPhase /*   */ = 0b010;
-export const PassivePhase /*  */ = 0b100;
-
 export const toDirective: unique symbol = Symbol('Directive.toDirective');
 
 export interface Boundary<T> {

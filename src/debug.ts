@@ -1,10 +1,6 @@
 import type { Directive, Scope, UpdateUnit } from './core.js';
 import { isChildScope } from './scope.js';
 
-export const MAX_ARRAY_LENGTH = 16;
-export const MAX_OBJECT_DEPTH = 3;
-export const MAX_STRING_LENGTH = 128;
-
 export function formatOnwerStack(ownerStack: UpdateUnit[]): string {
   const tail = ownerStack.length - 1;
   return ownerStack
