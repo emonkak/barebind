@@ -57,7 +57,6 @@ export class Slot<TPart = unknown> implements UpdateUnit<TPart> {
   needsRender(): boolean {
     return (
       this._pendingHandler === null ||
-      this._currentHandler === null ||
       this._pendingHandler !== this._currentHandler ||
       this._pendingHandler.shouldUpdate(
         this._pendingDirective.value,
