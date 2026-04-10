@@ -169,18 +169,18 @@ export class Slot<TPart = unknown> implements UpdateUnit<TPart> {
   }
 
   afterCommit(): void {
-    this._currentHandler?.afterMount(this._pendingDirective.value, this._part);
+    this._currentHandler?.afterMount(this._currentDirective.value, this._part);
   }
 
   beforeRevert(): void {
     this._currentHandler?.beforeUnmount(
-      this._pendingDirective.value,
+      this._currentDirective.value,
       this._part,
     );
   }
 
   revert(): void {
-    this._currentHandler?.unmount(this._pendingDirective.value, this._part);
+    this._currentHandler?.unmount(this._currentDirective.value, this._part);
     this._currentHandler = null;
   }
 }
