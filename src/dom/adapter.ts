@@ -9,6 +9,7 @@ import type {
   Scope,
   Template,
 } from '../core.js';
+import { NoLanes } from '../lane.js';
 import { isRootScope } from '../scope.js';
 import { ensurePartType } from './error.js';
 import {
@@ -65,7 +66,7 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
   }
 
   getDefaultLanes(): Lanes {
-    return 0;
+    return NoLanes;
   }
 
   getIdentifier(): string {
