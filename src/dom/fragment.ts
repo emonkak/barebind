@@ -27,7 +27,7 @@ interface Mutation {
   afterSlot?: Slot<DOMPart.ChildNodePart> | undefined;
 }
 
-export class DOMRepeatHandler<TSource>
+export class DOMFragmentHandler<TSource>
   implements
     DirectiveHandler<Iterable<TSource>, DOMPart.ChildNodePart, DOMRenderer>
 {

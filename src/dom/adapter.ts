@@ -12,6 +12,7 @@ import type {
 import { NoLanes } from '../lane.js';
 import { isRootScope } from '../scope.js';
 import { ensurePartType } from './error.js';
+import { DOMFragmentHandler } from './fragment.js';
 import {
   AttributeType,
   ChildNodeType,
@@ -38,7 +39,6 @@ import {
   type DOMRenderer,
   HydrationRenderer,
 } from './renderer.js';
-import { DOMRepeatHandler } from './repeat.js';
 import { DOMTemplate, DOMTemplateHandler } from './template.js';
 
 export interface DOMAdapterOptions {
@@ -111,6 +111,16 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
     }
   }
 
+  abstract requestRenderer(scope: Scope<DOMPart>): DOMRenderer;
+
+  resolveFragment(
+    directive: Directive.FragmentDirective<unknown>,
+    part: DOMPart,
+  ): DirectiveHandler<Iterable<unknown>, DOMPart, DOMRenderer> {
+    ensurePartType(ChildNodeType, directive, part);
+    return new DOMFragmentHandler();
+  }
+
   resolvePrimitive(
     _directive: Directive.PrimitiveDirective<unknown>,
     part: DOMPart,
@@ -140,16 +150,6 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
         return new DOMPropertyHandler();
     }
   }
-
-  resolveRepeat(
-    directive: Directive.RepeatDirective<unknown>,
-    part: DOMPart,
-  ): DirectiveHandler<Iterable<unknown>, DOMPart, DOMRenderer> {
-    ensurePartType(ChildNodeType, directive, part);
-    return new DOMRepeatHandler();
-  }
-
-  abstract requestRenderer(scope: Scope<DOMPart>): DOMRenderer;
 
   resolveTemplate(
     directive: Directive.TemplateDirective,

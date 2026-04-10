@@ -1,10 +1,10 @@
 import {
   type Directive,
   type DirectiveHandler,
+  Fragment,
   type Lanes,
   Primitive,
   type PrimitiveHandler,
-  Repeat,
   type Scope,
   type Session,
   type UpdateUnit,
@@ -90,8 +90,8 @@ export class Slot<TPart = unknown> implements UpdateUnit<TPart> {
           value,
           this._part,
         );
-      } else if (type === Repeat) {
-        this._pendingHandler = adapter.resolveRepeat(
+      } else if (type === Fragment) {
+        this._pendingHandler = adapter.resolveFragment(
           this._pendingDirective,
           this._part,
         );
