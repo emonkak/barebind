@@ -2,14 +2,15 @@ import type { Directive } from '../core.js';
 import { nameOf } from '../debug.js';
 import { annotateNode, annotatePlace, generateNodeFrame } from './debug.js';
 import {
-  AttributeType,
-  ChildNodeType,
+  type AttributeType,
+  type ChildNodeType,
   type DOMPart,
-  ElementType,
-  EventType,
-  LiveType,
-  PropertyType,
-  TextType,
+  type ElementType,
+  type EventType,
+  type LiveType,
+  PART_NAMES,
+  type PropertyType,
+  type TextType,
 } from './part.js';
 
 export type DOMPlace =
@@ -58,29 +59,14 @@ export function ensurePartType<TPartType extends DOMPart['type']>(
   part: DOMPart,
 ): asserts part is DOMPart & { type: TPartType } {
   if (part.type !== expectedPartType) {
-    let message = 'The part type mismatches.';
     DEBUG: {
-      message += ` ${nameOf(directive.type)} must be used in ${getPartName(expectedPartType)}Part.`;
+      if (true!) {
+        throw DOMRenderError.fromPlace(
+          part,
+          `${nameOf(directive.type)} must be used in ${PART_NAMES[expectedPartType]}Part.`,
+        );
+      }
     }
-    throw DOMRenderError.fromPlace(part, message);
-  }
-}
-
-function getPartName(type: DOMPart['type']): string {
-  switch (type) {
-    case AttributeType:
-      return 'Attribute';
-    case ChildNodeType:
-      return 'ChildNode';
-    case ElementType:
-      return 'Element';
-    case EventType:
-      return 'Event';
-    case LiveType:
-      return 'Live';
-    case PropertyType:
-      return 'Property';
-    case TextType:
-      return 'Text';
+    throw DOMRenderError.fromPlace(part, 'The part type mismatches.');
   }
 }
