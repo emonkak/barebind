@@ -75,6 +75,8 @@ export function isChildScope<TPart>(
   return scope.level > 0;
 }
 
-export function isRootScope(scope: Scope): scope is Scope.ChildScope {
+export function isRootScope<TPart>(
+  scope: Scope<TPart>,
+): scope is Scope.RootScope<TPart> {
   return scope.level === 0 && scope.owner !== null;
 }
