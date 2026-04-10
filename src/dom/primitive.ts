@@ -89,14 +89,14 @@ export class DOMAttributeHandler<TValue> extends DOMPrimitiveHandler<
   TValue,
   DOMPart.AttributePart
 > {
-  override mount(newValue: TValue, part: DOMPart.AttributePart): void {
+  override mount(value: TValue, part: DOMPart.AttributePart): void {
     const { node, name } = part;
-    if (typeof newValue === 'boolean') {
-      node.toggleAttribute(name, newValue);
-    } else if (newValue == null) {
+    if (typeof value === 'boolean') {
+      node.toggleAttribute(name, value);
+    } else if (value == null) {
       node.removeAttribute(name);
     } else {
-      node.setAttribute(name, toStringOrEmpty(newValue));
+      node.setAttribute(name, toStringOrEmpty(value));
     }
   }
 
@@ -177,7 +177,7 @@ export class DOMElementHandler extends DOMPrimitiveHandler<
     return newSlots.values();
   }
 
-  override mount(_newProps: ElementProps, _part: DOMPart.ElementPart): void {
+  override mount(_props: ElementProps, _part: DOMPart.ElementPart): void {
     const oldSlots = this._currentSlots;
     const newSlots = this._pendingSlots;
 
@@ -282,12 +282,12 @@ export class DOMLiveHandler<TValue> extends DOMPrimitiveHandler<
     return true;
   }
 
-  override mount(newValue: TValue, part: DOMPart.LivePart): void {
+  override mount(value: TValue, part: DOMPart.LivePart): void {
     const { node, name } = part;
     const currentValue = node[name as keyof Element];
 
-    if (!Object.is(currentValue, newValue)) {
-      (node as any)[name] = newValue;
+    if (!Object.is(currentValue, value)) {
+      (node as any)[name] = value;
     }
   }
 
@@ -298,8 +298,8 @@ export class DOMLiveHandler<TValue> extends DOMPrimitiveHandler<
 }
 
 export class DOMNodeHandler<T> extends DOMPrimitiveHandler<T, DOMPart> {
-  override mount(newValue: T, part: DOMPart): void {
-    part.node.nodeValue = toStringOrEmpty(newValue);
+  override mount(value: T, part: DOMPart): void {
+    part.node.nodeValue = toStringOrEmpty(value);
   }
 
   override unmount(_value: T, part: DOMPart): void {
@@ -311,9 +311,9 @@ export class DOMPropertyHandler<T> extends DOMPrimitiveHandler<
   T,
   DOMPart.PropertyPart
 > {
-  override mount(newValue: T, part: DOMPart.PropertyPart): void {
+  override mount(value: T, part: DOMPart.PropertyPart): void {
     const { node, name } = part;
-    (node as any)[name] = newValue;
+    (node as any)[name] = value;
   }
 
   override unmount(_value: T, part: DOMPart.PropertyPart): void {
