@@ -8,9 +8,6 @@
     "./addons/*": {
       "import": "./src/addons/*.ts"
     },
-    "./collections/*": {
-      "import": "./src/collections/*.ts"
-    },
     "./core": {
       "import": "./src/core.js"
     }
@@ -24,10 +21,6 @@
       "./addons/*": {
         "import": "./lib/addons/*.js",
         "types": "./lib/addons/*.d.ts"
-      },
-      "./collections/*": {
-        "import": "./lib/collections/*.js",
-        "types": "./lib/collections/*.d.ts"
       },
       "./core": {
         "import": "./lib/core.js",
