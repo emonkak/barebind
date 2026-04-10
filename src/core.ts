@@ -5,9 +5,9 @@ export const Primitive = Symbol('Primitive');
 
 export const toDirective: unique symbol = Symbol('Directive.toDirective');
 
-export interface Boundary<T> {
+export interface Boundary<T extends object> {
   instance: T;
-  next: Boundary<unknown> | null;
+  next: Boundary<object> | null;
 }
 
 export interface BoundaryType<TInstance, TDefault> {
@@ -160,13 +160,13 @@ export namespace Scope {
   export type ChildScope<TPart = unknown> = {
     owner: UpdateUnit<TPart>;
     level: number;
-    boundary: Boundary<unknown> | null;
+    boundary: Boundary<object> | null;
   };
 
   export type RootScope<TPart = unknown> = {
     owner: Root<TPart>;
     level: 0;
-    boundary: Boundary<unknown> | null;
+    boundary: Boundary<object> | null;
   };
 
   export type OrphanScope = {
