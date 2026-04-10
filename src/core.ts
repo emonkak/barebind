@@ -137,14 +137,14 @@ export interface UpdateScheduler {
   schedule(task: UpdateTask, options?: UpdateOptions): UpdateHandle;
 }
 
-export interface UpdateTask {
+export interface UpdateTask<TPart = unknown> {
   readonly scope: Scope;
   readonly pendingLanes: Lanes;
-  render(session: Session): Iterable<UpdateUnit>;
+  render(session: Session<TPart>): Iterable<UpdateUnit>;
   complete(): void;
 }
 
-export interface UpdateUnit<TPart = unknown> extends UpdateTask {
+export interface UpdateUnit<TPart = unknown> extends UpdateTask<TPart> {
   readonly part: TPart;
   readonly directive: Directive.ElementDirective;
   pendingLanes: Lanes;

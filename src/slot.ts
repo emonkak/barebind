@@ -76,7 +76,7 @@ export class Slot<TPart = unknown> implements UpdateUnit<TPart> {
     this._scope = scope;
   }
 
-  *render(session: Session): Generator<UpdateUnit> {
+  *render(session: Session<TPart>): Generator<UpdateUnit> {
     const { type, value } = this._pendingDirective;
     const { adapter, lanes } = session;
 
