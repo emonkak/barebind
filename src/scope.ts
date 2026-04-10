@@ -7,19 +7,6 @@ export const OrphanScope: Scope.OrphanScope = Object.freeze({
   boundary: null,
 });
 
-export function containsScope(origin: Scope, scope: Scope): boolean {
-  while (scope.level <= origin.level) {
-    if (scope === origin) {
-      return true;
-    }
-    if (!isChildScope(scope)) {
-      break;
-    }
-    scope = scope.owner.scope;
-  }
-  return false;
-}
-
 export function createChildScope<TPart>(
   owner: UpdateUnit<TPart>,
 ): Scope.ChildScope<TPart> {
