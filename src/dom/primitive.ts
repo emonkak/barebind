@@ -21,15 +21,9 @@ const CSS_VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
 
 const CLASS_TOKEN_SEPARATOR_PATTERN = /\s+/;
 
-export type ClassMap =
-  | {
-      readonly [index: number]: ClassToken;
-    }
-  | {
-      readonly [key: string]: ClassToken;
-    };
-
-export type ClassToken = boolean | string | null | undefined;
+export type ClassMap = {
+  readonly [key: string]: boolean;
+};
 
 export type ElementProps = { [key: string]: unknown };
 
@@ -495,20 +489,11 @@ function toStringOrEmpty(value: unknown): string {
 function toggleClass(
   classList: DOMTokenList,
   key: string,
-  token: ClassToken,
   enabled: boolean,
 ): void {
-  if (typeof token === 'string') {
-    token = token.trim();
-  } else if (token) {
-    token = key.trim();
-  } else {
-    return;
-  }
-
-  if (token !== '') {
-    for (const component of token.split(CLASS_TOKEN_SEPARATOR_PATTERN)) {
-      classList.toggle(component, enabled);
+  for (const token of key.trim().split(CLASS_TOKEN_SEPARATOR_PATTERN)) {
+    if (token !== '') {
+      classList.toggle(token, enabled);
     }
   }
 }
@@ -524,24 +509,17 @@ function undelegateEvents(
 
 function updateClass(
   classList: DOMTokenList,
-  oldTokens: Record<string, ClassToken>,
-  newTokens: Record<string, ClassToken>,
+  oldTokens: ClassMap,
+  newTokens: ClassMap,
 ): void {
   for (const key of Object.keys(oldTokens)) {
     if (!Object.hasOwn(newTokens, key)) {
-      toggleClass(classList, key, oldTokens[key], false);
+      toggleClass(classList, key, false);
     }
   }
 
   for (const key of Object.keys(newTokens)) {
-    const newToken = newTokens[key];
-    if (Object.hasOwn(oldTokens, key)) {
-      const oldToken = oldTokens[key];
-      if (newToken !== oldToken) {
-        toggleClass(classList, key, oldToken, false);
-      }
-    }
-    toggleClass(classList, key, newToken, true);
+    toggleClass(classList, key, newTokens[key]!);
   }
 }
 
