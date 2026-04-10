@@ -1,6 +1,6 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-export const Repeat = Symbol('Repeat');
+export const Fragment = Symbol('Fragment');
 export const Primitive = Symbol('Primitive');
 
 export const toDirective: unique symbol = Symbol('Directive.toDirective');
@@ -30,18 +30,18 @@ export interface Directable {
 export namespace Directive {
   export type ElementDirective =
     | ComponentDirective<unknown>
+    | FragmentDirective<unknown>
     | PrimitiveDirective<unknown>
-    | RepeatDirective<unknown>
     | TemplateDirective;
 
   export type ComponentDirective<TProps> = Directive<Component<TProps>, TProps>;
 
-  export type PrimitiveDirective<TValue> = Directive<typeof Primitive, TValue>;
-
-  export type RepeatDirective<TSource> = Directive<
-    typeof Repeat,
+  export type FragmentDirective<TSource> = Directive<
+    typeof Fragment,
     Iterable<TSource>
   >;
+
+  export type PrimitiveDirective<TValue> = Directive<typeof Primitive, TValue>;
 
   export type TemplateDirective = Directive<readonly string[], Template>;
 }
@@ -74,14 +74,14 @@ export interface HostAdapter<TPart, TRenderer> {
     options?: SchedulerPostTaskOptions,
   ): Promise<T>;
   requestRenderer(scope: Scope): TRenderer;
+  resolveFragment(
+    directive: Directive.FragmentDirective<unknown>,
+    part: TPart,
+  ): DirectiveHandler<Iterable<unknown>, TPart, TRenderer>;
   resolvePrimitive(
     directive: Directive.PrimitiveDirective<unknown>,
     part: TPart,
   ): PrimitiveHandler<unknown, TPart, TRenderer>;
-  resolveRepeat(
-    directive: Directive.RepeatDirective<unknown>,
-    part: TPart,
-  ): DirectiveHandler<Iterable<unknown>, TPart, TRenderer>;
   resolveTemplate(
     directive: Directive.TemplateDirective,
     part: TPart,
@@ -216,7 +216,7 @@ export function wrap(value: unknown): Directive.ElementDirective {
   return isDirectable(value)
     ? value[toDirective]()
     : typeof value === 'object' && isIterable(value)
-      ? new Directive(Repeat, value)
+      ? new Directive(Fragment, value)
       : new Directive(Primitive, value);
 }
 
