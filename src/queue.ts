@@ -37,8 +37,8 @@ export class PriorityQueue<T> {
     const compare = this._compare;
 
     while (true) {
-      const left = 2 * index + 1;
-      const right = 2 * index + 2;
+      const left = (index << 1) + 1;
+      const right = left + 1;
       let smallest = index;
 
       if (
