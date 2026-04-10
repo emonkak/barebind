@@ -1,5 +1,15 @@
 /// <reference path="../../typings/moveBefore.d.ts" />
 
+export const PART_NAMES: Record<DOMPart['type'], string> = [
+  'Attribute',
+  'ChildNode',
+  'Element',
+  'Event',
+  'Live',
+  'Property',
+  'Text',
+];
+
 export const AttributeType = 0;
 export const ChildNodeType = 1;
 export const ElementType = 2;
