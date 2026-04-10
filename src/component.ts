@@ -272,7 +272,7 @@ export class RenderContext {
     );
   }
 
-  provide<T>(instance: T): void {
+  provide<T extends object>(instance: T): void {
     this._scope.boundary = {
       instance,
       next: this._scope.boundary,
