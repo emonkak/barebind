@@ -79,32 +79,30 @@ export class Slot<TPart = unknown> implements UpdateUnit<TPart> {
     const { type, value } = this._pendingDirective;
     const { adapter, lanes } = session;
 
-    if (this._pendingHandler === null) {
-      if (type === Primitive) {
-        this._pendingHandler = adapter.resolvePrimitive(
-          this._pendingDirective,
-          this._part,
-        );
-        (this._pendingHandler as PrimitiveHandler<unknown>).ensureValue(
-          value,
-          this._part,
-        );
-      } else if (type === Fragment) {
-        this._pendingHandler = adapter.resolveFragment(
-          this._pendingDirective,
-          this._part,
-        );
-      } else if (typeof type === 'object') {
-        this._pendingHandler = adapter.resolveTemplate(
-          this._pendingDirective,
-          this._part,
-        );
-      } else {
-        this._pendingHandler = this._pendingDirective.type.resolveComponent(
-          this._pendingDirective,
-          this._part,
-        );
-      }
+    if (type === Primitive) {
+      this._pendingHandler ??= adapter.resolvePrimitive(
+        this._pendingDirective,
+        this._part,
+      );
+      (this._pendingHandler as PrimitiveHandler<unknown>).ensureValue(
+        value,
+        this._part,
+      );
+    } else if (type === Fragment) {
+      this._pendingHandler ??= adapter.resolveFragment(
+        this._pendingDirective,
+        this._part,
+      );
+    } else if (typeof type === 'object') {
+      this._pendingHandler ??= adapter.resolveTemplate(
+        this._pendingDirective,
+        this._part,
+      );
+    } else {
+      this._pendingHandler ??= type.resolveComponent(
+        this._pendingDirective,
+        this._part,
+      );
     }
 
     do {
