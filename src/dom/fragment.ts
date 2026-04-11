@@ -1,9 +1,4 @@
-import {
-  type DirectiveHandler,
-  type Scope,
-  type Session,
-  wrap,
-} from '../core.js';
+import { type Mountable, type Scope, type Session, wrap } from '../core.js';
 import { Slot } from '../slot.js';
 import {
   type DOMPart,
@@ -27,34 +22,67 @@ interface Mutation {
   afterSlot?: Slot<DOMPart.ChildNodePart> | undefined;
 }
 
-export class DOMFragmentHandler<TSource>
-  implements
-    DirectiveHandler<Iterable<TSource>, DOMPart.ChildNodePart, DOMRenderer>
+export class DOMFragment<TSource>
+  implements Mountable<Iterable<TSource>, DOMPart.ChildNodePart, DOMRenderer>
 {
-  private _pendingMutations: Mutation[] = [];
-
   private _pendingSlots: Slot<DOMPart.ChildNodePart>[] = [];
 
   private _currentSlots: Slot<DOMPart.ChildNodePart>[] = [];
 
-  shouldUpdate(
+  private _mutations: Mutation[] = [];
+
+  static shouldUpdate<TSource>(
     newSource: Iterable<TSource>,
     oldSource: Iterable<TSource>,
   ): boolean {
     return newSource !== oldSource;
   }
 
-  render(
+  static render<TSource>(
     source: Iterable<TSource>,
     _part: DOMPart.ChildNodePart,
     scope: Scope.ChildScope<DOMPart.ChildNodePart>,
     session: Session<DOMPart.ChildNodePart, DOMRenderer>,
-  ): Iterable<Slot> {
-    const oldKeys = this._currentSlots.map(
+  ): DOMFragment<TSource> {
+    const mutations: Mutation[] = [];
+    const slots: Slot<DOMPart.ChildNodePart>[] = [];
+
+    for (const item of source) {
+      const slot = new Slot(
+        session.renderer.renderChildNodePart(),
+        wrap(item),
+        scope,
+      );
+      slots.push(slot);
+      mutations.push({
+        type: InsertType,
+        slot: slot,
+      });
+    }
+
+    return new DOMFragment(slots, mutations);
+  }
+
+  constructor(slots: Slot<DOMPart.ChildNodePart>[], mutations: Mutation[]) {
+    this._pendingSlots = slots;
+    this._mutations = mutations;
+  }
+
+  get children(): Slot<DOMPart.ChildNodePart>[] {
+    return this._pendingSlots;
+  }
+
+  patch(
+    source: Iterable<TSource>,
+    _part: DOMPart.ChildNodePart,
+    scope: Scope.ChildScope<DOMPart.ChildNodePart>,
+    session: Session<DOMPart.ChildNodePart, DOMRenderer>,
+  ): void {
+    const oldKeys = this._pendingSlots.map(
       (slot, index) => slot.directive.key ?? index,
     );
     const oldSlots: (Slot<DOMPart.ChildNodePart> | undefined)[] =
-      this._currentSlots.slice();
+      this._pendingSlots.slice();
     const newDirectives = Array.from(source, wrap);
     const newKeys = newDirectives.map((node, index) => node.key ?? index);
     const newMutations: Mutation[] = [];
@@ -201,14 +229,12 @@ export class DOMFragmentHandler<TSource>
       }
     }
 
-    this._pendingMutations = newMutations;
     this._pendingSlots = newSlots;
-
-    return newSlots;
+    this._mutations = newMutations;
   }
 
-  mount(_source: Iterable<TSource>, part: DOMPart.ChildNodePart): void {
-    for (const { type, slot, afterSlot } of this._pendingMutations.splice(0)) {
+  mount(part: DOMPart.ChildNodePart): void {
+    for (const { type, slot, afterSlot } of this._mutations.splice(0)) {
       switch (type) {
         case InsertType:
           insertChildNodePart(part, slot.part, afterSlot?.part);
@@ -232,30 +258,19 @@ export class DOMFragmentHandler<TSource>
     this._currentSlots = this._pendingSlots;
   }
 
-  remount(
-    _oldSource: Iterable<TSource>,
-    newSource: Iterable<TSource>,
-    part: DOMPart.ChildNodePart,
-  ): void {
-    this.mount(newSource, part);
-  }
-
-  afterMount(_source: Iterable<TSource>, _part: DOMPart.ChildNodePart): void {
+  afterMount(_part: DOMPart.ChildNodePart): void {
     for (const slot of this._currentSlots) {
       slot.afterCommit();
     }
   }
 
-  beforeUnmount(
-    _source: Iterable<TSource>,
-    _part: DOMPart.ChildNodePart,
-  ): void {
+  beforeUnmount(_part: DOMPart.ChildNodePart): void {
     for (const slot of this._currentSlots) {
       slot.beforeRevert();
     }
   }
 
-  unmount(_source: Iterable<TSource>, part: DOMPart.ChildNodePart): void {
+  unmount(part: DOMPart.ChildNodePart): void {
     for (const slot of this._currentSlots) {
       slot.revert();
       slot.part.sentinelNode.remove();

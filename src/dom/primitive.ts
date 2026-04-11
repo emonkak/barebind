@@ -1,10 +1,5 @@
 import { sequentialEqual, shallowEqual } from '../compare.js';
-import {
-  type PrimitiveHandler,
-  type Scope,
-  type Session,
-  wrap,
-} from '../core.js';
+import { type Mountable, type Scope, type Session, wrap } from '../core.js';
 import { Slot } from '../slot.js';
 import { DOMRenderError } from './error.js';
 import {
@@ -54,109 +49,152 @@ type ExtractStringKeys<T> = {
   [K in keyof T]: T[K] extends string ? K : never;
 }[keyof T & string];
 
-export class DOMPrimitiveHandler<TValue, TPart extends DOMPart>
-  implements PrimitiveHandler<TValue, TPart, DOMRenderer>
+export class DOMPrimitive<TValue, TPart extends DOMPart>
+  implements Mountable<TValue, TPart, DOMRenderer>
 {
-  ensureValue(_value: unknown, _part: TPart): void {}
+  protected _value: TValue;
 
-  shouldUpdate(newValue: TValue, oldValue: TValue): boolean {
+  static shouldUpdate(newValue: unknown, oldValue: unknown): boolean {
     return !Object.is(newValue, oldValue);
   }
 
-  render(
-    _value: TValue,
-    _part: TPart,
-    _scope: Scope.ChildScope<TPart>,
-    _session: Session<TPart, DOMRenderer>,
-  ): Iterable<Slot> {
+  static ensureValue(_value: unknown, _part: DOMPart): void {}
+
+  static render<TValue, TPart extends DOMPart>(
+    value: TValue,
+    _part: DOMPart,
+    _scope: Scope.ChildScope<DOMPart>,
+    _session: Session<DOMPart, DOMRenderer>,
+  ): DOMPrimitive<TValue, TPart> {
+    return new this(value);
+  }
+
+  constructor(value: TValue) {
+    this._value = value;
+  }
+
+  get children(): Slot<DOMPart>[] {
     return [];
   }
 
-  mount(_value: TValue, _part: TPart): void {}
-
-  remount(_oldValue: TValue, newValue: TValue, part: TPart): void {
-    this.mount(newValue, part);
+  patch(
+    value: TValue,
+    _part: TPart,
+    _scope: Scope.ChildScope<TPart>,
+    _session: Session<TPart, DOMRenderer>,
+  ): void {
+    this._value = value;
   }
 
-  afterMount(_value: TValue, _part: TPart): void {}
+  mount(_part: TPart): void {}
 
-  beforeUnmount(_value: TValue, _part: TPart): void {}
+  afterMount(_part: TPart): void {}
 
-  unmount(_value: TValue, _part: TPart): void {}
+  beforeUnmount(_part: TPart): void {}
+
+  unmount(_part: TPart): void {}
 }
 
-export class DOMAttributeHandler<TValue> extends DOMPrimitiveHandler<
+export class DOMAttribute<TValue> extends DOMPrimitive<
   TValue,
   DOMPart.AttributePart
 > {
-  override mount(value: TValue, part: DOMPart.AttributePart): void {
+  override mount(part: DOMPart.AttributePart): void {
     const { node, name } = part;
-    if (typeof value === 'boolean') {
-      node.toggleAttribute(name, value);
-    } else if (value == null) {
+    if (typeof this._value === 'boolean') {
+      node.toggleAttribute(name, this._value);
+    } else if (this._value == null) {
       node.removeAttribute(name);
     } else {
-      node.setAttribute(name, toStringOrEmpty(value));
+      node.setAttribute(name, toStringOrEmpty(this._value));
     }
   }
 
-  override unmount(_value: TValue, part: DOMPart.AttributePart): void {
+  override unmount(part: DOMPart.AttributePart): void {
     const { node, name } = part;
     node.removeAttribute(name);
   }
 }
 
-export class DOMClassHandler extends DOMPrimitiveHandler<
-  ClassMap,
-  DOMPart.AttributePart
-> {
-  override ensureValue(value: unknown, part: DOMPart.AttributePart): void {
+export class DOMClass extends DOMPrimitive<ClassMap, DOMPart.AttributePart> {
+  private _memoizedValue: ClassMap = {};
+
+  static override shouldUpdate(
+    newTokens: ClassMap,
+    oldTokens: ClassMap,
+  ): boolean {
+    return !shallowEqual(newTokens, oldTokens);
+  }
+
+  static override ensureValue(
+    value: unknown,
+    part: DOMPart.AttributePart,
+  ): void {
     if (!isObject(value)) {
       throw DOMRenderError.fromPlace(part, 'Class values must be object.');
     }
   }
 
-  override shouldUpdate(newTokens: ClassMap, oldTokens: ClassMap): boolean {
-    return !shallowEqual(newTokens, oldTokens);
+  override mount(part: DOMPart.AttributePart): void {
+    updateClass(part.node.classList, this._memoizedValue, this._value);
+    this._memoizedValue = this._value;
   }
 
-  override mount(tokens: ClassMap, part: DOMPart.AttributePart): void {
-    updateClass(part.node.classList, {}, tokens);
-  }
-
-  override remount(
-    oldTokens: ClassMap,
-    newTokens: ClassMap,
-    part: DOMPart.AttributePart,
-  ): void {
-    updateClass(part.node.classList, oldTokens, newTokens);
-  }
-
-  override unmount(tokens: ClassMap, part: DOMPart.AttributePart): void {
-    updateClass(part.node.classList, tokens, {});
+  override unmount(part: DOMPart.AttributePart): void {
+    updateClass(part.node.classList, this._value, {});
+    this._memoizedValue = {};
   }
 }
 
-export class DOMElementHandler extends DOMPrimitiveHandler<
-  ElementProps,
-  DOMPart.ElementPart
-> {
+export class DOMElement
+  implements Mountable<ElementProps, DOMPart.ElementPart, DOMRenderer>
+{
   private _pendingSlots: Map<string, Slot<DOMPart>> = new Map();
 
   private _currentSlots: Map<string, Slot<DOMPart>> = new Map();
 
-  override ensureValue(value: unknown, part: DOMPart.ElementPart): void {
+  static shouldUpdate(oldProps: ElementProps, newProps: ElementProps): boolean {
+    return oldProps !== newProps;
+  }
+
+  static ensureValue(value: unknown, part: DOMPart.ElementPart): void {
     if (!isObject(value)) {
       throw DOMRenderError.fromPlace(part, 'Element values must be object.');
     }
   }
 
-  override render(
+  static render(
     props: ElementProps,
     part: DOMPart.ElementPart,
     scope: Scope.ChildScope<DOMPart.ElementPart>,
     _session: Session<DOMPart.ElementPart, DOMRenderer>,
-  ): Iterable<Slot> {
+  ): DOMElement {
+    const slots = new Map<string, Slot<DOMPart>>();
+
+    for (const propName of Object.keys(props)) {
+      const propPart = resolveNamedPart(propName, part.node);
+      const directive = wrap(props[propName]);
+      const slot = new Slot(propPart, directive, scope);
+      slots.set(propName, slot);
+    }
+
+    return new DOMElement(slots);
+  }
+
+  constructor(slots: Map<string, Slot<DOMPart>>) {
+    this._pendingSlots = slots;
+  }
+
+  get children(): Iterable<Slot<DOMPart>> {
+    return this._pendingSlots.values();
+  }
+
+  patch(
+    props: ElementProps,
+    part: DOMPart.ElementPart,
+    scope: Scope.ChildScope<DOMPart.ElementPart>,
+    _session: Session<DOMPart.ElementPart, DOMRenderer>,
+  ): void {
     const oldSlots = this._currentSlots;
     const newSlots = new Map();
 
@@ -173,11 +211,9 @@ export class DOMElementHandler extends DOMPrimitiveHandler<
     }
 
     this._pendingSlots = newSlots;
-
-    return newSlots.values();
   }
 
-  override mount(_props: ElementProps, _part: DOMPart.ElementPart): void {
+  mount(_part: DOMPart.ElementPart): void {
     const oldSlots = this._currentSlots;
     const newSlots = this._pendingSlots;
 
@@ -195,22 +231,19 @@ export class DOMElementHandler extends DOMPrimitiveHandler<
     this._currentSlots = this._pendingSlots;
   }
 
-  override afterMount(_props: ElementProps, _part: DOMPart.ElementPart): void {
+  afterMount(_part: DOMPart.ElementPart): void {
     for (const slot of this._currentSlots.values()) {
       slot.afterCommit();
     }
   }
 
-  override beforeUnmount(
-    _props: ElementProps,
-    _part: DOMPart.ElementPart,
-  ): void {
+  beforeUnmount(_part: DOMPart.ElementPart): void {
     for (const slot of this._currentSlots.values()) {
       slot.beforeRevert();
     }
   }
 
-  override unmount(_props: ElementProps, _part: DOMPart.ElementPart): void {
+  unmount(_part: DOMPart.ElementPart): void {
     for (const slot of this._currentSlots.values()) {
       slot.revert();
     }
@@ -218,13 +251,13 @@ export class DOMElementHandler extends DOMPrimitiveHandler<
   }
 }
 
-export class DOMEventHandler extends DOMPrimitiveHandler<
+export class DOMEvent extends DOMPrimitive<
   EventListenerOrNullish,
   DOMPart.EventPart
 > {
-  private _memoizedListener: EventListenerOrNullish;
+  private _memoizedValue: EventListenerOrNullish;
 
-  override ensureValue(value: unknown, part: DOMPart.EventPart): void {
+  static override ensureValue(value: unknown, part: DOMPart.EventPart): void {
     if (!(isEventListener(value) || value == null)) {
       throw DOMRenderError.fromPlace(
         part,
@@ -233,12 +266,9 @@ export class DOMEventHandler extends DOMPrimitiveHandler<
     }
   }
 
-  override mount(
-    listener: EventListenerOrNullish,
-    part: DOMPart.EventPart,
-  ): void {
-    const newListener = listener;
-    const oldListener = this._memoizedListener;
+  override mount(part: DOMPart.EventPart): void {
+    const newListener = this._value;
+    const oldListener = this._memoizedValue;
 
     if (
       newListener == null ||
@@ -252,85 +282,79 @@ export class DOMEventHandler extends DOMPrimitiveHandler<
         delegateEvents(part, newListener, this);
       }
     }
-    this._memoizedListener = newListener;
+    this._memoizedValue = newListener;
   }
 
-  override unmount(
-    listener: EventListenerOrNullish,
-    part: DOMPart.EventPart,
-  ): void {
-    if (listener != null) {
-      undelegateEvents(part, listener, this);
+  override unmount(part: DOMPart.EventPart): void {
+    if (this._value != null) {
+      undelegateEvents(part, this._value, this);
     }
-    this._memoizedListener = null;
+    this._memoizedValue = null;
   }
 
   handleEvent(event: Event): void {
-    if (typeof this._memoizedListener === 'function') {
-      this._memoizedListener(event);
+    if (typeof this._memoizedValue === 'function') {
+      this._memoizedValue(event);
     } else {
-      this._memoizedListener?.handleEvent(event);
+      this._memoizedValue?.handleEvent(event);
     }
   }
 }
 
-export class DOMLiveHandler<TValue> extends DOMPrimitiveHandler<
-  TValue,
-  DOMPart.LivePart
-> {
-  override shouldUpdate(_newValue: TValue, _oldValue: TValue): boolean {
+export class DOMLive<TValue> extends DOMPrimitive<TValue, DOMPart.LivePart> {
+  static override shouldUpdate(
+    _newValue: unknown,
+    _oldValue: unknown,
+  ): boolean {
     return true;
   }
 
-  override mount(value: TValue, part: DOMPart.LivePart): void {
+  override mount(part: DOMPart.LivePart): void {
     const { node, name } = part;
     const currentValue = node[name as keyof Element];
 
-    if (!Object.is(currentValue, value)) {
-      (node as any)[name] = value;
+    if (!Object.is(currentValue, this._value)) {
+      (node as any)[name] = this._value;
     }
   }
 
-  override unmount(_value: TValue, part: DOMPart.LivePart): void {
+  override unmount(part: DOMPart.LivePart): void {
     const { node, name, defaultValue } = part;
     (node as any)[name] = defaultValue;
   }
 }
 
-export class DOMNodeHandler<T> extends DOMPrimitiveHandler<T, DOMPart> {
-  override mount(value: T, part: DOMPart): void {
-    part.node.nodeValue = toStringOrEmpty(value);
+export class DOMNode<T> extends DOMPrimitive<T, DOMPart> {
+  override mount(part: DOMPart): void {
+    part.node.nodeValue = toStringOrEmpty(this._value);
   }
 
-  override unmount(_value: T, part: DOMPart): void {
+  override unmount(part: DOMPart): void {
     part.node.nodeValue = '';
   }
 }
 
-export class DOMPropertyHandler<T> extends DOMPrimitiveHandler<
-  T,
-  DOMPart.PropertyPart
-> {
-  override mount(value: T, part: DOMPart.PropertyPart): void {
+export class DOMProperty<T> extends DOMPrimitive<T, DOMPart.PropertyPart> {
+  override mount(part: DOMPart.PropertyPart): void {
     const { node, name } = part;
-    (node as any)[name] = value;
+    (node as any)[name] = this._value;
   }
 
-  override unmount(_value: T, part: DOMPart.PropertyPart): void {
+  override unmount(part: DOMPart.PropertyPart): void {
     const { node, name, defaultValue } = part;
     (node as any)[name] = defaultValue;
   }
 }
 
-export class DOMRefHandler extends DOMPrimitiveHandler<
-  Ref<Element>,
-  DOMPart.AttributePart
-> {
-  private _memoizedRef: Ref<Element>;
+export class DOMRef extends DOMPrimitive<Ref<Element>, DOMPart.AttributePart> {
+  private _memoizedValue: Ref<Element>;
 
   private _memoizedCleanup: Cleanup | void | undefined;
 
-  override ensureValue(value: unknown, part: DOMPart.AttributePart): void {
+  static override ensureValue(
+    value: unknown,
+    part: DOMPart.AttributePart,
+  ): void {
     if (!isRef(value)) {
       throw DOMRenderError.fromPlace(
         part,
@@ -339,8 +363,9 @@ export class DOMRefHandler extends DOMPrimitiveHandler<
     }
   }
 
-  override afterMount(newRef: Ref<Element>, part: DOMPart.AttributePart): void {
-    const oldRef = this._memoizedRef;
+  override afterMount(part: DOMPart.AttributePart): void {
+    const newRef = this._value;
+    const oldRef = this._memoizedValue;
 
     if (newRef !== oldRef) {
       if (typeof oldRef === 'function') {
@@ -356,14 +381,11 @@ export class DOMRefHandler extends DOMPrimitiveHandler<
       }
     }
 
-    this._memoizedRef = newRef;
+    this._memoizedValue = newRef;
   }
 
-  override beforeUnmount(
-    _ref: Ref<Element>,
-    _part: DOMPart.AttributePart,
-  ): void {
-    const ref = this._memoizedRef;
+  override beforeUnmount(_part: DOMPart.AttributePart): void {
+    const ref = this._memoizedValue;
 
     if (typeof ref === 'function') {
       this._memoizedCleanup?.();
@@ -373,34 +395,35 @@ export class DOMRefHandler extends DOMPrimitiveHandler<
   }
 }
 
-export class DOMStyleHandler extends DOMPrimitiveHandler<
-  StyleMap,
-  DOMPart.AttributePart
-> {
-  override ensureValue(value: unknown, part: DOMPart.AttributePart): void {
+export class DOMStyle extends DOMPrimitive<StyleMap, DOMPart.AttributePart> {
+  private _memoizedValue: StyleMap = {};
+
+  static override shouldUpdate(
+    newProps: StyleMap,
+    oldProps: StyleMap,
+  ): boolean {
+    return !shallowEqual(newProps, oldProps);
+  }
+
+  static override ensureValue(
+    value: unknown,
+    part: DOMPart.AttributePart,
+  ): void {
     if (!isObject(value)) {
       throw DOMRenderError.fromPlace(part, 'Style values must be object.');
     }
   }
 
-  override shouldUpdate(newProps: StyleMap, oldProps: StyleMap): boolean {
-    return !shallowEqual(newProps, oldProps);
+  override mount(part: DOMPart.AttributePart): void {
+    updateStyle(
+      (part.node as HTMLElement).style,
+      this._memoizedValue,
+      this._value,
+    );
   }
 
-  override mount(props: StyleMap, part: DOMPart.AttributePart): void {
-    updateStyle((part.node as HTMLElement).style, {}, props);
-  }
-
-  override remount(
-    oldProps: StyleMap,
-    newProps: StyleMap,
-    part: DOMPart.AttributePart,
-  ): void {
-    updateStyle((part.node as HTMLElement).style, oldProps, newProps);
-  }
-
-  override unmount(props: StyleMap, part: DOMPart.AttributePart): void {
-    updateStyle((part.node as HTMLElement).style, props, {});
+  override unmount(part: DOMPart.AttributePart): void {
+    updateStyle((part.node as HTMLElement).style, this._memoizedValue, {});
   }
 }
 

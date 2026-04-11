@@ -2,17 +2,17 @@
 
 import type {
   Directive,
-  DirectiveHandler,
   HostAdapter,
   Lanes,
-  PrimitiveHandler,
+  Primitive,
+  Renderable,
   Scope,
   Template,
 } from '../core.js';
 import { NoLanes } from '../lane.js';
 import { isRootScope } from '../scope.js';
 import { ensurePartType } from './error.js';
-import { DOMFragmentHandler } from './fragment.js';
+import { DOMFragment } from './fragment.js';
 import {
   AttributeType,
   ChildNodeType,
@@ -24,22 +24,22 @@ import {
   TextType,
 } from './part.js';
 import {
-  DOMAttributeHandler,
-  DOMClassHandler,
-  DOMElementHandler,
-  DOMEventHandler,
-  DOMLiveHandler,
-  DOMNodeHandler,
-  DOMPropertyHandler,
-  DOMRefHandler,
-  DOMStyleHandler,
+  DOMAttribute,
+  DOMClass,
+  DOMElement,
+  DOMEvent,
+  DOMLive,
+  DOMNode,
+  DOMProperty,
+  DOMRef,
+  DOMStyle,
 } from './primitive.js';
 import {
   ClientRenderer,
   type DOMRenderer,
   HydrationRenderer,
 } from './renderer.js';
-import { DOMTemplate, DOMTemplateHandler } from './template.js';
+import { DOMTemplate } from './template.js';
 
 export interface DOMAdapterOptions {
   identifier?: string;
@@ -116,58 +116,55 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
   resolveFragment(
     directive: Directive.FragmentDirective<unknown>,
     part: DOMPart,
-  ): DirectiveHandler<Iterable<unknown>, DOMPart, DOMRenderer> {
+  ): Renderable<Iterable<unknown>, DOMPart, DOMRenderer> {
     ensurePartType(ChildNodeType, directive, part);
-    return new DOMFragmentHandler();
+    return DOMFragment;
   }
 
   resolvePrimitive(
     _directive: Directive.PrimitiveDirective<unknown>,
     part: DOMPart,
-  ): PrimitiveHandler<unknown, DOMPart, DOMRenderer> {
+  ): Primitive<unknown, DOMPart, DOMRenderer> {
     switch (part.type) {
       case AttributeType:
         switch (part.name) {
           case ':class':
-            return new DOMClassHandler();
+            return DOMClass;
           case ':ref':
-            return new DOMRefHandler();
+            return DOMRef;
           case ':style':
-            return new DOMStyleHandler();
+            return DOMStyle;
           default:
-            return new DOMAttributeHandler();
+            return DOMAttribute;
         }
       case ChildNodeType:
       case TextType:
-        return new DOMNodeHandler();
+        return DOMNode;
       case ElementType:
-        return new DOMElementHandler();
+        return DOMElement;
       case EventType:
-        return new DOMEventHandler();
+        return DOMEvent;
       case LiveType:
-        return new DOMLiveHandler();
+        return DOMLive;
       case PropertyType:
-        return new DOMPropertyHandler();
+        return DOMProperty;
     }
   }
 
   resolveTemplate(
     directive: Directive.TemplateDirective,
     part: DOMPart.ChildNodePart,
-  ): DirectiveHandler<Template, DOMPart.ChildNodePart, DOMRenderer> {
+  ): Renderable<Template, DOMPart.ChildNodePart, DOMRenderer> {
     ensurePartType(ChildNodeType, directive, part);
-    const template = this._templateCache.getOrInsertComputed(
-      directive.type,
-      () =>
-        DOMTemplate.parse(
-          directive.type,
-          directive.value.exprs,
-          directive.value.mode,
-          this._identifier,
-          this._container.ownerDocument,
-        ),
+    return this._templateCache.getOrInsertComputed(directive.type, () =>
+      DOMTemplate.parse(
+        directive.type,
+        directive.value.exprs,
+        directive.value.mode,
+        this._identifier,
+        this._container.ownerDocument,
+      ),
     );
-    return new DOMTemplateHandler(template);
   }
 
   startViewTransition(callback: () => PromiseLike<void> | void): Promise<void> {

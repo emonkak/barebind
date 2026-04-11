@@ -15,11 +15,7 @@ export interface BoundaryType<TInstance, TDefault> {
   getDefault?(): TDefault;
 }
 
-export interface Component<TProps> {
-  resolveComponent(
-    directive: Directive.ComponentDirective<TProps>,
-    part: unknown,
-  ): DirectiveHandler<TProps>;
+export interface Component<TProps> extends Renderable<TProps> {
   (props: TProps): Directive.ComponentDirective<TProps>;
 }
 
@@ -46,25 +42,6 @@ export namespace Directive {
   export type TemplateDirective = Directive<readonly string[], Template>;
 }
 
-export interface DirectiveHandler<
-  TValue,
-  TPart = unknown,
-  TRenderer = unknown,
-> {
-  shouldUpdate(newValue: TValue, oldValue: TValue): boolean;
-  render(
-    value: TValue,
-    part: TPart,
-    scope: Scope.ChildScope<TPart>,
-    session: Session<TPart, TRenderer>,
-  ): Iterable<UpdateUnit>;
-  mount(value: TValue | null, part: TPart): void;
-  remount(oldValue: TValue, newValue: TValue, part: TPart): void;
-  afterMount(value: TValue, part: TPart): void;
-  beforeUnmount(value: TValue, part: TPart): void;
-  unmount(value: TValue, part: TPart): void;
-}
-
 export interface HostAdapter<TPart, TRenderer> {
   getDefaultLanes(): Lanes;
   getIdentifier(): string;
@@ -77,15 +54,15 @@ export interface HostAdapter<TPart, TRenderer> {
   resolveFragment(
     directive: Directive.FragmentDirective<unknown>,
     part: TPart,
-  ): DirectiveHandler<Iterable<unknown>, TPart, TRenderer>;
+  ): Renderable<Iterable<unknown>, TPart, TRenderer>;
   resolvePrimitive(
     directive: Directive.PrimitiveDirective<unknown>,
     part: TPart,
-  ): PrimitiveHandler<unknown, TPart, TRenderer>;
+  ): Primitive<unknown, TPart, TRenderer>;
   resolveTemplate(
     directive: Directive.TemplateDirective,
     part: TPart,
-  ): DirectiveHandler<Template, TPart, TRenderer>;
+  ): Renderable<Template, TPart, TRenderer>;
   startViewTransition(callback: () => PromiseLike<void> | void): Promise<void>;
   yieldToMain(): Promise<void>;
 }
@@ -94,12 +71,36 @@ export type Lane = number;
 
 export type Lanes = number;
 
+export interface Mountable<TValue, TPart = unknown, TRenderer = unknown> {
+  readonly children: Iterable<UpdateUnit>;
+  patch(
+    value: TValue,
+    part: TPart,
+    scope: Scope.ChildScope<TPart>,
+    session: Session<TPart, TRenderer>,
+  ): void;
+  mount(part: TPart): void;
+  afterMount(part: TPart): void;
+  beforeUnmount(part: TPart): void;
+  unmount(part: TPart): void;
+}
+
+export interface Renderable<TValue, TPart = unknown, TRenderer = unknown> {
+  shouldUpdate(newValue: TValue, oldValue: TValue): boolean;
+  render(
+    value: TValue,
+    part: TPart,
+    scope: Scope.ChildScope<TPart>,
+    session: Session<TPart, TRenderer>,
+  ): Mountable<TValue, TPart, TRenderer>;
+}
+
 export interface Root<TPart> {
   part: TPart;
 }
 
-export interface PrimitiveHandler<TValue, TPart = unknown, TRenderer = unknown>
-  extends DirectiveHandler<TValue, TPart, TRenderer> {
+export interface Primitive<TValue, TPart = unknown, TRenderer = unknown>
+  extends Renderable<TValue, TPart, TRenderer> {
   ensureValue(value: unknown, part: TPart): void;
 }
 

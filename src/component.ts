@@ -3,8 +3,8 @@ import {
   type BoundaryType,
   type Component,
   Directive,
-  type DirectiveHandler,
   type Lanes,
+  type Mountable,
   type Scope,
   type Session,
   type UpdateHandle,
@@ -23,7 +23,7 @@ const MemoType = 3;
 const ReducerType = 4;
 
 export interface ComponentFunctionOptions<TProps> {
-  arePropsEqual?: (newProps: TProps, oldProps: TProps) => boolean;
+  arePropsEqual?: (oldProps: TProps, newProps: TProps) => boolean;
 }
 
 export type ComponentFunction<TProps, TReturn> = (
@@ -120,98 +120,74 @@ interface StateOptions {
   passthrough?: boolean;
 }
 
-export class ComponentHandler<TProps, TReturn>
-  implements DirectiveHandler<TProps>
-{
+export class ComponentHandle<TProps, TReturn> implements Mountable<TProps> {
   private readonly _componentFn: ComponentFunction<TProps, TReturn>;
 
-  private readonly _arePropsEqual: (
-    newProps: TProps,
-    oldProps: TProps,
-  ) => boolean;
+  private _context: RenderContext;
 
-  private _context: RenderContext | null = null;
-
-  private _slot: Slot | null = null;
+  private _slot: Slot;
 
   constructor(
     componentFn: ComponentFunction<TProps, TReturn>,
-    arePropsEqual: (newProps: TProps, oldProps: TProps) => boolean,
+    context: RenderContext,
+    slot: Slot,
   ) {
     this._componentFn = componentFn;
-    this._arePropsEqual = arePropsEqual;
+    this._context = context;
+    this._slot = slot;
   }
 
-  shouldUpdate(newProps: TProps, oldProps: TProps): boolean {
-    const arePropsEqual = this._arePropsEqual;
-    return !arePropsEqual(newProps, oldProps);
-  }
-
-  render(
-    props: TProps,
-    part: unknown,
-    scope: Scope.ChildScope,
-    session: Session,
-  ): Iterable<Slot> {
-    if (this._context !== null) {
-      resetContext(this._context, scope, session);
-    } else {
-      this._context = new RenderContext(scope, session);
-    }
-
-    const returnValue = this._componentFn.call(this._context, props);
-    const directive = wrap(returnValue);
-
-    finalizeContext(this._context);
-
-    if (this._slot !== null) {
-      this._slot.update(directive, scope);
-    } else {
-      this._slot = new Slot(part, directive, scope);
-    }
-
+  get children(): Slot[] {
     return [this._slot];
   }
 
-  mount(_value: TProps, _part: unknown): void {
-    this._slot?.commit();
+  patch(
+    props: TProps,
+    _part: unknown,
+    scope: Scope.ChildScope,
+    session: Session,
+  ): void {
+    resetContext(this._context, scope, session);
+
+    const returnValue = this._componentFn.call(this._context, props);
+
+    finalizeContext(this._context);
+
+    this._slot.update(wrap(returnValue), scope);
   }
 
-  remount(_oldValue: TProps, _newValue: TProps, _part: unknown): void {
-    this._slot?.commit();
+  mount(_part: unknown): void {
+    this._slot.commit();
   }
 
-  afterMount(_props: TProps, _part: unknown): void {
-    this._slot?.afterCommit();
-    if (this._context !== null) {
-      for (const hook of this._context._hooks) {
-        if (hook.type === EffectType && hook.setup !== null) {
-          hook.cleanup?.();
-          hook.cleanup = hook.setup();
-          hook.setup = null;
-        }
+  afterMount(_part: unknown): void {
+    this._slot.afterCommit();
+    for (const hook of this._context._hooks) {
+      if (hook.type === EffectType && hook.setup !== null) {
+        hook.cleanup?.();
+        hook.cleanup = hook.setup();
+        hook.setup = null;
       }
     }
   }
 
-  beforeUnmount(_props: TProps, _part: unknown): void {
-    if (this._context !== null) {
-      for (const hook of this._context._hooks) {
-        if (hook.type === EffectType && hook.cleanup !== undefined) {
-          hook.cleanup();
-          hook.cleanup = undefined;
-        }
+  beforeUnmount(_part: unknown): void {
+    for (const hook of this._context._hooks) {
+      if (hook.type === EffectType && hook.cleanup !== undefined) {
+        hook.cleanup();
+        hook.cleanup = undefined;
       }
-
-      this._context._scope = OrphanScope;
-      this._context._hooks = [];
-      this._context._hookIndex = 0;
     }
-    this._slot?.beforeRevert();
+
+    this._slot.beforeRevert();
+
+    this._context._scope = OrphanScope;
+    this._context._hooks = [];
+    this._context._hookIndex = 0;
   }
 
-  unmount(_value: TProps, _part: unknown): void {
-    this._slot?.revert();
+  unmount(_part: unknown): void {
+    this._slot.revert();
   }
 }
 
@@ -480,11 +456,21 @@ export function createComponent<TProps = {}, TReturn = unknown>(
     return new Directive(Component, props);
   }
 
-  Component.resolveComponent = (
-    _directive: Directive.ComponentDirective<TProps>,
-    _part: unknown,
-  ): DirectiveHandler<TProps> =>
-    new ComponentHandler(componentFn, arePropsEqual);
+  Component.shouldUpdate = (oldProps: TProps, newProps: TProps): boolean => {
+    return arePropsEqual(oldProps, newProps);
+  };
+  Component.render = (
+    props: TProps,
+    part: unknown,
+    scope: Scope.ChildScope,
+    session: Session,
+  ): Mountable<TProps> => {
+    const context = new RenderContext(scope, session);
+    const returnValue = componentFn.call(context, props);
+    finalizeContext(context);
+    const slot = new Slot(part, wrap(returnValue), scope);
+    return new ComponentHandle(componentFn, context, slot);
+  };
 
   DEBUG: {
     Object.defineProperty(Component, 'name', {

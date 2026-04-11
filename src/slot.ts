@@ -1,10 +1,10 @@
 import {
   type Directive,
-  type DirectiveHandler,
   Fragment,
   type Lanes,
+  type Mountable,
   Primitive,
-  type PrimitiveHandler,
+  type Renderable,
   type Scope,
   type Session,
   type UpdateUnit,
@@ -13,15 +13,18 @@ import { RenderError } from './error.js';
 import { NoLanes } from './lane.js';
 import { createChildScope, handleError } from './scope.js';
 
+const FLAG_NEEDS_RENDER = 0b01;
+const FLAG_NEEDS_COMMIT = 0b10;
+
 export class Slot<TPart = unknown> implements UpdateUnit<TPart> {
   private readonly _part: TPart;
-  private _pendingDirective: Directive.ElementDirective;
-  private _currentDirective: Directive.ElementDirective;
-  private _pendingHandler: DirectiveHandler<unknown> | null = null;
-  private _currentHandler: DirectiveHandler<unknown> | null = null;
+  private _directive: Directive.ElementDirective;
+  private _renderable: Renderable<unknown, TPart> | null = null;
+  private _pendingMountable: Mountable<unknown, TPart> | null = null;
+  private _currentMountable: Mountable<unknown, TPart> | null = null;
   private _scope: Scope<TPart>;
   private _pendingLanes: Lanes = 0;
-  private _dirty: boolean = false;
+  private _flags: number = 0;
 
   constructor(
     part: TPart,
@@ -29,8 +32,7 @@ export class Slot<TPart = unknown> implements UpdateUnit<TPart> {
     scope: Scope<TPart>,
   ) {
     this._part = part;
-    this._pendingDirective = directive;
-    this._currentDirective = directive;
+    this._directive = directive;
     this._scope = scope;
   }
 
@@ -39,7 +41,7 @@ export class Slot<TPart = unknown> implements UpdateUnit<TPart> {
   }
 
   get directive(): Directive.ElementDirective {
-    return this._pendingDirective;
+    return this._directive;
   }
 
   get scope(): Scope<TPart> {
@@ -55,70 +57,67 @@ export class Slot<TPart = unknown> implements UpdateUnit<TPart> {
   }
 
   needsRender(): boolean {
-    return (
-      this._pendingHandler === null ||
-      this._pendingHandler !== this._currentHandler ||
-      this._pendingHandler.shouldUpdate(
-        this._pendingDirective.value,
-        this._currentDirective.value,
-      )
-    );
+    return (this._flags & FLAG_NEEDS_RENDER) !== 0;
   }
 
   update(directive: Directive.ElementDirective, scope: Scope<TPart>): void {
-    this._pendingDirective = directive;
-    this._pendingHandler =
-      directive.type === this._currentDirective.type &&
-      directive.key === this._currentDirective.key
-        ? this._currentHandler
-        : null;
+    if (
+      this._renderable !== null &&
+      this._directive.type === directive.type &&
+      this._directive.key === directive.key
+    ) {
+      this._pendingMountable = this._currentMountable;
+      this._flags |= this._renderable.shouldUpdate(
+        this._directive.value,
+        directive.value,
+      )
+        ? FLAG_NEEDS_RENDER
+        : 0;
+    } else {
+      this._pendingMountable = null;
+      this._renderable = null;
+      this._flags |= FLAG_NEEDS_RENDER;
+    }
+    this._directive = directive;
     this._scope = scope;
   }
 
   *render(session: Session<TPart>): Generator<UpdateUnit> {
-    const { type, value } = this._pendingDirective;
+    const { type, value } = this._directive;
     const { adapter, lanes } = session;
 
     if (type === Primitive) {
-      this._pendingHandler ??= adapter.resolvePrimitive(
-        this._pendingDirective,
+      this._renderable ??= adapter.resolvePrimitive(
+        this._directive,
         this._part,
       );
-      (this._pendingHandler as PrimitiveHandler<unknown>).ensureValue(
-        value,
-        this._part,
-      );
+      (this._renderable as Primitive<unknown>).ensureValue(value, this._part);
     } else if (type === Fragment) {
-      this._pendingHandler ??= adapter.resolveFragment(
-        this._pendingDirective,
-        this._part,
-      );
+      this._renderable ??= adapter.resolveFragment(this._directive, this._part);
     } else if (typeof type === 'object') {
-      this._pendingHandler ??= adapter.resolveTemplate(
-        this._pendingDirective,
-        this._part,
-      );
+      this._renderable ??= adapter.resolveTemplate(this._directive, this._part);
     } else {
-      this._pendingHandler ??= type.resolveComponent(
-        this._pendingDirective,
-        this._part,
-      );
+      this._renderable ??= type;
     }
 
     do {
       const scope = createChildScope(this);
-      let children: Iterable<UpdateUnit>;
 
       this._pendingLanes &= ~lanes;
 
       try {
-        children = this._pendingHandler.render(
-          value,
-          this._part,
-          scope,
-          session,
-        );
+        if (this._pendingMountable !== null) {
+          this._pendingMountable.patch(value, this._part, scope, session);
+        } else {
+          this._pendingMountable = this._renderable.render(
+            value,
+            this._part,
+            scope,
+            session,
+          );
+        }
       } catch (error) {
+        this._pendingMountable = null;
         try {
           handleError(this._scope, error);
         } catch (error) {
@@ -126,19 +125,21 @@ export class Slot<TPart = unknown> implements UpdateUnit<TPart> {
             cause: error,
           });
         }
-        children = [];
       }
 
-      for (const child of children) {
-        if (child.needsRender()) {
-          yield child;
+      if (this._pendingMountable !== null) {
+        for (const child of this._pendingMountable.children) {
+          if (child.needsRender()) {
+            yield child;
+          }
         }
       }
 
       Object.freeze(scope);
     } while ((this._pendingLanes & lanes) !== NoLanes);
 
-    this._dirty = true;
+    this._flags |= FLAG_NEEDS_COMMIT;
+    this._flags &= ~FLAG_NEEDS_RENDER;
   }
 
   complete(): void {
@@ -147,37 +148,30 @@ export class Slot<TPart = unknown> implements UpdateUnit<TPart> {
   }
 
   commit(): void {
-    if (this._dirty) {
-      if (this._pendingHandler === this._currentHandler) {
-        this._pendingHandler?.remount(
-          this._currentDirective.value,
-          this._pendingDirective.value,
-          this._part,
-        );
-      } else {
-        this.beforeRevert();
-        this.revert();
-        this._pendingHandler?.mount(this._pendingDirective.value, this._part);
+    if (this._flags & FLAG_NEEDS_COMMIT) {
+      if (
+        this._currentMountable !== null &&
+        this._currentMountable !== this._pendingMountable
+      ) {
+        this._currentMountable.beforeUnmount(this._part);
+        this._currentMountable.unmount(this._part);
       }
-      this._dirty = false;
-      this._currentDirective = this._pendingDirective;
-      this._currentHandler = this._pendingHandler;
+      this._pendingMountable?.mount(this._part);
+      this._currentMountable = this._pendingMountable;
+      this._flags &= ~FLAG_NEEDS_COMMIT;
     }
   }
 
   afterCommit(): void {
-    this._currentHandler?.afterMount(this._currentDirective.value, this._part);
+    this._currentMountable?.afterMount(this._part);
   }
 
   beforeRevert(): void {
-    this._currentHandler?.beforeUnmount(
-      this._currentDirective.value,
-      this._part,
-    );
+    this._currentMountable?.beforeUnmount(this._part);
   }
 
   revert(): void {
-    this._currentHandler?.unmount(this._currentDirective.value, this._part);
-    this._currentHandler = null;
+    this._currentMountable?.unmount(this._part);
+    this._currentMountable = null;
   }
 }

@@ -22,7 +22,7 @@ import {
   createTreeWalker,
   type DOMHole,
   type DOMTemplate,
-  type DOMTemplateBlock,
+  DOMTemplateBlock,
   type DOMTemplateRenderer,
 } from './template.js';
 
@@ -158,7 +158,7 @@ function hydrateTemplate(
     );
   }
 
-  return { childNodes, slots };
+  return new DOMTemplateBlock(childNodes, slots);
 }
 
 function hydrateTextPart(
@@ -243,7 +243,7 @@ function renderTemplate(
     }
   }
 
-  return { childNodes, slots };
+  return new DOMTemplateBlock(childNodes, slots);
 }
 
 function popNode(

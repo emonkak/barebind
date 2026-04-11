@@ -1,5 +1,6 @@
 import {
-  type DirectiveHandler,
+  type Mountable,
+  type Renderable,
   type Scope,
   type Session,
   type Template,
@@ -95,12 +96,9 @@ export interface DOMTemplateRenderer {
   ): DOMTemplateBlock;
 }
 
-export interface DOMTemplateBlock {
-  childNodes: ChildNode[];
-  slots: Slot<DOMPart>[];
-}
-
-export class DOMTemplate {
+export class DOMTemplate
+  implements Renderable<Template, DOMPart.ChildNodePart, DOMTemplateRenderer>
+{
   readonly element: HTMLTemplateElement;
   readonly holes: DOMHole[];
   readonly mode: TemplateMode;
@@ -139,102 +137,88 @@ export class DOMTemplate {
     this.holes = holes;
     this.mode = mode;
   }
-}
-
-export class DOMTemplateHandler
-  implements DirectiveHandler<Template, DOMPart, DOMTemplateRenderer>
-{
-  private readonly _template: DOMTemplate;
-  private _block: DOMTemplateBlock | null = null;
-
-  constructor(template: DOMTemplate) {
-    this._template = template;
-  }
-
-  shouldUpdate(newTemplate: Template, oldTemplate: Template): boolean {
-    return newTemplate.exprs !== oldTemplate.exprs;
-  }
 
   render(
     template: Template,
     part: DOMPart.ChildNodePart,
     scope: Scope.ChildScope<DOMPart.ChildNodePart>,
     session: Session<DOMPart.ChildNodePart, DOMTemplateRenderer>,
-  ): Iterable<Slot> {
-    if (this._block !== null) {
-      this._block.slots.forEach((slot, i) => {
-        slot.update(wrap(template.exprs[i]), scope);
-      });
-    } else {
-      this._block = session.renderer.renderTemplate(
-        this._template,
-        template.exprs,
-        part,
-        scope,
-      );
-    }
-    return this._block.slots;
+  ): DOMTemplateBlock {
+    return session.renderer.renderTemplate(this, template.exprs, part, scope);
   }
 
-  mount(_template: Template, part: DOMPart.ChildNodePart): void {
-    if (this._block !== null) {
-      if (part.node === part.sentinelNode) {
-        part.sentinelNode.before(...this._block.childNodes);
-      }
+  shouldUpdate(newTemplate: Template, oldTemplate: Template): boolean {
+    return newTemplate.exprs !== oldTemplate.exprs;
+  }
+}
 
-      for (const slot of this._block.slots) {
-        slot.commit();
-      }
+export class DOMTemplateBlock
+  implements Mountable<Template, DOMPart, DOMTemplateRenderer>
+{
+  private readonly _childNodes: ChildNode[];
+  private readonly _slots: Slot<DOMPart>[];
 
-      part.node = getStartNode(part, this._block);
-    }
+  constructor(childNodes: ChildNode[], slots: Slot<DOMPart>[]) {
+    this._childNodes = childNodes;
+    this._slots = slots;
   }
 
-  remount(
-    _oldTemplate: Template,
-    newTemplate: Template,
-    part: DOMPart.ChildNodePart,
+  get children(): Slot<DOMPart>[] {
+    return this._slots;
+  }
+
+  patch(
+    template: Template,
+    _part: DOMPart.ChildNodePart,
+    scope: Scope.ChildScope<DOMPart.ChildNodePart>,
+    _session: Session<DOMPart.ChildNodePart, DOMTemplateRenderer>,
   ): void {
-    this.mount(newTemplate, part);
+    this._slots.forEach((slot, i) => {
+      slot.update(wrap(template.exprs[i]), scope);
+    });
   }
 
-  afterMount(_template: Template, _part: DOMPart.ChildNodePart): void {
-    if (this._block !== null) {
-      for (const slot of this._block.slots) {
-        slot.afterCommit();
-      }
+  mount(part: DOMPart.ChildNodePart): void {
+    if (part.node === part.sentinelNode) {
+      part.sentinelNode.before(...this._childNodes);
+    }
+
+    for (const slot of this._slots) {
+      slot.commit();
+    }
+
+    part.node = getStartNode(part, this._childNodes, this._slots);
+  }
+
+  afterMount(_part: DOMPart.ChildNodePart): void {
+    for (const slot of this._slots) {
+      slot.afterCommit();
     }
   }
 
-  beforeUnmount(_template: Template, _part: DOMPart.ChildNodePart): void {
-    if (this._block !== null) {
-      for (const slot of this._block.slots) {
-        slot.beforeRevert();
-      }
+  beforeUnmount(_part: DOMPart.ChildNodePart): void {
+    for (const slot of this._slots) {
+      slot.beforeRevert();
     }
   }
 
-  unmount(_template: Template, part: DOMPart.ChildNodePart): void {
-    if (this._block !== null) {
-      const { childNodes, slots } = this._block;
-
-      for (const slot of slots) {
-        if (
-          (slot.part.type === ChildNodeType || slot.part.type === TextType) &&
-          childNodes.includes(getEndNode(slot.part))
-        ) {
-          // The slot is mounted as a child of the root, so it needs to be
-          // reverted.
-          slot.revert();
-        }
+  unmount(part: DOMPart.ChildNodePart): void {
+    for (const slot of this._slots) {
+      if (
+        (slot.part.type === ChildNodeType || slot.part.type === TextType) &&
+        this._childNodes.includes(getEndNode(slot.part))
+      ) {
+        // The slot is mounted as a child of the root, so it needs to be
+        // reverted.
+        slot.revert();
       }
-
-      for (const childNode of childNodes) {
-        childNode.remove();
-      }
-
-      part.node = part.sentinelNode;
     }
+
+    for (const childNode of this._childNodes) {
+      childNode.remove();
+    }
+
+    part.node = part.sentinelNode;
   }
 }
 
@@ -266,10 +250,11 @@ function getRawAttributeName(s: string): string | undefined {
 
 function getStartNode(
   part: DOMPart.ChildNodePart,
-  block: DOMTemplateBlock,
+  childNodes: ChildNode[],
+  slots: Slot<DOMPart>[],
 ): ChildNode {
-  const firstChild = block.childNodes[0];
-  const firstSlot = block.slots[0];
+  const firstChild = childNodes[0];
+  const firstSlot = slots[0];
   return firstSlot !== undefined && getEndNode(firstSlot.part) === firstChild
     ? firstSlot.part.node
     : (firstChild ?? part.sentinelNode);
