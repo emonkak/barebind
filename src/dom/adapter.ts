@@ -5,7 +5,8 @@ import {
   Primitive,
   type VHostElement,
   type VTemplate,
-} from './core.js';
+} from '../core.js';
+import { DOMRenderError } from './error.js';
 import {
   AttributePart,
   ChildNodePart,
@@ -19,21 +20,38 @@ import {
   LivePart,
   PropertyPart,
   TextPart,
-} from './dom-node.js';
+} from './node.js';
 import {
+  AttributeType,
+  ChildNodeType,
   createTreeWalker,
   DOMTemplate,
+  ElementType,
+  EventType,
   type Hole,
-  HoleType,
-} from './dom-template.js';
+  LiveType,
+  PropertyType,
+  TextType,
+} from './template.js';
 
 export class DOMAdapter implements HostAdapter {
-  value: unknown;
-  private _identifier = generateUniqueIdentifier(8);
-  private _templateCache: WeakMap<readonly string[], DOMTemplate> =
+  private readonly _identifier = generateUniqueIdentifier(8);
+  private readonly _templateCache: WeakMap<readonly string[], DOMTemplate> =
     new WeakMap();
 
-  renderNode(element: VHostElement): HostNode {
+  getIdentifier(): string {
+    return this._identifier;
+  }
+
+  getTaskPriority(): TaskPriority {
+    return window.event !== undefined
+      ? isContinuousEvent(window.event)
+        ? 'user-visible'
+        : 'user-blocking'
+      : 'background';
+  }
+
+  renderElement(element: VHostElement): HostNode {
     if (element.type === Bind) {
       return new DOMBind(element.props.index);
     }
@@ -53,6 +71,56 @@ export class DOMAdapter implements HostAdapter {
       ),
     );
     return renderTemplate(template);
+  }
+
+  requestCallback<T>(
+    callback: () => T | PromiseLike<T>,
+    options?: SchedulerPostTaskOptions,
+  ): Promise<T> {
+    if (typeof window.scheduler?.postTask === 'function') {
+      return scheduler.postTask(callback, options);
+    } else {
+      return new Promise((resolve) => {
+        switch (options?.priority) {
+          case 'user-blocking': {
+            const channel = new MessageChannel();
+            channel.port1.onmessage = resolve;
+            channel.port2.postMessage(null);
+            break;
+          }
+          case 'background': {
+            if (typeof requestIdleCallback === 'function') {
+              requestIdleCallback(resolve);
+            } else {
+              setTimeout(resolve, 1);
+            }
+            break;
+          }
+          default:
+            setTimeout(resolve);
+        }
+      }).then(callback);
+    }
+  }
+
+  requestCommit(callback: () => void): Promise<void> {
+    return new Promise((resolve) => {
+      requestAnimationFrame(resolve);
+    }).then(callback);
+  }
+
+  startViewTransition(callback: () => void): Promise<void> {
+    return typeof document.startViewTransition === 'function'
+      ? document.startViewTransition(callback).updateCallbackDone
+      : Promise.resolve().then(callback);
+  }
+
+  yieldToMain(): Promise<void> {
+    return typeof window.scheduler?.yield === 'function'
+      ? scheduler.yield()
+      : new Promise((resolve) => {
+          setTimeout(resolve);
+        });
   }
 }
 
@@ -83,7 +151,8 @@ function renderTemplate(template: DOMTemplate): DOMBlock {
 
       for (; nodeIndex <= hole.index; nodeIndex++) {
         if (templateWalker.nextNode() === null) {
-          throw new Error(
+          throw new DOMRenderError(
+            templateWalker.currentNode,
             'There is no node that the hole indicates. The template may have been modified.',
           );
         }
@@ -93,31 +162,38 @@ function renderTemplate(template: DOMTemplate): DOMBlock {
       let part: DOMPart;
 
       switch (hole.type) {
-        case HoleType.Attribute:
+        case AttributeType:
           part = new AttributePart(node as Element, hole.name);
           break;
-        case HoleType.Event:
+        case EventType:
           part = new EventPart(node as Element, hole.name);
           break;
-        case HoleType.ChildNode:
+        case ChildNodeType:
           part = new ChildNodePart(node as Comment);
           break;
-        case HoleType.Element:
+        case ElementType:
           part = new ElementPart(node as Element);
           break;
-        case HoleType.Live:
+        case LiveType:
           part = new LivePart(node as Element, hole.name);
           break;
-        case HoleType.Property:
+        case PropertyType:
           part = new PropertyPart(node as Element, hole.name);
           break;
-        case HoleType.Text:
+        case TextType:
           part = splitTextPart(templateWalker, hole);
           break;
       }
 
       parts[holeIndex] = part;
     }
+  }
+
+  if (
+    parts[0] instanceof ChildNodePart &&
+    parts[0].node === fragment.firstChild
+  ) {
+    fragment.firstChild.before(document.createComment(''));
   }
 
   return new DOMBlock(fragment, parts);
@@ -137,4 +213,29 @@ function splitTextPart(treeWalker: TreeWalker, hole: Hole.TextHole): TextPart {
   }
   treeWalker.currentNode = currentNode;
   return part;
+}
+
+function isContinuousEvent(event: Event): boolean {
+  switch (event.type as keyof DocumentEventMap) {
+    case 'drag':
+    case 'dragenter':
+    case 'dragleave':
+    case 'dragover':
+    case 'mouseenter':
+    case 'mouseleave':
+    case 'mousemove':
+    case 'mouseout':
+    case 'mouseover':
+    case 'pointerenter':
+    case 'pointerleave':
+    case 'pointermove':
+    case 'pointerout':
+    case 'pointerover':
+    case 'scroll':
+    case 'touchmove':
+    case 'wheel':
+      return true;
+    default:
+      return false;
+  }
 }

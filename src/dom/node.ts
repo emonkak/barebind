@@ -1,5 +1,5 @@
-import { sequentialEqual } from './compare.js';
-import type { HostNode, VHostElement, VPrimitive, VTemplate } from './core.js';
+import { sequentialEqual } from '../compare.js';
+import type { HostNode, VHostElement, VPrimitive, VTemplate } from '../core.js';
 
 const CLASS_TOKEN_SEPARATOR_PATTERN = /\s+/;
 
@@ -34,7 +34,7 @@ export abstract class DOMNode implements HostNode {
     return null;
   }
 
-  get ref(): unknown {
+  get refNode(): unknown {
     return null;
   }
 
@@ -66,10 +66,19 @@ export abstract class DOMNode implements HostNode {
     _newProps: VHostElement['props'],
   ): void {}
 
+  /**
+   * @internal
+   */
   _remove(): void {}
 
+  /**
+   * @internal
+   */
   _mountBefore(_afterNode: ChildNode): void {}
 
+  /**
+   * @internal
+   */
   _moveBefore(_afterNode: ChildNode): void {}
 
   _invalidate(_child: DOMNode): void {
@@ -116,7 +125,7 @@ export class DOMBind extends DOMNode {
     return this._index;
   }
 
-  override get ref(): unknown {
+  override get refNode(): unknown {
     return this._parent instanceof DOMBlock
       ? (this._parent.parts[this._index]!.node ?? null)
       : null;
@@ -168,7 +177,7 @@ export class DOMBlock extends DOMNode {
     return this._parts;
   }
 
-  override get ref(): ChildNode[] {
+  override get refNode(): ChildNode[] {
     return collectChildNodes(this.firstNode, this.lastNode);
   }
 
@@ -204,9 +213,7 @@ export class DOMBlock extends DOMNode {
     _props: VTemplate['props'],
   ): void {
     for (const bind of this._binds) {
-      if (bind !== undefined) {
-        this._parts[bind.index]!.value = bind?.bindValue;
-      }
+      this._parts[bind!.index]!.value = bind!.bindValue;
     }
   }
 
@@ -216,27 +223,37 @@ export class DOMBlock extends DOMNode {
     _newElement: VTemplate['props'],
   ): void {
     for (const bind of this._binds) {
-      if (bind !== undefined) {
-        this._parts[bind.index]!.value = bind.bindValue;
-      }
+      this._parts[bind!.index]!.value = bind!.bindValue;
     }
   }
 
+  /**
+   * @internal
+   */
   override _mountBefore(afterNode: ChildNode): void {
     afterNode.before(this._fragment);
   }
 
+  /**
+   * @internal
+   */
   override _moveBefore(afterNode: ChildNode): void {
     for (const node of collectChildNodes(this.firstNode, this.lastNode)) {
       moveBefore.call(afterNode.parentNode, node, afterNode);
     }
   }
 
+  /**
+   * @internal
+   */
   override _remove(): void {
     this._fragment.append(...collectChildNodes(this.firstNode, this.lastNode));
     this._parent = null;
   }
 
+  /**
+   * @internal
+   */
   override _invalidate(child: DOMNode): void {
     if (child instanceof DOMBind) {
       this._parts[child.index]!.value = child.bindValue;
@@ -252,7 +269,7 @@ export class DOMPortal extends DOMNode {
     this._container = container;
   }
 
-  override get ref(): Element {
+  override get refNode(): Element {
     return this._container;
   }
 
@@ -289,8 +306,8 @@ export class DOMPrimitive extends DOMNode {
     return this._value;
   }
 
-  override get ref(): unknown {
-    return this._parent?.ref;
+  override get refNode(): unknown {
+    return this._parent?.refNode;
   }
 
   override prepareUpdate(
@@ -319,27 +336,29 @@ export class AttributePart extends DOMPart<Element> {
     this._name = name;
   }
 
+  get name(): string {
+    return this._name;
+  }
+
   protected _update(oldValue: unknown, newValue: unknown): void {
     if (this._name === 'class' && isObject(newValue)) {
-      let oldTokens = oldValue;
-      if (!isObject(oldTokens)) {
+      if (!isObject(oldValue)) {
         this._node.className = '';
-        oldTokens = {};
+        oldValue = {};
       }
       updateClass(
         this._node.classList,
-        oldTokens as ClassMap,
+        oldValue as ClassMap,
         newValue as ClassMap,
       );
     } else if (this._name === 'style' && isObject(newValue)) {
-      let oldProps = oldValue;
-      if (!isObject(oldProps)) {
+      if (!isObject(oldValue)) {
         (this._node as HTMLElement).style = '';
-        oldProps = {};
+        oldValue = {};
       }
       updateStyle(
         (this._node as HTMLElement).style,
-        oldProps as StyleMap,
+        oldValue as StyleMap,
         newValue as StyleMap,
       );
     } else if (newValue == null) {
@@ -378,7 +397,13 @@ export class ElementPart extends DOMPart<Element> {
     super(node);
   }
 
-  protected _update(_newValue: unknown): void {}
+  protected _update(newValue: unknown): void {
+    if (!isObject(newValue)) {
+      throw new TypeError(
+        'Ref values must be a RefCallback, RefObject, null or undefined.',
+      );
+    }
+  }
 }
 
 export class EventPart extends DOMPart<Element> implements EventListenerObject {
@@ -399,14 +424,14 @@ export class EventPart extends DOMPart<Element> implements EventListenerObject {
 
   protected _update(oldValue: unknown, newValue: unknown): void {
     if (!isEventListenerOrNillish(newValue)) {
-      throw new Error(
+      throw new TypeError(
         'Event values must be an EventListener, EventListenerObject, null or undefined.',
       );
     }
     if (
       oldValue == null ||
       newValue == null ||
-      !compareEventListenerOptions(
+      !areEventListenerOptionsEqual(
         newValue,
         oldValue as EventListenerOrEventListenerObject,
       )
@@ -429,6 +454,10 @@ export class LivePart extends DOMPart<Element> {
     this._name = name;
   }
 
+  get name(): string {
+    return this._name;
+  }
+
   protected _update(newValue: unknown): void {
     if ((this._node as any)[this._name] !== newValue) {
       (this._node as any)[this._name] = newValue;
@@ -444,6 +473,10 @@ export class PropertyPart extends DOMPart<Element> {
     this._name = name;
   }
 
+  get name(): string {
+    return this._name;
+  }
+
   protected _update(_oldValue: unknown, newValue: unknown): void {
     (this._node as any)[this._name] = newValue;
   }
@@ -457,6 +490,16 @@ export class TextPart extends DOMPart<Text> {
   protected _update(_oldValue: unknown, newValue: unknown): void {
     this._node.data = toStringOrEmpty(newValue);
   }
+}
+
+function areEventListenerOptionsEqual(
+  newListener: EventListenerOrEventListenerObject,
+  oldListener: EventListenerOrEventListenerObject,
+): boolean {
+  return sequentialEqual(
+    getEventListenerOptions(newListener),
+    getEventListenerOptions(oldListener),
+  );
 }
 
 function collectChildNodes(
@@ -477,16 +520,6 @@ function collectChildNodes(
   }
 
   return childNodes;
-}
-
-function compareEventListenerOptions(
-  newListener: EventListenerOrEventListenerObject,
-  oldListener: EventListenerOrEventListenerObject,
-): boolean {
-  return sequentialEqual(
-    getEventListenerOptions(newListener),
-    getEventListenerOptions(oldListener),
-  );
 }
 
 function getEventListenerOptions(

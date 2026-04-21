@@ -1,11 +1,9 @@
-export function areDepsChanged(
-  nextDeps: readonly unknown[] | null,
-  prevDeps: readonly unknown[] | null,
+export function areDependenciesChange(
+  oldDeps: readonly unknown[] | null | undefined,
+  newDeps: readonly unknown[] | null | undefined,
 ): boolean {
   return (
-    nextDeps === null ||
-    prevDeps === null ||
-    !sequentialEqual(nextDeps, prevDeps)
+    oldDeps == null || newDeps == null || !sequentialEqual(oldDeps, newDeps)
   );
 }
 

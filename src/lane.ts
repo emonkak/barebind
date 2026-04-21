@@ -58,7 +58,7 @@ export function getRenderLanes(options: UpdateOptions): Lanes {
     lanes |= TransitionLane1 << (options.transition % TransitionLength);
   }
 
-  return lanes > 0 ? lanes : UserVisibleLane;
+  return lanes || UserVisibleLane;
 }
 
 export function getTranstionIndex(lanes: Lanes): number {

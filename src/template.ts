@@ -1,6 +1,10 @@
-import { sequentialEqual } from '../compare.js';
-import type { Directive } from '../core.js';
-import { html, math, svg } from './template.js';
+import { sequentialEqual } from './compare.js';
+import { Bind, toElement, VNode, type VTemplate } from './core.js';
+
+export const html = createTemplate('html');
+export const svg = createTemplate('svg');
+export const math = createTemplate('math');
+export const text = createTemplate('textarea');
 
 const stringInterpolationCache = new WeakMap<
   readonly string[],
@@ -13,27 +17,36 @@ interface StringInterpolation {
   literalPositions: readonly number[];
 }
 
+export function createTemplate(
+  mode: VTemplate['props']['mode'],
+): (strings: readonly string[], ...children: unknown[]) => VTemplate {
+  return (strings, ...children) =>
+    new VNode(
+      strings,
+      {
+        mode,
+      },
+      children.map(
+        (child, index) => new VNode(Bind, { index }, [toElement(child)]),
+      ),
+    );
+}
+
 export class Partial {
   readonly strings: readonly string[];
 
   readonly exprs: readonly unknown[];
 
-  static html(
-    strings: readonly string[],
-    ...exprs: unknown[]
-  ): Directive.TemplateDirective {
+  static html(strings: readonly string[], ...exprs: unknown[]): VTemplate {
     const template = Partial.parse(strings, ...exprs);
     return html(template.strings, ...template.exprs);
   }
 
-  static literal(s: string): Partial {
-    return new Partial([s], []);
+  static literal(value: string): Partial {
+    return new Partial([value], []);
   }
 
-  static math(
-    strings: readonly string[],
-    ...exprs: unknown[]
-  ): Directive.TemplateDirective {
+  static math(strings: readonly string[], ...exprs: unknown[]): VTemplate {
     const template = Partial.parse(strings, ...exprs);
     return math(template.strings, ...template.exprs);
   }
@@ -94,10 +107,7 @@ export class Partial {
     return new Partial(interpolatedStrings, flattenedExprs);
   }
 
-  static svg(
-    strings: readonly string[],
-    ...exprs: unknown[]
-  ): Directive.TemplateDirective {
+  static svg(strings: readonly string[], ...exprs: unknown[]): VTemplate {
     const template = Partial.parse(strings, ...exprs);
     return svg(template.strings, ...template.exprs);
   }
