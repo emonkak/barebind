@@ -4,7 +4,6 @@ export const Bind = Symbol.for('barebind.Bind');
 export const Directive = Symbol.for('barebind.Directive');
 export const Fragment = Symbol.for('barebind.Fragment');
 export const Primitive = Symbol.for('barebind.Primitive');
-
 export const toElement = Symbol.for('barebind.toElement');
 
 // Mutation types
@@ -48,7 +47,6 @@ export interface HostAdapter {
     options?: SchedulerPostTaskOptions,
   ): Promise<T>;
   startViewTransition(callback: () => void): Promise<void>;
-  yieldToMain(): Promise<void>;
 }
 
 export interface HostNode {
@@ -97,6 +95,25 @@ export type Mutation =
       tree: RenderTree;
     };
 
+export interface Reconciler {
+  diff(oldTree: RenderRoot, element: VElement, scope: Scope): RenderRoot;
+  diff(oldTree: RenderChild, newElement: VElement, scope: Scope): RenderChild;
+  diff(oldTree: RenderTree, newElement: VElement, scope: Scope): RenderTree;
+  render(element: VElement, scope: Scope): RenderRoot;
+  render(
+    element: VElement,
+    scope: Scope,
+    index: number,
+    parent: RenderTree,
+  ): RenderChild;
+  render(
+    element: VElement,
+    scope: Scope,
+    index: number,
+    parent: RenderTree | null,
+  ): RenderTree;
+}
+
 export type RenderChild =
   | RenderChild.ComponentChild
   | RenderChild.DirectiveChild
@@ -113,7 +130,7 @@ export namespace RenderChild {
     cleanup: (() => void) | undefined;
   }
 
-  export interface ComponentChild<TProps = {}>
+  export interface ComponentChild<TProps = any>
     extends Pick<VComponent<TProps>, 'type' | 'props' | 'key'> {
     parent: RenderTree;
     children: RenderChild[];
@@ -171,7 +188,6 @@ export interface UpdateOptions
   extends Pick<SchedulerPostTaskOptions, 'delay' | 'priority'> {
   flushSync?: boolean;
   transition?: number;
-  triggerFlush?: boolean;
   viewTransition?: boolean;
 }
 
@@ -184,10 +200,12 @@ export interface UpdateScheduler {
   readonly flushLanes: Lanes;
   nextIdentifier(): string;
   nextTransition(): number;
-  schedule(
-    node: RenderChild.ComponentChild,
-    options?: UpdateOptions,
-  ): UpdateHandle;
+  schedule(unit: UpdateUnit, options?: UpdateOptions): UpdateHandle;
+}
+
+export interface UpdateUnit {
+  readonly scope: Scope;
+  prepare(reconciler: Reconciler): () => void;
 }
 
 export type VDirective<T = any> = VNode<
@@ -203,7 +221,7 @@ export type VElement = VDirective | VComponent | VFragment | VHostElement;
 
 export type VBind = VNode<typeof Bind, { index: number }, [VElement]>;
 
-export type VComponent<TProps = {}> = VNode<ComponentType<TProps>, TProps, []>;
+export type VComponent<TProps = any> = VNode<ComponentType<TProps>, TProps, []>;
 
 export type VFragment = VNode<typeof Fragment, {}, VElement[]>;
 
@@ -220,6 +238,29 @@ export type VTemplate = VNode<
   },
   VBind[]
 >;
+
+export class Ref<T> implements Renderable {
+  current: T;
+
+  constructor(current: T) {
+    this.current = current;
+    DEBUG: {
+      Object.seal(this);
+    }
+  }
+
+  [toElement](): VDirective<NonNullable<T>> {
+    return createDirective(
+      (instance) => {
+        this.current = instance as T;
+        return () => {
+          this.current = null as T;
+        };
+      },
+      [this],
+    );
+  }
+}
 
 export class VNode<TType, TProps, const TChildren extends VElement[]> {
   type: TType;
@@ -242,29 +283,6 @@ export class VNode<TType, TProps, const TChildren extends VElement[]> {
   }
 }
 
-export class Ref<T> implements Renderable {
-  current: T;
-
-  constructor(current: T) {
-    this.current = current;
-    DEBUG: {
-      Object.seal(this);
-    }
-  }
-
-  [toElement](): VDirective<T> {
-    return createDirective(
-      (instance) => {
-        this.current = instance as T;
-        return () => {
-          this.current = null as T;
-        };
-      },
-      [this],
-    );
-  }
-}
-
 export function createDirective<T>(
   setup: (instance: T) => (() => void) | undefined,
   deps?: unknown[] | null | undefined,
@@ -276,7 +294,7 @@ export function createPortal(child: unknown, container: Element): VPortal {
   return new VNode(container, {}, [wrap(child)]);
 }
 
-export function createScope(parent: Scope | null): Scope {
+export function createScope(parent: Scope | null = null): Scope {
   return {
     parent,
     level: (parent?.level ?? -1) + 1,
@@ -295,10 +313,10 @@ export function wrap(value: unknown): VElement {
         : new VNode(Primitive, { value }, []);
 }
 
-function isRenderable(value: any): value is Renderable {
-  return typeof value?.[toElement] === 'function';
-}
-
 function isIterable(value: any): value is Iterable<unknown> {
   return typeof value?.[Symbol.iterator] === 'function';
+}
+
+function isRenderable(value: any): value is Renderable {
+  return typeof value?.[toElement] === 'function';
 }

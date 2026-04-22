@@ -1,4 +1,4 @@
-import { createClientRoot, createComponent, html } from 'barebind';
+import { createComponent, DOMAdapter, html, Root, Runtime } from 'barebind';
 
 interface CountProps {
   initialCount?: number;
@@ -18,8 +18,15 @@ const Counter = createComponent<CountProps>(function Counter({
   }
 
   return html`
-    <button type="button" @click=${increment}>Count: ${count}</button>
+    <button
+      type="button"
+      @click=${increment}
+    >
+      Count: ${count}
+    </button>
   `;
 });
 
-createClientRoot(Counter({ initialCount: 100 }), document.body).mount();
+const runtime = new Runtime(new DOMAdapter());
+const root = new Root(document.body, runtime);
+root.render(Counter({ initialCount: 100 }));
