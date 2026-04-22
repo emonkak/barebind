@@ -681,22 +681,8 @@ function patch(oldTree: RenderTree, newTree: RenderTree): void {
     const oldChildren = oldTree.children;
     const newChildren = newTree.children;
 
-    for (let i = newChildren.length, l = oldChildren.length; i < l; i++) {
-      const child = oldChildren[i]!;
-      removeChild(getHostAncestor(child), child);
-    }
-
-    for (
-      let i = 0, l = Math.min(oldChildren.length, newChildren.length);
-      i < l;
-      i++
-    ) {
+    for (let i = 0, l = newChildren.length; i < l; i++) {
       patch(oldChildren[i]!, newChildren[i]!);
-    }
-
-    for (let i = oldChildren.length, l = newChildren.length; i < l; i++) {
-      const child = newChildren[i]!;
-      appendChild(newTree.hostNode, child, null);
     }
 
     newTree.hostNode.commitUpdate(
