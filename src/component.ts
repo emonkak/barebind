@@ -1,6 +1,6 @@
 import { areDependenciesChange } from './compare.js';
 import {
-  type BoundaryType,
+  type Boundary,
   type ComponentInstance,
   type ComponentType,
   createScope,
@@ -188,17 +188,13 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
   }
 
   inject<TInstance, TDefault = never>(
-    type: BoundaryType<TInstance, TDefault>,
+    type: Boundary<TInstance, TDefault>,
   ): TInstance | TDefault {
     let scope: Scope | null = this._origin?.scope ?? null;
     while (scope !== null) {
-      for (
-        let boundary = scope.boundary;
-        boundary !== null;
-        boundary = boundary.next
-      ) {
-        if (boundary.instance instanceof type) {
-          return boundary.instance;
+      for (const instance of scope.instances) {
+        if (instance instanceof type) {
+          return instance;
         }
       }
       scope = scope.parent;
@@ -212,12 +208,7 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
   }
 
   provide<T extends object>(instance: T): void {
-    if (this._origin !== null) {
-      this._origin.scope.boundary = {
-        instance,
-        next: this._origin.scope.boundary,
-      };
-    }
+    this._origin?.scope.instances.push(instance);
   }
 
   render(origin: RenderChild.ComponentChild<TProps>): VElement {
