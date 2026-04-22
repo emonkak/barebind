@@ -4,9 +4,9 @@ import {
   type ComponentInstance,
   type ComponentType,
   type Lanes,
+  Ref,
   type RenderChild,
   type Scope,
-  toElement,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
@@ -14,6 +14,7 @@ import {
   type VComponent,
   type VElement,
   VNode,
+  wrap,
 } from './core.js';
 import { RenderError } from './error.js';
 import { NoLanes } from './lane.js';
@@ -130,10 +131,6 @@ type InitialState<T> = (T extends Function ? never : T) | (() => T);
 
 type NextState<T> = (T extends Function ? never : T) | ((state: T) => T);
 
-interface RefObject<T> {
-  current: T;
-}
-
 interface StateOptions {
   passthrough?: boolean;
 }
@@ -237,7 +234,7 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
         Object.freeze(this._hooks);
       }
 
-      return toElement(returnValue);
+      return wrap(returnValue);
     } catch (error) {
       throw new RenderError(
         origin as RenderChild.ComponentChild<any>,
@@ -262,7 +259,10 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
     return this.useMemo(() => callback, deps);
   }
 
-  useEffect(setup: EffectSetup, deps?: readonly unknown[] | null): void {
+  useEffect(
+    setup: EffectSetup,
+    deps?: readonly unknown[] | null | undefined,
+  ): void {
     let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
@@ -414,8 +414,8 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
     ];
   }
 
-  useRef<T>(initialValue: T): RefObject<T> {
-    return this.useMemo(() => Object.seal({ current: initialValue }), []);
+  useRef<T>(initialValue: T): Ref<T> {
+    return this.useMemo(() => new Ref(initialValue), []);
   }
 
   useState<TState>(

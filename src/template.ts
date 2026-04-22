@@ -1,5 +1,5 @@
 import { sequentialEqual } from './compare.js';
-import { Bind, toElement, VNode, type VTemplate } from './core.js';
+import { Bind, VNode, type VTemplate, wrap } from './core.js';
 
 export const html = createTemplate('html');
 export const svg = createTemplate('svg');
@@ -26,9 +26,7 @@ export function createTemplate(
       {
         mode,
       },
-      children.map(
-        (child, index) => new VNode(Bind, { index }, [toElement(child)]),
-      ),
+      children.map((child, index) => new VNode(Bind, { index }, [wrap(child)])),
     );
 }
 

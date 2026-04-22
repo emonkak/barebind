@@ -1,15 +1,17 @@
-import { areDependenciesChange } from './compare.js';
 import { NoLanes } from './lane.js';
+
+export const Bind = Symbol.for('barebind.Bind');
+export const Directive = Symbol.for('barebind.Directive');
+export const Fragment = Symbol.for('barebind.Fragment');
+export const Primitive = Symbol.for('barebind.Primitive');
+
+export const toElement = Symbol.for('barebind.toElement');
 
 // Mutation types
 export const InsertType = 0;
 export const UpdateType = 1;
 export const UpdateAndMoveType = 2;
 export const RemoveType = 3;
-
-export const Bind = Symbol('Bind');
-export const Fragment = Symbol('Fragment');
-export const Primitive = Symbol('Primitive');
 
 export interface Boundary<T extends object = object> {
   instance: T;
@@ -50,7 +52,7 @@ export interface HostAdapter {
 }
 
 export interface HostNode {
-  get refNode(): unknown;
+  get refInstance(): unknown;
   prepareUpdate(
     type: VHostElement['type'],
     oldProps: VHostElement['props'],
@@ -97,10 +99,20 @@ export type Mutation =
 
 export type RenderChild =
   | RenderChild.ComponentChild
+  | RenderChild.DirectiveChild
   | RenderChild.FragmentChild
   | RenderChild.HostChild;
 
 export namespace RenderChild {
+  export interface DirectiveChild
+    extends Pick<VDirective, 'type' | 'props' | 'key'> {
+    parent: RenderTree;
+    children: RenderChild[];
+    index: number;
+    dirty: boolean;
+    cleanup: (() => void) | undefined;
+  }
+
   export interface ComponentChild<TProps = {}>
     extends Pick<VComponent<TProps>, 'type' | 'props' | 'key'> {
     parent: RenderTree;
@@ -127,17 +139,18 @@ export namespace RenderChild {
   }
 }
 
-export interface RenderRoot {
-  type: VPortal['type'];
-  props: VPortal['props'];
-  key: VPortal['key'];
-  children: RenderChild[];
-  hostNode: HostNode;
-  index: number;
+export interface RenderRoot extends Pick<VPortal, 'type' | 'props' | 'key'> {
   parent: null;
+  children: RenderChild[];
+  index: number;
+  hostNode: HostNode;
 }
 
 export type RenderTree = RenderRoot | RenderChild;
+
+export interface Renderable {
+  [toElement](): VElement;
+}
 
 export interface Scope {
   parent: Scope | null;
@@ -177,7 +190,16 @@ export interface UpdateScheduler {
   ): UpdateHandle;
 }
 
-export type VElement = VComponent | VFragment | VHostElement;
+export type VDirective<T = any> = VNode<
+  typeof Directive,
+  {
+    setup: (instance: T) => (() => void) | undefined;
+    deps: unknown[] | null | undefined;
+  },
+  []
+>;
+
+export type VElement = VDirective | VComponent | VFragment | VHostElement;
 
 export type VBind = VNode<typeof Bind, { index: number }, [VElement]>;
 
@@ -210,6 +232,9 @@ export class VNode<TType, TProps, const TChildren extends VElement[]> {
     this.props = props;
     this.children = children;
     this.key = key;
+    DEBUG: {
+      Object.freeze(this);
+    }
   }
 
   withKey(key: unknown): VNode<TType, TProps, TChildren> {
@@ -217,8 +242,38 @@ export class VNode<TType, TProps, const TChildren extends VElement[]> {
   }
 }
 
+export class Ref<T> implements Renderable {
+  current: T;
+
+  constructor(current: T) {
+    this.current = current;
+    DEBUG: {
+      Object.seal(this);
+    }
+  }
+
+  [toElement](): VDirective<T> {
+    return createDirective(
+      (instance) => {
+        this.current = instance as T;
+        return () => {
+          this.current = null as T;
+        };
+      },
+      [this],
+    );
+  }
+}
+
+export function createDirective<T>(
+  setup: (instance: T) => (() => void) | undefined,
+  deps?: unknown[] | null | undefined,
+): VDirective<T> {
+  return new VNode(Directive, { setup, deps }, []);
+}
+
 export function createPortal(child: unknown, container: Element): VPortal {
-  return new VNode(container, {}, [toElement(child)]);
+  return new VNode(container, {}, [wrap(child)]);
 }
 
 export function createScope(parent: Scope | null): Scope {
@@ -230,12 +285,18 @@ export function createScope(parent: Scope | null): Scope {
   };
 }
 
-export function toElement(value: unknown): VElement {
+export function wrap(value: unknown): VElement {
   return value instanceof VNode
     ? value
-    : typeof value === 'object' && isIterable(value)
-      ? new VNode(Fragment, {}, Array.from(value, toElement))
-      : new VNode(Primitive, { value }, []);
+    : isRenderable(value)
+      ? value[toElement]()
+      : typeof value === 'object' && isIterable(value)
+        ? new VNode(Fragment, {}, Array.from(value, wrap))
+        : new VNode(Primitive, { value }, []);
+}
+
+function isRenderable(value: any): value is Renderable {
+  return typeof value?.[toElement] === 'function';
 }
 
 function isIterable(value: any): value is Iterable<unknown> {

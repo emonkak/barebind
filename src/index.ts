@@ -4,6 +4,10 @@ export {
   type RenderContext,
   type Usable,
 } from './component.js';
+export {
+  createDirective,
+  createPortal,
+} from './core.js';
 export { DOMAdapter } from './dom/adapter.js';
 export { DOMRenderError } from './dom/error.js';
 export { createRoot, Root } from './dom/root.js';
