@@ -1,7 +1,4 @@
-import type { VElement } from '../core.js';
-import { nameOf } from '../debug.js';
 import { annotateAttribute, annotateNode, generateNodeFrame } from './debug.js';
-import type { DOMPart } from './node.js';
 
 export class DOMRenderError extends Error {
   readonly node: Node;
@@ -32,20 +29,5 @@ export class DOMRenderError extends Error {
   constructor(node: Node, message: string, options?: ErrorOptions) {
     super(message, options);
     this.node = node;
-  }
-}
-
-export function ensurePartType<
-  TPartType extends { new (...args: never[]): DOMPart },
->(
-  expectedPartType: TPartType,
-  element: VElement,
-  part: DOMPart,
-): asserts part is InstanceType<TPartType> {
-  if (!(part instanceof expectedPartType)) {
-    throw DOMRenderError.fromNode(
-      (part as DOMPart).node,
-      `${nameOf(element.type)} must be used in ${expectedPartType.name}Part.`,
-    );
   }
 }
