@@ -76,6 +76,9 @@ export class Runtime implements UpdateScheduler {
       return this.render(newElement, oldTree.index, oldTree.parent, scope);
     } else if (typeof newElement.type === 'function') {
       if (
+        ((oldTree as RenderChild.ComponentChild).scope.pendingLanes &
+          this.flushLanes) ===
+          NoLanes &&
         newElement.type.arePropsEqual(
           (oldTree as RenderChild.ComponentChild).props,
           newElement.props,
