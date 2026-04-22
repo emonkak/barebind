@@ -12,12 +12,7 @@ export const UpdateType = 1;
 export const UpdateAndMoveType = 2;
 export const RemoveType = 3;
 
-export interface Boundary<T extends object = object> {
-  instance: T;
-  next: Boundary<object> | null;
-}
-
-export interface BoundaryType<TInstance, TDefault> {
+export interface Boundary<TInstance, TDefault> {
   new (...args: never[]): TInstance;
   getDefault?(): TDefault;
 }
@@ -172,7 +167,7 @@ export interface Renderable {
 export interface Scope {
   parent: Scope | null;
   level: number;
-  boundary: Boundary | null;
+  instances: object[];
   pendingLanes: Lanes;
 }
 
@@ -298,7 +293,7 @@ export function createScope(parent: Scope | null = null): Scope {
   return {
     parent,
     level: (parent?.level ?? -1) + 1,
-    boundary: null,
+    instances: [],
     pendingLanes: NoLanes,
   };
 }
