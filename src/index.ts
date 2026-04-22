@@ -7,10 +7,11 @@ export {
 export {
   createDirective,
   createPortal,
+  toElement,
 } from './core.js';
 export { DOMAdapter } from './dom/adapter.js';
 export { DOMRenderError } from './dom/error.js';
-export { createRoot, Root } from './dom/root.js';
+export { Root } from './dom/root.js';
 export { RenderError } from './error.js';
 export { Runtime } from './runtime.js';
 export { html, math, Partial, svg, text } from './template.js';

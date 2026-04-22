@@ -1,4 +1,4 @@
-import type { RenderChild, RenderTree, VElement } from './core.js';
+import type { RenderChild, RenderTree } from './core.js';
 
 export function formatComponentStack(
   componentStack: RenderChild.ComponentChild[],
@@ -28,15 +28,4 @@ export function getComponentStack(
   } while (current !== null);
 
   return componentStack;
-}
-
-export function nameOf(type: VElement['type']): string {
-  switch (typeof type) {
-    case 'function':
-      return type.name;
-    case 'symbol':
-      return type.description!;
-    default:
-      return type instanceof Element ? type.nodeName : 'Template';
-  }
 }

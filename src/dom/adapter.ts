@@ -114,14 +114,6 @@ export class DOMAdapter implements HostAdapter {
       ? document.startViewTransition(callback).updateCallbackDone
       : Promise.resolve().then(callback);
   }
-
-  yieldToMain(): Promise<void> {
-    return typeof window.scheduler?.yield === 'function'
-      ? scheduler.yield()
-      : new Promise((resolve) => {
-          setTimeout(resolve);
-        });
-  }
 }
 
 function generateUniqueIdentifier(length: number): string {
@@ -132,6 +124,31 @@ function generateUniqueIdentifier(length: number): string {
         ? String.fromCharCode(0x61 + (byte % 26))
         : (byte % 36).toString(36),
   ).join('');
+}
+
+function isContinuousEvent(event: Event): boolean {
+  switch (event.type as keyof DocumentEventMap) {
+    case 'drag':
+    case 'dragenter':
+    case 'dragleave':
+    case 'dragover':
+    case 'mouseenter':
+    case 'mouseleave':
+    case 'mousemove':
+    case 'mouseout':
+    case 'mouseover':
+    case 'pointerenter':
+    case 'pointerleave':
+    case 'pointermove':
+    case 'pointerout':
+    case 'pointerover':
+    case 'scroll':
+    case 'touchmove':
+    case 'wheel':
+      return true;
+    default:
+      return false;
+  }
 }
 
 function renderTemplate(template: DOMTemplate): DOMBlock {
@@ -189,13 +206,6 @@ function renderTemplate(template: DOMTemplate): DOMBlock {
     }
   }
 
-  if (
-    parts[0] instanceof ChildNodePart &&
-    parts[0].node === fragment.firstChild
-  ) {
-    fragment.firstChild.before(document.createComment(''));
-  }
-
   return new DOMBlock(fragment, parts);
 }
 
@@ -213,29 +223,4 @@ function splitTextPart(treeWalker: TreeWalker, hole: Hole.TextHole): TextPart {
   }
   treeWalker.currentNode = currentNode;
   return part;
-}
-
-function isContinuousEvent(event: Event): boolean {
-  switch (event.type as keyof DocumentEventMap) {
-    case 'drag':
-    case 'dragenter':
-    case 'dragleave':
-    case 'dragover':
-    case 'mouseenter':
-    case 'mouseleave':
-    case 'mousemove':
-    case 'mouseout':
-    case 'mouseover':
-    case 'pointerenter':
-    case 'pointerleave':
-    case 'pointermove':
-    case 'pointerout':
-    case 'pointerover':
-    case 'scroll':
-    case 'touchmove':
-    case 'wheel':
-      return true;
-    default:
-      return false;
-  }
 }

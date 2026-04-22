@@ -4,11 +4,11 @@ import {
   Directive,
   Fragment,
   type HostAdapter,
-  type HostNode,
   type HostTree,
   InsertType,
   type Lanes,
   type Mutation,
+  type Reconciler,
   RemoveType,
   type RenderChild,
   type RenderRoot,
@@ -20,10 +20,12 @@ import {
   type UpdateResult,
   type UpdateScheduler,
   UpdateType,
+  type UpdateUnit,
   type VElement,
 } from './core.js';
 import {
   getHighestPriorityLane,
+  getPriorityFromLanes,
   getRenderLanes,
   NoLanes,
   ViewTransitionLane,
@@ -33,11 +35,11 @@ import { PriorityQueue } from './queue.js';
 interface Update {
   id: number;
   lanes: Lanes;
-  origin: RenderChild.ComponentChild;
+  unit: UpdateUnit;
   controller: PromiseWithResolvers<UpdateResult>;
 }
 
-export class Runtime implements UpdateScheduler {
+export class Runtime implements Reconciler, UpdateScheduler {
   private readonly _adapter: HostAdapter;
   private readonly _updateQueue: PriorityQueue<Update> = new PriorityQueue(
     compareUpdates,
@@ -56,24 +58,12 @@ export class Runtime implements UpdateScheduler {
     return this._flushLanes;
   }
 
-  diff(oldTree: RenderRoot, element: VElement): RenderRoot;
-  diff(
-    oldTree: RenderChild,
-    newElement: VElement,
-    scope: Scope | null,
-  ): RenderChild;
-  diff(
-    oldTree: RenderTree,
-    newElement: VElement,
-    scope: Scope | null,
-  ): RenderTree;
-  diff(
-    oldTree: RenderTree,
-    newElement: VElement,
-    scope: Scope | null = null,
-  ): RenderTree {
+  diff(oldTree: RenderRoot, element: VElement, scope: Scope): RenderRoot;
+  diff(oldTree: RenderChild, newElement: VElement, scope: Scope): RenderChild;
+  diff(oldTree: RenderTree, newElement: VElement, scope: Scope): RenderTree;
+  diff(oldTree: RenderTree, newElement: VElement, scope: Scope): RenderTree {
     if (oldTree.type !== newElement.type || oldTree.key !== newElement.key) {
-      return this.render(newElement, oldTree.index, oldTree.parent, scope);
+      return this.render(newElement, scope, oldTree.index, oldTree.parent);
     } else if (typeof newElement.type === 'function') {
       if (
         ((oldTree as RenderChild.ComponentChild).scope.pendingLanes &
@@ -96,7 +86,7 @@ export class Runtime implements UpdateScheduler {
       newTree.children[0] = this.diff(
         oldTree.children[0]!,
         returnElement,
-        Object.freeze(newTree.scope),
+        newTree.scope,
       );
       return newTree;
     } else if (newElement.type === Directive) {
@@ -113,8 +103,8 @@ export class Runtime implements UpdateScheduler {
       const children = this._diffChildren(
         (oldTree as RenderChild.FragmentChild).children.slice(),
         newElement.children,
-        oldTree.parent!,
         scope,
+        oldTree.parent!,
         mutations,
       );
       return {
@@ -145,56 +135,6 @@ export class Runtime implements UpdateScheduler {
     }
   }
 
-  async flush(): Promise<void> {
-    let update: Update | undefined;
-
-    while ((update = this._updateQueue.peek()) !== undefined) {
-      const { controller, origin, lanes } = update;
-
-      if ((this._flushLanes & lanes) !== lanes) {
-        break;
-      }
-
-      try {
-        if ((origin.scope.pendingLanes & lanes) === NoLanes) {
-          controller.resolve({ status: 'skipped' });
-          continue;
-        }
-
-        const newOrigin: RenderChild.ComponentChild = {
-          ...origin,
-          scope: createScope(origin.scope.parent),
-        };
-        const returnElement = newOrigin.instance.render(newOrigin);
-
-        newOrigin.children[0] = this.diff(
-          newOrigin.children[0]!,
-          returnElement,
-          Object.freeze(newOrigin.scope),
-        );
-
-        const commit = () => {
-          patch(origin, newOrigin);
-          afterCommit(newOrigin);
-        };
-
-        if (lanes & ViewTransitionLane) {
-          await this._adapter.startViewTransition(commit);
-        } else {
-          await this._adapter.requestCommit(commit);
-        }
-
-        controller.resolve({ status: 'done' });
-      } catch (error) {
-        controller.reject(error);
-      } finally {
-        this._updateQueue.dequeue();
-      }
-    }
-
-    this._flushLanes = NoLanes;
-  }
-
   nextIdentifier(): string {
     return this._adapter.getIdentifier() + '-' + this._identifierCount++;
   }
@@ -203,24 +143,24 @@ export class Runtime implements UpdateScheduler {
     return this._transitionCount++;
   }
 
-  render(element: VElement): RenderRoot;
+  render(element: VElement, scope: Scope): RenderRoot;
   render(
     element: VElement,
+    scope: Scope,
     index: number,
     parent: RenderTree,
-    scope: Scope | null,
   ): RenderChild;
   render(
     element: VElement,
+    scope: Scope,
     index: number,
     parent: RenderTree | null,
-    scope: Scope | null,
   ): RenderTree;
   render(
     element: VElement,
+    scope: Scope,
     index: number = 0,
     parent: RenderTree | null = null,
-    scope: Scope | null = null,
   ): RenderTree {
     if (typeof element.type === 'function') {
       const tree: RenderChild.ComponentChild = {
@@ -232,12 +172,7 @@ export class Runtime implements UpdateScheduler {
         scope: createScope(scope),
       };
       const returnElement = tree.instance.render(tree);
-      tree.children[0] = this.render(
-        returnElement,
-        0,
-        tree,
-        Object.freeze(tree.scope),
-      );
+      tree.children[0] = this.render(returnElement, tree.scope, 0, tree);
       return tree;
     } else if (element.type === Directive) {
       return {
@@ -257,7 +192,7 @@ export class Runtime implements UpdateScheduler {
         mutations: [],
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
-        tree.children[i] = this.render(element.children[i]!, i, tree, scope);
+        tree.children[i] = this.render(element.children[i]!, scope, i, tree);
       }
       return tree;
     } else {
@@ -269,23 +204,13 @@ export class Runtime implements UpdateScheduler {
         hostNode: this._adapter.renderElement(element),
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
-        tree.children[i] = this.render(element.children[i]!, i, tree, scope);
+        tree.children[i] = this.render(element.children[i]!, scope, i, tree);
       }
       return tree;
     }
   }
 
-  schedule(
-    origin: RenderChild.ComponentChild,
-    options: UpdateOptions = {},
-  ): UpdateHandle {
-    options.priority ??=
-      options.transition !== undefined || options.delay !== undefined
-        ? 'background'
-        : options.flushSync
-          ? 'user-blocking'
-          : this._adapter.getTaskPriority();
-
+  schedule(unit: UpdateUnit, options: UpdateOptions = {}): UpdateHandle {
     const controller = Promise.withResolvers<UpdateResult>();
     const id = this._updateCount++;
     const lanes = getRenderLanes(options);
@@ -293,25 +218,30 @@ export class Runtime implements UpdateScheduler {
     this._updateQueue.enqueue({
       id,
       lanes,
-      origin,
+      unit,
       controller,
     });
 
-    if (
-      (this._pendingLanes & lanes) !== lanes &&
-      (this._flushLanes & lanes) !== lanes
-    ) {
-      this._adapter.requestCallback(() => {
-        const shouldFlush =
-          (options.triggerFlush ?? true) && this._flushLanes === NoLanes;
-        this._pendingLanes &= ~lanes;
-        this._flushLanes |= lanes;
-        if (shouldFlush) {
-          this.flush();
-        }
-      }, options);
+    if (((this._pendingLanes | this._flushLanes) & lanes) !== lanes) {
+      const priority =
+        options.priority ??
+        getPriorityFromLanes(lanes) ??
+        this._adapter.getTaskPriority();
+      this._adapter.requestCallback(
+        () => {
+          const shouldFlush = this._flushLanes === NoLanes;
+          this._pendingLanes &= ~lanes;
+          this._flushLanes |= lanes;
+          if (shouldFlush) {
+            this._flush();
+          }
+        },
+        { ...options, priority },
+      );
       this._pendingLanes |= lanes;
     }
+
+    unit.scope.pendingLanes |= lanes;
 
     return {
       id,
@@ -323,8 +253,8 @@ export class Runtime implements UpdateScheduler {
   private _diffChildren(
     oldChildren: (RenderChild | undefined)[],
     newElements: VElement[],
+    scope: Scope,
     parent: RenderTree,
-    scope: Scope | null,
     mutations: Mutation[],
   ): RenderChild[] {
     const oldKeys = oldChildren.map((tree) => tree!.key);
@@ -355,9 +285,9 @@ export class Runtime implements UpdateScheduler {
         while (newHead <= newTail) {
           const tree = this.render(
             newElements[newHead]!,
+            scope,
             newHead,
             parent,
-            scope,
           );
           mutations.push({
             type: InsertType,
@@ -473,9 +403,9 @@ export class Runtime implements UpdateScheduler {
           } else {
             const tree = this.render(
               newElements[newTail]!,
+              scope,
               newTail,
               parent,
-              scope,
             );
             mutations.push({
               type: InsertType,
@@ -492,72 +422,42 @@ export class Runtime implements UpdateScheduler {
 
     return newChildren;
   }
-}
 
-export function mount(tree: RenderRoot): void {
-  for (const child of tree.children) {
-    appendChild(tree.hostNode, child, null);
-  }
-  tree.hostNode.commitMount(tree.type, tree.props);
-  afterCommit(tree);
-}
+  private async _flush(): Promise<void> {
+    let update: Update | undefined;
 
-export function unmount(tree: RenderRoot): void {
-  beforeRemove(tree);
-  for (const child of tree.children) {
-    removeSubtree(tree.hostNode, child);
-  }
-}
+    while ((update = this._updateQueue.peek()) !== undefined) {
+      const { controller, lanes, unit } = update;
 
-export function update(oldTree: RenderTree, newTree: RenderTree) {
-  patch(oldTree, newTree);
-  afterCommit(newTree);
-}
+      if ((this._flushLanes & lanes) !== lanes) {
+        break;
+      }
 
-function afterCommit(tree: RenderTree): void {
-  if (typeof tree.type === 'function') {
-    tree.instance.afterCommit();
-  } else if (tree.type === Directive) {
-    if (tree.dirty) {
-      tree.cleanup?.();
-      tree.cleanup = tree.props.setup(getHostAncestor(tree).refInstance);
-      tree.dirty = false;
+      try {
+        if ((unit.scope.pendingLanes & lanes) === NoLanes) {
+          controller.resolve({ status: 'skipped' });
+          continue;
+        }
+
+        const commit = unit.prepare(this);
+
+        unit.scope.pendingLanes &= ~this._flushLanes;
+
+        if (lanes & ViewTransitionLane) {
+          await this._adapter.startViewTransition(commit);
+        } else {
+          await this._adapter.requestCommit(commit);
+        }
+
+        controller.resolve({ status: 'done' });
+      } catch (error) {
+        controller.reject(error);
+      } finally {
+        this._updateQueue.dequeue();
+      }
     }
-  }
 
-  for (const descendant of tree.children) {
-    afterCommit(descendant);
-  }
-}
-
-function appendChild(
-  parentNode: HostNode,
-  child: RenderTree,
-  afterNode: HostNode | null,
-): void {
-  if (isHostTree(child)) {
-    parentNode.appendChild(child.hostNode, afterNode);
-    for (const descendant of child.children) {
-      appendChild(child.hostNode, descendant, null);
-    }
-    child.hostNode.commitMount(child.type, child.props);
-  } else {
-    for (const descendant of child.children) {
-      appendChild(parentNode, descendant, afterNode);
-    }
-  }
-}
-
-function beforeRemove(tree: RenderTree): void {
-  if (typeof tree.type === 'function') {
-    tree.instance.beforeRemove();
-  } else if (tree.type === Directive) {
-    tree.cleanup?.();
-    tree.cleanup = undefined;
-  }
-
-  for (const child of tree.children) {
-    beforeRemove(child);
+    this._flushLanes = NoLanes;
   }
 }
 
@@ -574,139 +474,9 @@ function buildKeyToIndexMap<T>(
 }
 
 function compareUpdates(x: Update, y: Update): number {
-  const p1 = getHighestPriorityLane(x.lanes);
-  const p2 = getHighestPriorityLane(y.lanes);
-  return p1 !== p2 ? p1 - p2 : x.origin.scope.level - y.origin.scope.level;
-}
-
-function getHostAncestor(tree: RenderTree): HostNode {
-  while (tree.parent !== null) {
-    if (isHostTree(tree.parent)) {
-      return tree.parent.hostNode;
-    }
-    tree = tree.parent;
-  }
-  return tree.hostNode;
-}
-
-function getHostDescendant(tree: RenderTree): HostNode | null {
-  if (isHostTree(tree)) {
-    return tree.hostNode;
-  }
-  for (const child of tree.children) {
-    const hostNode = getHostDescendant(child);
-    if (hostNode !== null) {
-      return hostNode;
-    }
-  }
-  return nextHostSibling(tree);
-}
-
-function isHostTree(tree: RenderTree): tree is HostTree {
-  return typeof tree.type !== 'function' && tree.type !== Fragment;
-}
-
-function moveChild(
-  parentNode: HostNode,
-  child: RenderTree,
-  afterNode: HostNode | null,
-): void {
-  if (isHostTree(child)) {
-    parentNode.moveChild(child.hostNode, afterNode);
-  } else {
-    for (const descendant of child.children) {
-      moveChild(parentNode, descendant, afterNode);
-    }
-  }
-}
-
-function nextHostSibling(child: RenderTree): HostNode | null {
-  while (child.parent !== null && !isHostTree(child.parent)) {
-    const parent = child.parent;
-    for (let i = child.index + 1, l = parent.children.length; i < l; i++) {
-      const hostNode = getHostDescendant(parent.children[i]!);
-      if (hostNode !== null) {
-        return hostNode;
-      }
-    }
-    child = child.parent;
-  }
-  return null;
-}
-
-function patch(oldTree: RenderTree, newTree: RenderTree): void {
-  if (oldTree === newTree) {
-    return;
-  }
-  if (oldTree.type !== newTree.type || oldTree.key !== newTree.key) {
-    removeChild(getHostAncestor(oldTree), oldTree);
-    appendChild(getHostAncestor(newTree), newTree, nextHostSibling(oldTree));
-  } else if (typeof newTree.type === 'function') {
-    patch(oldTree.children[0]!, newTree.children[0]!);
-  } else if (newTree.type === Directive) {
-    // skip
-  } else if (newTree.type === Fragment) {
-    const parentNode = getHostAncestor(newTree.parent);
-
-    for (const mutation of newTree.mutations) {
-      switch (mutation.type) {
-        case InsertType:
-          appendChild(
-            parentNode,
-            mutation.tree,
-            mutation.afterTree !== undefined
-              ? getHostDescendant(mutation.afterTree)
-              : null,
-          );
-          break;
-        case UpdateType:
-          patch(mutation.oldTree, mutation.newTree);
-          break;
-        case UpdateAndMoveType:
-          moveChild(
-            parentNode,
-            mutation.newTree,
-            mutation.afterTree !== undefined
-              ? getHostDescendant(mutation.afterTree)
-              : null,
-          );
-          patch(mutation.oldTree, mutation.newTree);
-          break;
-        case RemoveType:
-          removeChild(parentNode, mutation.tree);
-          break;
-      }
-    }
-  } else {
-    const oldChildren = oldTree.children;
-    const newChildren = newTree.children;
-
-    for (let i = 0, l = newChildren.length; i < l; i++) {
-      patch(oldChildren[i]!, newChildren[i]!);
-    }
-
-    newTree.hostNode.commitUpdate(
-      newTree.type,
-      (oldTree as HostTree).props,
-      newTree.props,
-    );
-  }
-  if (newTree.parent !== null) {
-    newTree.parent.children[newTree.index] = newTree;
-  }
-}
-
-function removeChild(parentNode: HostNode, child: RenderTree): void {
-  beforeRemove(child);
-  removeSubtree(parentNode, child);
-}
-
-function removeSubtree(parentNode: HostNode, child: RenderTree): void {
-  if (isHostTree(child)) {
-    parentNode.removeChild(child.hostNode);
-  } else {
-    for (const descendant of child.children) {
-      removeSubtree(parentNode, descendant);
-    }
-  }
+  const priority1 = getHighestPriorityLane(x.lanes);
+  const priority2 = getHighestPriorityLane(y.lanes);
+  return priority1 !== priority2
+    ? priority1 - priority2
+    : x.unit.scope.level - y.unit.scope.level;
 }

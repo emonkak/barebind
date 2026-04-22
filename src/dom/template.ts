@@ -1,6 +1,8 @@
 import type { TemplateMode } from '../core.js';
 import { DOMRenderError } from './error.js';
 
+const TEMPLATE_PREFIX = '<!---->';
+
 const PLACEHOLDER_PATTERN = /^[0-9a-z_-]+$/;
 
 const LEADING_NEWLINE_PATTERN = /^\s*\n/;
@@ -90,7 +92,7 @@ export class DOMTemplate {
   ) {
     DEBUG: {
       if (!PLACEHOLDER_PATTERN.test(placeholder)) {
-        throw new TypeError(
+        throw new Error(
           `Placeholders must match pattern ${PLACEHOLDER_PATTERN.source}, but got "${placeholder}".`,
         );
       }
@@ -98,7 +100,7 @@ export class DOMTemplate {
 
     const element = document.createElement('template');
     const marker = createMarker(placeholder);
-    const html = stripWhitespaces(strings.join(marker));
+    const html = TEMPLATE_PREFIX + stripWhitespaces(strings.join(marker));
 
     if (mode === 'html') {
       element.setHTMLUnsafe(html);

@@ -81,6 +81,9 @@ export abstract class DOMNode implements HostNode {
    */
   _moveBefore(_afterNode: ChildNode): void {}
 
+  /**
+   * @internal
+   */
   _invalidate(_child: DOMNode): void {
     this._parent?._invalidate(this);
   }
@@ -336,10 +339,6 @@ export class AttributePart extends DOMPart<Element> {
     this._name = name;
   }
 
-  get name(): string {
-    return this._name;
-  }
-
   protected _update(oldValue: unknown, newValue: unknown): void {
     if (this._name === 'class' && isObject(newValue)) {
       if (!isObject(oldValue)) {
@@ -377,17 +376,15 @@ export class ChildNodePart extends DOMPart<Comment> {
   }
 
   protected _update(oldValue: unknown, newValue: unknown): void {
-    if (oldValue !== newValue) {
-      if (oldValue instanceof DOMNode) {
-        oldValue._remove();
-      } else {
-        this._node.data = '';
-      }
-      if (newValue instanceof DOMNode) {
-        newValue._mountBefore(this._node);
-      } else {
-        this._node.data = toStringOrEmpty(newValue);
-      }
+    if (oldValue instanceof DOMNode) {
+      oldValue._remove();
+    } else {
+      this._node.data = '';
+    }
+    if (newValue instanceof DOMNode) {
+      newValue._mountBefore(this._node);
+    } else {
+      this._node.data = toStringOrEmpty(newValue);
     }
   }
 }
@@ -397,13 +394,7 @@ export class ElementPart extends DOMPart<Element> {
     super(node);
   }
 
-  protected _update(newValue: unknown): void {
-    if (!isObject(newValue)) {
-      throw new TypeError(
-        'Ref values must be a RefCallback, RefObject, null or undefined.',
-      );
-    }
-  }
+  protected _update(_newValue: unknown): void {}
 }
 
 export class EventPart extends DOMPart<Element> implements EventListenerObject {
@@ -423,7 +414,7 @@ export class EventPart extends DOMPart<Element> implements EventListenerObject {
   }
 
   protected _update(oldValue: unknown, newValue: unknown): void {
-    if (!isEventListenerOrNillish(newValue)) {
+    if (!isEventListenerOrNullable(newValue)) {
       throw new TypeError(
         'Event values must be an EventListener, EventListenerObject, null or undefined.',
       );
@@ -454,10 +445,6 @@ export class LivePart extends DOMPart<Element> {
     this._name = name;
   }
 
-  get name(): string {
-    return this._name;
-  }
-
   protected _update(newValue: unknown): void {
     if ((this._node as any)[this._name] !== newValue) {
       (this._node as any)[this._name] = newValue;
@@ -471,10 +458,6 @@ export class PropertyPart extends DOMPart<Element> {
   constructor(node: Element, name: string) {
     super(node);
     this._name = name;
-  }
-
-  get name(): string {
-    return this._name;
   }
 
   protected _update(_oldValue: unknown, newValue: unknown): void {
@@ -530,7 +513,7 @@ function getEventListenerOptions(
   return [capture, once, passive, signal];
 }
 
-function isEventListenerOrNillish(
+function isEventListenerOrNullable(
   value: any,
 ): value is EventListenerOrEventListenerObject & AddEventListenerOptions {
   return (

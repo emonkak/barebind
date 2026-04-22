@@ -3,7 +3,9 @@ import {
   type BoundaryType,
   type ComponentInstance,
   type ComponentType,
+  createScope,
   type Lanes,
+  type Reconciler,
   Ref,
   type RenderChild,
   type Scope,
@@ -11,6 +13,7 @@ import {
   type UpdateOptions,
   type UpdateResult,
   type UpdateScheduler,
+  type UpdateUnit,
   type VComponent,
   type VElement,
   VNode,
@@ -18,6 +21,7 @@ import {
 } from './core.js';
 import { RenderError } from './error.js';
 import { NoLanes } from './lane.js';
+import { patch } from './tree.js';
 
 const FinalizerType = 0;
 const EffectType = 1;
@@ -106,6 +110,7 @@ namespace Hook {
     setup: EffectSetup;
     cleanup: EffectCleanup | void;
     deps: readonly unknown[] | null | undefined;
+    dirty: boolean;
   }
 
   export interface IdHook {
@@ -152,9 +157,10 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
 
   afterCommit(): void {
     for (const hook of this._hooks) {
-      if (hook.type === EffectType) {
+      if (hook.type === EffectType && hook.dirty) {
         hook.cleanup?.();
         hook.cleanup = hook.setup();
+        hook.dirty = false;
       }
     }
   }
@@ -178,12 +184,7 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
         }),
       };
     }
-    const handle = this._scheduler.schedule(
-      this._origin as RenderChild.ComponentChild<any>,
-      options,
-    );
-    this._origin.scope.pendingLanes |= handle.lanes;
-    return handle;
+    return this._scheduler.schedule(new UpdateComponent(this._origin), options);
   }
 
   inject<TInstance, TDefault = never>(
@@ -205,7 +206,7 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
     if (type.getDefault !== undefined) {
       return type.getDefault();
     }
-    throw new TypeError(
+    throw new ReferenceError(
       `${type.name} could not be resolved in the current component hierarchy.`,
     );
   }
@@ -244,8 +245,7 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
   }
 
   startTransition<T>(callback: (transition: number) => T): T {
-    const transition = this._scheduler.nextTransition();
-    return callback(transition);
+    return callback(this._scheduler.nextTransition());
   }
 
   use<TReturn>(usable: Usable<TReturn>): TReturn {
@@ -267,16 +267,16 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
 
     if (currentHook !== undefined) {
       ensureHookType(EffectType, currentHook);
-      if (areDependenciesChange(currentHook.deps, deps)) {
-        currentHook.setup = setup;
-        currentHook.deps = deps;
-      }
+      currentHook.setup = setup;
+      currentHook.deps = deps;
+      currentHook.dirty = areDependenciesChange(currentHook.deps, deps);
     } else {
       currentHook = {
         type: EffectType,
         setup,
         cleanup: undefined,
         deps,
+        dirty: true,
       };
       this._hooks.push(currentHook);
     }
@@ -458,6 +458,35 @@ export function createComponent<TProps = {}, TReturn = unknown>(
   }
 
   return ComponentWrapper;
+}
+
+class UpdateComponent implements UpdateUnit {
+  private readonly _origin: RenderChild.ComponentChild;
+
+  constructor(origin: RenderChild.ComponentChild) {
+    this._origin = origin;
+  }
+
+  get scope(): Scope {
+    return this._origin.scope;
+  }
+
+  prepare(reconciler: Reconciler): () => void {
+    const newOrigin: RenderChild.ComponentChild = {
+      ...this._origin,
+      children: new Array(1),
+      scope: createScope(this._origin.scope),
+    };
+    const returnElement = newOrigin.instance.render(newOrigin);
+    newOrigin.children[0] = reconciler.diff(
+      this._origin.children[0]!,
+      returnElement,
+      newOrigin.scope,
+    );
+    return () => {
+      patch(this._origin, newOrigin);
+    };
+  }
 }
 
 function ensureHookType<TExpectedType extends Hook['type']>(

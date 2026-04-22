@@ -1,6 +1,12 @@
-import { createPortal, type RenderRoot } from '../core.js';
-import { mount, Runtime, unmount, update } from '../runtime.js';
-import { DOMAdapter } from './adapter.js';
+import {
+  createPortal,
+  createScope,
+  type RenderRoot,
+  type UpdateHandle,
+  type UpdateOptions,
+} from '../core.js';
+import type { Runtime } from '../runtime.js';
+import { mount, patch, unmount } from '../tree.js';
 
 export class Root {
   private readonly _container: Element;
@@ -12,27 +18,45 @@ export class Root {
     this._runtime = runtime;
   }
 
-  render(child: unknown): void {
-    const oldTree = this._tree;
-    const element = createPortal(child, this._container);
-
-    if (oldTree !== null) {
-      const newTree = this._runtime.diff(oldTree, element);
-      update(oldTree, newTree);
-    } else {
-      const tree = this._runtime.render(element);
-      mount(tree);
-    }
+  render(child: unknown, options?: UpdateOptions): UpdateHandle {
+    const scope = createScope();
+    return this._runtime.schedule(
+      {
+        scope,
+        prepare: (reconciler) => {
+          const element = createPortal(child, this._container);
+          const newTree =
+            this._tree !== null
+              ? reconciler.diff(this._tree, element, scope)
+              : reconciler.render(element, scope);
+          return () => {
+            if (this._tree !== null) {
+              patch(this._tree, newTree);
+            } else {
+              mount(newTree);
+            }
+            this._tree = newTree;
+          };
+        },
+      },
+      options,
+    );
   }
 
-  unmount(): void {
-    if (this._tree !== null) {
-      unmount(this._tree);
-    }
+  unmount(options?: UpdateOptions): UpdateHandle {
+    return this._runtime.schedule(
+      {
+        scope: createScope(),
+        prepare: () => {
+          return () => {
+            if (this._tree !== null) {
+              unmount(this._tree);
+              this._tree = null;
+            }
+          };
+        },
+      },
+      options,
+    );
   }
-}
-
-export function createRoot(container: Element): Root {
-  const runtime = new Runtime(new DOMAdapter());
-  return new Root(container, runtime);
 }
