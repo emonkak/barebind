@@ -1,5 +1,7 @@
+import { areDependenciesChange } from './compare.js';
 import {
   createScope,
+  Directive,
   Fragment,
   type HostAdapter,
   type HostNode,
@@ -94,6 +96,15 @@ export class Runtime implements UpdateScheduler {
         Object.freeze(newTree.scope),
       );
       return newTree;
+    } else if (newElement.type === Directive) {
+      return {
+        ...(oldTree as RenderChild.DirectiveChild),
+        ...newElement,
+        dirty: areDependenciesChange(
+          (oldTree as RenderChild.DirectiveChild).props.deps,
+          newElement.props.deps,
+        ),
+      };
     } else if (newElement.type === Fragment) {
       const mutations: Mutation[] = [];
       const children = this._diffChildren(
@@ -225,6 +236,15 @@ export class Runtime implements UpdateScheduler {
         Object.freeze(tree.scope),
       );
       return tree;
+    } else if (element.type === Directive) {
+      return {
+        ...element,
+        parent: parent!,
+        children: [],
+        index,
+        dirty: true,
+        cleanup: undefined,
+      };
     } else if (element.type === Fragment) {
       const tree: RenderChild.FragmentChild = {
         ...element,
@@ -494,6 +514,12 @@ export function update(oldTree: RenderTree, newTree: RenderTree) {
 function afterCommit(tree: RenderTree): void {
   if (typeof tree.type === 'function') {
     tree.instance.afterCommit();
+  } else if (tree.type === Directive) {
+    if (tree.dirty) {
+      tree.cleanup?.();
+      tree.cleanup = tree.props.setup(getHostAncestor(tree).refInstance);
+      tree.dirty = false;
+    }
   }
 
   for (const descendant of tree.children) {
@@ -522,6 +548,9 @@ function appendChild(
 function beforeRemove(tree: RenderTree): void {
   if (typeof tree.type === 'function') {
     tree.instance.beforeRemove();
+  } else if (tree.type === Directive) {
+    tree.cleanup?.();
+    tree.cleanup = undefined;
   }
 
   for (const child of tree.children) {
@@ -611,6 +640,8 @@ function patch(oldTree: RenderTree, newTree: RenderTree): void {
     appendChild(getHostAncestor(newTree), newTree, nextHostSibling(oldTree));
   } else if (typeof newTree.type === 'function') {
     patch(oldTree.children[0]!, newTree.children[0]!);
+  } else if (newTree.type === Directive) {
+    // skip
   } else if (newTree.type === Fragment) {
     const parentNode = getHostAncestor(newTree.parent);
 
