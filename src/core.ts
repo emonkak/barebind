@@ -93,8 +93,20 @@ export type Mutation =
 
 export interface Reconciler {
   diff(oldTree: RenderRoot, element: VElement, scope: Scope): RenderRoot;
-  diff(oldTree: RenderChild, newElement: VElement, scope: Scope): RenderChild;
-  diff(oldTree: RenderTree, newElement: VElement, scope: Scope): RenderTree;
+  diff(
+    oldTree: RenderChild,
+    newElement: VElement,
+    scope: Scope,
+    index: number,
+    parent: RenderTree,
+  ): RenderChild;
+  diff(
+    oldTree: RenderTree,
+    newElement: VElement,
+    scope: Scope,
+    index: number,
+    parent: RenderTree | null,
+  ): RenderTree;
   render(element: VElement, scope: Scope): RenderRoot;
   render(
     element: VElement,
@@ -142,9 +154,9 @@ export namespace RenderChild {
 
 export interface RenderNode<TElement extends VElement>
   extends Pick<TElement, 'type' | 'props' | 'key'> {
+  index: number;
   parent: RenderTree | null;
   children: RenderChild[];
-  index: number;
 }
 
 export interface RenderRoot extends RenderNode<VPortal> {
