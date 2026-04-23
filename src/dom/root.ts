@@ -1,6 +1,6 @@
 import {
   createPortal,
-  type RenderRoot,
+  type RenderTree,
   Scope,
   type UpdateHandle,
   type UpdateOptions,
@@ -11,7 +11,7 @@ import { mount, patch, unmount } from '../tree.js';
 export class Root {
   private readonly _container: Element;
   private readonly _runtime: Runtime;
-  private _tree: RenderRoot | null = null;
+  private _root: RenderTree.NativeNode | null = null;
 
   constructor(container: Element, runtime: Runtime) {
     this._container = container;
@@ -26,16 +26,20 @@ export class Root {
         prepare: (reconciler) => {
           const element = createPortal(child, this._container);
           const newTree =
-            this._tree !== null
-              ? reconciler.diff(this._tree, element, scope)
-              : reconciler.render(element, scope);
+            this._root !== null
+              ? (reconciler.diff(
+                  this._root,
+                  element,
+                  scope,
+                ) as RenderTree.NativeNode)
+              : (reconciler.render(element, scope) as RenderTree.NativeNode);
           return () => {
-            if (this._tree !== null) {
-              patch(this._tree, newTree);
+            if (this._root !== null) {
+              patch(this._root, newTree);
             } else {
               mount(newTree);
             }
-            this._tree = newTree;
+            this._root = newTree;
           };
         },
       },
@@ -49,9 +53,9 @@ export class Root {
         scope: new Scope(),
         prepare: () => {
           return () => {
-            if (this._tree !== null) {
-              unmount(this._tree);
-              this._tree = null;
+            if (this._root !== null) {
+              unmount(this._root);
+              this._root = null;
             }
           };
         },

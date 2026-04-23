@@ -6,7 +6,7 @@ import {
   type Lanes,
   type Reconciler,
   Ref,
-  type RenderChild,
+  type RenderTree,
   Scope,
   type UpdateHandle,
   type UpdateOptions,
@@ -150,7 +150,7 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
     }
   }
 
-  render(tree: RenderChild.ComponentChild<TProps>): VElement {
+  render(tree: RenderTree.ComponentNode<TProps>): VElement {
     this._context._tree = tree;
     this._context._hookIndex = 0;
 
@@ -160,7 +160,7 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
       return wrap(returnValue);
     } catch (cause) {
       throw new RenderError(
-        tree as RenderChild.ComponentChild<any>,
+        tree as RenderTree.ComponentNode<any>,
         'An error occurred during rendering.',
         {
           cause,
@@ -174,7 +174,7 @@ export class RenderContext {
   /** @internal */
   readonly _scheduler: UpdateScheduler;
   /** @internal */
-  _tree: RenderChild.ComponentChild | null = null;
+  _tree: RenderTree.ComponentNode | null = null;
   /** @internal */
   _hooks: Hook[] = [];
   /** @internal */
@@ -441,9 +441,9 @@ export function createComponent<TProps = {}, TReturn = unknown>(
 }
 
 class UpdateComponent implements UpdateUnit {
-  private readonly _tree: RenderChild.ComponentChild;
+  private readonly _tree: RenderTree.ComponentNode;
 
-  constructor(tree: RenderChild.ComponentChild) {
+  constructor(tree: RenderTree.ComponentNode) {
     this._tree = tree;
   }
 
@@ -452,7 +452,7 @@ class UpdateComponent implements UpdateUnit {
   }
 
   prepare(reconciler: Reconciler): () => void {
-    const newTree: RenderChild.ComponentChild = {
+    const newTree: RenderTree.ComponentNode = {
       ...this._tree,
       children: new Array(1),
       scope: new Scope(this._tree.scope.parent),
