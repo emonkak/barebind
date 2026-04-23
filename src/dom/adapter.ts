@@ -35,9 +35,14 @@ import {
 } from './template.js';
 
 export class DOMAdapter implements HostAdapter {
+  private readonly _document: Document;
   private readonly _identifier = generateUniqueIdentifier(8);
   private readonly _templateCache: WeakMap<readonly string[], DOMTemplate> =
     new WeakMap();
+
+  constructor(document: Document = window.document) {
+    this._document = document;
+  }
 
   getIdentifier(): string {
     return this._identifier;
@@ -67,7 +72,7 @@ export class DOMAdapter implements HostAdapter {
         (element as VTemplate).children,
         (element as VTemplate).props.mode,
         this._identifier,
-        document,
+        this._document,
       ),
     );
     return renderTemplate(template);
@@ -110,8 +115,8 @@ export class DOMAdapter implements HostAdapter {
   }
 
   startViewTransition(callback: () => void): Promise<void> {
-    return typeof document.startViewTransition === 'function'
-      ? document.startViewTransition(callback).updateCallbackDone
+    return typeof this._document.startViewTransition === 'function'
+      ? this._document.startViewTransition(callback).updateCallbackDone
       : Promise.resolve().then(callback);
   }
 
