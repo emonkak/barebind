@@ -42,6 +42,7 @@ export interface HostAdapter {
     options?: SchedulerPostTaskOptions,
   ): Promise<T>;
   startViewTransition(callback: () => void): Promise<void>;
+  yieldToMain(): Promise<void>;
 }
 
 export interface HostNode {
