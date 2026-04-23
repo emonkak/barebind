@@ -1,12 +1,13 @@
 import { sequentialEqual } from './compare.js';
-import { Bind, VNode, type VTemplate, wrap } from './core.js';
+import {
+  Bind,
+  type TemplateMode,
+  VNode,
+  type VTemplate,
+  wrap,
+} from './core.js';
 
-export const html = createTemplate('html');
-export const svg = createTemplate('svg');
-export const math = createTemplate('math');
-export const text = createTemplate('textarea');
-
-const stringInterpolationCache = new WeakMap<
+const STRING_INTERPOLATION_CACHE = new WeakMap<
   readonly string[],
   StringInterpolation[]
 >();
@@ -15,19 +16,6 @@ interface StringInterpolation {
   interpolatedStrings: readonly string[];
   literalStrings: readonly string[];
   literalPositions: readonly number[];
-}
-
-export function createTemplate(
-  mode: VTemplate['props']['mode'],
-): (strings: readonly string[], ...children: unknown[]) => VTemplate {
-  return (strings, ...children) =>
-    new VNode(
-      strings,
-      {
-        mode,
-      },
-      children.map((child, index) => new VNode(Bind, { index }, [wrap(child)])),
-    );
 }
 
 export class Partial {
@@ -72,7 +60,7 @@ export class Partial {
       return new Partial(strings, exprs);
     }
 
-    let stringInterpolations = stringInterpolationCache.get(strings);
+    let stringInterpolations = STRING_INTERPOLATION_CACHE.get(strings);
 
     if (stringInterpolations !== undefined) {
       for (const stringInterpolation of stringInterpolations) {
@@ -91,7 +79,7 @@ export class Partial {
       }
     } else {
       stringInterpolations = [];
-      stringInterpolationCache.set(strings, stringInterpolations);
+      STRING_INTERPOLATION_CACHE.set(strings, stringInterpolations);
     }
 
     const interpolatedStrings = interpolatePartials(strings, exprs);
@@ -118,6 +106,48 @@ export class Partial {
   toString(): string {
     return String.raw({ raw: this.strings }, ...this.exprs);
   }
+}
+
+export function html(
+  strings: readonly string[],
+  ...children: unknown[]
+): VTemplate {
+  return createTemplate('html', strings, children);
+}
+
+export function math(
+  strings: readonly string[],
+  ...children: unknown[]
+): VTemplate {
+  return createTemplate('math', strings, children);
+}
+
+export function svg(
+  strings: readonly string[],
+  ...children: unknown[]
+): VTemplate {
+  return createTemplate('svg', strings, children);
+}
+
+export function text(
+  strings: readonly string[],
+  ...children: unknown[]
+): VTemplate {
+  return createTemplate('textarea', strings, children);
+}
+
+function createTemplate(
+  mode: TemplateMode,
+  strings: readonly string[],
+  children: unknown[],
+): VTemplate {
+  return new VNode(
+    strings,
+    {
+      mode,
+    },
+    children.map((child, index) => new VNode(Bind, { index }, [wrap(child)])),
+  );
 }
 
 function interpolatePartials(
