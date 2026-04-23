@@ -120,7 +120,7 @@ export namespace RenderChild {
   export interface DirectiveChild extends RenderNode<VDirective> {
     parent: RenderTree;
     dirty: boolean;
-    cleanup: (() => void) | undefined;
+    cleanup: (() => void) | void;
   }
 
   export interface ComponentChild<TProps = any> extends RenderNode<VComponent> {
@@ -200,7 +200,7 @@ export interface UpdateUnit {
 export type VDirective<T = any> = VNode<
   typeof Directive,
   {
-    setup: (instance: T) => (() => void) | undefined;
+    setup: (instance: T) => (() => void) | void;
     deps: unknown[] | null | undefined;
   },
   []
@@ -273,7 +273,7 @@ export class VNode<TType, TProps, const TChildren extends VElement[]> {
 }
 
 export function createDirective<T>(
-  setup: (instance: T) => (() => void) | undefined,
+  setup: (instance: T) => (() => void) | void,
   deps?: unknown[] | null | undefined,
 ): VDirective<T> {
   return new VNode(Directive, { setup, deps }, []);

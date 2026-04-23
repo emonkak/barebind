@@ -216,7 +216,9 @@ export class DOMBlock extends DOMNode {
     _props: VTemplate['props'],
   ): void {
     for (const bind of this._binds) {
-      this._parts[bind!.index]!.value = bind!.bindValue;
+      if (bind !== undefined) {
+        this._parts[bind.index]!.value = bind.bindValue;
+      }
     }
   }
 
@@ -226,7 +228,9 @@ export class DOMBlock extends DOMNode {
     _newElement: VTemplate['props'],
   ): void {
     for (const bind of this._binds) {
-      this._parts[bind!.index]!.value = bind!.bindValue;
+      if (bind !== undefined) {
+        this._parts[bind.index]!.value = bind.bindValue;
+      }
     }
   }
 

@@ -167,7 +167,11 @@ function getHostDescendant(tree: RenderTree): HostNode | null {
 }
 
 function isHostTree(tree: RenderTree): tree is HostTree {
-  return typeof tree.type !== 'function' && tree.type !== Fragment;
+  return (
+    typeof tree.type !== 'function' &&
+    tree.type !== Directive &&
+    tree.type !== Fragment
+  );
 }
 
 function moveChild(
