@@ -462,6 +462,8 @@ class UpdateComponent implements UpdateUnit {
       this._tree.children[0]!,
       returnElement,
       newTree.scope,
+      0,
+      newTree,
     );
     return () => {
       patch(this._tree, newTree);

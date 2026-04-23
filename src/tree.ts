@@ -31,6 +31,9 @@ export function unmount(tree: RenderRoot): void {
 export function patch(oldTree: RenderTree, newTree: RenderTree) {
   applyPatch(oldTree, newTree);
   afterCommit(newTree);
+  if (newTree.parent !== null) {
+    newTree.parent.children[newTree.index] = newTree;
+  }
 }
 
 function afterCommit(tree: RenderTree): void {
@@ -127,9 +130,6 @@ function applyPatch(oldTree: RenderTree, newTree: RenderTree): void {
       (oldTree as HostTree).props,
       newTree.props,
     );
-  }
-  if (newTree.parent !== null) {
-    newTree.parent.children[newTree.index] = newTree;
   }
 }
 
