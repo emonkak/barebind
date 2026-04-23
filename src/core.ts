@@ -20,7 +20,7 @@ export interface Boundary<TInstance, TDefault> {
 export interface ComponentType<TProps> {
   (props: TProps): VComponent<TProps>;
   arePropsEqual(oldProps: TProps, newProps: TProps): boolean;
-  getInstance(
+  newInstance(
     props: TProps,
     scheduler: UpdateScheduler,
   ): ComponentInstance<TProps>;
