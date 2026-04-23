@@ -37,18 +37,27 @@ export interface ComponentOptions<TProps> {
   arePropsEqual?: (oldProps: TProps, newProps: TProps) => boolean;
 }
 
-export type Usable<TReturn> =
-  | Usable.UsableObject<TReturn>
-  | Usable.UsableFunction<TReturn>;
+export interface DispatchOptions<TState> extends UpdateOptions {
+  areStatesEqual?: (nextState: TState, prevState: TState) => boolean;
+  transient?: boolean;
+}
 
-export namespace Usable {
-  export type UsableFunction<TReturn = void> = (
-    context: RenderContext,
-  ) => TReturn;
+export type Usable<TReturn> = UsableObject<TReturn> | UsableFunction<TReturn>;
 
-  export interface UsableObject<TReturn = void> {
-    onUse(context: RenderContext): TReturn;
-  }
+export type UsableFunction<TReturn = void> = (
+  context: RenderContext,
+) => TReturn;
+
+export interface UsableObject<TReturn = void> {
+  onUse(context: RenderContext): TReturn;
+}
+
+export type InitialState<T> = (T extends Function ? never : T) | (() => T);
+
+export type NextState<T> = (T extends Function ? never : T) | ((state: T) => T);
+
+export interface StateOptions {
+  passthrough?: boolean;
 }
 
 interface Action<TPayload> {
@@ -65,11 +74,6 @@ interface ActionDispatcher<TState, TPayload> {
   pendingActions: Action<TPayload>[];
   pendingState: TState;
   reducer: (state: TState, action: TPayload) => TState;
-}
-
-interface DispatchOptions<TState> extends UpdateOptions {
-  areStatesEqual?: (nextState: TState, prevState: TState) => boolean;
-  transient?: boolean;
 }
 
 type EffectCleanup = () => void;
@@ -113,14 +117,6 @@ namespace Hook {
     memoizedActions: Action<TAction>[];
     memoizedState: TState;
   }
-}
-
-type InitialState<T> = (T extends Function ? never : T) | (() => T);
-
-type NextState<T> = (T extends Function ? never : T) | ((state: T) => T);
-
-interface StateOptions {
-  passthrough?: boolean;
 }
 
 export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
@@ -188,7 +184,7 @@ export class RenderContext {
     this._scheduler = scheduler;
   }
 
-  forceUpdate(options: UpdateOptions): UpdateHandle {
+  forceUpdate(options?: UpdateOptions): UpdateHandle {
     if (this._tree === null) {
       return {
         id: -1,
