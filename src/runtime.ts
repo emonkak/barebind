@@ -3,14 +3,11 @@ import {
   Directive,
   Fragment,
   type HostAdapter,
-  type HostTree,
   InsertType,
   type Lanes,
   type Mutation,
   type Reconciler,
   RemoveType,
-  type RenderChild,
-  type RenderRoot,
   type RenderTree,
   Scope,
   UpdateAndMoveType,
@@ -57,21 +54,6 @@ export class Runtime implements Reconciler, UpdateScheduler {
     return this._flushLanes;
   }
 
-  diff(oldTree: RenderRoot, element: VElement, scope: Scope): RenderRoot;
-  diff(
-    oldTree: RenderChild,
-    newElement: VElement,
-    scope: Scope,
-    index: number,
-    parent: RenderTree,
-  ): RenderChild;
-  diff(
-    oldTree: RenderTree,
-    newElement: VElement,
-    scope: Scope,
-    index: number,
-    parent: RenderTree | null,
-  ): RenderTree;
   diff(
     oldTree: RenderTree,
     newElement: VElement,
@@ -83,18 +65,18 @@ export class Runtime implements Reconciler, UpdateScheduler {
       return this.render(newElement, scope, index, parent);
     } else if (typeof newElement.type === 'function') {
       if (
-        ((oldTree as RenderChild.ComponentChild).scope.pendingLanes &
+        ((oldTree as RenderTree.ComponentNode).scope.pendingLanes &
           this.flushLanes) ===
           NoLanes &&
         newElement.type.arePropsEqual(
-          (oldTree as RenderChild.ComponentChild).props,
+          (oldTree as RenderTree.ComponentNode).props,
           newElement.props,
         )
       ) {
         return oldTree;
       }
-      const newTree: RenderChild.ComponentChild = {
-        ...(oldTree as RenderChild.ComponentChild),
+      const newTree: RenderTree.ComponentNode = {
+        ...(oldTree as RenderTree.ComponentNode),
         ...newElement,
         index,
         parent,
@@ -112,18 +94,18 @@ export class Runtime implements Reconciler, UpdateScheduler {
       return newTree;
     } else if (newElement.type === Directive) {
       return {
-        ...(oldTree as RenderChild.DirectiveChild),
+        ...(oldTree as RenderTree.DirectiveNode),
         ...newElement,
         index,
         parent,
         dirty: areDependenciesChange(
-          (oldTree as RenderChild.DirectiveChild).props.deps,
+          (oldTree as RenderTree.DirectiveNode).props.deps,
           newElement.props.deps,
         ),
       };
     } else if (newElement.type === Fragment) {
-      const newTree: RenderChild.FragmentChild = {
-        ...(oldTree as RenderChild.FragmentChild),
+      const newTree: RenderTree.FragmentNode = {
+        ...(oldTree as RenderTree.FragmentNode),
         ...newElement,
         index,
         parent,
@@ -131,7 +113,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
         mutations: [],
       };
       this._diffChildren(
-        (oldTree as RenderChild.FragmentChild).children.slice(),
+        (oldTree as RenderTree.FragmentNode).children.slice(),
         newTree.children,
         newElement.children,
         scope,
@@ -140,16 +122,16 @@ export class Runtime implements Reconciler, UpdateScheduler {
       );
       return newTree;
     } else {
-      const dirty = (oldTree as RenderChild.HostChild).hostNode.prepareUpdate(
+      const dirty = (oldTree as RenderTree.NativeNode).hostNode.prepareUpdate(
         newElement.type,
-        (oldTree as RenderChild.HostChild).props,
+        (oldTree as RenderTree.NativeNode).props,
         newElement.props,
       );
       if (!dirty) {
         return oldTree;
       }
-      const newTree: HostTree = {
-        ...(oldTree as RenderChild.HostChild),
+      const newTree: RenderTree.NativeNode = {
+        ...(oldTree as RenderTree.NativeNode),
         ...newElement,
         index,
         parent,
@@ -176,19 +158,6 @@ export class Runtime implements Reconciler, UpdateScheduler {
     return this._transitionCount++;
   }
 
-  render(element: VElement, scope: Scope): RenderRoot;
-  render(
-    element: VElement,
-    scope: Scope,
-    index: number,
-    parent: RenderTree,
-  ): RenderChild;
-  render(
-    element: VElement,
-    scope: Scope,
-    index: number,
-    parent: RenderTree | null,
-  ): RenderTree;
   render(
     element: VElement,
     scope: Scope,
@@ -196,7 +165,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
     parent: RenderTree | null = null,
   ): RenderTree {
     if (typeof element.type === 'function') {
-      const tree: RenderChild.ComponentChild = {
+      const tree: RenderTree.ComponentNode = {
         ...element,
         index,
         parent,
@@ -217,7 +186,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
         cleanup: undefined,
       };
     } else if (element.type === Fragment) {
-      const tree: RenderChild.FragmentChild = {
+      const tree: RenderTree.FragmentNode = {
         ...element,
         index,
         parent,
@@ -229,7 +198,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
       }
       return tree;
     } else {
-      const tree: HostTree = {
+      const tree: RenderTree.NativeNode = {
         ...element,
         index,
         parent,
@@ -284,14 +253,14 @@ export class Runtime implements Reconciler, UpdateScheduler {
   }
 
   private _diffChildren(
-    oldChildren: (RenderChild | undefined)[],
-    newChildren: RenderChild[],
+    oldChildren: (RenderTree | undefined)[],
+    newChildren: RenderTree[],
     newElements: VElement[],
     scope: Scope,
     parent: RenderTree,
     mutations: Mutation[],
   ): void {
-    const oldKeys = oldChildren.map((tree) => tree!.key);
+    const oldKeys = oldChildren.map((node) => node!.key);
     const newKeys = newElements.map((element) => element.key);
 
     let oldHead = 0;
@@ -304,11 +273,11 @@ export class Runtime implements Reconciler, UpdateScheduler {
     while (true) {
       if (newHead > newTail) {
         while (oldHead <= oldTail) {
-          const tree = oldChildren[oldHead];
-          if (tree !== undefined) {
+          const node = oldChildren[oldHead];
+          if (node !== undefined) {
             mutations.push({
               type: RemoveType,
-              tree,
+              tree: node,
             });
           }
           oldHead++;
@@ -316,7 +285,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
         break;
       } else if (oldHead > oldTail) {
         while (newHead <= newTail) {
-          const tree = this.render(
+          const node = this.render(
             newElements[newHead]!,
             scope,
             newHead,
@@ -324,10 +293,10 @@ export class Runtime implements Reconciler, UpdateScheduler {
           );
           mutations.push({
             type: InsertType,
-            tree,
+            tree: node,
             afterTree: newChildren[newTail + 1],
           });
-          newChildren[newHead] = tree;
+          newChildren[newHead] = node;
           newHead++;
         }
         break;
@@ -336,7 +305,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
       } else if (oldChildren[oldTail] === undefined) {
         oldTail--;
       } else if (Object.is(oldKeys[oldHead]!, newKeys[newHead]!)) {
-        const newTree = this.diff(
+        const newNode = this.diff(
           oldChildren[oldHead]!,
           newElements[newHead]!,
           scope,
@@ -346,13 +315,13 @@ export class Runtime implements Reconciler, UpdateScheduler {
         mutations.push({
           type: UpdateType,
           oldTree: oldChildren[oldHead]!,
-          newTree,
+          newTree: newNode,
         });
-        newChildren[newHead] = newTree;
+        newChildren[newHead] = newNode;
         oldHead++;
         newHead++;
       } else if (Object.is(oldKeys[oldTail]!, newKeys[newTail]!)) {
-        const newTree = this.diff(
+        const newNode = this.diff(
           oldChildren[oldTail]!,
           newElements[newTail]!,
           scope,
@@ -362,9 +331,9 @@ export class Runtime implements Reconciler, UpdateScheduler {
         mutations.push({
           type: UpdateType,
           oldTree: oldChildren[oldTail]!,
-          newTree,
+          newTree: newNode,
         });
-        newChildren[newTail] = newTree;
+        newChildren[newTail] = newNode;
         oldTail--;
         newTail--;
       } else if (
@@ -428,7 +397,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
             oldIndex <= oldTail &&
             oldChildren[oldIndex] !== undefined
           ) {
-            const newTree = this.diff(
+            const newNode = this.diff(
               oldChildren[oldIndex]!,
               newElements[newTail]!,
               scope,
@@ -438,13 +407,13 @@ export class Runtime implements Reconciler, UpdateScheduler {
             mutations.push({
               type: UpdateAndMoveType,
               oldTree: oldChildren[oldIndex]!,
-              newTree,
+              newTree: newNode,
               afterTree: newChildren[newTail + 1],
             });
-            newChildren[newTail] = newTree;
+            newChildren[newTail] = newNode;
             oldChildren[oldIndex] = undefined;
           } else {
-            const tree = this.render(
+            const node = this.render(
               newElements[newTail]!,
               scope,
               newTail,
@@ -452,10 +421,10 @@ export class Runtime implements Reconciler, UpdateScheduler {
             );
             mutations.push({
               type: InsertType,
-              tree,
+              tree: node,
               afterTree: newChildren[newTail + 1],
             });
-            newChildren[newTail] = tree;
+            newChildren[newTail] = node;
           }
 
           newTail--;

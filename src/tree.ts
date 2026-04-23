@@ -2,38 +2,33 @@ import {
   Directive,
   Fragment,
   type HostNode,
-  type HostTree,
   InsertType,
   RemoveType,
-  type RenderChild,
-  type RenderRoot,
   type RenderTree,
   UpdateAndMoveType,
   UpdateType,
 } from './core.js';
 import { NoLanes } from './lane.js';
 
-export function mount(tree: RenderRoot): void {
-  for (const child of tree.children) {
-    appendChild(tree.hostNode, child, null);
+export function mount(root: RenderTree.NativeNode): void {
+  for (const child of root.children) {
+    appendChild(root.hostNode, child, null);
   }
-  tree.hostNode.commitMount(tree.type, tree.props);
-  afterCommit(tree);
+  root.hostNode.commitMount(root.type, root.props);
+  afterCommit(root);
 }
 
-export function unmount(tree: RenderRoot): void {
-  beforeRemove(tree);
-  for (const child of tree.children) {
-    removeChild(tree.hostNode, child);
+export function unmount(root: RenderTree.NativeNode): void {
+  beforeRemove(root);
+  for (const child of root.children) {
+    removeChild(root.hostNode, child);
   }
 }
 
 export function patch(oldTree: RenderTree, newTree: RenderTree) {
   applyPatch(oldTree, newTree);
   afterCommit(newTree);
-  if (newTree.parent !== null) {
-    newTree.parent.children[newTree.index] = newTree;
-  }
+  reparent(newTree);
 }
 
 function afterCommit(tree: RenderTree): void {
@@ -57,17 +52,17 @@ function afterCommit(tree: RenderTree): void {
 
 function appendChild(
   parentNode: HostNode,
-  child: RenderTree,
+  tree: RenderTree,
   afterNode: HostNode | null,
 ): void {
-  if (isHostTree(child)) {
-    parentNode.appendChild(child.hostNode, afterNode);
-    for (const descendant of child.children) {
-      appendChild(child.hostNode, descendant, null);
+  if (isNativeNode(tree)) {
+    parentNode.appendChild(tree.hostNode, afterNode);
+    for (const descendant of tree.children) {
+      appendChild(tree.hostNode, descendant, null);
     }
-    child.hostNode.commitMount(child.type, child.props);
+    tree.hostNode.commitMount(tree.type, tree.props);
   } else {
-    for (const descendant of child.children) {
+    for (const descendant of tree.children) {
       appendChild(parentNode, descendant, afterNode);
     }
   }
@@ -81,7 +76,7 @@ function applyPatch(oldTree: RenderTree, newTree: RenderTree): void {
     removeSubtree(getHostAncestor(oldTree), oldTree);
     appendChild(getHostAncestor(newTree), newTree, nextHostSibling(oldTree));
   } else if (typeof newTree.type === 'function') {
-    (oldTree as RenderChild.ComponentChild).scope.pendingLanes = NoLanes;
+    (oldTree as RenderTree.ComponentNode).scope.pendingLanes = NoLanes;
     applyPatch(oldTree.children[0]!, newTree.children[0]!);
   } else if (newTree.type === Directive) {
     // skip
@@ -127,7 +122,7 @@ function applyPatch(oldTree: RenderTree, newTree: RenderTree): void {
 
     newTree.hostNode.commitUpdate(
       newTree.type,
-      (oldTree as HostTree).props,
+      (oldTree as RenderTree.NativeNode).props,
       newTree.props,
     );
   }
@@ -149,16 +144,16 @@ function beforeRemove(tree: RenderTree): void {
 
 function getHostAncestor(tree: RenderTree): HostNode {
   while (tree.parent !== null) {
-    if (isHostTree(tree.parent)) {
+    if (isNativeNode(tree.parent)) {
       return tree.parent.hostNode;
     }
     tree = tree.parent;
   }
-  return tree.hostNode;
+  return (tree as RenderTree.NativeNode).hostNode;
 }
 
 function getHostDescendant(tree: RenderTree): HostNode | null {
-  if (isHostTree(tree)) {
+  if (isNativeNode(tree)) {
     return tree.hostNode;
   }
   for (const child of tree.children) {
@@ -170,7 +165,7 @@ function getHostDescendant(tree: RenderTree): HostNode | null {
   return nextHostSibling(tree);
 }
 
-function isHostTree(tree: RenderTree): tree is HostTree {
+function isNativeNode(tree: RenderTree): tree is RenderTree.NativeNode {
   return (
     typeof tree.type !== 'function' &&
     tree.type !== Directive &&
@@ -183,7 +178,7 @@ function moveChild(
   child: RenderTree,
   afterNode: HostNode | null,
 ): void {
-  if (isHostTree(child)) {
+  if (isNativeNode(child)) {
     parentNode.moveChild(child.hostNode, afterNode);
   } else {
     for (const descendant of child.children) {
@@ -193,7 +188,7 @@ function moveChild(
 }
 
 function nextHostSibling(child: RenderTree): HostNode | null {
-  while (child.parent !== null && !isHostTree(child.parent)) {
+  while (child.parent !== null && !isNativeNode(child.parent)) {
     const parent = child.parent;
     for (let i = child.index + 1, l = parent.children.length; i < l; i++) {
       const hostNode = getHostDescendant(parent.children[i]!);
@@ -207,7 +202,7 @@ function nextHostSibling(child: RenderTree): HostNode | null {
 }
 
 function removeChild(parentNode: HostNode, child: RenderTree): void {
-  if (isHostTree(child)) {
+  if (isNativeNode(child)) {
     parentNode.removeChild(child.hostNode);
   } else {
     for (const descendant of child.children) {
@@ -219,4 +214,10 @@ function removeChild(parentNode: HostNode, child: RenderTree): void {
 function removeSubtree(parentNode: HostNode, child: RenderTree): void {
   beforeRemove(child);
   removeChild(parentNode, child);
+}
+
+function reparent(tree: RenderTree): void {
+  if (tree.parent !== null) {
+    tree.parent.children[tree.index] = tree;
+  }
 }

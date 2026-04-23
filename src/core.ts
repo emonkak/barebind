@@ -27,7 +27,7 @@ export interface ComponentType<TProps> {
 }
 
 export interface ComponentInstance<TProps> {
-  render(tree: RenderChild.ComponentChild<TProps>): VElement;
+  render(tree: RenderTree.ComponentNode<TProps>): VElement;
   afterCommit(): void;
   beforeRemove(): void;
 }
@@ -63,8 +63,6 @@ export interface HostNode {
   ): void;
 }
 
-export type HostTree = RenderRoot | RenderChild.HostChild;
-
 export type Lane = number;
 
 export type Lanes = number;
@@ -92,79 +90,53 @@ export type Mutation =
     };
 
 export interface Reconciler {
-  diff(oldTree: RenderRoot, element: VElement, scope: Scope): RenderRoot;
-  diff(
-    oldTree: RenderChild,
-    newElement: VElement,
-    scope: Scope,
-    index: number,
-    parent: RenderTree,
-  ): RenderChild;
   diff(
     oldTree: RenderTree,
     newElement: VElement,
     scope: Scope,
-    index: number,
-    parent: RenderTree | null,
+    index?: number,
+    parent?: RenderTree | null,
   ): RenderTree;
-  render(element: VElement, scope: Scope): RenderRoot;
   render(
     element: VElement,
     scope: Scope,
-    index: number,
-    parent: RenderTree,
-  ): RenderChild;
-  render(
-    element: VElement,
-    scope: Scope,
-    index: number,
-    parent: RenderTree | null,
+    index?: number,
+    parent?: RenderTree | null,
   ): RenderTree;
 }
 
-export type RenderChild =
-  | RenderChild.ComponentChild
-  | RenderChild.DirectiveChild
-  | RenderChild.FragmentChild
-  | RenderChild.HostChild;
+export type RenderTree =
+  | RenderTree.ComponentNode
+  | RenderTree.DirectiveNode
+  | RenderTree.FragmentNode
+  | RenderTree.NativeNode;
 
-export namespace RenderChild {
-  export interface DirectiveChild extends RenderNode<VDirective> {
-    parent: RenderTree;
+export namespace RenderTree {
+  interface RenderNode<TElement extends VElement>
+    extends Pick<TElement, 'type' | 'props' | 'key'> {
+    index: number;
+    parent: RenderTree | null;
+    children: RenderTree[];
+  }
+
+  export interface DirectiveNode extends RenderNode<VDirective> {
     dirty: boolean;
     cleanup: (() => void) | void;
   }
 
-  export interface ComponentChild<TProps = any> extends RenderNode<VComponent> {
-    parent: RenderTree;
+  export interface ComponentNode<TProps = any> extends RenderNode<VComponent> {
     instance: ComponentInstance<TProps>;
     scope: Scope;
   }
 
-  export interface FragmentChild extends RenderNode<VFragment> {
-    parent: RenderTree;
+  export interface FragmentNode extends RenderNode<VFragment> {
     mutations: Mutation[];
   }
 
-  export interface HostChild extends RenderNode<VHostElement> {
-    parent: RenderTree;
+  export interface NativeNode extends RenderNode<VHostElement> {
     hostNode: HostNode;
   }
 }
-
-export interface RenderNode<TElement extends VElement>
-  extends Pick<TElement, 'type' | 'props' | 'key'> {
-  index: number;
-  parent: RenderTree | null;
-  children: RenderChild[];
-}
-
-export interface RenderRoot extends RenderNode<VPortal> {
-  parent: null;
-  hostNode: HostNode;
-}
-
-export type RenderTree = RenderRoot | RenderChild;
 
 export interface Renderable {
   [toElement](): VElement;
