@@ -455,6 +455,8 @@ export class Runtime implements Reconciler, UpdateScheduler {
       } finally {
         this._updateQueue.dequeue();
       }
+
+      await this._adapter.yieldToMain();
     }
 
     this._flushLanes = NoLanes;
