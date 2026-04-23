@@ -34,9 +34,7 @@ export function patch(oldTree: RenderTree, newTree: RenderTree) {
 }
 
 function afterCommit(tree: RenderTree): void {
-  if (typeof tree.type === 'function') {
-    tree.instance.afterCommit();
-  } else if (tree.type === Directive) {
+  if (tree.type === Directive) {
     if (tree.dirty) {
       const { setup } = tree.props;
       tree.cleanup?.call(undefined);
@@ -47,6 +45,10 @@ function afterCommit(tree: RenderTree): void {
 
   for (const descendant of tree.children) {
     afterCommit(descendant);
+  }
+
+  if (typeof tree.type === 'function') {
+    tree.instance.afterCommit();
   }
 }
 
