@@ -38,22 +38,6 @@ export interface ComponentOptions<TProps> {
   arePropsEqual?: (oldProps: TProps, newProps: TProps) => boolean;
 }
 
-export type RenderContext = Pick<
-  Component<unknown, unknown>,
-  | 'forceUpdate'
-  | 'inject'
-  | 'provide'
-  | 'startTransition'
-  | 'use'
-  | 'useCallback'
-  | 'useEffect'
-  | 'useId'
-  | 'useMemo'
-  | 'useReducer'
-  | 'useRef'
-  | 'useState'
->;
-
 export type Usable<TReturn> =
   | Usable.UsableObject<TReturn>
   | Usable.UsableFunction<TReturn>;
@@ -142,21 +126,18 @@ interface StateOptions {
 
 export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
   private readonly _componentFn: ComponentFunction<TProps, TReturn>;
-  private readonly _scheduler: UpdateScheduler;
-  private _tree: RenderChild.ComponentChild<TProps> | null = null;
-  private _hooks: Hook[] = [];
-  private _hookIndex = 0;
+  private readonly _context: RenderContext;
 
   constructor(
     componentFn: ComponentFunction<TProps, TReturn>,
-    scheduler: UpdateScheduler,
+    context: RenderContext,
   ) {
     this._componentFn = componentFn;
-    this._scheduler = scheduler;
+    this._context = context;
   }
 
   afterCommit(): void {
-    for (const hook of this._hooks) {
+    for (const hook of this._context._hooks) {
       if (hook.type === EffectType && hook.dirty) {
         hook.cleanup?.();
         hook.cleanup = hook.setup();
@@ -166,12 +147,43 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
   }
 
   beforeRemove(): void {
-    for (const hook of this._hooks) {
+    for (const hook of this._context._hooks) {
       if (hook.type === EffectType && hook.cleanup !== undefined) {
         hook.cleanup();
         hook.cleanup = undefined;
       }
     }
+  }
+
+  render(tree: RenderChild.ComponentChild<TProps>): VElement {
+    this._context._tree = tree;
+    this._context._hookIndex = 0;
+
+    try {
+      const returnValue = this._componentFn.call(this._context, tree.props);
+      finalizeHooks(this._context);
+      return wrap(returnValue);
+    } catch (error) {
+      throw new RenderError(
+        tree as RenderChild.ComponentChild<any>,
+        'An error occurred during rendering.',
+      );
+    }
+  }
+}
+
+export class RenderContext {
+  /** @internal */
+  readonly _scheduler: UpdateScheduler;
+  /** @internal */
+  _tree: RenderChild.ComponentChild | null = null;
+  /** @internal */
+  _hooks: Hook[] = [];
+  /** @internal */
+  _hookIndex = 0;
+
+  constructor(scheduler: UpdateScheduler) {
+    this._scheduler = scheduler;
   }
 
   forceUpdate(options: UpdateOptions): UpdateHandle {
@@ -209,30 +221,6 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
 
   provide<T extends object>(instance: T): void {
     this._tree?.scope.instances.push(instance);
-  }
-
-  render(tree: RenderChild.ComponentChild<TProps>): VElement {
-    this._tree = tree;
-
-    try {
-      const returnValue = this._componentFn.call(this, tree.props);
-      let currentHook = this._hooks[this._hookIndex++];
-
-      if (currentHook !== undefined) {
-        ensureHookType(FinalizerType, currentHook);
-      } else {
-        currentHook = { type: FinalizerType };
-        this._hooks.push(currentHook);
-        Object.freeze(this._hooks);
-      }
-
-      return wrap(returnValue);
-    } catch (error) {
-      throw new RenderError(
-        tree as RenderChild.ComponentChild<any>,
-        'An error occurred during rendering.',
-      );
-    }
   }
 
   startTransition<T>(callback: (transition: number) => T): T {
@@ -434,23 +422,24 @@ export function createComponent<TProps = {}, TReturn = unknown>(
   componentFn: ComponentFunction<TProps, TReturn>,
   { arePropsEqual = Object.is }: ComponentOptions<TProps> = {},
 ): ComponentType<TProps> {
-  function ComponentWrapper(props: TProps): VComponent<TProps> {
-    return new VNode(ComponentWrapper, props, []);
+  function ComponentType(props: TProps): VComponent<TProps> {
+    return new VNode(ComponentType, props, []);
   }
 
-  ComponentWrapper.newInstance = (
+  ComponentType.newInstance = (
     _props: TProps,
     scheduler: UpdateScheduler,
-  ): ComponentInstance<TProps> => new Component(componentFn, scheduler);
-  ComponentWrapper.arePropsEqual = arePropsEqual;
+  ): ComponentInstance<TProps> =>
+    new Component(componentFn, new RenderContext(scheduler));
+  ComponentType.arePropsEqual = arePropsEqual;
 
   DEBUG: {
-    Object.defineProperty(Component, 'name', {
+    Object.defineProperty(ComponentType, 'name', {
       value: componentFn.name,
     });
   }
 
-  return ComponentWrapper;
+  return ComponentType;
 }
 
 class UpdateComponent implements UpdateUnit {
@@ -479,6 +468,18 @@ class UpdateComponent implements UpdateUnit {
     return () => {
       patch(this._tree, newTree);
     };
+  }
+}
+
+function finalizeHooks(context: RenderContext) {
+  let currentHook = context._hooks[context._hookIndex++];
+
+  if (currentHook !== undefined) {
+    ensureHookType(FinalizerType, currentHook);
+  } else {
+    currentHook = { type: FinalizerType };
+    context._hooks.push(currentHook);
+    Object.freeze(context._hooks);
   }
 }
 
