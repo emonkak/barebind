@@ -438,7 +438,7 @@ export function createComponent<TProps = {}, TReturn = unknown>(
     return new VNode(ComponentWrapper, props, []);
   }
 
-  ComponentWrapper.getInstance = (_props: TProps, scheduler: UpdateScheduler) =>
+  ComponentWrapper.newInstance = (_props: TProps, scheduler: UpdateScheduler) =>
     new Component(componentFn, scheduler);
   ComponentWrapper.arePropsEqual = arePropsEqual;
 

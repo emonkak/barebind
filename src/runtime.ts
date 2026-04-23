@@ -168,7 +168,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
         parent: parent!,
         children: new Array(1),
         index,
-        instance: element.type.getInstance(element.props, this),
+        instance: element.type.createInstance(element.props, this),
         scope: createScope(scope),
       };
       const returnElement = tree.instance.render(tree);
