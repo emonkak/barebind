@@ -37,8 +37,9 @@ function afterCommit(tree: RenderTree): void {
     tree.instance.afterCommit();
   } else if (tree.type === Directive) {
     if (tree.dirty) {
-      tree.cleanup?.();
-      tree.cleanup = tree.props.setup(getHostAncestor(tree).refInstance);
+      const { setup } = tree.props;
+      tree.cleanup?.call(undefined);
+      tree.cleanup = setup(getHostAncestor(tree).refInstance);
       tree.dirty = false;
     }
   }
@@ -133,7 +134,7 @@ function beforeRemove(tree: RenderTree): void {
     tree.instance.beforeRemove();
     tree.scope.pendingLanes = NoLanes;
   } else if (tree.type === Directive) {
-    tree.cleanup?.();
+    tree.cleanup?.call(undefined);
     tree.cleanup = undefined;
   }
 
