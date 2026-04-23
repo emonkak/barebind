@@ -1,4 +1,9 @@
-import { annotateAttribute, annotateNode, generateNodeFrame } from './debug.js';
+import {
+  annotateAttributeHole,
+  annotateNode,
+  annotateNodeHole,
+  generateNodeFrame,
+} from './debug.js';
 
 export class DOMRenderError extends Error {
   readonly node: Node;
@@ -14,14 +19,26 @@ export class DOMRenderError extends Error {
     return new DOMRenderError(node, message, options);
   }
 
-  static fromAttribute(
+  static fromNodeHole(
+    node: Node,
+    message: string,
+    options?: ErrorOptions,
+  ): DOMRenderError {
+    DEBUG: {
+      message += '\n' + generateNodeFrame(node, annotateNodeHole(node));
+    }
+    return new DOMRenderError(node, message, options);
+  }
+
+  static fromAttributeHole(
     node: Element,
     name: string,
     message: string,
     options?: ErrorOptions,
   ): DOMRenderError {
     DEBUG: {
-      message += '\n' + generateNodeFrame(node, annotateAttribute(node, name));
+      message +=
+        '\n' + generateNodeFrame(node, annotateAttributeHole(node, name));
     }
     return new DOMRenderError(node, message, options);
   }

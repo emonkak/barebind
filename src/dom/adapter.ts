@@ -181,7 +181,7 @@ function renderTemplate(template: DOMTemplate): DOMBlock {
 
       for (; nodeIndex <= hole.index; nodeIndex++) {
         if (templateWalker.nextNode() === null) {
-          throw new DOMRenderError(
+          throw DOMRenderError.fromNode(
             templateWalker.currentNode,
             'There is no node that the hole indicates. The template may have been modified.',
           );
