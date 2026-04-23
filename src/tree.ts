@@ -5,6 +5,7 @@ import {
   type HostTree,
   InsertType,
   RemoveType,
+  type RenderChild,
   type RenderRoot,
   type RenderTree,
   UpdateAndMoveType,
@@ -75,6 +76,7 @@ function applyPatch(oldTree: RenderTree, newTree: RenderTree): void {
     removeChild(getHostAncestor(oldTree), oldTree);
     appendChild(getHostAncestor(newTree), newTree, nextHostSibling(oldTree));
   } else if (typeof newTree.type === 'function') {
+    (oldTree as RenderChild.ComponentChild).scope.pendingLanes = NoLanes;
     applyPatch(oldTree.children[0]!, newTree.children[0]!);
   } else if (newTree.type === Directive) {
     // skip
