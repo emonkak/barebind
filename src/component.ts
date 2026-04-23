@@ -455,7 +455,7 @@ class UpdateComponent implements UpdateUnit {
     const newTree: RenderChild.ComponentChild = {
       ...this._tree,
       children: new Array(1),
-      scope: new Scope(this._tree.scope),
+      scope: new Scope(this._tree.scope.parent),
     };
     const returnElement = newTree.instance.render(newTree);
     newTree.children[0] = reconciler.diff(
