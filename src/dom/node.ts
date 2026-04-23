@@ -1,5 +1,5 @@
 import { sequentialEqual } from '../compare.js';
-import type { HostNode, VHostElement, VPrimitive, VTemplate } from '../core.js';
+import type { HostNode, VHostElement, VPrimitive } from '../core.js';
 
 const CLASS_TOKEN_SEPARATOR_PATTERN = /\s+/;
 
@@ -50,10 +50,7 @@ export abstract class DOMNode implements HostNode {
 
   moveChild(_child: DOMNode, _after: DOMNode | null): void {}
 
-  removeChild(child: DOMNode): void {
-    child._remove();
-    child._parent = null;
-  }
+  removeChild(_child: DOMNode): void {}
 
   commitMount(
     _type: VHostElement['type'],
@@ -117,8 +114,6 @@ export abstract class DOMPart<TNode extends ChildNode = ChildNode> {
 export class DOMBind extends DOMNode {
   private readonly _index: number;
 
-  private _child: DOMNode | null = null;
-
   constructor(index: number) {
     super();
     this._index = index;
@@ -134,28 +129,41 @@ export class DOMBind extends DOMNode {
       : null;
   }
 
-  override get bindValue(): unknown {
-    return this._child?.bindValue;
-  }
-
-  override appendChild(child: DOMNode, _after: DOMNode | null): void {
+  override appendChild(child: DOMNode, after: DOMNode | null): void {
+    const part = this._getPart();
+    if (part !== undefined) {
+      child._mountBefore(after?.firstNode ?? part.node);
+      part.value = child.bindValue;
+    }
     child._parent = this;
-    this._child = child;
   }
 
   override moveChild(child: DOMNode, after: DOMNode | null): void {
-    const part =
-      this._parent instanceof DOMBlock
-        ? (this._parent.parts[this._index]! ?? null)
-        : null;
-    if (part !== null) {
+    const part = this._getPart();
+    if (part !== undefined) {
       child._moveBefore(after?.firstNode ?? part.node);
     }
   }
 
   override removeChild(child: DOMNode): void {
-    super.removeChild(child);
-    this._child = null;
+    child._remove();
+    child._parent = null;
+  }
+
+  /**
+   * @internal
+   */
+  override _invalidate(child: DOMNode): void {
+    const part = this._getPart();
+    if (part !== undefined) {
+      part.value = child.bindValue;
+    }
+  }
+
+  private _getPart(): DOMPart | undefined {
+    return this._parent instanceof DOMBlock
+      ? this._parent.parts[this._index]
+      : undefined;
   }
 }
 
@@ -204,33 +212,8 @@ export class DOMBlock extends DOMNode {
   }
 
   override removeChild(child: DOMNode): void {
-    super.removeChild(child);
     if (child instanceof DOMBind) {
       this._binds[child.index] = undefined;
-      child._parent = null;
-    }
-  }
-
-  override commitMount(
-    _type: VTemplate['type'],
-    _props: VTemplate['props'],
-  ): void {
-    for (const bind of this._binds) {
-      if (bind !== undefined) {
-        this._parts[bind.index]!.value = bind.bindValue;
-      }
-    }
-  }
-
-  override commitUpdate(
-    _type: VTemplate['type'],
-    _oldElement: VTemplate['props'],
-    _newElement: VTemplate['props'],
-  ): void {
-    for (const bind of this._binds) {
-      if (bind !== undefined) {
-        this._parts[bind.index]!.value = bind.bindValue;
-      }
     }
   }
 
@@ -375,17 +358,9 @@ export class AttributePart extends DOMPart<Element> {
 }
 
 export class ChildNodePart extends DOMPart<Comment> {
-  protected _update(oldValue: unknown, newValue: unknown): void {
-    if (oldValue instanceof DOMNode) {
-      oldValue._remove();
-    } else {
-      this._node.data = '';
-    }
-    if (newValue instanceof DOMNode) {
-      newValue._mountBefore(this._node);
-    } else {
-      this._node.data = toStringOrEmpty(newValue);
-    }
+  protected _update(_oldValue: unknown, newValue: unknown): void {
+    this._node.data =
+      newValue instanceof DOMNode ? '' : toStringOrEmpty(newValue);
   }
 }
 
