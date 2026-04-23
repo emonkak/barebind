@@ -143,7 +143,7 @@ interface StateOptions {
 export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
   private readonly _componentFn: ComponentFunction<TProps, TReturn>;
   private readonly _scheduler: UpdateScheduler;
-  private _origin: RenderChild.ComponentChild<TProps> | null = null;
+  private _tree: RenderChild.ComponentChild<TProps> | null = null;
   private _hooks: Hook[] = [];
   private _hookIndex = 0;
 
@@ -175,7 +175,7 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
   }
 
   forceUpdate(options: UpdateOptions): UpdateHandle {
-    if (this._origin === null) {
+    if (this._tree === null) {
       return {
         id: -1,
         lanes: NoLanes,
@@ -184,13 +184,13 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
         }),
       };
     }
-    return this._scheduler.schedule(new UpdateComponent(this._origin), options);
+    return this._scheduler.schedule(new UpdateComponent(this._tree), options);
   }
 
   inject<TInstance, TDefault = never>(
     type: Boundary<TInstance, TDefault>,
   ): TInstance | TDefault {
-    let scope: Scope | null = this._origin?.scope ?? null;
+    let scope: Scope | null = this._tree?.scope ?? null;
     while (scope !== null) {
       for (const instance of scope.instances) {
         if (instance instanceof type) {
@@ -208,14 +208,14 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
   }
 
   provide<T extends object>(instance: T): void {
-    this._origin?.scope.instances.push(instance);
+    this._tree?.scope.instances.push(instance);
   }
 
-  render(origin: RenderChild.ComponentChild<TProps>): VElement {
-    this._origin = origin;
+  render(tree: RenderChild.ComponentChild<TProps>): VElement {
+    this._tree = tree;
 
     try {
-      const returnValue = this._componentFn.call(this, origin.props);
+      const returnValue = this._componentFn.call(this, tree.props);
       let currentHook = this._hooks[this._hookIndex++];
 
       if (currentHook !== undefined) {
@@ -229,7 +229,7 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
       return wrap(returnValue);
     } catch (error) {
       throw new RenderError(
-        origin as RenderChild.ComponentChild<any>,
+        tree as RenderChild.ComponentChild<any>,
         'An error occurred during rendering.',
       );
     }
@@ -438,8 +438,10 @@ export function createComponent<TProps = {}, TReturn = unknown>(
     return new VNode(ComponentWrapper, props, []);
   }
 
-  ComponentWrapper.newInstance = (_props: TProps, scheduler: UpdateScheduler) =>
-    new Component(componentFn, scheduler);
+  ComponentWrapper.newInstance = (
+    _props: TProps,
+    scheduler: UpdateScheduler,
+  ): ComponentInstance<TProps> => new Component(componentFn, scheduler);
   ComponentWrapper.arePropsEqual = arePropsEqual;
 
   DEBUG: {
@@ -452,30 +454,30 @@ export function createComponent<TProps = {}, TReturn = unknown>(
 }
 
 class UpdateComponent implements UpdateUnit {
-  private readonly _origin: RenderChild.ComponentChild;
+  private readonly _tree: RenderChild.ComponentChild;
 
-  constructor(origin: RenderChild.ComponentChild) {
-    this._origin = origin;
+  constructor(tree: RenderChild.ComponentChild) {
+    this._tree = tree;
   }
 
   get scope(): Scope {
-    return this._origin.scope;
+    return this._tree.scope;
   }
 
   prepare(reconciler: Reconciler): () => void {
-    const newOrigin: RenderChild.ComponentChild = {
-      ...this._origin,
+    const newTree: RenderChild.ComponentChild = {
+      ...this._tree,
       children: new Array(1),
-      scope: createScope(this._origin.scope),
+      scope: createScope(this._tree.scope),
     };
-    const returnElement = newOrigin.instance.render(newOrigin);
-    newOrigin.children[0] = reconciler.diff(
-      this._origin.children[0]!,
+    const returnElement = newTree.instance.render(newTree);
+    newTree.children[0] = reconciler.diff(
+      this._tree.children[0]!,
       returnElement,
-      newOrigin.scope,
+      newTree.scope,
     );
     return () => {
-      patch(this._origin, newOrigin);
+      patch(this._tree, newTree);
     };
   }
 }
