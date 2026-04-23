@@ -7,32 +7,81 @@ const COMPLEXITY_THRESHOLD = 10;
 
 const serializer = new XMLSerializer();
 
-export function annotateAttribute(element: Element, name: string): string[] {
-  return annotateElementTail(element, name + '=' + PLACEHOLDER_STRING);
+export function annotateAttributeHole(
+  element: Element,
+  name: string,
+): string[] {
+  const closed = isClosed(element);
+  const tailSpan = closed ? 1 : element.localName.length + 4;
+  const outerHTML = element.outerHTML;
+  const unclosedTag = outerHTML.slice(
+    0,
+    outerHTML.length - element.innerHTML.length - tailSpan,
+  );
+
+  const lines = [
+    `${unclosedTag} ${name}=${PLACEHOLDER_STRING}>`,
+    ' '.repeat(unclosedTag.length + 1) +
+      CARET_CHAR.repeat(name.length + PLACEHOLDER_STRING.length + 1),
+  ];
+
+  if (!closed) {
+    lines.push(...prettyPrintChildren(element, 1), toCloseTag(element));
+  }
+
+  return lines;
 }
 
 export function annotateNode(node: Node): string[] {
-  if (node instanceof Element) {
-    return annotateElementHead(
-      node,
-      isUnknownElement(node) ? PLACEHOLDER_STRING : node.localName,
-    );
-  } else {
-    return prettyPrintNode(node).flatMap((line) => {
-      const caretSpan = Math.max(1, line.trimStart().length);
-      const spaceSpan = line.length - caretSpan;
-      return [line, ' '.repeat(spaceSpan) + CARET_CHAR.repeat(caretSpan)];
-    });
+  switch (node.nodeType) {
+    case Node.ELEMENT_NODE:
+      return annotateElement(node as Element, (node as Element).localName);
+    case Node.COMMENT_NODE:
+      return [
+        `<!--${(node as Comment).data}-->`,
+        CARET_CHAR.repeat((node as Comment).data.length + 7),
+      ];
+    case Node.TEXT_NODE:
+      return [
+        `"${(node as Text).data}"`,
+        CARET_CHAR.repeat((node as Text).data.length + 2),
+      ];
+    default:
+      return [
+        `<${node.nodeName}>`,
+        CARET_CHAR.repeat(node.nodeName.length + 2),
+        ...prettyPrintChildren(node, 1),
+        `</${node.nodeName}>`,
+      ];
+  }
+}
+
+export function annotateNodeHole(node: Node): string[] {
+  switch (node.nodeType) {
+    case Node.ELEMENT_NODE:
+      return annotateElement(node as Element, PLACEHOLDER_STRING);
+    case Node.COMMENT_NODE:
+      return [
+        `<!--${PLACEHOLDER_STRING}-->`,
+        CARET_CHAR.repeat(PLACEHOLDER_STRING.length + 7),
+      ];
+    case Node.TEXT_NODE:
+      return [
+        `"${PLACEHOLDER_STRING}"`,
+        CARET_CHAR.repeat(PLACEHOLDER_STRING.length + 2),
+      ];
+    default:
+      return [];
   }
 }
 
 export function generateNodeFrame(
-  node: Node,
+  originNode: Node,
   annotatedLines: string[],
 ): string {
-  const leadingLines: string[] = [];
-  const trailingLines: string[] = [];
-  let currentNode: Node | null = node;
+  let leadingLines: string[] = [];
+  let trailingLines: string[] = [];
+  let currentNode: Node | null = originNode;
   let complexity = 0;
   let level = 0;
 
@@ -57,16 +106,16 @@ export function generateNodeFrame(
 
     currentNode = currentNode.parentNode;
 
-    if (!(currentNode instanceof Element)) {
+    if (currentNode === null || currentNode.nodeType !== Node.ELEMENT_NODE) {
       break;
     }
 
-    shiftLines(leadingLines);
-    shiftLines(trailingLines);
+    leadingLines = leadingLines.map(shiftLine);
+    trailingLines = trailingLines.map(shiftLine);
 
     // Not self-closing because it contains child nodes.
-    leadingLines.push(toOpenTag(currentNode));
-    trailingLines.push(toCloseTag(currentNode));
+    leadingLines.push(toOpenTag(currentNode as Element));
+    trailingLines.push(toCloseTag(currentNode as Element));
 
     complexity += getComplexity(currentNode);
     level++;
@@ -76,16 +125,16 @@ export function generateNodeFrame(
     leadingLines.length > 0 ? leadingLines.reverse().join('\n') + '\n' : '';
   const trailingString =
     trailingLines.length > 0 ? '\n' + trailingLines.join('\n') : '';
-  const annotatedString = annotatedLines
+  const middle = annotatedLines
     .map((line) => INDENT_STRING.repeat(level) + line)
     .join('\n');
 
-  return leadingString + annotatedString + trailingString;
+  return leadingString + middle + trailingString;
 }
 
-function annotateElementHead(element: Element, annotation: string): string[] {
-  const isClosed = isTagClosed(element);
-  const tailSpan = isClosed ? 0 : element.localName.length + 3;
+function annotateElement(element: Element, annotation: string): string[] {
+  const closed = isClosed(element);
+  const tailSpan = closed ? 0 : element.localName.length + 3;
   const outerHTML = element.outerHTML;
   const unopenedTag = outerHTML.substring(
     element.localName.length + 1,
@@ -93,32 +142,11 @@ function annotateElementHead(element: Element, annotation: string): string[] {
   );
 
   const lines = [
-    '<' + PLACEHOLDER_STRING + unopenedTag,
-    ' ' + CARET_CHAR.repeat(annotation.length),
+    '<' + annotation + unopenedTag,
+    CARET_CHAR.repeat(annotation.length + unopenedTag.length + 1),
   ];
 
-  if (!isClosed) {
-    lines.push(...prettyPrintChildren(element, 1), toCloseTag(element));
-  }
-
-  return lines;
-}
-
-function annotateElementTail(element: Element, annotation: string): string[] {
-  const isClosed = isTagClosed(element);
-  const tailSpan = isClosed ? 1 : element.localName.length + 4;
-  const outerHTML = element.outerHTML;
-  const unclosedTag = outerHTML.slice(
-    0,
-    outerHTML.length - element.innerHTML.length - tailSpan,
-  );
-
-  const lines = [
-    unclosedTag + ' ' + annotation + '>',
-    ' '.repeat(unclosedTag.length + 1) + CARET_CHAR.repeat(annotation.length),
-  ];
-
-  if (!isClosed) {
+  if (!closed) {
     lines.push(...prettyPrintChildren(element, 1), toCloseTag(element));
   }
 
@@ -144,16 +172,8 @@ function getComplexity(node: Node): number {
   return complexity;
 }
 
-function isTagClosed(element: Element): boolean {
+function isClosed(element: Element): boolean {
   return !element.outerHTML.endsWith(toCloseTag(element));
-}
-
-function isUnknownElement(el: Element): boolean {
-  return (
-    el.constructor === HTMLUnknownElement ||
-    el.constructor === SVGElement ||
-    el.constructor === MathMLElement
-  );
 }
 
 function prettyPrintChildren(node: Node, level: number): string[] {
@@ -168,30 +188,32 @@ function prettyPrintChildren(node: Node, level: number): string[] {
 
 function prettyPrintNode(node: Node, level: number = 0): string[] {
   const lines: string[] = [];
-  const indentString = INDENT_STRING.repeat(level);
+  const indent = INDENT_STRING.repeat(level);
 
-  if (node instanceof Element) {
-    if (isTagClosed(node)) {
-      lines.push(indentString + node.outerHTML);
-      return lines;
-    }
+  switch (node.nodeType) {
+    case Node.ELEMENT_NODE:
+      if (isClosed(node as Element)) {
+        lines.push(indent + (node as Element).outerHTML);
+        return lines;
+      }
 
-    lines.push(
-      indentString + toOpenTag(node),
-      ...prettyPrintChildren(node, level + 1),
-    );
+      lines.push(
+        indent + toOpenTag(node as Element),
+        ...prettyPrintChildren(node, level + 1),
+      );
 
-    if (lines.length > 1) {
-      lines.push(indentString + toCloseTag(node));
-    } else {
-      lines[0] += toCloseTag(node);
-    }
-  } else if (node instanceof DocumentFragment) {
-    lines.push(...prettyPrintChildren(node, level));
-  } else if (node instanceof Text) {
-    lines.push(indentString + JSON.stringify(node.data));
-  } else {
-    lines.push(indentString + serializeNode(node));
+      if (lines.length > 1) {
+        lines.push(indent + toCloseTag(node as Element));
+      } else {
+        lines[0] += toCloseTag(node as Element);
+      }
+      break;
+    case Node.COMMENT_NODE:
+      lines.push(indent + serializeNode(node));
+      break;
+    case Node.TEXT_NODE:
+      lines.push(indent + JSON.stringify((node as Text).data));
+      break;
   }
 
   return lines;
@@ -201,12 +223,8 @@ function serializeNode(node: Node): string {
   return serializer.serializeToString(node);
 }
 
-function shiftLines(lines: string[]): void {
-  for (let i = 0, l = lines.length; i < l; i++) {
-    if (lines[i] !== '') {
-      lines[i] = INDENT_STRING + lines[i];
-    }
-  }
+function shiftLine(line: string): string {
+  return line !== '' ? INDENT_STRING + line : line;
 }
 
 function toCloseTag(element: Element): string {
