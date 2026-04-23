@@ -83,7 +83,7 @@ function applyPatch(oldTree: RenderTree, newTree: RenderTree): void {
   } else if (newTree.type === Directive) {
     // skip
   } else if (newTree.type === Fragment) {
-    const parentNode = getHostAncestor(newTree.parent);
+    const parentNode = getHostAncestor(newTree);
 
     for (const mutation of newTree.mutations) {
       switch (mutation.type) {
