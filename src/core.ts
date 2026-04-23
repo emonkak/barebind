@@ -116,13 +116,6 @@ export type RenderChild =
   | RenderChild.FragmentChild
   | RenderChild.HostChild;
 
-export interface RenderNode<TElement extends VElement>
-  extends Pick<TElement, 'type' | 'props' | 'key'> {
-  parent: RenderTree | null;
-  children: RenderChild[];
-  index: number;
-}
-
 export namespace RenderChild {
   export interface DirectiveChild extends RenderNode<VDirective> {
     parent: RenderTree;
@@ -145,6 +138,13 @@ export namespace RenderChild {
     parent: RenderTree;
     hostNode: HostNode;
   }
+}
+
+export interface RenderNode<TElement extends VElement>
+  extends Pick<TElement, 'type' | 'props' | 'key'> {
+  parent: RenderTree | null;
+  children: RenderChild[];
+  index: number;
 }
 
 export interface RenderRoot extends RenderNode<VPortal> {
