@@ -1,0 +1,194 @@
+/// <reference types="navigation-api-types" />
+
+import type { UsableFunction } from '../../component.js';
+import type { UpdateResult } from '../../core.js';
+import {
+  anyModifiersArePressed,
+  HistoryContext,
+  type HistoryLocation,
+  type HistoryNavigator,
+  isInternalLink,
+} from './history.js';
+import { RelativeURL } from './relative-url.js';
+
+export function BrowserHistory(): UsableFunction<HistoryContext> {
+  return (context) => {
+    const [location, setLocation] = context.useState<HistoryLocation>(() => ({
+      url: RelativeURL.fromURL(window.location),
+      state: history.state,
+      navigationType: null,
+    }));
+
+    const navigator: HistoryNavigator = context.useMemo(
+      () => ({
+        isTransitionRunning: false as boolean,
+        runningTransition: Promise.resolve<UpdateResult>({ status: 'done' }),
+        getCurrentURL() {
+          return RelativeURL.fromURL(window.location);
+        },
+        navigate(url, { replace = false, state = null } = {}) {
+          const handle = setLocation({
+            url: RelativeURL.from(url),
+            state,
+            navigationType: replace ? 'replace' : 'push',
+          });
+
+          handle.finished.finally(() => {
+            if (this.runningTransition === handle.finished) {
+              this.isTransitionRunning = false;
+            }
+          });
+
+          this.isTransitionRunning = true;
+          this.runningTransition = handle.finished;
+
+          if (replace) {
+            history.replaceState(state, '', '#' + url);
+          } else {
+            history.pushState(state, '', '#' + url);
+          }
+        },
+      }),
+      [],
+    );
+
+    context.useEffect(() => {
+      const handleClick = createLinkClickHandler(navigator);
+      const handleSubmit = createFormSubmitHandler(navigator);
+
+      if (typeof navigation === 'object') {
+        const handleNavigate = (event: NavigateEvent) => {
+          if (!event.hashChange) {
+            // Ignore an event when the hash has only changed.
+            return;
+          }
+
+          if (event.navigationType === 'traverse') {
+            setLocation({
+              url: RelativeURL.fromString(event.destination.url),
+              state: event.destination.getState(),
+              navigationType: 'traverse',
+            });
+          }
+        };
+
+        addEventListener('click', handleClick);
+        addEventListener('submit', handleSubmit);
+        navigation.addEventListener('navigate', handleNavigate);
+
+        return () => {
+          removeEventListener('click', handleClick);
+          removeEventListener('submit', handleSubmit);
+          navigation.removeEventListener('navigate', handleNavigate);
+        };
+      } else {
+        const handlePopState = (event: PopStateEvent) => {
+          const { url } = location;
+
+          if (
+            url.pathname === window.location.pathname &&
+            url.search === window.location.search
+          ) {
+            // Ignore an event when the hash has only changed.
+            return;
+          }
+
+          setLocation({
+            url: RelativeURL.fromURL(window.location),
+            state: event.state,
+            navigationType: 'traverse',
+          });
+        };
+
+        addEventListener('click', handleClick);
+        addEventListener('submit', handleSubmit);
+        addEventListener('popstate', handlePopState);
+
+        return () => {
+          removeEventListener('click', handleClick);
+          removeEventListener('submit', handleSubmit);
+          removeEventListener('popstate', handlePopState);
+        };
+      }
+    }, []);
+
+    const historyContext = new HistoryContext(location, navigator);
+
+    context.provide(historyContext);
+
+    return historyContext;
+  };
+}
+
+export function createLinkClickHandler({
+  navigate,
+}: Pick<HistoryNavigator, 'navigate'>): (event: MouseEvent) => void {
+  return (event) => {
+    if (
+      anyModifiersArePressed(event) ||
+      event.button !== 0 ||
+      event.defaultPrevented
+    ) {
+      return;
+    }
+
+    const element = (event.composedPath() as Element[]).find(isInternalLink);
+    if (
+      element === undefined ||
+      element.origin !== window.location.origin ||
+      element.getAttribute('href')!.startsWith('#')
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const url = RelativeURL.fromURL(element);
+    const replace =
+      element.hasAttribute('data-link-replace') ||
+      element.href === window.location.href;
+
+    navigate(url, { replace });
+  };
+}
+
+export function createFormSubmitHandler({
+  navigate,
+}: Pick<HistoryNavigator, 'navigate'>): (event: SubmitEvent) => void {
+  return (event) => {
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    const form = event.target as HTMLFormElement;
+    const submitter = event.submitter as
+      | HTMLButtonElement
+      | HTMLInputElement
+      | null;
+
+    const method = submitter?.formMethod ?? form.method;
+    if (method !== 'get') {
+      return;
+    }
+
+    const action = new URL(submitter?.formAction ?? form.action);
+    if (action.origin !== window.location.origin) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Action's search params are replaced with form data.
+    const url = new RelativeURL(
+      action.pathname,
+      new FormData(form, submitter) as any,
+      action.hash,
+    );
+    const replace =
+      form.hasAttribute('data-link-replace') ||
+      url.toString() === window.location.href;
+
+    navigate(url, { replace });
+  };
+}
