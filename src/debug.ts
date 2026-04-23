@@ -1,7 +1,7 @@
-import type { RenderChild, RenderTree } from './core.js';
+import type { RenderTree } from './core.js';
 
 export function formatComponentStack(
-  componentStack: RenderChild.ComponentChild[],
+  componentStack: RenderTree.ComponentNode[],
 ): string {
   const tail = componentStack.length - 1;
   return componentStack
@@ -16,8 +16,8 @@ export function formatComponentStack(
 
 export function getComponentStack(
   tree: RenderTree,
-): RenderChild.ComponentChild[] {
-  const componentStack: RenderChild.ComponentChild[] = [];
+): RenderTree.ComponentNode[] {
+  const componentStack: RenderTree.ComponentNode[] = [];
   let current: RenderTree | null = tree;
 
   do {
