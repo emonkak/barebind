@@ -27,7 +27,7 @@ export interface ComponentType<TProps> {
 }
 
 export interface ComponentInstance<TProps> {
-  render(origin: RenderChild.ComponentChild<TProps>): VElement;
+  render(tree: RenderChild.ComponentChild<TProps>): VElement;
   afterCommit(): void;
   beforeRemove(): void;
 }
@@ -116,46 +116,39 @@ export type RenderChild =
   | RenderChild.FragmentChild
   | RenderChild.HostChild;
 
+export interface RenderNode<TElement extends VElement>
+  extends Pick<TElement, 'type' | 'props' | 'key'> {
+  parent: RenderTree | null;
+  children: RenderChild[];
+  index: number;
+}
+
 export namespace RenderChild {
-  export interface DirectiveChild
-    extends Pick<VDirective, 'type' | 'props' | 'key'> {
+  export interface DirectiveChild extends RenderNode<VDirective> {
     parent: RenderTree;
-    children: RenderChild[];
-    index: number;
     dirty: boolean;
     cleanup: (() => void) | undefined;
   }
 
-  export interface ComponentChild<TProps = any>
-    extends Pick<VComponent<TProps>, 'type' | 'props' | 'key'> {
+  export interface ComponentChild<TProps = any> extends RenderNode<VComponent> {
     parent: RenderTree;
-    children: RenderChild[];
-    index: number;
     instance: ComponentInstance<TProps>;
     scope: Scope;
   }
 
-  export interface FragmentChild
-    extends Pick<VFragment, 'type' | 'props' | 'key'> {
+  export interface FragmentChild extends RenderNode<VFragment> {
     parent: RenderTree;
-    children: RenderChild[];
-    index: number;
     mutations: Mutation[];
   }
 
-  export interface HostChild
-    extends Pick<VHostElement, 'type' | 'props' | 'key'> {
+  export interface HostChild extends RenderNode<VHostElement> {
     parent: RenderTree;
-    children: RenderChild[];
-    index: number;
     hostNode: HostNode;
   }
 }
 
-export interface RenderRoot extends Pick<VPortal, 'type' | 'props' | 'key'> {
+export interface RenderRoot extends RenderNode<VPortal> {
   parent: null;
-  children: RenderChild[];
-  index: number;
   hostNode: HostNode;
 }
 
