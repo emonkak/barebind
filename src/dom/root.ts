@@ -1,7 +1,7 @@
 import {
   createPortal,
-  createScope,
   type RenderRoot,
+  Scope,
   type UpdateHandle,
   type UpdateOptions,
 } from '../core.js';
@@ -19,7 +19,7 @@ export class Root {
   }
 
   render(child: unknown, options?: UpdateOptions): UpdateHandle {
-    const scope = createScope();
+    const scope = new Scope();
     return this._runtime.schedule(
       {
         scope,
@@ -46,7 +46,7 @@ export class Root {
   unmount(options?: UpdateOptions): UpdateHandle {
     return this._runtime.schedule(
       {
-        scope: createScope(),
+        scope: new Scope(),
         prepare: () => {
           return () => {
             if (this._tree !== null) {
