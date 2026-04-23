@@ -371,10 +371,6 @@ export class AttributePart extends DOMPart<Element> {
 }
 
 export class ChildNodePart extends DOMPart<Comment> {
-  constructor(node: Comment) {
-    super(node);
-  }
-
   protected _update(oldValue: unknown, newValue: unknown): void {
     if (oldValue instanceof DOMNode) {
       oldValue._remove();
@@ -390,10 +386,6 @@ export class ChildNodePart extends DOMPart<Comment> {
 }
 
 export class ElementPart extends DOMPart<Element> {
-  constructor(node: Element) {
-    super(node);
-  }
-
   protected _update(_newValue: unknown): void {}
 }
 
@@ -466,10 +458,6 @@ export class PropertyPart extends DOMPart<Element> {
 }
 
 export class TextPart extends DOMPart<Text> {
-  constructor(node: Text) {
-    super(node);
-  }
-
   protected _update(_oldValue: unknown, newValue: unknown): void {
     this._node.data = toStringOrEmpty(newValue);
   }
