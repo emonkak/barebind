@@ -114,6 +114,14 @@ export class DOMAdapter implements HostAdapter {
       ? document.startViewTransition(callback).updateCallbackDone
       : Promise.resolve().then(callback);
   }
+
+  yieldToMain(): Promise<void> {
+    return typeof window.scheduler?.yield === 'function'
+      ? scheduler.yield()
+      : new Promise((resolve) => {
+          setTimeout(resolve);
+        });
+  }
 }
 
 function generateUniqueIdentifier(length: number): string {
