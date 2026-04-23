@@ -3,12 +3,11 @@ import {
   type Boundary,
   type ComponentInstance,
   type ComponentType,
-  createScope,
   type Lanes,
   type Reconciler,
   Ref,
   type RenderChild,
-  type Scope,
+  Scope,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateResult,
@@ -460,7 +459,7 @@ class UpdateComponent implements UpdateUnit {
     const newTree: RenderChild.ComponentChild = {
       ...this._tree,
       children: new Array(1),
-      scope: createScope(this._tree.scope),
+      scope: new Scope(this._tree.scope),
     };
     const returnElement = newTree.instance.render(newTree);
     newTree.children[0] = reconciler.diff(

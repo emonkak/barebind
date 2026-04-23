@@ -1,6 +1,5 @@
 import { areDependenciesChange } from './compare.js';
 import {
-  createScope,
   Directive,
   Fragment,
   type HostAdapter,
@@ -13,7 +12,7 @@ import {
   type RenderChild,
   type RenderRoot,
   type RenderTree,
-  type Scope,
+  Scope,
   UpdateAndMoveType,
   type UpdateHandle,
   type UpdateOptions,
@@ -80,7 +79,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
         ...(oldTree as RenderChild.ComponentChild),
         ...newElement,
         children: new Array(1),
-        scope: createScope(scope),
+        scope: new Scope(scope),
       };
       const returnElement = newTree.instance.render(newTree);
       newTree.children[0] = this.diff(
@@ -169,7 +168,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
         children: new Array(1),
         index,
         instance: element.type.newInstance(element.props, this),
-        scope: createScope(scope),
+        scope: new Scope(scope),
       };
       const returnElement = tree.instance.render(tree);
       tree.children[0] = this.render(returnElement, tree.scope, 0, tree);

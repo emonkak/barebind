@@ -158,13 +158,6 @@ export interface Renderable {
   [toElement](): VElement;
 }
 
-export interface Scope {
-  parent: Scope | null;
-  level: number;
-  instances: object[];
-  pendingLanes: Lanes;
-}
-
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
 export interface UpdateHandle {
@@ -251,6 +244,18 @@ export class Ref<T> implements Renderable {
   }
 }
 
+export class Scope {
+  parent: Scope | null;
+  level: number;
+  instances: object[] = [];
+  pendingLanes: Lanes = NoLanes;
+
+  constructor(parent: Scope | null = null) {
+    this.parent = parent;
+    this.level = (parent?.level ?? -1) + 1;
+  }
+}
+
 export class VNode<TType, TProps, const TChildren extends VElement[]> {
   type: TType;
   props: TProps;
@@ -281,15 +286,6 @@ export function createDirective<T>(
 
 export function createPortal(child: unknown, container: Element): VPortal {
   return new VNode(container, {}, [wrap(child)]);
-}
-
-export function createScope(parent: Scope | null = null): Scope {
-  return {
-    parent,
-    level: (parent?.level ?? -1) + 1,
-    instances: [],
-    pendingLanes: NoLanes,
-  };
 }
 
 export function wrap(value: unknown): VElement {
