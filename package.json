@@ -10,9 +10,6 @@
     },
     "./core": {
       "import": "./src/core.js"
-    },
-    "./experimental": {
-      "import": "./src/experimental/index.js"
     }
   },
   "publishConfig": {

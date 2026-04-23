@@ -40,6 +40,15 @@ importers:
         specifier: workspace:*
         version: link:../..
 
+  examples/todomvc:
+    dependencies:
+      barebind:
+        specifier: workspace:*
+        version: link:../..
+      todomvc-app-css:
+        specifier: ^2.4.3
+        version: 2.4.3
+
   tools/esbuild-plugin-minify-templates:
     dependencies:
       '@types/node':
@@ -1033,6 +1042,10 @@ packages:
     resolution: {integrity: sha512-Bf+ILmBgretUrdJxzXM0SgXLZ3XfiaUuOj/IKQHuTXip+05Xn+uyEYdVg0kYDipTBcLrCVyUzAPz7QmArb0mmw==}
     engines: {node: '>=14.0.0'}
 
+  todomvc-app-css@2.4.3:
+    resolution: {integrity: sha512-mSnWZaKBWj9aQcFRsGguY/a8O8NR8GmecD48yU1rzwNemgZa/INLpIsxxMiToFGVth+uEKBrQ7IhWkaXZxwq5Q==}
+    engines: {node: '>=4'}
+
   totalist@3.0.1:
     resolution: {integrity: sha512-sf4i37nQ2LBx4m3wB74y+ubopq6W/dIzXg0FDGjsYnZHVa1Da8FH853wlL2gtUhg+xJXjfk3kUZS3BRoQeoQBQ==}
     engines: {node: '>=6'}
@@ -2004,6 +2017,8 @@ snapshots:
       picomatch: 4.0.4
 
   tinyrainbow@3.1.0: {}
+
+  todomvc-app-css@2.4.3: {}
 
   totalist@3.0.1: {}
 
