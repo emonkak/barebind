@@ -163,10 +163,13 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
       const returnValue = this._componentFn.call(this._context, tree.props);
       finalizeHooks(this._context);
       return wrap(returnValue);
-    } catch (error) {
+    } catch (cause) {
       throw new RenderError(
         tree as RenderChild.ComponentChild<any>,
         'An error occurred during rendering.',
+        {
+          cause,
+        },
       );
     }
   }
