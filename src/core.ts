@@ -27,6 +27,7 @@ export interface ComponentType<TProps> {
 }
 
 export interface ComponentInstance<TProps> {
+  connect(tree: RenderTree.ComponentNode<TProps>): void;
   render(tree: RenderTree.ComponentNode<TProps>): VElement;
   afterCommit(): void;
   beforeRemove(): void;
@@ -97,6 +98,7 @@ export interface Reconciler {
     index?: number,
     parent?: RenderTree | null,
   ): RenderTree;
+  nextRenderId(): number;
   render(
     element: VElement,
     scope: Scope,
@@ -114,6 +116,7 @@ export type RenderTree =
 export namespace RenderTree {
   interface RenderNode<TElement extends VElement>
     extends Pick<TElement, 'type' | 'props' | 'key'> {
+    id: number;
     index: number;
     parent: RenderTree | null;
     children: RenderTree[];
