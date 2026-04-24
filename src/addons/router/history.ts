@@ -1,4 +1,3 @@
-import type { UpdateResult } from '../../core.js';
 import type { RelativeURL } from './relative-url.js';
 
 export interface HistoryLocation {
@@ -9,7 +8,7 @@ export interface HistoryLocation {
 
 export interface HistoryNavigator {
   readonly isTransitionRunning: boolean;
-  readonly runningTransition: Promise<UpdateResult>;
+  readonly runningTransition: Promise<void>;
   getCurrentURL(): RelativeURL;
   navigate(url: string | RelativeURL, options?: NavigateOptions): void;
 }

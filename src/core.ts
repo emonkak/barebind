@@ -150,7 +150,7 @@ export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 export interface UpdateHandle {
   id: number;
   lanes: Lanes;
-  finished: Promise<UpdateResult>;
+  finished: Promise<void>;
 }
 
 export interface UpdateOptions
@@ -159,11 +159,6 @@ export interface UpdateOptions
   transition?: number;
   viewTransition?: boolean;
 }
-
-export type UpdateResult =
-  | { status: 'done' }
-  | { status: 'skipped' }
-  | { status: 'intrupted'; reason: unknown };
 
 export interface UpdateScheduler {
   readonly flushLanes: Lanes;

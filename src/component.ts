@@ -10,7 +10,6 @@ import {
   Scope,
   type UpdateHandle,
   type UpdateOptions,
-  type UpdateResult,
   type UpdateScheduler,
   type UpdateUnit,
   type VComponent,
@@ -161,13 +160,9 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
       finalizeHooks(this._context);
       return wrap(returnValue);
     } catch (cause) {
-      throw new RenderError(
-        tree as RenderTree.ComponentNode<any>,
-        'An error occurred during rendering.',
-        {
-          cause,
-        },
-      );
+      throw new RenderError(tree, 'An error occurred during rendering.', {
+        cause,
+      });
     }
   }
 }
@@ -191,9 +186,7 @@ export class RenderContext {
       return {
         id: -1,
         lanes: NoLanes,
-        finished: Promise.resolve({
-          status: 'skipped',
-        }),
+        finished: Promise.resolve(),
       };
     }
     return this._scheduler.schedule(new UpdateComponent(this._tree), options);
@@ -359,9 +352,7 @@ export class RenderContext {
               return {
                 id: -1,
                 lanes: NoLanes,
-                finished: Promise.resolve<UpdateResult>({
-                  status: 'skipped',
-                }),
+                finished: Promise.resolve(),
               };
             }
           }
