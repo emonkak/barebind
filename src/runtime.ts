@@ -1,6 +1,7 @@
 import { areDependenciesChange } from './compare.js';
 import {
   Directive,
+  type Dispatcher,
   Fragment,
   type HostAdapter,
   InsertType,
@@ -13,7 +14,6 @@ import {
   UpdateAndMoveType,
   type UpdateHandle,
   type UpdateOptions,
-  type UpdateScheduler,
   UpdateType,
   type UpdateUnit,
   type VElement,
@@ -36,7 +36,7 @@ interface Update {
   controller: PromiseWithResolvers<void>;
 }
 
-export class Runtime implements Reconciler, UpdateScheduler {
+export class Runtime implements Reconciler, Dispatcher {
   private readonly _adapter: HostAdapter;
   private readonly _updateQueue: PriorityQueue<Update> = new PriorityQueue(
     compareUpdates,
@@ -565,7 +565,7 @@ function buildKeyToIndexMap<T>(
 function compareUpdates(x: Update, y: Update): number {
   const lane1 = getHighestPriorityLane(x.lanes);
   const lane2 = getHighestPriorityLane(y.lanes);
-  return lane1 !== lane2
-    ? lane1 - lane2
-    : x.unit.scope.level - y.unit.scope.level;
+  const level1 = x.unit.scope.level;
+  const level2 = y.unit.scope.level;
+  return lane1 !== lane2 ? lane1 - lane2 : level1 - level2;
 }

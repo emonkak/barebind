@@ -1,26 +1,26 @@
 import {
   createPortal,
+  type Dispatcher,
   type RenderTree,
   Scope,
   type UpdateHandle,
   type UpdateOptions,
 } from '../core.js';
-import type { Runtime } from '../runtime.js';
 import { mount, patch, unmount } from '../tree.js';
 
 export class Root {
   private readonly _container: Element;
-  private readonly _runtime: Runtime;
+  private readonly _dispatcher: Dispatcher;
   private _root: RenderTree.NativeNode | null = null;
 
-  constructor(container: Element, runtime: Runtime) {
+  constructor(container: Element, dispatcher: Dispatcher) {
     this._container = container;
-    this._runtime = runtime;
+    this._dispatcher = dispatcher;
   }
 
   render(child: unknown, options?: UpdateOptions): UpdateHandle {
     const scope = new Scope();
-    return this._runtime.schedule(
+    return this._dispatcher.schedule(
       {
         scope,
         prepare: (reconciler) => {
@@ -48,7 +48,7 @@ export class Root {
   }
 
   unmount(options?: UpdateOptions): UpdateHandle {
-    return this._runtime.schedule(
+    return this._dispatcher.schedule(
       {
         scope: new Scope(),
         prepare: () => {
