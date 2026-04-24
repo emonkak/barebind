@@ -21,7 +21,7 @@ export function mount(root: RenderTree.NativeNode): void {
 export function unmount(root: RenderTree.NativeNode): void {
   beforeRemove(root);
   for (const child of root.children) {
-    removeChild(root.hostNode, child);
+    removeHostNode(root.hostNode, child);
   }
 }
 
@@ -73,7 +73,7 @@ function applyPatch(oldTree: RenderTree, newTree: RenderTree): void {
     return;
   }
   if (oldTree.type !== newTree.type || oldTree.key !== newTree.key) {
-    removeSubtree(getHostAncestor(oldTree), oldTree);
+    removeChild(getHostAncestor(oldTree), oldTree);
     appendChild(getHostAncestor(newTree), newTree, nextHostSibling(oldTree));
   } else if (typeof newTree.type === 'function') {
     (oldTree as RenderTree.ComponentNode).scope.pendingLanes = NoLanes;
@@ -108,7 +108,7 @@ function applyPatch(oldTree: RenderTree, newTree: RenderTree): void {
           applyPatch(mutation.oldTree, mutation.newTree);
           break;
         case RemoveType:
-          removeSubtree(parentNode, mutation.tree);
+          removeChild(parentNode, mutation.tree);
           break;
       }
     }
@@ -202,18 +202,18 @@ function nextHostSibling(child: RenderTree): HostNode | null {
 }
 
 function removeChild(parentNode: HostNode, child: RenderTree): void {
+  beforeRemove(child);
+  removeHostNode(parentNode, child);
+}
+
+function removeHostNode(parentNode: HostNode, child: RenderTree): void {
   if (isNativeNode(child)) {
     parentNode.removeChild(child.hostNode);
   } else {
     for (const descendant of child.children) {
-      removeChild(parentNode, descendant);
+      removeHostNode(parentNode, descendant);
     }
   }
-}
-
-function removeSubtree(parentNode: HostNode, child: RenderTree): void {
-  beforeRemove(child);
-  removeChild(parentNode, child);
 }
 
 function reparent(tree: RenderTree): void {
