@@ -202,10 +202,6 @@ export class DOMBlock extends DOMNode {
     return this._staticNodes.at(-1) ?? null;
   }
 
-  override get bindValue(): unknown {
-    return this;
-  }
-
   override commitMount(
     _type: VHostElement['type'],
     _props: VHostElement['props'],
@@ -368,8 +364,7 @@ export class AttributePart extends DOMPart<Element> {
 
 export class ChildNodePart extends DOMPart<Comment> {
   protected _update(_oldValue: unknown, newValue: unknown): void {
-    this._node.data =
-      newValue instanceof DOMNode ? '' : toStringOrEmpty(newValue);
+    this._node.data = toStringOrEmpty(newValue);
   }
 }
 
