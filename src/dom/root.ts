@@ -18,13 +18,13 @@ export class Root {
     this._dispatcher = dispatcher;
   }
 
-  render(child: unknown, options?: UpdateOptions): UpdateHandle {
+  render(value: unknown, options?: UpdateOptions): UpdateHandle {
     const scope = new Scope();
     return this._dispatcher.schedule(
       {
         scope,
         prepare: (reconciler) => {
-          const element = createPortal(child, this._container);
+          const element = createPortal(value, this._container);
           const newRoot = (
             this._root !== null
               ? reconciler.diff(this._root, element, scope)
