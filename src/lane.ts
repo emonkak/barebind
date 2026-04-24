@@ -19,16 +19,26 @@ export function getHighestPriorityLane(lanes: Lanes): Lane {
   return lanes & -lanes;
 }
 
-export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
-  if (lanes & (BackgroundLane | TransitionLanes | DelayedLanes)) {
-    return 'background';
-  } else if (lanes & UserVisibleLane) {
-    return 'user-visible';
-  } else if (lanes & (HydrationLane | SyncLane | UserBlockingLane)) {
-    return 'user-blocking';
-  } else {
-    return null;
+export function getLaneFromPriority(priority: TaskPriority): Lanes {
+  switch (priority) {
+    case 'user-blocking':
+      return UserBlockingLane;
+    case 'user-visible':
+      return UserVisibleLane;
+    case 'background':
+      return BackgroundLane;
   }
+}
+
+export function getPriorityFromLanes(lanes: Lanes): TaskPriority {
+  return lanes &
+    (HydrationLane | SyncLane | ViewTransitionLane | UserBlockingLane)
+    ? 'user-blocking'
+    : lanes & UserVisibleLane
+      ? 'user-visible'
+      : lanes & (BackgroundLane | TransitionLanes | DelayedLanes)
+        ? 'background'
+        : 'user-visible';
 }
 
 export function getRenderLanes(options: UpdateOptions): Lanes {
@@ -42,16 +52,8 @@ export function getRenderLanes(options: UpdateOptions): Lanes {
     lanes |= ViewTransitionLane;
   }
 
-  switch (options.priority) {
-    case 'user-blocking':
-      lanes |= UserBlockingLane;
-      break;
-    case 'user-visible':
-      lanes |= UserVisibleLane;
-      break;
-    case 'background':
-      lanes |= BackgroundLane;
-      break;
+  if (options.priority !== undefined) {
+    lanes = getLaneFromPriority(options.priority);
   }
 
   if (options.transition !== undefined) {
@@ -62,7 +64,7 @@ export function getRenderLanes(options: UpdateOptions): Lanes {
     lanes |= options.delay <= 100 ? DelayedLane1 : DelayedLane2;
   }
 
-  return lanes || UserVisibleLane;
+  return lanes;
 }
 
 export function getTranstionIndex(lanes: Lanes): number {

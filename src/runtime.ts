@@ -20,6 +20,7 @@ import {
 } from './core.js';
 import {
   getHighestPriorityLane,
+  getLaneFromPriority,
   getPriorityFromLanes,
   getRenderLanes,
   NoLanes,
@@ -141,7 +142,9 @@ export class Runtime implements Reconciler, UpdateScheduler {
   schedule(unit: UpdateUnit, options: UpdateOptions = {}): UpdateHandle {
     const controller = Promise.withResolvers<void>();
     const id = this._updateCount++;
-    const lanes = getRenderLanes(options);
+    const lanes =
+      getRenderLanes(options) ||
+      getLaneFromPriority(this._adapter.getTaskPriority());
 
     this._updateQueue.enqueue({
       id,
@@ -151,10 +154,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
     });
 
     if (((this._pendingLanes | this._flushLanes) & lanes) !== lanes) {
-      const priority =
-        options.priority ??
-        getPriorityFromLanes(lanes) ??
-        this._adapter.getTaskPriority();
+      const priority = getPriorityFromLanes(lanes);
       this._pendingLanes |= lanes;
       this._adapter.requestCallback(
         () => {
@@ -190,7 +190,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
     } else if (typeof newElement.type === 'function') {
       if (
         ((oldTree as RenderTree.ComponentNode).scope.pendingLanes &
-          this.flushLanes) ===
+          this._flushLanes) ===
           NoLanes &&
         newElement.type.arePropsEqual(
           (oldTree as RenderTree.ComponentNode).props,
@@ -563,9 +563,9 @@ function buildKeyToIndexMap<T>(
 }
 
 function compareUpdates(x: Update, y: Update): number {
-  const priority1 = getHighestPriorityLane(x.lanes);
-  const priority2 = getHighestPriorityLane(y.lanes);
-  return priority1 !== priority2
-    ? priority1 - priority2
+  const lane1 = getHighestPriorityLane(x.lanes);
+  const lane2 = getHighestPriorityLane(y.lanes);
+  return lane1 !== lane2
+    ? lane1 - lane2
     : x.unit.scope.level - y.unit.scope.level;
 }
