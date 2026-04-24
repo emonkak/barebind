@@ -150,10 +150,12 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
     }
   }
 
-  render(tree: RenderTree.ComponentNode<TProps>): VElement {
+  connect(tree: RenderTree.ComponentNode<TProps>): void {
     this._context._tree = tree;
     this._context._hookIndex = 0;
+  }
 
+  render(tree: RenderTree.ComponentNode<TProps>): VElement {
     try {
       const returnValue = this._componentFn.call(this._context, tree.props);
       finalizeHooks(this._context);
@@ -454,9 +456,11 @@ class UpdateComponent implements UpdateUnit {
   prepare(reconciler: Reconciler): () => void {
     const newTree: RenderTree.ComponentNode = {
       ...this._tree,
+      id: reconciler.nextRenderId(),
       children: new Array(1),
       scope: new Scope(this._tree.scope.parent),
     };
+    newTree.instance.connect(newTree);
     const returnElement = newTree.instance.render(newTree);
     newTree.children[0] = reconciler.diff(
       this._tree.children[0]!,

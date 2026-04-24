@@ -43,6 +43,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
   private _pendingLanes: number = NoLanes;
   private _flushLanes: number = NoLanes;
   private _identifierCount: number = 0;
+  private _renderCount: number = 0;
   private _transitionCount: number = 0;
   private _updateCount: number = 0;
 
@@ -73,16 +74,24 @@ export class Runtime implements Reconciler, UpdateScheduler {
           newElement.props,
         )
       ) {
-        return oldTree;
+        const newTree = {
+          ...(oldTree as RenderTree.ComponentNode),
+          index,
+          parent,
+        };
+        newTree.instance.connect(newTree);
+        return newTree;
       }
       const newTree: RenderTree.ComponentNode = {
         ...(oldTree as RenderTree.ComponentNode),
         ...newElement,
+        id: this._renderCount++,
         index,
         parent,
         children: new Array(1),
         scope: new Scope(scope),
       };
+      newTree.instance.connect(newTree);
       const returnElement = newTree.instance.render(newTree);
       newTree.children[0] = this.diff(
         oldTree.children[0]!,
@@ -96,6 +105,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
       return {
         ...(oldTree as RenderTree.DirectiveNode),
         ...newElement,
+        id: this._renderCount++,
         index,
         parent,
         dirty: areDependenciesChange(
@@ -107,6 +117,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
       const newTree: RenderTree.FragmentNode = {
         ...(oldTree as RenderTree.FragmentNode),
         ...newElement,
+        id: this._renderCount++,
         index,
         parent,
         children: new Array(newElement.children.length),
@@ -128,11 +139,12 @@ export class Runtime implements Reconciler, UpdateScheduler {
         newElement.props,
       );
       if (!dirty) {
-        return oldTree;
+        return { ...oldTree, index, parent };
       }
       const newTree: RenderTree.NativeNode = {
         ...(oldTree as RenderTree.NativeNode),
         ...newElement,
+        id: this._renderCount++,
         index,
         parent,
         children: new Array(newElement.children.length),
@@ -154,6 +166,10 @@ export class Runtime implements Reconciler, UpdateScheduler {
     return this._adapter.getIdentifier() + '-' + this._identifierCount++;
   }
 
+  nextRenderId(): number {
+    return this._renderCount++;
+  }
+
   nextTransition(): number {
     return this._transitionCount++;
   }
@@ -167,18 +183,21 @@ export class Runtime implements Reconciler, UpdateScheduler {
     if (typeof element.type === 'function') {
       const tree: RenderTree.ComponentNode = {
         ...element,
+        id: this._renderCount++,
         index,
         parent,
         children: new Array(1),
         instance: element.type.newInstance(element.props, this),
         scope: new Scope(scope),
       };
+      tree.instance.connect(tree);
       const returnElement = tree.instance.render(tree);
       tree.children[0] = this.render(returnElement, tree.scope, 0, tree);
       return tree;
     } else if (element.type === Directive) {
       return {
         ...element,
+        id: this._renderCount++,
         index,
         parent,
         children: [],
@@ -188,6 +207,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
     } else if (element.type === Fragment) {
       const tree: RenderTree.FragmentNode = {
         ...element,
+        id: this._renderCount++,
         index,
         parent,
         children: new Array(element.children.length),
@@ -200,6 +220,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
     } else {
       const tree: RenderTree.NativeNode = {
         ...element,
+        id: this._renderCount++,
         index,
         parent,
         children: new Array(element.children.length),

@@ -69,7 +69,7 @@ function appendChild(
 }
 
 function applyPatch(oldTree: RenderTree, newTree: RenderTree): void {
-  if (oldTree === newTree) {
+  if (oldTree.id === newTree.id) {
     return;
   }
   if (oldTree.type !== newTree.type || oldTree.key !== newTree.key) {
