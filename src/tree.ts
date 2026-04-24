@@ -56,10 +56,10 @@ function appendChild(
   afterNode: HostNode | null,
 ): void {
   if (isNativeNode(tree)) {
-    parentNode.appendChild(tree.hostNode, afterNode);
     for (const descendant of tree.children) {
       appendChild(tree.hostNode, descendant, null);
     }
+    parentNode.appendChild(tree.hostNode, afterNode);
     tree.hostNode.commitMount(tree.type, tree.props);
   } else {
     for (const descendant of tree.children) {
