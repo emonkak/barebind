@@ -3,6 +3,7 @@ import {
   type Boundary,
   type ComponentInstance,
   type ComponentType,
+  type Dispatcher,
   type Lanes,
   type Reconciler,
   Ref,
@@ -10,7 +11,6 @@ import {
   Scope,
   type UpdateHandle,
   type UpdateOptions,
-  type UpdateScheduler,
   type UpdateUnit,
   type VComponent,
   type VElement,
@@ -65,7 +65,7 @@ interface Action<TPayload> {
   revertLanes: Lanes;
 }
 
-interface ActionDispatcher<TState, TPayload> {
+interface ActionHandler<TState, TPayload> {
   dispatch: (
     payload: TPayload,
     options?: DispatchOptions<TState>,
@@ -112,7 +112,7 @@ namespace Hook {
 
   export interface ReducerHook<TState, TAction> {
     type: typeof ReducerType;
-    dispatcher: ActionDispatcher<TState, TAction>;
+    handler: ActionHandler<TState, TAction>;
     memoizedActions: Action<TAction>[];
     memoizedState: TState;
   }
@@ -169,8 +169,7 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
 }
 
 export class RenderContext {
-  /** @internal */
-  readonly _scheduler: UpdateScheduler;
+  private readonly _dispatcher: Dispatcher;
   /** @internal */
   _tree: RenderTree.ComponentNode | null = null;
   /** @internal */
@@ -178,8 +177,8 @@ export class RenderContext {
   /** @internal */
   _hookIndex = 0;
 
-  constructor(scheduler: UpdateScheduler) {
-    this._scheduler = scheduler;
+  constructor(dispatcher: Dispatcher) {
+    this._dispatcher = dispatcher;
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
@@ -190,7 +189,7 @@ export class RenderContext {
         finished: Promise.resolve(),
       };
     }
-    return this._scheduler.schedule(new UpdateComponent(this._tree), options);
+    return this._dispatcher.schedule(new UpdateComponent(this._tree), options);
   }
 
   inject<TInstance, TDefault = never>(
@@ -218,7 +217,7 @@ export class RenderContext {
   }
 
   startTransition<T>(callback: (transition: number) => T): T {
-    return callback(this._scheduler.nextTransition());
+    return callback(this._dispatcher.nextTransition());
   }
 
   use<TReturn>(usable: Usable<TReturn>): TReturn {
@@ -263,7 +262,7 @@ export class RenderContext {
     } else {
       currentHook = {
         type: IdType,
-        id: this._scheduler.nextIdentifier(),
+        id: this._dispatcher.nextIdentifier(),
       };
       this._hooks.push(currentHook);
     }
@@ -312,14 +311,14 @@ export class RenderContext {
     if (currentHook !== undefined) {
       ensureHookType(ReducerType, currentHook);
 
-      const { dispatcher, memoizedState, memoizedActions } = currentHook;
-      const renderLanes = this._scheduler.flushLanes;
+      const { handler, memoizedState, memoizedActions } = currentHook;
+      const renderLanes = this._dispatcher.flushLanes;
       let newState = options.passthrough
         ? getInitialState(initialState)
         : memoizedState;
       let skipLanes = NoLanes;
 
-      memoizedActions.push(...dispatcher.pendingActions);
+      memoizedActions.push(...handler.pendingActions);
 
       for (const action of memoizedActions) {
         const { payload, lanes, revertLanes } = action;
@@ -337,13 +336,13 @@ export class RenderContext {
         currentHook.memoizedState = newState;
       }
 
-      dispatcher.pendingState = newState;
-      dispatcher.pendingActions = [];
-      dispatcher.reducer = reducer;
+      handler.pendingState = newState;
+      handler.pendingActions = [];
+      handler.reducer = reducer;
     } else {
-      const dispatcher: ActionDispatcher<TState, TAction> = {
+      const handler: ActionHandler<TState, TAction> = {
         dispatch: (payload, options = {}) => {
-          const { pendingActions, pendingState, reducer } = dispatcher;
+          const { pendingActions, pendingState, reducer } = handler;
 
           if (pendingActions.length === 0) {
             const areStatesEqual = options.areStatesEqual ?? Object.is;
@@ -372,17 +371,14 @@ export class RenderContext {
       };
       currentHook = {
         type: ReducerType,
-        memoizedState: dispatcher.pendingState,
+        memoizedState: handler.pendingState,
         memoizedActions: [],
-        dispatcher,
+        handler,
       };
       this._hooks.push(currentHook);
     }
 
-    return [
-      currentHook.dispatcher.pendingState,
-      currentHook.dispatcher.dispatch,
-    ];
+    return [currentHook.handler.pendingState, currentHook.handler.dispatch];
   }
 
   useRef<T>(initialValue: T): Ref<T> {
@@ -420,9 +416,9 @@ export function createComponent<TProps = {}, TReturn = unknown>(
 
   ComponentType.newInstance = (
     _props: TProps,
-    scheduler: UpdateScheduler,
+    dispatcher: Dispatcher,
   ): ComponentInstance<TProps> =>
-    new Component(componentFn, new RenderContext(scheduler));
+    new Component(componentFn, new RenderContext(dispatcher));
   ComponentType.arePropsEqual = arePropsEqual;
 
   DEBUG: {

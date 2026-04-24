@@ -20,10 +20,7 @@ export interface Boundary<TInstance, TDefault> {
 export interface ComponentType<TProps> {
   (props: TProps): VComponent<TProps>;
   arePropsEqual(oldProps: TProps, newProps: TProps): boolean;
-  newInstance(
-    props: TProps,
-    scheduler: UpdateScheduler,
-  ): ComponentInstance<TProps>;
+  newInstance(props: TProps, dispatcher: Dispatcher): ComponentInstance<TProps>;
 }
 
 export interface ComponentInstance<TProps> {
@@ -31,6 +28,13 @@ export interface ComponentInstance<TProps> {
   render(tree: RenderTree.ComponentNode<TProps>): VElement;
   afterCommit(): void;
   beforeRemove(): void;
+}
+
+export interface Dispatcher {
+  readonly flushLanes: Lanes;
+  nextIdentifier(): string;
+  nextTransition(): number;
+  schedule(unit: UpdateUnit, options?: UpdateOptions): UpdateHandle;
 }
 
 export interface HostAdapter {
@@ -158,13 +162,6 @@ export interface UpdateOptions
   flushSync?: boolean;
   transition?: number;
   viewTransition?: boolean;
-}
-
-export interface UpdateScheduler {
-  readonly flushLanes: Lanes;
-  nextIdentifier(): string;
-  nextTransition(): number;
-  schedule(unit: UpdateUnit, options?: UpdateOptions): UpdateHandle;
 }
 
 export interface UpdateUnit {
