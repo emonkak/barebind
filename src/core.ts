@@ -234,12 +234,13 @@ export class Ref<T> implements Renderable {
 export class Scope {
   parent: Scope | null;
   level: number;
+  pendingLanes: Lanes;
   instances: object[] = [];
-  pendingLanes: Lanes = NoLanes;
 
-  constructor(parent: Scope | null = null) {
+  constructor(parent: Scope | null = null, pendingLanes: Lanes = NoLanes) {
     this.parent = parent;
     this.level = (parent?.level ?? -1) + 1;
+    this.pendingLanes = pendingLanes;
   }
 }
 

@@ -80,6 +80,8 @@ export class Runtime implements Reconciler, UpdateScheduler {
           parent,
         };
         newTree.instance.connect(newTree);
+        newTree.scope.parent = scope;
+        newTree.scope.pendingLanes &= ~this._flushLanes;
         return newTree;
       }
       const newTree: RenderTree.ComponentNode = {
@@ -89,10 +91,14 @@ export class Runtime implements Reconciler, UpdateScheduler {
         index,
         parent,
         children: new Array(1),
-        scope: new Scope(scope),
+        scope: new Scope(
+          scope,
+          (oldTree as RenderTree.ComponentRenderNode).scope.pendingLanes,
+        ),
       };
       newTree.instance.connect(newTree);
       const returnElement = newTree.instance.render(newTree);
+      newTree.scope.pendingLanes &= ~this._flushLanes;
       newTree.children[0] = this.diff(
         oldTree.children[0]!,
         returnElement,
