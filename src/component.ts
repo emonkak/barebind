@@ -158,6 +158,7 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
     try {
       const returnValue = this._componentFn.call(this._context, tree.props);
       finalizeHooks(this._context);
+      Object.freeze(tree.scope.instances);
       return wrap(returnValue);
     } catch (cause) {
       throw new RenderError(tree, 'An error occurred during rendering.', {
