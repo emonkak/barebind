@@ -357,7 +357,7 @@ export class AttributePart extends DOMPart<Element> {
     } else if (typeof newValue === 'boolean') {
       this._node.toggleAttribute(this._name, newValue);
     } else {
-      this._node.setAttribute(this._name, newValue?.toString?.() ?? '');
+      this._node.setAttribute(this._name, toStringOrEmpty(newValue));
     }
   }
 }
