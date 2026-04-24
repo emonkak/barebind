@@ -13,7 +13,6 @@ import {
   UpdateAndMoveType,
   type UpdateHandle,
   type UpdateOptions,
-  type UpdateResult,
   type UpdateScheduler,
   UpdateType,
   type UpdateUnit,
@@ -24,6 +23,7 @@ import {
   getPriorityFromLanes,
   getRenderLanes,
   NoLanes,
+  SyncLane,
   ViewTransitionLane,
 } from './lane.js';
 import { PriorityQueue } from './queue.js';
@@ -32,7 +32,7 @@ interface Update {
   id: number;
   lanes: Lanes;
   unit: UpdateUnit;
-  controller: PromiseWithResolvers<UpdateResult>;
+  controller: PromiseWithResolvers<void>;
 }
 
 export class Runtime implements Reconciler, UpdateScheduler {
@@ -62,110 +62,9 @@ export class Runtime implements Reconciler, UpdateScheduler {
     index: number = oldTree.index,
     parent: RenderTree | null = oldTree.parent,
   ): RenderTree {
-    if (oldTree.type !== newElement.type || oldTree.key !== newElement.key) {
-      return this.render(newElement, scope, index, parent);
-    } else if (typeof newElement.type === 'function') {
-      if (
-        ((oldTree as RenderTree.ComponentNode).scope.pendingLanes &
-          this.flushLanes) ===
-          NoLanes &&
-        newElement.type.arePropsEqual(
-          (oldTree as RenderTree.ComponentNode).props,
-          newElement.props,
-        )
-      ) {
-        const newTree = {
-          ...(oldTree as RenderTree.ComponentNode),
-          index,
-          parent,
-        };
-        newTree.instance.connect(newTree);
-        newTree.scope.parent = scope;
-        newTree.scope.pendingLanes &= ~this._flushLanes;
-        return newTree;
-      }
-      const newTree: RenderTree.ComponentNode = {
-        ...(oldTree as RenderTree.ComponentNode),
-        ...newElement,
-        id: this._renderCount++,
-        index,
-        parent,
-        children: new Array(1),
-        scope: new Scope(
-          scope,
-          (oldTree as RenderTree.ComponentRenderNode).scope.pendingLanes,
-        ),
-      };
-      newTree.instance.connect(newTree);
-      const returnElement = newTree.instance.render(newTree);
-      newTree.scope.pendingLanes &= ~this._flushLanes;
-      newTree.children[0] = this.diff(
-        oldTree.children[0]!,
-        returnElement,
-        newTree.scope,
-        index,
-        newTree,
-      );
-      return newTree;
-    } else if (newElement.type === Directive) {
-      return {
-        ...(oldTree as RenderTree.DirectiveNode),
-        ...newElement,
-        id: this._renderCount++,
-        index,
-        parent,
-        dirty: areDependenciesChange(
-          (oldTree as RenderTree.DirectiveNode).props.deps,
-          newElement.props.deps,
-        ),
-      };
-    } else if (newElement.type === Fragment) {
-      const newTree: RenderTree.FragmentNode = {
-        ...(oldTree as RenderTree.FragmentNode),
-        ...newElement,
-        id: this._renderCount++,
-        index,
-        parent,
-        children: new Array(newElement.children.length),
-        mutations: [],
-      };
-      this._diffChildren(
-        (oldTree as RenderTree.FragmentNode).children.slice(),
-        newTree.children,
-        newElement.children,
-        scope,
-        newTree,
-        newTree.mutations,
-      );
-      return newTree;
-    } else {
-      const dirty = (oldTree as RenderTree.NativeNode).hostNode.prepareUpdate(
-        newElement.type,
-        (oldTree as RenderTree.NativeNode).props,
-        newElement.props,
-      );
-      if (!dirty) {
-        return { ...oldTree, index, parent };
-      }
-      const newTree: RenderTree.NativeNode = {
-        ...(oldTree as RenderTree.NativeNode),
-        ...newElement,
-        id: this._renderCount++,
-        index,
-        parent,
-        children: new Array(newElement.children.length),
-      };
-      for (let i = 0, l = newElement.children.length; i < l; i++) {
-        newTree.children[i] = this.diff(
-          oldTree.children[i]!,
-          newElement.children[i]!,
-          scope,
-          i,
-          newTree,
-        );
-      }
-      return newTree;
-    }
+    const newTree = this._diffChild(oldTree, newElement, scope, index, parent);
+    this._settleSubtree(oldTree);
+    return newTree;
   }
 
   nextIdentifier(): string {
@@ -240,7 +139,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
   }
 
   schedule(unit: UpdateUnit, options: UpdateOptions = {}): UpdateHandle {
-    const controller = Promise.withResolvers<UpdateResult>();
+    const controller = Promise.withResolvers<void>();
     const id = this._updateCount++;
     const lanes = getRenderLanes(options);
 
@@ -256,6 +155,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
         options.priority ??
         getPriorityFromLanes(lanes) ??
         this._adapter.getTaskPriority();
+      this._pendingLanes |= lanes;
       this._adapter.requestCallback(
         () => {
           const shouldFlush = this._flushLanes === NoLanes;
@@ -267,7 +167,6 @@ export class Runtime implements Reconciler, UpdateScheduler {
         },
         { ...options, priority },
       );
-      this._pendingLanes |= lanes;
     }
 
     unit.scope.pendingLanes |= lanes;
@@ -277,6 +176,122 @@ export class Runtime implements Reconciler, UpdateScheduler {
       lanes,
       finished: controller.promise,
     };
+  }
+
+  private _diffChild(
+    oldTree: RenderTree,
+    newElement: VElement,
+    scope: Scope,
+    index: number,
+    parent: RenderTree | null,
+  ): RenderTree {
+    if (oldTree.type !== newElement.type || oldTree.key !== newElement.key) {
+      return this.render(newElement, scope, index, parent);
+    } else if (typeof newElement.type === 'function') {
+      if (
+        ((oldTree as RenderTree.ComponentNode).scope.pendingLanes &
+          this.flushLanes) ===
+          NoLanes &&
+        newElement.type.arePropsEqual(
+          (oldTree as RenderTree.ComponentNode).props,
+          newElement.props,
+        )
+      ) {
+        const newTree = {
+          ...(oldTree as RenderTree.ComponentNode),
+          index,
+          parent,
+          scope: new Scope(
+            scope,
+            (oldTree as RenderTree.ComponentNode).scope.pendingLanes &
+              ~this._flushLanes,
+          ),
+        };
+        newTree.instance.connect(newTree);
+        return newTree;
+      }
+      const newTree: RenderTree.ComponentNode = {
+        ...(oldTree as RenderTree.ComponentNode),
+        ...newElement,
+        id: this._renderCount++,
+        index,
+        parent,
+        children: new Array(1),
+        scope: new Scope(
+          scope,
+          (oldTree as RenderTree.ComponentNode).scope.pendingLanes,
+        ),
+      };
+      newTree.instance.connect(newTree);
+      const returnElement = newTree.instance.render(newTree);
+      newTree.scope.pendingLanes &= ~this._flushLanes;
+      newTree.children[0] = this._diffChild(
+        oldTree.children[0]!,
+        returnElement,
+        newTree.scope,
+        index,
+        newTree,
+      );
+      return newTree;
+    } else if (newElement.type === Directive) {
+      return {
+        ...(oldTree as RenderTree.DirectiveNode),
+        ...newElement,
+        id: this._renderCount++,
+        index,
+        parent,
+        dirty: areDependenciesChange(
+          (oldTree as RenderTree.DirectiveNode).props.deps,
+          newElement.props.deps,
+        ),
+      };
+    } else if (newElement.type === Fragment) {
+      const newTree: RenderTree.FragmentNode = {
+        ...(oldTree as RenderTree.FragmentNode),
+        ...newElement,
+        id: this._renderCount++,
+        index,
+        parent,
+        children: new Array(newElement.children.length),
+        mutations: [],
+      };
+      this._diffChildren(
+        (oldTree as RenderTree.FragmentNode).children.slice(),
+        newTree.children,
+        newElement.children,
+        scope,
+        newTree,
+        newTree.mutations,
+      );
+      return newTree;
+    } else {
+      const dirty = (oldTree as RenderTree.NativeNode).hostNode.prepareUpdate(
+        newElement.type,
+        (oldTree as RenderTree.NativeNode).props,
+        newElement.props,
+      );
+      if (!dirty) {
+        return { ...oldTree, index, parent };
+      }
+      const newTree: RenderTree.NativeNode = {
+        ...(oldTree as RenderTree.NativeNode),
+        ...newElement,
+        id: this._renderCount++,
+        index,
+        parent,
+        children: new Array(newElement.children.length),
+      };
+      for (let i = 0, l = newElement.children.length; i < l; i++) {
+        newTree.children[i] = this._diffChild(
+          oldTree.children[i]!,
+          newElement.children[i]!,
+          scope,
+          i,
+          newTree,
+        );
+      }
+      return newTree;
+    }
   }
 
   private _diffChildren(
@@ -334,7 +349,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
       } else if (oldChildren[oldTail] === undefined) {
         oldTail--;
       } else if (Object.is(oldKeys[oldHead]!, newKeys[newHead]!)) {
-        const newNode = this.diff(
+        const newNode = this._diffChild(
           oldChildren[oldHead]!,
           newElements[newHead]!,
           scope,
@@ -350,7 +365,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
         oldHead++;
         newHead++;
       } else if (Object.is(oldKeys[oldTail]!, newKeys[newTail]!)) {
-        const newNode = this.diff(
+        const newNode = this._diffChild(
           oldChildren[oldTail]!,
           newElements[newTail]!,
           scope,
@@ -369,14 +384,14 @@ export class Runtime implements Reconciler, UpdateScheduler {
         Object.is(oldKeys[oldHead]!, newKeys[newTail]!) &&
         Object.is(oldKeys[oldTail]!, newKeys[newHead]!)
       ) {
-        const headTree = this.diff(
+        const headTree = this._diffChild(
           oldChildren[oldHead]!,
           newElements[newTail]!,
           scope,
           newTail,
           parent,
         );
-        const tailTree = this.diff(
+        const tailTree = this._diffChild(
           oldChildren[oldTail]!,
           newElements[newHead]!,
           scope,
@@ -426,7 +441,7 @@ export class Runtime implements Reconciler, UpdateScheduler {
             oldIndex <= oldTail &&
             oldChildren[oldIndex] !== undefined
           ) {
-            const newNode = this.diff(
+            const newNode = this._diffChild(
               oldChildren[oldIndex]!,
               newElements[newTail]!,
               scope,
@@ -462,40 +477,73 @@ export class Runtime implements Reconciler, UpdateScheduler {
     }
   }
 
+  private _settleSubtree(tree: RenderTree): void {
+    if (typeof tree.type === 'function') {
+      tree.scope.pendingLanes &= ~this._flushLanes;
+    }
+
+    for (const child of tree.children) {
+      this._settleSubtree(child);
+    }
+  }
+
   private async _flush(): Promise<void> {
-    let update: Update | undefined;
+    while (true) {
+      const batchedUpdates: Update[] = [];
+      const batchedEffects: (() => void)[] = [];
+      let update: Update | undefined;
 
-    while ((update = this._updateQueue.peek()) !== undefined) {
-      const { controller, lanes, unit } = update;
+      while ((update = this._updateQueue.peek()) !== undefined) {
+        if ((this._flushLanes & update.lanes) !== update.lanes) {
+          break;
+        }
+        batchedUpdates.push(this._updateQueue.dequeue()!);
+      }
 
-      if ((this._flushLanes & lanes) !== lanes) {
+      if (batchedUpdates.length === 0) {
         break;
       }
 
       try {
-        if ((unit.scope.pendingLanes & lanes) === NoLanes) {
-          controller.resolve({ status: 'skipped' });
-          continue;
+        for (const update of batchedUpdates) {
+          const { lanes, unit } = update;
+
+          if ((unit.scope.pendingLanes & lanes) === NoLanes) {
+            continue;
+          }
+
+          batchedEffects.push(unit.prepare(this));
+
+          unit.scope.pendingLanes &= ~this._flushLanes;
+
+          if (!(this._flushLanes & SyncLane)) {
+            await this._adapter.yieldToMain();
+          }
         }
 
-        const commit = unit.prepare(this);
-
-        unit.scope.pendingLanes &= ~this._flushLanes;
-
-        if (lanes & ViewTransitionLane) {
-          await this._adapter.startViewTransition(commit);
-        } else {
-          await this._adapter.requestCommit(commit);
+        if (batchedEffects.length > 0) {
+          const commit = () => {
+            for (const effect of batchedEffects) {
+              effect();
+            }
+          };
+          if (this._flushLanes & SyncLane) {
+            commit();
+          } else if (this._flushLanes & ViewTransitionLane) {
+            await this._adapter.startViewTransition(commit);
+          } else {
+            await this._adapter.requestCommit(commit);
+          }
         }
 
-        controller.resolve({ status: 'done' });
+        for (const { controller } of batchedUpdates) {
+          controller.resolve();
+        }
       } catch (error) {
-        controller.reject(error);
-      } finally {
-        this._updateQueue.dequeue();
+        for (const { controller } of batchedUpdates) {
+          controller.reject(error);
+        }
       }
-
-      await this._adapter.yieldToMain();
     }
 
     this._flushLanes = NoLanes;

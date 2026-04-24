@@ -1,7 +1,6 @@
 /// <reference types="navigation-api-types" />
 
 import type { UsableFunction } from '../../component.js';
-import type { UpdateResult } from '../../core.js';
 import {
   anyModifiersArePressed,
   HistoryContext,
@@ -22,7 +21,7 @@ export function BrowserHistory(): UsableFunction<HistoryContext> {
     const navigator: HistoryNavigator = context.useMemo(
       () => ({
         isTransitionRunning: false as boolean,
-        runningTransition: Promise.resolve<UpdateResult>({ status: 'done' }),
+        runningTransition: Promise.resolve(),
         getCurrentURL() {
           return RelativeURL.fromURL(window.location);
         },
