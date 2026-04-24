@@ -304,7 +304,8 @@ export class Runtime implements Reconciler, UpdateScheduler {
           oldHead++;
         }
         break;
-      } else if (oldHead > oldTail) {
+      }
+      if (oldHead > oldTail) {
         while (newHead <= newTail) {
           const node = this.render(
             newElements[newHead]!,
@@ -321,7 +322,8 @@ export class Runtime implements Reconciler, UpdateScheduler {
           newHead++;
         }
         break;
-      } else if (oldChildren[oldHead] === undefined) {
+      }
+      if (oldChildren[oldHead] === undefined) {
         oldHead++;
       } else if (oldChildren[oldTail] === undefined) {
         oldTail--;
