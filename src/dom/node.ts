@@ -242,7 +242,10 @@ export class DOMBlock extends DOMNode {
    * @internal
    */
   override _remove(): void {
-    this._fragment.append(...collectChildNodes(this.firstNode, this.lastNode));
+    for (const node of collectChildNodes(this.firstNode, this.lastNode)) {
+      node.remove();
+    }
+    this._fragment.replaceChildren(...this._staticNodes);
     this._parent = null;
   }
 
