@@ -20,7 +20,10 @@ interface StyleMap {
 }
 
 export abstract class DOMNode implements HostNode {
+  /** @internal */
   _parent: DOMNode | null = null;
+  /** @internal */
+  _children: Set<DOMNode> = new Set();
 
   get firstNode(): ChildNode | null {
     return null;
@@ -46,11 +49,18 @@ export abstract class DOMNode implements HostNode {
     return oldProps !== newProps;
   }
 
-  appendChild(_child: DOMNode, _after: DOMNode | null): void {}
+  appendChild(child: DOMNode, _after: DOMNode | null): void {
+    this._children.add(child);
+    child._parent = this;
+  }
 
   moveChild(_child: DOMNode, _after: DOMNode | null): void {}
 
-  removeChild(_child: DOMNode): void {}
+  removeChild(child: DOMNode): void {
+    this._children.delete(child);
+    child._remove();
+    child._parent = null;
+  }
 
   commitMount(
     _type: VHostElement['type'],
@@ -130,12 +140,12 @@ export class DOMBind extends DOMNode {
   }
 
   override appendChild(child: DOMNode, after: DOMNode | null): void {
+    super.appendChild(child, after);
     const part = this._getPart();
     if (part !== undefined) {
       child._mountBefore(after?.firstNode ?? part.node);
       part.value = child.bindValue;
     }
-    child._parent = this;
   }
 
   override moveChild(child: DOMNode, after: DOMNode | null): void {
@@ -143,11 +153,6 @@ export class DOMBind extends DOMNode {
     if (part !== undefined) {
       child._moveBefore(after?.firstNode ?? part.node);
     }
-  }
-
-  override removeChild(child: DOMNode): void {
-    child._remove();
-    child._parent = null;
   }
 
   /**
@@ -170,18 +175,15 @@ export class DOMBind extends DOMNode {
 export class DOMBlock extends DOMNode {
   private readonly _fragment: DocumentFragment;
 
-  private readonly _childNodes: ChildNode[];
+  private readonly _staticNodes: ChildNode[];
 
   private readonly _parts: DOMPart[];
-
-  private readonly _binds: (DOMBind | undefined)[];
 
   constructor(fragment: DocumentFragment, parts: DOMPart[]) {
     super();
     this._fragment = fragment;
-    this._childNodes = Array.from(fragment.childNodes);
+    this._staticNodes = Array.from(fragment.childNodes);
     this._parts = parts;
-    this._binds = new Array(parts.length);
   }
 
   get parts(): DOMPart[] {
@@ -193,27 +195,30 @@ export class DOMBlock extends DOMNode {
   }
 
   override get firstNode(): ChildNode | null {
-    return this._childNodes[0] ?? null;
+    return this._staticNodes[0] ?? null;
   }
 
   override get lastNode(): ChildNode | null {
-    return this._childNodes.at(-1) ?? null;
+    return this._staticNodes.at(-1) ?? null;
   }
 
   override get bindValue(): unknown {
     return this;
   }
 
-  override appendChild(child: DOMNode, _after: DOMNode | null): void {
-    if (child instanceof DOMBind) {
-      this._binds[child.index] = child;
-      child._parent = this;
-    }
-  }
-
-  override removeChild(child: DOMNode): void {
-    if (child instanceof DOMBind) {
-      this._binds[child.index] = undefined;
+  override commitMount(
+    _type: VHostElement['type'],
+    _props: VHostElement['props'],
+  ): void {
+    let i = 0;
+    for (const bind of this._children) {
+      const part = this._parts[i++];
+      if (part !== undefined) {
+        for (const child of bind._children) {
+          child._mountBefore(part.node);
+          part.value = child.bindValue;
+        }
+      }
     }
   }
 
@@ -272,6 +277,7 @@ export class DOMPortal extends DOMNode {
   }
 
   override appendChild(child: DOMNode, after: DOMNode | null): void {
+    super.appendChild(child, after);
     for (const node of collectChildNodes(child.firstNode, child.lastNode)) {
       insertBefore.call(this._container, node, after?.firstNode ?? null);
     }
