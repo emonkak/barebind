@@ -264,8 +264,8 @@ export function createDirective<T>(
   return new VNode(Directive, { setup, deps }, []);
 }
 
-export function createPortal(child: unknown, container: Element): VPortal {
-  return new VNode(container, {}, [wrap(child)]);
+export function createPortal(value: unknown, container: Element): VPortal {
+  return new VNode(container, {}, [wrap(value)]);
 }
 
 export function wrap(value: unknown): VElement {
