@@ -42,6 +42,7 @@ export class Runtime implements Reconciler, Dispatcher {
     compareUpdates,
   );
   private _pendingLanes: number = NoLanes;
+  private _stagedLanes: number = NoLanes;
   private _flushLanes: number = NoLanes;
   private _identifierCount: number = 0;
   private _renderCount: number = 0;
@@ -153,14 +154,16 @@ export class Runtime implements Reconciler, Dispatcher {
       controller,
     });
 
-    if (((this._pendingLanes | this._flushLanes) & lanes) !== lanes) {
+    unit.scope.pendingLanes |= lanes;
+
+    if (((this._pendingLanes | this._stagedLanes) & lanes) !== lanes) {
       const priority = getPriorityFromLanes(lanes);
       this._pendingLanes |= lanes;
       this._adapter.requestCallback(
         () => {
           const shouldFlush = this._flushLanes === NoLanes;
           this._pendingLanes &= ~lanes;
-          this._flushLanes |= lanes;
+          this._stagedLanes |= lanes;
           if (shouldFlush) {
             this._flush();
           }
@@ -168,8 +171,6 @@ export class Runtime implements Reconciler, Dispatcher {
         { ...options, priority },
       );
     }
-
-    unit.scope.pendingLanes |= lanes;
 
     return {
       id,
@@ -489,30 +490,32 @@ export class Runtime implements Reconciler, Dispatcher {
 
   private async _flush(): Promise<void> {
     while (true) {
-      const batchedUpdates: Update[] = [];
-      const batchedEffects: (() => void)[] = [];
+      const updateBatch: Update[] = [];
+      const effectBatch: (() => void)[] = [];
       let update: Update | undefined;
+
+      this._flushLanes |= this._stagedLanes;
 
       while ((update = this._updateQueue.peek()) !== undefined) {
         if ((this._flushLanes & update.lanes) !== update.lanes) {
           break;
         }
-        batchedUpdates.push(this._updateQueue.dequeue()!);
+        updateBatch.push(this._updateQueue.dequeue()!);
       }
 
-      if (batchedUpdates.length === 0) {
+      if (updateBatch.length === 0) {
         break;
       }
 
       try {
-        for (const update of batchedUpdates) {
+        for (const update of updateBatch) {
           const { lanes, unit } = update;
 
           if ((unit.scope.pendingLanes & lanes) === NoLanes) {
             continue;
           }
 
-          batchedEffects.push(unit.prepare(this));
+          effectBatch.push(unit.prepare(this));
 
           unit.scope.pendingLanes &= ~this._flushLanes;
 
@@ -521,9 +524,9 @@ export class Runtime implements Reconciler, Dispatcher {
           }
         }
 
-        if (batchedEffects.length > 0) {
+        if (effectBatch.length > 0) {
           const commit = () => {
-            for (const effect of batchedEffects) {
+            for (const effect of effectBatch) {
               effect();
             }
           };
@@ -536,16 +539,17 @@ export class Runtime implements Reconciler, Dispatcher {
           }
         }
 
-        for (const { controller } of batchedUpdates) {
+        for (const { controller } of updateBatch) {
           controller.resolve();
         }
       } catch (error) {
-        for (const { controller } of batchedUpdates) {
+        for (const { controller } of updateBatch) {
           controller.reject(error);
         }
       }
     }
 
+    this._stagedLanes = NoLanes;
     this._flushLanes = NoLanes;
   }
 }
@@ -562,10 +566,10 @@ function buildKeyToIndexMap<T>(
   return keyToIndexMap;
 }
 
-function compareUpdates(x: Update, y: Update): number {
-  const lane1 = getHighestPriorityLane(x.lanes);
-  const lane2 = getHighestPriorityLane(y.lanes);
-  const level1 = x.unit.scope.level;
-  const level2 = y.unit.scope.level;
+function compareUpdates(update1: Update, update2: Update): number {
+  const lane1 = getHighestPriorityLane(update1.lanes);
+  const lane2 = getHighestPriorityLane(update2.lanes);
+  const level1 = update1.unit.scope.level;
+  const level2 = update2.unit.scope.level;
   return lane1 !== lane2 ? lane1 - lane2 : level1 - level2;
 }
