@@ -25,21 +25,18 @@ export class Root {
         scope,
         prepare: (reconciler) => {
           const element = createPortal(child, this._container);
-          const newTree =
+          const newRoot = (
             this._root !== null
-              ? (reconciler.diff(
-                  this._root,
-                  element,
-                  scope,
-                ) as RenderTree.NativeNode)
-              : (reconciler.render(element, scope) as RenderTree.NativeNode);
+              ? reconciler.diff(this._root, element, scope)
+              : reconciler.render(element, scope)
+          ) as RenderTree.NativeNode;
           return () => {
             if (this._root !== null) {
-              patch(this._root, newTree);
+              patch(this._root, newRoot);
             } else {
-              mount(newTree);
+              mount(newRoot);
             }
-            this._root = newTree;
+            this._root = newRoot;
           };
         },
       },
