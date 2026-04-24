@@ -7,12 +7,9 @@ import {
   wrap,
 } from './core.js';
 
-const STRING_INTERPOLATION_CACHE = new WeakMap<
-  readonly string[],
-  StringInterpolation[]
->();
+const INTERPOLATION_CACHE = new WeakMap<readonly string[], Interpolation[]>();
 
-interface StringInterpolation {
+interface Interpolation {
   interpolatedStrings: readonly string[];
   literalStrings: readonly string[];
   literalPositions: readonly number[];
@@ -21,90 +18,90 @@ interface StringInterpolation {
 export class Partial {
   readonly strings: readonly string[];
 
-  readonly exprs: readonly unknown[];
+  readonly values: readonly unknown[];
 
-  static html(strings: readonly string[], ...exprs: unknown[]): VTemplate {
-    const template = Partial.parse(strings, ...exprs);
-    return html(template.strings, ...template.exprs);
+  static html(strings: readonly string[], ...children: unknown[]): VTemplate {
+    const partial = Partial.parse(strings, ...children);
+    return createTemplate('html', partial.strings, partial.values);
   }
 
   static literal(value: string): Partial {
     return new Partial([value], []);
   }
 
-  static math(strings: readonly string[], ...exprs: unknown[]): VTemplate {
-    const template = Partial.parse(strings, ...exprs);
-    return math(template.strings, ...template.exprs);
+  static math(strings: readonly string[], ...children: unknown[]): VTemplate {
+    const partial = Partial.parse(strings, ...children);
+    return createTemplate('math', partial.strings, partial.values);
   }
 
   static parse(
     strings: readonly string[],
-    ...exprs: readonly unknown[]
+    ...values: readonly unknown[]
   ): Partial {
     const literalStrings: string[] = [];
     const literalPositions: number[] = [];
-    const flattenedExprs: unknown[] = [];
+    const flattenedValues: unknown[] = [];
 
-    for (let i = 0, l = exprs.length; i < l; i++) {
-      const expr = exprs[i]!;
-      if (expr instanceof Partial) {
-        literalStrings.push(...expr.strings);
+    for (let i = 0, l = values.length; i < l; i++) {
+      const value = values[i]!;
+      if (value instanceof Partial) {
+        literalStrings.push(...value.strings);
         literalPositions.push(i);
-        flattenedExprs.push(...expr.exprs);
+        flattenedValues.push(...value.values);
       } else {
-        flattenedExprs.push(expr);
+        flattenedValues.push(value);
       }
     }
 
     if (literalStrings.length === 0) {
-      return new Partial(strings, exprs);
+      return new Partial(strings, values);
     }
 
-    let stringInterpolations = STRING_INTERPOLATION_CACHE.get(strings);
+    let interpolations = INTERPOLATION_CACHE.get(strings);
 
-    if (stringInterpolations !== undefined) {
-      for (const stringInterpolation of stringInterpolations) {
+    if (interpolations !== undefined) {
+      for (const interpolation of interpolations) {
         if (
-          sequentialEqual(stringInterpolation.literalStrings, literalStrings) &&
-          sequentialEqual(
-            stringInterpolation.literalPositions,
-            literalPositions,
-          )
+          sequentialEqual(interpolation.literalStrings, literalStrings) &&
+          sequentialEqual(interpolation.literalPositions, literalPositions)
         ) {
           return new Partial(
-            stringInterpolation.interpolatedStrings,
-            flattenedExprs,
+            interpolation.interpolatedStrings,
+            flattenedValues,
           );
         }
       }
     } else {
-      stringInterpolations = [];
-      STRING_INTERPOLATION_CACHE.set(strings, stringInterpolations);
+      interpolations = [];
+      INTERPOLATION_CACHE.set(strings, interpolations);
     }
 
-    const interpolatedStrings = interpolatePartials(strings, exprs);
+    const interpolatedStrings = interpolatePartials(strings, values);
 
-    stringInterpolations.push({
+    interpolations.push({
       interpolatedStrings,
       literalStrings,
       literalPositions,
     });
 
-    return new Partial(interpolatedStrings, flattenedExprs);
+    return new Partial(interpolatedStrings, flattenedValues);
   }
 
-  static svg(strings: readonly string[], ...exprs: unknown[]): VTemplate {
-    const template = Partial.parse(strings, ...exprs);
-    return svg(template.strings, ...template.exprs);
+  static svg(strings: readonly string[], ...children: unknown[]): VTemplate {
+    const partial = Partial.parse(strings, ...children);
+    return createTemplate('svg', partial.strings, partial.values);
   }
 
-  private constructor(strings: readonly string[], exprs: readonly unknown[]) {
+  private constructor(strings: readonly string[], values: readonly unknown[]) {
     this.strings = strings;
-    this.exprs = exprs;
+    this.values = values;
+    DEBUG: {
+      Object.freeze(this);
+    }
   }
 
   toString(): string {
-    return String.raw({ raw: this.strings }, ...this.exprs);
+    return String.raw({ raw: this.strings }, ...this.values);
   }
 }
 
@@ -139,7 +136,7 @@ export function text(
 function createTemplate(
   mode: TemplateMode,
   strings: readonly string[],
-  children: unknown[],
+  children: readonly unknown[],
 ): VTemplate {
   return new VNode(
     strings,
@@ -152,17 +149,17 @@ function createTemplate(
 
 function interpolatePartials(
   strings: readonly string[],
-  exprs: readonly unknown[],
+  values: readonly unknown[],
 ): readonly string[] {
   const interpolatedStrings = [strings[0]!];
   let interpolatedIndex = 0;
 
-  for (let i = 0, l = exprs.length; i < l; i++) {
-    const expr = exprs[i];
-    if (expr instanceof Partial) {
-      interpolatedStrings[interpolatedIndex] += expr.strings[0]!;
-      for (let j = 0, m = expr.exprs.length; j < m; j++) {
-        interpolatedStrings.push(expr.strings[j + 1]!);
+  for (let i = 0, l = values.length; i < l; i++) {
+    const value = values[i];
+    if (value instanceof Partial) {
+      interpolatedStrings[interpolatedIndex] += value.strings[0]!;
+      for (let j = 0, m = value.values.length; j < m; j++) {
+        interpolatedStrings.push(value.strings[j + 1]!);
         interpolatedIndex++;
       }
       interpolatedStrings[interpolatedIndex] += strings[i + 1]!;
