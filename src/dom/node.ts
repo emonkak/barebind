@@ -161,6 +161,15 @@ export class DOMBind extends DOMNode {
     }
   }
 
+  /**
+   * @internal
+   */
+  override _remove(): void {
+    for (const child of this._children) {
+      child._remove();
+    }
+  }
+
   private _getPart(): DOMPart | undefined {
     return this._parent instanceof DOMBlock
       ? this._parent._parts[this._index]
