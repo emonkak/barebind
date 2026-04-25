@@ -132,9 +132,7 @@ export class DOMBind extends DOMNode {
   }
 
   override get refInstance(): unknown {
-    return this._parent instanceof DOMBlock
-      ? (this._parent._parts[this._index]!.node ?? null)
-      : null;
+    return this._getPart()?.node ?? null;
   }
 
   override appendChild(child: DOMNode, after: DOMNode | null): void {
