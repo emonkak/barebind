@@ -1,9 +1,9 @@
 import { areDependenciesChange } from './compare.js';
 import {
-  type Boundary,
   type ComponentInstance,
   type ComponentType,
   type Dispatcher,
+  type Injectable,
   type Lanes,
   type Reconciler,
   Ref,
@@ -193,22 +193,22 @@ export class RenderContext {
   }
 
   inject<TInstance, TDefault = never>(
-    type: Boundary<TInstance, TDefault>,
+    injectable: Injectable<TInstance, TDefault>,
   ): TInstance | TDefault {
     let scope: Scope | null = this._tree?.scope ?? null;
     while (scope !== null) {
       for (const instance of scope.instances) {
-        if (instance instanceof type) {
+        if (instance instanceof injectable) {
           return instance;
         }
       }
       scope = scope.parent;
     }
-    if (type.getDefault !== undefined) {
-      return type.getDefault();
+    if (injectable.getDefault !== undefined) {
+      return injectable.getDefault();
     }
     throw new ReferenceError(
-      `${type.name} could not be resolved in the current component hierarchy.`,
+      `${injectable.name} could not be resolved in the current component hierarchy.`,
     );
   }
 
