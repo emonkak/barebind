@@ -2,6 +2,7 @@ import { areDependenciesChange } from './compare.js';
 import {
   Directive,
   type Dispatcher,
+  type Effect,
   Fragment,
   type HostAdapter,
   InsertType,
@@ -491,7 +492,7 @@ export class Runtime implements Reconciler, Dispatcher {
   private async _flush(): Promise<void> {
     while (true) {
       const updateBatch: Update[] = [];
-      const effectBatch: (() => void)[] = [];
+      const effectBatch: Effect[] = [];
       let update: Update | undefined;
 
       this._flushLanes |= this._stagedLanes;
