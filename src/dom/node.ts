@@ -91,9 +91,7 @@ export abstract class DOMNode implements HostNode {
   /**
    * @internal
    */
-  _invalidate(_child: DOMNode): void {
-    this._parent?._invalidate(this);
-  }
+  _invalidate(_child: DOMNode): void {}
 }
 
 export abstract class DOMPart<TNode extends ChildNode = ChildNode> {
@@ -135,7 +133,7 @@ export class DOMBind extends DOMNode {
 
   override get refInstance(): unknown {
     return this._parent instanceof DOMBlock
-      ? (this._parent.parts[this._index]!.node ?? null)
+      ? (this._parent._parts[this._index]!.node ?? null)
       : null;
   }
 
@@ -167,27 +165,23 @@ export class DOMBind extends DOMNode {
 
   private _getPart(): DOMPart | undefined {
     return this._parent instanceof DOMBlock
-      ? this._parent.parts[this._index]
+      ? this._parent._parts[this._index]
       : undefined;
   }
 }
 
 export class DOMBlock extends DOMNode {
-  private readonly _fragment: DocumentFragment;
+  readonly _fragment: DocumentFragment;
 
-  private readonly _staticNodes: ChildNode[];
+  readonly _staticNodes: ChildNode[];
 
-  private readonly _parts: DOMPart[];
+  readonly _parts: DOMPart[];
 
   constructor(fragment: DocumentFragment, parts: DOMPart[]) {
     super();
     this._fragment = fragment;
     this._staticNodes = Array.from(fragment.childNodes);
     this._parts = parts;
-  }
-
-  get parts(): DOMPart[] {
-    return this._parts;
   }
 
   override get refInstance(): ChildNode[] {
@@ -206,13 +200,14 @@ export class DOMBlock extends DOMNode {
     _type: VHostElement['type'],
     _props: VHostElement['props'],
   ): void {
-    let i = 0;
-    for (const bind of this._children) {
-      const part = this._parts[i++];
-      if (part !== undefined) {
-        for (const child of bind._children) {
-          child._mountBefore(part.node);
-          part.value = child.bindValue;
+    for (const child of this._children) {
+      if (child instanceof DOMBind) {
+        const part = this._parts[child.index];
+        if (part !== undefined) {
+          for (const descendant of child._children) {
+            descendant._mountBefore(part.node);
+            part.value = descendant.bindValue;
+          }
         }
       }
     }
@@ -243,15 +238,6 @@ export class DOMBlock extends DOMNode {
     }
     this._fragment.replaceChildren(...this._staticNodes);
     this._parent = null;
-  }
-
-  /**
-   * @internal
-   */
-  override _invalidate(child: DOMNode): void {
-    if (child instanceof DOMBind) {
-      this._parts[child.index]!.value = child.bindValue;
-    }
   }
 }
 
@@ -319,7 +305,7 @@ export class DOMPrimitive extends DOMNode {
     newProps: VPrimitive['props'],
   ): void {
     this._value = newProps.value;
-    this._invalidate(this);
+    this._parent?._invalidate(this);
   }
 }
 
