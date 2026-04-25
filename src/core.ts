@@ -12,11 +12,6 @@ export const UpdateType = 1;
 export const UpdateAndMoveType = 2;
 export const RemoveType = 3;
 
-export interface Boundary<TInstance, TDefault> {
-  new (...args: never[]): TInstance;
-  getDefault?(): TDefault;
-}
-
 export interface ComponentType<TProps> {
   (props: TProps): VComponent<TProps>;
   arePropsEqual(oldProps: TProps, newProps: TProps): boolean;
@@ -66,6 +61,11 @@ export interface HostNode {
     oldProps: VHostElement['props'],
     newProps: VHostElement['props'],
   ): void;
+}
+
+export interface Injectable<TInstance, TDefault> {
+  new (...args: never[]): TInstance;
+  getDefault?(): TDefault;
 }
 
 export type Lane = number;
