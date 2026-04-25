@@ -510,6 +510,8 @@ export class Runtime implements Reconciler, Dispatcher {
       }
 
       try {
+        let iteration = 0;
+
         for (const update of updateBatch) {
           const { lanes, unit } = update;
 
@@ -517,13 +519,12 @@ export class Runtime implements Reconciler, Dispatcher {
             continue;
           }
 
-          effectBatch.push(unit.prepare(this));
-
-          unit.scope.pendingLanes &= ~this._flushLanes;
-
-          if (!(this._flushLanes & SyncLane)) {
+          if (iteration++ > 0 && !(this._flushLanes & SyncLane)) {
             await this._adapter.yieldToMain();
           }
+
+          effectBatch.push(unit.prepare(this));
+          unit.scope.pendingLanes &= ~this._flushLanes;
         }
 
         if (effectBatch.length > 0) {
