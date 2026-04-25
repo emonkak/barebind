@@ -3,6 +3,7 @@ import {
   type ComponentInstance,
   type ComponentType,
   type Dispatcher,
+  type Effect,
   type Injectable,
   type Lanes,
   type Reconciler,
@@ -441,7 +442,7 @@ class UpdateComponent implements UpdateUnit {
     return this._tree.scope;
   }
 
-  prepare(reconciler: Reconciler): () => void {
+  prepare(reconciler: Reconciler): Effect {
     const newTree: RenderTree.ComponentNode = {
       ...this._tree,
       id: reconciler.nextRenderId(),

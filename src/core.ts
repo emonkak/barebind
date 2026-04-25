@@ -32,6 +32,8 @@ export interface Dispatcher {
   schedule(unit: UpdateUnit, options?: UpdateOptions): UpdateHandle;
 }
 
+export type Effect = () => void;
+
 export interface HostAdapter {
   getIdentifier(): string;
   getTaskPriority(): TaskPriority;
@@ -166,7 +168,7 @@ export interface UpdateOptions
 
 export interface UpdateUnit {
   readonly scope: Scope;
-  prepare(reconciler: Reconciler): () => void;
+  prepare(reconciler: Reconciler): Effect;
 }
 
 export type VDirective<T = any> = VNode<
