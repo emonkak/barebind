@@ -496,6 +496,7 @@ export class Runtime implements Reconciler, Dispatcher {
       let update: Update | undefined;
 
       this._flushLanes |= this._stagedLanes;
+      this._stagedLanes = NoLanes;
 
       while ((update = this._updateQueue.peek()) !== undefined) {
         if ((this._flushLanes & update.lanes) !== update.lanes) {
@@ -550,7 +551,6 @@ export class Runtime implements Reconciler, Dispatcher {
       }
     }
 
-    this._stagedLanes = NoLanes;
     this._flushLanes = NoLanes;
   }
 }
