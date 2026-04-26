@@ -36,7 +36,7 @@ function afterCommit(tree: RenderTree): void {
     if (tree.dirty) {
       const { setup } = tree.props;
       tree.cleanup?.call(undefined);
-      tree.cleanup = setup(getHostAncestor(tree).refInstance);
+      tree.cleanup = setup(getHostAncestor(tree).refNode);
       tree.dirty = false;
     }
   }

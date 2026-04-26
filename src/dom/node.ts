@@ -37,7 +37,7 @@ export abstract class DOMNode implements HostNode {
     return null;
   }
 
-  get refInstance(): unknown {
+  get refNode(): unknown {
     return null;
   }
 
@@ -131,7 +131,7 @@ export class DOMBind extends DOMNode {
     return this._index;
   }
 
-  override get refInstance(): unknown {
+  override get refNode(): unknown {
     return this._getPart()?.node ?? null;
   }
 
@@ -191,7 +191,7 @@ export class DOMBlock extends DOMNode {
     this._parts = parts;
   }
 
-  override get refInstance(): ChildNode[] {
+  override get refNode(): ChildNode[] {
     return collectChildNodes(this.firstNode, this.lastNode);
   }
 
@@ -256,7 +256,7 @@ export class DOMPortal extends DOMNode {
     this._container = container;
   }
 
-  override get refInstance(): Element {
+  override get refNode(): Element {
     return this._container;
   }
 
@@ -294,8 +294,8 @@ export class DOMPrimitive extends DOMNode {
     return this._value;
   }
 
-  override get refInstance(): unknown {
-    return this._parent?.refInstance;
+  override get refNode(): unknown {
+    return this._parent?.refNode;
   }
 
   override prepareUpdate(
