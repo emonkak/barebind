@@ -48,7 +48,7 @@ export interface HostAdapter {
 }
 
 export interface HostNode {
-  get refInstance(): unknown;
+  get refNode(): unknown;
   prepareUpdate(
     type: VHostElement['type'],
     oldProps: VHostElement['props'],
@@ -174,7 +174,7 @@ export interface UpdateUnit {
 export type VDirective<T = any> = VNode<
   typeof Directive,
   {
-    setup: (instance: T) => (() => void) | void;
+    setup: (node: T) => (() => void) | void;
     deps: unknown[] | null | undefined;
   },
   []
@@ -214,8 +214,8 @@ export class Ref<T> implements Renderable {
 
   [toElement](): VDirective<NonNullable<T>> {
     return createDirective(
-      (instance) => {
-        this.current = instance as T;
+      (node) => {
+        this.current = node as T;
         return () => {
           this.current = null as T;
         };
@@ -260,7 +260,7 @@ export class VNode<TType, TProps, const TChildren extends VElement[]> {
 }
 
 export function createDirective<T>(
-  setup: (instance: T) => (() => void) | void,
+  setup: (node: T) => (() => void) | void,
   deps?: unknown[] | null | undefined,
 ): VDirective<T> {
   return new VNode(Directive, { setup, deps }, []);
