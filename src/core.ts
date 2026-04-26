@@ -171,6 +171,10 @@ export interface UpdateUnit {
   prepare(reconciler: Reconciler): Effect;
 }
 
+export type VBind = VNode<typeof Bind, { index: number }, [VElement]>;
+
+export type VComponent<TProps = any> = VNode<ComponentType<TProps>, TProps, []>;
+
 export type VDirective<T = any> = VNode<
   typeof Directive,
   {
@@ -180,11 +184,7 @@ export type VDirective<T = any> = VNode<
   []
 >;
 
-export type VElement = VDirective | VComponent | VFragment | VHostElement;
-
-export type VBind = VNode<typeof Bind, { index: number }, [VElement]>;
-
-export type VComponent<TProps = any> = VNode<ComponentType<TProps>, TProps, []>;
+export type VElement = VComponent | VDirective | VFragment | VHostElement;
 
 export type VFragment = VNode<typeof Fragment, {}, VElement[]>;
 
