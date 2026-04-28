@@ -226,7 +226,6 @@ export class Runtime implements Reconciler, Dispatcher {
       };
       newTree.instance.connect(newTree);
       const returnElement = newTree.instance.render(newTree);
-      newTree.scope.pendingLanes &= ~this._flushLanes;
       newTree.children[0] = this._diffChild(
         oldTree.children[0]!,
         returnElement,
@@ -234,6 +233,7 @@ export class Runtime implements Reconciler, Dispatcher {
         index,
         newTree,
       );
+      newTree.scope.pendingLanes &= ~this._flushLanes;
       return newTree;
     } else if (newElement.type === Directive) {
       return {
