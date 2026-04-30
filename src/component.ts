@@ -8,7 +8,7 @@ import {
   type Lanes,
   type Reconciler,
   Ref,
-  Scope,
+  type Scope,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateUnit,
@@ -139,6 +139,7 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
         hook.dirty = false;
       }
     }
+    this._context._committedView = this._context._stagingView;
   }
 
   beforeRemove(): void {
@@ -148,10 +149,11 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
         hook.cleanup = undefined;
       }
     }
+    this._context._stagingView = null;
   }
 
   connect(view: View.ComponentView<TProps>): void {
-    this._context._view = view;
+    this._context._stagingView = view;
     this._context._hookIndex = 0;
   }
 
@@ -172,7 +174,9 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
 export class RenderContext {
   private readonly _dispatcher: Dispatcher;
   /** @internal */
-  _view: View.ComponentView | null = null;
+  _stagingView: View.ComponentView | null = null;
+  /** @internal */
+  _committedView: View.ComponentView | null = null;
   /** @internal */
   _hooks: Hook[] = [];
   /** @internal */
@@ -183,20 +187,23 @@ export class RenderContext {
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    if (this._view === null) {
+    if (this._stagingView === null) {
       return {
         id: -1,
         lanes: NoLanes,
         finished: Promise.resolve(),
       };
     }
-    return this._dispatcher.schedule(new UpdateComponent(this._view), options);
+    return this._dispatcher.schedule(
+      new UpdateComponent(this, this._stagingView),
+      options,
+    );
   }
 
   inject<TInstance, TDefault = never>(
     injectable: Injectable<TInstance, TDefault>,
   ): TInstance | TDefault {
-    let scope: Scope | null = this._view?.scope ?? null;
+    let scope: Scope | null = this._stagingView?.scope ?? null;
     while (scope !== null) {
       for (const instance of scope.instances) {
         if (instance instanceof injectable) {
@@ -214,7 +221,7 @@ export class RenderContext {
   }
 
   provide<T extends object>(instance: T): void {
-    this._view?.scope.instances.push(instance);
+    this._stagingView?.scope.instances.push(instance);
   }
 
   startTransition<T>(callback: (transition: number) => T): T {
@@ -432,34 +439,37 @@ export function createComponent<TProps = {}, TReturn = unknown>(
 }
 
 class UpdateComponent implements UpdateUnit {
-  private readonly _view: View.ComponentView;
+  private readonly _context: RenderContext;
+  private readonly _stagingView: View.ComponentView;
 
-  constructor(view: View.ComponentView) {
-    this._view = view;
+  constructor(context: RenderContext, stagingView: View.ComponentView) {
+    this._context = context;
+    this._stagingView = stagingView;
   }
 
   get scope(): Scope {
-    return this._view.scope;
+    return this._stagingView.scope;
   }
 
   prepare(reconciler: Reconciler): Effect {
+    const oldView = this._context._committedView ?? this._stagingView;
     const newView: View.ComponentView = {
-      ...this._view,
+      ...oldView,
       id: reconciler.nextRenderId(),
       children: new Array(1),
-      scope: new Scope(this._view.scope.parent),
+      scope: this._stagingView.scope.clone(),
     };
     newView.instance.connect(newView);
     const returnElement = newView.instance.render(newView);
     newView.children[0] = reconciler.diff(
-      this._view.children[0]!,
+      oldView.children[0]!,
       returnElement,
       newView.scope,
       0,
       newView,
     );
     return () => {
-      patch(this._view, newView);
+      patch(oldView, newView);
     };
   }
 }

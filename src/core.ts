@@ -228,12 +228,25 @@ export class Ref<T> implements Renderable {
 export class Scope {
   parent: Scope | null;
   level: number;
-  pendingLanes: Lanes = NoLanes;
+  pendingLanes: Lanes;
   instances: object[] = [];
 
-  constructor(parent: Scope | null = null) {
+  constructor(
+    parent: Scope | null = null,
+    level: number = 0,
+    pendingLanes: Lanes = NoLanes,
+  ) {
     this.parent = parent;
-    this.level = (parent?.level ?? -1) + 1;
+    this.level = level;
+    this.pendingLanes = pendingLanes;
+  }
+
+  append(): Scope {
+    return new Scope(this, this.level + 1);
+  }
+
+  clone(): Scope {
+    return new Scope(this.parent, this.level, this.pendingLanes);
   }
 }
 
