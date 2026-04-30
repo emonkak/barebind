@@ -10,7 +10,7 @@ import {
   type Mutation,
   type Reconciler,
   RemoveType,
-  Scope,
+  type Scope,
   UpdateAndMoveType,
   type UpdateHandle,
   type UpdateOptions,
@@ -81,7 +81,6 @@ export class Runtime implements Reconciler, Dispatcher {
           ...(oldView as View.ComponentView),
           index,
           parent,
-          scope: new Scope(scope),
         };
         newView.instance.connect(newView);
       } else {
@@ -92,7 +91,7 @@ export class Runtime implements Reconciler, Dispatcher {
           index,
           parent,
           children: new Array(1),
-          scope: new Scope(scope),
+          scope: scope.append(),
         };
         newView.instance.connect(newView);
         const returnElement = newView.instance.render(newView);
@@ -196,7 +195,7 @@ export class Runtime implements Reconciler, Dispatcher {
         parent,
         children: new Array(1),
         instance: element.type.newInstance(element.props, this),
-        scope: new Scope(scope),
+        scope: scope.append(),
       };
       view.instance.connect(view);
       const returnElement = view.instance.render(view);
@@ -533,7 +532,6 @@ export class Runtime implements Reconciler, Dispatcher {
     if (typeof view.type === 'function') {
       view.scope.pendingLanes &= ~this._flushLanes;
     }
-
     for (const child of view.children) {
       this._settleSubview(child);
     }
