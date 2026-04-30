@@ -1,17 +1,17 @@
 import {
   createPortal,
   type Dispatcher,
-  type RenderTree,
   Scope,
   type UpdateHandle,
   type UpdateOptions,
+  type View,
 } from '../core.js';
-import { mount, patch, unmount } from '../tree.js';
+import { mount, patch, unmount } from '../view.js';
 
 export class Root {
   private readonly _container: Element;
   private readonly _dispatcher: Dispatcher;
-  private _root: RenderTree.NativeNode | null = null;
+  private _root: View.HostView | null = null;
 
   constructor(container: Element, dispatcher: Dispatcher) {
     this._container = container;
@@ -29,7 +29,7 @@ export class Root {
             this._root !== null
               ? reconciler.diff(this._root, element, scope)
               : reconciler.render(element, scope)
-          ) as RenderTree.NativeNode;
+          ) as View.HostView;
           return () => {
             if (this._root !== null) {
               patch(this._root, newRoot);

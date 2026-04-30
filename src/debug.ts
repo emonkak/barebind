@@ -1,7 +1,7 @@
-import type { RenderTree } from './core.js';
+import type { View } from './core.js';
 
 export function formatComponentStack(
-  componentStack: RenderTree.ComponentNode[],
+  componentStack: View.ComponentView[],
 ): string {
   const tail = componentStack.length - 1;
   return componentStack
@@ -14,17 +14,15 @@ export function formatComponentStack(
     .join('\n');
 }
 
-export function getComponentStack(
-  tree: RenderTree,
-): RenderTree.ComponentNode[] {
-  const componentStack: RenderTree.ComponentNode[] = [];
-  let current: RenderTree | null = tree;
+export function getComponentStack(view: View): View.ComponentView[] {
+  const componentStack: View.ComponentView[] = [];
+  let current: View | null = view;
 
   do {
     if (typeof current.type === 'function') {
       componentStack.push(current);
     }
-    current = tree.parent;
+    current = view.parent;
   } while (current !== null);
 
   return componentStack;

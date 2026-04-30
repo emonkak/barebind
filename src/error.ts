@@ -1,14 +1,14 @@
-import type { RenderTree } from './core.js';
+import type { View } from './core.js';
 import { formatComponentStack, getComponentStack } from './debug.js';
 
 export class RenderError extends Error {
-  readonly tree: RenderTree;
+  readonly view: View;
 
-  constructor(tree: RenderTree, message?: string, options?: ErrorOptions) {
+  constructor(view: View, message?: string, options?: ErrorOptions) {
     DEBUG: {
-      message += '\n' + formatComponentStack(getComponentStack(tree));
+      message += '\n' + formatComponentStack(getComponentStack(view));
     }
     super(message, options);
-    this.tree = tree;
+    this.view = view;
   }
 }
