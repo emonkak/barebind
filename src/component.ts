@@ -8,19 +8,19 @@ import {
   type Lanes,
   type Reconciler,
   Ref,
-  type RenderTree,
   Scope,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateUnit,
   type VComponent,
   type VElement,
+  type View,
   VNode,
   wrap,
 } from './core.js';
 import { RenderError } from './error.js';
 import { NoLanes } from './lane.js';
-import { patch } from './tree.js';
+import { patch } from './view.js';
 
 const FinalizerType = 0;
 const EffectType = 1;
@@ -150,19 +150,19 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
     }
   }
 
-  connect(tree: RenderTree.ComponentNode<TProps>): void {
-    this._context._tree = tree;
+  connect(view: View.ComponentView<TProps>): void {
+    this._context._view = view;
     this._context._hookIndex = 0;
   }
 
-  render(tree: RenderTree.ComponentNode<TProps>): VElement {
+  render(view: View.ComponentView<TProps>): VElement {
     try {
-      const returnValue = this._componentFn.call(this._context, tree.props);
+      const returnValue = this._componentFn.call(this._context, view.props);
       finalizeHooks(this._context);
-      Object.freeze(tree.scope.instances);
+      Object.freeze(view.scope.instances);
       return wrap(returnValue);
     } catch (cause) {
-      throw new RenderError(tree, 'An error occurred during rendering.', {
+      throw new RenderError(view, 'An error occurred during rendering.', {
         cause,
       });
     }
@@ -172,7 +172,7 @@ export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
 export class RenderContext {
   private readonly _dispatcher: Dispatcher;
   /** @internal */
-  _tree: RenderTree.ComponentNode | null = null;
+  _view: View.ComponentView | null = null;
   /** @internal */
   _hooks: Hook[] = [];
   /** @internal */
@@ -183,20 +183,20 @@ export class RenderContext {
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    if (this._tree === null) {
+    if (this._view === null) {
       return {
         id: -1,
         lanes: NoLanes,
         finished: Promise.resolve(),
       };
     }
-    return this._dispatcher.schedule(new UpdateComponent(this._tree), options);
+    return this._dispatcher.schedule(new UpdateComponent(this._view), options);
   }
 
   inject<TInstance, TDefault = never>(
     injectable: Injectable<TInstance, TDefault>,
   ): TInstance | TDefault {
-    let scope: Scope | null = this._tree?.scope ?? null;
+    let scope: Scope | null = this._view?.scope ?? null;
     while (scope !== null) {
       for (const instance of scope.instances) {
         if (instance instanceof injectable) {
@@ -214,7 +214,7 @@ export class RenderContext {
   }
 
   provide<T extends object>(instance: T): void {
-    this._tree?.scope.instances.push(instance);
+    this._view?.scope.instances.push(instance);
   }
 
   startTransition<T>(callback: (transition: number) => T): T {
@@ -432,34 +432,34 @@ export function createComponent<TProps = {}, TReturn = unknown>(
 }
 
 class UpdateComponent implements UpdateUnit {
-  private readonly _tree: RenderTree.ComponentNode;
+  private readonly _view: View.ComponentView;
 
-  constructor(tree: RenderTree.ComponentNode) {
-    this._tree = tree;
+  constructor(view: View.ComponentView) {
+    this._view = view;
   }
 
   get scope(): Scope {
-    return this._tree.scope;
+    return this._view.scope;
   }
 
   prepare(reconciler: Reconciler): Effect {
-    const newTree: RenderTree.ComponentNode = {
-      ...this._tree,
+    const newView: View.ComponentView = {
+      ...this._view,
       id: reconciler.nextRenderId(),
       children: new Array(1),
-      scope: new Scope(this._tree.scope.parent),
+      scope: new Scope(this._view.scope.parent),
     };
-    newTree.instance.connect(newTree);
-    const returnElement = newTree.instance.render(newTree);
-    newTree.children[0] = reconciler.diff(
-      this._tree.children[0]!,
+    newView.instance.connect(newView);
+    const returnElement = newView.instance.render(newView);
+    newView.children[0] = reconciler.diff(
+      this._view.children[0]!,
       returnElement,
-      newTree.scope,
+      newView.scope,
       0,
-      newTree,
+      newView,
     );
     return () => {
-      patch(this._tree, newTree);
+      patch(this._view, newView);
     };
   }
 }

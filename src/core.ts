@@ -19,8 +19,8 @@ export interface ComponentType<TProps> {
 }
 
 export interface ComponentInstance<TProps> {
-  connect(tree: RenderTree.ComponentNode<TProps>): void;
-  render(tree: RenderTree.ComponentNode<TProps>): VElement;
+  connect(view: View.ComponentView<TProps>): void;
+  render(view: View.ComponentView<TProps>): VElement;
   afterCommit(): void;
   beforeRemove(): void;
 }
@@ -77,72 +77,72 @@ export type Lanes = number;
 export type Mutation =
   | {
       type: typeof InsertType;
-      tree: RenderTree;
-      afterTree: RenderTree | undefined;
+      view: View;
+      afterView: View | undefined;
     }
   | {
       type: typeof UpdateType;
-      oldTree: RenderTree;
-      newTree: RenderTree;
+      oldView: View;
+      newView: View;
     }
   | {
       type: typeof UpdateAndMoveType;
-      oldTree: RenderTree;
-      newTree: RenderTree;
-      afterTree: RenderTree | undefined;
+      oldView: View;
+      newView: View;
+      afterView: View | undefined;
     }
   | {
       type: typeof RemoveType;
-      tree: RenderTree;
+      view: View;
     };
 
 export interface Reconciler {
   diff(
-    oldTree: RenderTree,
+    oldView: View,
     newElement: VElement,
     scope: Scope,
     index?: number,
-    parent?: RenderTree | null,
-  ): RenderTree;
+    parent?: View | null,
+  ): View;
   nextRenderId(): number;
   render(
     element: VElement,
     scope: Scope,
     index?: number,
-    parent?: RenderTree | null,
-  ): RenderTree;
+    parent?: View | null,
+  ): View;
 }
 
-export type RenderTree =
-  | RenderTree.ComponentNode
-  | RenderTree.DirectiveNode
-  | RenderTree.FragmentNode
-  | RenderTree.NativeNode;
+export type View =
+  | View.ComponentView
+  | View.DirectiveView
+  | View.FragmentView
+  | View.HostView;
 
-export namespace RenderTree {
-  interface RenderNode<TElement extends VElement>
+export namespace View {
+  interface BaseView<TElement extends VElement>
     extends Pick<TElement, 'type' | 'props' | 'key'> {
     id: number;
     index: number;
-    parent: RenderTree | null;
-    children: RenderTree[];
+    parent: View | null;
+    children: View[];
   }
 
-  export interface DirectiveNode extends RenderNode<VDirective> {
+  export interface DirectiveView extends BaseView<VDirective> {
     dirty: boolean;
     cleanup: (() => void) | void;
   }
 
-  export interface ComponentNode<TProps = any> extends RenderNode<VComponent> {
+  export interface ComponentView<TProps = any> extends BaseView<VComponent> {
     instance: ComponentInstance<TProps>;
     scope: Scope;
   }
 
-  export interface FragmentNode extends RenderNode<VFragment> {
+  export interface FragmentView extends BaseView<VFragment> {
     mutations: Mutation[];
   }
 
-  export interface NativeNode extends RenderNode<VHostElement> {
+  export interface HostView extends BaseView<VHostElement> {
     hostNode: HostNode;
   }
 }
