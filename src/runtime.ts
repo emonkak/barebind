@@ -483,6 +483,7 @@ export class Runtime implements Reconciler, Dispatcher {
       }
 
       try {
+        const flushSync = (this._flushLanes & SyncLane) === SyncLane;
         let iteration = 0;
 
         for (const update of updateBatch) {
@@ -492,7 +493,7 @@ export class Runtime implements Reconciler, Dispatcher {
             continue;
           }
 
-          if (iteration++ > 0 && !(this._flushLanes & SyncLane)) {
+          if (iteration++ > 0 && !flushSync) {
             await this._adapter.yieldToMain();
           }
 
@@ -506,7 +507,7 @@ export class Runtime implements Reconciler, Dispatcher {
               effect();
             }
           };
-          if (this._flushLanes & SyncLane) {
+          if (flushSync) {
             commit();
           } else if (this._flushLanes & ViewTransitionLane) {
             await this._adapter.startViewTransition(commit);
