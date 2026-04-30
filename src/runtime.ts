@@ -65,9 +65,109 @@ export class Runtime implements Reconciler, Dispatcher {
     index: number = oldView.index,
     parent: View | null = oldView.parent,
   ): View {
-    const newView = this._diffChild(oldView, newElement, scope, index, parent);
-    this._settleSubview(oldView);
-    return newView;
+    if (oldView.type !== newElement.type || oldView.key !== newElement.key) {
+      const newView = this.render(newElement, scope, index, parent);
+      this._settleSubview(oldView);
+      return newView;
+    } else if (typeof newElement.type === 'function') {
+      let newView: View.ComponentView;
+      if (
+        ((oldView as View.ComponentView).scope.pendingLanes &
+          this._flushLanes) ===
+          NoLanes &&
+        newElement.type.arePropsEqual(oldView.props, newElement.props)
+      ) {
+        newView = {
+          ...(oldView as View.ComponentView),
+          index,
+          parent,
+          scope: new Scope(scope),
+        };
+        newView.instance.connect(newView);
+      } else {
+        newView = {
+          ...(oldView as View.ComponentView),
+          ...newElement,
+          id: this._renderCount++,
+          index,
+          parent,
+          children: new Array(1),
+          scope: new Scope(scope),
+        };
+        newView.instance.connect(newView);
+        const returnElement = newView.instance.render(newView);
+        newView.children[0] = this.diff(
+          oldView.children[0]!,
+          returnElement,
+          newView.scope,
+          index,
+          newView,
+        );
+      }
+      (oldView as View.ComponentView).scope.pendingLanes &= ~this._flushLanes;
+      newView.scope.pendingLanes = (
+        oldView as View.ComponentView
+      ).scope.pendingLanes;
+      return newView;
+    } else if (newElement.type === Directive) {
+      return {
+        ...(oldView as View.DirectiveView),
+        ...newElement,
+        id: this._renderCount++,
+        index,
+        parent,
+        dirty: areDependenciesChange(
+          (oldView as View.DirectiveView).props.deps,
+          newElement.props.deps,
+        ),
+      };
+    } else if (newElement.type === Fragment) {
+      const newView: View.FragmentView = {
+        ...(oldView as View.FragmentView),
+        ...newElement,
+        id: this._renderCount++,
+        index,
+        parent,
+        children: new Array(newElement.children.length),
+        mutations: [],
+      };
+      this._diffChildren(
+        (oldView as View.FragmentView).children.slice(),
+        newView.children,
+        newElement.children,
+        scope,
+        newView,
+        newView.mutations,
+      );
+      return newView;
+    } else {
+      const dirty = (oldView as View.HostView).hostNode.prepareUpdate(
+        newElement.type,
+        (oldView as View.HostView).props,
+        newElement.props,
+      );
+      if (!dirty) {
+        return { ...oldView, index, parent };
+      }
+      const newView: View.HostView = {
+        ...(oldView as View.HostView),
+        ...newElement,
+        id: this._renderCount++,
+        index,
+        parent,
+        children: new Array(newElement.children.length),
+      };
+      for (let i = 0, l = newElement.children.length; i < l; i++) {
+        newView.children[i] = this.diff(
+          oldView.children[i]!,
+          newElement.children[i]!,
+          scope,
+          i,
+          newView,
+        );
+      }
+      return newView;
+    }
   }
 
   nextIdentifier(): string {
@@ -180,122 +280,6 @@ export class Runtime implements Reconciler, Dispatcher {
     };
   }
 
-  private _diffChild(
-    oldView: View,
-    newElement: VElement,
-    scope: Scope,
-    index: number,
-    parent: View | null,
-  ): View {
-    if (oldView.type !== newElement.type || oldView.key !== newElement.key) {
-      return this.render(newElement, scope, index, parent);
-    } else if (typeof newElement.type === 'function') {
-      if (
-        ((oldView as View.ComponentView).scope.pendingLanes &
-          this._flushLanes) ===
-          NoLanes &&
-        newElement.type.arePropsEqual(
-          (oldView as View.ComponentView).props,
-          newElement.props,
-        )
-      ) {
-        const newView = {
-          ...(oldView as View.ComponentView),
-          index,
-          parent,
-          scope: new Scope(
-            scope,
-            (oldView as View.ComponentView).scope.pendingLanes &
-              ~this._flushLanes,
-          ),
-        };
-        newView.instance.connect(newView);
-        return newView;
-      }
-      const newView: View.ComponentView = {
-        ...(oldView as View.ComponentView),
-        ...newElement,
-        id: this._renderCount++,
-        index,
-        parent,
-        children: new Array(1),
-        scope: new Scope(
-          scope,
-          (oldView as View.ComponentView).scope.pendingLanes,
-        ),
-      };
-      newView.instance.connect(newView);
-      const returnElement = newView.instance.render(newView);
-      newView.children[0] = this._diffChild(
-        oldView.children[0]!,
-        returnElement,
-        newView.scope,
-        index,
-        newView,
-      );
-      newView.scope.pendingLanes &= ~this._flushLanes;
-      return newView;
-    } else if (newElement.type === Directive) {
-      return {
-        ...(oldView as View.DirectiveView),
-        ...newElement,
-        id: this._renderCount++,
-        index,
-        parent,
-        dirty: areDependenciesChange(
-          (oldView as View.DirectiveView).props.deps,
-          newElement.props.deps,
-        ),
-      };
-    } else if (newElement.type === Fragment) {
-      const newView: View.FragmentView = {
-        ...(oldView as View.FragmentView),
-        ...newElement,
-        id: this._renderCount++,
-        index,
-        parent,
-        children: new Array(newElement.children.length),
-        mutations: [],
-      };
-      this._diffChildren(
-        (oldView as View.FragmentView).children.slice(),
-        newView.children,
-        newElement.children,
-        scope,
-        newView,
-        newView.mutations,
-      );
-      return newView;
-    } else {
-      const dirty = (oldView as View.HostView).hostNode.prepareUpdate(
-        newElement.type,
-        (oldView as View.HostView).props,
-        newElement.props,
-      );
-      if (!dirty) {
-        return { ...oldView, index, parent };
-      }
-      const newView: View.HostView = {
-        ...(oldView as View.HostView),
-        ...newElement,
-        id: this._renderCount++,
-        index,
-        parent,
-        children: new Array(newElement.children.length),
-      };
-      for (let i = 0, l = newElement.children.length; i < l; i++) {
-        newView.children[i] = this._diffChild(
-          oldView.children[i]!,
-          newElement.children[i]!,
-          scope,
-          i,
-          newView,
-        );
-      }
-      return newView;
-    }
-  }
-
   private _diffChildren(
     oldChildren: (View | undefined)[],
     newChildren: View[],
@@ -351,7 +335,7 @@ export class Runtime implements Reconciler, Dispatcher {
       } else if (oldChildren[oldTail] === undefined) {
         oldTail--;
       } else if (Object.is(oldKeys[oldHead]!, newKeys[newHead]!)) {
-        const newView = this._diffChild(
+        const newView = this.diff(
           oldChildren[oldHead]!,
           newElements[newHead]!,
           scope,
@@ -367,7 +351,7 @@ export class Runtime implements Reconciler, Dispatcher {
         oldHead++;
         newHead++;
       } else if (Object.is(oldKeys[oldTail]!, newKeys[newTail]!)) {
-        const newView = this._diffChild(
+        const newView = this.diff(
           oldChildren[oldTail]!,
           newElements[newTail]!,
           scope,
@@ -386,14 +370,14 @@ export class Runtime implements Reconciler, Dispatcher {
         Object.is(oldKeys[oldHead]!, newKeys[newTail]!) &&
         Object.is(oldKeys[oldTail]!, newKeys[newHead]!)
       ) {
-        const headView = this._diffChild(
+        const headView = this.diff(
           oldChildren[oldHead]!,
           newElements[newTail]!,
           scope,
           newTail,
           parent,
         );
-        const tailView = this._diffChild(
+        const tailView = this.diff(
           oldChildren[oldTail]!,
           newElements[newHead]!,
           scope,
@@ -443,7 +427,7 @@ export class Runtime implements Reconciler, Dispatcher {
             oldIndex <= oldTail &&
             oldChildren[oldIndex] !== undefined
           ) {
-            const newView = this._diffChild(
+            const newView = this.diff(
               oldChildren[oldIndex]!,
               newElements[newTail]!,
               scope,
