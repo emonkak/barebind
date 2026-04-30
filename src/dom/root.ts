@@ -27,7 +27,7 @@ export class Root {
           const element = createPortal(value, this._container);
           const newRoot = (
             this._root !== null
-              ? reconciler.diff(this._root, element, scope)
+              ? reconciler.diff(this._root, element, scope, 0, null)
               : reconciler.render(element, scope)
           ) as View.HostView;
           return () => {
