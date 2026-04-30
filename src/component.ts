@@ -464,7 +464,7 @@ class UpdateComponent implements UpdateUnit {
   }
 }
 
-function finalizeHooks(context: RenderContext) {
+function finalizeHooks(context: RenderContext): void {
   let currentHook = context._hooks[context._hookIndex++];
 
   if (currentHook !== undefined) {
