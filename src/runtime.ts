@@ -62,8 +62,8 @@ export class Runtime implements Reconciler, Dispatcher {
     oldView: View,
     newElement: VElement,
     scope: Scope,
-    index: number = oldView.index,
-    parent: View | null = oldView.parent,
+    index: number,
+    parent: View | null,
   ): View {
     if (oldView.type !== newElement.type || oldView.key !== newElement.key) {
       const newView = this.render(newElement, scope, index, parent);

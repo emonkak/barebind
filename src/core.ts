@@ -101,8 +101,8 @@ export interface Reconciler {
     oldView: View,
     newElement: VElement,
     scope: Scope,
-    index?: number,
-    parent?: View | null,
+    index: number,
+    parent: View | null,
   ): View;
   nextRenderId(): number;
   render(
