@@ -165,7 +165,7 @@ function parseAttribtues(
 
       DEBUG: {
         if (caseSensitiveName?.toLowerCase() !== attribute.name) {
-          throw DOMNodeError.fromAttributeHole(
+          throw DOMNodeError.fromAttribute(
             element,
             attribute.name,
             `The attribute name must be "${attribute.name}", but got "${caseSensitiveName}". There are unclosed tags or duplicate attributes.`,
@@ -206,7 +206,7 @@ function parseAttribtues(
     } else {
       DEBUG: {
         if (attribute.name.includes(marker)) {
-          throw DOMNodeError.fromAttributeHole(
+          throw DOMNodeError.fromAttribute(
             element,
             attribute.name,
             'Expressions are not allowed as an attribute name.',
@@ -214,7 +214,7 @@ function parseAttribtues(
         }
 
         if (attribute.value.includes(marker)) {
-          throw DOMNodeError.fromAttributeHole(
+          throw DOMNodeError.fromAttribute(
             element,
             attribute.name,
             'Expressions inside an attribute must make up the entire attribute value.',
@@ -246,7 +246,7 @@ function parseChildren(
       case Node.ELEMENT_NODE: {
         DEBUG: {
           if ((currentNode as Element).localName.includes(marker)) {
-            throw DOMNodeError.fromNodeHole(
+            throw DOMNodeError.fromNode(
               currentNode as Element,
               'Expressions are not allowed as a tag name.',
             );
@@ -281,7 +281,7 @@ function parseChildren(
         } else {
           DEBUG: {
             if ((currentNode as Comment).data.includes(marker)) {
-              throw DOMNodeError.fromNodeHole(
+              throw DOMNodeError.fromNode(
                 currentNode,
                 'Expressions inside a comment must make up the entire comment value.',
               );
