@@ -17,8 +17,12 @@ export interface ComponentType<TProps> {
 }
 
 export interface ComponentHandle<TProps> {
-  connect(view: View.ComponentView<TProps>): void;
-  render(view: View.ComponentView<TProps>): VElement;
+  skipUpdate(view: View.ComponentView<TProps>): void;
+  update(
+    view: View.ComponentView<TProps>,
+    lanes: Lanes,
+    reconciler: Reconciler,
+  ): void;
   afterCommit(): void;
   beforeRemove(): void;
 }
@@ -172,7 +176,7 @@ export interface UpdateOptions
 export interface UpdateUnit {
   readonly scope: Scope;
   readonly pendingLanes: Lanes;
-  prepare(reconciler: Reconciler, lanes: Lanes): Effect;
+  prepare(lanes: Lanes, reconciler: Reconciler): Effect;
 }
 
 export type VBind = VNode<typeof Bind, { index: number }, [VElement]>;

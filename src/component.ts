@@ -131,6 +131,34 @@ export class Component<TProps, TReturn> implements ComponentHandle<TProps> {
     this._context = context;
   }
 
+  skipUpdate(view: View.ComponentView<TProps>): void {
+    this._context._stagingView = view;
+  }
+
+  update(
+    view: View.ComponentView<TProps>,
+    lanes: Lanes,
+    reconciler: Reconciler,
+  ): void {
+    this._context._stagingView = view;
+    this._context._hookIndex = 0;
+    view.instance.pendingLanes &= ~lanes;
+    let returnElement: VElement;
+    try {
+      returnElement = wrap(this._componentFn.call(this._context, view.props));
+      finalizeHooks(this._context);
+      Object.freeze(view.scope.instances);
+    } catch (cause) {
+      throw new RenderError(view, 'An error occurred during rendering.', {
+        cause,
+      });
+    }
+    view.children[0] =
+      view.children[0] !== undefined
+        ? reconciler.diff(view.children[0], returnElement, view.scope, 0, view)
+        : reconciler.render(returnElement, view.scope, 0);
+  }
+
   afterCommit(): void {
     for (const hook of this._context._hooks) {
       if (hook.type === EffectType && hook.dirty) {
@@ -150,24 +178,6 @@ export class Component<TProps, TReturn> implements ComponentHandle<TProps> {
       }
     }
     this._context._stagingView = null;
-  }
-
-  connect(view: View.ComponentView<TProps>): void {
-    this._context._stagingView = view;
-    this._context._hookIndex = 0;
-  }
-
-  render(view: View.ComponentView<TProps>): VElement {
-    try {
-      const returnValue = this._componentFn.call(this._context, view.props);
-      finalizeHooks(this._context);
-      Object.freeze(view.scope.instances);
-      return wrap(returnValue);
-    } catch (cause) {
-      throw new RenderError(view, 'An error occurred during rendering.', {
-        cause,
-      });
-    }
   }
 }
 
@@ -457,24 +467,18 @@ class UpdateComponent implements UpdateUnit {
     return this._stagingView.instance.pendingLanes;
   }
 
-  prepare(reconciler: Reconciler, lanes: Lanes): Effect {
-    const oldView = this._context._committedView ?? this._stagingView;
+  prepare(lanes: Lanes, reconciler: Reconciler): Effect {
+    const oldView = this._context._committedView;
+    if (oldView === null) {
+      return noOp;
+    }
     const newView: View.ComponentView = {
       ...oldView,
       id: reconciler.nextRenderId(),
-      children: new Array(1),
-      scope: this._stagingView.scope.clone(),
+      children: oldView.children.slice(),
+      scope: oldView.scope.clone(),
     };
-    newView.instance.pendingLanes &= ~lanes;
-    newView.instance.handle.connect(newView);
-    const returnElement = newView.instance.handle.render(newView);
-    newView.children[0] = reconciler.diff(
-      oldView.children[0]!,
-      returnElement,
-      newView.scope,
-      0,
-      newView,
-    );
+    newView.instance.handle.update(newView, lanes, reconciler);
     return () => {
       patch(oldView, newView);
     };
@@ -509,3 +513,5 @@ function getInitialState<TState>(initialState: InitialState<TState>): TState {
     ? (initialState as () => TState)()
     : initialState;
 }
+
+function noOp() {}
