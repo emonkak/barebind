@@ -225,7 +225,7 @@ function parseAttribtues(
     }
 
     holes.push(hole);
-    element.removeAttribute(attribute.name);
+    element.removeAttributeNode(attribute);
   }
 }
 
