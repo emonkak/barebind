@@ -471,7 +471,6 @@ export class Runtime implements Reconciler, Dispatcher {
 
       try {
         const flushSync = (this._flushLanes & SyncLane) === SyncLane;
-        let iteration = 0;
 
         for (const update of updateBatch) {
           const { lanes, unit } = update;
@@ -480,7 +479,7 @@ export class Runtime implements Reconciler, Dispatcher {
             continue;
           }
 
-          if (iteration++ > 0 && !flushSync) {
+          if (!flushSync && effectBatch.length > 0) {
             await this._adapter.yieldToMain();
           }
 
