@@ -1,32 +1,39 @@
 const CARET_CHAR = '^';
+const SPACE_CHAR = ' ';
+
 const INDENT_STRING = '  ';
-const PLACEHOLDER_STRING = '${...}';
 
 // Minimum complexity score required to make a node identifiable.
 const COMPLEXITY_THRESHOLD = 10;
 
 const serializer = new XMLSerializer();
 
-export function annotateAttributeHole(
-  element: Element,
-  name: string,
-): string[] {
-  const closed = isClosed(element);
-  const tailSpan = closed ? 1 : element.localName.length + 4;
-  const outerHTML = element.outerHTML;
-  const unclosedTag = outerHTML.slice(
-    0,
-    outerHTML.length - element.innerHTML.length - tailSpan,
-  );
+export function annotateAttribute(element: Element, name: string): string[] {
+  const isTagClosed = isSelfClosingElement(element);
+  const components = splitAttributes(element);
 
+  if (!element.hasAttribute(name)) {
+    components.push(`${name}=""`);
+  }
+
+  const prefix = name + '=';
   const lines = [
-    `${unclosedTag} ${name}=${PLACEHOLDER_STRING}>`,
-    ' '.repeat(unclosedTag.length + 1) +
-      CARET_CHAR.repeat(name.length + PLACEHOLDER_STRING.length + 1),
+    `<${element.localName} ${components.join(SPACE_CHAR)}>`,
+    (
+      SPACE_CHAR.repeat(element.localName.length + 2) +
+      components
+        .map((component) =>
+          (component.startsWith(prefix) ? CARET_CHAR : SPACE_CHAR).repeat(
+            component.length,
+          ),
+        )
+        .join(SPACE_CHAR)
+    ).trimEnd(),
   ];
 
-  if (!closed) {
-    lines.push(...prettyPrintChildren(element, 1), toCloseTag(element));
+  if (!isTagClosed) {
+    prettyPrintChildren(element, 1, lines);
+    lines.push(toCloseTag(element));
   }
 
   return lines;
@@ -35,43 +42,24 @@ export function annotateAttributeHole(
 export function annotateNode(node: Node): string[] {
   switch (node.nodeType) {
     case Node.ELEMENT_NODE:
-      return annotateElement(node as Element, (node as Element).localName);
-    case Node.COMMENT_NODE:
-      return [
-        `<!--${(node as Comment).data}-->`,
-        CARET_CHAR.repeat((node as Comment).data.length + 7),
-      ];
-    case Node.TEXT_NODE:
-      return [
-        `"${(node as Text).data}"`,
-        CARET_CHAR.repeat((node as Text).data.length + 2),
-      ];
-    default:
-      return [
+      return annotateElement(node as Element);
+    case Node.COMMENT_NODE: {
+      const line = serializeNode(node);
+      return [line, CARET_CHAR.repeat(line.length)];
+    }
+    case Node.TEXT_NODE: {
+      const line = serializeNode(node);
+      return [`"${line}"`, CARET_CHAR.repeat(line.length + 2)];
+    }
+    default: {
+      const lines = [
         `<${node.nodeName}>`,
         CARET_CHAR.repeat(node.nodeName.length + 2),
-        ...prettyPrintChildren(node, 1),
-        `</${node.nodeName}>`,
       ];
-  }
-}
-
-export function annotateNodeHole(node: Node): string[] {
-  switch (node.nodeType) {
-    case Node.ELEMENT_NODE:
-      return annotateElement(node as Element, PLACEHOLDER_STRING);
-    case Node.COMMENT_NODE:
-      return [
-        `<!--${PLACEHOLDER_STRING}-->`,
-        CARET_CHAR.repeat(PLACEHOLDER_STRING.length + 7),
-      ];
-    case Node.TEXT_NODE:
-      return [
-        `"${PLACEHOLDER_STRING}"`,
-        CARET_CHAR.repeat(PLACEHOLDER_STRING.length + 2),
-      ];
-    default:
-      return [];
+      prettyPrintChildren(node, 1, lines);
+      lines.push(`</${node.nodeName}>`);
+      return lines;
+    }
   }
 }
 
@@ -100,7 +88,7 @@ export function generateNodeFrame(
       nextNode !== null;
       nextNode = nextNode.nextSibling
     ) {
-      trailingLines.push(...prettyPrintNode(nextNode));
+      prettyPrintNode(nextNode, 0, trailingLines);
       complexity += getComplexity(nextNode);
     }
 
@@ -132,22 +120,14 @@ export function generateNodeFrame(
   return leadingString + middle + trailingString;
 }
 
-function annotateElement(element: Element, annotation: string): string[] {
-  const closed = isClosed(element);
-  const tailSpan = closed ? 0 : element.localName.length + 3;
-  const outerHTML = element.outerHTML;
-  const unopenedTag = outerHTML.substring(
-    element.localName.length + 1,
-    outerHTML.length - element.innerHTML.length - tailSpan,
-  );
+function annotateElement(element: Element): string[] {
+  const isTagClosed = isSelfClosingElement(element);
+  const outerTag = isTagClosed ? element.outerHTML : toOpenTag(element);
+  const lines = [outerTag, CARET_CHAR.repeat(outerTag.length)];
 
-  const lines = [
-    '<' + annotation + unopenedTag,
-    CARET_CHAR.repeat(annotation.length + unopenedTag.length + 1),
-  ];
-
-  if (!closed) {
-    lines.push(...prettyPrintChildren(element, 1), toCloseTag(element));
+  if (!isTagClosed) {
+    prettyPrintChildren(element, 1, lines);
+    lines.push(toCloseTag(element));
   }
 
   return lines;
@@ -172,35 +152,33 @@ function getComplexity(node: Node): number {
   return complexity;
 }
 
-function isClosed(element: Element): boolean {
+function isSelfClosingElement(element: Element): boolean {
   return !element.outerHTML.endsWith(toCloseTag(element));
 }
 
-function prettyPrintChildren(node: Node, level: number): string[] {
-  const lines: string[] = [];
-
+function prettyPrintChildren(node: Node, level: number, lines: string[]): void {
   for (let child = node.firstChild; child !== null; child = child.nextSibling) {
-    lines.push(...prettyPrintNode(child, level));
+    prettyPrintNode(child, level, lines);
   }
-
-  return lines;
 }
 
-function prettyPrintNode(node: Node, level: number = 0): string[] {
-  const lines: string[] = [];
+function prettyPrintNode(
+  node: Node,
+  level: number = 0,
+  lines: string[] = [],
+): string[] {
   const indent = INDENT_STRING.repeat(level);
 
   switch (node.nodeType) {
     case Node.ELEMENT_NODE:
-      if (isClosed(node as Element)) {
+      if (isSelfClosingElement(node as Element)) {
         lines.push(indent + (node as Element).outerHTML);
         return lines;
       }
 
-      lines.push(
-        indent + toOpenTag(node as Element),
-        ...prettyPrintChildren(node, level + 1),
-      );
+      lines.push(indent + toOpenTag(node as Element));
+
+      prettyPrintChildren(node, level + 1, lines);
 
       if (lines.length > 1) {
         lines.push(indent + toCloseTag(node as Element));
@@ -212,7 +190,7 @@ function prettyPrintNode(node: Node, level: number = 0): string[] {
       lines.push(indent + serializeNode(node));
       break;
     case Node.TEXT_NODE:
-      lines.push(indent + JSON.stringify((node as Text).data));
+      lines.push(indent + `"${serializeNode(node)}"`);
       break;
   }
 
@@ -225,6 +203,14 @@ function serializeNode(node: Node): string {
 
 function shiftLine(line: string): string {
   return line !== '' ? INDENT_STRING + line : line;
+}
+
+function splitAttributes(element: Element): string[] {
+  return Array.from(element.attributes, (attribute) => {
+    const wrapper = element.ownerDocument.createElement('input');
+    wrapper.setAttribute(attribute.name, attribute.value);
+    return wrapper.outerHTML.slice(7, -1);
+  });
 }
 
 function toCloseTag(element: Element): string {
