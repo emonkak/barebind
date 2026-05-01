@@ -81,7 +81,7 @@ export class Runtime implements Reconciler, Dispatcher {
           index,
           parent,
         };
-        newView.instance.handle.connect(newView);
+        newView.instance.handle.skipUpdate(newView);
         return newView;
       } else {
         const newView = {
@@ -90,19 +90,10 @@ export class Runtime implements Reconciler, Dispatcher {
           id: this._renderCount++,
           index,
           parent,
-          children: new Array(1),
+          children: oldView.children.slice(),
           scope: scope.append(),
         };
-        newView.instance.pendingLanes &= ~this._flushLanes;
-        newView.instance.handle.connect(newView);
-        const returnElement = newView.instance.handle.render(newView);
-        newView.children[0] = this.diff(
-          oldView.children[0]!,
-          returnElement,
-          newView.scope,
-          0,
-          newView,
-        );
+        newView.instance.handle.update(newView, this._flushLanes, this);
         return newView;
       }
     } else if (newElement.type === Directive) {
@@ -197,9 +188,7 @@ export class Runtime implements Reconciler, Dispatcher {
         },
         scope: scope.append(),
       };
-      view.instance.handle.connect(view);
-      const returnElement = view.instance.handle.render(view);
-      view.children[0] = this.render(returnElement, view.scope, 0, view);
+      view.instance.handle.update(view, this._flushLanes, this);
       return view;
     } else if (element.type === Directive) {
       return {
@@ -495,7 +484,7 @@ export class Runtime implements Reconciler, Dispatcher {
             await this._adapter.yieldToMain();
           }
 
-          effectBatch.push(unit.prepare(this, this._flushLanes));
+          effectBatch.push(unit.prepare(this._flushLanes, this));
         }
 
         if (effectBatch.length > 0) {
