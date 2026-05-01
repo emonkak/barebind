@@ -5,29 +5,29 @@ import {
   generateNodeFrame,
 } from './debug.js';
 
-export class DOMRenderError extends Error {
+export class DOMNodeError extends Error {
   readonly node: Node;
 
   static fromNode(
     node: Node,
     message: string,
     options?: ErrorOptions,
-  ): DOMRenderError {
+  ): DOMNodeError {
     DEBUG: {
       message += '\n' + generateNodeFrame(node, annotateNode(node));
     }
-    return new DOMRenderError(node, message, options);
+    return new DOMNodeError(node, message, options);
   }
 
   static fromNodeHole(
     node: Node,
     message: string,
     options?: ErrorOptions,
-  ): DOMRenderError {
+  ): DOMNodeError {
     DEBUG: {
       message += '\n' + generateNodeFrame(node, annotateNodeHole(node));
     }
-    return new DOMRenderError(node, message, options);
+    return new DOMNodeError(node, message, options);
   }
 
   static fromAttributeHole(
@@ -35,12 +35,12 @@ export class DOMRenderError extends Error {
     name: string,
     message: string,
     options?: ErrorOptions,
-  ): DOMRenderError {
+  ): DOMNodeError {
     DEBUG: {
       message +=
         '\n' + generateNodeFrame(node, annotateAttributeHole(node, name));
     }
-    return new DOMRenderError(node, message, options);
+    return new DOMNodeError(node, message, options);
   }
 
   constructor(node: Node, message: string, options?: ErrorOptions) {
