@@ -6,7 +6,7 @@ import {
   type VHostElement,
   type VTemplate,
 } from '../core.js';
-import { DOMRenderError } from './error.js';
+import { DOMNodeError } from './error.js';
 import {
   AttributePart,
   ChildNodePart,
@@ -181,7 +181,7 @@ function renderTemplate(template: DOMTemplate): DOMBlock {
 
       for (; nodeIndex <= hole.index; nodeIndex++) {
         if (templateWalker.nextNode() === null) {
-          throw DOMRenderError.fromNode(
+          throw DOMNodeError.fromNode(
             templateWalker.currentNode,
             'There is no node that the hole indicates. The template may have been modified.',
           );

@@ -10,7 +10,7 @@ export {
   toElement,
 } from './core.js';
 export { DOMAdapter } from './dom/adapter.js';
-export { DOMRenderError } from './dom/error.js';
+export { DOMNodeError } from './dom/error.js';
 export { Root } from './dom/root.js';
 export { RenderError } from './error.js';
 export { Runtime } from './runtime.js';
