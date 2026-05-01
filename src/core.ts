@@ -234,13 +234,16 @@ export class Ref<T> implements Renderable {
 }
 
 export class Scope {
-  parent: Scope | null;
-  level: number;
-  instances: object[] = [];
+  readonly parent: Scope | null;
+  readonly level: number;
+  readonly instances: object[] = [];
 
   constructor(parent: Scope | null = null, level: number = 0) {
     this.parent = parent;
     this.level = level;
+    DEBUG: {
+      Object.freeze(this);
+    }
   }
 
   append(): Scope {
@@ -253,10 +256,10 @@ export class Scope {
 }
 
 export class VNode<TType, TProps, const TChildren extends VElement[]> {
-  type: TType;
-  props: TProps;
-  children: TChildren;
-  key: unknown;
+  readonly type: TType;
+  readonly props: TProps;
+  readonly children: TChildren;
+  readonly key: unknown;
 
   constructor(type: TType, props: TProps, children: TChildren, key?: unknown) {
     this.type = type;
