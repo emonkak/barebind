@@ -1,5 +1,3 @@
-import { NoLanes } from './lane.js';
-
 export const Bind = Symbol.for('barebind.Bind');
 export const Directive = Symbol.for('barebind.Directive');
 export const Fragment = Symbol.for('barebind.Fragment');
@@ -15,14 +13,19 @@ export const RemoveType = 3;
 export interface ComponentType<TProps> {
   (props: TProps): VComponent<TProps>;
   arePropsEqual(oldProps: TProps, newProps: TProps): boolean;
-  newInstance(props: TProps, dispatcher: Dispatcher): ComponentInstance<TProps>;
+  newHandle(props: TProps, dispatcher: Dispatcher): ComponentHandle<TProps>;
 }
 
-export interface ComponentInstance<TProps> {
+export interface ComponentHandle<TProps> {
   connect(view: View.ComponentView<TProps>): void;
   render(view: View.ComponentView<TProps>): VElement;
   afterCommit(): void;
   beforeRemove(): void;
+}
+
+export interface ComponentInstance<TProps> {
+  handle: ComponentHandle<TProps>;
+  pendingLanes: Lanes;
 }
 
 export interface Dispatcher {
@@ -168,7 +171,8 @@ export interface UpdateOptions
 
 export interface UpdateUnit {
   readonly scope: Scope;
-  prepare(reconciler: Reconciler): Effect;
+  readonly pendingLanes: Lanes;
+  prepare(reconciler: Reconciler, lanes: Lanes): Effect;
 }
 
 export type VBind = VNode<typeof Bind, { index: number }, [VElement]>;
@@ -228,17 +232,11 @@ export class Ref<T> implements Renderable {
 export class Scope {
   parent: Scope | null;
   level: number;
-  pendingLanes: Lanes;
   instances: object[] = [];
 
-  constructor(
-    parent: Scope | null = null,
-    level: number = 0,
-    pendingLanes: Lanes = NoLanes,
-  ) {
+  constructor(parent: Scope | null = null, level: number = 0) {
     this.parent = parent;
     this.level = level;
-    this.pendingLanes = pendingLanes;
   }
 
   append(): Scope {
@@ -246,7 +244,7 @@ export class Scope {
   }
 
   clone(): Scope {
-    return new Scope(this.parent, this.level, this.pendingLanes);
+    return new Scope(this.parent, this.level);
   }
 }
 

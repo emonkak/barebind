@@ -46,7 +46,7 @@ function afterCommit(view: View): void {
   }
 
   if (typeof view.type === 'function') {
-    view.instance.afterCommit();
+    view.instance.handle.afterCommit();
   }
 }
 
@@ -76,7 +76,6 @@ function applyPatch(oldView: View, newView: View): void {
     removeSubview(getHostAncestor(oldView), oldView);
     appendChild(getHostAncestor(newView), newView, nextHostSibling(oldView));
   } else if (typeof newView.type === 'function') {
-    (oldView as View.ComponentView).scope.pendingLanes = NoLanes;
     applyPatch(oldView.children[0]!, newView.children[0]!);
   } else if (newView.type === Directive) {
     // skip
@@ -130,8 +129,8 @@ function applyPatch(oldView: View, newView: View): void {
 
 function beforeRemove(view: View): void {
   if (typeof view.type === 'function') {
-    view.instance.beforeRemove();
-    view.scope.pendingLanes = NoLanes;
+    view.instance.handle.beforeRemove();
+    view.instance.pendingLanes = NoLanes;
   } else if (view.type === Directive) {
     view.cleanup?.call(undefined);
     view.cleanup = undefined;

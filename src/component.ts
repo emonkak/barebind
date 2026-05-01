@@ -1,6 +1,6 @@
 import { areDependenciesChange } from './compare.js';
 import {
-  type ComponentInstance,
+  type ComponentHandle,
   type ComponentType,
   type Dispatcher,
   type Effect,
@@ -119,7 +119,7 @@ namespace Hook {
   }
 }
 
-export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
+export class Component<TProps, TReturn> implements ComponentHandle<TProps> {
   private readonly _componentFn: ComponentFunction<TProps, TReturn>;
   private readonly _context: RenderContext;
 
@@ -194,10 +194,12 @@ export class RenderContext {
         finished: Promise.resolve(),
       };
     }
-    return this._dispatcher.schedule(
-      new UpdateComponent(this, this._stagingView),
+    const handle = this._dispatcher.schedule(
+      new UpdateComponent(this._stagingView, this),
       options,
     );
+    this._stagingView.instance.pendingLanes |= handle.lanes;
+    return handle;
   }
 
   inject<TInstance, TDefault = never>(
@@ -422,10 +424,10 @@ export function createComponent<TProps = {}, TReturn = unknown>(
     return new VNode(ComponentType, props, []);
   }
 
-  ComponentType.newInstance = (
+  ComponentType.newHandle = (
     _props: TProps,
     dispatcher: Dispatcher,
-  ): ComponentInstance<TProps> =>
+  ): ComponentHandle<TProps> =>
     new Component(componentFn, new RenderContext(dispatcher));
   ComponentType.arePropsEqual = arePropsEqual;
 
@@ -439,19 +441,23 @@ export function createComponent<TProps = {}, TReturn = unknown>(
 }
 
 class UpdateComponent implements UpdateUnit {
-  private readonly _context: RenderContext;
   private readonly _stagingView: View.ComponentView;
+  private readonly _context: RenderContext;
 
-  constructor(context: RenderContext, stagingView: View.ComponentView) {
-    this._context = context;
+  constructor(stagingView: View.ComponentView, context: RenderContext) {
     this._stagingView = stagingView;
+    this._context = context;
   }
 
   get scope(): Scope {
     return this._stagingView.scope;
   }
 
-  prepare(reconciler: Reconciler): Effect {
+  get pendingLanes(): Lanes {
+    return this._stagingView.instance.pendingLanes;
+  }
+
+  prepare(reconciler: Reconciler, lanes: Lanes): Effect {
     const oldView = this._context._committedView ?? this._stagingView;
     const newView: View.ComponentView = {
       ...oldView,
@@ -459,8 +465,9 @@ class UpdateComponent implements UpdateUnit {
       children: new Array(1),
       scope: this._stagingView.scope.clone(),
     };
-    newView.instance.connect(newView);
-    const returnElement = newView.instance.render(newView);
+    newView.instance.pendingLanes &= ~lanes;
+    newView.instance.handle.connect(newView);
+    const returnElement = newView.instance.handle.render(newView);
     newView.children[0] = reconciler.diff(
       oldView.children[0]!,
       returnElement,
@@ -474,6 +481,17 @@ class UpdateComponent implements UpdateUnit {
   }
 }
 
+function ensureHookType<TExpectedType extends Hook['type']>(
+  expectedType: TExpectedType,
+  hook: Hook,
+): asserts hook is Hook & { type: TExpectedType } {
+  if (hook.type !== expectedType) {
+    throw new TypeError(
+      `Unexpected hook type. Expected "${expectedType}" but got "${hook.type}".`,
+    );
+  }
+}
+
 function finalizeHooks(context: RenderContext): void {
   let currentHook = context._hooks[context._hookIndex++];
 
@@ -483,17 +501,6 @@ function finalizeHooks(context: RenderContext): void {
     currentHook = { type: FinalizerType };
     context._hooks.push(currentHook);
     Object.freeze(context._hooks);
-  }
-}
-
-function ensureHookType<TExpectedType extends Hook['type']>(
-  expectedType: TExpectedType,
-  hook: Hook,
-): asserts hook is Hook & { type: TExpectedType } {
-  if (hook.type !== expectedType) {
-    throw new TypeError(
-      `Unexpected hook type. Expected "${expectedType}" but got "${hook.type}".`,
-    );
   }
 }
 
