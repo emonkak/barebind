@@ -1,8 +1,6 @@
 import type { TemplateMode } from '../core.js';
 import { DOMRenderError } from './error.js';
 
-const TEMPLATE_PREFIX = '<!---->';
-
 const PLACEHOLDER_PATTERN = /^[0-9a-z_-]+$/;
 
 const LEADING_NEWLINE_PATTERN = /^\s*\n/;
@@ -100,7 +98,7 @@ export class DOMTemplate {
 
     const element = document.createElement('template');
     const marker = createMarker(placeholder);
-    const html = TEMPLATE_PREFIX + stripWhitespaces(strings.join(marker));
+    const html = stripWhitespaces(strings.join(marker));
 
     if (mode === 'html') {
       element.setHTMLUnsafe(html);
@@ -111,7 +109,7 @@ export class DOMTemplate {
       );
     }
 
-    const holes = parseChildren(strings, marker, element);
+    const holes = parseChildren(strings, marker, element, document);
 
     if (holes.length !== exprs.length) {
       throw DOMRenderError.fromNode(
@@ -235,6 +233,7 @@ function parseChildren(
   strings: readonly string[],
   marker: string,
   template: HTMLTemplateElement,
+  document: Document,
 ): Hole[] {
   const sourceTree = createTreeWalker(template.content);
   const holes: Hole[] = [];
@@ -268,6 +267,12 @@ function parseChildren(
         if (
           stripTrailingSlash((currentNode as Comment).data).trim() === marker
         ) {
+          if (nodeIndex === 0) {
+            // Insert a marker node so the first template node keeps a stable
+            // position when inserting children.
+            (currentNode as Comment).before(document.createComment(''));
+            nodeIndex++;
+          }
           holes.push({
             type: ChildNodeType,
             index: nodeIndex,
