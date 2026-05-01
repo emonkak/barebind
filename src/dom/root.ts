@@ -6,6 +6,7 @@ import {
   type UpdateOptions,
   type View,
 } from '../core.js';
+import { AllLanes } from '../lane.js';
 import { mount, patch, unmount } from '../view.js';
 
 export class Root {
@@ -23,6 +24,7 @@ export class Root {
     return this._dispatcher.schedule(
       {
         scope,
+        pendingLanes: AllLanes,
         prepare: (reconciler) => {
           const element = createPortal(value, this._container);
           const newRoot = (
@@ -48,6 +50,7 @@ export class Root {
     return this._dispatcher.schedule(
       {
         scope: new Scope(),
+        pendingLanes: AllLanes,
         prepare: () => {
           return () => {
             if (this._root !== null) {
