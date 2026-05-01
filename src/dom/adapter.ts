@@ -140,7 +140,7 @@ function generateUniqueIdentifier(length: number): string {
 }
 
 function isContinuousEvent(event: Event): boolean {
-  switch (event.type as keyof DocumentEventMap) {
+  switch (event.type) {
     case 'drag':
     case 'dragenter':
     case 'dragleave':
