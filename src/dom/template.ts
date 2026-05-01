@@ -82,8 +82,8 @@ export namespace Hole {
   export interface TextHole {
     type: typeof TextType;
     index: number;
-    leadingSpan: number;
-    trailingSpan: number;
+    splitSpan: number;
+    splitAfter: boolean;
   }
 }
 
@@ -365,17 +365,15 @@ function parseChildren(
           .map(stripWhitespaces);
         const normalizedText = components.join('');
         const tail = components.length - 1;
-        let lastComponent = components[0]!;
 
         for (let i = 1; i <= tail; i++) {
           const component = components[i]!;
           holes.push({
             type: TextType,
             index: nodeIndex,
-            leadingSpan: lastComponent.length,
-            trailingSpan: i === tail ? component.length : 0,
+            splitSpan: components[i - 1]!.length,
+            splitAfter: i < tail || component.length > 0,
           });
-          lastComponent = component;
         }
 
         if (normalizedText === '' && components.length === 1) {
@@ -399,14 +397,11 @@ function parseChildren(
 
 function splitTextPart(treeWalker: TreeWalker, hole: Hole.TextHole): TextPart {
   let currentNode = treeWalker.currentNode as Text;
-  if (currentNode.previousSibling?.nodeType === Node.TEXT_NODE) {
-    currentNode = currentNode.splitText(0);
-  }
-  if (hole.leadingSpan > 0) {
-    currentNode = currentNode.splitText(hole.leadingSpan);
+  if (hole.splitSpan > 0) {
+    currentNode = currentNode.splitText(hole.splitSpan);
   }
   const part = new TextPart(currentNode);
-  if (hole.trailingSpan > 0) {
+  if (hole.splitAfter) {
     currentNode = currentNode.splitText(0);
   }
   treeWalker.currentNode = currentNode;
