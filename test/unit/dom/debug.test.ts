@@ -1,41 +1,53 @@
 import { describe, expect, it } from 'vitest';
 import {
-  annotateAttributeHole,
+  annotateAttribute,
   annotateNode,
-  annotateNodeHole,
   generateNodeFrame,
 } from '@/dom/debug.js';
 import { createElement } from '../../dom-helpers.js';
 
-describe('annotateAttributeHole()', () => {
-  it('generates node frames for attribute holes', () => {
-    const node = createElement('div', { id: 'a' });
+describe('annotateAttribute()', () => {
+  it('generates node frames for attributes', () => {
+    const node = createElement('div', { id: 'a', class: 'b' });
     // biome-ignore format: keep expected lines
     const expectedLines = [
-      '<div id="a" class=${...}>',
-      '            ^^^^^^^^^^^^',
+      '<div id="a" class="b">',
+      '            ^^^^^^^^^',
       '</div>'
     ];
-    expect(generateNodeFrame(node, annotateAttributeHole(node, 'class'))).toBe(
+    expect(generateNodeFrame(node, annotateAttribute(node, 'class'))).toBe(
       expectedLines.join('\n'),
     );
   });
 
-  it('generates node frames for attribute holes in an unclosed element', () => {
-    const node = createElement('input');
+  it('generates node frames for attributes in self-closing elements', () => {
+    const node = createElement('input', { id: 'a', class: 'b' });
     // biome-ignore format: keep expected lines
     const expectedLines = [
-      '<input id=${...}>',
-      '       ^^^^^^^^^',
+      '<input id="a" class="b">',
+      '       ^^^^^^',
     ];
-    expect(generateNodeFrame(node, annotateAttributeHole(node, 'id'))).toBe(
+    expect(generateNodeFrame(node, annotateAttribute(node, 'id'))).toBe(
+      expectedLines.join('\n'),
+    );
+  });
+
+  it('generates node frames for non-existent attributes', () => {
+    const node = createElement('div', {});
+    // biome-ignore format: keep expected lines
+    const expectedLines = [
+      '<div id="">',
+      '     ^^^^^',
+      '</div>',
+    ];
+    expect(generateNodeFrame(node, annotateAttribute(node, 'id'))).toBe(
       expectedLines.join('\n'),
     );
   });
 });
 
 describe('annotateNode()', () => {
-  it('generates node frames for elements themselves', () => {
+  it('generates node frames for elements', () => {
     const node = createElement(
       'div',
       {},
@@ -57,7 +69,30 @@ describe('annotateNode()', () => {
     );
   });
 
-  it('generates node frames for comment nodes themselves', () => {
+  it('generates node frames for self-closing elements', () => {
+    const node = createElement('input');
+    createElement(
+      'div',
+      {},
+      node,
+      document.createTextNode('A'),
+      document.createComment('B'),
+    );
+    // biome-ignore format: keep expected lines
+    const expectedLines = [
+      '<div>',
+      '  <input>',
+      '  ^^^^^^^',
+      '  "A"',
+      '  <!--B-->',
+      '</div>',
+    ];
+    expect(generateNodeFrame(node, annotateNode(node))).toBe(
+      expectedLines.join('\n'),
+    );
+  });
+
+  it('generates node frames for comment nodes', () => {
     const node = document.createComment('A');
     // biome-ignore format: keep expected lines
     const expectedLines = [
@@ -69,12 +104,66 @@ describe('annotateNode()', () => {
     );
   });
 
-  it('generates node frames for text nodes themselves', () => {
+  it('generates node frames for comment nodes in trees', () => {
+    const node = document.createComment('C');
+    createElement(
+      'div',
+      {},
+      createElement('div', {}, 'A'),
+      createElement('div', {}, 'B', node, createElement('div')),
+    );
+    // biome-ignore format: keep expected lines
+    const expectedLines = [
+      '<div>',
+      '  <div>',
+      '    "A"',
+      '  </div>',
+      '  <div>',
+      '    "B"',
+      '    <!--C-->',
+      '    ^^^^^^^^',
+      '    <div></div>',
+      '  </div>',
+      '</div>',
+    ]
+    expect(generateNodeFrame(node, annotateNode(node))).toBe(
+      expectedLines.join('\n'),
+    );
+  });
+
+  it('generates node frames for text nodes', () => {
     const node = document.createTextNode('A');
     // biome-ignore format: keep expected lines
     const expectedLines = [
       '"A"',
       '^^^',
+    ];
+    expect(generateNodeFrame(node, annotateNode(node))).toBe(
+      expectedLines.join('\n'),
+    );
+  });
+
+  it('generates node frames for text nodes in trees', () => {
+    const node = document.createTextNode('C');
+    createElement(
+      'div',
+      {},
+      createElement('div', {}, 'A'),
+      createElement('div', {}, 'B', node, createElement('div')),
+    );
+    // biome-ignore format: keep expected lines
+    const expectedLines = [
+      '<div>',
+      '  <div>',
+      '    "A"',
+      '  </div>',
+      '  <div>',
+      '    "B"',
+      '    "C"',
+      '    ^^^',
+      '    <div></div>',
+      '  </div>',
+      '</div>',
     ];
     expect(generateNodeFrame(node, annotateNode(node))).toBe(
       expectedLines.join('\n'),
@@ -100,120 +189,5 @@ describe('annotateNode()', () => {
     expect(generateNodeFrame(node, annotateNode(node))).toBe(
       expectedLines.join('\n'),
     );
-  });
-});
-
-describe('annotateNodeHole()', () => {
-  it('generates node frames for element holes', () => {
-    const node = createElement('div', { id: 'a' });
-    // biome-ignore format: keep expected lines
-    const expectedLines = [
-      '<${...} id="a">',
-      '^^^^^^^^^^^^^^^',
-      '</div>',
-    ];
-    expect(generateNodeFrame(node, annotateNodeHole(node))).toBe(
-      expectedLines.join('\n'),
-    );
-  });
-
-  it('generates node frames for unclosed element holes', () => {
-    const node = createElement('input');
-    // biome-ignore format: keep expected lines
-    const expectedLines = [
-      '<${...}>',
-      '^^^^^^^^',
-    ];
-    expect(generateNodeFrame(node, annotateNodeHole(node))).toBe(
-      expectedLines.join('\n'),
-    );
-  });
-
-  it('generates node frames for comment holes', () => {
-    const node = document.createComment('A');
-    // biome-ignore format: keep expected lines
-    const expectedLines = [
-      '<!--${...}-->',
-      '^^^^^^^^^^^^^',
-    ];
-    expect(generateNodeFrame(node, annotateNodeHole(node))).toBe(
-      expectedLines.join('\n'),
-    );
-  });
-
-  it('generates node frames for comment nodes in a tree', () => {
-    const node = document.createComment('C');
-    createElement(
-      'div',
-      {},
-      createElement('div', {}, 'A'),
-      createElement('div', {}, 'B', node, createElement('div')),
-    );
-    // biome-ignore format: keep expected lines
-    const expectedLines = [
-      '<div>',
-      '  <div>',
-      '    "A"',
-      '  </div>',
-      '  <div>',
-      '    "B"',
-      '    <!--${...}-->',
-      '    ^^^^^^^^^^^^^',
-      '    <div></div>',
-      '  </div>',
-      '</div>',
-    ]
-    expect(generateNodeFrame(node, annotateNodeHole(node))).toBe(
-      expectedLines.join('\n'),
-    );
-  });
-
-  it('generates node frames for text holes', () => {
-    const node = document.createTextNode('A');
-    // biome-ignore format: keep expected lines
-    const expectedLines = [
-      '"${...}"',
-      '^^^^^^^^',
-    ]
-    expect(generateNodeFrame(node, annotateNodeHole(node))).toBe(
-      expectedLines.join('\n'),
-    );
-  });
-
-  it('generates node frames for text holes in a tree', () => {
-    const node = document.createTextNode('C');
-    createElement(
-      'div',
-      {},
-      createElement('div', {}, 'A'),
-      createElement('div', {}, 'B', node, createElement('div')),
-    );
-    // biome-ignore format: keep expected lines
-    const expectedLines = [
-      '<div>',
-      '  <div>',
-      '    "A"',
-      '  </div>',
-      '  <div>',
-      '    "B"',
-      '    "${...}"',
-      '    ^^^^^^^^',
-      '    <div></div>',
-      '  </div>',
-      '</div>',
-    ];
-    expect(generateNodeFrame(node, annotateNodeHole(node))).toBe(
-      expectedLines.join('\n'),
-    );
-  });
-
-  it('generates no node frames for holes in a fragment', () => {
-    const node = document.createDocumentFragment();
-    node.append(
-      createElement('input'),
-      document.createTextNode('B'),
-      document.createComment('C'),
-    );
-    expect(generateNodeFrame(node, annotateNodeHole(node))).toBe('');
   });
 });
