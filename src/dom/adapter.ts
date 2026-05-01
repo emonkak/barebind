@@ -6,33 +6,8 @@ import {
   type VHostElement,
   type VTemplate,
 } from '../core.js';
-import { DOMNodeError } from './error.js';
-import {
-  AttributePart,
-  ChildNodePart,
-  DOMBind,
-  DOMBlock,
-  type DOMPart,
-  DOMPortal,
-  DOMPrimitive,
-  ElementPart,
-  EventPart,
-  LivePart,
-  PropertyPart,
-  TextPart,
-} from './node.js';
-import {
-  AttributeType,
-  ChildNodeType,
-  createTreeWalker,
-  DOMTemplate,
-  ElementType,
-  EventType,
-  type Hole,
-  LiveType,
-  PropertyType,
-  TextType,
-} from './template.js';
+import { DOMBind, DOMPortal, DOMPrimitive } from './node.js';
+import { DOMTemplate } from './template.js';
 
 export class DOMAdapter implements HostAdapter {
   private readonly _document: Document;
@@ -75,7 +50,7 @@ export class DOMAdapter implements HostAdapter {
         this._document,
       ),
     );
-    return renderTemplate(template);
+    return template.render();
   }
 
   requestCallback<T>(
@@ -162,78 +137,4 @@ function isContinuousEvent(event: Event): boolean {
     default:
       return false;
   }
-}
-
-function renderTemplate(template: DOMTemplate): DOMBlock {
-  const fragment = template.element.ownerDocument.importNode(
-    template.element.content,
-    true,
-  );
-  const holes = template.holes;
-  const parts: DOMPart[] = new Array(holes.length);
-
-  if (holes.length > 0) {
-    const templateWalker = createTreeWalker(fragment);
-    let nodeIndex = 0;
-
-    for (let holeIndex = 0, l = holes.length; holeIndex < l; holeIndex++) {
-      const hole = holes[holeIndex]!;
-
-      for (; nodeIndex <= hole.index; nodeIndex++) {
-        if (templateWalker.nextNode() === null) {
-          throw DOMNodeError.fromNode(
-            templateWalker.currentNode,
-            'There is no node that the hole indicates. The template may have been modified.',
-          );
-        }
-      }
-
-      const node = templateWalker.currentNode;
-      let part: DOMPart;
-
-      switch (hole.type) {
-        case AttributeType:
-          part = new AttributePart(node as Element, hole.name);
-          break;
-        case EventType:
-          part = new EventPart(node as Element, hole.name);
-          break;
-        case ChildNodeType:
-          part = new ChildNodePart(node as Comment);
-          break;
-        case ElementType:
-          part = new ElementPart(node as Element);
-          break;
-        case LiveType:
-          part = new LivePart(node as Element, hole.name);
-          break;
-        case PropertyType:
-          part = new PropertyPart(node as Element, hole.name);
-          break;
-        case TextType:
-          part = splitTextPart(templateWalker, hole);
-          break;
-      }
-
-      parts[holeIndex] = part;
-    }
-  }
-
-  return new DOMBlock(fragment, parts);
-}
-
-function splitTextPart(treeWalker: TreeWalker, hole: Hole.TextHole): TextPart {
-  let currentNode = treeWalker.currentNode as Text;
-  if (currentNode.previousSibling?.nodeType === Node.TEXT_NODE) {
-    currentNode = currentNode.splitText(0);
-  }
-  if (hole.leadingSpan > 0) {
-    currentNode = currentNode.splitText(hole.leadingSpan);
-  }
-  const part = new TextPart(currentNode);
-  if (hole.trailingSpan > 0) {
-    currentNode = currentNode.splitText(0);
-  }
-  treeWalker.currentNode = currentNode;
-  return part;
 }
