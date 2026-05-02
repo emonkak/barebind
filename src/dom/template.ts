@@ -1,5 +1,5 @@
 import type { TemplateMode } from '../core.js';
-import { DOMNodeError } from './error.js';
+import { DOMAttributeError, DOMNodeError } from './error.js';
 import {
   AttributePart,
   ChildNodePart,
@@ -123,7 +123,7 @@ export class DOMTemplate {
     const holes = parseChildren(strings, marker, element, document);
 
     if (holes.length !== exprs.length) {
-      throw DOMNodeError.fromNode(
+      throw new DOMNodeError(
         element.content,
         `The number of holes must be ${exprs.length}, but got ${holes.length}. Multiple holes indicate the same attribute.`,
       );
@@ -155,7 +155,7 @@ export class DOMTemplate {
 
         for (; nodeIndex <= hole.index; nodeIndex++) {
           if (templateWalker.nextNode() === null) {
-            throw DOMNodeError.fromNode(
+            throw new DOMNodeError(
               templateWalker.currentNode,
               'There is no node that the hole indicates. The template may have been modified.',
             );
@@ -234,9 +234,8 @@ function parseAttribtues(
 
       DEBUG: {
         if (caseSensitiveName?.toLowerCase() !== attribute.name) {
-          throw DOMNodeError.fromAttribute(
-            element,
-            attribute.name,
+          throw new DOMAttributeError(
+            attribute,
             `The attribute name must be "${attribute.name}", but got "${caseSensitiveName}". There are unclosed tags or duplicate attributes.`,
           );
         }
@@ -275,17 +274,15 @@ function parseAttribtues(
     } else {
       DEBUG: {
         if (attribute.name.includes(marker)) {
-          throw DOMNodeError.fromAttribute(
-            element,
-            attribute.name,
+          throw new DOMAttributeError(
+            attribute,
             'Expressions are not allowed as an attribute name.',
           );
         }
 
         if (attribute.value.includes(marker)) {
-          throw DOMNodeError.fromAttribute(
-            element,
-            attribute.name,
+          throw new DOMAttributeError(
+            attribute,
             'Expressions inside an attribute must make up the entire attribute value.',
           );
         }
@@ -315,7 +312,7 @@ function parseChildren(
       case Node.ELEMENT_NODE: {
         DEBUG: {
           if ((currentNode as Element).localName.includes(marker)) {
-            throw DOMNodeError.fromNode(
+            throw new DOMNodeError(
               currentNode as Element,
               'Expressions are not allowed as a tag name.',
             );
@@ -350,7 +347,7 @@ function parseChildren(
         } else {
           DEBUG: {
             if ((currentNode as Comment).data.includes(marker)) {
-              throw DOMNodeError.fromNode(
+              throw new DOMNodeError(
                 currentNode,
                 'Expressions inside a comment must make up the entire comment value.',
               );

@@ -8,15 +8,12 @@ const COMPLEXITY_THRESHOLD = 10;
 
 const serializer = new XMLSerializer();
 
-export function annotateAttribute(element: Element, name: string): string[] {
+export function annotateAttribute(attribute: Attr): string[] {
+  const element = attribute.ownerElement!;
   const isTagClosed = isSelfClosingElement(element);
   const components = splitAttributes(element);
 
-  if (!element.hasAttribute(name)) {
-    components.push(`${name}=""`);
-  }
-
-  const prefix = name + '=';
+  const prefix = attribute.name + '=';
   const lines = [
     `<${element.localName} ${components.join(SPACE_CHAR)}>`,
     (
