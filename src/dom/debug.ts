@@ -201,9 +201,9 @@ function shiftLine(line: string): string {
 
 function splitAttributes(element: Element): string[] {
   return Array.from(element.attributes, (attribute) => {
-    const wrapper = element.ownerDocument.createElement('input');
+    const wrapper = element.ownerDocument.createElement('br');
     wrapper.setAttribute(attribute.name, attribute.value);
-    return wrapper.outerHTML.slice(7, -1);
+    return wrapper.outerHTML.slice(4, -1);
   });
 }
 
