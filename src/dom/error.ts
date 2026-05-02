@@ -1,30 +1,13 @@
-import { annotateAttribute, annotateNode, generateNodeFrame } from './debug.js';
+import { generateNodeFrame } from './debug.js';
 
-export class DOMNodeError extends Error {
+export class DOMTemplateError extends DOMException {
   readonly node: Node;
 
-  constructor(node: Node, message: string, options?: ErrorOptions) {
+  constructor(node: Node, message: string) {
     DEBUG: {
-      message += '\n' + generateNodeFrame(node, annotateNode(node));
+      message += '\n' + generateNodeFrame(node);
     }
-    super(message, options);
+    super(message);
     this.node = node;
-  }
-}
-
-export class DOMAttributeError extends Error {
-  readonly attribute: Attr;
-
-  constructor(attribute: Attr, message: string, options?: ErrorOptions) {
-    DEBUG: {
-      message +=
-        '\n' +
-        generateNodeFrame(
-          attribute.ownerElement!,
-          annotateAttribute(attribute),
-        );
-    }
-    super(message, options);
-    this.attribute = attribute;
   }
 }

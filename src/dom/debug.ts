@@ -8,63 +8,11 @@ const COMPLEXITY_THRESHOLD = 10;
 
 const serializer = new XMLSerializer();
 
-export function annotateAttribute(attribute: Attr): string[] {
-  const element = attribute.ownerElement!;
-  const components = splitAttributes(element);
-  const prefix = attribute.name + '=';
-  const lines = [
-    `<${element.localName} ${components.join(SPACE_CHAR)}>`,
-    (
-      SPACE_CHAR.repeat(element.localName.length + 2) +
-      components
-        .map((component) =>
-          (component.startsWith(prefix) ? CARET_CHAR : SPACE_CHAR).repeat(
-            component.length,
-          ),
-        )
-        .join(SPACE_CHAR)
-    ).trimEnd(),
-  ];
-
-  if (!isVoidElement(element)) {
-    prettyPrintChildren(element, 1, lines);
-    lines.push(toCloseTag(element));
-  }
-
-  return lines;
-}
-
-export function annotateNode(node: Node): string[] {
-  switch (node.nodeType) {
-    case Node.ELEMENT_NODE:
-      return annotateElement(node as Element);
-    case Node.COMMENT_NODE: {
-      const line = serializeNode(node);
-      return [line, CARET_CHAR.repeat(line.length)];
-    }
-    case Node.TEXT_NODE: {
-      const line = serializeNode(node);
-      return [`"${line}"`, CARET_CHAR.repeat(line.length + 2)];
-    }
-    default: {
-      const lines = [
-        `<${node.nodeName}>`,
-        CARET_CHAR.repeat(node.nodeName.length + 2),
-      ];
-      prettyPrintChildren(node, 1, lines);
-      lines.push(`</${node.nodeName}>`);
-      return lines;
-    }
-  }
-}
-
-export function generateNodeFrame(
-  node: Node,
-  annotatedLines: string[],
-): string {
+export function generateNodeFrame(node: Node): string {
   let leadingLines: string[] = [];
   let trailingLines: string[] = [];
-  let currentNode: Node | null = node;
+  let currentNode: Node | null =
+    node.nodeType === Node.ATTRIBUTE_NODE ? (node as Attr).ownerElement! : node;
   let complexity = 0;
   let level = 0;
 
@@ -107,11 +55,37 @@ export function generateNodeFrame(
     leadingLines.length > 0 ? leadingLines.reverse().join('\n') + '\n' : '';
   const trailingString =
     trailingLines.length > 0 ? '\n' + trailingLines.join('\n') : '';
-  const middleString = annotatedLines
+  const middleString = annotateNode(node)
     .map((line) => indentString + line)
     .join('\n');
 
   return leadingString + middleString + trailingString;
+}
+
+function annotateAttribute(attribute: Attr): string[] {
+  const element = attribute.ownerElement!;
+  const components = splitAttributes(element);
+  const prefix = attribute.name + '=';
+  const lines = [
+    `<${element.localName} ${components.join(SPACE_CHAR)}>`,
+    (
+      SPACE_CHAR.repeat(element.localName.length + 2) +
+      components
+        .map((component) =>
+          (component.startsWith(prefix) ? CARET_CHAR : SPACE_CHAR).repeat(
+            component.length,
+          ),
+        )
+        .join(SPACE_CHAR)
+    ).trimEnd(),
+  ];
+
+  if (!isVoidElement(element)) {
+    prettyPrintChildren(element, 1, lines);
+    lines.push(toCloseTag(element));
+  }
+
+  return lines;
 }
 
 function annotateElement(element: Element): string[] {
@@ -124,6 +98,32 @@ function annotateElement(element: Element): string[] {
   }
 
   return lines;
+}
+
+function annotateNode(node: Node): string[] {
+  switch (node.nodeType) {
+    case Node.ATTRIBUTE_NODE:
+      return annotateAttribute(node as Attr);
+    case Node.ELEMENT_NODE:
+      return annotateElement(node as Element);
+    case Node.COMMENT_NODE: {
+      const line = serializeNode(node);
+      return [line, CARET_CHAR.repeat(line.length)];
+    }
+    case Node.TEXT_NODE: {
+      const line = serializeNode(node);
+      return [`"${line}"`, CARET_CHAR.repeat(line.length + 2)];
+    }
+    default: {
+      const lines = [
+        `<${node.nodeName}>`,
+        CARET_CHAR.repeat(node.nodeName.length + 2),
+      ];
+      prettyPrintChildren(node, 1, lines);
+      lines.push(`</${node.nodeName}>`);
+      return lines;
+    }
+  }
 }
 
 function getComplexity(node: Node): number {
@@ -200,7 +200,11 @@ function shiftLine(line: string): string {
 function splitAttributes(element: Element): string[] {
   return Array.from(element.attributes, (attribute) => {
     const wrapper = element.ownerDocument.createElement('br');
-    wrapper.setAttribute(attribute.name, attribute.value);
+    wrapper.setAttributeNS(
+      attribute.namespaceURI,
+      attribute.name,
+      attribute.value,
+    );
     return wrapper.outerHTML.slice(4, -1);
   });
 }

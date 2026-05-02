@@ -1,45 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import {
-  annotateAttribute,
-  annotateNode,
-  generateNodeFrame,
-} from '@/dom/debug.js';
+import { generateNodeFrame } from '@/dom/debug.js';
 import { createElement } from '../../dom-helpers.js';
 
-describe('annotateAttribute()', () => {
+describe('generateNodeFrame()', () => {
   it('generates node frames for attributes', () => {
     const element = createElement('div', { id: 'a', class: 'b' });
     // biome-ignore format: keep expected lines
     const expectedLines = [
       '<div id="a" class="b">',
       '            ^^^^^^^^^',
-      '</div>'
+      '</div>',
     ];
-    expect(
-      generateNodeFrame(
-        element,
-        annotateAttribute(element.getAttributeNode('class')!),
-      ),
-    ).toBe(expectedLines.join('\n'));
+    expect(generateNodeFrame(element.getAttributeNode('class')!)).toBe(
+      expectedLines.join('\n'),
+    );
   });
 
-  it('generates node frames for attributes in self-closing elements', () => {
+  it('generates node frames for attributes in void elements', () => {
     const element = createElement('input', { id: 'a', class: 'b' });
     // biome-ignore format: keep expected lines
     const expectedLines = [
       '<input id="a" class="b">',
       '       ^^^^^^',
     ];
-    expect(
-      generateNodeFrame(
-        element,
-        annotateAttribute(element.getAttributeNode('id')!),
-      ),
-    ).toBe(expectedLines.join('\n'));
+    expect(generateNodeFrame(element.getAttributeNode('id')!)).toBe(
+      expectedLines.join('\n'),
+    );
   });
-});
 
-describe('annotateNode()', () => {
   it('generates node frames for elements', () => {
     const node = createElement(
       'div',
@@ -57,12 +45,10 @@ describe('annotateNode()', () => {
       '  <!--B-->',
       '</div>',
     ];
-    expect(generateNodeFrame(node, annotateNode(node))).toBe(
-      expectedLines.join('\n'),
-    );
+    expect(generateNodeFrame(node)).toBe(expectedLines.join('\n'));
   });
 
-  it('generates node frames for self-closing elements', () => {
+  it('generates node frames for void elements', () => {
     const node = createElement('input');
     createElement(
       'div',
@@ -80,9 +66,7 @@ describe('annotateNode()', () => {
       '  <!--B-->',
       '</div>',
     ];
-    expect(generateNodeFrame(node, annotateNode(node))).toBe(
-      expectedLines.join('\n'),
-    );
+    expect(generateNodeFrame(node)).toBe(expectedLines.join('\n'));
   });
 
   it('generates node frames for comment nodes', () => {
@@ -92,9 +76,7 @@ describe('annotateNode()', () => {
       '<!--A-->',
       '^^^^^^^^',
     ];
-    expect(generateNodeFrame(node, annotateNode(node))).toBe(
-      expectedLines.join('\n'),
-    );
+    expect(generateNodeFrame(node)).toBe(expectedLines.join('\n'));
   });
 
   it('generates node frames for comment nodes in trees', () => {
@@ -119,9 +101,7 @@ describe('annotateNode()', () => {
       '  </div>',
       '</div>',
     ]
-    expect(generateNodeFrame(node, annotateNode(node))).toBe(
-      expectedLines.join('\n'),
-    );
+    expect(generateNodeFrame(node)).toBe(expectedLines.join('\n'));
   });
 
   it('generates node frames for text nodes', () => {
@@ -131,9 +111,7 @@ describe('annotateNode()', () => {
       '"A"',
       '^^^',
     ];
-    expect(generateNodeFrame(node, annotateNode(node))).toBe(
-      expectedLines.join('\n'),
-    );
+    expect(generateNodeFrame(node)).toBe(expectedLines.join('\n'));
   });
 
   it('generates node frames for text nodes in trees', () => {
@@ -158,9 +136,7 @@ describe('annotateNode()', () => {
       '  </div>',
       '</div>',
     ];
-    expect(generateNodeFrame(node, annotateNode(node))).toBe(
-      expectedLines.join('\n'),
-    );
+    expect(generateNodeFrame(node)).toBe(expectedLines.join('\n'));
   });
 
   it('generates node frames for nodes in fragments', () => {
@@ -179,8 +155,6 @@ describe('annotateNode()', () => {
       '  <!--C-->',
       '</#document-fragment>',
     ];
-    expect(generateNodeFrame(node, annotateNode(node))).toBe(
-      expectedLines.join('\n'),
-    );
+    expect(generateNodeFrame(node)).toBe(expectedLines.join('\n'));
   });
 });
