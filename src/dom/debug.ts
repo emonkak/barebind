@@ -10,7 +10,6 @@ const serializer = new XMLSerializer();
 
 export function annotateAttribute(attribute: Attr): string[] {
   const element = attribute.ownerElement!;
-  const isTagClosed = isVoidElement(element);
   const components = splitAttributes(element);
   const prefix = attribute.name + '=';
   const lines = [
@@ -27,7 +26,7 @@ export function annotateAttribute(attribute: Attr): string[] {
     ).trimEnd(),
   ];
 
-  if (!isTagClosed) {
+  if (!isVoidElement(element)) {
     prettyPrintChildren(element, 1, lines);
     lines.push(toCloseTag(element));
   }
@@ -60,12 +59,12 @@ export function annotateNode(node: Node): string[] {
 }
 
 export function generateNodeFrame(
-  originNode: Node,
+  node: Node,
   annotatedLines: string[],
 ): string {
   let leadingLines: string[] = [];
   let trailingLines: string[] = [];
-  let currentNode: Node | null = originNode;
+  let currentNode: Node | null = node;
   let complexity = 0;
   let level = 0;
 
@@ -103,23 +102,23 @@ export function generateNodeFrame(
     level++;
   } while (complexity < COMPLEXITY_THRESHOLD);
 
+  const indentString = INDENT_STRING.repeat(level);
   const leadingString =
     leadingLines.length > 0 ? leadingLines.reverse().join('\n') + '\n' : '';
   const trailingString =
     trailingLines.length > 0 ? '\n' + trailingLines.join('\n') : '';
-  const middle = annotatedLines
-    .map((line) => INDENT_STRING.repeat(level) + line)
+  const middleString = annotatedLines
+    .map((line) => indentString + line)
     .join('\n');
 
-  return leadingString + middle + trailingString;
+  return leadingString + middleString + trailingString;
 }
 
 function annotateElement(element: Element): string[] {
-  const isTagClosed = isVoidElement(element);
-  const outerTag = isTagClosed ? element.outerHTML : toOpenTag(element);
-  const lines = [outerTag, CARET_CHAR.repeat(outerTag.length)];
+  const openTag = toOpenTag(element);
+  const lines = [openTag, CARET_CHAR.repeat(openTag.length)];
 
-  if (!isTagClosed) {
+  if (!isVoidElement(element)) {
     prettyPrintChildren(element, 1, lines);
     lines.push(toCloseTag(element));
   }
@@ -161,30 +160,29 @@ function prettyPrintNode(
   level: number = 0,
   lines: string[] = [],
 ): string[] {
-  const indent = INDENT_STRING.repeat(level);
+  const indentString = INDENT_STRING.repeat(level);
 
   switch (node.nodeType) {
     case Node.ELEMENT_NODE:
+      lines.push(indentString + toOpenTag(node as Element));
+
       if (isVoidElement(node as Element)) {
-        lines.push(indent + (node as Element).outerHTML);
         return lines;
       }
-
-      lines.push(indent + toOpenTag(node as Element));
 
       prettyPrintChildren(node, level + 1, lines);
 
       if (lines.length > 1) {
-        lines.push(indent + toCloseTag(node as Element));
+        lines.push(indentString + toCloseTag(node as Element));
       } else {
         lines[0] += toCloseTag(node as Element);
       }
       break;
     case Node.COMMENT_NODE:
-      lines.push(indent + serializeNode(node));
+      lines.push(indentString + serializeNode(node));
       break;
     case Node.TEXT_NODE:
-      lines.push(indent + `"${serializeNode(node)}"`);
+      lines.push(`${indentString}"${serializeNode(node)}"`);
       break;
   }
 
@@ -208,11 +206,10 @@ function splitAttributes(element: Element): string[] {
 }
 
 function toCloseTag(element: Element): string {
-  return '</' + element.localName + '>';
+  return `</${element.localName}>`;
 }
 
 function toOpenTag(element: Element): string {
-  // Assumption: The tag is not self-closing.
-  const offset = element.localName.length + 3;
-  return element.outerHTML.slice(0, -(element.innerHTML.length + offset));
+  const html = element.outerHTML;
+  return html.slice(0, html.indexOf('>') + 1);
 }
