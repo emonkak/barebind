@@ -10,9 +10,8 @@ const serializer = new XMLSerializer();
 
 export function annotateAttribute(attribute: Attr): string[] {
   const element = attribute.ownerElement!;
-  const isTagClosed = isSelfClosingElement(element);
+  const isTagClosed = isVoidElement(element);
   const components = splitAttributes(element);
-
   const prefix = attribute.name + '=';
   const lines = [
     `<${element.localName} ${components.join(SPACE_CHAR)}>`,
@@ -97,8 +96,6 @@ export function generateNodeFrame(
 
     leadingLines = leadingLines.map(shiftLine);
     trailingLines = trailingLines.map(shiftLine);
-
-    // Not self-closing because it contains child nodes.
     leadingLines.push(toOpenTag(currentNode as Element));
     trailingLines.push(toCloseTag(currentNode as Element));
 
@@ -118,7 +115,7 @@ export function generateNodeFrame(
 }
 
 function annotateElement(element: Element): string[] {
-  const isTagClosed = isSelfClosingElement(element);
+  const isTagClosed = isVoidElement(element);
   const outerTag = isTagClosed ? element.outerHTML : toOpenTag(element);
   const lines = [outerTag, CARET_CHAR.repeat(outerTag.length)];
 
@@ -149,7 +146,7 @@ function getComplexity(node: Node): number {
   return complexity;
 }
 
-function isSelfClosingElement(element: Element): boolean {
+function isVoidElement(element: Element): boolean {
   return !element.outerHTML.endsWith(toCloseTag(element));
 }
 
@@ -168,7 +165,7 @@ function prettyPrintNode(
 
   switch (node.nodeType) {
     case Node.ELEMENT_NODE:
-      if (isSelfClosingElement(node as Element)) {
+      if (isVoidElement(node as Element)) {
         lines.push(indent + (node as Element).outerHTML);
         return lines;
       }
