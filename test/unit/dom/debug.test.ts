@@ -8,41 +8,34 @@ import { createElement } from '../../dom-helpers.js';
 
 describe('annotateAttribute()', () => {
   it('generates node frames for attributes', () => {
-    const node = createElement('div', { id: 'a', class: 'b' });
+    const element = createElement('div', { id: 'a', class: 'b' });
     // biome-ignore format: keep expected lines
     const expectedLines = [
       '<div id="a" class="b">',
       '            ^^^^^^^^^',
       '</div>'
     ];
-    expect(generateNodeFrame(node, annotateAttribute(node, 'class'))).toBe(
-      expectedLines.join('\n'),
-    );
+    expect(
+      generateNodeFrame(
+        element,
+        annotateAttribute(element.getAttributeNode('class')!),
+      ),
+    ).toBe(expectedLines.join('\n'));
   });
 
   it('generates node frames for attributes in self-closing elements', () => {
-    const node = createElement('input', { id: 'a', class: 'b' });
+    const element = createElement('input', { id: 'a', class: 'b' });
     // biome-ignore format: keep expected lines
     const expectedLines = [
       '<input id="a" class="b">',
       '       ^^^^^^',
     ];
-    expect(generateNodeFrame(node, annotateAttribute(node, 'id'))).toBe(
-      expectedLines.join('\n'),
-    );
-  });
-
-  it('generates node frames for non-existent attributes', () => {
-    const node = createElement('div', {});
-    // biome-ignore format: keep expected lines
-    const expectedLines = [
-      '<div id="">',
-      '     ^^^^^',
-      '</div>',
-    ];
-    expect(generateNodeFrame(node, annotateAttribute(node, 'id'))).toBe(
-      expectedLines.join('\n'),
-    );
+    expect(
+      generateNodeFrame(
+        element,
+        annotateAttribute(element.getAttributeNode('id')!),
+      ),
+    ).toBe(expectedLines.join('\n'));
   });
 });
 
