@@ -263,7 +263,7 @@ export class RenderContext {
       ensureHookType(EffectType, currentHook);
       currentHook.setup = setup;
       currentHook.deps = deps;
-      currentHook.dirty = areDependenciesChange(currentHook.deps, deps);
+      currentHook.dirty ||= areDependenciesChange(currentHook.deps, deps);
     } else {
       currentHook = {
         type: EffectType,
