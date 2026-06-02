@@ -253,10 +253,9 @@ export class Runtime implements Reconciler, Dispatcher {
       this._pendingLanes |= lanes;
       this._adapter.requestCallback(
         () => {
-          const shouldFlush = this._flushLanes === NoLanes;
           this._pendingLanes &= ~lanes;
           this._stagedLanes |= lanes;
-          if (shouldFlush) {
+          if (this._flushLanes === NoLanes) {
             this._flush();
           }
         },
