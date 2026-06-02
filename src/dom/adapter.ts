@@ -24,8 +24,9 @@ export class DOMAdapter implements HostAdapter {
   }
 
   getTaskPriority(): TaskPriority {
-    return window.event !== undefined
-      ? isContinuousEvent(window.event)
+    const currentEvent = this._document.defaultView?.event;
+    return currentEvent !== undefined
+      ? isContinuousEvent(currentEvent)
         ? 'user-visible'
         : 'user-blocking'
       : 'background';
