@@ -33,6 +33,8 @@ export interface ComponentState<TProps> {
   scope: Scope;
 }
 
+export type DirectiveFunction<T = any> = (instance: T) => (() => void) | void;
+
 export interface DirectiveState {
   dirty: boolean;
   cleanup: (() => void) | void;
@@ -186,7 +188,7 @@ export type VComponent<TProps = any> = VNode<ComponentType<TProps>, TProps, []>;
 export type VDirective<T = any> = VNode<
   typeof Directive,
   {
-    setup: (node: T) => (() => void) | void;
+    setup: DirectiveFunction<T>;
     deps: unknown[] | null | undefined;
   },
   []
