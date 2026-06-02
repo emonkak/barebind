@@ -1,5 +1,3 @@
-/// <reference types="navigation-api-types" />
-
 import type { UsableFunction } from '../../component.js';
 import type { UpdateOptions } from '../../core.js';
 import {

@@ -42,9 +42,6 @@
     "watch": "tsc --build --watch --preserveWatchOutput",
     "watch:all": "pnpm run --include-workspace-root --recursive --parallel watch"
   },
-  "dependencies": {
-    "navigation-api-types": "^0.6.1"
-  },
   "devDependencies": {
     "@biomejs/biome": "^2.5.0",
     "@vitest/browser": "^4.1.9",
