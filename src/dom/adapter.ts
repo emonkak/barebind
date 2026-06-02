@@ -19,20 +19,7 @@ export class DOMAdapter implements HostAdapter {
     this._document = document;
   }
 
-  getIdentifier(): string {
-    return this._identifier;
-  }
-
-  getTaskPriority(): TaskPriority {
-    const currentEvent = this._document.defaultView?.event;
-    return currentEvent !== undefined
-      ? isContinuousEvent(currentEvent)
-        ? 'user-visible'
-        : 'user-blocking'
-      : 'background';
-  }
-
-  renderElement(element: VHostElement): HostNode {
+  createHostNode(element: VHostElement): HostNode {
     if (element.type === Bind) {
       return new DOMBind(element.props.index);
     }
@@ -52,6 +39,19 @@ export class DOMAdapter implements HostAdapter {
       ),
     );
     return template.render();
+  }
+
+  getIdentifier(): string {
+    return this._identifier;
+  }
+
+  getTaskPriority(): TaskPriority {
+    const currentEvent = this._document.defaultView?.event;
+    return currentEvent !== undefined
+      ? isContinuousEvent(currentEvent)
+        ? 'user-visible'
+        : 'user-blocking'
+      : 'background';
   }
 
   requestCallback(
