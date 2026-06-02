@@ -48,9 +48,9 @@ export interface Dispatcher {
 export type Effect = () => void;
 
 export interface HostAdapter {
+  createHostNode(element: VHostElement): HostNode;
   getIdentifier(): string;
   getTaskPriority(): TaskPriority;
-  renderElement(element: VHostElement): HostNode;
   requestCommit(callback: () => void): Promise<void>;
   requestCallback(
     callback: () => void | PromiseLike<void>,

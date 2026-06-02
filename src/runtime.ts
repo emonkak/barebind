@@ -225,7 +225,7 @@ export class Runtime implements Reconciler, Dispatcher {
         index,
         parent,
         children: new Array(element.children.length),
-        data: this._adapter.renderElement(element),
+        data: this._adapter.createHostNode(element),
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
         view.children[i] = this.render(element.children[i]!, scope, i, view);
