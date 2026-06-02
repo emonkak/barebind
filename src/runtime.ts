@@ -362,13 +362,6 @@ export class Runtime implements Reconciler, Dispatcher {
         Object.is(oldKeys[oldHead]!, newKeys[newTail]!) &&
         Object.is(oldKeys[oldTail]!, newKeys[newHead]!)
       ) {
-        const headView = this.diff(
-          oldChildren[oldHead]!,
-          newElements[newTail]!,
-          scope,
-          newTail,
-          parent,
-        );
         const tailView = this.diff(
           oldChildren[oldTail]!,
           newElements[newHead]!,
@@ -376,20 +369,27 @@ export class Runtime implements Reconciler, Dispatcher {
           newHead,
           parent,
         );
-        mutations.push({
-          type: UpdateAndMoveType,
-          oldView: oldChildren[oldHead]!,
-          newView: headView,
-          afterView: newChildren[newTail + 1],
-        });
+        const headView = this.diff(
+          oldChildren[oldHead]!,
+          newElements[newTail]!,
+          scope,
+          newTail,
+          parent,
+        );
         mutations.push({
           type: UpdateAndMoveType,
           oldView: oldChildren[oldTail]!,
           newView: tailView,
           afterView: oldChildren[oldHead],
         });
-        newChildren[newTail] = headView;
+        mutations.push({
+          type: UpdateAndMoveType,
+          oldView: oldChildren[oldHead]!,
+          newView: headView,
+          afterView: newChildren[newTail + 1],
+        });
         newChildren[newHead] = tailView;
+        newChildren[newTail] = headView;
         oldHead++;
         newHead++;
         oldTail--;
