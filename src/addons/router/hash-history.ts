@@ -115,12 +115,9 @@ export function HashHistory(
   };
 }
 
-export function createHashClickHandler({
-  getCurrentURL,
-  navigate,
-}: Pick<HistoryNavigator, 'getCurrentURL' | 'navigate'>): (
-  event: MouseEvent,
-) => void {
+export function createHashClickHandler(
+  navigator: HistoryNavigator,
+): (event: MouseEvent) => void {
   return (event) => {
     if (
       anyModifiersArePressed(event) ||
@@ -140,12 +137,12 @@ export function createHashClickHandler({
 
     event.preventDefault();
 
-    const base = getCurrentURL();
-    const url = RelativeURL.fromString(trimHashMark(element.hash), base);
+    const baseUrl = navigator.getCurrentURL();
+    const url = RelativeURL.fromString(trimHashMark(element.hash), baseUrl);
     const replace =
       element.hasAttribute('data-link-replace') ||
       element.hash === window.location.hash;
 
-    navigate(url, { replace });
+    navigator.navigate(url, { replace });
   };
 }

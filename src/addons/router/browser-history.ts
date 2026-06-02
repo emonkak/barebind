@@ -125,9 +125,9 @@ export function BrowserHistory(
   };
 }
 
-export function createLinkClickHandler({
-  navigate,
-}: Pick<HistoryNavigator, 'navigate'>): (event: MouseEvent) => void {
+export function createLinkClickHandler(
+  navigator: HistoryNavigator,
+): (event: MouseEvent) => void {
   return (event) => {
     if (
       anyModifiersArePressed(event) ||
@@ -153,13 +153,13 @@ export function createLinkClickHandler({
       element.hasAttribute('data-link-replace') ||
       element.href === window.location.href;
 
-    navigate(url, { replace });
+    navigator.navigate(url, { replace });
   };
 }
 
-export function createFormSubmitHandler({
-  navigate,
-}: Pick<HistoryNavigator, 'navigate'>): (event: SubmitEvent) => void {
+export function createFormSubmitHandler(
+  navigator: HistoryNavigator,
+): (event: SubmitEvent) => void {
   return (event) => {
     if (event.defaultPrevented) {
       return;
@@ -194,6 +194,6 @@ export function createFormSubmitHandler({
       form.hasAttribute('data-link-replace') ||
       url.toString() === window.location.href;
 
-    navigate(url, { replace });
+    navigator.navigate(url, { replace });
   };
 }
