@@ -52,10 +52,10 @@ export interface HostAdapter {
   getTaskPriority(): TaskPriority;
   renderElement(element: VHostElement): HostNode;
   requestCommit(callback: () => void): Promise<void>;
-  requestCallback<T>(
-    callback: () => T | PromiseLike<T>,
+  requestCallback(
+    callback: () => void | PromiseLike<void>,
     options?: SchedulerPostTaskOptions,
-  ): Promise<T>;
+  ): Promise<void>;
   startViewTransition(callback: () => void): Promise<void>;
   yieldToMain(): Promise<void>;
 }
