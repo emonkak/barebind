@@ -1,5 +1,3 @@
-/// <reference types="navigation-api-types" />
-
 import type { RenderContext, UsableFunction } from '../../component.js';
 import { HistoryContext, trimHashMark } from './history.js';
 
