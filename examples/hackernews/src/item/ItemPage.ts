@@ -1,0 +1,33 @@
+import { createComponent, html } from 'barebind';
+
+import { AppStore } from '../store.js';
+import { ItemView } from './ItemView.js';
+
+export interface ItemPageProps {
+  id: number;
+}
+
+export const ItemPage = createComponent<ItemPageProps>(function ItemPage({
+  id,
+}): unknown {
+  const appStore = this.inject(AppStore);
+  const itemState = this.use(appStore.itemState$);
+
+  this.useEffect(() => {
+    if (itemState.item?.id !== id) {
+      appStore.fetchItem(id);
+    }
+  }, [id]);
+
+  if (!itemState.isLoading && itemState.error !== null) {
+    return html`
+      <div class="error-view">
+        <h1>${itemState.error.error}</h1>
+      </div>
+    `;
+  }
+
+  return !itemState.isLoading && itemState.item?.id === id
+    ? ItemView({ item: itemState.item })
+    : null;
+});
