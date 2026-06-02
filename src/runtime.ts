@@ -38,8 +38,10 @@ interface Update {
 }
 
 export class Runtime implements Reconciler, Dispatcher {
-  private readonly _adapter: HostAdapter;
-  private readonly _updateQueue: PriorityQueue<Update> = new PriorityQueue(
+  /** @internal */
+  readonly _adapter: HostAdapter;
+  /** @internal */
+  readonly _updateQueue: PriorityQueue<Update> = new PriorityQueue(
     compareUpdates,
   );
   private _pendingLanes: number = NoLanes;
