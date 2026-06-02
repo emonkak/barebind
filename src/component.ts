@@ -1,6 +1,6 @@
 import { areDependenciesChange } from './compare.js';
 import {
-  type ComponentHandle,
+  type ComponentInstance,
   type ComponentType,
   type Dispatcher,
   type Effect,
@@ -119,7 +119,7 @@ namespace Hook {
   }
 }
 
-export class Component<TProps, TReturn> implements ComponentHandle<TProps> {
+export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
   private readonly _componentFn: ComponentFunction<TProps, TReturn>;
   private readonly _context: RenderContext;
 
@@ -142,12 +142,12 @@ export class Component<TProps, TReturn> implements ComponentHandle<TProps> {
   ): void {
     this._context._stagingView = view;
     this._context._hookIndex = 0;
-    view.instance.pendingLanes &= ~lanes;
+    view.data.pendingLanes &= ~lanes;
     let returnElement: VElement;
     try {
       returnElement = wrap(this._componentFn.call(this._context, view.props));
       finalizeHooks(this._context);
-      Object.freeze(view.scope.instances);
+      Object.freeze(view.data.scope.instances);
     } catch (cause) {
       throw new RenderError(view, 'An error occurred during rendering.', {
         cause,
@@ -155,8 +155,14 @@ export class Component<TProps, TReturn> implements ComponentHandle<TProps> {
     }
     view.children[0] =
       view.children[0] !== undefined
-        ? reconciler.diff(view.children[0], returnElement, view.scope, 0, view)
-        : reconciler.render(returnElement, view.scope, 0);
+        ? reconciler.diff(
+            view.children[0],
+            returnElement,
+            view.data.scope,
+            0,
+            view,
+          )
+        : reconciler.render(returnElement, view.data.scope, 0);
   }
 
   afterCommit(): void {
@@ -208,7 +214,7 @@ export class RenderContext {
       new UpdateComponent(this._stagingView, this),
       options,
     );
-    this._stagingView.instance.pendingLanes |= handle.lanes;
+    this._stagingView.data.pendingLanes |= handle.lanes;
     return handle;
   }
 
@@ -216,7 +222,7 @@ export class RenderContext {
     injectable: Injectable<TInstance, TDefault>,
   ): TInstance | TDefault {
     for (
-      let scope: Scope | null = this._stagingView?.scope ?? null;
+      let scope: Scope | null = this._stagingView?.data.scope ?? null;
       scope !== null;
       scope = scope.parent
     ) {
@@ -235,7 +241,7 @@ export class RenderContext {
   }
 
   provide<T extends object>(instance: T): void {
-    this._stagingView?.scope.instances.push(instance);
+    this._stagingView?.data.scope.instances.push(instance);
   }
 
   startTransition<T>(callback: (transition: number) => T): T {
@@ -436,10 +442,10 @@ export function createComponent<TProps = {}, TReturn = unknown>(
     return new VNode(ComponentType, props, []);
   }
 
-  ComponentType.newHandle = (
+  ComponentType.newInstance = (
     _props: TProps,
     dispatcher: Dispatcher,
-  ): ComponentHandle<TProps> =>
+  ): ComponentInstance<TProps> =>
     new Component(componentFn, new RenderContext(dispatcher));
   ComponentType.arePropsEqual = arePropsEqual;
 
@@ -462,11 +468,11 @@ class UpdateComponent implements UpdateUnit {
   }
 
   get scope(): Scope {
-    return this._stagingView.scope;
+    return this._stagingView.data.scope;
   }
 
   get pendingLanes(): Lanes {
-    return this._stagingView.instance.pendingLanes;
+    return this._stagingView.data.pendingLanes;
   }
 
   prepare(lanes: Lanes, reconciler: Reconciler): Effect {
@@ -478,9 +484,9 @@ class UpdateComponent implements UpdateUnit {
       ...oldView,
       id: reconciler.nextRenderId(),
       children: oldView.children.slice(),
-      scope: oldView.scope.clone(),
+      data: { ...oldView.data, scope: oldView.data.scope.clone() },
     };
-    newView.instance.handle.update(newView, lanes, reconciler);
+    newView.data.instance.update(newView, lanes, reconciler);
     return () => {
       patch(oldView, newView);
     };
