@@ -1,6 +1,7 @@
 /// <reference types="navigation-api-types" />
 
 import type { UsableFunction } from '../../component.js';
+import type { UpdateOptions } from '../../core.js';
 import {
   anyModifiersArePressed,
   HistoryContext,
@@ -11,7 +12,9 @@ import {
 } from './history.js';
 import { RelativeURL } from './relative-url.js';
 
-export function HashHistory(): UsableFunction<HistoryContext> {
+export function HashHistory(
+  options?: UpdateOptions,
+): UsableFunction<HistoryContext> {
   return (context) => {
     const [location, setLocation] = context.useState<HistoryLocation>(() => ({
       url: RelativeURL.fromString(trimHashMark(window.location.hash)),
@@ -27,11 +30,14 @@ export function HashHistory(): UsableFunction<HistoryContext> {
           return RelativeURL.fromString(trimHashMark(window.location.hash));
         },
         navigate(url, { replace = false, state = null } = {}) {
-          const handle = setLocation({
-            url: RelativeURL.from(url),
-            state,
-            navigationType: replace ? 'replace' : 'push',
-          });
+          const handle = setLocation(
+            {
+              url: RelativeURL.from(url),
+              state,
+              navigationType: replace ? 'replace' : 'push',
+            },
+            options,
+          );
 
           handle.finished.finally(() => {
             if (this.runningTransition === handle.finished) {
