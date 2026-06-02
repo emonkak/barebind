@@ -54,10 +54,10 @@ export class DOMAdapter implements HostAdapter {
     return template.render();
   }
 
-  requestCallback<T>(
-    callback: () => T | PromiseLike<T>,
+  requestCallback(
+    callback: () => void | PromiseLike<void>,
     options?: SchedulerPostTaskOptions,
-  ): Promise<T> {
+  ): Promise<void> {
     if (typeof window.scheduler?.postTask === 'function') {
       return scheduler.postTask(callback, options);
     } else {
