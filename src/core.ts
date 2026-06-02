@@ -13,10 +13,10 @@ export const RemoveType = 3;
 export interface ComponentType<TProps> {
   (props: TProps): VComponent<TProps>;
   arePropsEqual(oldProps: TProps, newProps: TProps): boolean;
-  newHandle(props: TProps, dispatcher: Dispatcher): ComponentHandle<TProps>;
+  newInstance(props: TProps, dispatcher: Dispatcher): ComponentInstance<TProps>;
 }
 
-export interface ComponentHandle<TProps> {
+export interface ComponentInstance<TProps> {
   skipUpdate(view: View.ComponentView<TProps>): void;
   update(
     view: View.ComponentView<TProps>,
@@ -27,9 +27,15 @@ export interface ComponentHandle<TProps> {
   beforeRemove(): void;
 }
 
-export interface ComponentInstance<TProps> {
-  handle: ComponentHandle<TProps>;
+export interface ComponentState<TProps> {
+  instance: ComponentInstance<TProps>;
   pendingLanes: Lanes;
+  scope: Scope;
+}
+
+export interface DirectiveState {
+  dirty: boolean;
+  cleanup: (() => void) | void;
 }
 
 export interface Dispatcher {
@@ -127,31 +133,24 @@ export type View =
   | View.HostView;
 
 export namespace View {
-  interface BaseView<TElement extends VElement>
+  interface AbstractView<TElement extends VElement, TData>
     extends Pick<TElement, 'type' | 'props' | 'key'> {
     id: number;
     index: number;
     parent: View | null;
     children: View[];
+    data: TData;
   }
 
-  export interface DirectiveView extends BaseView<VDirective> {
-    dirty: boolean;
-    cleanup: (() => void) | void;
-  }
+  export interface DirectiveView
+    extends AbstractView<VDirective, DirectiveState> {}
 
-  export interface ComponentView<TProps = any> extends BaseView<VComponent> {
-    instance: ComponentInstance<TProps>;
-    scope: Scope;
-  }
+  export interface ComponentView<TProps = any>
+    extends AbstractView<VComponent, ComponentState<TProps>> {}
 
-  export interface FragmentView extends BaseView<VFragment> {
-    mutations: Mutation[];
-  }
+  export interface FragmentView extends AbstractView<VFragment, Mutation[]> {}
 
-  export interface HostView extends BaseView<VHostElement> {
-    hostNode: HostNode;
-  }
+  export interface HostView extends AbstractView<VHostElement, HostNode> {}
 }
 
 export interface Renderable {

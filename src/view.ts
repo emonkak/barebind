@@ -12,16 +12,16 @@ import { NoLanes } from './lane.js';
 
 export function mount(root: View.HostView): void {
   for (const child of root.children) {
-    appendChild(root.hostNode, child, null);
+    appendChild(root.data, child, null);
   }
-  root.hostNode.commitMount(root.type, root.props);
+  root.data.commitMount(root.type, root.props);
   afterCommit(root);
 }
 
 export function unmount(root: View.HostView): void {
   beforeRemove(root);
   for (const child of root.children) {
-    removeChild(root.hostNode, child);
+    removeChild(root.data, child);
   }
 }
 
@@ -33,11 +33,11 @@ export function patch(oldView: View, newView: View) {
 
 function afterCommit(view: View): void {
   if (view.type === Directive) {
-    if (view.dirty) {
+    if (view.data.dirty) {
       const { setup } = view.props;
-      view.cleanup?.call(undefined);
-      view.cleanup = setup(getHostAncestor(view).refNode);
-      view.dirty = false;
+      view.data.cleanup?.call(undefined);
+      view.data.cleanup = setup(getHostAncestor(view).refNode);
+      view.data.dirty = false;
     }
   }
 
@@ -46,7 +46,7 @@ function afterCommit(view: View): void {
   }
 
   if (typeof view.type === 'function') {
-    view.instance.handle.afterCommit();
+    view.data.instance.afterCommit();
   }
 }
 
@@ -55,12 +55,12 @@ function appendChild(
   view: View,
   afterNode: HostNode | null,
 ): void {
-  if (isNativeNode(view)) {
+  if (isHostView(view)) {
     for (const descendant of view.children) {
-      appendChild(view.hostNode, descendant, null);
+      appendChild(view.data, descendant, null);
     }
-    parentNode.appendChild(view.hostNode, afterNode);
-    view.hostNode.commitMount(view.type, view.props);
+    parentNode.appendChild(view.data, afterNode);
+    view.data.commitMount(view.type, view.props);
   } else {
     for (const descendant of view.children) {
       appendChild(parentNode, descendant, afterNode);
@@ -82,7 +82,7 @@ function applyPatch(oldView: View, newView: View): void {
   } else if (newView.type === Fragment) {
     const parentNode = getHostAncestor(newView);
 
-    for (const mutation of newView.mutations) {
+    for (const mutation of newView.data) {
       switch (mutation.type) {
         case InsertType:
           appendChild(
@@ -119,7 +119,7 @@ function applyPatch(oldView: View, newView: View): void {
       applyPatch(oldChildren[i]!, newChildren[i]!);
     }
 
-    newView.hostNode.commitUpdate(
+    newView.data.commitUpdate(
       newView.type,
       (oldView as View.HostView).props,
       newView.props,
@@ -129,11 +129,11 @@ function applyPatch(oldView: View, newView: View): void {
 
 function beforeRemove(view: View): void {
   if (typeof view.type === 'function') {
-    view.instance.handle.beforeRemove();
-    view.instance.pendingLanes = NoLanes;
+    view.data.instance.beforeRemove();
+    view.data.pendingLanes = NoLanes;
   } else if (view.type === Directive) {
-    view.cleanup?.call(undefined);
-    view.cleanup = undefined;
+    view.data.cleanup?.call(undefined);
+    view.data.cleanup = undefined;
   }
 
   for (const child of view.children) {
@@ -143,17 +143,17 @@ function beforeRemove(view: View): void {
 
 function getHostAncestor(view: View): HostNode {
   while (view.parent !== null) {
-    if (isNativeNode(view.parent)) {
-      return view.parent.hostNode;
+    if (isHostView(view.parent)) {
+      return view.parent.data;
     }
     view = view.parent;
   }
-  return (view as View.HostView).hostNode;
+  return (view as View.HostView).data;
 }
 
 function getHostDescendant(view: View): HostNode | null {
-  if (isNativeNode(view)) {
-    return view.hostNode;
+  if (isHostView(view)) {
+    return view.data;
   }
   for (const child of view.children) {
     const hostNode = getHostDescendant(child);
@@ -164,7 +164,7 @@ function getHostDescendant(view: View): HostNode | null {
   return nextHostSibling(view);
 }
 
-function isNativeNode(view: View): view is View.HostView {
+function isHostView(view: View): view is View.HostView {
   return (
     typeof view.type !== 'function' &&
     view.type !== Directive &&
@@ -177,8 +177,8 @@ function moveChild(
   child: View,
   afterNode: HostNode | null,
 ): void {
-  if (isNativeNode(child)) {
-    parentNode.moveChild(child.hostNode, afterNode);
+  if (isHostView(child)) {
+    parentNode.moveChild(child.data, afterNode);
   } else {
     for (const descendant of child.children) {
       moveChild(parentNode, descendant, afterNode);
@@ -187,7 +187,7 @@ function moveChild(
 }
 
 function nextHostSibling(child: View): HostNode | null {
-  while (child.parent !== null && !isNativeNode(child.parent)) {
+  while (child.parent !== null && !isHostView(child.parent)) {
     const parent = child.parent;
     for (let i = child.index + 1, l = parent.children.length; i < l; i++) {
       const hostNode = getHostDescendant(parent.children[i]!);
@@ -201,8 +201,8 @@ function nextHostSibling(child: View): HostNode | null {
 }
 
 function removeChild(parentNode: HostNode, child: View): void {
-  if (isNativeNode(child)) {
-    parentNode.removeChild(child.hostNode);
+  if (isHostView(child)) {
+    parentNode.removeChild(child.data);
   } else {
     for (const descendant of child.children) {
       removeChild(parentNode, descendant);
