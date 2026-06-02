@@ -165,9 +165,10 @@ export interface UpdateHandle {
   finished: Promise<void>;
 }
 
-export interface UpdateOptions
-  extends Pick<SchedulerPostTaskOptions, 'delay' | 'priority'> {
+export interface UpdateOptions {
+  delay?: number;
   flushSync?: boolean;
+  priority?: TaskPriority;
   transition?: number;
   viewTransition?: boolean;
 }
