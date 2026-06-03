@@ -23,7 +23,7 @@ export function getComponentStack(view: View): View.ComponentView[] {
       componentStack.push(current);
     }
     current = view.parent;
-  } while (current !== null);
+  } while (current != null);
 
   return componentStack;
 }

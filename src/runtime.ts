@@ -68,51 +68,46 @@ export class Runtime implements Reconciler, Dispatcher {
     parent: View | null,
   ): View {
     if (oldView.type !== newElement.type || oldView.key !== newElement.key) {
-      const newView = this.render(newElement, scope, index, parent);
-      this._settleSubview(oldView);
-      return newView;
+      return this.render(newElement, scope, index, parent);
     } else if (typeof newElement.type === 'function') {
+      const newView: View.ComponentView = {
+        ...(oldView as View.ComponentView),
+        ...newElement,
+        id: this._renderCount++,
+        index,
+        parent,
+        children: oldView.children.slice(),
+      };
       if (
-        ((oldView as View.ComponentView).data.pendingLanes &
-          this._flushLanes) ===
-          NoLanes &&
-        newElement.type.arePropsEqual(oldView.props, newElement.props)
+        (oldView as View.ComponentView).data.prepareRender(
+          oldView as View.ComponentView,
+          newElement,
+          this._flushLanes,
+        )
       ) {
-        const newView = {
-          ...(oldView as View.ComponentView),
-          index,
-          parent,
-        };
-        newView.data.instance.skipUpdate(newView);
-        return newView;
-      } else {
-        const newView = {
-          ...(oldView as View.ComponentView),
-          ...newElement,
-          id: this._renderCount++,
-          index,
-          parent,
-          children: oldView.children.slice(),
-          scope: scope.append(),
-        };
-        newView.data.instance.update(newView, this._flushLanes, this);
-        return newView;
+        const subScope = scope.child();
+        newView.children[0] = this.diff(
+          newView.children[0]!,
+          newView.data.render(newView, subScope, this._flushLanes),
+          subScope,
+          0,
+          newView,
+        );
       }
+      return newView;
     } else if (newElement.type === Directive) {
-      return {
+      const newView: View.DirectiveView = {
         ...(oldView as View.DirectiveView),
         ...newElement,
         id: this._renderCount++,
         index,
         parent,
-        data: {
-          dirty: areDependenciesChange(
-            (oldView as View.DirectiveView).props.deps,
-            newElement.props.deps,
-          ),
-          cleanup: (oldView as View.DirectiveView).data.cleanup,
-        },
       };
+      newView.data.dirty = areDependenciesChange(
+        (oldView as View.DirectiveView).props.deps,
+        newElement.props.deps,
+      );
+      return newView;
     } else if (newElement.type === Fragment) {
       const newView: View.FragmentView = {
         ...(oldView as View.FragmentView),
@@ -187,13 +182,15 @@ export class Runtime implements Reconciler, Dispatcher {
         index,
         parent,
         children: new Array(1),
-        data: {
-          instance: element.type.newInstance(element.props, this),
-          pendingLanes: NoLanes,
-          scope: scope.append(),
-        },
+        data: element.type.newInstance(this),
       };
-      view.data.instance.update(view, this._flushLanes, this);
+      const subScope = scope.child();
+      view.children[0] = this.render(
+        view.data.render(view, subScope, this._flushLanes),
+        subScope,
+        0,
+        view,
+      );
       return view;
     } else if (element.type === Directive) {
       return {
@@ -518,15 +515,6 @@ export class Runtime implements Reconciler, Dispatcher {
     }
 
     this._flushLanes = NoLanes;
-  }
-
-  private _settleSubview(view: View): void {
-    if (typeof view.type === 'function') {
-      view.data.pendingLanes &= ~this._flushLanes;
-    }
-    for (const child of view.children) {
-      this._settleSubview(child);
-    }
   }
 }
 
