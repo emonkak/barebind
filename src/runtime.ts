@@ -449,7 +449,6 @@ export class Runtime implements Reconciler, Dispatcher {
   private async _flush(): Promise<void> {
     while (true) {
       const updateBatch: Update[] = [];
-      const effectBatch: Effect[] = [];
       let update: Update | undefined;
 
       this._flushLanes |= this._stagedLanes;
@@ -467,6 +466,7 @@ export class Runtime implements Reconciler, Dispatcher {
       }
 
       try {
+        const effectBatch: Effect[] = [];
         const flushSync = (this._flushLanes & SyncLane) === SyncLane;
 
         for (const update of updateBatch) {
