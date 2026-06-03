@@ -13,5 +13,5 @@ export { DOMAdapter } from './dom/adapter.js';
 export { DOMTemplateError } from './dom/error.js';
 export { Root } from './dom/root.js';
 export { RenderError } from './error.js';
-export { Runtime } from './runtime.js';
+export { Runtime, waitForIdle } from './runtime.js';
 export { html, math, Partial, svg, text } from './template.js';

@@ -512,6 +512,16 @@ export class Runtime implements Reconciler, Dispatcher {
   }
 }
 
+export async function waitForIdle(runtime: Runtime): Promise<void> {
+  while (true) {
+    const update = runtime._updateQueue.peek();
+    if (update === undefined) {
+      break;
+    }
+    await update.controller.promise;
+  }
+}
+
 function buildKeyToIndexMap<T>(
   keys: T[],
   head: number,
