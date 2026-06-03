@@ -33,33 +33,17 @@ export abstract class DOMNode implements HostNode {
     return null;
   }
 
-  get bindValue(): unknown {
-    return null;
-  }
-
   get refNode(): unknown {
-    return null;
+    return undefined;
   }
 
-  prepareUpdate(
-    _type: VHostElement['type'],
-    oldProps: VHostElement['props'],
-    newProps: VHostElement['props'],
-  ): boolean {
-    return oldProps !== newProps;
+  get value(): unknown {
+    return null;
   }
 
   appendChild(child: DOMNode, _after: DOMNode | null): void {
     this._children.add(child);
     child._parent = this;
-  }
-
-  moveChild(_child: DOMNode, _after: DOMNode | null): void {}
-
-  removeChild(child: DOMNode): void {
-    this._children.delete(child);
-    child._remove();
-    child._parent = null;
   }
 
   commitMount(
@@ -73,10 +57,18 @@ export abstract class DOMNode implements HostNode {
     _newProps: VHostElement['props'],
   ): void {}
 
+  moveChild(_child: DOMNode, _after: DOMNode | null): void {}
+
+  removeChild(child: DOMNode): void {
+    this._children.delete(child);
+    child._remove();
+    child._parent = null;
+  }
+
   /**
    * @internal
    */
-  _remove(): void {}
+  _invalidate(_child: DOMNode): void {}
 
   /**
    * @internal
@@ -91,7 +83,11 @@ export abstract class DOMNode implements HostNode {
   /**
    * @internal
    */
-  _invalidate(_child: DOMNode): void {}
+  _remove(): void {
+    for (const child of this._children) {
+      child._remove();
+    }
+  }
 }
 
 export abstract class DOMPart<TNode extends ChildNode = ChildNode> {
@@ -112,8 +108,14 @@ export abstract class DOMPart<TNode extends ChildNode = ChildNode> {
   }
 
   set value(newValue: unknown) {
-    this._update(this._value, newValue);
-    this._value = newValue;
+    if (this._needsUpdate(this._value, newValue)) {
+      this._update(this._value, newValue);
+      this._value = newValue;
+    }
+  }
+
+  protected _needsUpdate(oldValue: unknown, newValue: unknown): boolean {
+    return !Object.is(oldValue, newValue);
   }
 
   protected abstract _update(oldValue: unknown, newValue: unknown): void;
@@ -132,7 +134,7 @@ export class DOMBind extends DOMNode {
   }
 
   override get refNode(): unknown {
-    return this._getPart()?.node ?? null;
+    return this._getPart()?.node;
   }
 
   override appendChild(child: DOMNode, after: DOMNode | null): void {
@@ -140,7 +142,7 @@ export class DOMBind extends DOMNode {
     const part = this._getPart();
     if (part !== undefined) {
       child._mountBefore(after?.firstNode ?? part.node);
-      part.value = child.bindValue;
+      part.value = child.value;
     }
   }
 
@@ -157,16 +159,7 @@ export class DOMBind extends DOMNode {
   override _invalidate(child: DOMNode): void {
     const part = this._getPart();
     if (part !== undefined) {
-      part.value = child.bindValue;
-    }
-  }
-
-  /**
-   * @internal
-   */
-  override _remove(): void {
-    for (const child of this._children) {
-      child._remove();
+      part.value = child.value;
     }
   }
 
@@ -191,16 +184,16 @@ export class DOMBlock extends DOMNode {
     this._parts = parts;
   }
 
-  override get refNode(): ChildNode[] {
-    return collectChildNodes(this.firstNode, this.lastNode);
-  }
-
   override get firstNode(): ChildNode | null {
     return this._staticNodes[0] ?? null;
   }
 
   override get lastNode(): ChildNode | null {
     return this._staticNodes.at(-1) ?? null;
+  }
+
+  override get refNode(): ChildNode[] {
+    return collectChildNodes(this.firstNode, this.lastNode);
   }
 
   override commitMount(
@@ -213,7 +206,7 @@ export class DOMBlock extends DOMNode {
         if (part !== undefined) {
           for (const descendant of child._children) {
             descendant._mountBefore(part.node);
-            part.value = descendant.bindValue;
+            part.value = descendant.value;
           }
         }
       }
@@ -256,15 +249,15 @@ export class DOMPortal extends DOMNode {
     this._container = container;
   }
 
-  override get refNode(): Element {
-    return this._container;
-  }
-
   override get firstNode(): Element {
     return this._container;
   }
 
   override get lastNode(): Element {
+    return this._container;
+  }
+
+  override get refNode(): Element {
     return this._container;
   }
 
@@ -290,20 +283,8 @@ export class DOMPrimitive extends DOMNode {
     this._value = value;
   }
 
-  override get bindValue(): unknown {
+  override get value(): unknown {
     return this._value;
-  }
-
-  override get refNode(): unknown {
-    return this._parent?.refNode;
-  }
-
-  override prepareUpdate(
-    _type: VPrimitive['type'],
-    oldProps: VPrimitive['props'],
-    newProps: VPrimitive['props'],
-  ): boolean {
-    return !Object.is(oldProps.value, newProps.value);
   }
 
   override commitUpdate(
@@ -411,6 +392,13 @@ export class LivePart extends DOMPart<Element> {
   constructor(node: Element, name: string) {
     super(node);
     this._name = name;
+  }
+
+  protected override _needsUpdate(
+    _oldValue: unknown,
+    _newValue: unknown,
+  ): boolean {
+    return true;
   }
 
   protected _update(_oldValue: unknown, newValue: unknown): void {

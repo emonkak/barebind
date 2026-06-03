@@ -69,6 +69,8 @@ export class Runtime implements Reconciler, Dispatcher {
   ): View {
     if (oldView.type !== newElement.type || oldView.key !== newElement.key) {
       return this.render(newElement, scope, index, parent);
+    } else if (oldView.props === newElement.props) {
+      return { ...oldView, index, parent };
     } else if (typeof newElement.type === 'function') {
       const newView: View.ComponentView = {
         ...(oldView as View.ComponentView),
@@ -128,14 +130,6 @@ export class Runtime implements Reconciler, Dispatcher {
       );
       return newView;
     } else {
-      const dirty = (oldView as View.HostView).data.prepareUpdate(
-        newElement.type,
-        (oldView as View.HostView).props,
-        newElement.props,
-      );
-      if (!dirty) {
-        return { ...oldView, index, parent };
-      }
       const newView: View.HostView = {
         ...(oldView as View.HostView),
         ...newElement,
