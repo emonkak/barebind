@@ -413,7 +413,7 @@ export class LivePart extends DOMPart<Element> {
     this._name = name;
   }
 
-  protected _update(newValue: unknown): void {
+  protected _update(_oldValue: unknown, newValue: unknown): void {
     if ((this._node as any)[this._name] !== newValue) {
       (this._node as any)[this._name] = newValue;
     }
