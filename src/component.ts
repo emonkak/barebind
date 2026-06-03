@@ -119,102 +119,109 @@ namespace Hook {
   }
 }
 
-export class Component<TProps, TReturn> implements ComponentInstance<TProps> {
-  private readonly _componentFn: ComponentFunction<TProps, TReturn>;
-  private readonly _context: RenderContext;
+export class Component<TProps = any, TReturn = unknown>
+  implements ComponentInstance<TProps>
+{
+  /** @internal */
+  readonly _componentFn: ComponentFunction<TProps, TReturn>;
+  /** @internal */
+  readonly _dispatcher: Dispatcher;
+  /** @internal */
+  _stagingView: View.ComponentView | null = null;
+  /** @internal */
+  _committedView: View.ComponentView | null = null;
+  /** @internal */
+  _pendingLanes: Lanes = NoLanes;
+  /** @internal */
+  _hooks: readonly Hook[] = [];
 
   constructor(
     componentFn: ComponentFunction<TProps, TReturn>,
-    context: RenderContext,
+    dispatcher: Dispatcher,
   ) {
     this._componentFn = componentFn;
-    this._context = context;
+    this._dispatcher = dispatcher;
   }
 
-  skipUpdate(view: View.ComponentView<TProps>): void {
-    this._context._stagingView = view;
-  }
-
-  update(
+  prepareRender(
     view: View.ComponentView<TProps>,
+    element: VComponent<TProps>,
     lanes: Lanes,
-    reconciler: Reconciler,
-  ): void {
-    this._context._stagingView = view;
-    this._context._hookIndex = 0;
-    view.data.pendingLanes &= ~lanes;
-    let returnElement: VElement;
+  ): boolean {
+    const dirty =
+      (this._pendingLanes & lanes) !== NoLanes ||
+      !view.type.arePropsEqual(view.props, element.props);
+    if (!dirty) {
+      this._stagingView = view;
+      this._pendingLanes &= ~lanes;
+    }
+    return dirty;
+  }
+
+  render(
+    view: View.ComponentView<TProps>,
+    scope: Scope,
+    lanes: Lanes,
+  ): VElement {
     try {
-      returnElement = wrap(this._componentFn.call(this._context, view.props));
-      finalizeHooks(this._context);
-      Object.freeze(view.data.scope.instances);
+      const context = new RenderContext(this, scope);
+      const returnValue = this._componentFn.call(context, view.props);
+      this._hooks = finalizeHooks(context);
+      Object.freeze(scope.instances);
+      return wrap(returnValue);
     } catch (cause) {
       throw new RenderError(view, 'An error occurred during rendering.', {
         cause,
       });
+    } finally {
+      this._stagingView = view;
+      this._pendingLanes &= ~lanes;
     }
-    view.children[0] =
-      view.children[0] !== undefined
-        ? reconciler.diff(
-            view.children[0],
-            returnElement,
-            view.data.scope,
-            0,
-            view,
-          )
-        : reconciler.render(returnElement, view.data.scope, 0);
   }
 
   afterCommit(): void {
-    for (const hook of this._context._hooks) {
+    for (const hook of this._hooks) {
       if (hook.type === EffectType && hook.dirty) {
         hook.cleanup?.();
         hook.cleanup = hook.setup();
         hook.dirty = false;
       }
     }
-    this._context._committedView = this._context._stagingView;
+    this._committedView = this._stagingView;
   }
 
   beforeRemove(): void {
-    for (const hook of this._context._hooks) {
+    for (const hook of this._hooks) {
       if (hook.type === EffectType && hook.cleanup !== undefined) {
         hook.cleanup();
         hook.cleanup = undefined;
       }
     }
-    this._context._stagingView = null;
+    this._committedView = null;
   }
 }
 
 export class RenderContext {
-  private readonly _dispatcher: Dispatcher;
-  /** @internal */
-  _stagingView: View.ComponentView | null = null;
-  /** @internal */
-  _committedView: View.ComponentView | null = null;
-  /** @internal */
-  _hooks: Hook[] = [];
-  /** @internal */
-  _hookIndex = 0;
+  private readonly _instance: Component;
+  private readonly _scope: Scope;
+  /** internal */
+  readonly _hooks: Hook[];
+  /** internal */
+  _hookIndex: number = 0;
 
-  constructor(dispatcher: Dispatcher) {
-    this._dispatcher = dispatcher;
+  constructor(instance: Component, scope: Scope) {
+    this._instance = instance;
+    this._scope = scope;
+    this._hooks = instance._hooks.slice();
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    if (this._stagingView === null) {
-      return {
-        id: -1,
-        lanes: NoLanes,
-        finished: Promise.resolve(),
-      };
-    }
-    const handle = this._dispatcher.schedule(
-      new UpdateComponent(this._stagingView, this),
+    const instance = this._instance;
+    const handle = instance._dispatcher.schedule(
+      new UpdateComponent(instance, this._scope),
       options,
     );
-    this._stagingView.data.pendingLanes |= handle.lanes;
+    instance._pendingLanes |= handle.lanes;
     return handle;
   }
 
@@ -222,7 +229,7 @@ export class RenderContext {
     injectable: Injectable<TInstance, TDefault>,
   ): TInstance | TDefault {
     for (
-      let scope: Scope | null = this._stagingView?.data.scope ?? null;
+      let scope: Scope | null = this._scope ?? null;
       scope !== null;
       scope = scope.parent
     ) {
@@ -241,11 +248,11 @@ export class RenderContext {
   }
 
   provide<T extends object>(instance: T): void {
-    this._stagingView?.data.scope.instances.push(instance);
+    this._scope.instances.push(instance);
   }
 
   startTransition<T>(callback: (transition: number) => T): T {
-    return callback(this._dispatcher.nextTransition());
+    return callback(this._instance._dispatcher.nextTransition());
   }
 
   use<TReturn>(usable: Usable<TReturn>): TReturn {
@@ -263,13 +270,17 @@ export class RenderContext {
     setup: EffectSetup,
     deps?: readonly unknown[] | null | undefined,
   ): void {
-    let currentHook = this._hooks[this._hookIndex++];
+    let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType(EffectType, currentHook);
-      currentHook.dirty ||= areDependenciesChange(currentHook.deps, deps);
-      currentHook.setup = setup;
-      currentHook.deps = deps;
+      currentHook = {
+        ...currentHook,
+        dirty:
+          currentHook.dirty || areDependenciesChange(currentHook.deps, deps),
+        setup,
+        deps,
+      };
     } else {
       currentHook = {
         type: EffectType,
@@ -278,22 +289,24 @@ export class RenderContext {
         deps,
         dirty: true,
       };
-      this._hooks.push(currentHook);
     }
+
+    this._hooks[this._hookIndex++] = currentHook;
   }
 
   useId(): string {
-    let currentHook = this._hooks[this._hookIndex++];
+    let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType(IdType, currentHook);
     } else {
       currentHook = {
         type: IdType,
-        id: this._dispatcher.nextIdentifier(),
+        id: this._instance._dispatcher.nextIdentifier(),
       };
-      this._hooks.push(currentHook);
     }
+
+    this._hooks[this._hookIndex++] = currentHook;
 
     return currentHook.id;
   }
@@ -302,14 +315,17 @@ export class RenderContext {
     computation: () => TResult,
     deps: readonly unknown[],
   ): TResult {
-    let currentHook = this._hooks[this._hookIndex++];
+    let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType(MemoType, currentHook);
 
       if (areDependenciesChange(currentHook.deps, deps)) {
-        currentHook.result = computation();
-        currentHook.deps = deps;
+        currentHook = {
+          ...currentHook,
+          result: computation(),
+          deps,
+        };
       }
     } else {
       currentHook = {
@@ -317,8 +333,9 @@ export class RenderContext {
         result: computation(),
         deps,
       };
-      this._hooks.push(currentHook);
     }
+
+    this._hooks[this._hookIndex++] = currentHook;
 
     return currentHook.result as TResult;
   }
@@ -334,13 +351,13 @@ export class RenderContext {
       options?: DispatchOptions<TState>,
     ) => UpdateHandle,
   ] {
-    let currentHook = this._hooks[this._hookIndex++];
+    let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType(ReducerType, currentHook);
 
       const { handler, memoizedState, memoizedActions } = currentHook;
-      const renderLanes = this._dispatcher.flushLanes;
+      const renderLanes = this._instance._dispatcher.flushLanes;
       let newState = options.passthrough
         ? getInitialState(initialState)
         : memoizedState;
@@ -360,8 +377,11 @@ export class RenderContext {
       }
 
       if (skipLanes === NoLanes) {
-        currentHook.memoizedActions = [];
-        currentHook.memoizedState = newState;
+        currentHook = {
+          ...currentHook,
+          memoizedActions: [],
+          memoizedState: newState,
+        };
       }
 
       handler.pendingState = newState;
@@ -403,8 +423,9 @@ export class RenderContext {
         memoizedActions: [],
         handler,
       };
-      this._hooks.push(currentHook);
     }
+
+    this._hooks[this._hookIndex++] = currentHook;
 
     return [currentHook.handler.pendingState, currentHook.handler.dispatch];
   }
@@ -443,10 +464,8 @@ export function createComponent<TProps = {}, TReturn = unknown>(
   }
 
   ComponentType.newInstance = (
-    _props: TProps,
     dispatcher: Dispatcher,
-  ): ComponentInstance<TProps> =>
-    new Component(componentFn, new RenderContext(dispatcher));
+  ): ComponentInstance<TProps> => new Component(componentFn, dispatcher);
   ComponentType.arePropsEqual = arePropsEqual;
 
   DEBUG: {
@@ -459,24 +478,24 @@ export function createComponent<TProps = {}, TReturn = unknown>(
 }
 
 class UpdateComponent implements UpdateUnit {
-  private readonly _stagingView: View.ComponentView;
-  private readonly _context: RenderContext;
+  private readonly _instance: Component;
+  private readonly _scope: Scope;
 
-  constructor(stagingView: View.ComponentView, context: RenderContext) {
-    this._stagingView = stagingView;
-    this._context = context;
+  constructor(instance: Component, scope: Scope) {
+    this._instance = instance;
+    this._scope = scope;
   }
 
   get scope(): Scope {
-    return this._stagingView.data.scope;
+    return this._scope;
   }
 
   get pendingLanes(): Lanes {
-    return this._stagingView.data.pendingLanes;
+    return this._instance._pendingLanes;
   }
 
   prepare(lanes: Lanes, reconciler: Reconciler): Effect {
-    const oldView = this._context._committedView;
+    const oldView = this._instance._committedView;
     if (oldView === null) {
       return noOp;
     }
@@ -484,9 +503,15 @@ class UpdateComponent implements UpdateUnit {
       ...oldView,
       id: reconciler.nextRenderId(),
       children: oldView.children.slice(),
-      data: { ...oldView.data, scope: oldView.data.scope.clone() },
     };
-    newView.data.instance.update(newView, lanes, reconciler);
+    const newScope = this._scope.peer();
+    newView.children[0] = reconciler.diff(
+      newView.children[0]!,
+      newView.data.render(newView, newScope, lanes),
+      newScope,
+      0,
+      newView,
+    );
     return () => {
       patch(oldView, newView);
     };
@@ -504,16 +529,18 @@ function ensureHookType<TExpectedType extends Hook['type']>(
   }
 }
 
-function finalizeHooks(context: RenderContext): void {
-  let currentHook = context._hooks[context._hookIndex++];
+function finalizeHooks(context: RenderContext): readonly Hook[] {
+  let currentHook = context._hooks[context._hookIndex];
 
   if (currentHook !== undefined) {
     ensureHookType(FinalizerType, currentHook);
   } else {
     currentHook = { type: FinalizerType };
-    context._hooks.push(currentHook);
-    Object.freeze(context._hooks);
   }
+
+  context._hooks[context._hookIndex++] = currentHook;
+
+  return Object.freeze(context._hooks);
 }
 
 function getInitialState<TState>(initialState: InitialState<TState>): TState {

@@ -13,24 +13,22 @@ export const RemoveType = 3;
 export interface ComponentType<TProps> {
   (props: TProps): VComponent<TProps>;
   arePropsEqual(oldProps: TProps, newProps: TProps): boolean;
-  newInstance(props: TProps, dispatcher: Dispatcher): ComponentInstance<TProps>;
+  newInstance(dispatcher: Dispatcher): ComponentInstance<TProps>;
 }
 
 export interface ComponentInstance<TProps> {
-  skipUpdate(view: View.ComponentView<TProps>): void;
-  update(
+  prepareRender(
     view: View.ComponentView<TProps>,
+    element: VComponent<TProps>,
     lanes: Lanes,
-    reconciler: Reconciler,
-  ): void;
+  ): boolean;
+  render(
+    view: View.ComponentView<TProps>,
+    scope: Scope,
+    lanes: Lanes,
+  ): VElement;
   afterCommit(): void;
   beforeRemove(): void;
-}
-
-export interface ComponentState<TProps> {
-  instance: ComponentInstance<TProps>;
-  pendingLanes: Lanes;
-  scope: Scope;
 }
 
 export type DirectiveFunction<T = any> = (instance: T) => (() => void) | void;
@@ -148,7 +146,7 @@ export namespace View {
     extends AbstractView<VDirective, DirectiveState> {}
 
   export interface ComponentView<TProps = any>
-    extends AbstractView<VComponent, ComponentState<TProps>> {}
+    extends AbstractView<VComponent, ComponentInstance<TProps>> {}
 
   export interface FragmentView extends AbstractView<VFragment, Mutation[]> {}
 
@@ -248,11 +246,11 @@ export class Scope {
     }
   }
 
-  append(): Scope {
+  child(): Scope {
     return new Scope(this, this.level + 1);
   }
 
-  clone(): Scope {
+  peer(): Scope {
     return new Scope(this.parent, this.level);
   }
 }

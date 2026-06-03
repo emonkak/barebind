@@ -8,7 +8,6 @@ import {
   UpdateType,
   type View,
 } from './core.js';
-import { NoLanes } from './lane.js';
 
 export function mount(root: View.HostView): void {
   for (const child of root.children) {
@@ -46,7 +45,7 @@ function afterCommit(view: View): void {
   }
 
   if (typeof view.type === 'function') {
-    view.data.instance.afterCommit();
+    view.data.afterCommit();
   }
 }
 
@@ -129,8 +128,7 @@ function applyPatch(oldView: View, newView: View): void {
 
 function beforeRemove(view: View): void {
   if (typeof view.type === 'function') {
-    view.data.instance.beforeRemove();
-    view.data.pendingLanes = NoLanes;
+    view.data.beforeRemove();
   } else if (view.type === Directive) {
     view.data.cleanup?.call(undefined);
     view.data.cleanup = undefined;
