@@ -62,11 +62,6 @@ export interface HostAdapter {
 
 export interface HostNode {
   get refNode(): unknown;
-  prepareUpdate(
-    type: VHostElement['type'],
-    oldProps: VHostElement['props'],
-    newProps: VHostElement['props'],
-  ): boolean;
   appendChild(child: HostNode, after: HostNode | null): void;
   moveChild(child: HostNode, after: HostNode | null): void;
   removeChild(child: HostNode): void;
