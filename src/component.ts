@@ -229,7 +229,7 @@ export class RenderContext {
     injectable: Injectable<TInstance, TDefault>,
   ): TInstance | TDefault {
     for (
-      let scope: Scope | null = this._scope ?? null;
+      let scope: Scope | null = this._scope;
       scope !== null;
       scope = scope.parent
     ) {
