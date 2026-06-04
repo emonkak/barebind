@@ -192,10 +192,6 @@ export class DOMBlock extends DOMNode {
     return this._staticNodes.at(-1) ?? null;
   }
 
-  override get refNode(): ChildNode[] {
-    return collectChildNodes(this.firstNode, this.lastNode);
-  }
-
   override commitMount(
     _type: VHostElement['type'],
     _props: VHostElement['props'],
