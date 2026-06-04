@@ -68,7 +68,7 @@ export function getRenderLanes(options: UpdateOptions): Lanes {
   return lanes;
 }
 
-export function getTranstionIndex(lanes: Lanes): number {
+export function getTransitionIndex(lanes: Lanes): number {
   return (
     TransitionLength -
     Math.min(
