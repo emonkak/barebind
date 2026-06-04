@@ -22,7 +22,7 @@ export function getComponentStack(view: View): ComponentType<unknown>[] {
     if (typeof current.type === 'function') {
       componentStack.push(current.type);
     }
-    current = view.parent;
+    current = current.parent;
   } while (current != null);
 
   return componentStack;
