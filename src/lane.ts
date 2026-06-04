@@ -54,7 +54,7 @@ export function getRenderLanes(options: UpdateOptions): Lanes {
   }
 
   if (options.priority !== undefined) {
-    lanes = getLaneFromPriority(options.priority);
+    lanes |= getLaneFromPriority(options.priority);
   }
 
   if (options.transition !== undefined) {
