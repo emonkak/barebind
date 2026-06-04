@@ -1,26 +1,26 @@
-import type { View } from './core.js';
+import type { ComponentType, View } from './core.js';
 
 export function formatComponentStack(
-  componentStack: View.ComponentView[],
+  componentStack: ComponentType<unknown>[],
 ): string {
   const tail = componentStack.length - 1;
   return componentStack
-    .map((child, i) => {
+    .map((type, i) => {
       const prefix = i === tail ? '' : '   '.repeat(tail - i - 1) + '`- ';
       const suffix = i === 0 ? ' <- ERROR occurred here!' : '';
-      return prefix + child.type.name + suffix;
+      return prefix + type.name + suffix;
     })
     .reverse()
     .join('\n');
 }
 
-export function getComponentStack(view: View): View.ComponentView[] {
-  const componentStack: View.ComponentView[] = [];
+export function getComponentStack(view: View): ComponentType<unknown>[] {
+  const componentStack: ComponentType<unknown>[] = [];
   let current: View | null = view;
 
   do {
     if (typeof current.type === 'function') {
-      componentStack.push(current);
+      componentStack.push(current.type);
     }
     current = view.parent;
   } while (current != null);
