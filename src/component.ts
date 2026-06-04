@@ -233,7 +233,8 @@ export class RenderContext {
       scope !== null;
       scope = scope.parent
     ) {
-      for (const instance of scope.instances) {
+      for (let i = scope.instances.length - 1; i >= 0; i--) {
+        const instance = scope.instances[i]!;
         if (instance instanceof injectable) {
           return instance;
         }
