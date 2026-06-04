@@ -369,11 +369,13 @@ export class RenderContext {
         const { payload, lanes, revertLanes } = action;
         if ((lanes & renderLanes) === lanes) {
           newState = reducer(newState, payload);
-          action.lanes = NoLanes;
-        } else if ((revertLanes & renderLanes) === revertLanes) {
-          skipLanes |= lanes;
-          action.revertLanes = NoLanes;
+          action.lanes = revertLanes;
+        } else {
+          if ((revertLanes & renderLanes) === revertLanes) {
+            action.revertLanes = NoLanes;
+          }
         }
+        skipLanes |= (lanes & ~renderLanes) | (revertLanes & renderLanes);
       }
 
       if (skipLanes === NoLanes) {
@@ -409,7 +411,7 @@ export class RenderContext {
           pendingActions.push({
             payload,
             lanes: handle.lanes,
-            revertLanes: options.transient ? handle.lanes : 0,
+            revertLanes: options.transient ? handle.lanes : NoLanes,
           });
           return handle;
         },
