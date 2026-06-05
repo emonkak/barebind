@@ -20,13 +20,13 @@ export class Root {
   }
 
   render(value: unknown, options?: UpdateOptions): UpdateHandle {
-    const scope = new Scope();
     return this._dispatcher.schedule(
       {
-        scope,
+        level: 0,
         pendingLanes: AllLanes,
         prepare: (_lanes, reconciler) => {
           const element = createPortal(value, this._container);
+          const scope = new Scope();
           const newRoot = (
             this._root !== null
               ? reconciler.diff(this._root, element, scope, 0, null)
@@ -49,7 +49,7 @@ export class Root {
   unmount(options?: UpdateOptions): UpdateHandle {
     return this._dispatcher.schedule(
       {
-        scope: new Scope(),
+        level: 0,
         pendingLanes: AllLanes,
         prepare: () => {
           return () => {

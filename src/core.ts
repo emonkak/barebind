@@ -169,7 +169,7 @@ export interface UpdateOptions {
 }
 
 export interface UpdateUnit {
-  readonly scope: Scope;
+  readonly level: number;
   readonly pendingLanes: Lanes;
   prepare(lanes: Lanes, reconciler: Reconciler): Effect;
 }

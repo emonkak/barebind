@@ -489,8 +489,8 @@ class UpdateComponent implements UpdateUnit {
     this._scope = scope;
   }
 
-  get scope(): Scope {
-    return this._scope;
+  get level(): number {
+    return this._scope.level;
   }
 
   get pendingLanes(): Lanes {
