@@ -1,0 +1,74 @@
+import { DOMAdapter, html, Root, Runtime } from 'barebind';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+describe('classes', () => {
+  let container: Element;
+  let runtime: Runtime;
+  let root: Root;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    runtime = new Runtime(new DOMAdapter());
+    root = new Root(container, runtime);
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+  });
+
+  it('updates classes as a string', async () => {
+    const render = (value: unknown) => html`<div class=${value}></div>`;
+
+    await root.render(render('foo')).finished;
+    const target = container.querySelector('div')!;
+    expect(target.classList.contains('foo')).toBe(true);
+
+    await root.render(render('bar')).finished;
+    expect(target.classList.contains('foo')).toBe(false);
+    expect(target.classList.contains('bar')).toBe(true);
+  });
+
+  it.each([
+    null,
+    undefined,
+  ])('removes the class attribute when the value is %s', async (value) => {
+    const render = (value: unknown) => html`<div class=${value}></div>`;
+
+    await root.render(render('foo')).finished;
+    const target = container.querySelector('div')!;
+    expect(target.hasAttribute('class')).toBe(true);
+
+    await root.render(render(value)).finished;
+    expect(target.hasAttribute('class')).toBe(false);
+  });
+
+  it('updates classes as an object', async () => {
+    const render = (value: Record<string, boolean>) =>
+      html`<div class=${value}></div>`;
+
+    await root.render(render({ active: true, disabled: false })).finished;
+    const target = container.querySelector('div')!;
+    expect(target.classList.contains('active')).toBe(true);
+    expect(target.classList.contains('disabled')).toBe(false);
+
+    await root.render(render({ active: false, disabled: true })).finished;
+    expect(target.classList.contains('active')).toBe(false);
+    expect(target.classList.contains('disabled')).toBe(true);
+  });
+
+  it('removes classes that are no longer in the object', async () => {
+    const render = (value: Record<string, boolean>) => {
+      return html`<div class=${value}></div>`;
+    };
+
+    await root.render(render({ active: true, disabled: true })).finished;
+    const target = container.querySelector('div')!;
+    expect(target.classList.contains('active')).toBe(true);
+    expect(target.classList.contains('disabled')).toBe(true);
+
+    await root.render(render({ active: true })).finished;
+    expect(target.classList.contains('active')).toBe(true);
+    expect(target.classList.contains('disabled')).toBe(false);
+  });
+});
