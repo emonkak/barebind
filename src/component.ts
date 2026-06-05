@@ -151,6 +151,7 @@ export class Component<TProps = any, TReturn = unknown>
     lanes: Lanes,
   ): VElement {
     try {
+      this._pendingLanes &= ~lanes;
       const context = new RenderContext(this, scope);
       const returnValue = this._componentFn.call(context, view.props);
       this._hooks = finalizeHooks(context);
@@ -160,8 +161,6 @@ export class Component<TProps = any, TReturn = unknown>
       throw new RenderError(view, 'An error occurred during rendering.', {
         cause,
       });
-    } finally {
-      this._pendingLanes &= ~lanes;
     }
   }
 
