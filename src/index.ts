@@ -3,6 +3,8 @@ export {
   createComponent,
   type RenderContext,
   type Usable,
+  type UsableFunction,
+  type UsableObject,
 } from './component.js';
 export {
   createDirective,
