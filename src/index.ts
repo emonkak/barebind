@@ -1,7 +1,7 @@
 export { sequentialEqual, shallowEqual } from './compare.js';
 export {
   createComponent,
-  type RenderContext,
+  RenderContext,
   type Usable,
   type UsableFunction,
   type UsableObject,
