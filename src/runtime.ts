@@ -44,6 +44,8 @@ export class Runtime implements Reconciler, Dispatcher {
   readonly _updateQueue: PriorityQueue<Update> = new PriorityQueue(
     compareUpdates,
   );
+  /** @internal */
+  _updateBatch: Update[] = [];
   private _pendingLanes: number = NoLanes;
   private _stagedLanes: number = NoLanes;
   private _flushLanes: number = NoLanes;
@@ -448,7 +450,6 @@ export class Runtime implements Reconciler, Dispatcher {
 
   private async _flush(): Promise<void> {
     while (true) {
-      const updateBatch: Update[] = [];
       let update: Update | undefined;
 
       this._flushLanes |= this._stagedLanes;
@@ -458,10 +459,10 @@ export class Runtime implements Reconciler, Dispatcher {
         if ((this._flushLanes & update.lanes) !== update.lanes) {
           break;
         }
-        updateBatch.push(this._updateQueue.dequeue()!);
+        this._updateBatch.push(this._updateQueue.dequeue()!);
       }
 
-      if (updateBatch.length === 0) {
+      if (this._updateBatch.length === 0) {
         break;
       }
 
@@ -469,7 +470,7 @@ export class Runtime implements Reconciler, Dispatcher {
         const effectBatch: Effect[] = [];
         const flushSync = (this._flushLanes & SyncLane) === SyncLane;
 
-        for (const update of updateBatch) {
+        for (const update of this._updateBatch) {
           const { lanes, unit } = update;
 
           if ((unit.pendingLanes & lanes) === NoLanes) {
@@ -498,13 +499,15 @@ export class Runtime implements Reconciler, Dispatcher {
           }
         }
 
-        for (const { controller } of updateBatch) {
+        for (const { controller } of this._updateBatch) {
           controller.resolve();
         }
       } catch (error) {
-        for (const { controller } of updateBatch) {
+        for (const { controller } of this._updateBatch) {
           controller.reject(error);
         }
+      } finally {
+        this._updateBatch = [];
       }
     }
 
@@ -512,13 +515,19 @@ export class Runtime implements Reconciler, Dispatcher {
   }
 }
 
-export async function waitForIdle(runtime: Runtime): Promise<void> {
-  while (true) {
-    const update = runtime._updateQueue.peek();
-    if (update === undefined) {
-      break;
+export async function waitForStep(runtime: Runtime): Promise<boolean> {
+  if (runtime._updateBatch.length > 0) {
+    for (const update of runtime._updateBatch) {
+      await update.controller.promise;
     }
-    await update.controller.promise;
+    return true;
+  } else {
+    const update = runtime._updateQueue.peek();
+    if (update !== undefined) {
+      await update.controller.promise;
+      return true;
+    }
+    return false;
   }
 }
 
