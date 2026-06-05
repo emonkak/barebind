@@ -9,6 +9,7 @@ export {
 export {
   createDirective,
   createPortal,
+  Ref,
   toElement,
 } from './core.js';
 export { DOMAdapter } from './dom/adapter.js';
