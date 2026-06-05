@@ -189,9 +189,9 @@ export class Component<TProps = any, TReturn = unknown>
 export class RenderContext {
   private readonly _instance: Component;
   private readonly _scope: Scope;
-  /** internal */
+  /** @internal */
   readonly _hooks: Hook[];
-  /** internal */
+  /** @internal */
   _hookIndex: number = 0;
 
   constructor(instance: Component, scope: Scope) {
