@@ -45,7 +45,7 @@ function afterCommit(view: View): void {
   }
 
   if (typeof view.type === 'function') {
-    view.data.afterCommit();
+    view.data.afterCommit(view);
   }
 }
 

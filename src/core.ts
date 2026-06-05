@@ -17,17 +17,13 @@ export interface ComponentType<TProps> {
 }
 
 export interface ComponentInstance<TProps> {
-  prepareRender(
-    view: View.ComponentView<TProps>,
-    element: VComponent<TProps>,
-    lanes: Lanes,
-  ): boolean;
+  readonly pendingLanes: Lanes;
   render(
     view: View.ComponentView<TProps>,
     scope: Scope,
     lanes: Lanes,
   ): VElement;
-  afterCommit(): void;
+  afterCommit(view: View.ComponentView<TProps>): void;
   beforeRemove(): void;
 }
 

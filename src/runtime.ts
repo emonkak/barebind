@@ -83,10 +83,12 @@ export class Runtime implements Reconciler, Dispatcher {
         children: oldView.children.slice(),
       };
       if (
-        (oldView as View.ComponentView).data.prepareRender(
-          oldView as View.ComponentView,
-          newElement,
-          this._flushLanes,
+        ((newView as View.ComponentView).data.pendingLanes &
+          this._flushLanes) !==
+          NoLanes ||
+        !(newView as View.ComponentView).type.arePropsEqual(
+          oldView.props,
+          newElement.props,
         )
       ) {
         const subScope = scope.child();

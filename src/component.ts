@@ -127,9 +127,7 @@ export class Component<TProps = any, TReturn = unknown>
   /** @internal */
   readonly _dispatcher: Dispatcher;
   /** @internal */
-  _stagingView: View.ComponentView | null = null;
-  /** @internal */
-  _committedView: View.ComponentView | null = null;
+  _connectedView: View.ComponentView | null = null;
   /** @internal */
   _pendingLanes: Lanes = NoLanes;
   /** @internal */
@@ -143,19 +141,8 @@ export class Component<TProps = any, TReturn = unknown>
     this._dispatcher = dispatcher;
   }
 
-  prepareRender(
-    view: View.ComponentView<TProps>,
-    element: VComponent<TProps>,
-    lanes: Lanes,
-  ): boolean {
-    const dirty =
-      (this._pendingLanes & lanes) !== NoLanes ||
-      !view.type.arePropsEqual(view.props, element.props);
-    if (!dirty) {
-      this._stagingView = view;
-      this._pendingLanes &= ~lanes;
-    }
-    return dirty;
+  get pendingLanes(): Lanes {
+    return this._pendingLanes;
   }
 
   render(
@@ -174,12 +161,11 @@ export class Component<TProps = any, TReturn = unknown>
         cause,
       });
     } finally {
-      this._stagingView = view;
       this._pendingLanes &= ~lanes;
     }
   }
 
-  afterCommit(): void {
+  afterCommit(view: View.ComponentView<TProps>): void {
     for (const hook of this._hooks) {
       if (hook.type === EffectType && hook.dirty) {
         hook.cleanup?.();
@@ -187,7 +173,7 @@ export class Component<TProps = any, TReturn = unknown>
         hook.dirty = false;
       }
     }
-    this._committedView = this._stagingView;
+    this._connectedView = view;
   }
 
   beforeRemove(): void {
@@ -197,7 +183,7 @@ export class Component<TProps = any, TReturn = unknown>
         hook.cleanup = undefined;
       }
     }
-    this._committedView = null;
+    this._connectedView = null;
   }
 }
 
@@ -498,7 +484,7 @@ class UpdateComponent implements UpdateUnit {
   }
 
   prepare(lanes: Lanes, reconciler: Reconciler): Effect {
-    const oldView = this._instance._committedView;
+    const oldView = this._instance._connectedView;
     if (oldView === null) {
       return noOp;
     }
