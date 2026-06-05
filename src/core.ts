@@ -31,7 +31,7 @@ export interface ComponentInstance<TProps> {
   beforeRemove(): void;
 }
 
-export type DirectiveFunction<T = any> = (instance: T) => (() => void) | void;
+export type DirectiveFunction<T> = (instance: T) => (() => void) | void;
 
 export interface DirectiveState {
   dirty: boolean;
