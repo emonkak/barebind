@@ -3,12 +3,12 @@ import {
   type ComponentInstance,
   type ComponentType,
   type Dispatcher,
-  type Effect,
   type Injectable,
   type Lanes,
   type Reconciler,
   Ref,
   type Scope,
+  type Thunk,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateUnit,
@@ -482,7 +482,7 @@ class UpdateComponent implements UpdateUnit {
     return this._instance._pendingLanes;
   }
 
-  prepare(lanes: Lanes, reconciler: Reconciler): Effect {
+  produce(lanes: Lanes, reconciler: Reconciler): Thunk {
     const oldView = this._instance._connectedView;
     if (oldView === null) {
       return noOp;

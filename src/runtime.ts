@@ -1,6 +1,5 @@
 import {
   type Dispatcher,
-  type Effect,
   Fragment,
   type HostAdapter,
   InsertType,
@@ -9,6 +8,7 @@ import {
   type Reconciler,
   RemoveType,
   type Scope,
+  type Thunk,
   UpdateAndMoveType,
   type UpdateHandle,
   type UpdateOptions,
@@ -442,7 +442,7 @@ export class Runtime implements Reconciler, Dispatcher {
       }
 
       try {
-        const effectBatch: Effect[] = [];
+        const thunkBatch: Thunk[] = [];
         const flushSync = (this._flushLanes & SyncLane) === SyncLane;
 
         for (const update of this._updateBatch) {
@@ -452,17 +452,17 @@ export class Runtime implements Reconciler, Dispatcher {
             continue;
           }
 
-          if (!flushSync && effectBatch.length > 0) {
+          if (!flushSync && thunkBatch.length > 0) {
             await this._adapter.yieldToMain();
           }
 
-          effectBatch.push(unit.prepare(this._flushLanes, this));
+          thunkBatch.push(unit.produce(this._flushLanes, this));
         }
 
-        if (effectBatch.length > 0) {
+        if (thunkBatch.length > 0) {
           const commit = () => {
-            for (const effect of effectBatch) {
-              effect();
+            for (const thunk of thunkBatch) {
+              thunk();
             }
           };
           if (flushSync) {

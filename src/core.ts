@@ -33,8 +33,6 @@ export interface Dispatcher {
   schedule(unit: UpdateUnit, options?: UpdateOptions): UpdateHandle;
 }
 
-export type Effect = () => void;
-
 export interface HostAdapter {
   createHostNode(element: VHostElement): HostNode;
   getIdentifier(): string;
@@ -134,6 +132,8 @@ export interface Renderable {
 
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
+export type Thunk = () => void;
+
 export interface UpdateHandle {
   id: number;
   lanes: Lanes;
@@ -151,7 +151,7 @@ export interface UpdateOptions {
 export interface UpdateUnit {
   readonly level: number;
   readonly pendingLanes: Lanes;
-  prepare(lanes: Lanes, reconciler: Reconciler): Effect;
+  produce(lanes: Lanes, reconciler: Reconciler): Thunk;
 }
 
 export type VBind = VNode<typeof Bind, { index: number }, [VElement]>;

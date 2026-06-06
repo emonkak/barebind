@@ -24,7 +24,7 @@ export class Root {
       {
         level: 0,
         pendingLanes: AllLanes,
-        prepare: (_lanes, reconciler) => {
+        produce: (_lanes, reconciler) => {
           const element = createPortal(value, this._container);
           const scope = new Scope();
           const newRoot = (
@@ -51,7 +51,7 @@ export class Root {
       {
         level: 0,
         pendingLanes: AllLanes,
-        prepare: () => {
+        produce: () => {
           return () => {
             if (this._root !== null) {
               unmount(this._root);
