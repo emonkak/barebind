@@ -1,5 +1,4 @@
 export const Bind = Symbol.for('barebind.Bind');
-export const Directive = Symbol.for('barebind.Directive');
 export const Fragment = Symbol.for('barebind.Fragment');
 export const Primitive = Symbol.for('barebind.Primitive');
 export const toElement = Symbol.for('barebind.toElement');
@@ -25,13 +24,6 @@ export interface ComponentInstance<TProps> {
   ): VElement;
   afterCommit(view: View.ComponentView<TProps>): void;
   beforeRemove(): void;
-}
-
-export type DirectiveFunction<T> = (instance: T) => (() => void) | void;
-
-export interface DirectiveState {
-  dirty: boolean;
-  cleanup: (() => void) | void;
 }
 
 export interface Dispatcher {
@@ -116,11 +108,7 @@ export interface Reconciler {
   ): View;
 }
 
-export type View =
-  | View.ComponentView
-  | View.DirectiveView
-  | View.FragmentView
-  | View.HostView;
+export type View = View.ComponentView | View.FragmentView | View.HostView;
 
 export namespace View {
   interface AbstractView<TElement extends VElement, TData>
@@ -131,9 +119,6 @@ export namespace View {
     children: View[];
     data: TData;
   }
-
-  export interface DirectiveView
-    extends AbstractView<VDirective, DirectiveState> {}
 
   export interface ComponentView<TProps = any>
     extends AbstractView<VComponent, ComponentInstance<TProps>> {}
@@ -173,16 +158,7 @@ export type VBind = VNode<typeof Bind, { index: number }, [VElement]>;
 
 export type VComponent<TProps = any> = VNode<ComponentType<TProps>, TProps, []>;
 
-export type VDirective<T = any> = VNode<
-  typeof Directive,
-  {
-    setup: DirectiveFunction<T>;
-    deps: unknown[] | null | undefined;
-  },
-  []
->;
-
-export type VElement = VComponent | VDirective | VFragment | VHostElement;
+export type VElement = VComponent | VFragment | VHostElement;
 
 export type VFragment = VNode<typeof Fragment, {}, VElement[]>;
 
@@ -210,16 +186,13 @@ export class Ref<T> implements Renderable {
     }
   }
 
-  [toElement](): VDirective<NonNullable<T>> {
-    return createDirective(
-      (node) => {
-        this.current = node as T;
-        return () => {
-          this.current = null as T;
-        };
-      },
-      [this],
-    );
+  [toElement](): VPrimitive {
+    return createPrimitive((instance: T) => {
+      this.current = instance;
+      return () => {
+        this.current = null as T;
+      };
+    });
   }
 }
 
@@ -266,15 +239,16 @@ export class VNode<TType, TProps, const TChildren extends VElement[]> {
   }
 }
 
-export function createDirective<T>(
-  setup: (node: T) => (() => void) | void,
-  deps?: unknown[] | null | undefined,
-): VDirective<T> {
-  return new VNode(Directive, { setup, deps }, []);
+export function createFragment(value: unknown[]): VFragment {
+  return new VNode(Fragment, {}, Array.from(value, wrap));
 }
 
 export function createPortal(value: unknown, container: Element): VPortal {
   return new VNode(container, {}, [wrap(value)]);
+}
+
+export function createPrimitive(value: unknown): VPrimitive {
+  return new VNode(Primitive, { value }, []);
 }
 
 export function wrap(value: unknown): VElement {
@@ -283,8 +257,8 @@ export function wrap(value: unknown): VElement {
     : isRenderable(value)
       ? value[toElement]()
       : typeof value === 'object' && isIterable(value)
-        ? new VNode(Fragment, {}, Array.from(value, wrap))
-        : new VNode(Primitive, { value }, []);
+        ? createFragment(Array.from(value, wrap))
+        : createPrimitive(value);
 }
 
 function isIterable(value: any): value is Iterable<unknown> {

@@ -1,5 +1,4 @@
 import {
-  Directive,
   Fragment,
   type HostNode,
   InsertType,
@@ -31,15 +30,6 @@ export function patch(oldView: View, newView: View) {
 }
 
 function afterCommit(view: View): void {
-  if (view.type === Directive) {
-    if (view.data.dirty) {
-      const { setup } = view.props;
-      view.data.cleanup?.call(undefined);
-      view.data.cleanup = setup(getHostAncestor(view).refNode);
-      view.data.dirty = false;
-    }
-  }
-
   for (const descendant of view.children) {
     afterCommit(descendant);
   }
@@ -54,16 +44,16 @@ function appendChild(
   view: View,
   afterNode: HostNode | null,
 ): void {
-  if (isHostView(view)) {
+  if (isInternalView(view)) {
+    for (const descendant of view.children) {
+      appendChild(parentNode, descendant, afterNode);
+    }
+  } else {
     for (const descendant of view.children) {
       appendChild(view.data, descendant, null);
     }
     parentNode.appendChild(view.data, afterNode);
     view.data.commitMount(view.type, view.props);
-  } else {
-    for (const descendant of view.children) {
-      appendChild(parentNode, descendant, afterNode);
-    }
   }
 }
 
@@ -76,8 +66,6 @@ function applyPatch(oldView: View, newView: View): void {
     appendChild(getHostAncestor(newView), newView, nextHostSibling(oldView));
   } else if (typeof newView.type === 'function') {
     applyPatch(oldView.children[0]!, newView.children[0]!);
-  } else if (newView.type === Directive) {
-    // skip
   } else if (newView.type === Fragment) {
     const parentNode = getHostAncestor(newView);
 
@@ -129,11 +117,7 @@ function applyPatch(oldView: View, newView: View): void {
 function beforeRemove(view: View): void {
   if (typeof view.type === 'function') {
     view.data.beforeRemove();
-  } else if (view.type === Directive) {
-    view.data.cleanup?.call(undefined);
-    view.data.cleanup = undefined;
   }
-
   for (const child of view.children) {
     beforeRemove(child);
   }
@@ -141,7 +125,7 @@ function beforeRemove(view: View): void {
 
 function getHostAncestor(view: View): HostNode {
   while (view.parent !== null) {
-    if (isHostView(view.parent)) {
+    if (!isInternalView(view.parent)) {
       return view.parent.data;
     }
     view = view.parent;
@@ -150,7 +134,7 @@ function getHostAncestor(view: View): HostNode {
 }
 
 function getHostDescendant(view: View): HostNode | null {
-  if (isHostView(view)) {
+  if (!isInternalView(view)) {
     return view.data;
   }
   for (const child of view.children) {
@@ -162,12 +146,10 @@ function getHostDescendant(view: View): HostNode | null {
   return nextHostSibling(view);
 }
 
-function isHostView(view: View): view is View.HostView {
-  return (
-    typeof view.type !== 'function' &&
-    view.type !== Directive &&
-    view.type !== Fragment
-  );
+function isInternalView(
+  view: View,
+): view is View.ComponentView | View.FragmentView {
+  return typeof view.type === 'function' || view.type === Fragment;
 }
 
 function moveChild(
@@ -175,7 +157,7 @@ function moveChild(
   child: View,
   afterNode: HostNode | null,
 ): void {
-  if (isHostView(child)) {
+  if (!isInternalView(child)) {
     parentNode.moveChild(child.data, afterNode);
   } else {
     for (const descendant of child.children) {
@@ -185,7 +167,7 @@ function moveChild(
 }
 
 function nextHostSibling(child: View): HostNode | null {
-  while (child.parent !== null && !isHostView(child.parent)) {
+  while (child.parent !== null && !isInternalView(child.parent)) {
     const parent = child.parent;
     for (let i = child.index + 1, l = parent.children.length; i < l; i++) {
       const hostNode = getHostDescendant(parent.children[i]!);
@@ -199,12 +181,12 @@ function nextHostSibling(child: View): HostNode | null {
 }
 
 function removeChild(parentNode: HostNode, child: View): void {
-  if (isHostView(child)) {
-    parentNode.removeChild(child.data);
-  } else {
+  if (isInternalView(child)) {
     for (const descendant of child.children) {
       removeChild(parentNode, descendant);
     }
+  } else {
+    parentNode.removeChild(child.data);
   }
 }
 

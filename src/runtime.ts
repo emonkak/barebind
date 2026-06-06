@@ -1,6 +1,4 @@
-import { areDependenciesChange } from './compare.js';
 import {
-  Directive,
   type Dispatcher,
   type Effect,
   Fragment,
@@ -101,19 +99,6 @@ export class Runtime implements Reconciler, Dispatcher {
         );
       }
       return newView;
-    } else if (newElement.type === Directive) {
-      const newView: View.DirectiveView = {
-        ...(oldView as View.DirectiveView),
-        ...newElement,
-        id: this._renderCount++,
-        index,
-        parent,
-      };
-      newView.data.dirty = areDependenciesChange(
-        (oldView as View.DirectiveView).props.deps,
-        newElement.props.deps,
-      );
-      return newView;
     } else if (newElement.type === Fragment) {
       const newView: View.FragmentView = {
         ...(oldView as View.FragmentView),
@@ -190,18 +175,6 @@ export class Runtime implements Reconciler, Dispatcher {
         view,
       );
       return view;
-    } else if (element.type === Directive) {
-      return {
-        ...element,
-        id: this._renderCount++,
-        index,
-        parent,
-        children: [],
-        data: {
-          dirty: true,
-          cleanup: undefined,
-        },
-      };
     } else if (element.type === Fragment) {
       const view: View.FragmentView = {
         ...element,

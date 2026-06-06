@@ -7,7 +7,6 @@ export {
   type UsableObject,
 } from './component.js';
 export {
-  createDirective,
   createPortal,
   Ref,
   toElement,
