@@ -33,10 +33,6 @@ export abstract class DOMNode implements HostNode {
     return null;
   }
 
-  get refNode(): unknown {
-    return undefined;
-  }
-
   get value(): unknown {
     return null;
   }
@@ -61,8 +57,18 @@ export abstract class DOMNode implements HostNode {
 
   removeChild(child: DOMNode): void {
     this._children.delete(child);
+    child._beforeRemove();
     child._remove();
     child._parent = null;
+  }
+
+  /**
+   * @internal
+   */
+  _beforeRemove(): void {
+    for (const child of this._children) {
+      child._beforeRemove();
+    }
   }
 
   /**
@@ -114,6 +120,10 @@ export abstract class DOMPart<TNode extends ChildNode = ChildNode> {
     }
   }
 
+  afterCommit(): void {}
+
+  beforeRemove(): void {}
+
   protected _needsUpdate(oldValue: unknown, newValue: unknown): boolean {
     return !Object.is(oldValue, newValue);
   }
@@ -131,10 +141,6 @@ export class DOMBind extends DOMNode {
 
   get index(): number {
     return this._index;
-  }
-
-  override get refNode(): unknown {
-    return this._getPart()?.node;
   }
 
   override appendChild(child: DOMNode, after: DOMNode | null): void {
@@ -197,15 +203,25 @@ export class DOMBlock extends DOMNode {
     _props: VHostElement['props'],
   ): void {
     for (const child of this._children) {
-      if (child instanceof DOMBind) {
-        const part = this._parts[child.index];
-        if (part !== undefined) {
-          for (const descendant of child._children) {
-            descendant._mountBefore(part.node);
-            part.value = descendant.value;
-          }
+      const part = this._parts[(child as DOMBind).index];
+      if (part !== undefined) {
+        for (const descendant of child._children) {
+          descendant._mountBefore(part.node);
+          part.value = descendant.value;
         }
       }
+    }
+    for (const child of this._children) {
+      this._parts[(child as DOMBind).index]?.afterCommit();
+    }
+  }
+
+  /**
+   * @internal
+   */
+  override _beforeRemove(): void {
+    for (const child of this._children) {
+      this._parts[(child as DOMBind).index]?.beforeRemove();
     }
   }
 
@@ -250,10 +266,6 @@ export class DOMPortal extends DOMNode {
   }
 
   override get lastNode(): Element {
-    return this._container;
-  }
-
-  override get refNode(): Element {
     return this._container;
   }
 
@@ -339,7 +351,31 @@ export class ChildNodePart extends DOMPart<Comment> {
 }
 
 export class ElementPart extends DOMPart<Element> {
-  protected _update(_newValue: unknown): void {}
+  private _cleanup: (() => void) | void | undefined;
+
+  private _dirty: boolean = false;
+
+  protected _update(_oldValue: unknown, newValue: unknown): void {
+    if (!(newValue == null || typeof newValue === 'function')) {
+      throw new TypeError(
+        'Element values must be an function, null or undefined.',
+      );
+    }
+    this._dirty = true;
+  }
+
+  override afterCommit(): void {
+    if (this._dirty) {
+      this._cleanup?.();
+      this._cleanup = (this._value as Function)?.(this._node);
+      this._dirty = false;
+    }
+  }
+
+  override beforeRemove(): void {
+    this._cleanup?.();
+    this._cleanup = undefined;
+  }
 }
 
 export class EventPart extends DOMPart<Element> implements EventListenerObject {
