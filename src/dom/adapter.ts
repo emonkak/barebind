@@ -6,7 +6,7 @@ import {
   type VHostElement,
   type VTemplate,
 } from '../core.js';
-import { DOMBind, DOMPortal, DOMPrimitive } from './node.js';
+import { BindNode, PortalNode, PrimitiveNode } from './node.js';
 import { DOMTemplate } from './template.js';
 
 export class DOMAdapter implements HostAdapter {
@@ -21,13 +21,13 @@ export class DOMAdapter implements HostAdapter {
 
   createHostNode(element: VHostElement): HostNode {
     if (element.type === Bind) {
-      return new DOMBind(element.props.index);
+      return new BindNode(element.props.index);
     }
     if (element.type === Primitive) {
-      return new DOMPrimitive(element.props.value);
+      return new PrimitiveNode(element.props.value);
     }
     if (element.type instanceof Element) {
-      return new DOMPortal(element.type);
+      return new PortalNode(element.type);
     }
     const template = this._templateCache.getOrInsertComputed(element.type, () =>
       DOMTemplate.parse(
