@@ -57,7 +57,6 @@ export interface HostAdapter {
 }
 
 export interface HostNode {
-  get refNode(): unknown;
   appendChild(child: HostNode, after: HostNode | null): void;
   moveChild(child: HostNode, after: HostNode | null): void;
   removeChild(child: HostNode): void;
