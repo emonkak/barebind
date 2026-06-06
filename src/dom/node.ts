@@ -131,7 +131,7 @@ export abstract class DOMPart<TNode extends ChildNode = ChildNode> {
   protected abstract _update(oldValue: unknown, newValue: unknown): void;
 }
 
-export class DOMBind extends DOMNode {
+export class BindNode extends DOMNode {
   private readonly _index: number;
 
   constructor(index: number) {
@@ -170,13 +170,13 @@ export class DOMBind extends DOMNode {
   }
 
   private _getPart(): DOMPart | undefined {
-    return this._parent instanceof DOMBlock
+    return this._parent instanceof BlockNode
       ? this._parent._parts[this._index]
       : undefined;
   }
 }
 
-export class DOMBlock extends DOMNode {
+export class BlockNode extends DOMNode {
   readonly _fragment: DocumentFragment;
 
   readonly _staticNodes: ChildNode[];
@@ -203,7 +203,7 @@ export class DOMBlock extends DOMNode {
     _props: VHostElement['props'],
   ): void {
     for (const child of this._children) {
-      const part = this._parts[(child as DOMBind).index];
+      const part = this._parts[(child as BindNode).index];
       if (part !== undefined) {
         for (const descendant of child._children) {
           descendant._mountBefore(part.node);
@@ -212,7 +212,7 @@ export class DOMBlock extends DOMNode {
       }
     }
     for (const child of this._children) {
-      this._parts[(child as DOMBind).index]?.afterCommit();
+      this._parts[(child as BindNode).index]?.afterCommit();
     }
   }
 
@@ -221,7 +221,7 @@ export class DOMBlock extends DOMNode {
    */
   override _beforeRemove(): void {
     for (const child of this._children) {
-      this._parts[(child as DOMBind).index]?.beforeRemove();
+      this._parts[(child as BindNode).index]?.beforeRemove();
     }
   }
 
@@ -253,7 +253,7 @@ export class DOMBlock extends DOMNode {
   }
 }
 
-export class DOMPortal extends DOMNode {
+export class PortalNode extends DOMNode {
   private _container: Element;
 
   constructor(container: Element) {
@@ -283,7 +283,7 @@ export class DOMPortal extends DOMNode {
   }
 }
 
-export class DOMPrimitive extends DOMNode {
+export class PrimitiveNode extends DOMNode {
   private _value: unknown;
 
   constructor(value: unknown) {

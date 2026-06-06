@@ -2,8 +2,8 @@ import type { TemplateMode } from '../core.js';
 import { DOMTemplateError } from './error.js';
 import {
   AttributePart,
+  BlockNode,
   ChildNodePart,
-  DOMBlock,
   type DOMPart,
   ElementPart,
   EventPart,
@@ -138,7 +138,7 @@ export class DOMTemplate {
     this.mode = mode;
   }
 
-  render(): DOMBlock {
+  render(): BlockNode {
     const fragment = this.element.ownerDocument.importNode(
       this.element.content,
       true,
@@ -193,7 +193,7 @@ export class DOMTemplate {
       }
     }
 
-    return new DOMBlock(fragment, parts);
+    return new BlockNode(fragment, parts);
   }
 }
 
