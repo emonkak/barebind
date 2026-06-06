@@ -1,8 +1,8 @@
 import type { TemplateMode } from '../core.js';
 import { DOMTemplateError } from './error.js';
+import { BlockNode } from './node.js';
 import {
   AttributePart,
-  BlockNode,
   ChildNodePart,
   type DOMPart,
   ElementPart,
@@ -10,7 +10,7 @@ import {
   LivePart,
   PropertyPart,
   TextPart,
-} from './node.js';
+} from './part.js';
 
 const PLACEHOLDER_PATTERN = /^[0-9a-z_-]+$/;
 
