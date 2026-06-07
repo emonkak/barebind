@@ -7,6 +7,7 @@ import {
   type Lanes,
   type Reconciler,
   Ref,
+  type RenderNode,
   type Scope,
   type Thunk,
   type UpdateHandle,
@@ -14,13 +15,12 @@ import {
   type UpdateUnit,
   type VComponent,
   type VElement,
-  type View,
   VNode,
   wrap,
 } from './core.js';
 import { RenderError } from './error.js';
 import { NoLanes } from './lane.js';
-import { patch } from './view.js';
+import { patch } from './tree.js';
 
 const FinalizerType = 0;
 const EffectType = 1;
@@ -127,7 +127,7 @@ export class Component<TProps = any, TReturn = unknown>
   /** @internal */
   readonly _dispatcher: Dispatcher;
   /** @internal */
-  _connectedView: View.ComponentView | null = null;
+  _connectedNode: RenderNode.ComponentNode | null = null;
   /** @internal */
   _pendingLanes: Lanes = NoLanes;
   /** @internal */
@@ -146,25 +146,25 @@ export class Component<TProps = any, TReturn = unknown>
   }
 
   render(
-    view: View.ComponentView<TProps>,
+    node: RenderNode.ComponentNode<TProps>,
     scope: Scope,
     lanes: Lanes,
   ): VElement {
     try {
       this._pendingLanes &= ~lanes;
       const context = new RenderContext(this, scope);
-      const returnValue = this._componentFn.call(context, view.props);
+      const returnValue = this._componentFn.call(context, node.props);
       this._hooks = finalizeHooks(context);
       Object.freeze(scope.instances);
       return wrap(returnValue);
     } catch (cause) {
-      throw new RenderError(view, 'An error occurred during rendering.', {
+      throw new RenderError(node, 'An error occurred during rendering.', {
         cause,
       });
     }
   }
 
-  afterCommit(view: View.ComponentView<TProps>): void {
+  afterCommit(node: RenderNode.ComponentNode<TProps>): void {
     for (const hook of this._hooks) {
       if (hook.type === EffectType && hook.dirty) {
         hook.cleanup?.();
@@ -172,7 +172,7 @@ export class Component<TProps = any, TReturn = unknown>
         hook.dirty = false;
       }
     }
-    this._connectedView = view;
+    this._connectedNode = node;
   }
 
   beforeRemove(): void {
@@ -182,7 +182,7 @@ export class Component<TProps = any, TReturn = unknown>
         hook.cleanup = undefined;
       }
     }
-    this._connectedView = null;
+    this._connectedNode = null;
   }
 }
 
@@ -483,25 +483,25 @@ class UpdateComponent implements UpdateUnit {
   }
 
   produce(lanes: Lanes, reconciler: Reconciler): Thunk {
-    const oldView = this._instance._connectedView;
-    if (oldView === null) {
+    const oldNode = this._instance._connectedNode;
+    if (oldNode === null) {
       return noOp;
     }
-    const newView: View.ComponentView = {
-      ...oldView,
+    const newNode: RenderNode.ComponentNode = {
+      ...oldNode,
       id: reconciler.nextRenderId(),
-      children: oldView.children.slice(),
+      children: oldNode.children.slice(),
     };
     const newScope = this._scope.peer();
-    newView.children[0] = reconciler.diff(
-      newView.children[0]!,
-      newView.data.render(newView, newScope, lanes),
+    newNode.children[0] = reconciler.diff(
+      newNode.children[0]!,
+      newNode.data.render(newNode, newScope, lanes),
       newScope,
       0,
-      newView,
+      newNode,
     );
     return () => {
-      patch(oldView, newView);
+      patch(oldNode, newNode);
     };
   }
 }

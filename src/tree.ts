@@ -3,12 +3,12 @@ import {
   type HostNode,
   InsertType,
   RemoveType,
+  type RenderNode,
   UpdateAndMoveType,
   UpdateType,
-  type View,
 } from './core.js';
 
-export function mount(root: View.HostView): void {
+export function mount(root: RenderNode.NativeNode): void {
   for (const child of root.children) {
     appendChild(root.data, child, null);
   }
@@ -16,53 +16,53 @@ export function mount(root: View.HostView): void {
   afterCommit(root);
 }
 
-export function unmount(root: View.HostView): void {
+export function unmount(root: RenderNode.NativeNode): void {
   beforeRemove(root);
   for (const child of root.children) {
     removeChild(root.data, child);
   }
 }
 
-export function patch(oldView: View, newView: View) {
+export function patch(oldView: RenderNode, newView: RenderNode) {
   applyPatch(oldView, newView);
   afterCommit(newView);
   reparent(newView);
 }
 
-function afterCommit(view: View): void {
-  for (const descendant of view.children) {
+function afterCommit(node: RenderNode): void {
+  for (const descendant of node.children) {
     afterCommit(descendant);
   }
 
-  if (typeof view.type === 'function') {
-    view.data.afterCommit(view);
+  if (typeof node.type === 'function') {
+    node.data.afterCommit(node);
   }
 }
 
 function appendChild(
   parentNode: HostNode,
-  view: View,
+  node: RenderNode,
   afterNode: HostNode | null,
 ): void {
-  if (isInternalView(view)) {
-    for (const descendant of view.children) {
+  if (isInternalNode(node)) {
+    for (const descendant of node.children) {
       appendChild(parentNode, descendant, afterNode);
     }
   } else {
-    for (const descendant of view.children) {
-      appendChild(view.data, descendant, null);
+    for (const descendant of node.children) {
+      appendChild(node.data, descendant, null);
     }
-    parentNode.appendChild(view.data, afterNode);
-    view.data.commitMount(view.type, view.props);
+    parentNode.appendChild(node.data, afterNode);
+    node.data.commitMount(node.type, node.props);
   }
 }
 
-function applyPatch(oldView: View, newView: View): void {
+function applyPatch(oldView: RenderNode, newView: RenderNode): void {
   if (oldView.id === newView.id) {
     return;
   }
   if (oldView.type !== newView.type || oldView.key !== newView.key) {
-    removeSubview(getHostAncestor(oldView), oldView);
+    removeSubtree(getHostAncestor(oldView), oldView);
     appendChild(getHostAncestor(newView), newView, nextHostSibling(oldView));
   } else if (typeof newView.type === 'function') {
     applyPatch(oldView.children[0]!, newView.children[0]!);
@@ -74,27 +74,27 @@ function applyPatch(oldView: View, newView: View): void {
         case InsertType:
           appendChild(
             parentNode,
-            mutation.view,
-            mutation.afterView !== undefined
-              ? getHostDescendant(mutation.afterView)
+            mutation.node,
+            mutation.afterNode !== undefined
+              ? getHostDescendant(mutation.afterNode)
               : null,
           );
           break;
         case UpdateType:
-          applyPatch(mutation.oldView, mutation.newView);
+          applyPatch(mutation.oldNode, mutation.newNode);
           break;
         case UpdateAndMoveType:
           moveChild(
             parentNode,
-            mutation.newView,
-            mutation.afterView !== undefined
-              ? getHostDescendant(mutation.afterView)
+            mutation.newNode,
+            mutation.afterNode !== undefined
+              ? getHostDescendant(mutation.afterNode)
               : null,
           );
-          applyPatch(mutation.oldView, mutation.newView);
+          applyPatch(mutation.oldNode, mutation.newNode);
           break;
         case RemoveType:
-          removeSubview(parentNode, mutation.view);
+          removeSubtree(parentNode, mutation.node);
           break;
       }
     }
@@ -108,66 +108,66 @@ function applyPatch(oldView: View, newView: View): void {
 
     newView.data.commitUpdate(
       newView.type,
-      (oldView as View.HostView).props,
+      (oldView as RenderNode.NativeNode).props,
       newView.props,
     );
   }
 }
 
-function beforeRemove(view: View): void {
-  if (typeof view.type === 'function') {
-    view.data.beforeRemove();
+function beforeRemove(node: RenderNode): void {
+  if (typeof node.type === 'function') {
+    node.data.beforeRemove();
   }
-  for (const child of view.children) {
+  for (const child of node.children) {
     beforeRemove(child);
   }
 }
 
-function getHostAncestor(view: View): HostNode {
-  while (view.parent !== null) {
-    if (!isInternalView(view.parent)) {
-      return view.parent.data;
+function getHostAncestor(node: RenderNode): HostNode {
+  while (node.parent !== null) {
+    if (!isInternalNode(node.parent)) {
+      return node.parent.data;
     }
-    view = view.parent;
+    node = node.parent;
   }
-  return (view as View.HostView).data;
+  return (node as RenderNode.NativeNode).data;
 }
 
-function getHostDescendant(view: View): HostNode | null {
-  if (!isInternalView(view)) {
-    return view.data;
+function getHostDescendant(node: RenderNode): HostNode | null {
+  if (!isInternalNode(node)) {
+    return node.data;
   }
-  for (const child of view.children) {
+  for (const child of node.children) {
     const hostNode = getHostDescendant(child);
     if (hostNode !== null) {
       return hostNode;
     }
   }
-  return nextHostSibling(view);
+  return nextHostSibling(node);
 }
 
-function isInternalView(
-  view: View,
-): view is View.ComponentView | View.FragmentView {
-  return typeof view.type === 'function' || view.type === Fragment;
+function isInternalNode(
+  node: RenderNode,
+): node is RenderNode.ComponentNode | RenderNode.FragmentNode {
+  return typeof node.type === 'function' || node.type === Fragment;
 }
 
 function moveChild(
   parentNode: HostNode,
-  child: View,
+  child: RenderNode,
   afterNode: HostNode | null,
 ): void {
-  if (!isInternalView(child)) {
-    parentNode.moveChild(child.data, afterNode);
-  } else {
+  if (isInternalNode(child)) {
     for (const descendant of child.children) {
       moveChild(parentNode, descendant, afterNode);
     }
+  } else {
+    parentNode.moveChild(child.data, afterNode);
   }
 }
 
-function nextHostSibling(child: View): HostNode | null {
-  while (child.parent !== null && !isInternalView(child.parent)) {
+function nextHostSibling(child: RenderNode): HostNode | null {
+  while (child.parent !== null && !isInternalNode(child.parent)) {
     const parent = child.parent;
     for (let i = child.index + 1, l = parent.children.length; i < l; i++) {
       const hostNode = getHostDescendant(parent.children[i]!);
@@ -180,8 +180,8 @@ function nextHostSibling(child: View): HostNode | null {
   return null;
 }
 
-function removeChild(parentNode: HostNode, child: View): void {
-  if (isInternalView(child)) {
+function removeChild(parentNode: HostNode, child: RenderNode): void {
+  if (isInternalNode(child)) {
     for (const descendant of child.children) {
       removeChild(parentNode, descendant);
     }
@@ -190,13 +190,13 @@ function removeChild(parentNode: HostNode, child: View): void {
   }
 }
 
-function removeSubview(parentNode: HostNode, child: View): void {
+function removeSubtree(parentNode: HostNode, child: RenderNode): void {
   beforeRemove(child);
   removeChild(parentNode, child);
 }
 
-function reparent(view: View): void {
-  if (view.parent !== null) {
-    view.parent.children[view.index] = view;
+function reparent(node: RenderNode): void {
+  if (node.parent !== null) {
+    node.parent.children[node.index] = node;
   }
 }

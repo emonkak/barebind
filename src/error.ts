@@ -1,10 +1,10 @@
-import type { View } from './core.js';
+import type { RenderNode } from './core.js';
 import { formatComponentStack, getComponentStack } from './debug.js';
 
 export class RenderError extends Error {
-  constructor(view: View, message?: string, options?: ErrorOptions) {
+  constructor(node: RenderNode, message?: string, options?: ErrorOptions) {
     DEBUG: {
-      message += '\n' + formatComponentStack(getComponentStack(view));
+      message += '\n' + formatComponentStack(getComponentStack(node));
     }
     super(message, options);
   }

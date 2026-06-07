@@ -1,4 +1,4 @@
-import type { ComponentType, View } from './core.js';
+import type { ComponentType, RenderNode } from './core.js';
 
 export function formatComponentStack(
   componentStack: ComponentType<unknown>[],
@@ -14,9 +14,9 @@ export function formatComponentStack(
     .join('\n');
 }
 
-export function getComponentStack(view: View): ComponentType<unknown>[] {
+export function getComponentStack(node: RenderNode): ComponentType<unknown>[] {
   const componentStack: ComponentType<unknown>[] = [];
-  let current: View | null = view;
+  let current: RenderNode | null = node;
 
   do {
     if (typeof current.type === 'function') {
