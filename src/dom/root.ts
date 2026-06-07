@@ -1,18 +1,18 @@
 import {
   createPortal,
   type Dispatcher,
+  type RenderNode,
   Scope,
   type UpdateHandle,
   type UpdateOptions,
-  type View,
 } from '../core.js';
 import { AllLanes } from '../lane.js';
-import { mount, patch, unmount } from '../view.js';
+import { mount, patch, unmount } from '../tree.js';
 
 export class Root {
   private readonly _container: Element;
   private readonly _dispatcher: Dispatcher;
-  private _root: View.HostView | null = null;
+  private _root: RenderNode.NativeNode | null = null;
 
   constructor(container: Element, dispatcher: Dispatcher) {
     this._container = container;
@@ -31,7 +31,7 @@ export class Root {
             this._root !== null
               ? reconciler.diff(this._root, element, scope, 0, null)
               : reconciler.render(element, scope)
-          ) as View.HostView;
+          ) as RenderNode.NativeNode;
           return () => {
             if (this._root !== null) {
               patch(this._root, newRoot);

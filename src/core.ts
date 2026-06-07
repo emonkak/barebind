@@ -18,11 +18,11 @@ export interface ComponentType<TProps> {
 export interface ComponentInstance<TProps> {
   readonly pendingLanes: Lanes;
   render(
-    view: View.ComponentView<TProps>,
+    node: RenderNode.ComponentNode<TProps>,
     scope: Scope,
     lanes: Lanes,
   ): VElement;
-  afterCommit(view: View.ComponentView<TProps>): void;
+  afterCommit(node: RenderNode.ComponentNode<TProps>): void;
   beforeRemove(): void;
 }
 
@@ -70,60 +70,63 @@ export type Lanes = number;
 export type Mutation =
   | {
       type: typeof InsertType;
-      view: View;
-      afterView: View | undefined;
+      node: RenderNode;
+      afterNode: RenderNode | undefined;
     }
   | {
       type: typeof UpdateType;
-      oldView: View;
-      newView: View;
+      oldNode: RenderNode;
+      newNode: RenderNode;
     }
   | {
       type: typeof UpdateAndMoveType;
-      oldView: View;
-      newView: View;
-      afterView: View | undefined;
+      oldNode: RenderNode;
+      newNode: RenderNode;
+      afterNode: RenderNode | undefined;
     }
   | {
       type: typeof RemoveType;
-      view: View;
+      node: RenderNode;
     };
 
 export interface Reconciler {
   diff(
-    oldView: View,
+    oldNode: RenderNode,
     newElement: VElement,
     scope: Scope,
     index: number,
-    parent: View | null,
-  ): View;
+    parent: RenderNode | null,
+  ): RenderNode;
   nextRenderId(): number;
   render(
     element: VElement,
     scope: Scope,
     index?: number,
-    parent?: View | null,
-  ): View;
+    parent?: RenderNode | null,
+  ): RenderNode;
 }
 
-export type View = View.ComponentView | View.FragmentView | View.HostView;
+export type RenderNode =
+  | RenderNode.ComponentNode
+  | RenderNode.FragmentNode
+  | RenderNode.NativeNode;
 
-export namespace View {
-  interface AbstractView<TElement extends VElement, TData>
+export namespace RenderNode {
+  interface AbstractNode<TElement extends VElement, TData>
     extends Pick<TElement, 'type' | 'props' | 'key'> {
     id: number;
     index: number;
-    parent: View | null;
-    children: View[];
+    parent: RenderNode | null;
+    children: RenderNode[];
     data: TData;
   }
 
-  export interface ComponentView<TProps = any>
-    extends AbstractView<VComponent, ComponentInstance<TProps>> {}
+  export interface ComponentNode<TProps = any>
+    extends AbstractNode<VComponent, ComponentInstance<TProps>> {}
 
-  export interface FragmentView extends AbstractView<VFragment, Mutation[]> {}
+  export interface FragmentNode extends AbstractNode<VFragment, Mutation[]> {}
 
-  export interface HostView extends AbstractView<VHostElement, HostNode> {}
+  export interface NativeNode extends AbstractNode<VHostElement, HostNode> {}
 }
 
 export interface Renderable {

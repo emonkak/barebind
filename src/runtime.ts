@@ -7,6 +7,7 @@ import {
   type Mutation,
   type Reconciler,
   RemoveType,
+  type RenderNode,
   type Scope,
   type Thunk,
   UpdateAndMoveType,
@@ -15,7 +16,6 @@ import {
   UpdateType,
   type UpdateUnit,
   type VElement,
-  type View,
 } from './core.js';
 import {
   getHighestPriorityLane,
@@ -61,19 +61,19 @@ export class Runtime implements Reconciler, Dispatcher {
   }
 
   diff(
-    oldView: View,
+    oldView: RenderNode,
     newElement: VElement,
     scope: Scope,
     index: number,
-    parent: View | null,
-  ): View {
+    parent: RenderNode | null,
+  ): RenderNode {
     if (oldView.type !== newElement.type || oldView.key !== newElement.key) {
       return this.render(newElement, scope, index, parent);
     } else if (oldView.props === newElement.props) {
       return { ...oldView, index, parent };
     } else if (typeof newElement.type === 'function') {
-      const newView: View.ComponentView = {
-        ...(oldView as View.ComponentView),
+      const newView: RenderNode.ComponentNode = {
+        ...(oldView as RenderNode.ComponentNode),
         ...newElement,
         id: this._renderCount++,
         index,
@@ -81,10 +81,10 @@ export class Runtime implements Reconciler, Dispatcher {
         children: oldView.children.slice(),
       };
       if (
-        ((newView as View.ComponentView).data.pendingLanes &
+        ((newView as RenderNode.ComponentNode).data.pendingLanes &
           this._flushLanes) !==
           NoLanes ||
-        !(newView as View.ComponentView).type.arePropsEqual(
+        !(newView as RenderNode.ComponentNode).type.arePropsEqual(
           oldView.props,
           newElement.props,
         )
@@ -100,8 +100,8 @@ export class Runtime implements Reconciler, Dispatcher {
       }
       return newView;
     } else if (newElement.type === Fragment) {
-      const newView: View.FragmentView = {
-        ...(oldView as View.FragmentView),
+      const newView: RenderNode.FragmentNode = {
+        ...(oldView as RenderNode.FragmentNode),
         ...newElement,
         id: this._renderCount++,
         index,
@@ -110,7 +110,7 @@ export class Runtime implements Reconciler, Dispatcher {
         data: [],
       };
       this._diffChildren(
-        (oldView as View.FragmentView).children.slice(),
+        (oldView as RenderNode.FragmentNode).children.slice(),
         newView.children,
         newElement.children,
         scope,
@@ -119,8 +119,8 @@ export class Runtime implements Reconciler, Dispatcher {
       );
       return newView;
     } else {
-      const newView: View.HostView = {
-        ...(oldView as View.HostView),
+      const newView: RenderNode.NativeNode = {
+        ...(oldView as RenderNode.NativeNode),
         ...newElement,
         id: this._renderCount++,
         index,
@@ -156,10 +156,10 @@ export class Runtime implements Reconciler, Dispatcher {
     element: VElement,
     scope: Scope,
     index: number = 0,
-    parent: View | null = null,
-  ): View {
+    parent: RenderNode | null = null,
+  ): RenderNode {
     if (typeof element.type === 'function') {
-      const view: View.ComponentView = {
+      const node: RenderNode.ComponentNode = {
         ...element,
         id: this._renderCount++,
         index,
@@ -168,15 +168,15 @@ export class Runtime implements Reconciler, Dispatcher {
         data: element.type.newInstance(this),
       };
       const subScope = scope.child();
-      view.children[0] = this.render(
-        view.data.render(view, subScope, this._flushLanes),
+      node.children[0] = this.render(
+        node.data.render(node, subScope, this._flushLanes),
         subScope,
         0,
-        view,
+        node,
       );
-      return view;
+      return node;
     } else if (element.type === Fragment) {
-      const view: View.FragmentView = {
+      const node: RenderNode.FragmentNode = {
         ...element,
         id: this._renderCount++,
         index,
@@ -185,11 +185,11 @@ export class Runtime implements Reconciler, Dispatcher {
         data: [],
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
-        view.children[i] = this.render(element.children[i]!, scope, i, view);
+        node.children[i] = this.render(element.children[i]!, scope, i, node);
       }
-      return view;
+      return node;
     } else {
-      const view: View.HostView = {
+      const node: RenderNode.NativeNode = {
         ...element,
         id: this._renderCount++,
         index,
@@ -198,9 +198,9 @@ export class Runtime implements Reconciler, Dispatcher {
         data: this._adapter.createHostNode(element),
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
-        view.children[i] = this.render(element.children[i]!, scope, i, view);
+        node.children[i] = this.render(element.children[i]!, scope, i, node);
       }
-      return view;
+      return node;
     }
   }
 
@@ -241,11 +241,11 @@ export class Runtime implements Reconciler, Dispatcher {
   }
 
   private _diffChildren(
-    oldChildren: (View | undefined)[],
-    newChildren: View[],
+    oldChildren: (RenderNode | undefined)[],
+    newChildren: RenderNode[],
     newElements: VElement[],
     scope: Scope,
-    parent: View,
+    parent: RenderNode,
     mutations: Mutation[],
   ): void {
     const oldKeys = oldChildren.map((node) => node!.key);
@@ -261,11 +261,11 @@ export class Runtime implements Reconciler, Dispatcher {
     while (true) {
       if (newHead > newTail) {
         while (oldHead <= oldTail) {
-          const view = oldChildren[oldHead];
-          if (view !== undefined) {
+          const node = oldChildren[oldHead];
+          if (node !== undefined) {
             mutations.push({
               type: RemoveType,
-              view,
+              node,
             });
           }
           oldHead++;
@@ -274,7 +274,7 @@ export class Runtime implements Reconciler, Dispatcher {
       }
       if (oldHead > oldTail) {
         while (newHead <= newTail) {
-          const view = this.render(
+          const node = this.render(
             newElements[newHead]!,
             scope,
             newHead,
@@ -282,10 +282,10 @@ export class Runtime implements Reconciler, Dispatcher {
           );
           mutations.push({
             type: InsertType,
-            view,
-            afterView: newChildren[newTail + 1],
+            node,
+            afterNode: newChildren[newTail + 1],
           });
-          newChildren[newHead] = view;
+          newChildren[newHead] = node;
           newHead++;
         }
         break;
@@ -304,8 +304,8 @@ export class Runtime implements Reconciler, Dispatcher {
         );
         mutations.push({
           type: UpdateType,
-          oldView: oldChildren[oldHead]!,
-          newView,
+          oldNode: oldChildren[oldHead]!,
+          newNode: newView,
         });
         newChildren[newHead] = newView;
         oldHead++;
@@ -320,8 +320,8 @@ export class Runtime implements Reconciler, Dispatcher {
         );
         mutations.push({
           type: UpdateType,
-          oldView: oldChildren[oldTail]!,
-          newView,
+          oldNode: oldChildren[oldTail]!,
+          newNode: newView,
         });
         newChildren[newTail] = newView;
         oldTail--;
@@ -346,15 +346,15 @@ export class Runtime implements Reconciler, Dispatcher {
         );
         mutations.push({
           type: UpdateAndMoveType,
-          oldView: oldChildren[oldTail]!,
-          newView: tailView,
-          afterView: oldChildren[oldHead],
+          oldNode: oldChildren[oldTail]!,
+          newNode: tailView,
+          afterNode: oldChildren[oldHead],
         });
         mutations.push({
           type: UpdateAndMoveType,
-          oldView: oldChildren[oldHead]!,
-          newView: headView,
-          afterView: newChildren[newTail + 1],
+          oldNode: oldChildren[oldHead]!,
+          newNode: headView,
+          afterNode: newChildren[newTail + 1],
         });
         newChildren[newHead] = tailView;
         newChildren[newTail] = headView;
@@ -368,13 +368,13 @@ export class Runtime implements Reconciler, Dispatcher {
         if (!newKeyToIndexMap.has(oldKeys[oldHead]!)) {
           mutations.push({
             type: RemoveType,
-            view: oldChildren[oldHead]!,
+            node: oldChildren[oldHead]!,
           });
           oldHead++;
         } else if (!newKeyToIndexMap.has(oldKeys[oldTail]!)) {
           mutations.push({
             type: RemoveType,
-            view: oldChildren[oldTail]!,
+            node: oldChildren[oldTail]!,
           });
           oldTail--;
         } else {
@@ -396,14 +396,14 @@ export class Runtime implements Reconciler, Dispatcher {
             );
             mutations.push({
               type: UpdateAndMoveType,
-              oldView: oldChildren[oldIndex]!,
-              newView,
-              afterView: newChildren[newTail + 1],
+              oldNode: oldChildren[oldIndex]!,
+              newNode: newView,
+              afterNode: newChildren[newTail + 1],
             });
             newChildren[newTail] = newView;
             oldChildren[oldIndex] = undefined;
           } else {
-            const view = this.render(
+            const node = this.render(
               newElements[newTail]!,
               scope,
               newTail,
@@ -411,10 +411,10 @@ export class Runtime implements Reconciler, Dispatcher {
             );
             mutations.push({
               type: InsertType,
-              view,
-              afterView: newChildren[newTail + 1],
+              node,
+              afterNode: newChildren[newTail + 1],
             });
-            newChildren[newTail] = view;
+            newChildren[newTail] = node;
           }
 
           newTail--;
