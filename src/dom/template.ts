@@ -12,6 +12,14 @@ import {
   TextPart,
 } from './part.js';
 
+const HOLE_TYPE_ATTRIBUTE = 0;
+const HOLE_TYPE_CHILD_NODE = 1;
+const HOLE_TYPE_ELEMENT = 2;
+const HOLE_TYPE_EVENT = 3;
+const HOLE_TYPE_LIVE = 4;
+const HOLE_TYPE_PROPERTY = 5;
+const HOLE_TYPE_TEXT = 6;
+
 const PLACEHOLDER_PATTERN = /^[0-9a-z_-]+$/;
 
 const LEADING_NEWLINE_PATTERN = /^\s*\n/;
@@ -27,15 +35,7 @@ const ATTRIBUTE_NAME_PATTERN = new RegExp(
   'u',
 );
 
-export const AttributeType = 0;
-export const ChildNodeType = 1;
-export const ElementType = 2;
-export const EventType = 3;
-export const LiveType = 4;
-export const PropertyType = 5;
-export const TextType = 6;
-
-export type Hole =
+type Hole =
   | Hole.AttributeHole
   | Hole.ChildNodeHole
   | Hole.ElementHole
@@ -44,43 +44,43 @@ export type Hole =
   | Hole.PropertyHole
   | Hole.TextHole;
 
-export namespace Hole {
+namespace Hole {
   export interface AttributeHole {
-    type: typeof AttributeType;
+    type: typeof HOLE_TYPE_ATTRIBUTE;
     index: number;
     name: string;
   }
 
   export interface ChildNodeHole {
-    type: typeof ChildNodeType;
+    type: typeof HOLE_TYPE_CHILD_NODE;
     index: number;
   }
 
   export interface ElementHole {
-    type: typeof ElementType;
+    type: typeof HOLE_TYPE_ELEMENT;
     index: number;
   }
 
   export interface EventHole {
-    type: typeof EventType;
+    type: typeof HOLE_TYPE_EVENT;
     index: number;
     name: string;
   }
 
   export interface LiveHole {
-    type: typeof LiveType;
+    type: typeof HOLE_TYPE_LIVE;
     index: number;
     name: string;
   }
 
   export interface PropertyHole {
-    type: typeof PropertyType;
+    type: typeof HOLE_TYPE_PROPERTY;
     index: number;
     name: string;
   }
 
   export interface TextHole {
-    type: typeof TextType;
+    type: typeof HOLE_TYPE_TEXT;
     index: number;
     splitSpan: number;
     splitAfter: boolean;
@@ -166,25 +166,25 @@ export class DOMTemplate {
         let part: DOMPart;
 
         switch (hole.type) {
-          case AttributeType:
+          case HOLE_TYPE_ATTRIBUTE:
             part = new AttributePart(node as Element, hole.name);
             break;
-          case EventType:
+          case HOLE_TYPE_EVENT:
             part = new EventPart(node as Element, hole.name);
             break;
-          case ChildNodeType:
+          case HOLE_TYPE_CHILD_NODE:
             part = new ChildNodePart(node as Comment);
             break;
-          case ElementType:
+          case HOLE_TYPE_ELEMENT:
             part = new ElementPart(node as Element);
             break;
-          case LiveType:
+          case HOLE_TYPE_LIVE:
             part = new LivePart(node as Element, hole.name);
             break;
-          case PropertyType:
+          case HOLE_TYPE_PROPERTY:
             part = new PropertyPart(node as Element, hole.name);
             break;
-          case TextType:
+          case HOLE_TYPE_TEXT:
             part = splitTextPart(templateWalker, hole);
             break;
         }
@@ -226,7 +226,7 @@ function parseAttribtues(
 
     if (attribute.name === marker && attribute.value === '') {
       hole = {
-        type: ElementType,
+        type: HOLE_TYPE_ELEMENT,
         index: nodeIndex,
       };
     } else if (attribute.value === marker) {
@@ -244,28 +244,28 @@ function parseAttribtues(
       switch (caseSensitiveName[0]) {
         case '@':
           hole = {
-            type: EventType,
+            type: HOLE_TYPE_EVENT,
             index: nodeIndex,
             name: caseSensitiveName.slice(1),
           };
           break;
         case '$':
           hole = {
-            type: LiveType,
+            type: HOLE_TYPE_LIVE,
             index: nodeIndex,
             name: caseSensitiveName.slice(1),
           };
           break;
         case '.':
           hole = {
-            type: PropertyType,
+            type: HOLE_TYPE_PROPERTY,
             index: nodeIndex,
             name: caseSensitiveName.slice(1),
           };
           break;
         default:
           hole = {
-            type: AttributeType,
+            type: HOLE_TYPE_ATTRIBUTE,
             index: nodeIndex,
             name: caseSensitiveName,
           };
@@ -340,7 +340,7 @@ function parseChildren(
             nodeIndex++;
           }
           holes.push({
-            type: ChildNodeType,
+            type: HOLE_TYPE_CHILD_NODE,
             index: nodeIndex,
           });
           (currentNode as Comment).data = '';
@@ -366,7 +366,7 @@ function parseChildren(
         for (let i = 1; i <= tail; i++) {
           const component = components[i]!;
           holes.push({
-            type: TextType,
+            type: HOLE_TYPE_TEXT,
             index: nodeIndex,
             splitSpan: components[i - 1]!.length,
             splitAfter: i < tail || component.length > 0,
