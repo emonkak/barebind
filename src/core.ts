@@ -3,11 +3,10 @@ export const Fragment = Symbol.for('barebind.Fragment');
 export const Primitive = Symbol.for('barebind.Primitive');
 export const toElement = Symbol.for('barebind.toElement');
 
-// Mutation types
-export const InsertType = 0;
-export const UpdateType = 1;
-export const UpdateAndMoveType = 2;
-export const RemoveType = 3;
+export const MUTATION_TYPE_INSERT = 0;
+export const MUTATION_TYPE_UPDATE = 1;
+export const MUTATION_TYPE_UPDATE_AND_MOVE = 2;
+export const MUTATION_TYPE_REMOVE = 3;
 
 export interface ComponentType<TProps> {
   (props: TProps): VComponent<TProps>;
@@ -69,23 +68,23 @@ export type Lanes = number;
 
 export type Mutation =
   | {
-      type: typeof InsertType;
+      type: typeof MUTATION_TYPE_INSERT;
       node: RenderNode;
       afterNode: RenderNode | undefined;
     }
   | {
-      type: typeof UpdateType;
+      type: typeof MUTATION_TYPE_UPDATE;
       oldNode: RenderNode;
       newNode: RenderNode;
     }
   | {
-      type: typeof UpdateAndMoveType;
+      type: typeof MUTATION_TYPE_UPDATE_AND_MOVE;
       oldNode: RenderNode;
       newNode: RenderNode;
       afterNode: RenderNode | undefined;
     }
   | {
-      type: typeof RemoveType;
+      type: typeof MUTATION_TYPE_REMOVE;
       node: RenderNode;
     };
 

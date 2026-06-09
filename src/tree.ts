@@ -1,11 +1,11 @@
 import {
   Fragment,
   type HostNode,
-  InsertType,
-  RemoveType,
+  MUTATION_TYPE_INSERT,
+  MUTATION_TYPE_REMOVE,
+  MUTATION_TYPE_UPDATE,
+  MUTATION_TYPE_UPDATE_AND_MOVE,
   type RenderNode,
-  UpdateAndMoveType,
-  UpdateType,
 } from './core.js';
 
 export function mount(root: RenderNode.NativeNode): void {
@@ -71,7 +71,7 @@ function applyPatch(oldView: RenderNode, newView: RenderNode): void {
 
     for (const mutation of newView.data) {
       switch (mutation.type) {
-        case InsertType:
+        case MUTATION_TYPE_INSERT:
           appendChild(
             parentNode,
             mutation.node,
@@ -80,10 +80,10 @@ function applyPatch(oldView: RenderNode, newView: RenderNode): void {
               : null,
           );
           break;
-        case UpdateType:
+        case MUTATION_TYPE_UPDATE:
           applyPatch(mutation.oldNode, mutation.newNode);
           break;
-        case UpdateAndMoveType:
+        case MUTATION_TYPE_UPDATE_AND_MOVE:
           moveChild(
             parentNode,
             mutation.newNode,
@@ -93,7 +93,7 @@ function applyPatch(oldView: RenderNode, newView: RenderNode): void {
           );
           applyPatch(mutation.oldNode, mutation.newNode);
           break;
-        case RemoveType:
+        case MUTATION_TYPE_REMOVE:
           removeSubtree(parentNode, mutation.node);
           break;
       }

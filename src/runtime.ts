@@ -2,18 +2,18 @@ import {
   type Dispatcher,
   Fragment,
   type HostAdapter,
-  InsertType,
   type Lanes,
+  MUTATION_TYPE_INSERT,
+  MUTATION_TYPE_REMOVE,
+  MUTATION_TYPE_UPDATE,
+  MUTATION_TYPE_UPDATE_AND_MOVE,
   type Mutation,
   type Reconciler,
-  RemoveType,
   type RenderNode,
   type Scope,
   type Thunk,
-  UpdateAndMoveType,
   type UpdateHandle,
   type UpdateOptions,
-  UpdateType,
   type UpdateUnit,
   type VElement,
 } from './core.js';
@@ -264,7 +264,7 @@ export class Runtime implements Reconciler, Dispatcher {
           const node = oldChildren[oldHead];
           if (node !== undefined) {
             mutations.push({
-              type: RemoveType,
+              type: MUTATION_TYPE_REMOVE,
               node,
             });
           }
@@ -281,7 +281,7 @@ export class Runtime implements Reconciler, Dispatcher {
             parent,
           );
           mutations.push({
-            type: InsertType,
+            type: MUTATION_TYPE_INSERT,
             node,
             afterNode: newChildren[newTail + 1],
           });
@@ -303,7 +303,7 @@ export class Runtime implements Reconciler, Dispatcher {
           parent,
         );
         mutations.push({
-          type: UpdateType,
+          type: MUTATION_TYPE_UPDATE,
           oldNode: oldChildren[oldHead]!,
           newNode: newView,
         });
@@ -319,7 +319,7 @@ export class Runtime implements Reconciler, Dispatcher {
           parent,
         );
         mutations.push({
-          type: UpdateType,
+          type: MUTATION_TYPE_UPDATE,
           oldNode: oldChildren[oldTail]!,
           newNode: newView,
         });
@@ -345,13 +345,13 @@ export class Runtime implements Reconciler, Dispatcher {
           parent,
         );
         mutations.push({
-          type: UpdateAndMoveType,
+          type: MUTATION_TYPE_UPDATE_AND_MOVE,
           oldNode: oldChildren[oldTail]!,
           newNode: tailView,
           afterNode: oldChildren[oldHead],
         });
         mutations.push({
-          type: UpdateAndMoveType,
+          type: MUTATION_TYPE_UPDATE_AND_MOVE,
           oldNode: oldChildren[oldHead]!,
           newNode: headView,
           afterNode: newChildren[newTail + 1],
@@ -367,13 +367,13 @@ export class Runtime implements Reconciler, Dispatcher {
 
         if (!newKeyToIndexMap.has(oldKeys[oldHead]!)) {
           mutations.push({
-            type: RemoveType,
+            type: MUTATION_TYPE_REMOVE,
             node: oldChildren[oldHead]!,
           });
           oldHead++;
         } else if (!newKeyToIndexMap.has(oldKeys[oldTail]!)) {
           mutations.push({
-            type: RemoveType,
+            type: MUTATION_TYPE_REMOVE,
             node: oldChildren[oldTail]!,
           });
           oldTail--;
@@ -395,7 +395,7 @@ export class Runtime implements Reconciler, Dispatcher {
               parent,
             );
             mutations.push({
-              type: UpdateAndMoveType,
+              type: MUTATION_TYPE_UPDATE_AND_MOVE,
               oldNode: oldChildren[oldIndex]!,
               newNode: newView,
               afterNode: newChildren[newTail + 1],
@@ -410,7 +410,7 @@ export class Runtime implements Reconciler, Dispatcher {
               parent,
             );
             mutations.push({
-              type: InsertType,
+              type: MUTATION_TYPE_INSERT,
               node,
               afterNode: newChildren[newTail + 1],
             });
