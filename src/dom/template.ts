@@ -82,8 +82,9 @@ namespace Hole {
   export interface TextHole {
     type: typeof HOLE_TYPE_TEXT;
     index: number;
-    splitSpan: number;
-    splitAfter: boolean;
+    splitIndex: number;
+    leadingSpan: number;
+    trailingSpan: number;
   }
 }
 
@@ -139,10 +140,8 @@ export class DOMTemplate {
   }
 
   render(): BlockNode {
-    const fragment = this.element.ownerDocument.importNode(
-      this.element.content,
-      true,
-    );
+    const document = this.element.ownerDocument;
+    const fragment = document.importNode(this.element.content, true);
     const holes = this.holes;
     const parts: DOMPart[] = new Array(holes.length);
 
@@ -360,27 +359,26 @@ function parseChildren(
         const components = (currentNode as Text).data
           .split(marker)
           .map(stripWhitespaces);
-        const normalizedText = components.join('');
+        const wholeText = components.join('');
         const tail = components.length - 1;
 
         for (let i = 1; i <= tail; i++) {
-          const component = components[i]!;
           holes.push({
             type: HOLE_TYPE_TEXT,
             index: nodeIndex,
-            splitSpan: components[i - 1]!.length,
-            splitAfter: i < tail || component.length > 0,
+            splitIndex: i - 1,
+            leadingSpan: components[i - 1]!.length,
+            trailingSpan: i < tail ? 0 : components[i]!.length,
           });
         }
 
-        if (normalizedText === '' && components.length === 1) {
+        if (wholeText === '' && components.length === 1) {
           nextNode = sourceTree.nextNode();
           (currentNode as Text).remove();
           continue;
         }
 
-        (currentNode as Text).data = normalizedText;
-
+        (currentNode as Text).data = wholeText;
         break;
       }
     }
@@ -394,11 +392,14 @@ function parseChildren(
 
 function splitTextPart(treeWalker: TreeWalker, hole: Hole.TextHole): TextPart {
   let currentNode = treeWalker.currentNode as Text;
-  if (hole.splitSpan > 0) {
-    currentNode = currentNode.splitText(hole.splitSpan);
+  if (hole.splitIndex > 0) {
+    currentNode = currentNode.splitText(0);
+  }
+  if (hole.leadingSpan > 0) {
+    currentNode = currentNode.splitText(hole.leadingSpan);
   }
   const part = new TextPart(currentNode);
-  if (hole.splitAfter) {
+  if (hole.trailingSpan > 0) {
     currentNode = currentNode.splitText(0);
   }
   treeWalker.currentNode = currentNode;
