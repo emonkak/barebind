@@ -102,7 +102,7 @@ export class DOMTemplate {
     DEBUG: {
       if (!PLACEHOLDER_PATTERN.test(placeholder)) {
         throw new DOMException(
-          `Placeholders must match pattern ${PLACEHOLDER_PATTERN.source}, but got "${placeholder}".`,
+          `Placeholders must match pattern /${PLACEHOLDER_PATTERN.source}/, but got "${placeholder}".`,
         );
       }
     }
