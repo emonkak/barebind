@@ -216,11 +216,22 @@ export class BlockNode extends DOMNode {
 }
 
 export class PortalNode extends DOMNode {
-  private _container: Element;
+  private readonly _container: Element;
+
+  private readonly _marker: Comment;
 
   constructor(container: Element) {
     super();
     this._container = container;
+    this._marker = container.ownerDocument.createComment('');
+  }
+
+  override get firstNode(): ChildNode | null {
+    return this._marker;
+  }
+
+  override get lastNode(): ChildNode | null {
+    return this._marker;
   }
 
   override appendChild(child: DOMNode, after: DOMNode | null): void {
@@ -234,6 +245,13 @@ export class PortalNode extends DOMNode {
     for (const node of collectChildNodes(child.firstNode, child.lastNode)) {
       moveBefore.call(this._container, node, after?.firstNode ?? null);
     }
+  }
+
+  /**
+   * @internal
+   */
+  override _mountBefore(afterNode: ChildNode): void {
+    afterNode.before(this._marker);
   }
 
   /**
