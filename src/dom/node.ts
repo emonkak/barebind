@@ -45,7 +45,7 @@ export abstract class DOMNode implements HostNode {
   removeChild(child: DOMNode): void {
     this._children.delete(child);
     child._beforeRemove();
-    child._remove();
+    child._removeSubtree();
     child._parent = null;
   }
 
@@ -77,6 +77,15 @@ export abstract class DOMNode implements HostNode {
    * @internal
    */
   _remove(): void {
+    for (const child of this._children) {
+      child._remove();
+    }
+  }
+
+  /**
+   * @internal
+   */
+  _removeSubtree(): void {
     for (const child of this._children) {
       child._remove();
     }
@@ -174,6 +183,7 @@ export class BlockNode extends DOMNode {
   override _beforeRemove(): void {
     for (const child of this._children) {
       this._parts[(child as BindNode).index]?.beforeRemove();
+      child._beforeRemove();
     }
   }
 
@@ -196,12 +206,12 @@ export class BlockNode extends DOMNode {
   /**
    * @internal
    */
-  override _remove(): void {
+  override _removeSubtree(): void {
+    super._removeSubtree();
     for (const node of collectChildNodes(this.firstNode, this.lastNode)) {
       node.remove();
     }
     this._fragment.replaceChildren(...this._staticNodes);
-    this._parent = null;
   }
 }
 
@@ -211,14 +221,6 @@ export class PortalNode extends DOMNode {
   constructor(container: Element) {
     super();
     this._container = container;
-  }
-
-  override get firstNode(): Element {
-    return this._container;
-  }
-
-  override get lastNode(): Element {
-    return this._container;
   }
 
   override appendChild(child: DOMNode, after: DOMNode | null): void {
@@ -232,6 +234,25 @@ export class PortalNode extends DOMNode {
     for (const node of collectChildNodes(child.firstNode, child.lastNode)) {
       moveBefore.call(this._container, node, after?.firstNode ?? null);
     }
+  }
+
+  /**
+   * @internal
+   */
+  override _remove(): void {
+    for (const child of this._children) {
+      child._removeSubtree();
+    }
+  }
+
+  /**
+   * @internal
+   */
+  override _removeSubtree(): void {
+    for (const child of this._children) {
+      child._removeSubtree();
+    }
+    this._marker.remove();
   }
 }
 
