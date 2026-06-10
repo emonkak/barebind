@@ -131,17 +131,16 @@ export class BindNode extends DOMNode {
   }
 
   private _getPart(): DOMPart | undefined {
-    return this._parent instanceof BlockNode
-      ? this._parent._parts[this._index]
-      : undefined;
+    return (this._parent as BlockNode | undefined)?._parts[this._index];
   }
 }
 
 export class BlockNode extends DOMNode {
-  readonly _fragment: DocumentFragment;
+  private readonly _fragment: DocumentFragment;
 
-  readonly _staticNodes: ChildNode[];
+  private readonly _staticNodes: ChildNode[];
 
+  /** @internal */
   readonly _parts: DOMPart[];
 
   constructor(fragment: DocumentFragment, parts: DOMPart[]) {
@@ -164,12 +163,10 @@ export class BlockNode extends DOMNode {
     _props: VHostElement['props'],
   ): void {
     for (const child of this._children) {
-      const part = this._parts[(child as BindNode).index];
-      if (part !== undefined) {
-        for (const descendant of child._children) {
-          descendant._mountBefore(part.node);
-          part.value = descendant.value;
-        }
+      const part = this._parts[(child as BindNode).index]!;
+      for (const descendant of child._children) {
+        descendant._mountBefore(part.node);
+        part.value = descendant.value;
       }
     }
     for (const child of this._children) {
@@ -182,7 +179,7 @@ export class BlockNode extends DOMNode {
    */
   override _beforeRemove(): void {
     for (const child of this._children) {
-      this._parts[(child as BindNode).index]?.beforeRemove();
+      this._parts[(child as BindNode).index]!.beforeRemove();
       child._beforeRemove();
     }
   }
