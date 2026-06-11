@@ -7,7 +7,9 @@ export {
   type UsableObject,
 } from './component.js';
 export {
+  createFragment,
   createPortal,
+  createPrimitive,
   Ref,
   toElement,
 } from './core.js';
