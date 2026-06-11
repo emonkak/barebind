@@ -10,16 +10,16 @@ import {
 
 export function mount(root: RenderNode.NativeNode): void {
   for (const child of root.children) {
-    appendChild(root.data, child, null);
+    appendChild(root.state, child, null);
   }
-  root.data.commitMount(root.type, root.props);
+  root.state.commitMount(root.type, root.props);
   afterCommit(root);
 }
 
 export function unmount(root: RenderNode.NativeNode): void {
   beforeRemove(root);
   for (const child of root.children) {
-    removeChild(root.data, child);
+    removeChild(root.state, child);
   }
 }
 
@@ -35,7 +35,7 @@ function afterCommit(node: RenderNode): void {
   }
 
   if (typeof node.type === 'function') {
-    node.data.afterCommit(node);
+    node.state.afterCommit(node);
   }
 }
 
@@ -50,10 +50,10 @@ function appendChild(
     }
   } else {
     for (const descendant of node.children) {
-      appendChild(node.data, descendant, null);
+      appendChild(node.state, descendant, null);
     }
-    parentNode.appendChild(node.data, afterNode);
-    node.data.commitMount(node.type, node.props);
+    parentNode.appendChild(node.state, afterNode);
+    node.state.commitMount(node.type, node.props);
   }
 }
 
@@ -69,7 +69,7 @@ function applyPatch(oldView: RenderNode, newView: RenderNode): void {
   } else if (newView.type === Fragment) {
     const parentNode = getHostAncestor(newView);
 
-    for (const mutation of newView.data) {
+    for (const mutation of newView.state) {
       switch (mutation.type) {
         case MUTATION_TYPE_INSERT:
           appendChild(
@@ -106,7 +106,7 @@ function applyPatch(oldView: RenderNode, newView: RenderNode): void {
       applyPatch(oldChildren[i]!, newChildren[i]!);
     }
 
-    newView.data.commitUpdate(
+    newView.state.commitUpdate(
       newView.type,
       (oldView as RenderNode.NativeNode).props,
       newView.props,
@@ -116,7 +116,7 @@ function applyPatch(oldView: RenderNode, newView: RenderNode): void {
 
 function beforeRemove(node: RenderNode): void {
   if (typeof node.type === 'function') {
-    node.data.beforeRemove();
+    node.state.beforeRemove();
   }
   for (const child of node.children) {
     beforeRemove(child);
@@ -127,7 +127,7 @@ function getHostAncestor(node: RenderNode): HostNode {
   let current = node.parent;
   while (current !== null) {
     if (!isInternalNode(current)) {
-      return current.data;
+      return current.state;
     }
     current = current.parent;
   }
@@ -141,7 +141,7 @@ function getHostAncestor(node: RenderNode): HostNode {
 
 function getHostDescendant(node: RenderNode): HostNode | null {
   if (!isInternalNode(node)) {
-    return node.data;
+    return node.state;
   }
   for (const child of node.children) {
     const hostNode = getHostDescendant(child);
@@ -182,7 +182,7 @@ function moveChild(
       moveChild(parentNode, descendant, afterNode);
     }
   } else {
-    parentNode.moveChild(child.data, afterNode);
+    parentNode.moveChild(child.state, afterNode);
   }
 }
 
@@ -192,7 +192,7 @@ function removeChild(parentNode: HostNode, child: RenderNode): void {
       removeChild(parentNode, descendant);
     }
   } else {
-    parentNode.removeChild(child.data);
+    parentNode.removeChild(child.state);
   }
 }
 

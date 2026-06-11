@@ -111,13 +111,13 @@ export type RenderNode =
   | RenderNode.NativeNode;
 
 export namespace RenderNode {
-  interface AbstractNode<TElement extends VElement, TData>
+  interface AbstractNode<TElement extends VElement, TState>
     extends Pick<TElement, 'type' | 'props' | 'key'> {
     id: number;
     index: number;
     parent: RenderNode | null;
     children: RenderNode[];
-    data: TData;
+    state: TState;
   }
 
   export interface ComponentNode<TProps = any>

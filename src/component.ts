@@ -495,7 +495,7 @@ class UpdateComponent implements UpdateUnit {
     const newScope = this._scope.peer();
     newNode.children[0] = reconciler.diff(
       newNode.children[0]!,
-      newNode.data.render(newNode, newScope, lanes),
+      newNode.state.render(newNode, newScope, lanes),
       newScope,
       0,
       newNode,
