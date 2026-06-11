@@ -3,7 +3,7 @@ import type { DOMPart } from './part.js';
 
 const insertBefore = Element.prototype.insertBefore;
 const moveBefore =
-  /* v8 ignore next */
+  /** v8 ignore next @preserve */
   Element.prototype.moveBefore ?? Element.prototype.insertBefore;
 
 export abstract class DOMNode implements HostNode {
