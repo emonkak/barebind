@@ -241,16 +241,34 @@ export class VNode<TType, TProps, const TChildren extends VElement[]> {
   }
 }
 
-export function createFragment(value: unknown[]): VFragment {
-  return new VNode(Fragment, {}, Array.from(value, wrap));
+export function createBind(child: unknown, index: number): VBind {
+  return new VNode(Bind, { index }, [wrap(child)]);
 }
 
-export function createPortal(value: unknown, container: Element): VPortal {
-  return new VNode(container, {}, [wrap(value)]);
+export function createFragment(children: unknown[]): VFragment {
+  return new VNode(Fragment, {}, Array.from(children, wrap));
+}
+
+export function createPortal(child: unknown, container: Element): VPortal {
+  return new VNode(container, {}, [wrap(child)]);
 }
 
 export function createPrimitive(value: unknown): VPrimitive {
   return new VNode(Primitive, { value }, []);
+}
+
+export function createTemplate(
+  mode: TemplateMode,
+  strings: readonly string[],
+  children: readonly unknown[],
+): VTemplate {
+  return new VNode(
+    strings,
+    {
+      mode,
+    },
+    children.map(createBind),
+  );
 }
 
 export function wrap(value: unknown): VElement {

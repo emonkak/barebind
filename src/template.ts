@@ -1,11 +1,5 @@
 import { sequentialEqual } from './compare.js';
-import {
-  Bind,
-  type TemplateMode,
-  VNode,
-  type VTemplate,
-  wrap,
-} from './core.js';
+import { createTemplate, type VTemplate } from './core.js';
 
 const INTERPOLATION_CACHE = new WeakMap<readonly string[], Interpolation[]>();
 
@@ -131,20 +125,6 @@ export function text(
   ...children: unknown[]
 ): VTemplate {
   return createTemplate('textarea', strings, children);
-}
-
-function createTemplate(
-  mode: TemplateMode,
-  strings: readonly string[],
-  children: readonly unknown[],
-): VTemplate {
-  return new VNode(
-    strings,
-    {
-      mode,
-    },
-    children.map((child, index) => new VNode(Bind, { index }, [wrap(child)])),
-  );
 }
 
 function interpolatePartials(
