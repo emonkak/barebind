@@ -2,9 +2,6 @@ export { sequentialEqual, shallowEqual } from './compare.js';
 export {
   createComponent,
   RenderContext,
-  type Usable,
-  type UsableFunction,
-  type UsableObject,
 } from './component.js';
 export {
   createFragment,
