@@ -16,7 +16,7 @@ interface StyleMap {
 export abstract class DOMPart<TNode extends ChildNode = ChildNode> {
   protected readonly _node: TNode;
 
-  protected _value: unknown;
+  protected _value: unknown = null;
 
   constructor(node: TNode) {
     this._node = node;
