@@ -33,8 +33,8 @@ export abstract class DOMPart<TNode extends ChildNode = ChildNode> {
   set value(newValue: unknown) {
     if (this._needsUpdate(this._value, newValue)) {
       this._update(this._value, newValue);
-      this._value = newValue;
     }
+    this._value = newValue;
   }
 
   afterCommit(): void {}
