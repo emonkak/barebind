@@ -63,7 +63,7 @@ function applyPatch(oldView: RenderNode, newView: RenderNode): void {
   }
   if (oldView.type !== newView.type || oldView.key !== newView.key) {
     removeSubtree(getHostAncestor(oldView), oldView);
-    appendChild(getHostAncestor(newView), newView, nextHostSibling(oldView));
+    appendChild(getHostAncestor(newView), newView, getHostSibling(oldView));
   } else if (typeof newView.type === 'function') {
     applyPatch(oldView.children[0]!, newView.children[0]!);
   } else if (newView.type === Fragment) {
@@ -124,13 +124,19 @@ function beforeRemove(node: RenderNode): void {
 }
 
 function getHostAncestor(node: RenderNode): HostNode {
-  while (node.parent !== null) {
-    if (!isInternalNode(node.parent)) {
-      return node.parent.data;
+  let current = node.parent;
+  while (current !== null) {
+    if (!isInternalNode(current)) {
+      return current.data;
     }
-    node = node.parent;
+    current = current.parent;
   }
-  return (node as RenderNode.NativeNode).data;
+  /** v8 ignore next @preserve */
+  DEBUG: {
+    throw new Error(
+      'Failed to find a host ancestor. This error is likely caused by a bug.',
+    );
+  }
 }
 
 function getHostDescendant(node: RenderNode): HostNode | null {
@@ -143,7 +149,21 @@ function getHostDescendant(node: RenderNode): HostNode | null {
       return hostNode;
     }
   }
-  return nextHostSibling(node);
+  return getHostSibling(node);
+}
+
+function getHostSibling(child: RenderNode): HostNode | null {
+  while (child.parent !== null) {
+    const children = child.parent.children;
+    for (let i = child.index + 1, l = children.length; i < l; i++) {
+      const hostNode = getHostDescendant(children[i]!);
+      if (hostNode !== null) {
+        return hostNode;
+      }
+    }
+    child = child.parent;
+  }
+  return null;
 }
 
 function isInternalNode(
@@ -164,20 +184,6 @@ function moveChild(
   } else {
     parentNode.moveChild(child.data, afterNode);
   }
-}
-
-function nextHostSibling(child: RenderNode): HostNode | null {
-  while (child.parent !== null && !isInternalNode(child.parent)) {
-    const parent = child.parent;
-    for (let i = child.index + 1, l = parent.children.length; i < l; i++) {
-      const hostNode = getHostDescendant(parent.children[i]!);
-      if (hostNode !== null) {
-        return hostNode;
-      }
-    }
-    child = child.parent;
-  }
-  return null;
 }
 
 function removeChild(parentNode: HostNode, child: RenderNode): void {
