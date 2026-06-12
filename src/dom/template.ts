@@ -3,13 +3,12 @@ import { DOMTemplateError } from './error.js';
 import { BlockNode } from './node.js';
 import {
   AttributePart,
-  ChildNodePart,
+  CharacterDataPart,
   type DOMPart,
   ElementPart,
   EventPart,
   LivePart,
   PropertyPart,
-  TextPart,
 } from './part.js';
 
 const HOLE_TYPE_ATTRIBUTE = 0;
@@ -368,7 +367,7 @@ function resolvePart(hole: Hole, treeWalker: TreeWalker): DOMPart {
     case HOLE_TYPE_EVENT:
       return new EventPart(treeWalker.currentNode as Element, hole.name);
     case HOLE_TYPE_CHILD_NODE:
-      return new ChildNodePart(treeWalker.currentNode as Comment);
+      return new CharacterDataPart(treeWalker.currentNode as Comment);
     case HOLE_TYPE_ELEMENT:
       return new ElementPart(treeWalker.currentNode as Element);
     case HOLE_TYPE_LIVE:
@@ -380,7 +379,10 @@ function resolvePart(hole: Hole, treeWalker: TreeWalker): DOMPart {
   }
 }
 
-function splitTextPart(treeWalker: TreeWalker, hole: Hole.TextHole): TextPart {
+function splitTextPart(
+  treeWalker: TreeWalker,
+  hole: Hole.TextHole,
+): CharacterDataPart {
   let currentNode = treeWalker.currentNode as Text;
   if (hole.splitIndex > 0) {
     currentNode = currentNode.splitText(0);
@@ -388,7 +390,7 @@ function splitTextPart(treeWalker: TreeWalker, hole: Hole.TextHole): TextPart {
   if (hole.leadingSpan > 0) {
     currentNode = currentNode.splitText(hole.leadingSpan);
   }
-  const part = new TextPart(currentNode);
+  const part = new CharacterDataPart(currentNode);
   if (hole.trailingSpan > 0) {
     currentNode = currentNode.splitText(0);
   }
