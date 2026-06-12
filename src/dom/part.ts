@@ -87,7 +87,7 @@ export class AttributePart extends DOMPart<Element> {
   }
 }
 
-export class ChildNodePart extends DOMPart<Comment> {
+export class CharacterDataPart extends DOMPart<CharacterData> {
   protected _update(_oldValue: unknown, newValue: unknown): void {
     this._node.data = toStringOrEmpty(newValue);
   }
@@ -193,12 +193,6 @@ export class PropertyPart extends DOMPart<Element> {
 
   protected _update(_oldValue: unknown, newValue: unknown): void {
     (this._node as any)[this._name] = newValue;
-  }
-}
-
-export class TextPart extends DOMPart<Text> {
-  protected _update(_oldValue: unknown, newValue: unknown): void {
-    this._node.data = toStringOrEmpty(newValue);
   }
 }
 
