@@ -31,19 +31,13 @@ export abstract class DOMPart<TNode extends ChildNode = ChildNode> {
   }
 
   set value(newValue: unknown) {
-    if (this._needsUpdate(this._value, newValue)) {
-      this._update(this._value, newValue);
-    }
+    this._update(this._value, newValue);
     this._value = newValue;
   }
 
   afterCommit(): void {}
 
   beforeRemove(): void {}
-
-  protected _needsUpdate(oldValue: unknown, newValue: unknown): boolean {
-    return !Object.is(oldValue, newValue);
-  }
 
   protected abstract _update(oldValue: unknown, newValue: unknown): void;
 }
@@ -57,39 +51,43 @@ export class AttributePart extends DOMPart<Element> {
   }
 
   protected _update(oldValue: unknown, newValue: unknown): void {
-    if (this._name === 'class' && isObject(newValue)) {
-      if (!isObject(oldValue)) {
-        this._node.className = '';
-        oldValue = {};
+    if (!Object.is(oldValue, newValue)) {
+      if (this._name === 'class' && isObject(newValue)) {
+        if (!isObject(oldValue)) {
+          this._node.className = '';
+          oldValue = {};
+        }
+        updateClass(
+          this._node.classList,
+          oldValue as ClassMap,
+          newValue as ClassMap,
+        );
+      } else if (this._name === 'style' && isObject(newValue)) {
+        if (!isObject(oldValue)) {
+          (this._node as HTMLElement).style = '';
+          oldValue = {};
+        }
+        updateStyle(
+          (this._node as HTMLElement).style,
+          oldValue as StyleMap,
+          newValue as StyleMap,
+        );
+      } else if (newValue == null) {
+        this._node.removeAttribute(this._name);
+      } else if (typeof newValue === 'boolean') {
+        this._node.toggleAttribute(this._name, newValue);
+      } else {
+        this._node.setAttribute(this._name, toStringOrEmpty(newValue));
       }
-      updateClass(
-        this._node.classList,
-        oldValue as ClassMap,
-        newValue as ClassMap,
-      );
-    } else if (this._name === 'style' && isObject(newValue)) {
-      if (!isObject(oldValue)) {
-        (this._node as HTMLElement).style = '';
-        oldValue = {};
-      }
-      updateStyle(
-        (this._node as HTMLElement).style,
-        oldValue as StyleMap,
-        newValue as StyleMap,
-      );
-    } else if (newValue == null) {
-      this._node.removeAttribute(this._name);
-    } else if (typeof newValue === 'boolean') {
-      this._node.toggleAttribute(this._name, newValue);
-    } else {
-      this._node.setAttribute(this._name, toStringOrEmpty(newValue));
     }
   }
 }
 
 export class CharacterDataPart extends DOMPart<CharacterData> {
-  protected _update(_oldValue: unknown, newValue: unknown): void {
-    this._node.data = toStringOrEmpty(newValue);
+  protected _update(oldValue: unknown, newValue: unknown): void {
+    if (!Object.is(oldValue, newValue)) {
+      this._node.data = toStringOrEmpty(newValue);
+    }
   }
 }
 
@@ -98,13 +96,13 @@ export class ElementPart extends DOMPart<Element> {
 
   private _dirty: boolean = false;
 
-  protected _update(_oldValue: unknown, newValue: unknown): void {
+  protected _update(oldValue: unknown, newValue: unknown): void {
     if (!(newValue == null || typeof newValue === 'function')) {
       throw new TypeError(
         'Element values must be an function, null or undefined.',
       );
     }
-    this._dirty = true;
+    this._dirty = oldValue !== newValue;
   }
 
   override afterCommit(): void {
@@ -169,13 +167,6 @@ export class LivePart extends DOMPart<Element> {
     this._name = name;
   }
 
-  protected override _needsUpdate(
-    _oldValue: unknown,
-    _newValue: unknown,
-  ): boolean {
-    return true;
-  }
-
   protected _update(_oldValue: unknown, newValue: unknown): void {
     if ((this._node as any)[this._name] !== newValue) {
       (this._node as any)[this._name] = newValue;
@@ -191,8 +182,10 @@ export class PropertyPart extends DOMPart<Element> {
     this._name = name;
   }
 
-  protected _update(_oldValue: unknown, newValue: unknown): void {
-    (this._node as any)[this._name] = newValue;
+  protected _update(oldValue: unknown, newValue: unknown): void {
+    if (!Object.is(oldValue, newValue)) {
+      (this._node as any)[this._name] = newValue;
+    }
   }
 }
 
