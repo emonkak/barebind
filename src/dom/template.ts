@@ -151,7 +151,6 @@ export class DOMTemplate {
 
       for (let holeIndex = 0, l = holes.length; holeIndex < l; holeIndex++) {
         const hole = holes[holeIndex]!;
-
         for (; nodeIndex <= hole.index; nodeIndex++) {
           if (templateWalker.nextNode() === null) {
             throw new DOMTemplateError(
@@ -160,35 +159,7 @@ export class DOMTemplate {
             );
           }
         }
-
-        const node = templateWalker.currentNode;
-        let part: DOMPart;
-
-        switch (hole.type) {
-          case HOLE_TYPE_ATTRIBUTE:
-            part = new AttributePart(node as Element, hole.name);
-            break;
-          case HOLE_TYPE_EVENT:
-            part = new EventPart(node as Element, hole.name);
-            break;
-          case HOLE_TYPE_CHILD_NODE:
-            part = new ChildNodePart(node as Comment);
-            break;
-          case HOLE_TYPE_ELEMENT:
-            part = new ElementPart(node as Element);
-            break;
-          case HOLE_TYPE_LIVE:
-            part = new LivePart(node as Element, hole.name);
-            break;
-          case HOLE_TYPE_PROPERTY:
-            part = new PropertyPart(node as Element, hole.name);
-            break;
-          case HOLE_TYPE_TEXT:
-            part = splitTextPart(templateWalker, hole);
-            break;
-        }
-
-        parts[holeIndex] = part;
+        parts[holeIndex] = resolvePart(hole, templateWalker);
       }
     }
 
@@ -388,6 +359,25 @@ function parseChildren(
   }
 
   return holes;
+}
+
+function resolvePart(hole: Hole, treeWalker: TreeWalker): DOMPart {
+  switch (hole.type) {
+    case HOLE_TYPE_ATTRIBUTE:
+      return new AttributePart(treeWalker.currentNode as Element, hole.name);
+    case HOLE_TYPE_EVENT:
+      return new EventPart(treeWalker.currentNode as Element, hole.name);
+    case HOLE_TYPE_CHILD_NODE:
+      return new ChildNodePart(treeWalker.currentNode as Comment);
+    case HOLE_TYPE_ELEMENT:
+      return new ElementPart(treeWalker.currentNode as Element);
+    case HOLE_TYPE_LIVE:
+      return new LivePart(treeWalker.currentNode as Element, hole.name);
+    case HOLE_TYPE_PROPERTY:
+      return new PropertyPart(treeWalker.currentNode as Element, hole.name);
+    case HOLE_TYPE_TEXT:
+      return splitTextPart(treeWalker, hole);
+  }
 }
 
 function splitTextPart(treeWalker: TreeWalker, hole: Hole.TextHole): TextPart {
