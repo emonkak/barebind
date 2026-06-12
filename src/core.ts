@@ -8,13 +8,7 @@ export const MUTATION_TYPE_UPDATE = 1;
 export const MUTATION_TYPE_UPDATE_AND_MOVE = 2;
 export const MUTATION_TYPE_REMOVE = 3;
 
-export interface ComponentType<TProps> {
-  (props: TProps): VComponent<TProps>;
-  arePropsEqual(oldProps: TProps, newProps: TProps): boolean;
-  newInstance(dispatcher: Dispatcher): ComponentInstance<TProps>;
-}
-
-export interface ComponentInstance<TProps> {
+export interface Component<TProps> {
   readonly pendingLanes: Lanes;
   render(
     node: RenderNode.ComponentNode<TProps>,
@@ -23,6 +17,12 @@ export interface ComponentInstance<TProps> {
   ): VElement;
   afterCommit(node: RenderNode.ComponentNode<TProps>): void;
   beforeRemove(): void;
+}
+
+export interface ComponentType<TProps> {
+  (props: TProps): VComponent<TProps>;
+  arePropsEqual(oldProps: TProps, newProps: TProps): boolean;
+  newInstance(dispatcher: Dispatcher): Component<TProps>;
 }
 
 export interface Dispatcher {
@@ -121,7 +121,7 @@ export namespace RenderNode {
   }
 
   export interface ComponentNode<TProps = any>
-    extends AbstractNode<VComponent, ComponentInstance<TProps>> {}
+    extends AbstractNode<VComponent, Component<TProps>> {}
 
   export interface FragmentNode extends AbstractNode<VFragment, Mutation[]> {}
 

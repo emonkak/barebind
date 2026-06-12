@@ -1,6 +1,6 @@
 import { areDependenciesChange } from './compare.js';
 import {
-  type ComponentInstance,
+  type Component,
   type ComponentType,
   type Dispatcher,
   type Injectable,
@@ -120,8 +120,8 @@ namespace Hook {
   }
 }
 
-export class Component<TProps = any, TReturn = unknown>
-  implements ComponentInstance<TProps>
+export class FunctionComponent<TProps = any, TReturn = unknown>
+  implements Component<TProps>
 {
   /** @internal */
   readonly _componentFn: ComponentFunction<TProps, TReturn>;
@@ -188,14 +188,14 @@ export class Component<TProps = any, TReturn = unknown>
 }
 
 export class RenderContext {
-  private readonly _instance: Component;
+  private readonly _instance: FunctionComponent;
   private readonly _scope: Scope;
   /** @internal */
   readonly _hooks: Hook[];
   /** @internal */
   _hookIndex: number = 0;
 
-  constructor(instance: Component, scope: Scope) {
+  constructor(instance: FunctionComponent, scope: Scope) {
     this._instance = instance;
     this._scope = scope;
     this._hooks = instance._hooks.slice();
@@ -458,9 +458,8 @@ export function createComponent<TProps = {}, TReturn = unknown>(
     return new VNode(ComponentType, props, []);
   }
 
-  ComponentType.newInstance = (
-    dispatcher: Dispatcher,
-  ): ComponentInstance<TProps> => new Component(componentFn, dispatcher);
+  ComponentType.newInstance = (dispatcher: Dispatcher): Component<TProps> =>
+    new FunctionComponent(componentFn, dispatcher);
   ComponentType.arePropsEqual = arePropsEqual;
 
   DEBUG: {
@@ -473,10 +472,10 @@ export function createComponent<TProps = {}, TReturn = unknown>(
 }
 
 class UpdateComponent implements UpdateUnit {
-  private readonly _instance: Component;
+  private readonly _instance: FunctionComponent;
   private readonly _scope: Scope;
 
-  constructor(instance: Component, scope: Scope) {
+  constructor(instance: FunctionComponent, scope: Scope) {
     this._instance = instance;
     this._scope = scope;
   }
