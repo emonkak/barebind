@@ -146,20 +146,16 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
     return this._pendingLanes;
   }
 
-  render(
-    node: RenderNode.ComponentNode<TProps>,
-    scope: Scope,
-    lanes: Lanes,
-  ): VElement {
+  render(props: TProps, scope: Scope, lanes: Lanes): VElement {
     try {
       this._pendingLanes &= ~lanes;
       const context = new RenderContext(this, scope);
-      const returnValue = this._componentFn.call(context, node.props);
+      const returnValue = this._componentFn.call(context, props);
       this._hooks = finalizeHooks(context);
       Object.freeze(scope.instances);
       return wrap(returnValue);
     } catch (cause) {
-      throw new RenderError(node, 'An error occurred during rendering.', {
+      throw new RenderError(scope, 'An error occurred during rendering.', {
         cause,
       });
     }
@@ -498,10 +494,10 @@ class UpdateComponent implements UpdateUnit {
       id: reconciler.nextRenderId(),
       children: oldNode.children.slice(),
     };
-    const newScope = this._scope.peer();
+    const newScope = oldNode.state.scope.peer();
     newNode.children[0] = reconciler.diff(
       newNode.children[0]!,
-      newNode.state.handle.render(newNode, newScope, lanes),
+      newNode.state.handle.render(newNode.props, newScope, lanes),
       newScope,
       0,
       newNode,

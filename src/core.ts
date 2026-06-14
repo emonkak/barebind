@@ -16,11 +16,7 @@ export interface Component<TProps> {
 
 export interface ComponentHandle<TProps> {
   readonly pendingLanes: Lanes;
-  render(
-    node: RenderNode.ComponentNode<TProps>,
-    scope: Scope,
-    lanes: Lanes,
-  ): VElement;
+  render(props: TProps, scope: Scope, lanes: Lanes): VElement;
   connect(node: RenderNode.ComponentNode<TProps>): void;
   disconnect(): void;
 }
@@ -119,9 +115,10 @@ export namespace RenderNode {
     children: RenderNode[];
   }
 
-  export interface ComponentNode<TProps = any> extends Node<VComponent> {
+  export interface ComponentNode<TProps = unknown> extends Node<VComponent> {
     state: {
       handle: ComponentHandle<TProps>;
+      scope: Scope;
     };
   }
 
@@ -212,21 +209,31 @@ export class Scope {
   readonly parent: Scope | null;
   readonly level: number;
   readonly instances: object[] = [];
+  readonly owner: Component<unknown> | null = null;
 
-  constructor(parent: Scope | null = null, level: number = 0) {
+  static root(): Scope {
+    return new Scope(null, 0, null);
+  }
+
+  private constructor(
+    parent: Scope | null,
+    level: number,
+    owner: Component<unknown> | null,
+  ) {
     this.parent = parent;
     this.level = level;
+    this.owner = owner;
     DEBUG: {
       Object.freeze(this);
     }
   }
 
-  child(): Scope {
-    return new Scope(this, this.level + 1);
+  child(owner: Component<unknown>): Scope {
+    return new Scope(this, this.level + 1, owner);
   }
 
   peer(): Scope {
-    return new Scope(this.parent, this.level);
+    return new Scope(this.parent, this.level, this.owner);
   }
 }
 

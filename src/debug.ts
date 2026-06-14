@@ -1,4 +1,4 @@
-import type { Component, RenderNode } from './core.js';
+import type { Component, Scope } from './core.js';
 
 export function formatComponentStack(
   componentStack: Component<unknown>[],
@@ -14,16 +14,14 @@ export function formatComponentStack(
     .join('\n');
 }
 
-export function getComponentStack(node: RenderNode): Component<unknown>[] {
+export function getComponentStack(scope: Scope): Component<unknown>[] {
   const componentStack: Component<unknown>[] = [];
-  let current: RenderNode | null = node;
+  let current: Scope | null = scope;
 
-  do {
-    if (typeof current.type === 'function') {
-      componentStack.push(current.type);
-    }
+  while (current !== null && current.owner !== null) {
+    componentStack.push(current.owner!);
     current = current.parent;
-  } while (current != null);
+  }
 
   return componentStack;
 }
