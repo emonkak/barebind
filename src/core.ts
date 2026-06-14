@@ -15,8 +15,8 @@ export interface Component<TProps> {
     scope: Scope,
     lanes: Lanes,
   ): VElement;
-  afterCommit(node: RenderNode.ComponentNode<TProps>): void;
-  beforeRemove(): void;
+  connect(node: RenderNode.ComponentNode<TProps>): void;
+  disconnect(): void;
 }
 
 export interface ComponentType<TProps> {
