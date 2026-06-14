@@ -35,7 +35,7 @@ function afterCommit(node: RenderNode): void {
   }
 
   if (typeof node.type === 'function') {
-    node.state.afterCommit(node);
+    node.state.connect(node);
   }
 }
 
@@ -116,7 +116,7 @@ function applyPatch(oldView: RenderNode, newView: RenderNode): void {
 
 function beforeRemove(node: RenderNode): void {
   if (typeof node.type === 'function') {
-    node.state.beforeRemove();
+    node.state.disconnect();
   }
   for (const child of node.children) {
     beforeRemove(child);

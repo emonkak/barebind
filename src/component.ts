@@ -165,7 +165,7 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
     }
   }
 
-  afterCommit(node: RenderNode.ComponentNode<TProps>): void {
+  connect(node: RenderNode.ComponentNode<TProps>): void {
     for (const hook of this._hooks) {
       if (hook.type === EffectType && hook.dirty) {
         hook.cleanup?.();
@@ -176,7 +176,7 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
     this._connectedNode = node;
   }
 
-  beforeRemove(): void {
+  disconnect(): void {
     for (const hook of this._hooks) {
       if (hook.type === EffectType && hook.cleanup !== undefined) {
         hook.cleanup();
