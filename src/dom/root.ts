@@ -26,7 +26,7 @@ export class Root {
         pendingLanes: AllLanes,
         produce: (_lanes, reconciler) => {
           const element = createPortal(value, this._container);
-          const scope = new Scope();
+          const scope = Scope.root();
           const newRoot = (
             this._root !== null
               ? reconciler.diff(this._root, element, scope, 0, null)

@@ -89,10 +89,14 @@ export class Runtime implements Reconciler, Dispatcher {
           newElement.props,
         )
       ) {
-        const subScope = scope.child();
+        const subScope = scope.child(newElement.type);
         newView.children[0] = this.diff(
           newView.children[0]!,
-          newView.state.handle.render(newView, subScope, this._flushLanes),
+          newView.state.handle.render(
+            newView.props,
+            subScope,
+            this._flushLanes,
+          ),
           subScope,
           0,
           newView,
@@ -165,11 +169,11 @@ export class Runtime implements Reconciler, Dispatcher {
         index,
         parent,
         children: new Array(1),
-        state: { handle: element.type.newHandle(this) },
+        state: { handle: element.type.newHandle(this), scope },
       };
-      const subScope = scope.child();
+      const subScope = scope.child(element.type);
       node.children[0] = this.render(
-        node.state.handle.render(node, subScope, this._flushLanes),
+        node.state.handle.render(node.props, subScope, this._flushLanes),
         subScope,
         0,
         node,
