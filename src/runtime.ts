@@ -81,7 +81,7 @@ export class Runtime implements Reconciler, Dispatcher {
         children: oldView.children.slice(),
       };
       if (
-        ((newView as RenderNode.ComponentNode).state.pendingLanes &
+        ((newView as RenderNode.ComponentNode).state.handle.pendingLanes &
           this._flushLanes) !==
           NoLanes ||
         !(newView as RenderNode.ComponentNode).type.arePropsEqual(
@@ -92,7 +92,7 @@ export class Runtime implements Reconciler, Dispatcher {
         const subScope = scope.child();
         newView.children[0] = this.diff(
           newView.children[0]!,
-          newView.state.render(newView, subScope, this._flushLanes),
+          newView.state.handle.render(newView, subScope, this._flushLanes),
           subScope,
           0,
           newView,
@@ -107,7 +107,7 @@ export class Runtime implements Reconciler, Dispatcher {
         index,
         parent,
         children: new Array(newElement.children.length),
-        state: [],
+        state: { mutations: [] },
       };
       this._diffChildren(
         (oldView as RenderNode.FragmentNode).children.slice(),
@@ -115,7 +115,7 @@ export class Runtime implements Reconciler, Dispatcher {
         newElement.children,
         scope,
         newView,
-        newView.state,
+        newView.state.mutations,
       );
       return newView;
     } else {
@@ -165,11 +165,11 @@ export class Runtime implements Reconciler, Dispatcher {
         index,
         parent,
         children: new Array(1),
-        state: element.type.newInstance(this),
+        state: { handle: element.type.newHandle(this) },
       };
       const subScope = scope.child();
       node.children[0] = this.render(
-        node.state.render(node, subScope, this._flushLanes),
+        node.state.handle.render(node, subScope, this._flushLanes),
         subScope,
         0,
         node,
@@ -182,7 +182,7 @@ export class Runtime implements Reconciler, Dispatcher {
         index,
         parent,
         children: new Array(element.children.length),
-        state: [],
+        state: { mutations: [] },
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
         node.children[i] = this.render(element.children[i]!, scope, i, node);
@@ -195,7 +195,7 @@ export class Runtime implements Reconciler, Dispatcher {
         index,
         parent,
         children: new Array(element.children.length),
-        state: this._adapter.createHostNode(element),
+        state: { hostNode: this._adapter.createHostNode(element) },
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
         node.children[i] = this.render(element.children[i]!, scope, i, node);

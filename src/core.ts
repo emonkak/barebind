@@ -9,6 +9,12 @@ export const MUTATION_TYPE_UPDATE_AND_MOVE = 2;
 export const MUTATION_TYPE_REMOVE = 3;
 
 export interface Component<TProps> {
+  (props: TProps): VComponent<TProps>;
+  arePropsEqual(oldProps: TProps, newProps: TProps): boolean;
+  newHandle(dispatcher: Dispatcher): ComponentHandle<TProps>;
+}
+
+export interface ComponentHandle<TProps> {
   readonly pendingLanes: Lanes;
   render(
     node: RenderNode.ComponentNode<TProps>,
@@ -17,12 +23,6 @@ export interface Component<TProps> {
   ): VElement;
   connect(node: RenderNode.ComponentNode<TProps>): void;
   disconnect(): void;
-}
-
-export interface ComponentType<TProps> {
-  (props: TProps): VComponent<TProps>;
-  arePropsEqual(oldProps: TProps, newProps: TProps): boolean;
-  newInstance(dispatcher: Dispatcher): Component<TProps>;
 }
 
 export interface Dispatcher {
@@ -111,21 +111,31 @@ export type RenderNode =
   | RenderNode.NativeNode;
 
 export namespace RenderNode {
-  interface AbstractNode<TElement extends VElement, TState>
+  interface Node<TElement extends VElement>
     extends Pick<TElement, 'type' | 'props' | 'key'> {
     id: number;
     index: number;
     parent: RenderNode | null;
     children: RenderNode[];
-    state: TState;
   }
 
-  export interface ComponentNode<TProps = any>
-    extends AbstractNode<VComponent, Component<TProps>> {}
+  export interface ComponentNode<TProps = any> extends Node<VComponent> {
+    state: {
+      handle: ComponentHandle<TProps>;
+    };
+  }
 
-  export interface FragmentNode extends AbstractNode<VFragment, Mutation[]> {}
+  export interface FragmentNode extends Node<VFragment> {
+    state: {
+      mutations: Mutation[];
+    };
+  }
 
-  export interface NativeNode extends AbstractNode<VHostElement, HostNode> {}
+  export interface NativeNode extends Node<VHostElement> {
+    state: {
+      hostNode: HostNode;
+    };
+  }
 }
 
 export interface Renderable {
@@ -158,7 +168,7 @@ export interface UpdateUnit {
 
 export type VBind = VNode<typeof Bind, { index: number }, [VElement]>;
 
-export type VComponent<TProps = any> = VNode<ComponentType<TProps>, TProps, []>;
+export type VComponent<TProps = any> = VNode<Component<TProps>, TProps, []>;
 
 export type VElement = VComponent | VFragment | VHostElement;
 

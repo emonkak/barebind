@@ -9,17 +9,18 @@ import {
 } from './core.js';
 
 export function mount(root: RenderNode.NativeNode): void {
+  const { hostNode } = root.state;
   for (const child of root.children) {
-    appendChild(root.state, child, null);
+    appendChild(hostNode, child, null);
   }
-  root.state.commitMount(root.type, root.props);
+  hostNode.commitMount(root.type, root.props);
   afterCommit(root);
 }
 
 export function unmount(root: RenderNode.NativeNode): void {
   beforeRemove(root);
   for (const child of root.children) {
-    removeChild(root.state, child);
+    removeChild(root.state.hostNode, child);
   }
 }
 
@@ -35,7 +36,7 @@ function afterCommit(node: RenderNode): void {
   }
 
   if (typeof node.type === 'function') {
-    node.state.connect(node);
+    node.state.handle.connect(node);
   }
 }
 
@@ -49,11 +50,12 @@ function appendChild(
       appendChild(parentNode, descendant, afterNode);
     }
   } else {
+    const { hostNode } = node.state;
     for (const descendant of node.children) {
-      appendChild(node.state, descendant, null);
+      appendChild(hostNode, descendant, null);
     }
-    parentNode.appendChild(node.state, afterNode);
-    node.state.commitMount(node.type, node.props);
+    parentNode.appendChild(hostNode, afterNode);
+    hostNode.commitMount(node.type, node.props);
   }
 }
 
@@ -69,7 +71,7 @@ function applyPatch(oldView: RenderNode, newView: RenderNode): void {
   } else if (newView.type === Fragment) {
     const parentNode = getHostAncestor(newView);
 
-    for (const mutation of newView.state) {
+    for (const mutation of newView.state.mutations) {
       switch (mutation.type) {
         case MUTATION_TYPE_INSERT:
           appendChild(
@@ -106,7 +108,7 @@ function applyPatch(oldView: RenderNode, newView: RenderNode): void {
       applyPatch(oldChildren[i]!, newChildren[i]!);
     }
 
-    newView.state.commitUpdate(
+    newView.state.hostNode.commitUpdate(
       newView.type,
       (oldView as RenderNode.NativeNode).props,
       newView.props,
@@ -116,7 +118,7 @@ function applyPatch(oldView: RenderNode, newView: RenderNode): void {
 
 function beforeRemove(node: RenderNode): void {
   if (typeof node.type === 'function') {
-    node.state.disconnect();
+    node.state.handle.disconnect();
   }
   for (const child of node.children) {
     beforeRemove(child);
@@ -127,7 +129,7 @@ function getHostAncestor(node: RenderNode): HostNode {
   let current = node.parent;
   while (current !== null) {
     if (!isInternalNode(current)) {
-      return current.state;
+      return current.state.hostNode;
     }
     current = current.parent;
   }
@@ -141,7 +143,7 @@ function getHostAncestor(node: RenderNode): HostNode {
 
 function getHostDescendant(node: RenderNode): HostNode | null {
   if (!isInternalNode(node)) {
-    return node.state;
+    return node.state.hostNode;
   }
   for (const child of node.children) {
     const hostNode = getHostDescendant(child);
@@ -182,7 +184,7 @@ function moveChild(
       moveChild(parentNode, descendant, afterNode);
     }
   } else {
-    parentNode.moveChild(child.state, afterNode);
+    parentNode.moveChild(child.state.hostNode, afterNode);
   }
 }
 
@@ -192,7 +194,7 @@ function removeChild(parentNode: HostNode, child: RenderNode): void {
       removeChild(parentNode, descendant);
     }
   } else {
-    parentNode.removeChild(child.state);
+    parentNode.removeChild(child.state.hostNode);
   }
 }
 
