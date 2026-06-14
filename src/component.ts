@@ -1,7 +1,7 @@
 import { areDependenciesChange } from './compare.js';
 import {
   type Component,
-  type ComponentType,
+  type ComponentHandle,
   type Dispatcher,
   type Injectable,
   type Lanes,
@@ -121,7 +121,7 @@ namespace Hook {
 }
 
 export class FunctionComponent<TProps = any, TReturn = unknown>
-  implements Component<TProps>
+  implements ComponentHandle<TProps>
 {
   /** @internal */
   readonly _componentFn: ComponentFunction<TProps, TReturn>;
@@ -453,12 +453,12 @@ export class RenderContext {
 export function createComponent<TProps = {}, TReturn = unknown>(
   componentFn: ComponentFunction<TProps, TReturn>,
   { arePropsEqual = Object.is }: ComponentOptions<TProps> = {},
-): ComponentType<TProps> {
+): Component<TProps> {
   function ComponentType(props: TProps): VComponent<TProps> {
     return new VNode(ComponentType, props, []);
   }
 
-  ComponentType.newInstance = (dispatcher: Dispatcher): Component<TProps> =>
+  ComponentType.newHandle = (dispatcher: Dispatcher): ComponentHandle<TProps> =>
     new FunctionComponent(componentFn, dispatcher);
   ComponentType.arePropsEqual = arePropsEqual;
 
@@ -501,7 +501,7 @@ class UpdateComponent implements UpdateUnit {
     const newScope = this._scope.peer();
     newNode.children[0] = reconciler.diff(
       newNode.children[0]!,
-      newNode.state.render(newNode, newScope, lanes),
+      newNode.state.handle.render(newNode, newScope, lanes),
       newScope,
       0,
       newNode,

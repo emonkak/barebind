@@ -1,7 +1,7 @@
-import type { ComponentType, RenderNode } from './core.js';
+import type { Component, RenderNode } from './core.js';
 
 export function formatComponentStack(
-  componentStack: ComponentType<unknown>[],
+  componentStack: Component<unknown>[],
 ): string {
   const tail = componentStack.length - 1;
   return componentStack
@@ -14,8 +14,8 @@ export function formatComponentStack(
     .join('\n');
 }
 
-export function getComponentStack(node: RenderNode): ComponentType<unknown>[] {
-  const componentStack: ComponentType<unknown>[] = [];
+export function getComponentStack(node: RenderNode): Component<unknown>[] {
+  const componentStack: Component<unknown>[] = [];
   let current: RenderNode | null = node;
 
   do {
