@@ -24,10 +24,10 @@ export function unmount(root: RenderNode.NativeNode): void {
   }
 }
 
-export function patch(oldView: RenderNode, newView: RenderNode) {
-  applyPatch(oldView, newView);
-  afterCommit(newView);
-  reparent(newView);
+export function patch(oldNode: RenderNode, newNode: RenderNode) {
+  applyPatch(oldNode, newNode);
+  afterCommit(newNode);
+  reparent(newNode);
 }
 
 function afterCommit(node: RenderNode): void {
@@ -59,19 +59,19 @@ function appendChild(
   }
 }
 
-function applyPatch(oldView: RenderNode, newView: RenderNode): void {
-  if (oldView.id === newView.id) {
+function applyPatch(oldNode: RenderNode, newNode: RenderNode): void {
+  if (oldNode.id === newNode.id) {
     return;
   }
-  if (oldView.type !== newView.type || oldView.key !== newView.key) {
-    removeSubtree(getHostAncestor(oldView), oldView);
-    appendChild(getHostAncestor(newView), newView, getHostSibling(oldView));
-  } else if (typeof newView.type === 'function') {
-    applyPatch(oldView.children[0]!, newView.children[0]!);
-  } else if (newView.type === Fragment) {
-    const parentNode = getHostAncestor(newView);
+  if (oldNode.type !== newNode.type || oldNode.key !== newNode.key) {
+    removeSubtree(getHostAncestor(oldNode), oldNode);
+    appendChild(getHostAncestor(newNode), newNode, getHostSibling(oldNode));
+  } else if (typeof newNode.type === 'function') {
+    applyPatch(oldNode.children[0]!, newNode.children[0]!);
+  } else if (newNode.type === Fragment) {
+    const parentNode = getHostAncestor(newNode);
 
-    for (const mutation of newView.state.mutations) {
+    for (const mutation of newNode.state.mutations) {
       switch (mutation.type) {
         case MUTATION_TYPE_INSERT:
           appendChild(
@@ -101,17 +101,17 @@ function applyPatch(oldView: RenderNode, newView: RenderNode): void {
       }
     }
   } else {
-    const oldChildren = oldView.children;
-    const newChildren = newView.children;
+    const oldChildren = oldNode.children;
+    const newChildren = newNode.children;
 
     for (let i = 0, l = newChildren.length; i < l; i++) {
       applyPatch(oldChildren[i]!, newChildren[i]!);
     }
 
-    newView.state.hostNode.commitUpdate(
-      newView.type,
-      (oldView as RenderNode.NativeNode).props,
-      newView.props,
+    newNode.state.hostNode.commitUpdate(
+      newNode.type,
+      (oldNode as RenderNode.NativeNode).props,
+      newNode.props,
     );
   }
 }

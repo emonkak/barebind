@@ -61,51 +61,51 @@ export class Runtime implements Reconciler, Dispatcher {
   }
 
   diff(
-    oldView: RenderNode,
+    oldNode: RenderNode,
     newElement: VElement,
     scope: Scope,
     index: number,
     parent: RenderNode | null,
   ): RenderNode {
-    if (oldView.type !== newElement.type || oldView.key !== newElement.key) {
+    if (oldNode.type !== newElement.type || oldNode.key !== newElement.key) {
       return this.render(newElement, scope, index, parent);
-    } else if (oldView.props === newElement.props) {
-      return { ...oldView, index, parent };
+    } else if (oldNode.props === newElement.props) {
+      return { ...oldNode, index, parent };
     } else if (typeof newElement.type === 'function') {
-      const newView: RenderNode.ComponentNode = {
-        ...(oldView as RenderNode.ComponentNode),
+      const newNode: RenderNode.ComponentNode = {
+        ...(oldNode as RenderNode.ComponentNode),
         ...newElement,
         id: this._renderCount++,
         index,
         parent,
-        children: oldView.children.slice(),
+        children: oldNode.children.slice(),
       };
       if (
-        ((newView as RenderNode.ComponentNode).state.handle.pendingLanes &
+        ((newNode as RenderNode.ComponentNode).state.handle.pendingLanes &
           this._flushLanes) !==
           NoLanes ||
-        !(newView as RenderNode.ComponentNode).type.arePropsEqual(
-          oldView.props,
+        !(newNode as RenderNode.ComponentNode).type.arePropsEqual(
+          oldNode.props,
           newElement.props,
         )
       ) {
         const subScope = scope.child(newElement.type);
-        newView.children[0] = this.diff(
-          newView.children[0]!,
-          newView.state.handle.render(
-            newView.props,
+        newNode.children[0] = this.diff(
+          newNode.children[0]!,
+          newNode.state.handle.render(
+            newNode.props,
             subScope,
             this._flushLanes,
           ),
           subScope,
           0,
-          newView,
+          newNode,
         );
       }
-      return newView;
+      return newNode;
     } else if (newElement.type === Fragment) {
-      const newView: RenderNode.FragmentNode = {
-        ...(oldView as RenderNode.FragmentNode),
+      const newNode: RenderNode.FragmentNode = {
+        ...(oldNode as RenderNode.FragmentNode),
         ...newElement,
         id: this._renderCount++,
         index,
@@ -114,17 +114,17 @@ export class Runtime implements Reconciler, Dispatcher {
         state: { mutations: [] },
       };
       this._diffChildren(
-        (oldView as RenderNode.FragmentNode).children.slice(),
-        newView.children,
+        (oldNode as RenderNode.FragmentNode).children.slice(),
+        newNode.children,
         newElement.children,
         scope,
-        newView,
-        newView.state.mutations,
+        newNode,
+        newNode.state.mutations,
       );
-      return newView;
+      return newNode;
     } else {
-      const newView: RenderNode.NativeNode = {
-        ...(oldView as RenderNode.NativeNode),
+      const newNode: RenderNode.NativeNode = {
+        ...(oldNode as RenderNode.NativeNode),
         ...newElement,
         id: this._renderCount++,
         index,
@@ -132,15 +132,15 @@ export class Runtime implements Reconciler, Dispatcher {
         children: new Array(newElement.children.length),
       };
       for (let i = 0, l = newElement.children.length; i < l; i++) {
-        newView.children[i] = this.diff(
-          oldView.children[i]!,
+        newNode.children[i] = this.diff(
+          oldNode.children[i]!,
           newElement.children[i]!,
           scope,
           i,
-          newView,
+          newNode,
         );
       }
-      return newView;
+      return newNode;
     }
   }
 
@@ -299,7 +299,7 @@ export class Runtime implements Reconciler, Dispatcher {
       } else if (oldChildren[oldTail] === undefined) {
         oldTail--;
       } else if (Object.is(oldKeys[oldHead]!, newKeys[newHead]!)) {
-        const newView = this.diff(
+        const newNode = this.diff(
           oldChildren[oldHead]!,
           newElements[newHead]!,
           scope,
@@ -309,13 +309,13 @@ export class Runtime implements Reconciler, Dispatcher {
         mutations.push({
           type: MUTATION_TYPE_UPDATE,
           oldNode: oldChildren[oldHead]!,
-          newNode: newView,
+          newNode: newNode,
         });
-        newChildren[newHead] = newView;
+        newChildren[newHead] = newNode;
         oldHead++;
         newHead++;
       } else if (Object.is(oldKeys[oldTail]!, newKeys[newTail]!)) {
-        const newView = this.diff(
+        const newNode = this.diff(
           oldChildren[oldTail]!,
           newElements[newTail]!,
           scope,
@@ -325,23 +325,23 @@ export class Runtime implements Reconciler, Dispatcher {
         mutations.push({
           type: MUTATION_TYPE_UPDATE,
           oldNode: oldChildren[oldTail]!,
-          newNode: newView,
+          newNode: newNode,
         });
-        newChildren[newTail] = newView;
+        newChildren[newTail] = newNode;
         oldTail--;
         newTail--;
       } else if (
         Object.is(oldKeys[oldHead]!, newKeys[newTail]!) &&
         Object.is(oldKeys[oldTail]!, newKeys[newHead]!)
       ) {
-        const tailView = this.diff(
+        const tailNode = this.diff(
           oldChildren[oldTail]!,
           newElements[newHead]!,
           scope,
           newHead,
           parent,
         );
-        const headView = this.diff(
+        const headNode = this.diff(
           oldChildren[oldHead]!,
           newElements[newTail]!,
           scope,
@@ -351,17 +351,17 @@ export class Runtime implements Reconciler, Dispatcher {
         mutations.push({
           type: MUTATION_TYPE_UPDATE_AND_MOVE,
           oldNode: oldChildren[oldTail]!,
-          newNode: tailView,
+          newNode: tailNode,
           afterNode: oldChildren[oldHead],
         });
         mutations.push({
           type: MUTATION_TYPE_UPDATE_AND_MOVE,
           oldNode: oldChildren[oldHead]!,
-          newNode: headView,
+          newNode: headNode,
           afterNode: newChildren[newTail + 1],
         });
-        newChildren[newHead] = tailView;
-        newChildren[newTail] = headView;
+        newChildren[newHead] = tailNode;
+        newChildren[newTail] = headNode;
         oldHead++;
         newHead++;
         oldTail--;
@@ -391,7 +391,7 @@ export class Runtime implements Reconciler, Dispatcher {
             oldIndex <= oldTail &&
             oldChildren[oldIndex] !== undefined
           ) {
-            const newView = this.diff(
+            const newNode = this.diff(
               oldChildren[oldIndex]!,
               newElements[newTail]!,
               scope,
@@ -401,10 +401,10 @@ export class Runtime implements Reconciler, Dispatcher {
             mutations.push({
               type: MUTATION_TYPE_UPDATE_AND_MOVE,
               oldNode: oldChildren[oldIndex]!,
-              newNode: newView,
+              newNode: newNode,
               afterNode: newChildren[newTail + 1],
             });
-            newChildren[newTail] = newView;
+            newChildren[newTail] = newNode;
             oldChildren[oldIndex] = undefined;
           } else {
             const node = this.render(
