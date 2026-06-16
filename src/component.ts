@@ -500,6 +500,7 @@ class UpdateComponent implements UpdateUnit {
       newNode.state.handle.render(newNode.props, newScope, lanes),
       newScope,
       0,
+      newNode.hostIndex,
       newNode,
     );
     return () => {

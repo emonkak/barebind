@@ -37,6 +37,8 @@ function afterCommit(node: RenderNode): void {
 
   if (typeof node.type === 'function') {
     node.state.handle.connect(node);
+  } else if (typeof node.type === 'object') {
+    node.state.hostNode.afterCommit();
   }
 }
 
@@ -119,6 +121,8 @@ function applyPatch(oldNode: RenderNode, newNode: RenderNode): void {
 function beforeRemove(node: RenderNode): void {
   if (typeof node.type === 'function') {
     node.state.handle.disconnect();
+  } else if (typeof node.type === 'object') {
+    node.state.hostNode.beforeRemove();
   }
   for (const child of node.children) {
     beforeRemove(child);
@@ -195,6 +199,9 @@ function removeChild(parentNode: HostNode, child: RenderNode): void {
     }
   } else {
     parentNode.removeChild(child.state.hostNode);
+    for (const descendant of child.children) {
+      removeChild(child.state.hostNode, descendant);
+    }
   }
 }
 

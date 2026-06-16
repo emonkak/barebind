@@ -2,11 +2,10 @@ import {
   Bind,
   type HostAdapter,
   type HostNode,
-  Primitive,
   type VHostElement,
   type VTemplate,
 } from '../core.js';
-import { BindNode, PortalNode, PrimitiveNode } from './node.js';
+import { BindNode, PortalNode } from './node.js';
 import { DOMTemplate } from './template.js';
 
 export class DOMAdapter implements HostAdapter {
@@ -19,15 +18,12 @@ export class DOMAdapter implements HostAdapter {
     this._document = document;
   }
 
-  createHostNode(element: VHostElement): HostNode {
+  createHostNode(element: VHostElement, index: number): HostNode {
     if (element.type === Bind) {
-      return new BindNode(element.props.index);
-    }
-    if (element.type === Primitive) {
-      return new PrimitiveNode(element.props.value);
+      return new BindNode(index);
     }
     if (element.type instanceof Element) {
-      return new PortalNode(element.type);
+      return new PortalNode(index, element.type);
     }
     const template = this._templateCache.getOrInsertComputed(element.type, () =>
       DOMTemplate.parse(
@@ -38,7 +34,7 @@ export class DOMAdapter implements HostAdapter {
         this._document,
       ),
     );
-    return template.render();
+    return template.render(index);
   }
 
   getIdentifier(): string {

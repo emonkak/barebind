@@ -7,7 +7,6 @@ import {
   MUTATION_TYPE_REMOVE,
   MUTATION_TYPE_UPDATE,
   MUTATION_TYPE_UPDATE_AND_MOVE,
-  type Mutation,
   type Reconciler,
   type RenderNode,
   type Scope,
@@ -65,10 +64,11 @@ export class Runtime implements Reconciler, Dispatcher {
     newElement: VElement,
     scope: Scope,
     index: number,
+    hostIndex: number,
     parent: RenderNode | null,
   ): RenderNode {
     if (oldNode.type !== newElement.type || oldNode.key !== newElement.key) {
-      return this.render(newElement, scope, index, parent);
+      return this.render(newElement, scope, index, hostIndex, parent);
     } else if (oldNode.props === newElement.props) {
       return { ...oldNode, index, parent };
     } else if (typeof newElement.type === 'function') {
@@ -99,6 +99,7 @@ export class Runtime implements Reconciler, Dispatcher {
           ),
           subScope,
           0,
+          hostIndex,
           newNode,
         );
       }
@@ -118,6 +119,7 @@ export class Runtime implements Reconciler, Dispatcher {
         newNode,
         newElement.children,
         scope,
+        hostIndex,
       );
       return newNode;
     } else {
@@ -134,6 +136,7 @@ export class Runtime implements Reconciler, Dispatcher {
           oldNode.children[i]!,
           newElement.children[i]!,
           scope,
+          i,
           i,
           newNode,
         );
@@ -158,6 +161,7 @@ export class Runtime implements Reconciler, Dispatcher {
     element: VElement,
     scope: Scope,
     index: number = 0,
+    hostIndex: number = 0,
     parent: RenderNode | null = null,
   ): RenderNode {
     if (typeof element.type === 'function') {
@@ -165,6 +169,7 @@ export class Runtime implements Reconciler, Dispatcher {
         ...element,
         id: this._renderCount++,
         index,
+        hostIndex,
         parent,
         children: new Array(1),
         state: { handle: element.type.newHandle(this), scope },
@@ -174,6 +179,7 @@ export class Runtime implements Reconciler, Dispatcher {
         node.state.handle.render(node.props, subScope, this._flushLanes),
         subScope,
         0,
+        hostIndex,
         node,
       );
       return node;
@@ -182,12 +188,19 @@ export class Runtime implements Reconciler, Dispatcher {
         ...element,
         id: this._renderCount++,
         index,
+        hostIndex,
         parent,
         children: new Array(element.children.length),
         state: { mutations: [] },
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
-        node.children[i] = this.render(element.children[i]!, scope, i, node);
+        node.children[i] = this.render(
+          element.children[i]!,
+          scope,
+          i,
+          hostIndex,
+          node,
+        );
       }
       return node;
     } else {
@@ -195,12 +208,13 @@ export class Runtime implements Reconciler, Dispatcher {
         ...element,
         id: this._renderCount++,
         index,
+        hostIndex,
         parent,
         children: new Array(element.children.length),
-        state: { hostNode: this._adapter.createHostNode(element) },
+        state: { hostNode: this._adapter.createHostNode(element, hostIndex) },
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
-        node.children[i] = this.render(element.children[i]!, scope, i, node);
+        node.children[i] = this.render(element.children[i]!, scope, i, i, node);
       }
       return node;
     }
@@ -247,6 +261,7 @@ export class Runtime implements Reconciler, Dispatcher {
     newParent: RenderNode.FragmentNode,
     newElements: VElement[],
     scope: Scope,
+    hostIndex: number,
   ): void {
     const oldChildren: (RenderNode | undefined)[] = oldParent.children.slice();
     const newChildren = newParent.children;
@@ -281,6 +296,7 @@ export class Runtime implements Reconciler, Dispatcher {
             newElements[newHead]!,
             scope,
             newHead,
+            hostIndex,
             newParent,
           );
           mutations.push({
@@ -303,6 +319,7 @@ export class Runtime implements Reconciler, Dispatcher {
           newElements[newHead]!,
           scope,
           newHead,
+          hostIndex,
           newParent,
         );
         mutations.push({
@@ -319,6 +336,7 @@ export class Runtime implements Reconciler, Dispatcher {
           newElements[newTail]!,
           scope,
           newTail,
+          hostIndex,
           newParent,
         );
         mutations.push({
@@ -338,6 +356,7 @@ export class Runtime implements Reconciler, Dispatcher {
           newElements[newHead]!,
           scope,
           newHead,
+          hostIndex,
           newParent,
         );
         const headNode = this.diff(
@@ -345,6 +364,7 @@ export class Runtime implements Reconciler, Dispatcher {
           newElements[newTail]!,
           scope,
           newTail,
+          hostIndex,
           newParent,
         );
         mutations.push({
@@ -395,6 +415,7 @@ export class Runtime implements Reconciler, Dispatcher {
               newElements[newTail]!,
               scope,
               newTail,
+              hostIndex,
               newParent,
             );
             mutations.push({
@@ -410,6 +431,7 @@ export class Runtime implements Reconciler, Dispatcher {
               newElements[newTail]!,
               scope,
               newTail,
+              hostIndex,
               newParent,
             );
             mutations.push({

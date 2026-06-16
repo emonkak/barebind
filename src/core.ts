@@ -1,6 +1,5 @@
 export const Bind = Symbol.for('barebind.Bind');
 export const Fragment = Symbol.for('barebind.Fragment');
-export const Primitive = Symbol.for('barebind.Primitive');
 export const toElement = Symbol.for('barebind.toElement');
 
 export const MUTATION_TYPE_INSERT = 0;
@@ -29,7 +28,7 @@ export interface Dispatcher {
 }
 
 export interface HostAdapter {
-  createHostNode(element: VHostElement): HostNode;
+  createHostNode(element: VHostElement, index: number): HostNode;
   getIdentifier(): string;
   getTaskPriority(): TaskPriority;
   requestCommit(callback: () => void): Promise<void>;
@@ -45,6 +44,8 @@ export interface HostNode {
   appendChild(child: HostNode, after: HostNode | null): void;
   moveChild(child: HostNode, after: HostNode | null): void;
   removeChild(child: HostNode): void;
+  afterCommit(): void;
+  beforeRemove(): void;
   commitMount(type: VHostElement['type'], props: VHostElement['props']): void;
   commitUpdate(
     type: VHostElement['type'],
@@ -90,6 +91,7 @@ export interface Reconciler {
     newElement: VElement,
     scope: Scope,
     index: number,
+    hostIndex: number,
     parent: RenderNode | null,
   ): RenderNode;
   nextRenderId(): number;
@@ -97,6 +99,7 @@ export interface Reconciler {
     element: VElement,
     scope: Scope,
     index?: number,
+    hostIndex?: number,
     parent?: RenderNode | null,
   ): RenderNode;
 }
@@ -111,6 +114,7 @@ export namespace RenderNode {
     extends Pick<TElement, 'type' | 'props' | 'key'> {
     id: number;
     index: number;
+    hostIndex: number;
     parent: RenderNode | null;
     children: RenderNode[];
   }
@@ -163,7 +167,7 @@ export interface UpdateUnit {
   produce(lanes: Lanes, reconciler: Reconciler): Thunk;
 }
 
-export type VBind = VNode<typeof Bind, { index: number }, [VElement]>;
+export type VBind = VNode<typeof Bind, { value: unknown }, []>;
 
 export type VComponent<TProps = any> = VNode<Component<TProps>, TProps, []>;
 
@@ -171,18 +175,16 @@ export type VElement = VComponent | VFragment | VHostElement;
 
 export type VFragment = VNode<typeof Fragment, {}, VElement[]>;
 
-export type VHostElement = VBind | VPortal | VPrimitive | VTemplate;
+export type VHostElement = VBind | VPortal | VTemplate;
 
 export type VPortal = VNode<Element, {}, [VElement]>;
-
-export type VPrimitive = VNode<typeof Primitive, { value: unknown }, []>;
 
 export type VTemplate = VNode<
   readonly string[],
   {
     mode: TemplateMode;
   },
-  VBind[]
+  VElement[]
 >;
 
 export class Ref<T> implements Renderable {
@@ -195,8 +197,8 @@ export class Ref<T> implements Renderable {
     }
   }
 
-  [toElement](): VPrimitive {
-    return createPrimitive((instance: T) => {
+  [toElement](): VElement {
+    return createBind((instance: T) => {
       this.current = instance;
       return () => {
         this.current = null as T;
@@ -258,8 +260,8 @@ export class VNode<TType, TProps, const TChildren extends VElement[]> {
   }
 }
 
-export function createBind(child: unknown, index: number): VBind {
-  return new VNode(Bind, { index }, [wrap(child)]);
+export function createBind(value: unknown): VBind {
+  return new VNode(Bind, { value }, []);
 }
 
 export function createFragment(children: unknown[]): VFragment {
@@ -268,10 +270,6 @@ export function createFragment(children: unknown[]): VFragment {
 
 export function createPortal(child: unknown, container: Element): VPortal {
   return new VNode(container, {}, [wrap(child)]);
-}
-
-export function createPrimitive(value: unknown): VPrimitive {
-  return new VNode(Primitive, { value }, []);
 }
 
 export function createTemplate(
@@ -284,7 +282,7 @@ export function createTemplate(
     {
       mode,
     },
-    children.map(createBind),
+    children.map(wrap),
   );
 }
 
@@ -295,7 +293,7 @@ export function wrap(value: unknown): VElement {
       ? value[toElement]()
       : typeof value === 'object' && isIterable(value)
         ? createFragment(Array.from(value, wrap))
-        : createPrimitive(value);
+        : createBind(value);
 }
 
 function isIterable(value: any): value is Iterable<unknown> {

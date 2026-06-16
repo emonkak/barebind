@@ -138,7 +138,7 @@ export class DOMTemplate {
     this.mode = mode;
   }
 
-  render(): BlockNode {
+  render(index: number): BlockNode {
     const document = this.element.ownerDocument;
     const fragment = document.importNode(this.element.content, true);
     const holes = this.holes;
@@ -162,7 +162,7 @@ export class DOMTemplate {
       }
     }
 
-    return new BlockNode(fragment, parts);
+    return new BlockNode(index, fragment, parts);
   }
 }
 

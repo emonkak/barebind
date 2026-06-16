@@ -1,32 +1,34 @@
-import type { HostNode, VHostElement, VPrimitive } from '../core.js';
-import type { DOMPart } from './part.js';
-
-const insertBefore = Element.prototype.insertBefore;
-const moveBefore =
-  /** v8 ignore next @preserve */
-  Element.prototype.moveBefore ?? Element.prototype.insertBefore;
+import type { HostNode, VBind, VHostElement } from '../core.js';
+import { type DOMPart, ElementPart } from './part.js';
 
 export abstract class DOMNode implements HostNode {
   /** @internal */
-  _parent: DOMNode | null = null;
+  _index: number;
+
   /** @internal */
-  _children: Set<DOMNode> = new Set();
+  _part: DOMPart | null = null;
 
-  get firstNode(): ChildNode | null {
+  get startNode(): ChildNode | null {
     return null;
   }
 
-  get lastNode(): ChildNode | null {
+  get endNode(): ChildNode | null {
     return null;
   }
 
-  get value(): unknown {
-    return null;
+  constructor(index: number) {
+    this._index = index;
   }
 
-  appendChild(child: DOMNode, _after: DOMNode | null): void {
-    this._children.add(child);
-    child._parent = this;
+  appendChild(_child: DOMNode, _after: DOMNode | null): void {}
+
+  moveChild(child: DOMNode, after: DOMNode | null): void {
+    child._moveBefore(after?.startNode ?? this._part!.node);
+  }
+
+  removeChild(child: DOMNode): void {
+    child._part = null;
+    child._remove();
   }
 
   commitMount(
@@ -40,28 +42,9 @@ export abstract class DOMNode implements HostNode {
     _newProps: VHostElement['props'],
   ): void {}
 
-  moveChild(_child: DOMNode, _after: DOMNode | null): void {}
+  afterCommit(): void {}
 
-  removeChild(child: DOMNode): void {
-    this._children.delete(child);
-    child._beforeRemove();
-    child._removeSubtree();
-    child._parent = null;
-  }
-
-  /**
-   * @internal
-   */
-  _beforeRemove(): void {
-    for (const child of this._children) {
-      child._beforeRemove();
-    }
-  }
-
-  /**
-   * @internal
-   */
-  _invalidate(_child: DOMNode): void {}
+  beforeRemove(): void {}
 
   /**
    * @internal
@@ -71,67 +54,43 @@ export abstract class DOMNode implements HostNode {
   /**
    * @internal
    */
+  _mountInto(_parentNode: ParentNode, _afterNode: ChildNode | null): void {}
+
+  /**
+   * @internal
+   */
   _moveBefore(_afterNode: ChildNode): void {}
 
   /**
    * @internal
    */
-  _remove(): void {
-    for (const child of this._children) {
-      child._remove();
-    }
-  }
+  _moveInto(_parentNode: ParentNode, _afterNode: ChildNode | null): void {}
 
   /**
    * @internal
    */
-  _removeSubtree(): void {
-    for (const child of this._children) {
-      child._remove();
-    }
-  }
+  _remove(): void {}
 }
 
 export class BindNode extends DOMNode {
-  private readonly _index: number;
-
-  constructor(index: number) {
-    super();
-    this._index = index;
+  override get startNode(): ChildNode | null {
+    return this._part?.node ?? null;
   }
 
-  get index(): number {
-    return this._index;
+  override get endNode(): ChildNode | null {
+    return this._part?.node ?? null;
   }
 
-  override appendChild(child: DOMNode, after: DOMNode | null): void {
-    super.appendChild(child, after);
-    const part = this._getPart();
-    if (part !== undefined) {
-      child._mountBefore(after?.firstNode ?? part.node);
-      part.value = child.value;
-    }
+  override commitMount(_type: VBind['type'], props: VBind['props']): void {
+    this._part!.value = props.value;
   }
 
-  override moveChild(child: DOMNode, after: DOMNode | null): void {
-    const part = this._getPart();
-    if (part !== undefined) {
-      child._moveBefore(after?.firstNode ?? part.node);
-    }
-  }
-
-  /**
-   * @internal
-   */
-  override _invalidate(child: DOMNode): void {
-    const part = this._getPart();
-    if (part !== undefined) {
-      part.value = child.value;
-    }
-  }
-
-  private _getPart(): DOMPart | undefined {
-    return (this._parent as BlockNode | undefined)?._parts[this._index];
+  override commitUpdate(
+    _type: VBind['type'],
+    _oldProps: VBind['props'],
+    newProps: VBind['props'],
+  ): void {
+    this._part!.value = newProps.value;
   }
 }
 
@@ -143,44 +102,41 @@ export class BlockNode extends DOMNode {
   /** @internal */
   readonly _parts: DOMPart[];
 
-  constructor(fragment: DocumentFragment, parts: DOMPart[]) {
-    super();
+  constructor(index: number, fragment: DocumentFragment, parts: DOMPart[]) {
+    super(index);
     this._fragment = fragment;
     this._staticNodes = Array.from(fragment.childNodes);
     this._parts = parts;
   }
 
-  override get firstNode(): ChildNode | null {
+  override get startNode(): ChildNode | null {
     return this._staticNodes[0] ?? null;
   }
 
-  override get lastNode(): ChildNode | null {
+  override get endNode(): ChildNode | null {
     return this._staticNodes.at(-1) ?? null;
   }
 
-  override commitMount(
-    _type: VHostElement['type'],
-    _props: VHostElement['props'],
-  ): void {
-    for (const child of this._children) {
-      const part = this._parts[(child as BindNode).index]!;
-      for (const descendant of child._children) {
-        descendant._mountBefore(part.node);
-        part.value = descendant.value;
-      }
-    }
-    for (const child of this._children) {
-      this._parts[(child as BindNode).index]?.afterCommit();
+  override appendChild(child: DOMNode, after: DOMNode | null): void {
+    const part = this._parts[child._index]!;
+    child._mountBefore(after?.startNode ?? part.node);
+    child._part = part;
+  }
+
+  override moveChild(child: DOMNode, after: DOMNode | null): void {
+    const part = this._parts[child._index]!;
+    child._moveBefore(after?.startNode ?? part.node);
+  }
+
+  override afterCommit(): void {
+    for (const part of this._parts) {
+      part.afterCommit();
     }
   }
 
-  /**
-   * @internal
-   */
-  override _beforeRemove(): void {
-    for (const child of this._children) {
-      this._parts[(child as BindNode).index]!.beforeRemove();
-      child._beforeRemove();
+  override beforeRemove(): void {
+    for (const part of this._parts) {
+      part.beforeRemove();
     }
   }
 
@@ -194,18 +150,39 @@ export class BlockNode extends DOMNode {
   /**
    * @internal
    */
-  override _moveBefore(afterNode: ChildNode): void {
-    for (const node of collectChildNodes(this.firstNode, this.lastNode)) {
-      moveBefore.call(afterNode.parentNode, node, afterNode);
+  override _mountInto(
+    parentNode: ParentNode,
+    afterNode: ChildNode | null,
+  ): void {
+    parentNode.insertBefore(this._fragment, afterNode);
+  }
+
+  /**
+   * @internal
+   */
+  override _moveBefore(afterNode: ChildNode | null): void {
+    for (const node of collectChildNodes(this.startNode, this.endNode)) {
+      node.parentNode!.moveBefore(node, afterNode);
     }
   }
 
   /**
    * @internal
    */
-  override _removeSubtree(): void {
-    super._removeSubtree();
-    for (const node of collectChildNodes(this.firstNode, this.lastNode)) {
+  override _moveInto(
+    parentNode: ParentNode,
+    afterNode: ChildNode | null,
+  ): void {
+    for (const node of collectChildNodes(this.startNode, this.endNode)) {
+      parentNode.moveBefore(node, afterNode);
+    }
+  }
+
+  /**
+   * @internal
+   */
+  override _remove(): void {
+    for (const node of collectChildNodes(this.startNode, this.endNode)) {
       node.remove();
     }
     this._fragment.replaceChildren(...this._staticNodes);
@@ -215,81 +192,53 @@ export class BlockNode extends DOMNode {
 export class PortalNode extends DOMNode {
   private readonly _container: Element;
 
-  private readonly _marker: Comment;
+  private readonly _markerNode: Comment;
 
-  constructor(container: Element) {
-    super();
+  constructor(index: number, container: Element) {
+    super(index);
     this._container = container;
-    this._marker = container.ownerDocument.createComment('');
+    this._markerNode = container.ownerDocument.createComment('');
   }
 
-  override get firstNode(): ChildNode | null {
-    return this._marker;
+  override get startNode(): ChildNode | null {
+    return this._markerNode;
   }
 
-  override get lastNode(): ChildNode | null {
-    return this._marker;
+  override get endNode(): ChildNode | null {
+    return this._markerNode;
   }
 
   override appendChild(child: DOMNode, after: DOMNode | null): void {
-    super.appendChild(child, after);
-    for (const node of collectChildNodes(child.firstNode, child.lastNode)) {
-      insertBefore.call(this._container, node, after?.firstNode ?? null);
-    }
+    child._mountInto(this._container, after?.startNode ?? null);
+    child._part = new ElementPart(this._container);
   }
 
   override moveChild(child: DOMNode, after: DOMNode | null): void {
-    for (const node of collectChildNodes(child.firstNode, child.lastNode)) {
-      moveBefore.call(this._container, node, after?.firstNode ?? null);
-    }
+    child._moveInto(this._container, after?.startNode ?? null);
   }
 
   /**
    * @internal
    */
   override _mountBefore(afterNode: ChildNode): void {
-    afterNode.before(this._marker);
+    afterNode.before(this._markerNode);
+  }
+
+  /**
+   * @internal
+   */
+  override _mountInto(
+    parentNode: ParentNode,
+    afterNode: ChildNode | null,
+  ): void {
+    parentNode.insertBefore(this._markerNode, afterNode);
   }
 
   /**
    * @internal
    */
   override _remove(): void {
-    for (const child of this._children) {
-      child._removeSubtree();
-    }
-  }
-
-  /**
-   * @internal
-   */
-  override _removeSubtree(): void {
-    for (const child of this._children) {
-      child._removeSubtree();
-    }
-    this._marker.remove();
-  }
-}
-
-export class PrimitiveNode extends DOMNode {
-  private _value: unknown;
-
-  constructor(value: unknown) {
-    super();
-    this._value = value;
-  }
-
-  override get value(): unknown {
-    return this._value;
-  }
-
-  override commitUpdate(
-    _type: VPrimitive['type'],
-    _oldProps: VPrimitive['props'],
-    newProps: VPrimitive['props'],
-  ): void {
-    this._value = newProps.value;
-    this._parent?._invalidate(this);
+    this._markerNode.remove();
   }
 }
 
