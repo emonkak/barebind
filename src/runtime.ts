@@ -70,15 +70,18 @@ export class Runtime implements Reconciler, Dispatcher {
     if (oldNode.type !== newElement.type || oldNode.key !== newElement.key) {
       return this.render(newElement, scope, index, hostIndex, parent);
     } else if (oldNode.props === newElement.props) {
-      return { ...oldNode, index, parent };
+      return { ...oldNode, index, hostIndex, parent };
     } else if (typeof newElement.type === 'function') {
       const newNode: RenderNode.ComponentNode = {
-        ...(oldNode as RenderNode.ComponentNode),
-        ...newElement,
         id: this._renderCount++,
+        type: newElement.type,
+        props: newElement.props,
+        key: newElement.key,
         index,
+        hostIndex,
         parent,
         children: oldNode.children.slice(),
+        state: (oldNode as RenderNode.ComponentNode).state,
       };
       if (
         ((newNode as RenderNode.ComponentNode).state.handle.pendingLanes &
@@ -106,10 +109,12 @@ export class Runtime implements Reconciler, Dispatcher {
       return newNode;
     } else if (newElement.type === Fragment) {
       const newNode: RenderNode.FragmentNode = {
-        ...(oldNode as RenderNode.FragmentNode),
-        ...newElement,
         id: this._renderCount++,
+        type: newElement.type,
+        props: newElement.props,
+        key: newElement.key,
         index,
+        hostIndex,
         parent,
         children: new Array(newElement.children.length),
         state: { mutations: [] },
@@ -124,12 +129,15 @@ export class Runtime implements Reconciler, Dispatcher {
       return newNode;
     } else {
       const newNode: RenderNode.NativeNode = {
-        ...(oldNode as RenderNode.NativeNode),
-        ...newElement,
         id: this._renderCount++,
+        type: newElement.type,
+        props: newElement.props,
+        key: newElement.key,
         index,
+        hostIndex,
         parent,
         children: new Array(newElement.children.length),
+        state: (oldNode as RenderNode.NativeNode).state,
       };
       for (let i = 0, l = newElement.children.length; i < l; i++) {
         newNode.children[i] = this.diff(
@@ -166,8 +174,10 @@ export class Runtime implements Reconciler, Dispatcher {
   ): RenderNode {
     if (typeof element.type === 'function') {
       const node: RenderNode.ComponentNode = {
-        ...element,
         id: this._renderCount++,
+        type: element.type,
+        props: element.props,
+        key: element.key,
         index,
         hostIndex,
         parent,
@@ -185,8 +195,10 @@ export class Runtime implements Reconciler, Dispatcher {
       return node;
     } else if (element.type === Fragment) {
       const node: RenderNode.FragmentNode = {
-        ...element,
         id: this._renderCount++,
+        type: element.type,
+        props: element.props,
+        key: element.key,
         index,
         hostIndex,
         parent,
@@ -205,8 +217,10 @@ export class Runtime implements Reconciler, Dispatcher {
       return node;
     } else {
       const node: RenderNode.NativeNode = {
-        ...element,
         id: this._renderCount++,
+        type: element.type,
+        props: element.props,
+        key: element.key,
         index,
         hostIndex,
         parent,
