@@ -110,9 +110,11 @@ export type RenderNode =
   | RenderNode.NativeNode;
 
 export namespace RenderNode {
-  interface Node<TElement extends VElement>
-    extends Pick<TElement, 'type' | 'props' | 'key'> {
+  interface Node<TElement extends VElement> {
     id: number;
+    type: TElement['type'];
+    props: TElement['props'];
+    key: TElement['key'];
     index: number;
     hostIndex: number;
     parent: RenderNode | null;
