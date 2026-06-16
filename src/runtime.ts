@@ -114,12 +114,10 @@ export class Runtime implements Reconciler, Dispatcher {
         state: { mutations: [] },
       };
       this._diffChildren(
-        (oldNode as RenderNode.FragmentNode).children.slice(),
-        newNode.children,
+        oldNode as RenderNode.FragmentNode,
+        newNode,
         newElement.children,
         scope,
-        newNode,
-        newNode.state.mutations,
       );
       return newNode;
     } else {
@@ -245,15 +243,16 @@ export class Runtime implements Reconciler, Dispatcher {
   }
 
   private _diffChildren(
-    oldChildren: (RenderNode | undefined)[],
-    newChildren: RenderNode[],
+    oldParent: RenderNode.FragmentNode,
+    newParent: RenderNode.FragmentNode,
     newElements: VElement[],
     scope: Scope,
-    parent: RenderNode,
-    mutations: Mutation[],
   ): void {
+    const oldChildren: (RenderNode | undefined)[] = oldParent.children.slice();
+    const newChildren = newParent.children;
     const oldKeys = oldChildren.map((node) => node!.key);
     const newKeys = newElements.map((element) => element.key);
+    const mutations = newParent.state.mutations;
 
     let oldHead = 0;
     let newHead = 0;
@@ -282,7 +281,7 @@ export class Runtime implements Reconciler, Dispatcher {
             newElements[newHead]!,
             scope,
             newHead,
-            parent,
+            newParent,
           );
           mutations.push({
             type: MUTATION_TYPE_INSERT,
@@ -304,7 +303,7 @@ export class Runtime implements Reconciler, Dispatcher {
           newElements[newHead]!,
           scope,
           newHead,
-          parent,
+          newParent,
         );
         mutations.push({
           type: MUTATION_TYPE_UPDATE,
@@ -320,7 +319,7 @@ export class Runtime implements Reconciler, Dispatcher {
           newElements[newTail]!,
           scope,
           newTail,
-          parent,
+          newParent,
         );
         mutations.push({
           type: MUTATION_TYPE_UPDATE,
@@ -339,14 +338,14 @@ export class Runtime implements Reconciler, Dispatcher {
           newElements[newHead]!,
           scope,
           newHead,
-          parent,
+          newParent,
         );
         const headNode = this.diff(
           oldChildren[oldHead]!,
           newElements[newTail]!,
           scope,
           newTail,
-          parent,
+          newParent,
         );
         mutations.push({
           type: MUTATION_TYPE_UPDATE_AND_MOVE,
@@ -396,7 +395,7 @@ export class Runtime implements Reconciler, Dispatcher {
               newElements[newTail]!,
               scope,
               newTail,
-              parent,
+              newParent,
             );
             mutations.push({
               type: MUTATION_TYPE_UPDATE_AND_MOVE,
@@ -411,7 +410,7 @@ export class Runtime implements Reconciler, Dispatcher {
               newElements[newTail]!,
               scope,
               newTail,
-              parent,
+              newParent,
             );
             mutations.push({
               type: MUTATION_TYPE_INSERT,
