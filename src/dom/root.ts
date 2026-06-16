@@ -29,7 +29,7 @@ export class Root {
           const scope = Scope.root();
           const newRoot = (
             this._root !== null
-              ? reconciler.diff(this._root, element, scope, 0, null)
+              ? reconciler.diff(this._root, element, scope, 0, 0, null)
               : reconciler.render(element, scope)
           ) as RenderNode.NativeNode;
           return () => {

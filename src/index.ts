@@ -4,9 +4,9 @@ export {
   RenderContext,
 } from './component.js';
 export {
+  createBind,
   createFragment,
   createPortal,
-  createPrimitive,
   Ref,
   toElement,
 } from './core.js';

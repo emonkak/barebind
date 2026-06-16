@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Bind, Fragment, Primitive } from '@/core.js';
+import { Bind, Fragment } from '@/core.js';
 import { html, math, Partial, svg, text } from '@/template.js';
 
 describe('html()', () => {
@@ -10,34 +10,39 @@ describe('html()', () => {
     expect(t.children).toHaveLength(0);
   });
 
-  it('creates Bind children for interpolated values', () => {
-    const t = html`<span>${'x'}</span>`;
+  it('creates nested template children for interpolated values', () => {
+    const t = html`<div>${html`<span>${'x'}</span>`}</div>`;
     expect(t.children).toHaveLength(1);
-    const bind = t.children[0]!;
-    expect(bind.type).toBe(Bind);
-    expect(bind.props.index).toBe(0);
-    const child = bind.children[0]!;
-    expect(child.type).toBe(Primitive);
+    const child = t.children[0]!;
+    expect(child.type).toStrictEqual(['<span>', '</span>']);
+    expect(child.props.mode).toBe('html');
+    expect(child.children).toHaveLength(1);
+    expect(child.children[0]!.props.value).toBe('x');
+  });
+
+  it('creates bind children for interpolated values', () => {
+    const t = html`<div>${'x'}</div>`;
+    expect(t.children).toHaveLength(1);
+    const child = t.children[0]!;
+    expect(child.type).toBe(Bind);
     expect(child.props.value).toBe('x');
   });
 
-  it('preserves array values as Fragment children', () => {
+  it('preserves array values as fragment children', () => {
     const t = html`<ul>${['a', 'b']}</ul>`;
     expect(t.children).toHaveLength(1);
-    const bind = t.children[0]!;
-    expect(bind.type).toBe(Bind);
-    const child = bind.children[0]!;
+    const child = t.children[0]!;
     expect(child.type).toBe(Fragment);
     expect(child.children).toHaveLength(2);
     expect(child.children[0]!.props.value).toBe('a');
     expect(child.children[1]!.props.value).toBe('b');
   });
 
-  it('preserves null/undefined as Primitive', () => {
+  it('preserves null/undefined as bind children', () => {
     const t = html`<div>${null}${undefined}</div>`;
     expect(t.children).toHaveLength(2);
-    expect(t.children[0]!.children[0]!.props.value).toBeNull();
-    expect(t.children[1]!.children[0]!.props.value).toBeUndefined();
+    expect(t.children[0]!.props.value).toBe(null);
+    expect(t.children[1]!.props.value).toBe(undefined);
   });
 
   it('interleaves strings and values correctly', () => {
@@ -48,9 +53,9 @@ describe('html()', () => {
   it('handles multiple interpolations', () => {
     const t = html`<div>${1}${2}${3}</div>`;
     expect(t.children).toHaveLength(3);
-    expect(t.children[0]!.children[0]!.props.value).toBe(1);
-    expect(t.children[1]!.children[0]!.props.value).toBe(2);
-    expect(t.children[2]!.children[0]!.props.value).toBe(3);
+    expect(t.children[0]!.props.value).toBe(1);
+    expect(t.children[1]!.props.value).toBe(2);
+    expect(t.children[2]!.props.value).toBe(3);
   });
 });
 
@@ -163,14 +168,10 @@ describe('Partial.parse()', () => {
 });
 
 describe('Partial.html()', () => {
-  it('creates a VTemplate from a Partial template', () => {
+  it('creates a VTemplate with "html" mode', () => {
     const inner = Partial.parse`<span>${'x'}</span>`;
     const t = Partial.html`<div>${inner}</div>`;
     expect(t.props.mode).toBe('html');
-    expect(t.children).toHaveLength(1);
-    const bind = t.children[0]!;
-    expect(bind.type).toBe(Bind);
-    expect(bind.children[0]!.props.value).toBe('x');
   });
 });
 
