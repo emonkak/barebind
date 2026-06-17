@@ -94,7 +94,6 @@ export interface Reconciler {
     hostIndex: number,
     parent: RenderNode | null,
   ): RenderNode;
-  nextRenderId(): number;
   render(
     element: VElement,
     scope: Scope,
@@ -111,7 +110,6 @@ export type RenderNode =
 
 export namespace RenderNode {
   interface Node<TElement extends VElement> {
-    id: number;
     type: TElement['type'];
     props: TElement['props'];
     key: TElement['key'];
@@ -119,6 +117,7 @@ export namespace RenderNode {
     hostIndex: number;
     parent: RenderNode | null;
     children: RenderNode[];
+    dirty: boolean;
   }
 
   export interface ComponentNode<TProps = unknown> extends Node<VComponent> {
