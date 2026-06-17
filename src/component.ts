@@ -353,10 +353,8 @@ export class RenderContext {
         if ((lanes & renderLanes) === lanes) {
           nextState = action.eagerState ?? reducer(nextState, payload);
           action.lanes = revertLanes;
-        } else {
-          if ((revertLanes & renderLanes) === revertLanes) {
-            action.revertLanes = NoLanes;
-          }
+        } else if ((revertLanes & renderLanes) === revertLanes) {
+          action.revertLanes = NoLanes;
         }
         skipLanes |= (lanes & ~renderLanes) | (revertLanes & renderLanes);
       }
