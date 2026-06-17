@@ -1,26 +1,25 @@
+import { patch } from './commit.js';
 import { areDependenciesChange } from './compare.js';
 import {
+  type Commit,
   type Component,
   type ComponentHandle,
   type Dispatcher,
   type Injectable,
   type Lanes,
-  type Reconciler,
   Ref,
+  type Renderer,
   type RenderNode,
   type Scope,
-  type Thunk,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateUnit,
-  type VComponent,
+  VComponent,
   type VElement,
-  VNode,
   wrap,
 } from './core.js';
 import { RenderError } from './error.js';
 import { NoLanes } from './lane.js';
-import { patch } from './tree.js';
 
 const FinalizerType = 0;
 const EffectType = 1;
@@ -200,7 +199,7 @@ export class RenderContext {
   forceUpdate(options?: UpdateOptions): UpdateHandle {
     const instance = this._instance;
     const handle = instance._dispatcher.schedule(
-      new UpdateComponent(instance, this._scope),
+      new UpdateComponent(instance, this._scope.level),
       options,
     );
     instance._pendingLanes |= handle.lanes;
@@ -445,11 +444,12 @@ export function createComponent<TProps = {}, TReturn = unknown>(
   { arePropsEqual = Object.is }: ComponentOptions<TProps> = {},
 ): Component<TProps> {
   function ComponentType(props: TProps): VComponent<TProps> {
-    return new VNode(ComponentType, props, []);
+    return new VComponent(ComponentType, props, []);
   }
 
-  ComponentType.newHandle = (dispatcher: Dispatcher): ComponentHandle<TProps> =>
-    new FunctionComponent(componentFn, dispatcher);
+  ComponentType.createHandle = (
+    dispatcher: Dispatcher,
+  ): ComponentHandle<TProps> => new FunctionComponent(componentFn, dispatcher);
   ComponentType.arePropsEqual = arePropsEqual;
 
   DEBUG: {
@@ -463,22 +463,22 @@ export function createComponent<TProps = {}, TReturn = unknown>(
 
 class UpdateComponent implements UpdateUnit {
   private readonly _instance: FunctionComponent;
-  private readonly _scope: Scope;
+  private readonly _level: number;
 
-  constructor(instance: FunctionComponent, scope: Scope) {
+  constructor(instance: FunctionComponent, level: number) {
     this._instance = instance;
-    this._scope = scope;
+    this._level = level;
   }
 
   get level(): number {
-    return this._scope.level;
+    return this._level;
   }
 
   get pendingLanes(): Lanes {
     return this._instance._pendingLanes;
   }
 
-  produce(lanes: Lanes, reconciler: Reconciler): Thunk {
+  prepare(lanes: Lanes, renderer: Renderer): Commit {
     const oldNode = this._instance._connectedNode;
     if (oldNode === null) {
       return noOp;
@@ -486,15 +486,13 @@ class UpdateComponent implements UpdateUnit {
     const newNode: RenderNode.ComponentNode = {
       ...oldNode,
       children: oldNode.children.slice(),
-      dirty: true,
     };
-    const newScope = oldNode.state.scope.peer();
-    newNode.children[0] = reconciler.diff(
+    const scope = oldNode.state.scope.peer();
+    newNode.children[0] = renderer.diff(
       newNode.children[0]!,
-      newNode.state.handle.render(newNode.props, newScope, lanes),
-      newScope,
+      newNode.state.handle.render(newNode.props, scope, lanes),
+      scope,
       0,
-      newNode.hostIndex,
       newNode,
     );
     return () => {

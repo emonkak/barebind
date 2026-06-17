@@ -1,8 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createBind, createPortal } from '@/core.js';
 import { DOMAdapter } from '@/dom/adapter.js';
-import { BindNode, BlockNode, PortalNode } from '@/dom/node.js';
-import { html } from '@/template.js';
 
 describe('DOMAdapter', () => {
   let adapter: DOMAdapter;
@@ -14,35 +11,6 @@ describe('DOMAdapter', () => {
   afterEach(() => {
     vi.resetAllMocks();
     vi.unstubAllGlobals();
-  });
-
-  describe('createHostNode()', () => {
-    it('returns a BindNode for a Bind element', () => {
-      const element = createBind('hello');
-      const node = adapter.createHostNode(element, 0);
-      expect(node).toBeInstanceOf(BindNode);
-    });
-
-    it('returns a PortalNode for a Portal element', () => {
-      const container = document.createElement('div');
-      const element = createPortal('hello', container);
-      const node = adapter.createHostNode(element, 0);
-      expect(node).toBeInstanceOf(PortalNode);
-    });
-
-    it('returns a BlockNode for an html template element', () => {
-      const element = html`<div>hello</div>`;
-      const node = adapter.createHostNode(element, 0);
-      expect(node).toBeInstanceOf(BlockNode);
-    });
-
-    it('caches and reuses the same DOMTemplate for identical template strings', () => {
-      const element = html`<div>hello</div>`;
-      const node1 = adapter.createHostNode(element, 0);
-      const node2 = adapter.createHostNode(element, 0);
-      expect(node1).toBeInstanceOf(BlockNode);
-      expect(node2).toBeInstanceOf(BlockNode);
-    });
   });
 
   describe('getIdentifier()', () => {

@@ -1,15 +1,15 @@
-import { DOMAdapter, html, Root, Runtime } from 'barebind';
+import { DOMAdapter, DOMRoot, html, Runtime } from 'barebind';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('elements', () => {
   let container: Element;
   let runtime: Runtime;
-  let root: Root;
+  let root: DOMRoot;
 
   beforeEach(() => {
     container = document.createElement('div');
     runtime = new Runtime(new DOMAdapter());
-    root = new Root(container, runtime);
+    root = new DOMRoot(container, runtime);
     document.body.appendChild(container);
   });
 
@@ -50,7 +50,7 @@ describe('elements', () => {
     expect(ref).toHaveBeenCalledWith(container.querySelector('div'));
   });
 
-  it('invokes refs bottom-up during commit', async () => {
+  it('invokes refs in binding order', async () => {
     const elements: Element[] = [];
     const ref = (element: Element) => {
       elements.push(element);
@@ -62,23 +62,18 @@ describe('elements', () => {
     `;
     await root.render(template).finished;
     expect(elements).toHaveLength(2);
-    expect(elements[0]).toBe(container.querySelector('#b'));
-    expect(elements[1]).toBe(container.querySelector('#a'));
+    expect(elements[0]).toBe(container.querySelector('#a'));
+    expect(elements[1]).toBe(container.querySelector('#b'));
   });
 
-  it('invokes the ref with all other bindings committed', async () => {
+  it('invokes the ref with all previous bindings committed', async () => {
     const ref = vi.fn((element: Element) => element.outerHTML);
     const template = html`
-      <div
-        id=${'a'}
-        ${ref}
-      >
-        ${html`<div id=${'b'}>${'c'}</div>`}
-      </div>
+      <div id=${'a'} ${ref}>${'b'}</div>
     `;
     await root.render(template).finished;
     expect(ref).toHaveBeenCalledOnce();
-    expect(ref).toHaveReturnedWith('<div id="a"><div id="b">c</div></div>');
+    expect(ref).toHaveReturnedWith('<div id="a"></div>');
   });
 
   it('cleans up the ref when unmounted', async () => {

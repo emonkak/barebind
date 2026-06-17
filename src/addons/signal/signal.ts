@@ -3,7 +3,7 @@ import {
   type RenderContext,
   type UsableObject,
 } from '../../component.js';
-import { type Renderable, toElement, type VElement } from '../../core.js';
+import { type Bindable, toElement, type VElement } from '../../core.js';
 
 export interface InvalidateEvent<T = unknown> {
   readonly source: Atom<T>;
@@ -26,7 +26,7 @@ const SignalComponent = createComponent<Signal<any>>(
   },
 );
 
-export abstract class Signal<T> implements Renderable, UsableObject<T> {
+export abstract class Signal<T> implements Bindable, UsableObject<T> {
   abstract get value(): T;
 
   abstract get version(): number;

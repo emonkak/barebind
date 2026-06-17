@@ -1,21 +1,28 @@
 import {
+  type Commit,
   type Dispatcher,
-  Fragment,
   type HostAdapter,
   type Lanes,
   MUTATION_TYPE_INSERT,
   MUTATION_TYPE_REMOVE,
   MUTATION_TYPE_UPDATE,
   MUTATION_TYPE_UPDATE_AND_MOVE,
-  type Reconciler,
+  type Part,
+  type Renderer,
   type RenderNode,
+  type RenderRoot,
   type Scope,
-  type Thunk,
   type UpdateHandle,
   type UpdateOptions,
   type UpdateUnit,
+  VBind,
+  VComponent,
   type VElement,
+  VFragment,
+  VPortal,
+  VTemplate,
 } from './core.js';
+import { assertUnreachable } from './debug.js';
 import {
   getHighestPriorityLane,
   getLaneFromPriority,
@@ -34,7 +41,7 @@ interface Update {
   controller: PromiseWithResolvers<void>;
 }
 
-export class Runtime implements Reconciler, Dispatcher {
+export class Runtime implements Renderer, Dispatcher {
   /** @internal */
   readonly _adapter: HostAdapter;
   /** @internal */
@@ -50,8 +57,8 @@ export class Runtime implements Reconciler, Dispatcher {
   private _transitionCount: number = 0;
   private _updateCount: number = 0;
 
-  constructor(renderer: HostAdapter) {
-    this._adapter = renderer;
+  constructor(adapter: HostAdapter) {
+    this._adapter = adapter;
   }
 
   get flushLanes(): Lanes {
@@ -63,89 +70,106 @@ export class Runtime implements Reconciler, Dispatcher {
     newElement: VElement,
     scope: Scope,
     index: number,
-    hostIndex: number,
-    parent: RenderNode | null,
+    parent: RenderNode | RenderRoot,
   ): RenderNode {
     if (oldNode.type !== newElement.type || oldNode.key !== newElement.key) {
-      return this.render(newElement, scope, index, hostIndex, parent);
-    } else if (oldNode.props === newElement.props) {
+      return this.render(newElement, scope, index, parent, oldNode.part);
+    }
+    if (oldNode.props === newElement.props) {
       return oldNode;
-    } else if (typeof newElement.type === 'function') {
-      if (
-        ((oldNode as RenderNode.ComponentNode).state.handle.pendingLanes &
-          this._flushLanes) ===
-          NoLanes &&
-        (oldNode as RenderNode.ComponentNode).type.arePropsEqual(
-          oldNode.props,
-          newElement.props,
-        )
-      ) {
-        return oldNode;
+    }
+    switch (true) {
+      case newElement instanceof VBind: {
+        return {
+          ...(oldNode as RenderNode.BindNode),
+          type: newElement.type,
+          props: newElement.props,
+          key: newElement.key,
+        };
       }
-      const newNode: RenderNode.ComponentNode = {
-        type: newElement.type,
-        props: newElement.props,
-        key: newElement.key,
-        index,
-        hostIndex,
-        parent,
-        children: oldNode.children.slice(),
-        state: (oldNode as RenderNode.ComponentNode).state,
-        dirty: true,
-      };
-      const subScope = scope.child(newElement.type);
-      newNode.children[0] = this.diff(
-        newNode.children[0]!,
-        newNode.state.handle.render(newNode.props, subScope, this._flushLanes),
-        subScope,
-        0,
-        hostIndex,
-        newNode,
-      );
-      return newNode;
-    } else if (newElement.type === Fragment) {
-      const newNode: RenderNode.FragmentNode = {
-        type: newElement.type,
-        props: newElement.props,
-        key: newElement.key,
-        index,
-        hostIndex,
-        parent,
-        children: new Array(newElement.children.length),
-        state: { mutations: [] },
-        dirty: true,
-      };
-      this._diffChildren(
-        oldNode as RenderNode.FragmentNode,
-        newNode,
-        newElement.children,
-        scope,
-        hostIndex,
-      );
-      return newNode;
-    } else {
-      const newNode: RenderNode.NativeNode = {
-        type: newElement.type,
-        props: newElement.props,
-        key: newElement.key,
-        index,
-        hostIndex,
-        parent,
-        children: new Array(newElement.children.length),
-        state: (oldNode as RenderNode.NativeNode).state,
-        dirty: true,
-      };
-      for (let i = 0, l = newElement.children.length; i < l; i++) {
-        newNode.children[i] = this.diff(
-          oldNode.children[i]!,
-          newElement.children[i]!,
-          scope,
-          i,
-          i,
+      case newElement instanceof VComponent: {
+        if (
+          ((oldNode as RenderNode.ComponentNode).state.handle.pendingLanes &
+            this._flushLanes) ===
+            NoLanes &&
+          (oldNode as RenderNode.ComponentNode).type.arePropsEqual(
+            oldNode.props,
+            newElement.props,
+          )
+        ) {
+          return oldNode;
+        }
+        const newNode: RenderNode.ComponentNode = {
+          type: newElement.type,
+          props: newElement.props,
+          key: newElement.key,
+          part: oldNode.part,
+          index,
+          parent,
+          children: oldNode.children.slice(),
+          state: (oldNode as RenderNode.ComponentNode).state,
+        };
+        const subScope = scope.child(newElement.type);
+        newNode.children[0] = this.diff(
+          newNode.children[0]!,
+          newNode.state.handle.render(
+            newNode.props,
+            subScope,
+            this._flushLanes,
+          ),
+          subScope,
+          0,
           newNode,
         );
+        return newNode;
       }
-      return newNode;
+      case newElement instanceof VFragment: {
+        const newNode: RenderNode.FragmentNode = {
+          type: newElement.type,
+          props: newElement.props,
+          key: newElement.key,
+          part: oldNode.part,
+          index,
+          parent,
+          children: new Array(newElement.children.length),
+          state: { mutations: [] },
+        };
+        this._diffChildren(
+          oldNode as RenderNode.FragmentNode,
+          newNode,
+          newElement.children,
+          scope,
+        );
+        return newNode;
+      }
+      case newElement instanceof VPortal:
+      case newElement instanceof VTemplate: {
+        const newNode: RenderNode.BlockNode = {
+          type: newElement.type,
+          props: newElement.props,
+          key: newElement.key,
+          part: oldNode.part,
+          index,
+          parent,
+          children: new Array(newElement.children.length),
+          state: (oldNode as RenderNode.BlockNode).state,
+        };
+        for (let i = 0, l = newElement.children.length; i < l; i++) {
+          newNode.children[i] = this.diff(
+            oldNode.children[i]!,
+            newElement.children[i]!,
+            scope,
+            i,
+            newNode,
+          );
+        }
+        return newNode;
+      }
+      /** v8 ignore next @preserve */
+      default:
+        DEBUG: {
+          assertUnreachable(newElement);
+        }
     }
   }
 
@@ -160,69 +184,118 @@ export class Runtime implements Reconciler, Dispatcher {
   render(
     element: VElement,
     scope: Scope,
-    index: number = 0,
-    hostIndex: number = 0,
-    parent: RenderNode | null = null,
+    index: number,
+    parent: RenderNode | RenderRoot,
+    part: Part,
   ): RenderNode {
-    if (typeof element.type === 'function') {
-      const node: RenderNode.ComponentNode = {
-        type: element.type,
-        props: element.props,
-        key: element.key,
-        index,
-        hostIndex,
-        parent,
-        children: new Array(1),
-        state: { handle: element.type.newHandle(this), scope },
-        dirty: true,
-      };
-      const subScope = scope.child(element.type);
-      node.children[0] = this.render(
-        node.state.handle.render(node.props, subScope, this._flushLanes),
-        subScope,
-        0,
-        hostIndex,
-        node,
-      );
-      return node;
-    } else if (element.type === Fragment) {
-      const node: RenderNode.FragmentNode = {
-        type: element.type,
-        props: element.props,
-        key: element.key,
-        index,
-        hostIndex,
-        parent,
-        children: new Array(element.children.length),
-        state: { mutations: [] },
-        dirty: true,
-      };
-      for (let i = 0, l = element.children.length; i < l; i++) {
-        node.children[i] = this.render(
-          element.children[i]!,
-          scope,
-          i,
-          hostIndex,
+    switch (true) {
+      case element instanceof VBind: {
+        return {
+          type: element.type,
+          props: element.props,
+          key: element.key,
+          part,
+          index,
+          parent,
+          children: [],
+          state: null,
+        };
+      }
+      case element instanceof VComponent: {
+        const node: RenderNode.ComponentNode = {
+          type: element.type,
+          props: element.props,
+          key: element.key,
+          part,
+          index,
+          parent,
+          children: new Array(1),
+          state: {
+            handle: element.type.createHandle(this),
+            scope,
+          },
+        };
+        const subScope = scope.child(element.type);
+        node.children[0] = this.render(
+          node.state.handle.render(node.props, subScope, this._flushLanes),
+          subScope,
+          0,
           node,
+          part,
         );
+        return node;
       }
-      return node;
-    } else {
-      const node: RenderNode.NativeNode = {
-        type: element.type,
-        props: element.props,
-        key: element.key,
-        index,
-        hostIndex,
-        parent,
-        children: new Array(element.children.length),
-        state: { hostNode: this._adapter.createHostNode(element, hostIndex) },
-        dirty: true,
-      };
-      for (let i = 0, l = element.children.length; i < l; i++) {
-        node.children[i] = this.render(element.children[i]!, scope, i, i, node);
+      case element instanceof VFragment: {
+        const node: RenderNode.FragmentNode = {
+          type: element.type,
+          props: element.props,
+          key: element.key,
+          part,
+          index,
+          parent,
+          children: new Array(element.children.length),
+          state: { mutations: [] },
+        };
+        for (let i = 0, l = element.children.length; i < l; i++) {
+          node.children[i] = this.render(
+            element.children[i]!,
+            scope,
+            i,
+            node,
+            part,
+          );
+        }
+        return node;
       }
-      return node;
+      case element instanceof VPortal: {
+        const block = this._adapter.renderPortal(element);
+        const node: RenderNode.BlockNode = {
+          type: element.type,
+          props: element.props,
+          key: element.key,
+          part,
+          index,
+          parent,
+          children: new Array(1),
+          state: { block },
+        };
+        node.children[0] = this.render(
+          element.children[0],
+          scope,
+          0,
+          node,
+          block.parts[0]!,
+        );
+        return node;
+      }
+      case element instanceof VTemplate: {
+        const block = this._adapter.renderTemplate(element);
+        const node: RenderNode.BlockNode = {
+          type: element.type,
+          props: element.props,
+          key: element.key,
+          part,
+          index,
+          parent,
+          children: new Array(element.children.length),
+          state: { block },
+        };
+        for (let i = 0, l = element.children.length; i < l; i++) {
+          node.children[i] = this.render(
+            element.children[i]!,
+            scope,
+            i,
+            node,
+            block.parts[i]!,
+          );
+        }
+        return node;
+      }
+      /** v8 ignore next @preserve */
+      default:
+        DEBUG: {
+          assertUnreachable(element);
+        }
     }
   }
 
@@ -267,13 +340,12 @@ export class Runtime implements Reconciler, Dispatcher {
     newParent: RenderNode.FragmentNode,
     newElements: VElement[],
     scope: Scope,
-    hostIndex: number,
   ): void {
     const oldChildren: (RenderNode | undefined)[] = oldParent.children.slice();
     const newChildren = newParent.children;
-    const oldKeys = oldChildren.map((node) => node!.key);
+    const oldKeys = oldChildren.map((child) => child!.key);
     const newKeys = newElements.map((element) => element.key);
-    const mutations = newParent.state.mutations;
+    const { mutations } = newParent.state;
 
     let oldHead = 0;
     let newHead = 0;
@@ -285,11 +357,11 @@ export class Runtime implements Reconciler, Dispatcher {
     while (true) {
       if (newHead > newTail) {
         while (oldHead <= oldTail) {
-          const node = oldChildren[oldHead];
-          if (node !== undefined) {
+          const oldChild = oldChildren[oldHead];
+          if (oldChild !== undefined) {
             mutations.push({
               type: MUTATION_TYPE_REMOVE,
-              node,
+              node: oldChild,
             });
           }
           oldHead++;
@@ -298,19 +370,19 @@ export class Runtime implements Reconciler, Dispatcher {
       }
       if (oldHead > oldTail) {
         while (newHead <= newTail) {
-          const node = this.render(
+          const newChild = this.render(
             newElements[newHead]!,
             scope,
             newHead,
-            hostIndex,
             newParent,
+            newParent.part,
           );
           mutations.push({
             type: MUTATION_TYPE_INSERT,
-            node,
+            node: newChild,
             afterNode: newChildren[newTail + 1],
           });
-          newChildren[newHead] = node;
+          newChildren[newHead] = newChild;
           newHead++;
         }
         break;
@@ -320,79 +392,75 @@ export class Runtime implements Reconciler, Dispatcher {
       } else if (oldChildren[oldTail] === undefined) {
         oldTail--;
       } else if (Object.is(oldKeys[oldHead]!, newKeys[newHead]!)) {
-        const oldNode = oldChildren[oldHead]!;
-        const newNode = this.diff(
-          oldNode,
+        const oldChild = oldChildren[oldHead]!;
+        const newChild = this.diff(
+          oldChild,
           newElements[newHead]!,
           scope,
           newHead,
-          hostIndex,
           newParent,
         );
-        if (oldNode !== newNode) {
+        if (oldChild !== newChild) {
           mutations.push({
             type: MUTATION_TYPE_UPDATE,
-            oldNode: oldChildren[oldHead]!,
-            newNode: newNode,
+            oldNode: oldChild,
+            newNode: newChild,
           });
         }
-        newChildren[newHead] = newNode;
+        newChildren[newHead] = newChild;
         oldHead++;
         newHead++;
       } else if (Object.is(oldKeys[oldTail]!, newKeys[newTail]!)) {
-        const oldNode = oldChildren[oldTail]!;
-        const newNode = this.diff(
-          oldNode,
+        const oldChild = oldChildren[oldTail]!;
+        const newChild = this.diff(
+          oldChild,
           newElements[newTail]!,
           scope,
           newTail,
-          hostIndex,
           newParent,
         );
-        if (oldNode !== newNode) {
+        if (oldChild !== newChild) {
           mutations.push({
             type: MUTATION_TYPE_UPDATE,
-            oldNode: oldChildren[oldTail]!,
-            newNode: newNode,
+            oldNode: oldChild,
+            newNode: newChild,
           });
         }
-        newChildren[newTail] = newNode;
+        newChildren[newTail] = newChild;
         oldTail--;
         newTail--;
       } else if (
         Object.is(oldKeys[oldHead]!, newKeys[newTail]!) &&
         Object.is(oldKeys[oldTail]!, newKeys[newHead]!)
       ) {
-        const tailNode = this.diff(
+        const tailChild = this.diff(
           oldChildren[oldTail]!,
           newElements[newHead]!,
           scope,
           newHead,
-          hostIndex,
           newParent,
         );
-        const headNode = this.diff(
+        const headChild = this.diff(
           oldChildren[oldHead]!,
           newElements[newTail]!,
           scope,
           newTail,
-          hostIndex,
           newParent,
         );
         mutations.push({
           type: MUTATION_TYPE_UPDATE_AND_MOVE,
           oldNode: oldChildren[oldTail]!,
-          newNode: tailNode,
+          newNode: tailChild,
           afterNode: oldChildren[oldHead],
         });
         mutations.push({
           type: MUTATION_TYPE_UPDATE_AND_MOVE,
           oldNode: oldChildren[oldHead]!,
-          newNode: headNode,
+          newNode: headChild,
           afterNode: newChildren[newTail + 1],
         });
-        newChildren[newHead] = tailNode;
-        newChildren[newTail] = headNode;
+        newChildren[newHead] = tailChild;
+        newChildren[newTail] = headChild;
         oldHead++;
         newHead++;
         oldTail--;
@@ -401,15 +469,17 @@ export class Runtime implements Reconciler, Dispatcher {
         newKeyToIndexMap ??= buildKeyToIndexMap(newKeys, newHead, newTail);
 
         if (!newKeyToIndexMap.has(oldKeys[oldHead]!)) {
+          const oldChild = oldChildren[oldHead]!;
           mutations.push({
             type: MUTATION_TYPE_REMOVE,
-            node: oldChildren[oldHead]!,
+            node: oldChild,
           });
           oldHead++;
         } else if (!newKeyToIndexMap.has(oldKeys[oldTail]!)) {
+          const oldChild = oldChildren[oldTail]!;
           mutations.push({
             type: MUTATION_TYPE_REMOVE,
-            node: oldChildren[oldTail]!,
+            node: oldChild,
           });
           oldTail--;
         } else {
@@ -422,36 +492,35 @@ export class Runtime implements Reconciler, Dispatcher {
             oldIndex <= oldTail &&
             oldChildren[oldIndex] !== undefined
           ) {
-            const newNode = this.diff(
+            const newChild = this.diff(
               oldChildren[oldIndex]!,
               newElements[newTail]!,
               scope,
               newTail,
-              hostIndex,
               newParent,
             );
             mutations.push({
               type: MUTATION_TYPE_UPDATE_AND_MOVE,
               oldNode: oldChildren[oldIndex]!,
-              newNode: newNode,
+              newNode: newChild,
               afterNode: newChildren[newTail + 1],
             });
-            newChildren[newTail] = newNode;
+            newChildren[newTail] = newChild;
             oldChildren[oldIndex] = undefined;
           } else {
-            const node = this.render(
+            const newChild = this.render(
               newElements[newTail]!,
               scope,
               newTail,
-              hostIndex,
               newParent,
+              newParent.part,
             );
             mutations.push({
               type: MUTATION_TYPE_INSERT,
-              node,
+              node: newChild,
               afterNode: newChildren[newTail + 1],
             });
-            newChildren[newTail] = node;
+            newChildren[newTail] = newChild;
           }
 
           newTail--;
@@ -479,7 +548,7 @@ export class Runtime implements Reconciler, Dispatcher {
       }
 
       try {
-        const thunkBatch: Thunk[] = [];
+        const commitBatch: Commit[] = [];
         const flushSync = (this._flushLanes & SyncLane) === SyncLane;
 
         for (const update of this._updateBatch) {
@@ -489,25 +558,25 @@ export class Runtime implements Reconciler, Dispatcher {
             continue;
           }
 
-          if (!flushSync && thunkBatch.length > 0) {
+          if (!flushSync && commitBatch.length > 0) {
             await this._adapter.yieldToMain();
           }
 
-          thunkBatch.push(unit.produce(this._flushLanes, this));
+          commitBatch.push(unit.prepare(this._flushLanes, this));
         }
 
-        if (thunkBatch.length > 0) {
-          const commit = () => {
-            for (const thunk of thunkBatch) {
-              thunk();
+        if (commitBatch.length > 0) {
+          const callback = () => {
+            for (const commit of commitBatch) {
+              commit();
             }
           };
           if (flushSync) {
-            commit();
+            callback();
           } else if (this._flushLanes & ViewTransitionLane) {
-            await this._adapter.startViewTransition(commit);
+            await this._adapter.startViewTransition(callback);
           } else {
-            await this._adapter.requestCommit(commit);
+            await this._adapter.requestCommit(callback);
           }
         }
 

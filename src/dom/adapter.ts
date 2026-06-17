@@ -1,12 +1,6 @@
-import {
-  Bind,
-  type HostAdapter,
-  type HostNode,
-  type VHostElement,
-  type VTemplate,
-} from '../core.js';
-import { BindNode, PortalNode } from './node.js';
-import { DOMTemplate } from './template.js';
+import type { HostAdapter, VPortal, VTemplate } from '../core.js';
+import { PortalPart } from './part.js';
+import { DOMBlock, DOMTemplate } from './template.js';
 
 export class DOMAdapter implements HostAdapter {
   private readonly _document: Document;
@@ -16,25 +10,6 @@ export class DOMAdapter implements HostAdapter {
 
   constructor(document: Document = window.document) {
     this._document = document;
-  }
-
-  createHostNode(element: VHostElement, index: number): HostNode {
-    if (element.type === Bind) {
-      return new BindNode(index);
-    }
-    if (element.type instanceof Element) {
-      return new PortalNode(index, element.type);
-    }
-    const template = this._templateCache.getOrInsertComputed(element.type, () =>
-      DOMTemplate.parse(
-        (element as VTemplate).type,
-        (element as VTemplate).children,
-        (element as VTemplate).props.mode,
-        this._identifier,
-        this._document,
-      ),
-    );
-    return template.render(index);
   }
 
   getIdentifier(): string {
@@ -48,6 +23,28 @@ export class DOMAdapter implements HostAdapter {
         ? 'user-visible'
         : 'user-blocking'
       : 'background';
+  }
+
+  renderPortal(element: VPortal): DOMBlock {
+    const container = element.type;
+    const document = container.ownerDocument!;
+    const fragment = document.createDocumentFragment();
+    const part = new PortalPart(container);
+    fragment.appendChild(document.createComment(''));
+    return new DOMBlock(fragment, [part]);
+  }
+
+  renderTemplate(element: VTemplate): DOMBlock {
+    const template = this._templateCache.getOrInsertComputed(element.type, () =>
+      DOMTemplate.parse(
+        element.type,
+        element.children,
+        element.props.mode,
+        this._identifier,
+        this._document,
+      ),
+    );
+    return template.render();
   }
 
   requestCallback(

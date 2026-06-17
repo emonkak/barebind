@@ -1,14 +1,16 @@
-import type { TemplateMode } from '../core.js';
+import type { Block, TemplateMode } from '../core.js';
 import { DOMTemplateError } from './error.js';
-import { BlockNode } from './node.js';
 import {
   AttributePart,
-  CharacterDataPart,
+  ChildNodePart,
+  ClassAttributePart,
   type DOMPart,
   ElementPart,
   EventPart,
   LivePart,
   PropertyPart,
+  StyleAttributePart,
+  TextPart,
 } from './part.js';
 
 const HOLE_TYPE_ATTRIBUTE = 0;
@@ -33,6 +35,9 @@ const ATTRIBUTE_NAME_PATTERN = new RegExp(
   `${ATTRIBUTE_NAME_CLASS}+(?=${WHITESPACE_CLASS}*=${WHITESPACE_CLASS}*${QUOTE_CLASS}?$)`,
   'u',
 );
+
+const insertBefore = Element.prototype.insertBefore;
+const moveBefore = Element.prototype.moveBefore ?? insertBefore;
 
 type Hole =
   | Hole.AttributeHole
@@ -138,7 +143,7 @@ export class DOMTemplate {
     this.mode = mode;
   }
 
-  render(index: number): BlockNode {
+  render(): DOMBlock {
     const document = this.element.ownerDocument;
     const fragment = document.importNode(this.element.content, true);
     const holes = this.holes;
@@ -162,21 +167,96 @@ export class DOMTemplate {
       }
     }
 
-    return new BlockNode(index, fragment, parts);
+    return new DOMBlock(fragment, parts);
   }
 }
 
-export function createTreeWalker(
-  container: DocumentFragment | Element,
-): TreeWalker {
-  return container.ownerDocument.createTreeWalker(
-    container,
-    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
-  );
+export class DOMBlock implements Block {
+  private readonly _fragment: DocumentFragment;
+
+  private readonly _staticNodes: ChildNode[];
+
+  private readonly _parts: DOMPart[];
+
+  constructor(fragment: DocumentFragment, parts: DOMPart[]) {
+    this._fragment = fragment;
+    this._staticNodes = Array.from(fragment.childNodes);
+    this._parts = parts;
+  }
+
+  get parts(): readonly DOMPart[] {
+    return this._parts;
+  }
+
+  get staticNodes(): readonly ChildNode[] {
+    return this._staticNodes;
+  }
+
+  mountBefore(afterNode: ChildNode): void {
+    afterNode.before(this._fragment);
+  }
+
+  mountInto(container: ParentNode, afterNode: ChildNode | null): void {
+    insertBefore.call(container, this._fragment, afterNode);
+  }
+
+  moveBefore(afterNode: ChildNode): void {
+    for (const node of collectChildNodes(
+      this._staticNodes[0] ?? null,
+      this._staticNodes.at(-1) ?? null,
+    )) {
+      moveBefore.call(afterNode.parentNode, node, afterNode);
+    }
+  }
+
+  moveInto(container: ParentNode, afterNode: ChildNode | null): void {
+    for (const node of collectChildNodes(
+      this._staticNodes[0] ?? null,
+      this._staticNodes.at(-1) ?? null,
+    )) {
+      moveBefore.call(container, node, afterNode);
+    }
+  }
+
+  unmount(): void {
+    for (const node of collectChildNodes(
+      this._staticNodes[0] ?? null,
+      this._staticNodes.at(-1) ?? null,
+    )) {
+      node.remove();
+    }
+  }
+}
+
+function collectChildNodes(
+  firstNode: ChildNode | null,
+  lastNode: ChildNode | null,
+): ChildNode[] {
+  const childNodes = [];
+
+  for (
+    let currentNode = firstNode;
+    currentNode !== null;
+    currentNode = currentNode.nextSibling
+  ) {
+    childNodes.push(currentNode);
+    if (currentNode === lastNode) {
+      break;
+    }
+  }
+
+  return childNodes;
 }
 
 function createMarker(placeholder: string): string {
   return `?${placeholder}?`;
+}
+
+function createTreeWalker(container: DocumentFragment | Element): TreeWalker {
+  return container.ownerDocument.createTreeWalker(
+    container,
+    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
+  );
 }
 
 function extractAttributeName(s: string): string | undefined {
@@ -363,11 +443,27 @@ function parseChildren(
 function resolvePart(hole: Hole, treeWalker: TreeWalker): DOMPart {
   switch (hole.type) {
     case HOLE_TYPE_ATTRIBUTE:
-      return new AttributePart(treeWalker.currentNode as Element, hole.name);
+      switch (hole.name.toLowerCase()) {
+        case 'class':
+          return new ClassAttributePart(
+            treeWalker.currentNode as Element,
+            hole.name,
+          );
+        case 'style':
+          return new StyleAttributePart(
+            treeWalker.currentNode as Element,
+            hole.name,
+          );
+        default:
+          return new AttributePart(
+            treeWalker.currentNode as Element,
+            hole.name,
+          );
+      }
     case HOLE_TYPE_EVENT:
       return new EventPart(treeWalker.currentNode as Element, hole.name);
     case HOLE_TYPE_CHILD_NODE:
-      return new CharacterDataPart(treeWalker.currentNode as Comment);
+      return new ChildNodePart(treeWalker.currentNode as Comment);
     case HOLE_TYPE_ELEMENT:
       return new ElementPart(treeWalker.currentNode as Element);
     case HOLE_TYPE_LIVE:
@@ -379,10 +475,7 @@ function resolvePart(hole: Hole, treeWalker: TreeWalker): DOMPart {
   }
 }
 
-function splitTextPart(
-  treeWalker: TreeWalker,
-  hole: Hole.TextHole,
-): CharacterDataPart {
+function splitTextPart(treeWalker: TreeWalker, hole: Hole.TextHole): TextPart {
   let currentNode = treeWalker.currentNode as Text;
   if (hole.splitIndex > 0) {
     currentNode = currentNode.splitText(0);
@@ -390,7 +483,7 @@ function splitTextPart(
   if (hole.leadingSpan > 0) {
     currentNode = currentNode.splitText(hole.leadingSpan);
   }
-  const part = new CharacterDataPart(currentNode);
+  const part = new TextPart(currentNode);
   if (hole.trailingSpan > 0) {
     currentNode = currentNode.splitText(0);
   }

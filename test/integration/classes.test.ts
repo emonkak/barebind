@@ -1,15 +1,15 @@
-import { DOMAdapter, html, Root, Runtime } from 'barebind';
+import { DOMAdapter, DOMRoot, html, Runtime } from 'barebind';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 describe('classes', () => {
   let container: Element;
   let runtime: Runtime;
-  let root: Root;
+  let root: DOMRoot;
 
   beforeEach(() => {
     container = document.createElement('div');
     runtime = new Runtime(new DOMAdapter());
-    root = new Root(container, runtime);
+    root = new DOMRoot(container, runtime);
     document.body.appendChild(container);
   });
 
@@ -70,5 +70,31 @@ describe('classes', () => {
     await root.render(render({ active: true })).finished;
     expect(target.classList.contains('active')).toBe(true);
     expect(target.classList.contains('disabled')).toBe(false);
+  });
+
+  it('updates classes from a string to an object', async () => {
+    const render = (value: unknown) => html`<div class=${value}></div>`;
+
+    await root.render(render('foo')).finished;
+    const target = container.querySelector('div')!;
+    expect(target.classList.contains('foo')).toBe(true);
+    expect(target.classList.contains('bar')).toBe(false);
+
+    await root.render(render({ foo: false, bar: true })).finished;
+    expect(target.classList.contains('foo')).toBe(false);
+    expect(target.classList.contains('bar')).toBe(true);
+  });
+
+  it('updates classes from an object to a string', async () => {
+    const render = (value: unknown) => html`<div class=${value}></div>`;
+
+    await root.render(render({ foo: true, bar: false })).finished;
+    const target = container.querySelector('div')!;
+    expect(target.classList.contains('foo')).toBe(true);
+    expect(target.classList.contains('bar')).toBe(false);
+
+    await root.render(render('bar')).finished;
+    expect(target.classList.contains('foo')).toBe(false);
+    expect(target.classList.contains('bar')).toBe(true);
   });
 });
