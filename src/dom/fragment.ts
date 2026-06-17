@@ -126,10 +126,10 @@ export class DOMFragmentHandler<TSource>
         Object.is(oldKeys[oldHead]!, newKeys[newTail]!) &&
         Object.is(oldKeys[oldTail]!, newKeys[newHead]!)
       ) {
-        const headSlot = oldSlots[oldHead]!;
         const tailSlot = oldSlots[oldTail]!;
-        headSlot.update(newDirectives[newHead]!, scope);
-        tailSlot.update(newDirectives[newTail]!, scope);
+        const headSlot = oldSlots[oldHead]!;
+        tailSlot.update(newDirectives[newHead]!, scope);
+        headSlot.update(newDirectives[newTail]!, scope);
         newMutations.push({
           type: UpdateAndMoveType,
           slot: tailSlot,
