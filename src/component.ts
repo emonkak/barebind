@@ -373,18 +373,14 @@ export class RenderContext {
     } else {
       const handler: ActionHandler<TState, TAction> = {
         dispatch: (payload, options = {}) => {
-          const {
-            pendingActions,
-            currentState: pendingState,
-            reducer,
-          } = handler;
+          const { pendingActions, currentState, reducer } = handler;
           let eagerState: TState | undefined;
 
           if (pendingActions.length === 0) {
             const areStatesEqual = options.areStatesEqual ?? Object.is;
-            eagerState = reducer(pendingState, payload);
+            eagerState = reducer(currentState, payload);
 
-            if (areStatesEqual(eagerState, pendingState)) {
+            if (areStatesEqual(eagerState, currentState)) {
               return {
                 id: -1,
                 lanes: NoLanes,
