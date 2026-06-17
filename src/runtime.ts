@@ -47,7 +47,6 @@ export class Runtime implements Reconciler, Dispatcher {
   private _stagedLanes: number = NoLanes;
   private _flushLanes: number = NoLanes;
   private _identifierCount: number = 0;
-  private _renderCount: number = 0;
   private _transitionCount: number = 0;
   private _updateCount: number = 0;
 
@@ -70,10 +69,20 @@ export class Runtime implements Reconciler, Dispatcher {
     if (oldNode.type !== newElement.type || oldNode.key !== newElement.key) {
       return this.render(newElement, scope, index, hostIndex, parent);
     } else if (oldNode.props === newElement.props) {
-      return { ...oldNode, index, hostIndex, parent };
+      return oldNode;
     } else if (typeof newElement.type === 'function') {
+      if (
+        ((oldNode as RenderNode.ComponentNode).state.handle.pendingLanes &
+          this._flushLanes) ===
+          NoLanes &&
+        (oldNode as RenderNode.ComponentNode).type.arePropsEqual(
+          oldNode.props,
+          newElement.props,
+        )
+      ) {
+        return oldNode;
+      }
       const newNode: RenderNode.ComponentNode = {
-        id: this._renderCount++,
         type: newElement.type,
         props: newElement.props,
         key: newElement.key,
@@ -82,34 +91,20 @@ export class Runtime implements Reconciler, Dispatcher {
         parent,
         children: oldNode.children.slice(),
         state: (oldNode as RenderNode.ComponentNode).state,
+        dirty: true,
       };
-      if (
-        ((newNode as RenderNode.ComponentNode).state.handle.pendingLanes &
-          this._flushLanes) !==
-          NoLanes ||
-        !(newNode as RenderNode.ComponentNode).type.arePropsEqual(
-          oldNode.props,
-          newElement.props,
-        )
-      ) {
-        const subScope = scope.child(newElement.type);
-        newNode.children[0] = this.diff(
-          newNode.children[0]!,
-          newNode.state.handle.render(
-            newNode.props,
-            subScope,
-            this._flushLanes,
-          ),
-          subScope,
-          0,
-          hostIndex,
-          newNode,
-        );
-      }
+      const subScope = scope.child(newElement.type);
+      newNode.children[0] = this.diff(
+        newNode.children[0]!,
+        newNode.state.handle.render(newNode.props, subScope, this._flushLanes),
+        subScope,
+        0,
+        hostIndex,
+        newNode,
+      );
       return newNode;
     } else if (newElement.type === Fragment) {
       const newNode: RenderNode.FragmentNode = {
-        id: this._renderCount++,
         type: newElement.type,
         props: newElement.props,
         key: newElement.key,
@@ -118,6 +113,7 @@ export class Runtime implements Reconciler, Dispatcher {
         parent,
         children: new Array(newElement.children.length),
         state: { mutations: [] },
+        dirty: true,
       };
       this._diffChildren(
         oldNode as RenderNode.FragmentNode,
@@ -129,7 +125,6 @@ export class Runtime implements Reconciler, Dispatcher {
       return newNode;
     } else {
       const newNode: RenderNode.NativeNode = {
-        id: this._renderCount++,
         type: newElement.type,
         props: newElement.props,
         key: newElement.key,
@@ -138,6 +133,7 @@ export class Runtime implements Reconciler, Dispatcher {
         parent,
         children: new Array(newElement.children.length),
         state: (oldNode as RenderNode.NativeNode).state,
+        dirty: true,
       };
       for (let i = 0, l = newElement.children.length; i < l; i++) {
         newNode.children[i] = this.diff(
@@ -157,10 +153,6 @@ export class Runtime implements Reconciler, Dispatcher {
     return this._adapter.getIdentifier() + '-' + this._identifierCount++;
   }
 
-  nextRenderId(): number {
-    return this._renderCount++;
-  }
-
   nextTransition(): number {
     return this._transitionCount++;
   }
@@ -174,7 +166,6 @@ export class Runtime implements Reconciler, Dispatcher {
   ): RenderNode {
     if (typeof element.type === 'function') {
       const node: RenderNode.ComponentNode = {
-        id: this._renderCount++,
         type: element.type,
         props: element.props,
         key: element.key,
@@ -183,6 +174,7 @@ export class Runtime implements Reconciler, Dispatcher {
         parent,
         children: new Array(1),
         state: { handle: element.type.newHandle(this), scope },
+        dirty: true,
       };
       const subScope = scope.child(element.type);
       node.children[0] = this.render(
@@ -195,7 +187,6 @@ export class Runtime implements Reconciler, Dispatcher {
       return node;
     } else if (element.type === Fragment) {
       const node: RenderNode.FragmentNode = {
-        id: this._renderCount++,
         type: element.type,
         props: element.props,
         key: element.key,
@@ -204,6 +195,7 @@ export class Runtime implements Reconciler, Dispatcher {
         parent,
         children: new Array(element.children.length),
         state: { mutations: [] },
+        dirty: true,
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
         node.children[i] = this.render(
@@ -217,7 +209,6 @@ export class Runtime implements Reconciler, Dispatcher {
       return node;
     } else {
       const node: RenderNode.NativeNode = {
-        id: this._renderCount++,
         type: element.type,
         props: element.props,
         key: element.key,
@@ -226,6 +217,7 @@ export class Runtime implements Reconciler, Dispatcher {
         parent,
         children: new Array(element.children.length),
         state: { hostNode: this._adapter.createHostNode(element, hostIndex) },
+        dirty: true,
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
         node.children[i] = this.render(element.children[i]!, scope, i, i, node);
@@ -328,36 +320,42 @@ export class Runtime implements Reconciler, Dispatcher {
       } else if (oldChildren[oldTail] === undefined) {
         oldTail--;
       } else if (Object.is(oldKeys[oldHead]!, newKeys[newHead]!)) {
+        const oldNode = oldChildren[oldHead]!;
         const newNode = this.diff(
-          oldChildren[oldHead]!,
+          oldNode,
           newElements[newHead]!,
           scope,
           newHead,
           hostIndex,
           newParent,
         );
-        mutations.push({
-          type: MUTATION_TYPE_UPDATE,
-          oldNode: oldChildren[oldHead]!,
-          newNode: newNode,
-        });
+        if (oldNode !== newNode) {
+          mutations.push({
+            type: MUTATION_TYPE_UPDATE,
+            oldNode: oldChildren[oldHead]!,
+            newNode: newNode,
+          });
+        }
         newChildren[newHead] = newNode;
         oldHead++;
         newHead++;
       } else if (Object.is(oldKeys[oldTail]!, newKeys[newTail]!)) {
+        const oldNode = oldChildren[oldTail]!;
         const newNode = this.diff(
-          oldChildren[oldTail]!,
+          oldNode,
           newElements[newTail]!,
           scope,
           newTail,
           hostIndex,
           newParent,
         );
-        mutations.push({
-          type: MUTATION_TYPE_UPDATE,
-          oldNode: oldChildren[oldTail]!,
-          newNode: newNode,
-        });
+        if (oldNode !== newNode) {
+          mutations.push({
+            type: MUTATION_TYPE_UPDATE,
+            oldNode: oldChildren[oldTail]!,
+            newNode: newNode,
+          });
+        }
         newChildren[newTail] = newNode;
         oldTail--;
         newTail--;

@@ -31,14 +31,18 @@ export function patch(oldNode: RenderNode, newNode: RenderNode) {
 }
 
 function afterCommit(node: RenderNode): void {
-  for (const descendant of node.children) {
-    afterCommit(descendant);
-  }
+  if (node.dirty) {
+    for (const descendant of node.children) {
+      afterCommit(descendant);
+    }
 
-  if (typeof node.type === 'function') {
-    node.state.handle.connect(node);
-  } else if (typeof node.type === 'object') {
-    node.state.hostNode.afterCommit();
+    if (typeof node.type === 'function') {
+      node.state.handle.connect(node);
+    } else if (typeof node.type === 'object') {
+      node.state.hostNode.afterCommit();
+    }
+
+    node.dirty = false;
   }
 }
 
@@ -62,7 +66,7 @@ function appendChild(
 }
 
 function applyPatch(oldNode: RenderNode, newNode: RenderNode): void {
-  if (oldNode.id === newNode.id) {
+  if (oldNode === newNode) {
     return;
   }
   if (oldNode.type !== newNode.type || oldNode.key !== newNode.key) {
