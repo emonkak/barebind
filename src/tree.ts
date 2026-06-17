@@ -73,7 +73,7 @@ function applyPatch(oldNode: RenderNode, newNode: RenderNode): void {
   } else if (newNode.type === Fragment) {
     const parentNode = getHostAncestor(newNode);
 
-    for (const mutation of newNode.state.mutations) {
+    for (const mutation of newNode.state.mutations.splice(0)) {
       switch (mutation.type) {
         case MUTATION_TYPE_INSERT:
           appendChild(
