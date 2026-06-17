@@ -45,8 +45,9 @@ export namespace Usable {
   }
 }
 
-interface Action<TPayload> {
+interface Action<TState, TPayload> {
   payload: TPayload;
+  eagerState: TState | undefined;
   lanes: Lanes;
   revertLanes: Lanes;
 }
@@ -56,7 +57,7 @@ interface ActionDispatcher<TState, TPayload> {
     payload: TPayload,
     options?: DispatchOptions<TState>,
   ) => UpdateHandle;
-  pendingActions: Action<TPayload>[];
+  pendingActions: Action<TState, TPayload>[];
   pendingState: TState;
   reducer: (state: TState, action: TPayload) => TState;
 }
@@ -103,7 +104,7 @@ namespace Hook {
   export interface ReducerHook<TState, TAction> {
     type: typeof ReducerType;
     dispatcher: ActionDispatcher<TState, TAction>;
-    memoizedActions: Action<TAction>[];
+    memoizedActions: Action<TState, TAction>[];
     memoizedState: TState;
   }
 }
@@ -374,7 +375,7 @@ export class RenderContext {
 
       const { dispatcher, memoizedState, memoizedActions } = currentHook;
       const renderLanes = this._session.lanes;
-      let newState = options.passthrough
+      let nextState = options.passthrough
         ? getInitialState(initialState)
         : memoizedState;
       let skipLanes = NoLanes;
@@ -384,32 +385,33 @@ export class RenderContext {
       for (const action of memoizedActions) {
         const { payload, lanes, revertLanes } = action;
         if ((lanes & renderLanes) === lanes) {
-          newState = reducer(newState, payload);
+          nextState = action.eagerState ?? reducer(nextState, payload);
           action.lanes = NoLanes;
         } else if ((revertLanes & renderLanes) === revertLanes) {
-          skipLanes |= lanes;
           action.revertLanes = NoLanes;
         }
+        skipLanes |= (lanes & ~renderLanes) | (revertLanes & renderLanes);
       }
 
       if (skipLanes === NoLanes) {
         currentHook.memoizedActions = [];
-        currentHook.memoizedState = newState;
+        currentHook.memoizedState = nextState;
       }
 
-      dispatcher.pendingState = newState;
+      dispatcher.pendingState = nextState;
       dispatcher.pendingActions = [];
       dispatcher.reducer = reducer;
     } else {
       const dispatcher: ActionDispatcher<TState, TAction> = {
         dispatch: (payload, options = {}) => {
           const { pendingActions, pendingState, reducer } = dispatcher;
+          let eagerState: TState | undefined;
 
           if (pendingActions.length === 0) {
             const areStatesEqual = options.areStatesEqual ?? Object.is;
-            const newState = reducer(pendingState, payload);
+            eagerState = reducer(pendingState, payload);
 
-            if (areStatesEqual(newState, pendingState)) {
+            if (areStatesEqual(eagerState, pendingState)) {
               return {
                 id: -1,
                 lanes: 0,
@@ -423,6 +425,7 @@ export class RenderContext {
           const handle = this.forceUpdate(options);
           pendingActions.push({
             payload,
+            eagerState,
             lanes: handle.lanes,
             revertLanes: options.transient ? handle.lanes : 0,
           });
