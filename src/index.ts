@@ -12,7 +12,7 @@ export {
 } from './core.js';
 export { DOMAdapter } from './dom/adapter.js';
 export { DOMTemplateError } from './dom/error.js';
-export { Root } from './dom/root.js';
+export { DOMRoot } from './dom/root.js';
 export { RenderError } from './error.js';
 export { Runtime, waitForStep } from './runtime.js';
 export { html, math, Partial, svg, text } from './template.js';

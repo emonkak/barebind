@@ -1,15 +1,15 @@
-import { DOMAdapter, html, Root, Runtime } from 'barebind';
+import { DOMAdapter, DOMRoot, html, Runtime } from 'barebind';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 describe('styles', () => {
   let container: Element;
   let runtime: Runtime;
-  let root: Root;
+  let root: DOMRoot;
 
   beforeEach(() => {
     container = document.createElement('div');
     runtime = new Runtime(new DOMAdapter());
-    root = new Root(container, runtime);
+    root = new DOMRoot(container, runtime);
     document.body.appendChild(container);
   });
 
@@ -76,6 +76,31 @@ describe('styles', () => {
     expect(target.style.color).toBe('red');
 
     await root.render(render({ color: 'red', 'font-size': value })).finished;
+    expect(target.style.fontSize).toBe('');
+  });
+
+  it('updates styles from a string to an object', async () => {
+    const render = (value: unknown) => html`<div style=${value}></div>`;
+
+    await root.render(render('color: red')).finished;
+    const target = container.querySelector('div')!;
+    expect(target.style.color).toBe('red');
+
+    await root.render(render({ color: 'blue', 'font-size': '16px' })).finished;
+    expect(target.style.color).toBe('blue');
+    expect(target.style.fontSize).toBe('16px');
+  });
+
+  it('updates styles from an object to a string', async () => {
+    const render = (value: unknown) => html`<div style=${value}></div>`;
+
+    await root.render(render({ color: 'red', 'font-size': '16px' })).finished;
+    const target = container.querySelector('div')!;
+    expect(target.style.color).toBe('red');
+    expect(target.style.fontSize).toBe('16px');
+
+    await root.render(render('color: blue')).finished;
+    expect(target.style.color).toBe('blue');
     expect(target.style.fontSize).toBe('');
   });
 });

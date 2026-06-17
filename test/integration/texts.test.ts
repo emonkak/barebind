@@ -1,15 +1,15 @@
-import { DOMAdapter, html, Root, Runtime } from 'barebind';
+import { DOMAdapter, DOMRoot, html, Runtime } from 'barebind';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 describe('texts', () => {
   let container: Element;
   let runtime: Runtime;
-  let root: Root;
+  let root: DOMRoot;
 
   beforeEach(() => {
     container = document.createElement('div');
     runtime = new Runtime(new DOMAdapter());
-    root = new Root(container, runtime);
+    root = new DOMRoot(container, runtime);
     document.body.appendChild(container);
   });
 
@@ -60,6 +60,15 @@ describe('texts', () => {
     await root.render(template).finished;
     expect(container.innerHTML).toBe('<div>abc</div>');
     expect(collectTexts(container)).toStrictEqual(['a', 'b', 'c']);
+  });
+
+  it('updates a text node', async () => {
+    const render = (value: string) => html`
+      <div>${value}</div>
+    `;
+    await root.render(render('a')).finished;
+    await root.render(render('b')).finished;
+    expect(container.innerHTML).toBe('<div>b</div>');
   });
 
   it('binds multiple text holes', async () => {

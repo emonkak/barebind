@@ -1,18 +1,20 @@
+import { mount, patch, unmount } from '../commit.js';
 import {
-  createPortal,
   type Dispatcher,
-  type RenderNode,
+  type RenderRoot,
+  Root,
   Scope,
   type UpdateHandle,
   type UpdateOptions,
+  wrap,
 } from '../core.js';
 import { AllLanes } from '../lane.js';
-import { mount, patch, unmount } from '../tree.js';
+import { PortalPart } from './part.js';
 
-export class Root {
+export class DOMRoot {
   private readonly _container: Element;
   private readonly _dispatcher: Dispatcher;
-  private _root: RenderNode.NativeNode | null = null;
+  private readonly _root: RenderRoot = { type: Root, current: null };
 
   constructor(container: Element, dispatcher: Dispatcher) {
     this._container = container;
@@ -24,21 +26,25 @@ export class Root {
       {
         level: 0,
         pendingLanes: AllLanes,
-        produce: (_lanes, reconciler) => {
-          const element = createPortal(value, this._container);
+        prepare: (_lanes, renderer) => {
+          const element = wrap(value);
           const scope = Scope.root();
-          const newRoot = (
-            this._root !== null
-              ? reconciler.diff(this._root, element, scope, 0, 0, null)
-              : reconciler.render(element, scope)
-          ) as RenderNode.NativeNode;
+          const root =
+            this._root.current !== null
+              ? renderer.diff(this._root.current, element, scope, 0, this._root)
+              : renderer.render(
+                  element,
+                  scope,
+                  0,
+                  this._root,
+                  new PortalPart(this._container),
+                );
           return () => {
-            if (this._root !== null) {
-              patch(this._root, newRoot);
+            if (this._root.current !== null) {
+              patch(this._root.current, root);
             } else {
-              mount(newRoot);
+              mount(root);
             }
-            this._root = newRoot;
           };
         },
       },
@@ -51,11 +57,11 @@ export class Root {
       {
         level: 0,
         pendingLanes: AllLanes,
-        produce: () => {
+        prepare: () => {
           return () => {
-            if (this._root !== null) {
-              unmount(this._root);
-              this._root = null;
+            if (this._root.current !== null) {
+              unmount(this._root.current);
+              this._root.current = null;
             }
           };
         },

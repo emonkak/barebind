@@ -1,5 +1,10 @@
 import type { Component, Scope } from './core.js';
 
+export function assertUnreachable(value: never): never {
+  /** v8 ignore next @preserve */
+  throw new Error(`Unreachable case: ${JSON.stringify(value)}`);
+}
+
 export function formatComponentStack(
   componentStack: Component<unknown>[],
 ): string {

@@ -1,5 +1,6 @@
 export const Bind = Symbol.for('barebind.Bind');
 export const Fragment = Symbol.for('barebind.Fragment');
+export const Root = Symbol.for('barebind.Root');
 export const toElement = Symbol.for('barebind.toElement');
 
 export const MUTATION_TYPE_INSERT = 0;
@@ -7,10 +8,26 @@ export const MUTATION_TYPE_UPDATE = 1;
 export const MUTATION_TYPE_UPDATE_AND_MOVE = 2;
 export const MUTATION_TYPE_REMOVE = 3;
 
+export interface Bindable {
+  [toElement](): VElement;
+}
+
+export interface Block {
+  readonly parts: readonly Part[];
+  readonly staticNodes: readonly ChildNode[];
+  mountBefore(afterNode: ChildNode): void;
+  mountInto(container: ParentNode, afterNode: ChildNode | null): void;
+  moveBefore(afterNode: ChildNode): void;
+  moveInto(container: ParentNode, afterNode: ChildNode | null): void;
+  unmount(): void;
+}
+
+export type Commit = () => void;
+
 export interface Component<TProps> {
   (props: TProps): VComponent<TProps>;
   arePropsEqual(oldProps: TProps, newProps: TProps): boolean;
-  newHandle(dispatcher: Dispatcher): ComponentHandle<TProps>;
+  createHandle(dispatcher: Dispatcher): ComponentHandle<TProps>;
 }
 
 export interface ComponentHandle<TProps> {
@@ -28,9 +45,10 @@ export interface Dispatcher {
 }
 
 export interface HostAdapter {
-  createHostNode(element: VHostElement, index: number): HostNode;
   getIdentifier(): string;
   getTaskPriority(): TaskPriority;
+  renderPortal(element: VPortal): Block;
+  renderTemplate(element: VTemplate): Block;
   requestCommit(callback: () => void): Promise<void>;
   requestCallback(
     callback: () => void | PromiseLike<void>,
@@ -38,20 +56,6 @@ export interface HostAdapter {
   ): Promise<void>;
   startViewTransition(callback: () => void): Promise<void>;
   yieldToMain(): Promise<void>;
-}
-
-export interface HostNode {
-  appendChild(child: HostNode, after: HostNode | null): void;
-  moveChild(child: HostNode, after: HostNode | null): void;
-  removeChild(child: HostNode): void;
-  afterCommit(): void;
-  beforeRemove(): void;
-  commitMount(type: VHostElement['type'], props: VHostElement['props']): void;
-  commitUpdate(
-    type: VHostElement['type'],
-    oldProps: VHostElement['props'],
-    newProps: VHostElement['props'],
-  ): void;
 }
 
 export interface Injectable<TInstance, TDefault> {
@@ -85,39 +89,35 @@ export type Mutation =
       node: RenderNode;
     };
 
-export interface Reconciler {
-  diff(
-    oldNode: RenderNode,
-    newElement: VElement,
-    scope: Scope,
-    index: number,
-    hostIndex: number,
-    parent: RenderNode | null,
-  ): RenderNode;
-  render(
-    element: VElement,
-    scope: Scope,
-    index?: number,
-    hostIndex?: number,
-    parent?: RenderNode | null,
-  ): RenderNode;
+export interface Part {
+  mountBlock(block: Block, afterNode: ChildNode | null): void;
+  moveBlock(block: Block, afterNode: ChildNode | null): void;
+  unmountBlock(block: Block, recursive: boolean): void;
+  commitUpdate(oldValue: unknown, newValue: unknown): void;
+  commitMount(value: unknown): void;
+  commitUnmount(value: unknown): void;
 }
 
 export type RenderNode =
+  | RenderNode.BindNode
   | RenderNode.ComponentNode
   | RenderNode.FragmentNode
-  | RenderNode.NativeNode;
+  | RenderNode.BlockNode;
 
 export namespace RenderNode {
   interface Node<TElement extends VElement> {
     type: TElement['type'];
     props: TElement['props'];
     key: TElement['key'];
+    part: Part;
     index: number;
-    hostIndex: number;
-    parent: RenderNode | null;
+    parent: RenderNode | RenderRoot;
     children: RenderNode[];
-    dirty: boolean;
+    state: unknown;
+  }
+
+  export interface BindNode extends Node<VBind> {
+    state: null;
   }
 
   export interface ComponentNode<TProps = unknown> extends Node<VComponent> {
@@ -133,20 +133,36 @@ export namespace RenderNode {
     };
   }
 
-  export interface NativeNode extends Node<VHostElement> {
+  export interface BlockNode extends Node<VPortal | VTemplate> {
     state: {
-      hostNode: HostNode;
+      block: Block;
     };
   }
 }
 
-export interface Renderable {
-  [toElement](): VElement;
+export interface RenderRoot {
+  type: typeof Root;
+  current: RenderNode | null;
+}
+
+export interface Renderer {
+  diff(
+    oldNode: RenderNode,
+    newElement: VElement,
+    scope: Scope,
+    index: number,
+    parent: RenderNode | RenderRoot,
+  ): RenderNode;
+  render(
+    element: VElement,
+    scope: Scope,
+    index: number,
+    parent: RenderNode | RenderRoot,
+    part: Part,
+  ): RenderNode;
 }
 
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
-
-export type Thunk = () => void;
 
 export interface UpdateHandle {
   id: number;
@@ -165,30 +181,12 @@ export interface UpdateOptions {
 export interface UpdateUnit {
   readonly level: number;
   readonly pendingLanes: Lanes;
-  produce(lanes: Lanes, reconciler: Reconciler): Thunk;
+  prepare(lanes: Lanes, renderer: Renderer): Commit;
 }
 
-export type VBind = VNode<typeof Bind, { value: unknown }, []>;
+export type VElement = VComponent | VFragment | VBind | VPortal | VTemplate;
 
-export type VComponent<TProps = any> = VNode<Component<TProps>, TProps, []>;
-
-export type VElement = VComponent | VFragment | VHostElement;
-
-export type VFragment = VNode<typeof Fragment, {}, VElement[]>;
-
-export type VHostElement = VBind | VPortal | VTemplate;
-
-export type VPortal = VNode<Element, {}, [VElement]>;
-
-export type VTemplate = VNode<
-  readonly string[],
-  {
-    mode: TemplateMode;
-  },
-  VElement[]
->;
-
-export class Ref<T> implements Renderable {
+export class Ref<T> implements Bindable {
   current: T;
 
   constructor(current: T) {
@@ -211,8 +209,8 @@ export class Ref<T> implements Renderable {
 export class Scope {
   readonly parent: Scope | null;
   readonly level: number;
-  readonly instances: object[] = [];
   readonly owner: Component<unknown> | null = null;
+  readonly instances: object[] = [];
 
   static root(): Scope {
     return new Scope(null, 0, null);
@@ -256,21 +254,51 @@ export class VNode<TType, TProps, const TChildren extends VElement[]> {
     }
   }
 
-  withKey(key: unknown): VNode<TType, TProps, TChildren> {
-    return new VNode(this.type, this.props, this.children, key);
+  withKey(key: unknown): this {
+    return new (this.constructor as typeof VNode)(
+      this.type,
+      this.props,
+      this.children,
+      key,
+    ) as this;
   }
 }
 
+export class VBind extends VNode<typeof Bind, { value: unknown }, []> {}
+
+export class VComponent<TProps = any> extends VNode<
+  Component<TProps>,
+  TProps,
+  []
+> {}
+
+export class VFragment extends VNode<typeof Fragment, {}, VElement[]> {}
+
+export class VPortal<TContainer extends ParentNode = ParentNode> extends VNode<
+  TContainer,
+  {},
+  [VElement]
+> {}
+
+export class VTemplate extends VNode<
+  readonly string[],
+  { mode: TemplateMode },
+  VElement[]
+> {}
+
 export function createBind(value: unknown): VBind {
-  return new VNode(Bind, { value }, []);
+  return new VBind(Bind, { value }, []);
 }
 
-export function createFragment(children: unknown[]): VFragment {
-  return new VNode(Fragment, {}, Array.from(children, wrap));
+export function createFragment(children: Iterable<unknown>): VFragment {
+  return new VFragment(Fragment, {}, Array.from(children, wrap));
 }
 
-export function createPortal(child: unknown, container: Element): VPortal {
-  return new VNode(container, {}, [wrap(child)]);
+export function createPortal<TContainer extends ParentNode>(
+  child: unknown,
+  container: TContainer,
+): VPortal<TContainer> {
+  return new VPortal(container, {}, [wrap(child)]);
 }
 
 export function createTemplate(
@@ -278,7 +306,7 @@ export function createTemplate(
   strings: readonly string[],
   children: readonly unknown[],
 ): VTemplate {
-  return new VNode(
+  return new VTemplate(
     strings,
     {
       mode,
@@ -290,17 +318,17 @@ export function createTemplate(
 export function wrap(value: unknown): VElement {
   return value instanceof VNode
     ? value
-    : isRenderable(value)
+    : isBindable(value)
       ? value[toElement]()
       : typeof value === 'object' && isIterable(value)
-        ? createFragment(Array.from(value, wrap))
+        ? createFragment(value)
         : createBind(value);
+}
+
+function isBindable(value: any): value is Bindable {
+  return typeof value?.[toElement] === 'function';
 }
 
 function isIterable(value: any): value is Iterable<unknown> {
   return typeof value?.[Symbol.iterator] === 'function';
-}
-
-function isRenderable(value: any): value is Renderable {
-  return typeof value?.[toElement] === 'function';
 }

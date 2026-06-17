@@ -1,11 +1,11 @@
 import {
   createComponent,
   DOMAdapter,
+  DOMRoot,
   html,
   Ref,
   RenderContext,
   RenderError,
-  Root,
   Runtime,
   waitForStep,
 } from 'barebind';
@@ -15,12 +15,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 describe('components', () => {
   let container: Element;
   let runtime: Runtime;
-  let root: Root;
+  let root: DOMRoot;
 
   beforeEach(() => {
     container = document.createElement('div');
     runtime = new Runtime(new DOMAdapter());
-    root = new Root(container, runtime);
+    root = new DOMRoot(container, runtime);
     document.body.appendChild(container);
   });
 

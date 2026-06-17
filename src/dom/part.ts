@@ -1,4 +1,5 @@
 import { sequentialEqual } from '../compare.js';
+import type { Block, Part } from '../core.js';
 
 const CLASS_TOKEN_SEPARATOR_PATTERN = /\s+/;
 
@@ -13,46 +14,92 @@ interface StyleMap {
   readonly [key: string]: string | null | undefined;
 }
 
-export abstract class DOMPart<TNode extends ChildNode = ChildNode> {
-  protected readonly _node: TNode;
+export abstract class DOMPart implements Part {
+  mountBlock(_block: Block, _afterNode: ChildNode): void {}
 
-  protected _value: unknown = null;
+  moveBlock(_block: Block, _afterNode: ChildNode): void {}
 
-  constructor(node: TNode) {
-    this._node = node;
-  }
+  unmountBlock(_block: Block, _recursive: boolean): void {}
 
-  get node(): TNode {
-    return this._node;
-  }
+  commitMount(_value: unknown): void {}
 
-  get value(): unknown {
-    return this._value;
-  }
+  commitUpdate(_oldValue: unknown, _newValue: unknown): void {}
 
-  set value(newValue: unknown) {
-    this._update(this._value, newValue);
-    this._value = newValue;
-  }
-
-  afterCommit(): void {}
-
-  beforeRemove(): void {}
-
-  protected abstract _update(oldValue: unknown, newValue: unknown): void;
+  commitUnmount(_value: unknown): void {}
 }
 
-export class AttributePart extends DOMPart<Element> {
-  private readonly _name: string;
+export class AttributePart extends DOMPart {
+  protected readonly _node: Element;
+  protected readonly _name: string;
 
   constructor(node: Element, name: string) {
-    super(node);
+    super();
+    this._node = node;
     this._name = name;
   }
 
-  protected _update(oldValue: unknown, newValue: unknown): void {
+  override commitMount(value: unknown): void {
+    if (value == null) {
+      this._node.removeAttribute(this._name);
+    } else if (typeof value === 'boolean') {
+      this._node.toggleAttribute(this._name, value);
+    } else {
+      this._node.setAttribute(this._name, toStringOrEmpty(value));
+    }
+  }
+
+  override commitUpdate(oldValue: unknown, newValue: unknown): void {
     if (!Object.is(oldValue, newValue)) {
-      if (this._name === 'class' && isObject(newValue)) {
+      this.commitMount(newValue);
+    }
+  }
+}
+
+export class ChildNodePart extends DOMPart {
+  private readonly _node: CharacterData;
+
+  constructor(node: CharacterData) {
+    super();
+    this._node = node;
+  }
+
+  override mountBlock(block: Block, afterNode: ChildNode | null): void {
+    block.mountBefore(afterNode ?? this._node);
+  }
+
+  override moveBlock(block: Block, afterNode: ChildNode | null): void {
+    block.moveBefore(afterNode ?? this._node);
+  }
+
+  override unmountBlock(block: Block, recursive: boolean): void {
+    if (!recursive) {
+      block.unmount();
+    }
+  }
+
+  override commitMount(value: unknown): void {
+    this._node.data = toStringOrEmpty(value);
+  }
+
+  override commitUpdate(oldValue: unknown, newValue: unknown): void {
+    if (!Object.is(oldValue, newValue)) {
+      this.commitMount(newValue);
+    }
+  }
+}
+
+export class ClassAttributePart extends AttributePart {
+  override commitMount(value: unknown): void {
+    if (isObject(value)) {
+      updateClass(this._node.classList, {}, value as ClassMap);
+    } else {
+      super.commitMount(value);
+    }
+  }
+
+  override commitUpdate(oldValue: unknown, newValue: unknown): void {
+    if (!Object.is(oldValue, newValue)) {
+      if (isObject(newValue)) {
         if (!isObject(oldValue)) {
           this._node.className = '';
           oldValue = {};
@@ -62,7 +109,180 @@ export class AttributePart extends DOMPart<Element> {
           oldValue as ClassMap,
           newValue as ClassMap,
         );
-      } else if (this._name === 'style' && isObject(newValue)) {
+      } else {
+        super.commitMount(newValue);
+      }
+    }
+  }
+}
+
+export class ElementPart extends DOMPart {
+  private readonly _node: Element;
+  private _cleanup: (() => void) | void | undefined;
+
+  constructor(node: Element) {
+    super();
+    this._node = node;
+  }
+
+  override commitMount(value: unknown): void {
+    if (!(value == null || typeof value === 'function')) {
+      throw new TypeError(
+        'Element values must be an function, null or undefined.',
+      );
+    }
+    this._cleanup?.();
+    this._cleanup = (value as Function)?.(this._node);
+  }
+
+  override commitUpdate(oldValue: unknown, newValue: unknown): void {
+    if (oldValue !== newValue) {
+      this.commitMount(newValue);
+    }
+  }
+
+  override commitUnmount(_value: unknown): void {
+    this._cleanup?.();
+    this._cleanup = undefined;
+  }
+}
+
+export class EventPart extends DOMPart implements EventListenerObject {
+  private readonly _node: Element;
+  private readonly _name: string;
+  private _currentListener:
+    | EventListenerOrEventListenerObject
+    | null
+    | undefined;
+
+  constructor(node: Element, name: string) {
+    super();
+    this._node = node;
+    this._name = name;
+  }
+
+  override commitMount(value: unknown): void {
+    if (!isEventListenerOrNullable(value)) {
+      throw new TypeError(
+        'Event values must be an EventListener, EventListenerObject, null or undefined.',
+      );
+    }
+    const oldListener = this._currentListener;
+    const newListener = value;
+    if (
+      oldListener == null ||
+      newListener == null ||
+      !areEventListenerOptionsEqual(oldListener, newListener)
+    ) {
+      if (oldListener != null) {
+        this._node.removeEventListener(
+          this._name,
+          this,
+          oldListener as AddEventListenerOptions,
+        );
+      }
+      if (newListener != null) {
+        this._node.addEventListener(
+          this._name,
+          this,
+          newListener as AddEventListenerOptions,
+        );
+      }
+    }
+    this._currentListener = value;
+  }
+
+  override commitUpdate(oldValue: unknown, newValue: unknown): void {
+    if (oldValue !== newValue) {
+      this.commitMount(newValue);
+    }
+  }
+
+  handleEvent(event: Event): void {
+    const listener = this._currentListener;
+    if (typeof listener === 'function') {
+      listener(event);
+    } else {
+      listener?.handleEvent(event);
+    }
+  }
+}
+
+export class LivePart extends DOMPart {
+  private readonly _node: Element;
+  private readonly _name: string;
+
+  constructor(node: Element, name: string) {
+    super();
+    this._node = node;
+    this._name = name;
+  }
+
+  override commitMount(value: unknown): void {
+    if ((this._node as any)[this._name] !== value) {
+      (this._node as any)[this._name] = value;
+    }
+  }
+
+  override commitUpdate(_oldValue: unknown, newValue: unknown): void {
+    this.commitMount(newValue);
+  }
+}
+
+export class PortalPart extends DOMPart {
+  private readonly _container: ParentNode;
+
+  constructor(container: ParentNode) {
+    super();
+    this._container = container;
+  }
+
+  override mountBlock(block: Block, afterNode: ChildNode | null): void {
+    block.mountInto(this._container, afterNode);
+  }
+
+  override moveBlock(block: Block, afterNode: ChildNode | null): void {
+    block.moveInto(this._container, afterNode);
+  }
+
+  override unmountBlock(block: Block, _recursive: boolean): void {
+    block.unmount();
+  }
+}
+
+export class PropertyPart extends DOMPart {
+  private readonly _node: Element;
+  private readonly _name: string;
+
+  constructor(node: Element, name: string) {
+    super();
+    this._node = node;
+    this._name = name;
+  }
+
+  override commitMount(value: unknown): void {
+    (this._node as any)[this._name] = value;
+  }
+
+  override commitUpdate(oldValue: unknown, newValue: unknown): void {
+    if (!Object.is(oldValue, newValue)) {
+      this.commitMount(newValue);
+    }
+  }
+}
+
+export class StyleAttributePart extends AttributePart {
+  override commitMount(value: unknown): void {
+    if (isObject(value)) {
+      updateStyle((this._node as HTMLElement).style, {}, value as StyleMap);
+    } else {
+      super.commitMount(value);
+    }
+  }
+
+  override commitUpdate(oldValue: unknown, newValue: unknown): void {
+    if (!Object.is(oldValue, newValue)) {
+      if (isObject(newValue)) {
         if (!isObject(oldValue)) {
           (this._node as HTMLElement).style = '';
           oldValue = {};
@@ -72,119 +292,28 @@ export class AttributePart extends DOMPart<Element> {
           oldValue as StyleMap,
           newValue as StyleMap,
         );
-      } else if (newValue == null) {
-        this._node.removeAttribute(this._name);
-      } else if (typeof newValue === 'boolean') {
-        this._node.toggleAttribute(this._name, newValue);
       } else {
-        this._node.setAttribute(this._name, toStringOrEmpty(newValue));
+        super.commitMount(newValue);
       }
     }
   }
 }
 
-export class CharacterDataPart extends DOMPart<CharacterData> {
-  protected _update(oldValue: unknown, newValue: unknown): void {
+export class TextPart extends DOMPart {
+  private readonly _node: CharacterData;
+
+  constructor(node: CharacterData) {
+    super();
+    this._node = node;
+  }
+
+  override commitMount(value: unknown): void {
+    this._node.data = toStringOrEmpty(value);
+  }
+
+  override commitUpdate(oldValue: unknown, newValue: unknown): void {
     if (!Object.is(oldValue, newValue)) {
-      this._node.data = toStringOrEmpty(newValue);
-    }
-  }
-}
-
-export class ElementPart extends DOMPart<Element> {
-  private _cleanup: (() => void) | void | undefined;
-
-  private _dirty: boolean = false;
-
-  protected _update(oldValue: unknown, newValue: unknown): void {
-    if (!(newValue == null || typeof newValue === 'function')) {
-      throw new TypeError(
-        'Element values must be an function, null or undefined.',
-      );
-    }
-    this._dirty = oldValue !== newValue;
-  }
-
-  override afterCommit(): void {
-    if (this._dirty) {
-      this._cleanup?.();
-      this._cleanup = (this._value as Function)?.(this._node);
-      this._dirty = false;
-    }
-  }
-
-  override beforeRemove(): void {
-    this._cleanup?.();
-    this._cleanup = undefined;
-  }
-}
-
-export class EventPart extends DOMPart<Element> implements EventListenerObject {
-  private readonly _name: string;
-
-  constructor(node: Element, name: string) {
-    super(node);
-    this._name = name;
-  }
-
-  handleEvent(event: Event): void {
-    if (typeof this._value === 'function') {
-      this._value(event);
-    } else {
-      (this._value as EventListenerObject)?.handleEvent(event);
-    }
-  }
-
-  protected _update(oldValue: unknown, newValue: unknown): void {
-    if (!isEventListenerOrNullable(newValue)) {
-      throw new TypeError(
-        'Event values must be an EventListener, EventListenerObject, null or undefined.',
-      );
-    }
-    if (
-      oldValue == null ||
-      newValue == null ||
-      !areEventListenerOptionsEqual(
-        newValue,
-        oldValue as EventListenerOrEventListenerObject,
-      )
-    ) {
-      if (oldValue != null) {
-        this._node.removeEventListener(this._name, this, oldValue);
-      }
-      if (newValue != null) {
-        this._node.addEventListener(this._name, this, newValue);
-      }
-    }
-  }
-}
-
-export class LivePart extends DOMPart<Element> {
-  private readonly _name: string;
-
-  constructor(node: Element, name: string) {
-    super(node);
-    this._name = name;
-  }
-
-  protected _update(_oldValue: unknown, newValue: unknown): void {
-    if ((this._node as any)[this._name] !== newValue) {
-      (this._node as any)[this._name] = newValue;
-    }
-  }
-}
-
-export class PropertyPart extends DOMPart<Element> {
-  private readonly _name: string;
-
-  constructor(node: Element, name: string) {
-    super(node);
-    this._name = name;
-  }
-
-  protected _update(oldValue: unknown, newValue: unknown): void {
-    if (!Object.is(oldValue, newValue)) {
-      (this._node as any)[this._name] = newValue;
+      this.commitMount(newValue);
     }
   }
 }
@@ -209,7 +338,7 @@ function getEventListenerOptions(
 
 function isEventListenerOrNullable(
   value: any,
-): value is EventListenerOrEventListenerObject & AddEventListenerOptions {
+): value is EventListenerOrEventListenerObject {
   return (
     value == null ||
     typeof value === 'function' ||

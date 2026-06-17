@@ -79,7 +79,7 @@ describe('DOMTemplate', () => {
         'html',
       );
       expect(() => {
-        template.render(0);
+        template.render();
       }).toThrow('There is no node that the hole indicates.');
     });
   });
