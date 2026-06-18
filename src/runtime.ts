@@ -85,6 +85,8 @@ export class Runtime implements Renderer, Dispatcher {
           type: newElement.type,
           props: newElement.props,
           key: newElement.key,
+          index,
+          parent,
           dirty: true,
         };
       }
@@ -101,14 +103,13 @@ export class Runtime implements Renderer, Dispatcher {
           return oldNode;
         }
         const newNode: RenderNode.ComponentNode = {
+          ...(oldNode as RenderNode.ComponentNode),
           type: newElement.type,
           props: newElement.props,
           key: newElement.key,
-          part: oldNode.part,
           index,
           parent,
           children: oldNode.children.slice(),
-          state: (oldNode as RenderNode.ComponentNode).state,
           dirty: true,
         };
         const subScope = scope.child(newElement.type);
@@ -127,15 +128,14 @@ export class Runtime implements Renderer, Dispatcher {
       }
       case newElement instanceof VFragment: {
         const newNode: RenderNode.FragmentNode = {
+          ...(oldNode as RenderNode.FragmentNode),
           type: newElement.type,
           props: newElement.props,
           key: newElement.key,
-          part: oldNode.part,
           index,
           parent,
           children: new Array(newElement.children.length),
           state: { mutations: [] },
-          dirty: false,
         };
         this._diffChildren(
           oldNode as RenderNode.FragmentNode,
@@ -148,15 +148,13 @@ export class Runtime implements Renderer, Dispatcher {
       case newElement instanceof VPortal:
       case newElement instanceof VTemplate: {
         const newNode: RenderNode.BlockNode = {
+          ...(oldNode as RenderNode.BlockNode),
           type: newElement.type,
           props: newElement.props,
           key: newElement.key,
-          part: oldNode.part,
           index,
           parent,
           children: new Array(newElement.children.length),
-          state: (oldNode as RenderNode.BlockNode).state,
-          dirty: false,
         };
         for (let i = 0, l = newElement.children.length; i < l; i++) {
           const newChild = this.diff(
