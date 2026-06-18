@@ -41,7 +41,7 @@ export function shallowEqual<T extends {}>(
     }
 
     for (let i = 0, l = ks1.length; i < l; i++) {
-      const k = ks1[i]! as keyof T;
+      const k = ks1[i] as keyof T;
       if (!Object.hasOwn(ys, k) || !equals(xs[k]!, ys[k]!)) {
         return false;
       }
