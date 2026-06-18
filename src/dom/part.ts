@@ -90,28 +90,16 @@ export class ChildNodePart extends DOMPart {
 
 export class ClassAttributePart extends AttributePart {
   override commitMount(value: unknown): void {
-    if (isObject(value)) {
-      updateClass(this._node.classList, {}, value as ClassMap);
-    } else {
-      super.commitMount(value);
-    }
+    updateClass(this._node.classList, {}, normalizeClass(value));
   }
 
   override commitUpdate(oldValue: unknown, newValue: unknown): void {
     if (!Object.is(oldValue, newValue)) {
-      if (isObject(newValue)) {
-        if (!isObject(oldValue)) {
-          this._node.className = '';
-          oldValue = {};
-        }
-        updateClass(
-          this._node.classList,
-          oldValue as ClassMap,
-          newValue as ClassMap,
-        );
-      } else {
-        super.commitMount(newValue);
-      }
+      updateClass(
+        this._node.classList,
+        normalizeClass(oldValue),
+        normalizeClass(newValue),
+      );
     }
   }
 }
@@ -348,6 +336,12 @@ function isEventListenerOrNullable(
 
 function isObject(value: unknown): value is object {
   return typeof value === 'object' && value !== null;
+}
+
+function normalizeClass(value: unknown): ClassMap {
+  return isObject(value)
+    ? (value as ClassMap)
+    : { [toStringOrEmpty(value)]: true };
 }
 
 /**
