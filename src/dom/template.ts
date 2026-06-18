@@ -441,51 +441,42 @@ function parseChildren(
 }
 
 function resolvePart(hole: Hole, treeWalker: TreeWalker): DOMPart {
+  let currentNode = treeWalker.currentNode;
   switch (hole.type) {
     case HOLE_TYPE_ATTRIBUTE:
       switch (hole.name.toLowerCase()) {
         case 'class':
-          return new ClassPart(treeWalker.currentNode as Element, hole.name);
+          return new ClassPart(currentNode as Element, hole.name);
         case 'style':
-          return new StylePart(treeWalker.currentNode as Element, hole.name);
+          return new StylePart(currentNode as Element, hole.name);
         default:
-          return new AttributePart(
-            treeWalker.currentNode as Element,
-            hole.name,
-          );
+          return new AttributePart(currentNode as Element, hole.name);
       }
     case HOLE_TYPE_EVENT:
-      return new EventPart(treeWalker.currentNode as Element, hole.name);
+      return new EventPart(currentNode as Element, hole.name);
     case HOLE_TYPE_CHILD_NODE:
-      return new ChildNodePart(treeWalker.currentNode as Comment);
+      return new ChildNodePart(currentNode as Comment);
     case HOLE_TYPE_ELEMENT:
-      return new ElementPart(treeWalker.currentNode as Element);
+      return new ElementPart(currentNode as Element);
     case HOLE_TYPE_LIVE:
-      return new LivePart(treeWalker.currentNode as Element, hole.name);
+      return new LivePart(currentNode as Element, hole.name);
     case HOLE_TYPE_PROPERTY:
-      return new PropertyPart(treeWalker.currentNode as Element, hole.name);
-    case HOLE_TYPE_TEXT:
-      return splitTextPart(treeWalker, hole);
+      return new PropertyPart(currentNode as Element, hole.name);
+    case HOLE_TYPE_TEXT: {
+      if (hole.splitIndex > 0) {
+        currentNode = (currentNode as Text).splitText(0);
+      }
+      if (hole.leadingSpan > 0) {
+        currentNode = (currentNode as Text).splitText(hole.leadingSpan);
+      }
+      const part = new CharacterDataPart(currentNode as Text);
+      if (hole.trailingSpan > 0) {
+        currentNode = (currentNode as Text).splitText(0);
+      }
+      treeWalker.currentNode = currentNode;
+      return part;
+    }
   }
-}
-
-function splitTextPart(
-  treeWalker: TreeWalker,
-  hole: Hole.TextHole,
-): CharacterDataPart {
-  let currentNode = treeWalker.currentNode as Text;
-  if (hole.splitIndex > 0) {
-    currentNode = currentNode.splitText(0);
-  }
-  if (hole.leadingSpan > 0) {
-    currentNode = currentNode.splitText(hole.leadingSpan);
-  }
-  const part = new CharacterDataPart(currentNode);
-  if (hole.trailingSpan > 0) {
-    currentNode = currentNode.splitText(0);
-  }
-  treeWalker.currentNode = currentNode;
-  return part;
 }
 
 function stripTrailingSlash(s: string): string {
