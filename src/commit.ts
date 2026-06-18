@@ -27,11 +27,14 @@ export function patch(oldNode: RenderNode, newNode: RenderNode) {
 }
 
 function afterCommit(node: RenderNode): void {
-  for (const child of node.children) {
-    afterCommit(child);
-  }
-  if (typeof node.type === 'function') {
-    node.state.handle.connect(node);
+  if (node.dirty) {
+    for (const child of node.children) {
+      afterCommit(child);
+    }
+    if (typeof node.type === 'function') {
+      node.state.handle.connect(node);
+    }
+    node.dirty = false;
   }
 }
 
