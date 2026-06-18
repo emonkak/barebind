@@ -141,7 +141,7 @@ describe('BrowserBackend', () => {
 
     it('schedules a callback with "user-blocking" priority using Scheduler.postTask()', () => {
       vi.stubGlobal('scheduler', {
-        postTask(callback) {
+        postTask(callback: Function) {
           return callback();
         },
       } as Partial<Scheduler>);
