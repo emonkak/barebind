@@ -7,11 +7,11 @@ const CSS_UPPERCASE_LETTER_PATTERN = /[A-Z]/g;
 const CSS_VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
 
 interface ClassMap {
-  readonly [key: string]: boolean;
+  [key: string]: boolean;
 }
 
 interface StyleMap {
-  readonly [key: string]: string | null | undefined;
+  [key: string]: string | null | undefined;
 }
 
 export abstract class DOMPart implements Part {
@@ -237,28 +237,16 @@ export class PropertyPart extends AttributePart {
 
 export class StylePart extends AttributePart {
   override commitMount(value: unknown): void {
-    if (isObject(value)) {
-      updateStyle((this._node as HTMLElement).style, {}, value as StyleMap);
-    } else {
-      super.commitMount(value);
-    }
+    updateStyle((this._node as HTMLElement).style, {}, normalizeStyle(value));
   }
 
   override commitUpdate(oldValue: unknown, newValue: unknown): void {
     if (!Object.is(oldValue, newValue)) {
-      if (isObject(newValue)) {
-        if (!isObject(oldValue)) {
-          (this._node as HTMLElement).style = '';
-          oldValue = {};
-        }
-        updateStyle(
-          (this._node as HTMLElement).style,
-          oldValue as StyleMap,
-          newValue as StyleMap,
-        );
-      } else {
-        super.commitMount(newValue);
-      }
+      updateStyle(
+        (this._node as HTMLElement).style,
+        normalizeStyle(oldValue),
+        normalizeStyle(newValue),
+      );
     }
   }
 }
@@ -301,6 +289,12 @@ function normalizeClass(value: unknown): ClassMap {
     : { [toStringOrEmpty(value)]: true };
 }
 
+function normalizeStyle(value: unknown): StyleMap {
+  return isObject(value)
+    ? (value as StyleMap)
+    : parseCSSText(toStringOrEmpty(value));
+}
+
 /**
  * Convert style property names expressed in lowerCamelCase to CSS style
  * propertes in kebab-case.
@@ -322,6 +316,17 @@ function toCSSPropertyName(key: string): string {
 
 function toStringOrEmpty(value: unknown): string {
   return value?.toString?.() ?? '';
+}
+
+function parseCSSText(cssText: string): StyleMap {
+  // biome-ignore lint/style/noRestrictedGlobals: intentional global document reference
+  const element = document.createElement('p');
+  element.style.cssText = cssText;
+  const styleMap: StyleMap = {};
+  for (const key of element.style) {
+    styleMap[key] = element.style.getPropertyValue(key);
+  }
+  return styleMap;
 }
 
 function toggleClass(
