@@ -148,7 +148,7 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
   render(props: TProps, scope: Scope, lanes: Lanes): VElement {
     try {
       this._pendingLanes &= ~lanes;
-      const context = new RenderContext(this, scope);
+      const context = new RenderContext(this, this._hooks.slice(), scope);
       const returnValue = this._componentFn.call(context, props);
       this._hooks = finalizeHooks(context);
       Object.freeze(scope.instances);
@@ -190,10 +190,10 @@ export class RenderContext {
   /** @internal */
   _hookIndex: number = 0;
 
-  constructor(instance: FunctionComponent, scope: Scope) {
+  constructor(instance: FunctionComponent, hooks: Hook[], scope: Scope) {
     this._instance = instance;
+    this._hooks = hooks;
     this._scope = scope;
-    this._hooks = instance._hooks.slice();
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
