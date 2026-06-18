@@ -79,14 +79,14 @@ export function SyncEnternalStore<T>(
       store.snapshot = snapshot;
 
       if (!Object.is(getSnapshot(), snapshot)) {
-        context.forceUpdate();
+        context.forceUpdate({ flushSync: true });
       }
     }, [getSnapshot, snapshot]);
 
     context.useEffect(() => {
       const checkForChanges = () => {
         if (!Object.is(store.getSnapshot(), store.snapshot)) {
-          context.forceUpdate();
+          context.forceUpdate({ flushSync: true });
         }
       };
       checkForChanges();
