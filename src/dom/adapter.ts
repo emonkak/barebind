@@ -1,73 +1,43 @@
-/// <reference path="../../typings/upsert.d.ts" />
-
-import type {
-  Directive,
-  DirectiveHandler,
-  HostAdapter,
-  Lanes,
-  PrimitiveHandler,
-  Scope,
-  Template,
+import {
+  Bind,
+  type HostAdapter,
+  type HostNode,
+  Primitive,
+  type VHostElement,
+  type VTemplate,
 } from '../core.js';
-import { NoLanes } from '../lane.js';
-import { isRootScope } from '../scope.js';
-import { ensurePartType } from './error.js';
-import { DOMFragmentHandler } from './fragment.js';
+import { DOMRenderError } from './error.js';
+import {
+  AttributePart,
+  ChildNodePart,
+  DOMBind,
+  DOMBlock,
+  type DOMPart,
+  DOMPortal,
+  DOMPrimitive,
+  ElementPart,
+  EventPart,
+  LivePart,
+  PropertyPart,
+  TextPart,
+} from './node.js';
 import {
   AttributeType,
   ChildNodeType,
-  type DOMPart,
+  createTreeWalker,
+  DOMTemplate,
   ElementType,
   EventType,
+  type Hole,
   LiveType,
   PropertyType,
   TextType,
-} from './part.js';
-import {
-  DOMAttributeHandler,
-  DOMClassHandler,
-  DOMElementHandler,
-  DOMEventHandler,
-  DOMLiveHandler,
-  DOMNodeHandler,
-  DOMPropertyHandler,
-  DOMRefHandler,
-  DOMStyleHandler,
-} from './primitive.js';
-import {
-  ClientRenderer,
-  type DOMRenderer,
-  HydrationRenderer,
-} from './renderer.js';
-import { DOMTemplate, DOMTemplateHandler } from './template.js';
+} from './template.js';
 
-export interface DOMAdapterOptions {
-  identifier?: string;
-}
-
-export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
-  protected readonly _container: Element;
-
-  private readonly _identifier: string;
-
+export class DOMAdapter implements HostAdapter {
+  private readonly _identifier = generateUniqueIdentifier(8);
   private readonly _templateCache: WeakMap<readonly string[], DOMTemplate> =
     new WeakMap();
-
-  constructor(
-    container: Element,
-    { identifier = generateUniqueIdentifier(8) }: DOMAdapterOptions = {},
-  ) {
-    this._container = container;
-    this._identifier = identifier;
-  }
-
-  get container(): Element {
-    return this._container;
-  }
-
-  getDefaultLanes(): Lanes {
-    return NoLanes;
-  }
 
   getIdentifier(): string {
     return this._identifier;
@@ -79,6 +49,28 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
         ? 'user-visible'
         : 'user-blocking'
       : 'background';
+  }
+
+  renderElement(element: VHostElement): HostNode {
+    if (element.type === Bind) {
+      return new DOMBind(element.props.index);
+    }
+    if (element.type === Primitive) {
+      return new DOMPrimitive(element.props.value);
+    }
+    if (element.type instanceof Element) {
+      return new DOMPortal(element.type);
+    }
+    const template = this._templateCache.getOrInsertComputed(element.type, () =>
+      DOMTemplate.parse(
+        (element as VTemplate).type,
+        (element as VTemplate).children,
+        (element as VTemplate).props.mode,
+        this._identifier,
+        document,
+      ),
+    );
+    return renderTemplate(template);
   }
 
   requestCallback<T>(
@@ -111,67 +103,13 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
     }
   }
 
-  abstract requestRenderer(scope: Scope<DOMPart>): DOMRenderer;
-
-  resolveFragment(
-    directive: Directive.FragmentDirective<unknown>,
-    part: DOMPart,
-  ): DirectiveHandler<Iterable<unknown>, DOMPart, DOMRenderer> {
-    ensurePartType(ChildNodeType, directive, part);
-    return new DOMFragmentHandler();
+  requestCommit(callback: () => void): Promise<void> {
+    return new Promise((resolve) => {
+      requestAnimationFrame(resolve);
+    }).then(callback);
   }
 
-  resolvePrimitive(
-    _directive: Directive.PrimitiveDirective<unknown>,
-    part: DOMPart,
-  ): PrimitiveHandler<unknown, DOMPart, DOMRenderer> {
-    switch (part.type) {
-      case AttributeType:
-        switch (part.name) {
-          case ':class':
-            return new DOMClassHandler();
-          case ':ref':
-            return new DOMRefHandler();
-          case ':style':
-            return new DOMStyleHandler();
-          default:
-            return new DOMAttributeHandler();
-        }
-      case ChildNodeType:
-      case TextType:
-        return new DOMNodeHandler();
-      case ElementType:
-        return new DOMElementHandler();
-      case EventType:
-        return new DOMEventHandler();
-      case LiveType:
-        return new DOMLiveHandler();
-      case PropertyType:
-        return new DOMPropertyHandler();
-    }
-  }
-
-  resolveTemplate(
-    directive: Directive.TemplateDirective,
-    part: DOMPart.ChildNodePart,
-  ): DirectiveHandler<Template, DOMPart.ChildNodePart, DOMRenderer> {
-    ensurePartType(ChildNodeType, directive, part);
-    const template = this._templateCache.getOrInsertComputed(
-      directive.type,
-      () =>
-        DOMTemplate.parse(
-          directive.type,
-          directive.value.exprs,
-          directive.value.mode,
-          this._identifier,
-          this._container.ownerDocument,
-        ),
-    );
-    return new DOMTemplateHandler(template);
-  }
-
-  startViewTransition(callback: () => PromiseLike<void> | void): Promise<void> {
-    const document = this._container.ownerDocument;
+  startViewTransition(callback: () => void): Promise<void> {
     return typeof document.startViewTransition === 'function'
       ? document.startViewTransition(callback).updateCallbackDone
       : Promise.resolve().then(callback);
@@ -186,21 +124,6 @@ export abstract class DOMAdapter implements HostAdapter<DOMPart, DOMRenderer> {
   }
 }
 
-export class ClientAdapter extends DOMAdapter {
-  requestRenderer(_scope: Scope<DOMPart>): DOMRenderer {
-    return new ClientRenderer(this._container);
-  }
-}
-
-export class HydrationAdapter extends DOMAdapter {
-  requestRenderer(scope: Scope<DOMPart>): DOMRenderer {
-    return isRootScope(scope) &&
-      !this._container.contains(scope.owner.part.node)
-      ? new HydrationRenderer(this._container)
-      : new ClientRenderer(this._container);
-  }
-}
-
 function generateUniqueIdentifier(length: number): string {
   return Array.from(
     crypto.getRandomValues(new Uint8Array(length)),
@@ -209,6 +132,87 @@ function generateUniqueIdentifier(length: number): string {
         ? String.fromCharCode(0x61 + (byte % 26))
         : (byte % 36).toString(36),
   ).join('');
+}
+
+function renderTemplate(template: DOMTemplate): DOMBlock {
+  const fragment = template.element.ownerDocument.importNode(
+    template.element.content,
+    true,
+  );
+  const holes = template.holes;
+  const parts: DOMPart[] = new Array(holes.length);
+
+  if (holes.length > 0) {
+    const templateWalker = createTreeWalker(fragment);
+    let nodeIndex = 0;
+
+    for (let holeIndex = 0, l = holes.length; holeIndex < l; holeIndex++) {
+      const hole = holes[holeIndex]!;
+
+      for (; nodeIndex <= hole.index; nodeIndex++) {
+        if (templateWalker.nextNode() === null) {
+          throw new DOMRenderError(
+            templateWalker.currentNode,
+            'There is no node that the hole indicates. The template may have been modified.',
+          );
+        }
+      }
+
+      const node = templateWalker.currentNode;
+      let part: DOMPart;
+
+      switch (hole.type) {
+        case AttributeType:
+          part = new AttributePart(node as Element, hole.name);
+          break;
+        case EventType:
+          part = new EventPart(node as Element, hole.name);
+          break;
+        case ChildNodeType:
+          part = new ChildNodePart(node as Comment);
+          break;
+        case ElementType:
+          part = new ElementPart(node as Element);
+          break;
+        case LiveType:
+          part = new LivePart(node as Element, hole.name);
+          break;
+        case PropertyType:
+          part = new PropertyPart(node as Element, hole.name);
+          break;
+        case TextType:
+          part = splitTextPart(templateWalker, hole);
+          break;
+      }
+
+      parts[holeIndex] = part;
+    }
+  }
+
+  if (
+    parts[0] instanceof ChildNodePart &&
+    parts[0].node === fragment.firstChild
+  ) {
+    fragment.firstChild.before(document.createComment(''));
+  }
+
+  return new DOMBlock(fragment, parts);
+}
+
+function splitTextPart(treeWalker: TreeWalker, hole: Hole.TextHole): TextPart {
+  let currentNode = treeWalker.currentNode as Text;
+  if (currentNode.previousSibling?.nodeType === Node.TEXT_NODE) {
+    currentNode = currentNode.splitText(0);
+  }
+  if (hole.leadingSpan > 0) {
+    currentNode = currentNode.splitText(hole.leadingSpan);
+  }
+  const part = new TextPart(currentNode);
+  if (hole.trailingSpan > 0) {
+    currentNode = currentNode.splitText(0);
+  }
+  treeWalker.currentNode = currentNode;
+  return part;
 }
 
 function isContinuousEvent(event: Event): boolean {

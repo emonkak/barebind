@@ -1,138 +1,38 @@
-import {
-  type Lanes,
-  type Scope,
-  type Session,
-  type UpdateHandle,
-  type UpdateTask,
-  type UpdateUnit,
-  wrap,
-} from '../core.js';
-import { Runtime } from '../runtime.js';
-import { createRootScope } from '../scope.js';
-import { Slot } from '../slot.js';
-import {
-  ClientAdapter,
-  type DOMAdapter,
-  type DOMAdapterOptions,
-  HydrationAdapter,
-} from './adapter.js';
-import { createChildNodePart, type DOMPart } from './part.js';
-import type { DOMRenderer } from './renderer.js';
+import { createPortal, type RenderRoot } from '../core.js';
+import { mount, Runtime, unmount, update } from '../runtime.js';
+import { DOMAdapter } from './adapter.js';
 
-export class DOMRoot {
-  private readonly _slot: Slot<DOMPart.ChildNodePart>;
-  private readonly _runtime: Runtime<DOMPart, DOMRenderer>;
+export class Root {
+  private readonly _container: Element;
+  private readonly _runtime: Runtime;
+  private _tree: RenderRoot | null = null;
 
-  constructor(
-    slot: Slot<DOMPart.ChildNodePart>,
-    runtime: Runtime<DOMPart, DOMRenderer>,
-  ) {
-    this._slot = slot;
+  constructor(container: Element, runtime: Runtime) {
+    this._container = container;
     this._runtime = runtime;
   }
 
-  update(source: unknown): UpdateHandle {
-    this._slot.update(wrap(source), this._slot.scope);
-    return this._runtime.schedule(this._slot);
+  render(child: unknown): void {
+    const oldTree = this._tree;
+    const element = createPortal(child, this._container);
+
+    if (oldTree !== null) {
+      const newTree = this._runtime.diff(oldTree, element);
+      update(oldTree, newTree);
+    } else {
+      const tree = this._runtime.render(element);
+      mount(tree);
+    }
   }
 
-  mount(): UpdateHandle {
-    const task = new MountTask(
-      this._slot,
-      (this._runtime.adapter as DOMAdapter).container,
-    );
-    return this._runtime.schedule(task);
-  }
-
-  unmount(): UpdateHandle {
-    const task = new UnmountTask(this._slot);
-    return this._runtime.schedule(task);
-  }
-}
-
-export function createClientRoot(
-  source: unknown,
-  container: Element,
-  options?: DOMAdapterOptions,
-) {
-  const adapter = new ClientAdapter(container, options);
-  const runtime = new Runtime<DOMPart, DOMRenderer>(adapter);
-  return createRoot(source, runtime);
-}
-
-export function createHydrationRoot(
-  source: unknown,
-  container: Element,
-  options?: DOMAdapterOptions,
-): DOMRoot {
-  const adapter = new HydrationAdapter(container, options);
-  const runtime = new Runtime<DOMPart, DOMRenderer>(adapter);
-  return createRoot(source, runtime);
-}
-
-export function createRoot(
-  source: unknown,
-  runtime: Runtime<DOMPart, DOMRenderer>,
-): DOMRoot {
-  const document = (runtime.adapter as DOMAdapter).container.ownerDocument;
-  const part = createChildNodePart(document.createComment(''));
-  const scope = createRootScope({
-    part,
-  });
-  const slot = new Slot(part, wrap(source), Object.freeze(scope));
-  return new DOMRoot(slot, runtime);
-}
-
-class MountTask implements UpdateTask {
-  private _slot: Slot<DOMPart.ChildNodePart>;
-  private _container: Element;
-
-  constructor(slot: Slot<DOMPart.ChildNodePart>, container: Element) {
-    this._slot = slot;
-    this._container = container;
-  }
-
-  get scope(): Scope<DOMPart.ChildNodePart> {
-    return this._slot.scope;
-  }
-
-  get pendingLanes(): Lanes {
-    return -1;
-  }
-
-  render(session: Session): Iterable<UpdateUnit> {
-    return this._slot.render(session);
-  }
-
-  complete(): void {
-    this._container.appendChild(this._slot.part.sentinelNode);
-    this._slot.commit();
-    this._slot.afterCommit();
+  unmount(): void {
+    if (this._tree !== null) {
+      unmount(this._tree);
+    }
   }
 }
 
-class UnmountTask implements UpdateTask {
-  private _slot: Slot<DOMPart.ChildNodePart>;
-
-  constructor(slot: Slot<DOMPart.ChildNodePart>) {
-    this._slot = slot;
-  }
-
-  get scope(): Scope<DOMPart.ChildNodePart> {
-    return this._slot.scope;
-  }
-
-  get pendingLanes(): Lanes {
-    return -1;
-  }
-
-  render(_session: Session): Iterable<UpdateUnit> {
-    return [];
-  }
-
-  complete(): void {
-    this._slot.part.sentinelNode.remove();
-    this._slot.beforeRevert();
-    this._slot.revert();
-  }
+export function createRoot(container: Element): Root {
+  const runtime = new Runtime(new DOMAdapter());
+  return new Root(container, runtime);
 }

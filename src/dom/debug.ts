@@ -1,14 +1,3 @@
-import type { DOMPlace } from './error.js';
-import {
-  AttributeType,
-  ChildNodeType,
-  ElementType,
-  EventType,
-  LiveType,
-  PropertyType,
-  TextType,
-} from './part.js';
-
 const CARET_CHAR = '^';
 const INDENT_STRING = '  ';
 const PLACEHOLDER_STRING = '${...}';
@@ -18,51 +7,22 @@ const COMPLEXITY_THRESHOLD = 10;
 
 const serializer = new XMLSerializer();
 
+export function annotateAttribute(element: Element, name: string): string[] {
+  return annotateElementTail(element, name + '=' + PLACEHOLDER_STRING);
+}
+
 export function annotateNode(node: Node): string[] {
   if (node instanceof Element) {
-    return annotateElementHead(node, node.localName);
+    return annotateElementHead(
+      node,
+      isUnknownElement(node) ? PLACEHOLDER_STRING : node.localName,
+    );
   } else {
     return prettyPrintNode(node).flatMap((line) => {
-      const caretSpan = line.trimStart().length;
+      const caretSpan = Math.max(1, line.trimStart().length);
       const spaceSpan = line.length - caretSpan;
       return [line, ' '.repeat(spaceSpan) + CARET_CHAR.repeat(caretSpan)];
     });
-  }
-}
-
-export function annotatePlace(place: DOMPlace): string[] {
-  switch (place.type) {
-    case AttributeType:
-      return annotateElementTail(
-        place.node,
-        place.name + '=' + PLACEHOLDER_STRING,
-      );
-    case ChildNodeType:
-      return [
-        `<!--${PLACEHOLDER_STRING}-->`,
-        CARET_CHAR.repeat(PLACEHOLDER_STRING.length + 7),
-      ];
-    case ElementType:
-      return place.unknown
-        ? annotateElementHead(place.node, PLACEHOLDER_STRING)
-        : annotateElementTail(place.node, PLACEHOLDER_STRING);
-    case EventType:
-      return annotateElementTail(
-        place.node,
-        '@' + place.name + '=' + PLACEHOLDER_STRING,
-      );
-    case LiveType:
-      return annotateElementTail(
-        place.node,
-        '$' + place.name + '=' + PLACEHOLDER_STRING,
-      );
-    case PropertyType:
-      return annotateElementTail(
-        place.node,
-        '.' + place.name + '=' + PLACEHOLDER_STRING,
-      );
-    case TextType:
-      return [PLACEHOLDER_STRING, CARET_CHAR.repeat(PLACEHOLDER_STRING.length)];
   }
 }
 
@@ -123,6 +83,27 @@ export function generateNodeFrame(
   return leadingString + annotatedString + trailingString;
 }
 
+function annotateElementHead(element: Element, annotation: string): string[] {
+  const isClosed = isTagClosed(element);
+  const tailSpan = isClosed ? 0 : element.localName.length + 3;
+  const outerHTML = element.outerHTML;
+  const unopenedTag = outerHTML.substring(
+    element.localName.length + 1,
+    outerHTML.length - element.innerHTML.length - tailSpan,
+  );
+
+  const lines = [
+    '<' + PLACEHOLDER_STRING + unopenedTag,
+    ' ' + CARET_CHAR.repeat(annotation.length),
+  ];
+
+  if (!isClosed) {
+    lines.push(...prettyPrintChildren(element, 1), toCloseTag(element));
+  }
+
+  return lines;
+}
+
 function annotateElementTail(element: Element, annotation: string): string[] {
   const isClosed = isTagClosed(element);
   const tailSpan = isClosed ? 1 : element.localName.length + 4;
@@ -135,27 +116,6 @@ function annotateElementTail(element: Element, annotation: string): string[] {
   const lines = [
     unclosedTag + ' ' + annotation + '>',
     ' '.repeat(unclosedTag.length + 1) + CARET_CHAR.repeat(annotation.length),
-  ];
-
-  if (!isClosed) {
-    lines.push(...prettyPrintChildren(element, 1), toCloseTag(element));
-  }
-
-  return lines;
-}
-
-function annotateElementHead(element: Element, annotation: string): string[] {
-  const isClosed = isTagClosed(element);
-  const tailSpan = isClosed ? 0 : element.localName.length + 3;
-  const outerHTML = element.outerHTML;
-  const unopenedTag = outerHTML.substring(
-    element.localName.length + 1,
-    outerHTML.length - element.innerHTML.length - tailSpan,
-  );
-
-  const lines = [
-    '<' + annotation + unopenedTag,
-    ' ' + CARET_CHAR.repeat(annotation.length),
   ];
 
   if (!isClosed) {
@@ -186,6 +146,14 @@ function getComplexity(node: Node): number {
 
 function isTagClosed(element: Element): boolean {
   return !element.outerHTML.endsWith(toCloseTag(element));
+}
+
+function isUnknownElement(el: Element): boolean {
+  return (
+    el.constructor === HTMLUnknownElement ||
+    el.constructor === SVGElement ||
+    el.constructor === MathMLElement
+  );
 }
 
 function prettyPrintChildren(node: Node, level: number): string[] {
@@ -220,6 +188,8 @@ function prettyPrintNode(node: Node, level: number = 0): string[] {
     }
   } else if (node instanceof DocumentFragment) {
     lines.push(...prettyPrintChildren(node, level));
+  } else if (node instanceof Text) {
+    lines.push(indentString + JSON.stringify(node.data));
   } else {
     lines.push(indentString + serializeNode(node));
   }

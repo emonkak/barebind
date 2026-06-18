@@ -1,26 +1,7 @@
-import type { Directive } from '../core.js';
+import type { VElement } from '../core.js';
 import { nameOf } from '../debug.js';
-import { annotateNode, annotatePlace, generateNodeFrame } from './debug.js';
-import {
-  type AttributeType,
-  type ChildNodeType,
-  type DOMPart,
-  type ElementType,
-  type EventType,
-  type LiveType,
-  PART_NAMES,
-  type PropertyType,
-  type TextType,
-} from './part.js';
-
-export type DOMPlace =
-  | { type: typeof AttributeType; name: string; node: Element }
-  | { type: typeof ChildNodeType; node: ChildNode }
-  | { type: typeof ElementType; node: Element; unknown?: boolean }
-  | { type: typeof EventType; name: string; node: Element }
-  | { type: typeof LiveType; name: string; node: Element }
-  | { type: typeof PropertyType; name: string; node: Element }
-  | { type: typeof TextType; node: Text };
+import { annotateAttribute, annotateNode, generateNodeFrame } from './debug.js';
+import type { DOMPart } from './node.js';
 
 export class DOMRenderError extends Error {
   readonly node: Node;
@@ -36,15 +17,16 @@ export class DOMRenderError extends Error {
     return new DOMRenderError(node, message, options);
   }
 
-  static fromPlace(
-    place: DOMPlace,
+  static fromAttribute(
+    node: Element,
+    name: string,
     message: string,
     options?: ErrorOptions,
   ): DOMRenderError {
     DEBUG: {
-      message += '\n' + generateNodeFrame(place.node, annotatePlace(place));
+      message += '\n' + generateNodeFrame(node, annotateAttribute(node, name));
     }
-    return new DOMRenderError(place.node, message, options);
+    return new DOMRenderError(node, message, options);
   }
 
   constructor(node: Node, message: string, options?: ErrorOptions) {
@@ -53,20 +35,17 @@ export class DOMRenderError extends Error {
   }
 }
 
-export function ensurePartType<TPartType extends DOMPart['type']>(
+export function ensurePartType<
+  TPartType extends { new (...args: never[]): DOMPart },
+>(
   expectedPartType: TPartType,
-  directive: Directive.ElementDirective,
+  element: VElement,
   part: DOMPart,
-): asserts part is DOMPart & { type: TPartType } {
-  if (part.type !== expectedPartType) {
-    DEBUG: {
-      if (true!) {
-        throw DOMRenderError.fromPlace(
-          part,
-          `${nameOf(directive.type)} must be used in ${PART_NAMES[expectedPartType]}Part.`,
-        );
-      }
-    }
-    throw DOMRenderError.fromPlace(part, 'The part type mismatches.');
+): asserts part is InstanceType<TPartType> {
+  if (!(part instanceof expectedPartType)) {
+    throw DOMRenderError.fromNode(
+      (part as DOMPart).node,
+      `${nameOf(element.type)} must be used in ${expectedPartType.name}Part.`,
+    );
   }
 }
