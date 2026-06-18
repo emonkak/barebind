@@ -17,7 +17,7 @@ describe('styles', () => {
     document.body.removeChild(container);
   });
 
-  it('updates styles as a string', async () => {
+  it('updates styles with a string', async () => {
     const render = (value: string) => html`<div style=${value}></div>`;
 
     await root.render(render('color: red')).finished;
@@ -28,7 +28,7 @@ describe('styles', () => {
     expect(target.style.color).toBe('blue');
   });
 
-  it('updates styles as an object', async () => {
+  it('updates styles with an object', async () => {
     const render = (value: Record<string, string>) =>
       html`<div style=${value}></div>`;
 
@@ -40,6 +40,22 @@ describe('styles', () => {
     await root.render(render({ color: 'blue' })).finished;
     expect(target.style.color).toBe('blue');
     expect(target.style.fontSize).toBe('');
+  });
+
+  it('updates classes with an array', async () => {
+    const render = (values: unknown[]) => html`<div style=${values}></div>`;
+
+    await root.render(render(['color: red', { fontSize: '16px' }])).finished;
+    const target = container.querySelector('div')!;
+    expect(target.style.color).toBe('red');
+    expect(target.style.fontSize).toBe('16px');
+    expect(target.style.background).toBe('');
+
+    await root.render(render([null, { fontSize: '24px' }, 'background: blue']))
+      .finished;
+    expect(target.style.color).toBe('');
+    expect(target.style.fontSize).toBe('24px');
+    expect(target.style.background).toBe('blue');
   });
 
   it('applies CSS custom properties when specified in the object', async () => {
