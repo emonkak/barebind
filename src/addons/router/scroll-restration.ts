@@ -1,7 +1,9 @@
 import type { RenderContext, UsableFunction } from '../../component.js';
 import { HistoryContext, trimHashMark } from './history.js';
 
-export function ScrollRestration(): UsableFunction<void> {
+export function ScrollRestration(
+  document: Document = window.document,
+): UsableFunction<void> {
   return (context: RenderContext) => {
     const { location, navigator } = context.inject(HistoryContext);
 
@@ -43,16 +45,15 @@ export function ScrollRestration(): UsableFunction<void> {
         location.navigationType === 'push' ||
         location.navigationType === 'replace'
       ) {
-        resetScrollPosition(location.url.hash);
+        resetScrollPosition(document, location.url.hash);
       }
-    }, [location]);
+    }, [document, location]);
   };
 }
 
-function resetScrollPosition(hash: string): void {
+function resetScrollPosition(document: Document, hash: string): void {
   if (hash !== '') {
     const id = trimHashMark(hash);
-    // biome-ignore lint/style/noRestrictedGlobals: intentional global document reference
     const element = document.getElementById(id);
 
     if (element !== null) {
