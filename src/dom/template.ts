@@ -1,23 +1,5 @@
-import {
-  type DirectiveHandler,
-  type Scope,
-  type Session,
-  type Template,
-  type TemplateMode,
-  wrap,
-} from '../core.js';
-import type { Slot } from '../slot.js';
+import type { TemplateMode } from '../core.js';
 import { DOMRenderError } from './error.js';
-import {
-  AttributeType,
-  ChildNodeType,
-  type DOMPart,
-  ElementType,
-  EventType,
-  LiveType,
-  PropertyType,
-  TextType,
-} from './part.js';
 
 const PLACEHOLDER_PATTERN = /^[0-9a-z_-]+$/;
 
@@ -34,16 +16,24 @@ const ATTRIBUTE_NAME_PATTERN = new RegExp(
   'u',
 );
 
-export type DOMHole =
-  | DOMHole.AttributeHole
-  | DOMHole.ChildNodeHole
-  | DOMHole.ElementHole
-  | DOMHole.EventHole
-  | DOMHole.LiveHole
-  | DOMHole.PropertyHole
-  | DOMHole.TextHole;
+export const AttributeType = 0;
+export const ChildNodeType = 1;
+export const ElementType = 2;
+export const EventType = 3;
+export const LiveType = 4;
+export const PropertyType = 5;
+export const TextType = 6;
 
-export namespace DOMHole {
+export type Hole =
+  | Hole.AttributeHole
+  | Hole.ChildNodeHole
+  | Hole.ElementHole
+  | Hole.EventHole
+  | Hole.LiveHole
+  | Hole.PropertyHole
+  | Hole.TextHole;
+
+export namespace Hole {
   export interface AttributeHole {
     type: typeof AttributeType;
     index: number;
@@ -86,23 +76,9 @@ export namespace DOMHole {
   }
 }
 
-export interface DOMTemplateRenderer {
-  renderTemplate(
-    template: DOMTemplate,
-    exprs: readonly unknown[],
-    part: DOMPart.ChildNodePart,
-    scope: Scope<DOMPart>,
-  ): DOMTemplateBlock;
-}
-
-export interface DOMTemplateBlock {
-  childNodes: ChildNode[];
-  slots: Slot<DOMPart>[];
-}
-
 export class DOMTemplate {
   readonly element: HTMLTemplateElement;
-  readonly holes: DOMHole[];
+  readonly holes: Hole[];
   readonly mode: TemplateMode;
 
   static parse(
@@ -112,6 +88,14 @@ export class DOMTemplate {
     placeholder: string,
     document: Document,
   ) {
+    DEBUG: {
+      if (!PLACEHOLDER_PATTERN.test(placeholder)) {
+        throw new TypeError(
+          `Placeholders must match pattern ${PLACEHOLDER_PATTERN.source}, but got "${placeholder}".`,
+        );
+      }
+    }
+
     const element = document.createElement('template');
     const marker = createMarker(placeholder);
     const html = stripWhitespaces(strings.join(marker));
@@ -125,116 +109,22 @@ export class DOMTemplate {
       );
     }
 
-    const holes = parseChildren(strings, exprs, marker, element);
+    const holes = parseChildren(strings, marker, element);
+
+    if (holes.length !== exprs.length) {
+      throw DOMRenderError.fromNode(
+        element.content,
+        `The number of holes must be ${exprs.length}, but got ${holes.length}. Multiple holes indicate the same attribute.`,
+      );
+    }
 
     return new DOMTemplate(element, holes, mode);
   }
 
-  constructor(
-    element: HTMLTemplateElement,
-    holes: DOMHole[],
-    mode: TemplateMode,
-  ) {
+  constructor(element: HTMLTemplateElement, holes: Hole[], mode: TemplateMode) {
     this.element = element;
     this.holes = holes;
     this.mode = mode;
-  }
-}
-
-export class DOMTemplateHandler
-  implements DirectiveHandler<Template, DOMPart, DOMTemplateRenderer>
-{
-  private readonly _template: DOMTemplate;
-  private _block: DOMTemplateBlock | null = null;
-
-  constructor(template: DOMTemplate) {
-    this._template = template;
-  }
-
-  shouldUpdate(newTemplate: Template, oldTemplate: Template): boolean {
-    return newTemplate.exprs !== oldTemplate.exprs;
-  }
-
-  render(
-    template: Template,
-    part: DOMPart.ChildNodePart,
-    scope: Scope.ChildScope<DOMPart.ChildNodePart>,
-    session: Session<DOMPart.ChildNodePart, DOMTemplateRenderer>,
-  ): Iterable<Slot> {
-    if (this._block !== null) {
-      this._block.slots.forEach((slot, i) => {
-        slot.update(wrap(template.exprs[i]), scope);
-      });
-    } else {
-      this._block = session.renderer.renderTemplate(
-        this._template,
-        template.exprs,
-        part,
-        scope,
-      );
-    }
-    return this._block.slots;
-  }
-
-  mount(_template: Template, part: DOMPart.ChildNodePart): void {
-    if (this._block !== null) {
-      if (part.node === part.sentinelNode) {
-        part.sentinelNode.before(...this._block.childNodes);
-      }
-
-      for (const slot of this._block.slots) {
-        slot.commit();
-      }
-
-      part.node = getStartNode(part, this._block);
-    }
-  }
-
-  remount(
-    _oldTemplate: Template,
-    newTemplate: Template,
-    part: DOMPart.ChildNodePart,
-  ): void {
-    this.mount(newTemplate, part);
-  }
-
-  afterMount(_template: Template, _part: DOMPart.ChildNodePart): void {
-    if (this._block !== null) {
-      for (const slot of this._block.slots) {
-        slot.afterCommit();
-      }
-    }
-  }
-
-  beforeUnmount(_template: Template, _part: DOMPart.ChildNodePart): void {
-    if (this._block !== null) {
-      for (const slot of this._block.slots) {
-        slot.beforeRevert();
-      }
-    }
-  }
-
-  unmount(_template: Template, part: DOMPart.ChildNodePart): void {
-    if (this._block !== null) {
-      const { childNodes, slots } = this._block;
-
-      for (const slot of slots) {
-        if (
-          (slot.part.type === ChildNodeType || slot.part.type === TextType) &&
-          childNodes.includes(getEndNode(slot.part))
-        ) {
-          // The slot is mounted as a child of the root, so it needs to be
-          // reverted.
-          slot.revert();
-        }
-      }
-
-      for (const childNode of childNodes) {
-        childNode.remove();
-      }
-
-      part.node = part.sentinelNode;
-    }
   }
 }
 
@@ -248,114 +138,85 @@ export function createTreeWalker(
 }
 
 function createMarker(placeholder: string): string {
-  if (!PLACEHOLDER_PATTERN.test(placeholder)) {
-    throw new Error(
-      `Placeholders must match pattern ${PLACEHOLDER_PATTERN.source}, but got "${placeholder}".`,
-    );
-  }
-  return '??' + placeholder + '??';
+  return `?${placeholder}?`;
 }
 
-function getEndNode(part: DOMPart): ChildNode {
-  return part.type === ChildNodeType ? part.sentinelNode : part.node;
-}
-
-function getRawAttributeName(s: string): string | undefined {
+function extractAttributeName(s: string): string | undefined {
   return s.match(ATTRIBUTE_NAME_PATTERN)?.[0];
-}
-
-function getStartNode(
-  part: DOMPart.ChildNodePart,
-  block: DOMTemplateBlock,
-): ChildNode {
-  const firstChild = block.childNodes[0];
-  const firstSlot = block.slots[0];
-  return firstSlot !== undefined && getEndNode(firstSlot.part) === firstChild
-    ? firstSlot.part.node
-    : (firstChild ?? part.sentinelNode);
 }
 
 function parseAttribtues(
   element: Element,
   strings: readonly string[],
   marker: string,
-  holes: DOMHole[],
-  index: number,
+  holes: Hole[],
+  nodeIndex: number,
 ): void {
   for (const attribute of Array.from(element.attributes)) {
-    let hole: DOMHole;
+    let hole: Hole;
 
     if (attribute.name === marker && attribute.value === '') {
       hole = {
         type: ElementType,
-        index,
+        index: nodeIndex,
       };
     } else if (attribute.value === marker) {
-      const rawName = getRawAttributeName(strings[holes.length]!);
+      const caseSensitiveName = extractAttributeName(strings[holes.length]!);
 
       DEBUG: {
-        if (rawName?.toLowerCase() !== attribute.name) {
-          throw DOMRenderError.fromPlace(
-            {
-              type: AttributeType,
-              node: element,
-              name: attribute.name,
-            },
-            `The attribute name must be "${attribute.name}", but got "${rawName}". There are unclosed tags or duplicate attributes.`,
+        if (caseSensitiveName?.toLowerCase() !== attribute.name) {
+          throw DOMRenderError.fromAttribute(
+            element,
+            attribute.name,
+            `The attribute name must be "${attribute.name}", but got "${caseSensitiveName}". There are unclosed tags or duplicate attributes.`,
           );
         }
       }
 
-      switch (rawName[0]) {
+      switch (caseSensitiveName[0]) {
         case '@':
           hole = {
             type: EventType,
-            index,
-            name: rawName.slice(1),
+            index: nodeIndex,
+            name: caseSensitiveName.slice(1),
           };
           break;
         case '$':
           hole = {
             type: LiveType,
-            index,
-            name: rawName.slice(1),
+            index: nodeIndex,
+            name: caseSensitiveName.slice(1),
           };
           break;
         case '.':
           hole = {
             type: PropertyType,
-            index,
-            name: rawName.slice(1),
+            index: nodeIndex,
+            name: caseSensitiveName.slice(1),
           };
           break;
         default:
           hole = {
             type: AttributeType,
-            index,
-            name: rawName,
+            index: nodeIndex,
+            name: caseSensitiveName,
           };
           break;
       }
     } else {
       DEBUG: {
         if (attribute.name.includes(marker)) {
-          throw DOMRenderError.fromPlace(
-            {
-              type: AttributeType,
-              node: element,
-              name: attribute.name,
-            },
+          throw DOMRenderError.fromAttribute(
+            element,
+            attribute.name,
             'Expressions are not allowed as an attribute name.',
           );
         }
 
         if (attribute.value.includes(marker)) {
-          throw DOMRenderError.fromPlace(
-            {
-              type: AttributeType,
-              node: element,
-              name: attribute.name,
-            },
+          throw DOMRenderError.fromAttribute(
+            element,
+            attribute.name,
             'Expressions inside an attribute must make up the entire attribute value.',
           );
         }
@@ -370,14 +231,13 @@ function parseAttribtues(
 
 function parseChildren(
   strings: readonly string[],
-  exprs: readonly unknown[],
   marker: string,
   template: HTMLTemplateElement,
-): DOMHole[] {
+): Hole[] {
   const sourceTree = createTreeWalker(template.content);
-  const holes: DOMHole[] = [];
+  const holes: Hole[] = [];
   let nextNode = sourceTree.nextNode();
-  let index = 0;
+  let nodeIndex = 0;
 
   while (nextNode !== null) {
     const currentNode = nextNode;
@@ -385,12 +245,8 @@ function parseChildren(
       case Node.ELEMENT_NODE: {
         DEBUG: {
           if ((currentNode as Element).localName.includes(marker)) {
-            throw DOMRenderError.fromPlace(
-              {
-                type: ElementType,
-                node: currentNode as Element,
-                unknown: true,
-              },
+            throw DOMRenderError.fromNode(
+              currentNode as Element,
               'Expressions are not allowed as a tag name.',
             );
           }
@@ -401,7 +257,7 @@ function parseChildren(
             strings,
             marker,
             holes,
-            index,
+            nodeIndex,
           );
         }
         break;
@@ -412,17 +268,14 @@ function parseChildren(
         ) {
           holes.push({
             type: ChildNodeType,
-            index,
+            index: nodeIndex,
           });
           (currentNode as Comment).data = '';
         } else {
           DEBUG: {
             if ((currentNode as Comment).data.includes(marker)) {
-              throw DOMRenderError.fromPlace(
-                {
-                  type: ChildNodeType,
-                  node: currentNode as Comment,
-                },
+              throw DOMRenderError.fromNode(
+                currentNode,
                 'Expressions inside a comment must make up the entire comment value.',
               );
             }
@@ -442,7 +295,7 @@ function parseChildren(
           const component = components[i]!;
           holes.push({
             type: TextType,
-            index,
+            index: nodeIndex,
             leadingSpan: lastComponent.length,
             trailingSpan: i === tail ? component.length : 0,
           });
@@ -462,14 +315,7 @@ function parseChildren(
     }
 
     nextNode = sourceTree.nextNode();
-    index++;
-  }
-
-  if (exprs.length !== holes.length) {
-    throw DOMRenderError.fromNode(
-      template.content,
-      `The number of holes must be ${exprs.length}, but got ${holes.length}. Multiple holes indicate the same attribute.`,
-    );
+    nodeIndex++;
   }
 
   return holes;

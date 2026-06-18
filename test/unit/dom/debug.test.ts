@@ -1,14 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { annotateNode, annotatePlace, generateNodeFrame } from '@/dom/debug.js';
 import {
-  AttributeType,
-  ChildNodeType,
-  ElementType,
-  EventType,
-  LiveType,
-  PropertyType,
-  TextType,
-} from '@/dom/part.js';
+  annotateAttribute,
+  annotateNode,
+  generateNodeFrame,
+} from '@/dom/debug.js';
 import { createElement } from '../../dom-helpers.js';
 
 describe('generateNodeFrame()', () => {
@@ -19,9 +14,9 @@ describe('generateNodeFrame()', () => {
       '<!--${...}-->',
       '^^^^^^^^^^^^^',
     ];
-    expect(
-      generateNodeFrame(node, annotatePlace({ type: ChildNodeType, node })),
-    ).toBe(expectedLines.join('\n'));
+    expect(generateNodeFrame(node, annotateNode(node))).toBe(
+      expectedLines.join('\n'),
+    );
   });
 
   it('generates node frames for comments nodes in a tree', () => {
@@ -36,19 +31,19 @@ describe('generateNodeFrame()', () => {
     const expectedLines = [
       '<div>',
       '  <div>',
-      '    A',
+      '    "A"',
       '  </div>',
       '  <div>',
-      '    B',
+      '    "B"',
       '    <!--${...}-->',
       '    ^^^^^^^^^^^^^',
       '    <div></div>',
       '  </div>',
       '</div>',
     ]
-    expect(
-      generateNodeFrame(node, annotatePlace({ type: ChildNodeType, node })),
-    ).toBe(expectedLines.join('\n'));
+    expect(generateNodeFrame(node, annotateNode(node))).toBe(
+      expectedLines.join('\n'),
+    );
   });
 
   it('generates node frames for element attributes', () => {
@@ -59,104 +54,34 @@ describe('generateNodeFrame()', () => {
       '            ^^^^^^^^^^^^',
       '</div>'
     ];
-    expect(
-      generateNodeFrame(
-        node,
-        annotatePlace({ type: AttributeType, name: 'class', node }),
-      ),
-    ).toBe(expectedLines.join('\n'));
-  });
-
-  it('generates node frames for element events', () => {
-    const node = createElement('div', { id: 'a' });
-    // biome-ignore format: keep expected lines
-    const expectedLines = [
-      '<div id="a" @click=${...}>',
-      '            ^^^^^^^^^^^^^',
-      '</div>'
-    ];
-    expect(
-      generateNodeFrame(
-        node,
-        annotatePlace({ type: EventType, name: 'click', node }),
-      ),
-    ).toBe(expectedLines.join('\n'));
-  });
-
-  it('generates node frames for element lives', () => {
-    const node = createElement('div');
-    // biome-ignore format: keep expected lines
-    const expectedLines = [
-      '<div $innerHTML=${...}>',
-      '     ^^^^^^^^^^^^^^^^^',
-      '</div>'
-    ];
-    expect(
-      generateNodeFrame(
-        node,
-        annotatePlace({ type: LiveType, name: 'innerHTML', node }),
-      ),
-    ).toBe(expectedLines.join('\n'));
-  });
-
-  it('generates node frames for element properties', () => {
-    const node = createElement('div', { id: 'a' });
-    // biome-ignore format: keep expected lines
-    const expectedLines = [
-      '<div id="a" .className=${...}>',
-      '            ^^^^^^^^^^^^^^^^^',
-      '</div>'
-    ];
-    expect(
-      generateNodeFrame(
-        node,
-        annotatePlace({ type: PropertyType, name: 'className', node }),
-      ),
-    ).toBe(expectedLines.join('\n'));
+    expect(generateNodeFrame(node, annotateAttribute(node, 'class'))).toBe(
+      expectedLines.join('\n'),
+    );
   });
 
   it('generates node frames for element tagNames', () => {
-    const node = createElement('div', { id: 'a' });
+    const node = createElement('unknown', { id: 'a' });
     // biome-ignore format: keep expected lines
     const expectedLines = [
       '<${...} id="a">',
       ' ^^^^^^',
       '</div>',
     ];
-    expect(
-      generateNodeFrame(
-        node,
-        annotatePlace({ type: ElementType, node, unknown: true }),
-      ),
-    ).toBe(expectedLines.join('\n'));
-  });
-
-  it('generates node frames for element tails', () => {
-    const node = createElement('div', { id: 'a' });
-    // biome-ignore format: keep expected lines
-    const expectedLines = [
-      '<div id="a" ${...}>',
-      '            ^^^^^^',
-      '</div>'
-    ];
-    expect(
-      generateNodeFrame(node, annotatePlace({ type: ElementType, node })),
-    ).toBe(expectedLines.join('\n'));
+    expect(generateNodeFrame(node, annotateNode(node))).toBe(
+      expectedLines.join('\n'),
+    );
   });
 
   it('generates node frames for unclosed element tagNames', () => {
-    const node = createElement('input');
+    const node = createElement('unknown');
     // biome-ignore format: keep expected lines
     const expectedLines = [
       '<${...}>',
       ' ^^^^^^',
     ];
-    expect(
-      generateNodeFrame(
-        node,
-        annotatePlace({ type: ElementType, node, unknown: true }),
-      ),
-    ).toBe(expectedLines.join('\n'));
+    expect(generateNodeFrame(node, annotateNode(node))).toBe(
+      expectedLines.join('\n'),
+    );
   });
 
   it('generates node frames for unclosed element attribute', () => {
@@ -166,24 +91,9 @@ describe('generateNodeFrame()', () => {
       '<input id=${...}>',
       '       ^^^^^^^^^',
     ];
-    expect(
-      generateNodeFrame(
-        node,
-        annotatePlace({ type: AttributeType, name: 'id', node }),
-      ),
-    ).toBe(expectedLines.join('\n'));
-  });
-
-  it('generates node frames for unclosed element tails', () => {
-    const node = createElement('input');
-    // biome-ignore format: keep expected lines
-    const expectedLines = [
-      '<input ${...}>',
-      '       ^^^^^^',
-    ];
-    expect(
-      generateNodeFrame(node, annotatePlace({ type: ElementType, node })),
-    ).toBe(expectedLines.join('\n'));
+    expect(generateNodeFrame(node, annotateAttribute(node, 'id'))).toBe(
+      expectedLines.join('\n'),
+    );
   });
 
   it('generates node frames for elements themselves', () => {
@@ -199,7 +109,7 @@ describe('generateNodeFrame()', () => {
       '<div>',
       ' ^^^',
       '  <input>',
-      '  A',
+      '  "A"',
       '  <!--B-->',
       '</div>',
     ];
@@ -219,8 +129,8 @@ describe('generateNodeFrame()', () => {
     const expectedLines = [
       '<input>',
       '^^^^^^^',
-      'B',
-      '^',
+      '"B"',
+      '^^^',
       '<!--C-->',
       '^^^^^^^^',
     ];
@@ -236,9 +146,9 @@ describe('generateNodeFrame()', () => {
       '${...}',
       '^^^^^^',
     ]
-    expect(
-      generateNodeFrame(node, annotatePlace({ type: TextType, node })),
-    ).toBe(expectedLines.join('\n'));
+    expect(generateNodeFrame(node, annotateNode(node))).toBe(
+      expectedLines.join('\n'),
+    );
   });
 
   it('generates node frames for text nodes in a tree', () => {
@@ -253,18 +163,18 @@ describe('generateNodeFrame()', () => {
     const expectedLines = [
       '<div>',
       '  <div>',
-      '    A',
+      '    "A"',
       '  </div>',
       '  <div>',
-      '    B',
-      '    ${...}',
-      '    ^^^^^^',
+      '    "B"',
+      '    "C"',
+      '    ^^^',
       '    <div></div>',
       '  </div>',
       '</div>',
     ];
-    expect(
-      generateNodeFrame(node, annotatePlace({ type: TextType, node })),
-    ).toBe(expectedLines.join('\n'));
+    expect(generateNodeFrame(node, annotateNode(node))).toBe(
+      expectedLines.join('\n'),
+    );
   });
 });

@@ -1,36 +1,42 @@
-import type { Directive, Scope, UpdateUnit } from './core.js';
-import { isChildScope } from './scope.js';
+import type { RenderChild, RenderTree, VElement } from './core.js';
 
-export function formatOnwerStack(ownerStack: UpdateUnit[]): string {
-  const tail = ownerStack.length - 1;
-  return ownerStack
-    .map((owner, i) => {
+export function formatComponentStack(
+  componentStack: RenderChild.ComponentChild[],
+): string {
+  const tail = componentStack.length - 1;
+  return componentStack
+    .map((child, i) => {
       const prefix = i === tail ? '' : '   '.repeat(tail - i - 1) + '`- ';
       const suffix = i === 0 ? ' <- ERROR occurred here!' : '';
-      return prefix + nameOf(owner.directive.type) + suffix;
+      return prefix + child.type.name + suffix;
     })
     .reverse()
     .join('\n');
 }
 
-export function getOwnerStack(scope: Scope): UpdateUnit[] {
-  const ownerStack: UpdateUnit[] = [];
+export function getComponentStack(
+  tree: RenderTree,
+): RenderChild.ComponentChild[] {
+  const componentStack: RenderChild.ComponentChild[] = [];
+  let current: RenderTree | null = tree;
 
-  while (isChildScope(scope)) {
-    ownerStack.push(scope.owner);
-    scope = scope.owner.scope;
-  }
+  do {
+    if (typeof current.type === 'function') {
+      componentStack.push(current);
+    }
+    current = tree.parent;
+  } while (current !== null);
 
-  return ownerStack;
+  return componentStack;
 }
 
-export function nameOf(type: Directive.ElementDirective['type']): string {
+export function nameOf(type: VElement['type']): string {
   switch (typeof type) {
     case 'function':
       return type.name;
     case 'symbol':
       return type.description!;
     default:
-      return 'Template';
+      return type instanceof Element ? type.nodeName : 'Template';
   }
 }

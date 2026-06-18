@@ -1,32 +1,14 @@
-import type { Scope } from './core.js';
-import { formatOnwerStack, getOwnerStack } from './debug.js';
-
-export type ErrorHandler = (
-  error: unknown,
-  propagate: (error: unknown) => void,
-) => void;
-
-export class ErrorBoundary {
-  private readonly _handler: ErrorHandler;
-
-  constructor(handler: ErrorHandler) {
-    this._handler = handler;
-  }
-
-  handleError(error: unknown, propagate: (error: unknown) => void): void {
-    const handler = this._handler;
-    handler(error, propagate);
-  }
-}
+import type { RenderTree } from './core.js';
+import { formatComponentStack, getComponentStack } from './debug.js';
 
 export class RenderError extends Error {
-  readonly scope: Scope;
+  readonly tree: RenderTree;
 
-  constructor(scope: Scope, message?: string, options?: ErrorOptions) {
+  constructor(tree: RenderTree, message?: string, options?: ErrorOptions) {
     DEBUG: {
-      message += '\n' + formatOnwerStack(getOwnerStack(scope));
+      message += '\n' + formatComponentStack(getComponentStack(tree));
     }
     super(message, options);
-    this.scope = scope;
+    this.tree = tree;
   }
 }

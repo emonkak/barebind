@@ -1,11 +1,17 @@
-/// <reference path="../typings/scheduler.d.ts" />
+import { areDependenciesChange } from './compare.js';
+import { NoLanes } from './lane.js';
 
+// Mutation types
+export const InsertType = 0;
+export const UpdateType = 1;
+export const UpdateAndMoveType = 2;
+export const RemoveType = 3;
+
+export const Bind = Symbol('Bind');
 export const Fragment = Symbol('Fragment');
 export const Primitive = Symbol('Primitive');
 
-export const toDirective: unique symbol = Symbol('Directive.toDirective');
-
-export interface Boundary<T extends object> {
+export interface Boundary<T extends object = object> {
   instance: T;
   next: Boundary<object> | null;
 }
@@ -15,100 +21,132 @@ export interface BoundaryType<TInstance, TDefault> {
   getDefault?(): TDefault;
 }
 
-export interface Component<TProps> {
-  resolveComponent(
-    directive: Directive.ComponentDirective<TProps>,
-    part: unknown,
-  ): DirectiveHandler<TProps>;
-  (props: TProps): Directive.ComponentDirective<TProps>;
+export interface ComponentType<TProps> {
+  (props: TProps): VComponent<TProps>;
+  arePropsEqual(oldProps: TProps, newProps: TProps): boolean;
+  getInstance(
+    props: TProps,
+    scheduler: UpdateScheduler,
+  ): ComponentInstance<TProps>;
 }
 
-export interface Directable {
-  [toDirective](): Directive.ElementDirective;
+export interface ComponentInstance<TProps> {
+  render(origin: RenderChild.ComponentChild<TProps>): VElement;
+  afterCommit(): void;
+  beforeRemove(): void;
 }
 
-export namespace Directive {
-  export type ElementDirective =
-    | ComponentDirective<unknown>
-    | FragmentDirective<unknown>
-    | PrimitiveDirective<unknown>
-    | TemplateDirective;
-
-  export type ComponentDirective<TProps> = Directive<Component<TProps>, TProps>;
-
-  export type FragmentDirective<TSource> = Directive<
-    typeof Fragment,
-    Iterable<TSource>
-  >;
-
-  export type PrimitiveDirective<TValue> = Directive<typeof Primitive, TValue>;
-
-  export type TemplateDirective = Directive<readonly string[], Template>;
-}
-
-export interface DirectiveHandler<
-  TValue,
-  TPart = unknown,
-  TRenderer = unknown,
-> {
-  shouldUpdate(newValue: TValue, oldValue: TValue): boolean;
-  render(
-    value: TValue,
-    part: TPart,
-    scope: Scope.ChildScope<TPart>,
-    session: Session<TPart, TRenderer>,
-  ): Iterable<UpdateUnit>;
-  mount(value: TValue | null, part: TPart): void;
-  remount(oldValue: TValue, newValue: TValue, part: TPart): void;
-  afterMount(value: TValue, part: TPart): void;
-  beforeUnmount(value: TValue, part: TPart): void;
-  unmount(value: TValue, part: TPart): void;
-}
-
-export interface HostAdapter<TPart, TRenderer> {
-  getDefaultLanes(): Lanes;
+export interface HostAdapter {
   getIdentifier(): string;
   getTaskPriority(): TaskPriority;
+  renderElement(element: VHostElement): HostNode;
+  requestCommit(callback: () => void): Promise<void>;
   requestCallback<T>(
     callback: () => T | PromiseLike<T>,
     options?: SchedulerPostTaskOptions,
   ): Promise<T>;
-  requestRenderer(scope: Scope): TRenderer;
-  resolveFragment(
-    directive: Directive.FragmentDirective<unknown>,
-    part: TPart,
-  ): DirectiveHandler<Iterable<unknown>, TPart, TRenderer>;
-  resolvePrimitive(
-    directive: Directive.PrimitiveDirective<unknown>,
-    part: TPart,
-  ): PrimitiveHandler<unknown, TPart, TRenderer>;
-  resolveTemplate(
-    directive: Directive.TemplateDirective,
-    part: TPart,
-  ): DirectiveHandler<Template, TPart, TRenderer>;
-  startViewTransition(callback: () => PromiseLike<void> | void): Promise<void>;
+  startViewTransition(callback: () => void): Promise<void>;
   yieldToMain(): Promise<void>;
 }
+
+export interface HostNode {
+  get refNode(): unknown;
+  prepareUpdate(
+    type: VHostElement['type'],
+    oldProps: VHostElement['props'],
+    newProps: VHostElement['props'],
+  ): boolean;
+  appendChild(child: HostNode, after: HostNode | null): void;
+  moveChild(child: HostNode, after: HostNode | null): void;
+  removeChild(child: HostNode): void;
+  commitMount(type: VHostElement['type'], props: VHostElement['props']): void;
+  commitUpdate(
+    type: VHostElement['type'],
+    oldProps: VHostElement['props'],
+    newProps: VHostElement['props'],
+  ): void;
+}
+
+export type HostTree = RenderRoot | RenderChild.HostChild;
 
 export type Lane = number;
 
 export type Lanes = number;
 
-export interface Root<TPart> {
-  part: TPart;
+export type Mutation =
+  | {
+      type: typeof InsertType;
+      tree: RenderTree;
+      afterTree: RenderTree | undefined;
+    }
+  | {
+      type: typeof UpdateType;
+      oldTree: RenderTree;
+      newTree: RenderTree;
+    }
+  | {
+      type: typeof UpdateAndMoveType;
+      oldTree: RenderTree;
+      newTree: RenderTree;
+      afterTree: RenderTree | undefined;
+    }
+  | {
+      type: typeof RemoveType;
+      tree: RenderTree;
+    };
+
+export type RenderChild =
+  | RenderChild.ComponentChild
+  | RenderChild.FragmentChild
+  | RenderChild.HostChild;
+
+export namespace RenderChild {
+  export interface ComponentChild<TProps = {}>
+    extends Pick<VComponent<TProps>, 'type' | 'props' | 'key'> {
+    parent: RenderTree;
+    children: RenderChild[];
+    index: number;
+    instance: ComponentInstance<TProps>;
+    scope: Scope;
+  }
+
+  export interface FragmentChild
+    extends Pick<VFragment, 'type' | 'props' | 'key'> {
+    parent: RenderTree;
+    children: RenderChild[];
+    index: number;
+    mutations: Mutation[];
+  }
+
+  export interface HostChild
+    extends Pick<VHostElement, 'type' | 'props' | 'key'> {
+    parent: RenderTree;
+    children: RenderChild[];
+    index: number;
+    hostNode: HostNode;
+  }
 }
 
-export interface PrimitiveHandler<TValue, TPart = unknown, TRenderer = unknown>
-  extends DirectiveHandler<TValue, TPart, TRenderer> {
-  ensureValue(value: unknown, part: TPart): void;
+export interface RenderRoot {
+  type: VPortal['type'];
+  props: VPortal['props'];
+  key: VPortal['key'];
+  children: RenderChild[];
+  hostNode: HostNode;
+  index: number;
+  parent: null;
 }
 
-export interface Update {
-  id: number;
-  lanes: Lanes;
-  task: UpdateTask;
-  controller: PromiseWithResolvers<UpdateResult>;
+export type RenderTree = RenderRoot | RenderChild;
+
+export interface Scope {
+  parent: Scope | null;
+  level: number;
+  boundary: Boundary | null;
+  pendingLanes: Lanes;
 }
+
+export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
 export interface UpdateHandle {
   id: number;
@@ -119,9 +157,8 @@ export interface UpdateHandle {
 export interface UpdateOptions
   extends Pick<SchedulerPostTaskOptions, 'delay' | 'priority'> {
   flushSync?: boolean;
-  inherit?: boolean;
-  resume?: boolean;
   transition?: number;
+  triggerFlush?: boolean;
   viewTransition?: boolean;
 }
 
@@ -131,97 +168,74 @@ export type UpdateResult =
   | { status: 'intrupted'; reason: unknown };
 
 export interface UpdateScheduler {
-  readonly currentUpdate: Update | undefined;
+  readonly flushLanes: Lanes;
   nextIdentifier(): string;
   nextTransition(): number;
-  schedule(task: UpdateTask, options?: UpdateOptions): UpdateHandle;
+  schedule(
+    node: RenderChild.ComponentChild,
+    options?: UpdateOptions,
+  ): UpdateHandle;
 }
 
-export interface UpdateTask<TPart = unknown> {
-  readonly scope: Scope;
-  readonly pendingLanes: Lanes;
-  render(session: Session<TPart>): Iterable<UpdateUnit>;
-  complete(): void;
-}
+export type VElement = VComponent | VFragment | VHostElement;
 
-export interface UpdateUnit<TPart = unknown> extends UpdateTask<TPart> {
-  readonly part: TPart;
-  readonly directive: Directive.ElementDirective;
-  pendingLanes: Lanes;
-  needsRender(): boolean;
-}
+export type VBind = VNode<typeof Bind, { index: number }, [VElement]>;
 
-export type Scope<TPart = unknown> =
-  | Scope.ChildScope<TPart>
-  | Scope.OrphanScope
-  | Scope.RootScope<TPart>;
+export type VComponent<TProps = {}> = VNode<ComponentType<TProps>, TProps, []>;
 
-export namespace Scope {
-  export type ChildScope<TPart = unknown> = {
-    owner: UpdateUnit<TPart>;
-    level: number;
-    boundary: Boundary<object> | null;
-  };
+export type VFragment = VNode<typeof Fragment, {}, VElement[]>;
 
-  export type RootScope<TPart = unknown> = {
-    owner: Root<TPart>;
-    level: 0;
-    boundary: Boundary<object> | null;
-  };
+export type VHostElement = VBind | VPortal | VPrimitive | VTemplate;
 
-  export type OrphanScope = {
-    owner: null;
-    level: 0;
-    boundary: null;
-  };
-}
+export type VPortal = VNode<Element, {}, [VElement]>;
 
-export interface Session<TPart = unknown, TRenderer = unknown> {
-  id: number;
-  lanes: Lanes;
-  adapter: HostAdapter<TPart, TRenderer>;
-  renderer: TRenderer;
-  scheduler: UpdateScheduler;
-}
+export type VPrimitive = VNode<typeof Primitive, { value: unknown }, []>;
 
-export interface Template {
-  strings: readonly string[];
-  exprs: readonly unknown[];
-  mode: TemplateMode;
-}
+export type VTemplate = VNode<
+  readonly string[],
+  {
+    mode: TemplateMode;
+  },
+  VBind[]
+>;
 
-export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
+export class VNode<TType, TProps, const TChildren extends VElement[]> {
+  type: TType;
+  props: TProps;
+  children: TChildren;
+  key: unknown;
 
-export class Directive<TType, TValue> implements Directable {
-  readonly type: TType;
-  readonly value: TValue;
-  readonly key: unknown;
-
-  constructor(type: TType, value: TValue, key?: unknown) {
+  constructor(type: TType, props: TProps, children: TChildren, key?: unknown) {
     this.type = type;
-    this.value = value;
+    this.props = props;
+    this.children = children;
     this.key = key;
   }
 
-  [toDirective](this: Directive.ElementDirective): Directive.ElementDirective {
-    return this;
-  }
-
-  withKey(key: unknown): Directive<TType, TValue> {
-    return new Directive(this.type, this.value, key);
+  withKey(key: unknown): VNode<TType, TProps, TChildren> {
+    return new VNode(this.type, this.props, this.children, key);
   }
 }
 
-export function wrap(value: unknown): Directive.ElementDirective {
-  return isDirectable(value)
-    ? value[toDirective]()
+export function createPortal(child: unknown, container: Element): VPortal {
+  return new VNode(container, {}, [toElement(child)]);
+}
+
+export function createScope(parent: Scope | null): Scope {
+  return {
+    parent,
+    level: (parent?.level ?? -1) + 1,
+    boundary: null,
+    pendingLanes: NoLanes,
+  };
+}
+
+export function toElement(value: unknown): VElement {
+  return value instanceof VNode
+    ? value
     : typeof value === 'object' && isIterable(value)
-      ? new Directive(Fragment, value)
-      : new Directive(Primitive, value);
-}
-
-function isDirectable(value: any): value is Directable {
-  return typeof value?.[toDirective] === 'function';
+      ? new VNode(Fragment, {}, Array.from(value, toElement))
+      : new VNode(Primitive, { value }, []);
 }
 
 function isIterable(value: any): value is Iterable<unknown> {
