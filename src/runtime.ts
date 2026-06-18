@@ -85,6 +85,7 @@ export class Runtime implements Renderer, Dispatcher {
           type: newElement.type,
           props: newElement.props,
           key: newElement.key,
+          dirty: true,
         };
       }
       case newElement instanceof VComponent: {
@@ -108,6 +109,7 @@ export class Runtime implements Renderer, Dispatcher {
           parent,
           children: oldNode.children.slice(),
           state: (oldNode as RenderNode.ComponentNode).state,
+          dirty: true,
         };
         const subScope = scope.child(newElement.type);
         newNode.children[0] = this.diff(
@@ -133,6 +135,7 @@ export class Runtime implements Renderer, Dispatcher {
           parent,
           children: new Array(newElement.children.length),
           state: { mutations: [] },
+          dirty: false,
         };
         this._diffChildren(
           oldNode as RenderNode.FragmentNode,
@@ -153,15 +156,18 @@ export class Runtime implements Renderer, Dispatcher {
           parent,
           children: new Array(newElement.children.length),
           state: (oldNode as RenderNode.BlockNode).state,
+          dirty: false,
         };
         for (let i = 0, l = newElement.children.length; i < l; i++) {
-          newNode.children[i] = this.diff(
+          const newChild = this.diff(
             oldNode.children[i]!,
             newElement.children[i]!,
             scope,
             i,
             newNode,
           );
+          newNode.children[i] = newChild;
+          newNode.dirty ||= newChild.dirty;
         }
         return newNode;
       }
@@ -198,6 +204,7 @@ export class Runtime implements Renderer, Dispatcher {
           index,
           parent,
           children: [],
+          dirty: true,
           state: null,
         };
       }
@@ -210,6 +217,7 @@ export class Runtime implements Renderer, Dispatcher {
           index,
           parent,
           children: new Array(1),
+          dirty: true,
           state: {
             handle: element.type.createHandle(this),
             scope,
@@ -234,6 +242,7 @@ export class Runtime implements Renderer, Dispatcher {
           index,
           parent,
           children: new Array(element.children.length),
+          dirty: element.children.length > 0,
           state: { mutations: [] },
         };
         for (let i = 0, l = element.children.length; i < l; i++) {
@@ -257,6 +266,7 @@ export class Runtime implements Renderer, Dispatcher {
           index,
           parent,
           children: new Array(1),
+          dirty: true,
           state: { block },
         };
         node.children[0] = this.render(
@@ -278,6 +288,7 @@ export class Runtime implements Renderer, Dispatcher {
           index,
           parent,
           children: new Array(element.children.length),
+          dirty: true,
           state: { block },
         };
         for (let i = 0, l = element.children.length; i < l; i++) {
@@ -527,6 +538,8 @@ export class Runtime implements Renderer, Dispatcher {
         }
       }
     }
+
+    newParent.dirty = mutations.length > 0;
   }
 
   private async _flush(): Promise<void> {

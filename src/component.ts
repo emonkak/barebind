@@ -486,6 +486,7 @@ class UpdateComponent implements UpdateUnit {
     const newNode: RenderNode.ComponentNode = {
       ...oldNode,
       children: oldNode.children.slice(),
+      dirty: true,
     };
     const scope = oldNode.state.scope.peer();
     newNode.children[0] = renderer.diff(

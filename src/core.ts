@@ -113,6 +113,7 @@ export namespace RenderNode {
     index: number;
     parent: RenderNode | RenderRoot;
     children: RenderNode[];
+    dirty: boolean;
     state: unknown;
   }
 
