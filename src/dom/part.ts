@@ -55,26 +55,12 @@ export class AttributePart extends DOMPart {
   }
 }
 
-export class ChildNodePart extends DOMPart {
-  private readonly _node: CharacterData;
+export class CharacterDataPart extends DOMPart {
+  protected readonly _node: CharacterData;
 
   constructor(node: CharacterData) {
     super();
     this._node = node;
-  }
-
-  override mountBlock(block: Block, afterNode: ChildNode | null): void {
-    block.mountBefore(afterNode ?? this._node);
-  }
-
-  override moveBlock(block: Block, afterNode: ChildNode | null): void {
-    block.moveBefore(afterNode ?? this._node);
-  }
-
-  override unmountBlock(block: Block, recursive: boolean): void {
-    if (!recursive) {
-      block.unmount();
-    }
   }
 
   override commitMount(value: unknown): void {
@@ -88,7 +74,23 @@ export class ChildNodePart extends DOMPart {
   }
 }
 
-export class ClassAttributePart extends AttributePart {
+export class ChildNodePart extends CharacterDataPart {
+  override mountBlock(block: Block, afterNode: ChildNode | null): void {
+    block.mountBefore(afterNode ?? this._node);
+  }
+
+  override moveBlock(block: Block, afterNode: ChildNode | null): void {
+    block.moveBefore(afterNode ?? this._node);
+  }
+
+  override unmountBlock(block: Block, recursive: boolean): void {
+    if (!recursive) {
+      block.unmount();
+    }
+  }
+}
+
+export class ClassPart extends AttributePart {
   override commitMount(value: unknown): void {
     updateClass(this._node.classList, {}, normalizeClass(value));
   }
@@ -135,19 +137,11 @@ export class ElementPart extends DOMPart {
   }
 }
 
-export class EventPart extends DOMPart implements EventListenerObject {
-  private readonly _node: Element;
-  private readonly _name: string;
+export class EventPart extends AttributePart implements EventListenerObject {
   private _currentListener:
     | EventListenerOrEventListenerObject
     | null
     | undefined;
-
-  constructor(node: Element, name: string) {
-    super();
-    this._node = node;
-    this._name = name;
-  }
 
   override commitMount(value: unknown): void {
     if (!isEventListenerOrNullable(value)) {
@@ -196,16 +190,7 @@ export class EventPart extends DOMPart implements EventListenerObject {
   }
 }
 
-export class LivePart extends DOMPart {
-  private readonly _node: Element;
-  private readonly _name: string;
-
-  constructor(node: Element, name: string) {
-    super();
-    this._node = node;
-    this._name = name;
-  }
-
+export class LivePart extends AttributePart {
   override commitMount(value: unknown): void {
     if ((this._node as any)[this._name] !== value) {
       (this._node as any)[this._name] = value;
@@ -238,16 +223,7 @@ export class PortalPart extends DOMPart {
   }
 }
 
-export class PropertyPart extends DOMPart {
-  private readonly _node: Element;
-  private readonly _name: string;
-
-  constructor(node: Element, name: string) {
-    super();
-    this._node = node;
-    this._name = name;
-  }
-
+export class PropertyPart extends AttributePart {
   override commitMount(value: unknown): void {
     (this._node as any)[this._name] = value;
   }
@@ -259,7 +235,7 @@ export class PropertyPart extends DOMPart {
   }
 }
 
-export class StyleAttributePart extends AttributePart {
+export class StylePart extends AttributePart {
   override commitMount(value: unknown): void {
     if (isObject(value)) {
       updateStyle((this._node as HTMLElement).style, {}, value as StyleMap);
@@ -283,25 +259,6 @@ export class StyleAttributePart extends AttributePart {
       } else {
         super.commitMount(newValue);
       }
-    }
-  }
-}
-
-export class TextPart extends DOMPart {
-  private readonly _node: CharacterData;
-
-  constructor(node: CharacterData) {
-    super();
-    this._node = node;
-  }
-
-  override commitMount(value: unknown): void {
-    this._node.data = toStringOrEmpty(value);
-  }
-
-  override commitUpdate(oldValue: unknown, newValue: unknown): void {
-    if (!Object.is(oldValue, newValue)) {
-      this.commitMount(newValue);
     }
   }
 }

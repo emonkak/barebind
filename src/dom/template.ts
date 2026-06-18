@@ -2,15 +2,15 @@ import type { Block, TemplateMode } from '../core.js';
 import { DOMTemplateError } from './error.js';
 import {
   AttributePart,
+  CharacterDataPart,
   ChildNodePart,
-  ClassAttributePart,
+  ClassPart,
   type DOMPart,
   ElementPart,
   EventPart,
   LivePart,
   PropertyPart,
-  StyleAttributePart,
-  TextPart,
+  StylePart,
 } from './part.js';
 
 const HOLE_TYPE_ATTRIBUTE = 0;
@@ -445,15 +445,9 @@ function resolvePart(hole: Hole, treeWalker: TreeWalker): DOMPart {
     case HOLE_TYPE_ATTRIBUTE:
       switch (hole.name.toLowerCase()) {
         case 'class':
-          return new ClassAttributePart(
-            treeWalker.currentNode as Element,
-            hole.name,
-          );
+          return new ClassPart(treeWalker.currentNode as Element, hole.name);
         case 'style':
-          return new StyleAttributePart(
-            treeWalker.currentNode as Element,
-            hole.name,
-          );
+          return new StylePart(treeWalker.currentNode as Element, hole.name);
         default:
           return new AttributePart(
             treeWalker.currentNode as Element,
@@ -475,7 +469,10 @@ function resolvePart(hole: Hole, treeWalker: TreeWalker): DOMPart {
   }
 }
 
-function splitTextPart(treeWalker: TreeWalker, hole: Hole.TextHole): TextPart {
+function splitTextPart(
+  treeWalker: TreeWalker,
+  hole: Hole.TextHole,
+): CharacterDataPart {
   let currentNode = treeWalker.currentNode as Text;
   if (hole.splitIndex > 0) {
     currentNode = currentNode.splitText(0);
@@ -483,7 +480,7 @@ function splitTextPart(treeWalker: TreeWalker, hole: Hole.TextHole): TextPart {
   if (hole.leadingSpan > 0) {
     currentNode = currentNode.splitText(hole.leadingSpan);
   }
-  const part = new TextPart(currentNode);
+  const part = new CharacterDataPart(currentNode);
   if (hole.trailingSpan > 0) {
     currentNode = currentNode.splitText(0);
   }
