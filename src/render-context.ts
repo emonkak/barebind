@@ -37,13 +37,14 @@ export interface ActionDispatcher<TState, TAction> {
     action: TAction,
     options?: DispatchOptions<TState>,
   ) => UpdateHandle;
-  pendingProposals: ActionProposal<TAction>[];
+  pendingProposals: ActionProposal<TState, TAction>[];
   pendingState: TState;
   reducer: (state: TState, action: TAction) => TState;
 }
 
-export interface ActionProposal<TAction> {
+export interface ActionProposal<TState, TAction> {
   action: TAction;
+  eagerState: TState | undefined;
   lanes: Lanes;
   revertLanes: Lanes;
 }
@@ -103,7 +104,7 @@ export namespace Hook {
     type: typeof HOOK_TYPE_REDUCER;
     dispatcher: ActionDispatcher<TState, TAction>;
     memoizedState: TState;
-    memoizedProposals: ActionProposal<TAction>[];
+    memoizedProposals: ActionProposal<TState, TAction>[];
   }
 }
 
@@ -518,7 +519,7 @@ export class RenderContext {
 
       const { dispatcher, memoizedState, memoizedProposals } = currentHook;
       const renderLanes = this._frame.lanes;
-      let newState = options.passthrough
+      let nextState = options.passthrough
         ? getInitialState(initialState)
         : memoizedState;
       let skipLanes = NoLanes;
@@ -528,25 +529,25 @@ export class RenderContext {
       for (const proposal of memoizedProposals) {
         const { action, lanes, revertLanes } = proposal;
         if ((lanes & renderLanes) === lanes) {
-          newState = reducer(newState, action);
+          nextState = proposal.eagerState ?? reducer(nextState, action);
           proposal.lanes = NoLanes;
         } else if ((revertLanes & renderLanes) === revertLanes) {
-          skipLanes |= lanes;
           proposal.revertLanes = NoLanes;
         }
+        skipLanes |= (lanes & ~renderLanes) | (revertLanes & renderLanes);
       }
 
       if (skipLanes === NoLanes) {
         currentHook = {
           type: HOOK_TYPE_REDUCER,
           dispatcher,
-          memoizedState: newState,
+          memoizedState: nextState,
           memoizedProposals: [],
         };
       }
 
       dispatcher.context = this;
-      dispatcher.pendingState = newState;
+      dispatcher.pendingState = nextState;
       dispatcher.pendingProposals = [];
       dispatcher.reducer = reducer;
     } else {
@@ -554,12 +555,13 @@ export class RenderContext {
         context: this,
         dispatch(action, options = {}) {
           const { context, pendingProposals, pendingState, reducer } = this;
+          let eagerState: TState | undefined;
 
           if (pendingProposals.length === 0) {
             const areStatesEqual = options.areStatesEqual ?? Object.is;
-            const newState = reducer(pendingState, action);
+            eagerState = reducer(pendingState, action);
 
-            if (areStatesEqual(newState, pendingState)) {
+            if (areStatesEqual(eagerState, pendingState)) {
               const skipped = Promise.resolve<UpdateResult>({
                 status: 'skipped',
               });
@@ -575,6 +577,7 @@ export class RenderContext {
           const handle = context.forceUpdate(options);
           pendingProposals.push({
             action,
+            eagerState,
             lanes: handle.lanes,
             revertLanes: options.transient ? handle.lanes : NoLanes,
           });
