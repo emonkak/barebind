@@ -76,3 +76,29 @@ export function getTransitionIndex(lanes: Lanes): number {
     1
   );
 }
+
+export function inspectLanes(lanes: Lanes): string[] {
+  const tags = [];
+  if (lanes & SyncLane) {
+    tags.push('SyncLane');
+  }
+  if (lanes & ViewTransitionLane) {
+    tags.push('ViewTransitionLane');
+  }
+  if (lanes & UserBlockingLane) {
+    tags.push('UserBlockingLane');
+  }
+  if (lanes & UserVisibleLane) {
+    tags.push('UserVisibleLane');
+  }
+  if (lanes & BackgroundLane) {
+    tags.push('BackgroundLane');
+  }
+  if (lanes & TransitionLanes) {
+    tags.push('TransitionLane');
+  }
+  if (lanes & DelayedLanes) {
+    tags.push('DelayedLanes');
+  }
+  return tags;
+}
