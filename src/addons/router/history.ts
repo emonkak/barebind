@@ -1,3 +1,4 @@
+import type { UpdateOptions } from '../../core.js';
 import type { RelativeURL } from './relative-url.js';
 
 export interface HistoryLocation {
@@ -13,7 +14,7 @@ export interface HistoryNavigator {
   navigate(url: string | RelativeURL, options?: NavigateOptions): void;
 }
 
-export interface NavigateOptions {
+export interface NavigateOptions extends UpdateOptions {
   replace?: boolean;
   state?: unknown;
 }

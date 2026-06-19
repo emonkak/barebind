@@ -1,5 +1,4 @@
 import type { UsableFunction } from '../../component.js';
-import type { UpdateOptions } from '../../core.js';
 import {
   anyModifiersArePressed,
   HistoryContext,
@@ -9,9 +8,7 @@ import {
 } from './history.js';
 import { RelativeURL } from './relative-url.js';
 
-export function BrowserHistory(
-  options?: UpdateOptions,
-): UsableFunction<HistoryContext> {
+export function BrowserHistory(): UsableFunction<HistoryContext> {
   return (context) => {
     const [location, setLocation] = context.useState<HistoryLocation>(() => ({
       url: RelativeURL.fromURL(window.location),
@@ -26,7 +23,7 @@ export function BrowserHistory(
         getCurrentURL() {
           return RelativeURL.fromURL(window.location);
         },
-        navigate(url, { replace = false, state = null } = {}) {
+        navigate(url, { replace = false, state = null, ...options } = {}) {
           const handle = setLocation(
             {
               url: RelativeURL.from(url),
