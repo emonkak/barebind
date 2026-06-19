@@ -264,7 +264,7 @@ export class VNode<TType, TProps, const TChildren extends VElement[]> {
   }
 }
 
-export class VBind extends VNode<typeof Bind, { value: unknown }, []> {}
+export class VBind<T = unknown> extends VNode<typeof Bind, { value: T }, []> {}
 
 export class VComponent<TProps = any> extends VNode<
   Component<TProps>,
@@ -286,7 +286,7 @@ export class VTemplate extends VNode<
   VElement[]
 > {}
 
-export function createBind(value: unknown): VBind {
+export function createBind<T>(value: T): VBind<T> {
   return new VBind(Bind, { value }, []);
 }
 
