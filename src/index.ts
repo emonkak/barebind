@@ -7,6 +7,7 @@ export {
   createBind,
   createFragment,
   createPortal,
+  createTemplate,
   Ref,
   toElement,
 } from './core.js';
