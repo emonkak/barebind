@@ -229,6 +229,10 @@ export class Scope {
     }
   }
 
+  detach(): Scope {
+    return new Scope(null, this.level, this.owner);
+  }
+
   enter(owner: Component<unknown>): Scope {
     return new Scope(this, this.level + 1, owner);
   }

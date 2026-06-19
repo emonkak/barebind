@@ -155,7 +155,7 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
         lanes,
       );
       const returnValue = this._componentFn.call(context, props);
-      this._hooks = finalizeHooks(context);
+      this._hooks = finalizeContext(context);
       Object.freeze(scope.instances);
       return wrap(returnValue);
     } catch (cause) {
@@ -189,12 +189,13 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
 
 export class RenderContext {
   private readonly _instance: FunctionComponent;
-  private readonly _scope: Scope;
   private readonly _lanes: Lanes;
   /** @internal */
   readonly _hooks: Hook[];
   /** @internal */
   _hookIndex: number = 0;
+  /** @internal */
+  _scope: Scope;
 
   constructor(
     instance: FunctionComponent,
@@ -525,7 +526,7 @@ function ensureHookType<TExpectedType extends Hook['type']>(
   }
 }
 
-function finalizeHooks(context: RenderContext): readonly Hook[] {
+function finalizeContext(context: RenderContext): readonly Hook[] {
   let currentHook = context._hooks[context._hookIndex];
 
   if (currentHook !== undefined) {
@@ -535,6 +536,7 @@ function finalizeHooks(context: RenderContext): readonly Hook[] {
   }
 
   context._hooks[context._hookIndex++] = currentHook;
+  context._scope = context._scope.detach();
 
   return Object.freeze(context._hooks);
 }
