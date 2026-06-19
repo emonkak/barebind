@@ -644,9 +644,9 @@ function buildKeyToIndexMap<T>(
 }
 
 function compareUpdates(update1: Update, update2: Update): number {
-  const lane1 = getHighestPriorityLane(update1.lanes);
-  const lane2 = getHighestPriorityLane(update2.lanes);
-  const level1 = update1.transaction.level;
-  const level2 = update2.transaction.level;
-  return lane1 !== lane2 ? lane1 - lane2 : level1 - level2;
+  const highestLane1 = getHighestPriorityLane(update1.lanes);
+  const highestLane2 = getHighestPriorityLane(update2.lanes);
+  return highestLane1 !== highestLane2
+    ? highestLane1 - highestLane2
+    : update1.transaction.level - update2.transaction.level;
 }
