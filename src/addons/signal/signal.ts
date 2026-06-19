@@ -63,7 +63,7 @@ export abstract class Signal<T> implements Bindable, UsableObject<T> {
         }
         batched = false;
       };
-      queueMicrotask(checkForChanges);
+      checkForChanges();
       return this.subscribe(() => {
         if (!batched) {
           batched = true;
