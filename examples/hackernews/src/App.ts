@@ -11,7 +11,7 @@ interface AppProps {
 }
 
 export const App = createComponent<AppProps>(function App({ store }) {
-  const { location } = this.use(HashHistory({ viewTransition: true }));
+  const { location } = this.use(HashHistory());
   const page = router.match(location.url) ?? NotFound({ url: location.url });
 
   this.provide(store);

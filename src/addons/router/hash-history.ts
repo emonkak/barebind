@@ -1,5 +1,4 @@
 import type { UsableFunction } from '../../component.js';
-import type { UpdateOptions } from '../../core.js';
 import {
   anyModifiersArePressed,
   HistoryContext,
@@ -10,9 +9,7 @@ import {
 } from './history.js';
 import { RelativeURL } from './relative-url.js';
 
-export function HashHistory(
-  options?: UpdateOptions,
-): UsableFunction<HistoryContext> {
+export function HashHistory(): UsableFunction<HistoryContext> {
   return (context) => {
     const [location, setLocation] = context.useState<HistoryLocation>(() => ({
       url: RelativeURL.fromString(trimHashMark(window.location.hash)),
@@ -27,7 +24,7 @@ export function HashHistory(
         getCurrentURL() {
           return RelativeURL.fromString(trimHashMark(window.location.hash));
         },
-        navigate(url, { replace = false, state = null } = {}) {
+        navigate(url, { replace = false, state = null, ...options } = {}) {
           const handle = setLocation(
             {
               url: RelativeURL.from(url),
