@@ -12,7 +12,7 @@ import {
   NoLanes,
   SyncLane,
   TransitionLane1,
-  TransitionLength,
+  TransitionLaneLength,
   UserBlockingLane,
   UserVisibleLane,
   ViewTransitionLane,
@@ -161,8 +161,8 @@ describe('getRenderLanes()', () => {
     expect(lanes).toBe(TransitionLane1 << 5);
   });
 
-  it('wraps transition index within TransitionLength', () => {
-    const lanes = getRenderLanes({ transition: TransitionLength });
+  it('wraps transition index within TransitionLaneLength', () => {
+    const lanes = getRenderLanes({ transition: TransitionLaneLength });
     expect(lanes).toBe(TransitionLane1);
   });
 
