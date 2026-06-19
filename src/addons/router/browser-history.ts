@@ -18,8 +18,7 @@ export function BrowserHistory(): UsableFunction<HistoryContext> {
 
     const navigator: HistoryNavigator = context.useMemo(
       () => ({
-        isTransitionRunning: false as boolean,
-        runningTransition: Promise.resolve(),
+        transition: null as Promise<void> | null,
         getCurrentURL() {
           return RelativeURL.fromURL(window.location);
         },
@@ -32,15 +31,15 @@ export function BrowserHistory(): UsableFunction<HistoryContext> {
             },
             options,
           );
-
-          handle.finished.finally(() => {
-            if (this.runningTransition === handle.finished) {
-              this.isTransitionRunning = false;
+          const callback = () => {
+            if (this.transition === handle.finished) {
+              this.transition = null;
             }
-          });
+          };
 
-          this.isTransitionRunning = true;
-          this.runningTransition = handle.finished;
+          handle.finished.then(callback, callback);
+
+          this.transition = handle.finished;
 
           if (replace) {
             history.replaceState(state, '', '#' + url);

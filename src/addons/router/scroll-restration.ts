@@ -12,13 +12,13 @@ export function ScrollRestration(
 
       if (typeof navigation === 'object') {
         const handleNavigate = (event: NavigateEvent) => {
-          if (!event.canIntercept || !navigator.isTransitionRunning) {
+          if (!event.canIntercept || navigator.transition === null) {
             return;
           }
 
           event.intercept({
             async handler() {
-              await navigator.runningTransition;
+              await navigator.transition;
               event.scroll();
             },
           });

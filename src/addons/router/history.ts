@@ -8,8 +8,7 @@ export interface HistoryLocation {
 }
 
 export interface HistoryNavigator {
-  readonly isTransitionRunning: boolean;
-  readonly runningTransition: Promise<void>;
+  readonly transition: Promise<void> | null;
   getCurrentURL(): RelativeURL;
   navigate(url: string | RelativeURL, options?: NavigateOptions): void;
 }
