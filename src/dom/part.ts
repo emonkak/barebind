@@ -320,7 +320,7 @@ function toStringOrEmpty(value: unknown): string {
 
 function parseCSSText(cssText: string): StyleMap {
   // biome-ignore lint/style/noRestrictedGlobals: intentional global document reference
-  const { style } = document.createElement('p');
+  const { style } = document.createElement('div');
   const styleMap: StyleMap = {};
   style.cssText = cssText;
   for (const property of style) {
