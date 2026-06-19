@@ -40,7 +40,10 @@ export interface ComponentHandle<TProps> {
 export interface Dispatcher {
   nextIdentifier(): string;
   nextTransition(): number;
-  schedule(unit: UpdateUnit, options?: UpdateOptions): UpdateHandle;
+  schedule(
+    transaction: UpdateTransaction,
+    options?: UpdateOptions,
+  ): UpdateHandle;
 }
 
 export interface HostAdapter {
@@ -178,7 +181,7 @@ export interface UpdateOptions {
   viewTransition?: boolean;
 }
 
-export interface UpdateUnit {
+export interface UpdateTransaction {
   readonly level: number;
   readonly pendingLanes: Lanes;
   prepare(lanes: Lanes, renderer: Renderer): Commit;

@@ -14,7 +14,7 @@ import {
   type Scope,
   type UpdateHandle,
   type UpdateOptions,
-  type UpdateUnit,
+  type UpdateTransaction,
   VBind,
   VComponent,
   type VElement,
@@ -37,7 +37,7 @@ import { PriorityQueue } from './queue.js';
 interface Update {
   id: number;
   lanes: Lanes;
-  unit: UpdateUnit;
+  transaction: UpdateTransaction;
   controller: PromiseWithResolvers<void>;
 }
 
@@ -308,7 +308,10 @@ export class Runtime implements Renderer, Dispatcher {
     }
   }
 
-  schedule(unit: UpdateUnit, options: UpdateOptions = {}): UpdateHandle {
+  schedule(
+    transaction: UpdateTransaction,
+    options: UpdateOptions = {},
+  ): UpdateHandle {
     const controller = Promise.withResolvers<void>();
     const id = this._updateCount++;
     const lanes =
@@ -318,7 +321,7 @@ export class Runtime implements Renderer, Dispatcher {
     this._updateQueue.enqueue({
       id,
       lanes,
-      unit,
+      transaction,
       controller,
     });
 
@@ -568,9 +571,9 @@ export class Runtime implements Renderer, Dispatcher {
         const flushSync = (this._flushLanes & SyncLane) === SyncLane;
 
         for (const update of this._updateBatch) {
-          const { lanes, unit } = update;
+          const { lanes, transaction } = update;
 
-          if ((unit.pendingLanes & lanes) === NoLanes) {
+          if ((transaction.pendingLanes & lanes) === NoLanes) {
             continue;
           }
 
@@ -578,7 +581,7 @@ export class Runtime implements Renderer, Dispatcher {
             await this._adapter.yieldToMain();
           }
 
-          commitBatch.push(unit.prepare(this._flushLanes, this));
+          commitBatch.push(transaction.prepare(this._flushLanes, this));
         }
 
         if (commitBatch.length > 0) {
@@ -643,7 +646,7 @@ function buildKeyToIndexMap<T>(
 function compareUpdates(update1: Update, update2: Update): number {
   const lane1 = getHighestPriorityLane(update1.lanes);
   const lane2 = getHighestPriorityLane(update2.lanes);
-  const level1 = update1.unit.level;
-  const level2 = update2.unit.level;
+  const level1 = update1.transaction.level;
+  const level2 = update2.transaction.level;
   return lane1 !== lane2 ? lane1 - lane2 : level1 - level2;
 }

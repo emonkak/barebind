@@ -13,7 +13,7 @@ import {
   type Scope,
   type UpdateHandle,
   type UpdateOptions,
-  type UpdateUnit,
+  type UpdateTransaction,
   VComponent,
   type VElement,
   wrap,
@@ -474,7 +474,7 @@ export function createComponent<TProps = {}, TReturn = unknown>(
   return ComponentType;
 }
 
-class UpdateComponent implements UpdateUnit {
+class UpdateComponent implements UpdateTransaction {
   private readonly _instance: FunctionComponent;
   private readonly _level: number;
 
