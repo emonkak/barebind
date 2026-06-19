@@ -548,9 +548,14 @@ export class Runtime implements Renderer, Dispatcher {
       this._stagedLanes = NoLanes;
 
       while ((update = this._updateQueue.peek()) !== undefined) {
-        if ((this._flushLanes & update.lanes) !== update.lanes) {
+        if (
+          (update.lanes & this._flushLanes) !== update.lanes &&
+          getHighestPriorityLane(this._flushLanes) <
+            getHighestPriorityLane(update.lanes)
+        ) {
           break;
         }
+        this._flushLanes |= update.lanes;
         this._updateBatch.push(this._updateQueue.dequeue()!);
       }
 
