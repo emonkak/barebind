@@ -42,27 +42,21 @@ export function getPriorityFromLanes(lanes: Lanes): TaskPriority {
 
 export function getRenderLanes(options: UpdateOptions): Lanes {
   let lanes = NoLanes;
-
   if (options.flushSync) {
     lanes |= SyncLane;
   }
-
   if (options.viewTransition) {
     lanes |= ViewTransitionLane;
   }
-
   if (options.priority !== undefined) {
     lanes |= getLaneFromPriority(options.priority);
   }
-
   if (options.transition !== undefined) {
     lanes |= TransitionLane1 << (options.transition % TransitionLaneLength);
   }
-
   if (options.delay !== undefined) {
     lanes |= options.delay <= 100 ? DelayedLane1 : DelayedLane2;
   }
-
   return lanes;
 }
 
