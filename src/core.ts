@@ -91,7 +91,7 @@ export type Mutation =
 export interface Part {
   mountBlock(block: Block, afterNode: ChildNode | null): void;
   moveBlock(block: Block, afterNode: ChildNode | null): void;
-  unmountBlock(block: Block, recursive: boolean): void;
+  unmountBlock(block: Block, cascade: boolean): void;
   commitUpdate(oldValue: unknown, newValue: unknown): void;
   commitMount(value: unknown): void;
   commitUnmount(value: unknown): void;

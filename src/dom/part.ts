@@ -19,7 +19,7 @@ export abstract class DOMPart implements Part {
 
   moveBlock(_block: Block, _afterNode: ChildNode): void {}
 
-  unmountBlock(_block: Block, _recursive: boolean): void {}
+  unmountBlock(_block: Block, _cascade: boolean): void {}
 
   commitMount(_value: unknown): void {}
 
@@ -83,8 +83,8 @@ export class ChildNodePart extends CharacterDataPart {
     block.moveBefore(afterNode ?? this._node);
   }
 
-  override unmountBlock(block: Block, recursive: boolean): void {
-    if (!recursive) {
+  override unmountBlock(block: Block, cascade: boolean): void {
+    if (!cascade) {
       block.unmount();
     }
   }
@@ -218,7 +218,7 @@ export class PortalPart extends DOMPart {
     block.moveInto(this._container, afterNode);
   }
 
-  override unmountBlock(block: Block, _recursive: boolean): void {
+  override unmountBlock(block: Block, _cascade: boolean): void {
     block.unmount();
   }
 }
