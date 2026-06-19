@@ -456,22 +456,21 @@ export function createComponent<TProps = {}, TReturn = unknown>(
   componentFn: ComponentFunction<TProps, TReturn>,
   { arePropsEqual = Object.is }: ComponentOptions<TProps> = {},
 ): Component<TProps> {
-  function ComponentType(props: TProps): VComponent<TProps> {
-    return new VComponent(ComponentType, props, []);
+  function Component(props: TProps): VComponent<TProps> {
+    return new VComponent(Component, props, []);
   }
 
-  ComponentType.createHandle = (
-    dispatcher: Dispatcher,
-  ): ComponentHandle<TProps> => new FunctionComponent(componentFn, dispatcher);
-  ComponentType.arePropsEqual = arePropsEqual;
+  Component.createHandle = (dispatcher: Dispatcher): ComponentHandle<TProps> =>
+    new FunctionComponent(componentFn, dispatcher);
+  Component.arePropsEqual = arePropsEqual;
 
   DEBUG: {
-    Object.defineProperty(ComponentType, 'name', {
+    Object.defineProperty(Component, 'name', {
       value: componentFn.name,
     });
   }
 
-  return ComponentType;
+  return Component;
 }
 
 class UpdateComponent implements UpdateTransaction {
