@@ -25,7 +25,7 @@ export abstract class DOMPart implements Part {
 
   commitUpdate(_oldValue: unknown, _newValue: unknown): void {}
 
-  commitUnmount(_value: unknown): void {}
+  commitUnmount(_value: unknown, _cascade: boolean): void {}
 }
 
 export class AttributePart extends DOMPart {
@@ -104,6 +104,12 @@ export class ClassPart extends AttributePart {
       );
     }
   }
+
+  override commitUnmount(value: unknown, cascade: boolean): void {
+    if (!cascade) {
+      updateClass(this._node.classList, normalizeClass(value), {});
+    }
+  }
 }
 
 export class ElementPart extends DOMPart {
@@ -136,7 +142,7 @@ export class ElementPart extends DOMPart {
     }
   }
 
-  override commitUnmount(value: unknown): void {
+  override commitUnmount(value: unknown, _cascade: boolean): void {
     if (value != null) {
       this._cleanups.get(value as Function)?.();
     }
@@ -253,6 +259,12 @@ export class StylePart extends AttributePart {
         normalizeStyle(oldValue),
         normalizeStyle(newValue),
       );
+    }
+  }
+
+  override commitUnmount(value: unknown, cascade: boolean): void {
+    if (!cascade) {
+      updateStyle((this._node as HTMLElement).style, normalizeStyle(value), {});
     }
   }
 }

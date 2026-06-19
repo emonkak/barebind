@@ -166,7 +166,7 @@ function replaceChild(child: RenderNode): void {
 
 function unmountChild(child: RenderNode, cascade: boolean = false): void {
   if (child.type === Bind) {
-    child.part.commitUnmount(child.props.value);
+    child.part.commitUnmount(child.props.value, cascade);
   } else if (typeof child.type === 'object') {
     child.part.unmountBlock(child.state.block, cascade);
     for (const grandchild of child.children) {

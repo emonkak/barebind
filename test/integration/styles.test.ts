@@ -95,6 +95,21 @@ describe('styles', () => {
     expect(target.style.fontSize).toBe('');
   });
 
+  it('removes styles that are no longer in the fragment', async () => {
+    const render = (value: unknown) => {
+      return html`<div style=${value}></div>`;
+    };
+
+    await root.render(render(['color: red', { fontSize: '16px' }])).finished;
+    const target = container.querySelector('div')!;
+    expect(target.style.color).toBe('red');
+    expect(target.style.fontSize).toBe('16px');
+
+    await root.render(render([])).finished;
+    expect(target.style.color).toBe('');
+    expect(target.style.fontSize).toBe('');
+  });
+
   it('updates styles from a string to an object', async () => {
     const render = (value: unknown) => html`<div style=${value}></div>`;
 

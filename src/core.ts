@@ -94,7 +94,7 @@ export interface Part {
   unmountBlock(block: Block, cascade: boolean): void;
   commitUpdate(oldValue: unknown, newValue: unknown): void;
   commitMount(value: unknown): void;
-  commitUnmount(value: unknown): void;
+  commitUnmount(value: unknown, cascade: boolean): void;
 }
 
 export type RenderNode =
