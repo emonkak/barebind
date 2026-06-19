@@ -186,7 +186,7 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
 }
 
 export class RenderContext {
-  private readonly _instance: FunctionComponent;
+  private readonly _handle: FunctionComponent;
   private readonly _lanes: Lanes;
   /** @internal */
   readonly _hooks: Hook[];
@@ -201,14 +201,14 @@ export class RenderContext {
     scope: Scope,
     lanes: Lanes,
   ) {
-    this._instance = instance;
+    this._handle = instance;
     this._hooks = hooks;
     this._scope = scope;
     this._lanes = lanes;
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    const instance = this._instance;
+    const instance = this._handle;
     const handle = instance._dispatcher.schedule(
       new UpdateComponent(instance, this._scope.level),
       options,
@@ -245,7 +245,7 @@ export class RenderContext {
   }
 
   startTransition<T>(callback: (transition: number) => T): T {
-    return callback(this._instance._dispatcher.nextTransition());
+    return callback(this._handle._dispatcher.nextTransition());
   }
 
   use<TReturn>(usable: Usable<TReturn>): TReturn {
@@ -295,7 +295,7 @@ export class RenderContext {
     } else {
       currentHook = {
         type: IdType,
-        id: this._instance._dispatcher.nextIdentifier(),
+        id: this._handle._dispatcher.nextIdentifier(),
       };
     }
 
