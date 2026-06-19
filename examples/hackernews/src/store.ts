@@ -75,20 +75,20 @@ export interface UserState {
 }
 
 export class AppStore {
-  readonly itemState$: Reactive<ItemState> = Reactive.from({
+  readonly itemState$: Reactive<ItemState> = Reactive.from<ItemState>({
     item: null,
     isLoading: false,
     error: null,
   });
 
-  readonly storyState$: Reactive<StoryState> = Reactive.from({
+  readonly storyState$: Reactive<StoryState> = Reactive.from<StoryState>({
     stories: [],
     type: null,
     page: 0,
     isLoading: false,
   });
 
-  readonly userState$: Reactive<UserState> = Reactive.from({
+  readonly userState$: Reactive<UserState> = Reactive.from<UserState>({
     user: null,
     isLoading: false,
     error: null,
