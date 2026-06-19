@@ -5,7 +5,7 @@ import {
 } from '../../component.js';
 import { type Bindable, toElement, type VElement } from '../../core.js';
 
-export interface InvalidateEvent<T = unknown> {
+export interface InvalidateEvent<T = any> {
   readonly source: Atom<T>;
   readonly path: readonly PropertyKey[];
   readonly oldValue: T;
@@ -35,7 +35,9 @@ export abstract class Signal<T> implements Bindable, UsableObject<T> {
     return SignalComponent(this);
   }
 
-  map<TResult>(selector: (value: T) => TResult): Signal<TResult> {
+  map<TResult>(
+    selector: (value: T) => TResult,
+  ): Computed<TResult, [Signal<T>]> {
     return new Computed<TResult, [Signal<T>]>(selector, [this]);
   }
 
@@ -96,7 +98,7 @@ export class Atom<T> extends Signal<T> {
     if (!Object.is(oldValue, newValue)) {
       this._value = newValue;
       this.invalidate({
-        source: this,
+        source: this as Atom<unknown>,
         path: [],
         oldValue,
         newValue,

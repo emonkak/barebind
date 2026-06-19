@@ -91,7 +91,6 @@ export class Reactive<T> extends Signal<T> {
     if (!(this._node.signal instanceof Atom)) {
       throw new TypeError('Cannot set value on a read-only signal.');
     }
-
     this._node.children = null;
     this._node.flags |= FLAG_PENGING_VALUE;
     this._node.flags &= ~FLAG_NEEDS_SNAPSHOT;
@@ -110,11 +109,10 @@ export class Reactive<T> extends Signal<T> {
     key: PropertyKey,
     options?: ReactiveOptions,
   ): T extends object ? Reactive<unknown> : null;
-  get(key: PropertyKey, options?: ReactiveOptions): Reactive<unknown> | null {
+  get(key: PropertyKey, options?: ReactiveOptions): Reactive<any> | null {
     if (!isObject(this._node.signal.value)) {
       return null;
     }
-
     const child = getChild(this._node, key);
     return new Reactive(child, options);
   }
@@ -123,18 +121,15 @@ export class Reactive<T> extends Signal<T> {
     if (!(this._node.signal instanceof Atom)) {
       throw new TypeError('Cannot mutate value with a readonly signal.');
     }
-
     if (!isObject(this._node.signal.value)) {
       throw new TypeError('Cannot mutate value with a non-object signal.');
     }
-
     const proxy = proxyObject(this._node);
     return callback(proxy);
   }
 
   subscribe(subscriber: Subscriber): Unsubscribe {
     const { signal } = this._node;
-
     if (this._shallow) {
       return signal.subscribe((event) => {
         if (event.source === signal) {
@@ -188,7 +183,7 @@ function isObject<T>(value: T): value is T & object {
 
 function proxyObject<T>(
   node: ReactiveNode<T>,
-  getValue: <T>(node: ReactiveNode<T>) => T = takeSnapshot,
+  getValue: (node: ReactiveNode<unknown>) => unknown = takeSnapshot,
 ): T {
   return new Proxy(node.signal.value as T & object, {
     get(_target, key, _receiver) {
@@ -251,7 +246,7 @@ function resolveChild<T>(
     prototype = Object.getPrototypeOf(prototype);
   } while (prototype !== null && prototype !== Object.prototype);
 
-  return createNode(new Atom(undefined, signal.version));
+  return createNode(new Atom<unknown>(undefined, signal.version));
 }
 
 function shallowClone<T extends object>(object: T): T {
