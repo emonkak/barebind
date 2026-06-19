@@ -119,10 +119,10 @@ export class Reactive<T> extends Signal<T> {
 
   mutate<TResult>(callback: (value: T) => TResult): TResult {
     if (!(this._node.signal instanceof Atom)) {
-      throw new TypeError('Cannot mutate value with a readonly signal.');
+      throw new TypeError('Cannot mutate value on a read-only signal.');
     }
     if (!isObject(this._node.signal.value)) {
-      throw new TypeError('Cannot mutate value with a non-object signal.');
+      throw new TypeError('Cannot mutate a non-object value.');
     }
     const proxy = proxyObject(this._node);
     return callback(proxy);
