@@ -18,11 +18,13 @@ export class DOMAdapter implements HostAdapter {
 
   getTaskPriority(): TaskPriority {
     const currentEvent = this._document.defaultView?.event;
-    return currentEvent !== undefined
-      ? isContinuousEvent(currentEvent)
-        ? 'user-visible'
-        : 'user-blocking'
-      : 'background';
+    if (currentEvent !== undefined) {
+      return isContinuousEvent(currentEvent) ? 'user-visible' : 'user-blocking';
+    }
+    if (this._document.readyState !== 'complete') {
+      return 'user-blocking';
+    }
+    return 'background';
   }
 
   renderPortal(element: VPortal): DOMBlock {
