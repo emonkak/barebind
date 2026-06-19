@@ -1,7 +1,7 @@
-import type { UsableFunction } from '../../component.js';
+import type { HookFunction } from '../../component.js';
 import { Atom, Computed, type Signal, type UnwrapSignals } from './signal.js';
 
-export function LocalAtom<T>(initialValue: T): UsableFunction<Atom<T>> {
+export function LocalAtom<T>(initialValue: T): HookFunction<Atom<T>> {
   return (context) => {
     return context.useMemo(() => new Atom(initialValue), []);
   };
@@ -13,7 +13,7 @@ export function LocalComputed<
 >(
   computation: (...values: UnwrapSignals<TDependencies>) => TResult,
   dependencies: TDependencies,
-): UsableFunction<Computed<TResult, TDependencies>> {
+): HookFunction<Computed<TResult, TDependencies>> {
   return (context) => {
     return context.useMemo(
       () => new Computed(computation, dependencies),

@@ -41,13 +41,9 @@ export interface DispatchOptions<TState> extends UpdateOptions {
   transient?: boolean;
 }
 
-export type Usable<TReturn> = UsableObject<TReturn> | UsableFunction<TReturn>;
+export type HookFunction<TReturn = void> = (context: RenderContext) => TReturn;
 
-export type UsableFunction<TReturn = void> = (
-  context: RenderContext,
-) => TReturn;
-
-export interface UsableObject<TReturn = void> {
+export interface HookObject<TReturn = void> {
   onUse(context: RenderContext): TReturn;
 }
 
@@ -118,6 +114,8 @@ namespace Hook {
     memoizedState: TState;
   }
 }
+
+type Usable<TReturn> = HookObject<TReturn> | HookFunction<TReturn>;
 
 export class FunctionComponent<TProps = any, TReturn = unknown>
   implements ComponentHandle<TProps>

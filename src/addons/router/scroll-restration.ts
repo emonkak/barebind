@@ -1,9 +1,9 @@
-import type { RenderContext, UsableFunction } from '../../component.js';
+import type { HookFunction, RenderContext } from '../../component.js';
 import { HistoryContext, trimHashMark } from './history.js';
 
 export function ScrollRestration(
   document: Document = window.document,
-): UsableFunction<void> {
+): HookFunction<void> {
   return (context: RenderContext) => {
     const { location, navigator } = context.inject(HistoryContext);
 

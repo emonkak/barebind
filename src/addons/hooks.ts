@@ -1,7 +1,7 @@
 import type {
   DispatchOptions,
+  HookFunction,
   InitialState,
-  UsableFunction,
 } from '../component.js';
 import type { Ref } from '../core.js';
 
@@ -12,7 +12,7 @@ export interface DeferredValueOptions<T> extends DispatchOptions<T> {
 export function DeferredValue<T>(
   value: T,
   { initialValue, ...dispatchOptions }: DeferredValueOptions<T> = {},
-): UsableFunction<T> {
+): HookFunction<T> {
   return (context) => {
     const [deferredValue, setDeferredValue] = context.useState(
       initialValue ?? (() => value),
@@ -33,7 +33,7 @@ export function DeferredValue<T>(
 
 export function EffectEvent<T extends (...args: any[]) => any>(
   callback: T,
-): UsableFunction<(...args: Parameters<T>) => ReturnType<T>> {
+): HookFunction<(...args: Parameters<T>) => ReturnType<T>> {
   return (context) => {
     const callbackRef = context.useRef(callback);
 
@@ -51,7 +51,7 @@ export function ImperativeHandle<T>(
   ref: Ref<T | null> | ((handle: T) => void),
   createHandle: () => T,
   dependencies?: unknown[],
-): UsableFunction<void> {
+): HookFunction<void> {
   return (context) => {
     context.useEffect(() => {
       if (typeof ref === 'function') {
@@ -69,7 +69,7 @@ export function ImperativeHandle<T>(
 export function SyncEnternalStore<T>(
   subscribe: (subscriber: () => void) => (() => void) | void,
   getSnapshot: () => T,
-): UsableFunction<void> {
+): HookFunction<void> {
   return (context) => {
     const snapshot = getSnapshot();
     const store = context.useMemo(() => ({ getSnapshot, snapshot }), []);
@@ -97,7 +97,7 @@ export function SyncEnternalStore<T>(
   };
 }
 
-export function Transition(): UsableFunction<
+export function Transition(): HookFunction<
   [
     isPending: boolean,
     startTransition: <T>(action: (transition: number) => T) => T,
