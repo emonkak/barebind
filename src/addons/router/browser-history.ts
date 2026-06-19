@@ -146,8 +146,9 @@ export function createLinkClickHandler(
     const replace =
       element.hasAttribute('data-link-replace') ||
       element.href === window.location.href;
+    const viewTransition = element.hasAttribute('data-view-transition');
 
-    navigator.navigate(url, { replace });
+    navigator.navigate(url, { replace, viewTransition });
   };
 }
 
@@ -187,7 +188,8 @@ export function createFormSubmitHandler(
     const replace =
       form.hasAttribute('data-link-replace') ||
       url.toString() === window.location.href;
+    const viewTransition = form.hasAttribute('data-view-transition');
 
-    navigator.navigate(url, { replace });
+    navigator.navigate(url, { replace, viewTransition });
   };
 }
