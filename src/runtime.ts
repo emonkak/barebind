@@ -111,8 +111,12 @@ export class Runtime implements Renderer, Dispatcher {
           parent,
           children: oldNode.children.slice(),
           dirty: true,
+          state: {
+            handle: (oldNode as RenderNode.ComponentNode).state.handle,
+            scope,
+          },
         };
-        const subScope = scope.child(newElement.type);
+        const subScope = scope.enter(newElement.type);
         newNode.children[0] = this.diff(
           newNode.children[0]!,
           newNode.state.handle.render(
@@ -221,7 +225,7 @@ export class Runtime implements Renderer, Dispatcher {
             scope,
           },
         };
-        const subScope = scope.child(element.type);
+        const subScope = scope.enter(element.type);
         node.children[0] = this.render(
           node.state.handle.render(node.props, subScope, this._flushLanes),
           subScope,

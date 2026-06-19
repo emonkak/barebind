@@ -214,6 +214,36 @@ describe('components', () => {
       expect(container.innerHTML).toBe('<div>default</div>');
     });
 
+    it('inherits the latest instance in child updates', async () => {
+      const Child = createComponent(function Child() {
+        const context = this.inject(Context);
+        return html`
+          <button
+            @click=${() => {
+              this.forceUpdate();
+            }}
+          >
+            ${context.value}
+          </button>
+        `;
+      });
+      const App = createComponent(function App({ value }: { value: unknown }) {
+        this.provide(new Context(value));
+        return Child({});
+      });
+
+      await root.render(App({ value: 'first' })).finished;
+      const button = container.querySelector('button')!;
+      expect(container.innerHTML).toBe('<button>first</button>');
+
+      await root.render(App({ value: 'second' })).finished;
+      expect(container.innerHTML).toBe('<button>second</button>');
+
+      button.click();
+      await waitForStep(runtime);
+      expect(container.innerHTML).toBe('<button>second</button>');
+    });
+
     it('throws when injectable is not found', async () => {
       const App = createComponent(function App() {
         this.inject(class {});

@@ -488,11 +488,11 @@ class UpdateComponent implements UpdateUnit {
       children: oldNode.children.slice(),
       dirty: true,
     };
-    const scope = oldNode.state.scope.peer();
+    const subScope = newNode.state.scope.enter(newNode.type);
     newNode.children[0] = renderer.diff(
       newNode.children[0]!,
-      newNode.state.handle.render(newNode.props, scope, lanes),
-      scope,
+      newNode.state.handle.render(newNode.props, subScope, lanes),
+      subScope,
       0,
       newNode,
     );
