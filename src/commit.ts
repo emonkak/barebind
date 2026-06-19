@@ -164,11 +164,11 @@ function replaceChild(child: RenderNode): void {
   }
 }
 
-function unmountChild(child: RenderNode, recursive: boolean = false): void {
+function unmountChild(child: RenderNode, cascade: boolean = false): void {
   if (child.type === Bind) {
     child.part.commitUnmount(child.props.value);
   } else if (typeof child.type === 'object') {
-    child.part.unmountBlock(child.state.block, recursive);
+    child.part.unmountBlock(child.state.block, cascade);
     for (const grandchild of child.children) {
       unmountChild(grandchild, true);
     }
@@ -177,7 +177,7 @@ function unmountChild(child: RenderNode, recursive: boolean = false): void {
       child.state.handle.disconnect();
     }
     for (const grandchild of child.children) {
-      unmountChild(grandchild, recursive);
+      unmountChild(grandchild, cascade);
     }
   }
 }
