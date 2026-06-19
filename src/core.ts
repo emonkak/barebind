@@ -230,12 +230,8 @@ export class Scope {
     }
   }
 
-  child(owner: Component<unknown>): Scope {
+  enter(owner: Component<unknown>): Scope {
     return new Scope(this, this.level + 1, owner);
-  }
-
-  peer(): Scope {
-    return new Scope(this.parent, this.level, this.owner);
   }
 }
 
