@@ -20,8 +20,8 @@ export type UnwrapSignals<T> = {
   [K in keyof T]: T[K] extends Signal<infer Value> ? Value : never;
 };
 
-const SignalComponent = createComponent<Signal<any>>(
-  function SignalComponent(signal) {
+const SignalObserver = createComponent<Signal<any>>(
+  function SignalObserver(signal) {
     return this.use(signal);
   },
 );
@@ -32,7 +32,7 @@ export abstract class Signal<T> implements Bindable, UsableObject<T> {
   abstract get version(): number;
 
   [toElement](): VElement {
-    return SignalComponent(this);
+    return SignalObserver(this);
   }
 
   map<TResult>(
