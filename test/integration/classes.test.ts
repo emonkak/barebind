@@ -87,6 +87,21 @@ describe('classes', () => {
     expect(target.classList.contains('disabled')).toBe(false);
   });
 
+  it('removes classes that are no longer in the fragment', async () => {
+    const render = (value: unknown) => {
+      return html`<div class=${value}></div>`;
+    };
+
+    await root.render(render(['foo', { bar: true }])).finished;
+    const target = container.querySelector('div')!;
+    expect(target.classList.contains('foo')).toBe(true);
+    expect(target.classList.contains('bar')).toBe(true);
+
+    await root.render(render([])).finished;
+    expect(target.classList.contains('foo')).toBe(false);
+    expect(target.classList.contains('bar')).toBe(false);
+  });
+
   it('updates classes from a string to an object', async () => {
     const render = (value: unknown) => html`<div class=${value}></div>`;
 
