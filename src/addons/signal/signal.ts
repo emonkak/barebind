@@ -1,7 +1,7 @@
 import {
   createComponent,
+  type HookObject,
   type RenderContext,
-  type UsableObject,
 } from '../../component.js';
 import { type Bindable, toElement, type VElement } from '../../core.js';
 
@@ -26,7 +26,7 @@ const SignalObserver = createComponent<Signal<any>>(
   },
 );
 
-export abstract class Signal<T> implements Bindable, UsableObject<T> {
+export abstract class Signal<T> implements Bindable, HookObject<T> {
   abstract get value(): T;
 
   abstract get version(): number;

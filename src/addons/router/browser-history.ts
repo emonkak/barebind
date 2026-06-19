@@ -1,4 +1,4 @@
-import type { UsableFunction } from '../../component.js';
+import type { HookFunction } from '../../component.js';
 import {
   anyModifiersArePressed,
   HistoryContext,
@@ -8,7 +8,7 @@ import {
 } from './history.js';
 import { RelativeURL } from './relative-url.js';
 
-export function BrowserHistory(): UsableFunction<HistoryContext> {
+export function BrowserHistory(): HookFunction<HistoryContext> {
   return (context) => {
     const [location, setLocation] = context.useState<HistoryLocation>(() => ({
       url: RelativeURL.fromURL(window.location),
