@@ -136,7 +136,8 @@ export function createHashClickHandler(
     const replace =
       element.hasAttribute('data-link-replace') ||
       element.hash === window.location.hash;
+    const viewTransition = element.hasAttribute('data-view-transition');
 
-    navigator.navigate(url, { replace });
+    navigator.navigate(url, { replace, viewTransition });
   };
 }
