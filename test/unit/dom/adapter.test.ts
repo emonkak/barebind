@@ -31,9 +31,19 @@ describe('DOMAdapter', () => {
   });
 
   describe('getTaskPriority()', () => {
-    it('returns "background" when there is no current event', () => {
+    it('returns "background" when there is no current event and readyState is "complete"', () => {
+      vi.spyOn(document, 'readyState', 'get').mockReturnValue('complete');
       vi.spyOn(window, 'event', 'get').mockReturnValue(undefined);
       expect(adapter.getTaskPriority()).toBe('background');
+    });
+
+    it.each([
+      'loading',
+      'interactive',
+    ] as const)('returns "user-blocking" when readyState is "%s" and there is no current event', (readyState) => {
+      vi.spyOn(document, 'readyState', 'get').mockReturnValue(readyState);
+      vi.spyOn(window, 'event', 'get').mockReturnValue(undefined);
+      expect(adapter.getTaskPriority()).toBe('user-blocking');
     });
 
     it.each([
@@ -55,11 +65,13 @@ describe('DOMAdapter', () => {
       'touchmove',
       'wheel',
     ])('returns "user-visible" for a "%s" event', (type) => {
+      vi.spyOn(document, 'readyState', 'get').mockReturnValue('complete');
       vi.spyOn(window, 'event', 'get').mockReturnValue(new Event(type));
       expect(adapter.getTaskPriority()).toBe('user-visible');
     });
 
     it('returns "user-blocking" for a non-continuous event', () => {
+      vi.spyOn(document, 'readyState', 'get').mockReturnValue('complete');
       vi.spyOn(window, 'event', 'get').mockReturnValue(new Event('click'));
       expect(adapter.getTaskPriority()).toBe('user-blocking');
     });
