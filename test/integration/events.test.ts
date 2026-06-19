@@ -147,6 +147,38 @@ describe('events', () => {
     expect(listener2).toHaveBeenCalledOnce();
   });
 
+  it('removes the event listener after the root is unmounted', async () => {
+    const listener = vi.fn();
+    const template = html`
+      <button id="target" @click=${listener}></button>
+    `;
+
+    await root.render(template).finished;
+    const target = container.querySelector<HTMLButtonElement>('#target')!;
+    target.click();
+    expect(listener).toHaveBeenCalledOnce();
+
+    await root.unmount().finished;
+    target.click();
+    expect(listener).toHaveBeenCalledOnce();
+  });
+
+  it('removes the event listener object after the root is unmounted', async () => {
+    const handleEvent = vi.fn();
+    const template = html`
+      <button id="target" @click=${{ handleEvent }}></button>
+    `;
+
+    await root.render(template).finished;
+    const target = container.querySelector<HTMLButtonElement>('#target')!;
+    target.click();
+    expect(handleEvent).toHaveBeenCalledOnce();
+
+    await root.unmount().finished;
+    target.click();
+    expect(handleEvent).toHaveBeenCalledOnce();
+  });
+
   it('re-attaches the object listener when the options change', async () => {
     const events: Partial<Event>[] = [];
     const render = (listener: Record<string, unknown>) => html`

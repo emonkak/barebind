@@ -192,6 +192,17 @@ export class EventPart extends AttributePart implements EventListenerObject {
     }
   }
 
+  override commitUnmount(_value: unknown, _cascade: boolean): void {
+    if (this._currentListener != null) {
+      this._node.removeEventListener(
+        this._name,
+        this,
+        this._currentListener as AddEventListenerOptions,
+      );
+      this._currentListener = undefined;
+    }
+  }
+
   handleEvent(event: Event): void {
     const listener = this._currentListener;
     if (typeof listener === 'function') {
