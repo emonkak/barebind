@@ -132,18 +132,28 @@ describe('components', () => {
   });
 
   describe('context', () => {
-    it('injects the instance provided by itself', async () => {
-      class Context {
-        name: string;
-        constructor(name: string) {
-          this.name = name;
-        }
+    class Context {
+      value: unknown;
+      constructor(value: unknown) {
+        this.value = value;
       }
+    }
 
+    class ContextWithDefault {
+      static getDefault(): ContextWithDefault {
+        return new ContextWithDefault('default');
+      }
+      value: unknown;
+      constructor(value: unknown) {
+        this.value = value;
+      }
+    }
+
+    it('injects the instance provided by itself', async () => {
       const App = createComponent(function App() {
         this.provide(new Context('hello'));
         const context = this.inject(Context);
-        return html`<div>${context.name}</div>`;
+        return html`<div>${context.value}</div>`;
       });
 
       await root.render(App({})).finished;
@@ -151,18 +161,11 @@ describe('components', () => {
     });
 
     it('injects the last provided instance', async () => {
-      class Context {
-        name: string;
-        constructor(name: string) {
-          this.name = name;
-        }
-      }
-
       const App = createComponent(function App() {
         this.provide(new Context('first'));
         this.provide(new Context('second'));
         const context = this.inject(Context);
-        return html`<div>${context.name}</div>`;
+        return html`<div>${context.value}</div>`;
       });
 
       await root.render(App({})).finished;
@@ -170,18 +173,10 @@ describe('components', () => {
     });
 
     it('injects the instance provided by the parent', async () => {
-      class Context {
-        name: string;
-        constructor(name: string) {
-          this.name = name;
-        }
-      }
-
       const Child = createComponent(function Child() {
         const context = this.inject(Context);
-        return html`<div>${context.name}</div>`;
+        return html`<div>${context.value}</div>`;
       });
-
       const App = createComponent(function App() {
         this.provide(new Context('hello'));
         return Child({});
@@ -192,23 +187,14 @@ describe('components', () => {
     });
 
     it('injects the instance provided by the nearest parent', async () => {
-      class Context {
-        name: string;
-        constructor(name: string) {
-          this.name = name;
-        }
-      }
-
       const GrandChild = createComponent(function GrandChild() {
         const context = this.inject(Context);
-        return html`<div>${context.name}</div>`;
+        return html`<div>${context.value}</div>`;
       });
-
       const Child = createComponent(function Child() {
         this.provide(new Context('child'));
         return GrandChild({});
       });
-
       const App = createComponent(function app() {
         this.provide(new Context('parent'));
         return Child({});
@@ -219,19 +205,9 @@ describe('components', () => {
     });
 
     it('injects the default instance from getDefault()', async () => {
-      class Context {
-        static getDefault(): Context {
-          return new Context('default');
-        }
-        name: string;
-        constructor(name: string) {
-          this.name = name;
-        }
-      }
-
       const App = createComponent(function Child() {
-        const context = this.inject(Context);
-        return html`<div>${context.name}</div>`;
+        const context = this.inject(ContextWithDefault);
+        return html`<div>${context.value}</div>`;
       });
 
       await root.render(App({})).finished;
@@ -239,10 +215,8 @@ describe('components', () => {
     });
 
     it('throws when injectable is not found', async () => {
-      class Context {}
-
       const App = createComponent(function App() {
-        this.inject(Context);
+        this.inject(class {});
         return html`<div>unreachable</div>`;
       });
 
@@ -266,12 +240,12 @@ describe('components', () => {
       });
 
       await root.render(App({})).finished;
-      const target = container.querySelector('button')!;
-      expect(target.textContent).toBe('0');
+      const button = container.querySelector('button')!;
+      expect(button.textContent).toBe('0');
 
-      target.click();
+      button.click();
       await waitForStep(runtime);
-      expect(target.textContent).toBe('1');
+      expect(button.textContent).toBe('1');
     });
 
     it('updates the state with the updater function', async () => {
@@ -289,12 +263,12 @@ describe('components', () => {
       });
 
       await root.render(App({})).finished;
-      const target = container.querySelector('button')!;
-      expect(target.textContent).toBe('0');
+      const button = container.querySelector('button')!;
+      expect(button.textContent).toBe('0');
 
-      target.click();
+      button.click();
       await waitForStep(runtime);
-      expect(target.textContent).toBe('1');
+      expect(button.textContent).toBe('1');
     });
 
     it('updates the state with the reducer function', async () => {
@@ -315,12 +289,12 @@ describe('components', () => {
       });
 
       await root.render(App({})).finished;
-      const target = container.querySelector('button')!;
-      expect(target.textContent).toBe('0');
+      const button = container.querySelector('button')!;
+      expect(button.textContent).toBe('0');
 
-      target.click();
+      button.click();
       await waitForStep(runtime);
-      expect(target.textContent).toBe('1');
+      expect(button.textContent).toBe('1');
     });
 
     it('skips re-render when the state is unchanged', async () => {
@@ -373,14 +347,14 @@ describe('components', () => {
       });
 
       await root.render(App({})).finished;
-      const target = container.querySelector('button')!;
+      const button = container.querySelector('button')!;
       expect(renderCount).toBe(1);
-      expect(target.textContent).toBe('1');
+      expect(button.textContent).toBe('1');
 
-      target.click();
+      button.click();
       await waitForStep(runtime);
       expect(renderCount).toBe(1);
-      expect(target.textContent).toBe('1');
+      expect(button.textContent).toBe('1');
     });
 
     it('initializes the state with a function', async () => {
