@@ -108,7 +108,8 @@ export class ClassPart extends AttributePart {
 
 export class ElementPart extends DOMPart {
   private readonly _node: Element;
-  private _cleanup: (() => void) | void | undefined;
+  private readonly _cleanups: WeakMap<Function, (() => void) | undefined> =
+    new WeakMap();
 
   constructor(node: Element) {
     super();
@@ -116,24 +117,29 @@ export class ElementPart extends DOMPart {
   }
 
   override commitMount(value: unknown): void {
-    if (!(value == null || typeof value === 'function')) {
-      throw new TypeError(
-        'Element values must be an function, null or undefined.',
-      );
+    if (value != null) {
+      if (typeof value !== 'function') {
+        throw new TypeError(
+          'Element values must be an function, null or undefined.',
+        );
+      }
+      this._cleanups.set(value, value(this._node));
     }
-    this._cleanup?.();
-    this._cleanup = (value as Function)?.(this._node);
   }
 
   override commitUpdate(oldValue: unknown, newValue: unknown): void {
     if (oldValue !== newValue) {
+      if (oldValue != null) {
+        this._cleanups.get(oldValue as Function)?.();
+      }
       this.commitMount(newValue);
     }
   }
 
-  override commitUnmount(_value: unknown): void {
-    this._cleanup?.();
-    this._cleanup = undefined;
+  override commitUnmount(value: unknown): void {
+    if (value != null) {
+      this._cleanups.get(value as Function)?.();
+    }
   }
 }
 

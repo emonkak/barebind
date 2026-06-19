@@ -76,32 +76,47 @@ describe('elements', () => {
     expect(ref).toHaveReturnedWith('<div id="a"></div>');
   });
 
+  it('invokes multiple refs in the fragment', async () => {
+    const ref1 = vi.fn();
+    const ref2 = vi.fn();
+    const template = html`
+      <div ${[ref1, ref2]}></div>
+    `;
+    await root.render(template).finished;
+    const target = container.querySelector('div');
+    expect(ref1).toHaveBeenCalledOnce();
+    expect(ref1).toHaveBeenCalledWith(target);
+    expect(ref2).toHaveBeenCalledOnce();
+    expect(ref2).toHaveBeenCalledWith(target);
+  });
+
   it('cleans up the ref when unmounted', async () => {
-    const logs: string[] = [];
-    const render = (show: boolean) => html`
-      <div>
-        ${
-          show
-            ? html`
-              <div
-                ${() => {
-                  logs.push('setup');
-                  return () => {
-                    logs.push('cleanup');
-                  };
-                }}
-              ></div>
-            `
-            : null
-        }
-      </div>
+    const cleanup = vi.fn();
+    const template = html`
+      <div ${() => cleanup}></div>
     `;
 
-    await root.render(render(true)).finished;
-    expect(logs).toStrictEqual(['setup']);
+    await root.render(template).finished;
+    expect(cleanup).not.toHaveBeenCalled();
 
-    await root.render(render(false)).finished;
-    expect(logs).toStrictEqual(['setup', 'cleanup']);
+    await root.unmount().finished;
+    expect(cleanup).toHaveBeenCalledOnce();
+  });
+
+  it('cleans up multiple refs in the fragment', async () => {
+    const cleanup1 = vi.fn();
+    const cleanup2 = vi.fn();
+    const template = html`
+      <div ${[() => cleanup1, () => cleanup2]}></div>
+    `;
+
+    await root.render(template).finished;
+    expect(cleanup1).not.toHaveBeenCalled();
+    expect(cleanup2).not.toHaveBeenCalled();
+
+    await root.unmount().finished;
+    expect(cleanup1).toHaveBeenCalledOnce();
+    expect(cleanup2).toHaveBeenCalledOnce();
   });
 
   it('throws when an invalid value is used as a ref', async () => {
