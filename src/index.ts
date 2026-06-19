@@ -1,6 +1,8 @@
 export { sequentialEqual, shallowEqual } from './compare.js';
 export {
   createComponent,
+  type HookFunction,
+  type HookObject,
   RenderContext,
 } from './component.js';
 export {
