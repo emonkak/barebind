@@ -79,7 +79,7 @@ export class Atom<T> extends Signal<T> {
 
   private _version: number;
 
-  private _subscribers = new Set<Subscriber>();
+  private readonly _subscribers = new Set<Subscriber>();
 
   constructor(initialValue: T, initialVersion: number = 0) {
     super();
