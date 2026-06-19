@@ -148,7 +148,12 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
   render(props: TProps, scope: Scope, lanes: Lanes): VElement {
     try {
       this._pendingLanes &= ~lanes;
-      const context = new RenderContext(this, this._hooks.slice(), scope);
+      const context = new RenderContext(
+        this,
+        this._hooks.slice(),
+        scope,
+        lanes,
+      );
       const returnValue = this._componentFn.call(context, props);
       this._hooks = finalizeHooks(context);
       Object.freeze(scope.instances);
@@ -185,15 +190,22 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
 export class RenderContext {
   private readonly _instance: FunctionComponent;
   private readonly _scope: Scope;
+  private readonly _lanes: Lanes;
   /** @internal */
   readonly _hooks: Hook[];
   /** @internal */
   _hookIndex: number = 0;
 
-  constructor(instance: FunctionComponent, hooks: Hook[], scope: Scope) {
+  constructor(
+    instance: FunctionComponent,
+    hooks: Hook[],
+    scope: Scope,
+    lanes: Lanes,
+  ) {
     this._instance = instance;
     this._hooks = hooks;
     this._scope = scope;
+    this._lanes = lanes;
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
@@ -339,7 +351,7 @@ export class RenderContext {
       ensureHookType(ReducerType, currentHook);
 
       const { handler, memoizedState, memoizedActions } = currentHook;
-      const renderLanes = this._instance._dispatcher.flushLanes;
+      const renderLanes = this._lanes;
       let nextState = options.passthrough
         ? getInitialState(initialState)
         : memoizedState;

@@ -38,7 +38,6 @@ export interface ComponentHandle<TProps> {
 }
 
 export interface Dispatcher {
-  readonly flushLanes: Lanes;
   nextIdentifier(): string;
   nextTransition(): number;
   schedule(unit: UpdateUnit, options?: UpdateOptions): UpdateHandle;
