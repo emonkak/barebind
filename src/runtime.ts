@@ -61,10 +61,6 @@ export class Runtime implements Renderer, Dispatcher {
     this._adapter = adapter;
   }
 
-  get flushLanes(): Lanes {
-    return this._flushLanes;
-  }
-
   diff(
     oldNode: RenderNode,
     newElement: VElement,
