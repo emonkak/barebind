@@ -9,6 +9,7 @@ import {
   getPriorityFromLanes,
   getRenderLanes,
   getTransitionIndex,
+  inspectLanes,
   NoLanes,
   SyncLane,
   TransitionLane1,
@@ -211,5 +212,61 @@ describe('getTransitionIndex()', () => {
         TransitionLane1 | (TransitionLane1 << 3) | (TransitionLane1 << 7),
       ),
     ).toBe(7);
+  });
+});
+
+describe('inspectLanes()', () => {
+  it('returns an empty array for NoLanes', () => {
+    expect(inspectLanes(NoLanes)).toStrictEqual([]);
+  });
+
+  it('identifies SyncLane', () => {
+    expect(inspectLanes(SyncLane)).toStrictEqual(['SyncLane']);
+  });
+
+  it('identifies ViewTransitionLane', () => {
+    expect(inspectLanes(ViewTransitionLane)).toStrictEqual([
+      'ViewTransitionLane',
+    ]);
+  });
+
+  it('identifies UserBlockingLane', () => {
+    expect(inspectLanes(UserBlockingLane)).toStrictEqual(['UserBlockingLane']);
+  });
+
+  it('identifies UserVisibleLane', () => {
+    expect(inspectLanes(UserVisibleLane)).toStrictEqual(['UserVisibleLane']);
+  });
+
+  it('identifies BackgroundLane', () => {
+    expect(inspectLanes(BackgroundLane)).toStrictEqual(['BackgroundLane']);
+  });
+
+  it('identifies any lane within TransitionLanes', () => {
+    for (let i = 0; i < TransitionLaneLength; i++) {
+      expect(inspectLanes(TransitionLane1 << i)).toStrictEqual([
+        'TransitionLane',
+      ]);
+    }
+  });
+
+  it('identifies DelayedLane1', () => {
+    expect(inspectLanes(DelayedLane1)).toStrictEqual(['DelayedLanes']);
+  });
+
+  it('identifies DelayedLane2', () => {
+    expect(inspectLanes(DelayedLane2)).toStrictEqual(['DelayedLanes']);
+  });
+
+  it('returns tags for all lane groups in AllLanes', () => {
+    expect(inspectLanes(AllLanes)).toStrictEqual([
+      'SyncLane',
+      'ViewTransitionLane',
+      'UserBlockingLane',
+      'UserVisibleLane',
+      'BackgroundLane',
+      'TransitionLane',
+      'DelayedLanes',
+    ]);
   });
 });
