@@ -13,7 +13,7 @@ export const DelayedLane1: Lane /*       */ = 0b0100000000000000000000000000000;
 export const DelayedLane2: Lane /*       */ = 0b1000000000000000000000000000000;
 export const DelayedLanes: Lanes /*      */ = 0b1100000000000000000000000000000;
 
-export const TransitionLength: number = 24;
+export const TransitionLaneLength: number = 24;
 
 export function getHighestPriorityLane(lanes: Lanes): Lane {
   return lanes & -lanes;
@@ -56,7 +56,7 @@ export function getRenderLanes(options: UpdateOptions): Lanes {
   }
 
   if (options.transition !== undefined) {
-    lanes |= TransitionLane1 << (options.transition % TransitionLength);
+    lanes |= TransitionLane1 << (options.transition % TransitionLaneLength);
   }
 
   if (options.delay !== undefined) {
@@ -68,10 +68,10 @@ export function getRenderLanes(options: UpdateOptions): Lanes {
 
 export function getTransitionIndex(lanes: Lanes): number {
   return (
-    TransitionLength -
+    TransitionLaneLength -
     Math.min(
       Math.clz32(lanes << Math.clz32(TransitionLanes)),
-      TransitionLength,
+      TransitionLaneLength,
     ) -
     1
   );
