@@ -100,6 +100,38 @@ describe('events', () => {
     );
   });
 
+  it('fires multiple event listeners in the fragment', async () => {
+    const listener1 = vi.fn();
+    const listener2 = vi.fn();
+    const template = html`
+      <button @click=${[listener1, listener2]}></button>
+    `;
+
+    await root.render(template).finished;
+    const button = container.querySelector('button')!;
+    button.click();
+
+    expect(listener1).toHaveBeenCalledOnce();
+    expect(listener2).toHaveBeenCalledOnce();
+  });
+
+  it('fires new event listeners added to the fragment', async () => {
+    const listener1 = vi.fn();
+    const listener2 = vi.fn();
+    const render = (listeners: unknown[]) => html`
+      <button @click=${listeners}></button>
+    `;
+
+    await root.render(render([])).finished;
+    const button = container.querySelector('button')!;
+
+    await root.render(render([listener1, listener2])).finished;
+    button.click();
+
+    expect(listener1).toHaveBeenCalledOnce();
+    expect(listener2).toHaveBeenCalledOnce();
+  });
+
   it('throws when an invalid value is used as an event listener', async () => {
     const template = html`
       <button id="target" @click=${123}></button>
@@ -177,6 +209,23 @@ describe('events', () => {
     await root.unmount().finished;
     target.click();
     expect(handleEvent).toHaveBeenCalledOnce();
+  });
+
+  it('removes multiple event listeners in the fragment', async () => {
+    const listener1 = vi.fn();
+    const listener2 = vi.fn();
+    const template = html`
+      <button @click=${[listener1, listener2]}></button>
+    `;
+
+    await root.render(template).finished;
+    const button = container.querySelector('button')!;
+
+    await root.unmount().finished;
+    button.click();
+
+    expect(listener1).not.toHaveBeenCalled();
+    expect(listener2).not.toHaveBeenCalled();
   });
 
   it('re-attaches the object listener when the options change', async () => {

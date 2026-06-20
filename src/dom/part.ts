@@ -15,6 +15,10 @@ interface StyleMap {
 }
 
 export abstract class DOMPart implements Part {
+  splitPart(): DOMPart {
+    return this;
+  }
+
   mountBlock(_block: Block, _afterNode: ChildNode): void {}
 
   moveBlock(_block: Block, _afterNode: ChildNode): void {}
@@ -114,12 +118,15 @@ export class ClassPart extends AttributePart {
 
 export class ElementPart extends DOMPart {
   private readonly _node: Element;
-  private readonly _cleanups: WeakMap<Function, (() => void) | undefined> =
-    new WeakMap();
+  private _cleanup: (() => void) | undefined;
 
   constructor(node: Element) {
     super();
     this._node = node;
+  }
+
+  override splitPart(): DOMPart {
+    return new ElementPart(this._node);
   }
 
   override commitMount(value: unknown): void {
@@ -129,22 +136,21 @@ export class ElementPart extends DOMPart {
           'Element values must be an function, null or undefined.',
         );
       }
-      this._cleanups.set(value, value(this._node));
+      this._cleanup = value(this._node);
     }
   }
 
   override commitUpdate(oldValue: unknown, newValue: unknown): void {
     if (oldValue !== newValue) {
-      if (oldValue != null) {
-        this._cleanups.get(oldValue as Function)?.();
-      }
+      this._cleanup?.();
       this.commitMount(newValue);
     }
   }
 
   override commitUnmount(value: unknown, _cascade: boolean): void {
     if (value != null) {
-      this._cleanups.get(value as Function)?.();
+      this._cleanup?.();
+      this._cleanup = undefined;
     }
   }
 }
@@ -154,6 +160,10 @@ export class EventPart extends AttributePart implements EventListenerObject {
     | EventListenerOrEventListenerObject
     | null
     | undefined;
+
+  override splitPart(): DOMPart {
+    return new EventPart(this._node, this._name);
+  }
 
   override commitMount(value: unknown): void {
     if (!isEventListenerOrNullable(value)) {
