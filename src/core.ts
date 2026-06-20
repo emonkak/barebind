@@ -92,6 +92,7 @@ export type Mutation =
     };
 
 export interface Part {
+  splitPart(): Part;
   mountBlock(block: Block, afterNode: ChildNode | null): void;
   moveBlock(block: Block, afterNode: ChildNode | null): void;
   unmountBlock(block: Block, cascade: boolean): void;

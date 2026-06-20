@@ -249,7 +249,7 @@ export class Runtime implements Renderer, Dispatcher {
             scope,
             i,
             node,
-            part,
+            part.splitPart(),
           );
         }
         return node;
@@ -387,7 +387,7 @@ export class Runtime implements Renderer, Dispatcher {
             scope,
             newHead,
             newParent,
-            newParent.part,
+            newParent.part.splitPart(),
           );
           mutations.push({
             type: MUTATION_TYPE_INSERT,
@@ -525,7 +525,7 @@ export class Runtime implements Renderer, Dispatcher {
               scope,
               newTail,
               newParent,
-              newParent.part,
+              newParent.part.splitPart(),
             );
             mutations.push({
               type: MUTATION_TYPE_INSERT,
