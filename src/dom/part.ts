@@ -59,41 +59,6 @@ export class AttributePart extends DOMPart {
   }
 }
 
-export class CharacterDataPart extends DOMPart {
-  protected readonly _node: CharacterData;
-
-  constructor(node: CharacterData) {
-    super();
-    this._node = node;
-  }
-
-  override commitMount(value: unknown): void {
-    this._node.data = toStringOrEmpty(value);
-  }
-
-  override commitUpdate(oldValue: unknown, newValue: unknown): void {
-    if (!Object.is(oldValue, newValue)) {
-      this.commitMount(newValue);
-    }
-  }
-}
-
-export class ChildNodePart extends CharacterDataPart {
-  override mountBlock(block: Block, afterNode: ChildNode | null): void {
-    block.mountBefore(afterNode ?? this._node);
-  }
-
-  override moveBlock(block: Block, afterNode: ChildNode | null): void {
-    block.moveBefore(afterNode ?? this._node);
-  }
-
-  override unmountBlock(block: Block, cascade: boolean): void {
-    if (!cascade) {
-      block.unmount();
-    }
-  }
-}
-
 export class ClassPart extends AttributePart {
   override commitMount(value: unknown): void {
     updateClass(this._node.classList, {}, normalizeClass(value));
@@ -112,45 +77,6 @@ export class ClassPart extends AttributePart {
   override commitUnmount(value: unknown, cascade: boolean): void {
     if (!cascade) {
       updateClass(this._node.classList, normalizeClass(value), {});
-    }
-  }
-}
-
-export class ElementPart extends DOMPart {
-  private readonly _node: Element;
-  private _cleanup: (() => void) | undefined;
-
-  constructor(node: Element) {
-    super();
-    this._node = node;
-  }
-
-  override splitPart(): DOMPart {
-    return new ElementPart(this._node);
-  }
-
-  override commitMount(value: unknown): void {
-    if (value != null) {
-      if (typeof value !== 'function') {
-        throw new TypeError(
-          'Element values must be an function, null or undefined.',
-        );
-      }
-      this._cleanup = value(this._node);
-    }
-  }
-
-  override commitUpdate(oldValue: unknown, newValue: unknown): void {
-    if (oldValue !== newValue) {
-      this._cleanup?.();
-      this.commitMount(newValue);
-    }
-  }
-
-  override commitUnmount(value: unknown, _cascade: boolean): void {
-    if (value != null) {
-      this._cleanup?.();
-      this._cleanup = undefined;
     }
   }
 }
@@ -235,27 +161,6 @@ export class LivePart extends AttributePart {
   }
 }
 
-export class PortalPart extends DOMPart {
-  private readonly _container: ParentNode;
-
-  constructor(container: ParentNode) {
-    super();
-    this._container = container;
-  }
-
-  override mountBlock(block: Block, afterNode: ChildNode | null): void {
-    block.mountInto(this._container, afterNode);
-  }
-
-  override moveBlock(block: Block, afterNode: ChildNode | null): void {
-    block.moveInto(this._container, afterNode);
-  }
-
-  override unmountBlock(block: Block, _cascade: boolean): void {
-    block.unmount();
-  }
-}
-
 export class PropertyPart extends AttributePart {
   override commitMount(value: unknown): void {
     (this._node as any)[this._name] = value;
@@ -287,6 +192,101 @@ export class StylePart extends AttributePart {
     if (!cascade) {
       updateStyle((this._node as HTMLElement).style, normalizeStyle(value), {});
     }
+  }
+}
+
+export class CharacterDataPart extends DOMPart {
+  protected readonly _node: CharacterData;
+
+  constructor(node: CharacterData) {
+    super();
+    this._node = node;
+  }
+
+  override commitMount(value: unknown): void {
+    this._node.data = toStringOrEmpty(value);
+  }
+
+  override commitUpdate(oldValue: unknown, newValue: unknown): void {
+    if (!Object.is(oldValue, newValue)) {
+      this.commitMount(newValue);
+    }
+  }
+}
+
+export class ChildNodePart extends CharacterDataPart {
+  override mountBlock(block: Block, afterNode: ChildNode | null): void {
+    block.mountBefore(afterNode ?? this._node);
+  }
+
+  override moveBlock(block: Block, afterNode: ChildNode | null): void {
+    block.moveBefore(afterNode ?? this._node);
+  }
+
+  override unmountBlock(block: Block, cascade: boolean): void {
+    if (!cascade) {
+      block.unmount();
+    }
+  }
+}
+
+export class ElementPart extends DOMPart {
+  private readonly _node: Element;
+  private _cleanup: (() => void) | undefined;
+
+  constructor(node: Element) {
+    super();
+    this._node = node;
+  }
+
+  override splitPart(): DOMPart {
+    return new ElementPart(this._node);
+  }
+
+  override commitMount(value: unknown): void {
+    if (value != null) {
+      if (typeof value !== 'function') {
+        throw new TypeError(
+          'Element values must be an function, null or undefined.',
+        );
+      }
+      this._cleanup = value(this._node);
+    }
+  }
+
+  override commitUpdate(oldValue: unknown, newValue: unknown): void {
+    if (oldValue !== newValue) {
+      this._cleanup?.();
+      this.commitMount(newValue);
+    }
+  }
+
+  override commitUnmount(value: unknown, _cascade: boolean): void {
+    if (value != null) {
+      this._cleanup?.();
+      this._cleanup = undefined;
+    }
+  }
+}
+
+export class PortalPart extends DOMPart {
+  private readonly _container: ParentNode;
+
+  constructor(container: ParentNode) {
+    super();
+    this._container = container;
+  }
+
+  override mountBlock(block: Block, afterNode: ChildNode | null): void {
+    block.mountInto(this._container, afterNode);
+  }
+
+  override moveBlock(block: Block, afterNode: ChildNode | null): void {
+    block.moveInto(this._container, afterNode);
+  }
+
+  override unmountBlock(block: Block, _cascade: boolean): void {
+    block.unmount();
   }
 }
 
