@@ -124,7 +124,7 @@ describe('elements', () => {
       <div ${123}></div>
     `;
     await expect(root.render(template).finished).rejects.toThrow(
-      'Element values must be an function, null or undefined.',
+      'Element values must be a function, null or undefined.',
     );
   });
 
