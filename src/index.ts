@@ -14,7 +14,7 @@ export {
   toElement,
 } from './core.js';
 export { DOMAdapter } from './dom/adapter.js';
-export { DOMTemplateError } from './dom/error.js';
+export { DOMAdapterError } from './dom/error.js';
 export { DOMRoot } from './dom/root.js';
 export { RenderError } from './error.js';
 export { Runtime, waitForStep } from './runtime.js';

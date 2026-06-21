@@ -1,6 +1,7 @@
 import { sequentialEqual } from '../compare.js';
 import type { Block, Part } from '../core.js';
 import { generateNodeFrame } from './debug.js';
+import { DOMAdapterError } from './error.js';
 
 const CLASS_TOKEN_SEPARATOR_PATTERN = /\s+/;
 
@@ -104,7 +105,8 @@ export class EventPart extends AttributePart implements EventListenerObject {
 
   override commitMount(value: unknown): void {
     if (!isEventListenerOrNullable(value)) {
-      throw new TypeError(
+      throw DOMAdapterError.withNode(
+        this._node,
         'Event values must be an EventListener, EventListenerObject, null or undefined.',
       );
     }
@@ -257,8 +259,9 @@ export class ElementPart extends DOMPart {
   override commitMount(value: unknown): void {
     if (value != null) {
       if (typeof value !== 'function') {
-        throw new TypeError(
-          'Element values must be an function, null or undefined.',
+        throw DOMAdapterError.withNode(
+          this._node,
+          'Element values must be a function, null or undefined.',
         );
       }
       this._cleanup = value(this._node);
