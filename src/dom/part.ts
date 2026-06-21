@@ -19,9 +19,9 @@ export abstract class DOMPart implements Part {
     return this;
   }
 
-  mountBlock(_block: Block, _afterNode: ChildNode): void {}
+  mountBlock(_block: Block, _afterNode: ChildNode | null): void {}
 
-  moveBlock(_block: Block, _afterNode: ChildNode): void {}
+  moveBlock(_block: Block, _afterNode: ChildNode | null): void {}
 
   unmountBlock(_block: Block, _cascade: boolean): void {}
 
