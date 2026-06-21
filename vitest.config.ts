@@ -18,13 +18,7 @@ export default defineConfig({
     },
     coverage: {
       include: ['src/**'],
-      exclude: [
-        'src/addons/jsx-dev-runtime.ts',
-        'src/addons/router.ts',
-        'src/addons/signal.ts',
-        'src/addons/suspense.ts',
-        'src/index.ts',
-      ],
+      exclude: ['src/index.ts'],
     },
     include: ['test/**/*.test.ts?(x)'],
     projects: [
