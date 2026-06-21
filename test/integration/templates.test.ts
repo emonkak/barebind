@@ -1,5 +1,5 @@
 import { DOMAdapter, DOMRoot, html, math, Runtime, svg, text } from 'barebind';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('templates', () => {
   let container: Element;
@@ -64,5 +64,40 @@ describe('templates', () => {
     const template = html``;
     await root.render(template).finished;
     expect(container.innerHTML).toBe('');
+  });
+
+  describe('nested templates', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('warns when mounting a template block in a text hole', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const template = html`
+        <div>${html`<span>nested</span>`}</div>
+      `;
+      await root.render(template).finished;
+
+      expect(warnSpy).toHaveBeenCalledOnce();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Template blocks can only be mounted as child nodes. ',
+        ),
+      );
+    });
+
+    it('does not warn when mounting a template block in a child node hole', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const template = html`
+        <div>
+          <${html`<span>nested</span>`}>
+        </div>
+      `;
+      await root.render(template).finished;
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
   });
 });

@@ -1,5 +1,6 @@
 import { sequentialEqual } from '../compare.js';
 import type { Block, Part } from '../core.js';
+import { generateNodeFrame } from './debug.js';
 
 const CLASS_TOKEN_SEPARATOR_PATTERN = /\s+/;
 
@@ -15,11 +16,21 @@ interface StyleMap {
 }
 
 export abstract class DOMPart implements Part {
+  protected declare readonly _node: Node;
+
   splitPart(): DOMPart {
     return this;
   }
 
-  mountBlock(_block: Block, _afterNode: ChildNode | null): void {}
+  mountBlock(_block: Block, _afterNode: ChildNode | null): void {
+    DEBUG: {
+      console.warn(
+        'Template blocks can only be mounted as child nodes. ' +
+          'Use the `<${...}>` syntax to mount a template block as a child node.\n' +
+          generateNodeFrame(this._node),
+      );
+    }
+  }
 
   moveBlock(_block: Block, _afterNode: ChildNode | null): void {}
 
@@ -33,7 +44,7 @@ export abstract class DOMPart implements Part {
 }
 
 export class AttributePart extends DOMPart {
-  protected readonly _node: Element;
+  protected override readonly _node: Element;
   protected readonly _name: string;
 
   constructor(node: Element, name: string) {
@@ -196,7 +207,7 @@ export class StylePart extends AttributePart {
 }
 
 export class CharacterDataPart extends DOMPart {
-  protected readonly _node: CharacterData;
+  protected override readonly _node: CharacterData;
 
   constructor(node: CharacterData) {
     super();
@@ -231,7 +242,7 @@ export class ChildNodePart extends CharacterDataPart {
 }
 
 export class ElementPart extends DOMPart {
-  private readonly _node: Element;
+  protected override readonly _node: Element;
   private _cleanup: (() => void) | undefined;
 
   constructor(node: Element) {
