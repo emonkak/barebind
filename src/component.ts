@@ -117,7 +117,7 @@ namespace Hook {
 
 type Usable<TReturn> = HookObject<TReturn> | HookFunction<TReturn>;
 
-export class FunctionComponent<TProps = any, TReturn = unknown>
+export class FunctionComponentHandle<TProps = any, TReturn = unknown>
   implements ComponentHandle<TProps>
 {
   /** @internal */
@@ -186,7 +186,7 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
 }
 
 export class RenderContext {
-  private readonly _handle: FunctionComponent;
+  private readonly _handle: FunctionComponentHandle;
   private readonly _lanes: Lanes;
   /** @internal */
   readonly _hooks: Hook[];
@@ -196,7 +196,7 @@ export class RenderContext {
   _scope: Scope;
 
   constructor(
-    instance: FunctionComponent,
+    instance: FunctionComponentHandle,
     hooks: Hook[],
     scope: Scope,
     lanes: Lanes,
@@ -454,28 +454,30 @@ export function createComponent<TProps = {}, TReturn = unknown>(
   componentFn: ComponentFunction<TProps, TReturn>,
   { arePropsEqual = Object.is }: ComponentOptions<TProps> = {},
 ): Component<TProps> {
-  function Component(props: TProps): VComponent<TProps> {
-    return new VComponent(Component, props, []);
+  function FunctionComponent(props: TProps): VComponent<TProps> {
+    return new VComponent(FunctionComponent, props, []);
   }
 
-  Component.createHandle = (dispatcher: Dispatcher): ComponentHandle<TProps> =>
-    new FunctionComponent(componentFn, dispatcher);
-  Component.arePropsEqual = arePropsEqual;
+  FunctionComponent.createHandle = (
+    dispatcher: Dispatcher,
+  ): ComponentHandle<TProps> =>
+    new FunctionComponentHandle(componentFn, dispatcher);
+  FunctionComponent.arePropsEqual = arePropsEqual;
 
   DEBUG: {
-    Object.defineProperty(Component, 'name', {
+    Object.defineProperty(FunctionComponent, 'name', {
       value: componentFn.name,
     });
   }
 
-  return Component;
+  return FunctionComponent;
 }
 
 class UpdateComponent implements UpdateTransaction {
-  private readonly _handle: FunctionComponent;
+  private readonly _handle: FunctionComponentHandle;
   private readonly _level: number;
 
-  constructor(handle: FunctionComponent, level: number) {
+  constructor(handle: FunctionComponentHandle, level: number) {
     this._handle = handle;
     this._level = level;
   }
