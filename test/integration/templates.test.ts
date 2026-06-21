@@ -63,7 +63,7 @@ describe('templates', () => {
   it('renders an empty template', async () => {
     const template = html``;
     await root.render(template).finished;
-    expect(container.innerHTML).toBe('');
+    expect(container.innerHTML).toBe('<!---->');
   });
 
   describe('nested templates', () => {
