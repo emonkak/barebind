@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DOMAdapter } from '@/dom/adapter.js';
 
 describe('DOMAdapter', () => {
@@ -6,11 +6,6 @@ describe('DOMAdapter', () => {
 
   beforeEach(() => {
     adapter = new DOMAdapter();
-  });
-
-  afterEach(() => {
-    vi.resetAllMocks();
-    vi.unstubAllGlobals();
   });
 
   describe('getIdentifier()', () => {
