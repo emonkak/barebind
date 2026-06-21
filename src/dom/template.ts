@@ -201,37 +201,27 @@ export class DOMBlock implements Block {
   }
 
   moveBefore(afterNode: ChildNode): void {
-    for (const node of collectChildNodes(
-      this._staticNodes[0] ?? null,
-      this._staticNodes.at(-1) ?? null,
-    )) {
+    for (const node of collectChildNodes(this._staticNodes)) {
       moveBefore.call(afterNode.parentNode, node, afterNode);
     }
   }
 
   moveInto(container: ParentNode, afterNode: ChildNode | null): void {
-    for (const node of collectChildNodes(
-      this._staticNodes[0] ?? null,
-      this._staticNodes.at(-1) ?? null,
-    )) {
+    for (const node of collectChildNodes(this._staticNodes)) {
       moveBefore.call(container, node, afterNode);
     }
   }
 
   unmount(): void {
-    for (const node of collectChildNodes(
-      this._staticNodes[0] ?? null,
-      this._staticNodes.at(-1) ?? null,
-    )) {
+    for (const node of collectChildNodes(this._staticNodes)) {
       node.remove();
     }
   }
 }
 
-function collectChildNodes(
-  firstNode: ChildNode | null,
-  lastNode: ChildNode | null,
-): ChildNode[] {
+function collectChildNodes(staticNodes: ChildNode[]): ChildNode[] {
+  const firstNode = staticNodes[0] ?? null;
+  const lastNode = staticNodes.at(-1) ?? null;
   const childNodes = [];
 
   for (
