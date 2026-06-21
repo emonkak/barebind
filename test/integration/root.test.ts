@@ -64,7 +64,7 @@ describe('root', () => {
 
     await root.render(html`<div id="second">second</div>`).finished;
     expect(container.innerHTML).toBe('<div id="second">second</div>');
-    expect(container.querySelector('#first')).toBeNull();
-    expect(container.querySelector('#second')).not.toBeNull();
+    expect(container.querySelector('#first')).toBe(null);
+    expect(container.querySelector('#second')).not.toBe(null);
   });
 });
