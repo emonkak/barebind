@@ -31,7 +31,7 @@ describe('DOMTemplate', () => {
         'http://www.w3.org/1998/Math/MathML',
       );
       expect(template.holes).toStrictEqual([]);
-      expect(template.mode).toStrictEqual('math');
+      expect(template.mode).toBe('math');
     });
 
     it('creates an SVG template', () => {
@@ -46,7 +46,7 @@ describe('DOMTemplate', () => {
         'http://www.w3.org/2000/svg',
       );
       expect(template.holes).toStrictEqual([]);
-      expect(template.mode).toStrictEqual('svg');
+      expect(template.mode).toBe('svg');
     });
 
     it('creates a text template', () => {
@@ -55,7 +55,7 @@ describe('DOMTemplate', () => {
       `;
       expect(template.element.content.textContent).toBe('<div>hello</div>');
       expect(template.holes).toStrictEqual([]);
-      expect(template.mode).toStrictEqual('textarea');
+      expect(template.mode).toBe('textarea');
     });
 
     it('throws for an invalid placeholder', () => {
