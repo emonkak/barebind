@@ -67,10 +67,6 @@ describe('templates', () => {
   });
 
   describe('nested templates', () => {
-    afterEach(() => {
-      vi.restoreAllMocks();
-    });
-
     it('warns when mounting a template block in a text hole', async () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
