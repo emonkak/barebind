@@ -472,11 +472,11 @@ export function createComponent<TProps = {}, TReturn = unknown>(
 }
 
 class UpdateComponent implements UpdateTransaction {
-  private readonly _instance: FunctionComponent;
+  private readonly _handle: FunctionComponent;
   private readonly _level: number;
 
-  constructor(instance: FunctionComponent, level: number) {
-    this._instance = instance;
+  constructor(handle: FunctionComponent, level: number) {
+    this._handle = handle;
     this._level = level;
   }
 
@@ -485,11 +485,11 @@ class UpdateComponent implements UpdateTransaction {
   }
 
   get pendingLanes(): Lanes {
-    return this._instance._pendingLanes;
+    return this._handle._pendingLanes;
   }
 
   prepare(lanes: Lanes, renderer: Renderer): Commit {
-    const oldNode = this._instance._connectedNode;
+    const oldNode = this._handle._connectedNode;
     if (oldNode === null) {
       return noOp;
     }
