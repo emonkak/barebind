@@ -96,11 +96,11 @@ describe('addon hooks', () => {
       });
 
       await root.render(App({})).finished;
-      expect(ref.current).not.toBeNull();
+      expect(ref.current).not.toBe(null);
       expect(ref.current!.method()).toBe('hello');
 
       await root.unmount().finished;
-      expect(ref.current).toBeNull();
+      expect(ref.current).toBe(null);
     });
 
     it('works with a function ref', async () => {
@@ -175,10 +175,10 @@ describe('addon hooks', () => {
       });
 
       await root.render(App({})).finished;
-      expect(subscriber).not.toBeNull();
+      expect(subscriber).not.toBe(null);
 
       await root.unmount().finished;
-      expect(subscriber).toBeNull();
+      expect(subscriber).toBe(null);
     });
   });
 

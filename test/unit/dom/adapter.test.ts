@@ -158,13 +158,13 @@ describe('DOMAdapter', () => {
     it.runIf(window.scheduler)(
       'uses scheduler.yield when available',
       async () => {
-        await expect(adapter.yieldToMain()).resolves.toBeUndefined();
+        await expect(adapter.yieldToMain()).resolves.toBe(undefined);
       },
     );
 
     it('falls back to setTimeout when scheduler.yield is unavailable', async () => {
       vi.stubGlobal('scheduler', undefined);
-      await expect(adapter.yieldToMain()).resolves.toBeUndefined();
+      await expect(adapter.yieldToMain()).resolves.toBe(undefined);
     });
   });
 });
