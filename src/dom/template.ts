@@ -125,7 +125,7 @@ export class DOMTemplate {
       );
     }
 
-    const holes = parseChildren(strings, marker, element, document);
+    const holes = parseChildren(strings, marker, element);
 
     if (holes.length !== exprs.length) {
       throw DOMAdapterError.withNode(
@@ -167,10 +167,18 @@ export class DOMTemplate {
       }
     }
 
-    if (fragment.childNodes.length === 0) {
-      // Ensure at least one static child node exists, as DOMBlock assumes
-      // `staticNodes` is non-empty.
-      fragment.appendChild(document.createComment(''));
+    if (
+      fragment.childNodes.length === 0 ||
+      (holes.length > 0 &&
+        holes[0]!.type === HOLE_TYPE_CHILD_NODE &&
+        holes[0]!.index === 0)
+    ) {
+      // DOMBlock requires its `staticNodes` to be non-empty. Insert a
+      // placeholder comment as a static anchor when the template has no
+      // children, or when the first child is a hole (comment placeholder that
+      // will be replaced) so ChildNodePart has a preceding node for block
+      // insertion and replacement.
+      fragment.insertBefore(document.createComment(''), fragment.firstChild);
     }
 
     return new DOMBlock(fragment, parts);
@@ -351,7 +359,6 @@ function parseChildren(
   strings: readonly string[],
   marker: string,
   template: HTMLTemplateElement,
-  document: Document,
 ): Hole[] {
   const sourceTree = createTreeWalker(template.content);
   const holes: Hole[] = [];
@@ -385,12 +392,6 @@ function parseChildren(
         if (
           stripTrailingSlash((currentNode as Comment).data).trim() === marker
         ) {
-          if (nodeIndex === 0) {
-            // Insert a marker node so the first template node keeps a stable
-            // position when inserting children.
-            (currentNode as Comment).before(document.createComment(''));
-            nodeIndex++;
-          }
           holes.push({
             type: HOLE_TYPE_CHILD_NODE,
             index: nodeIndex,
