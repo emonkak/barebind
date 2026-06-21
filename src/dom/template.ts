@@ -167,6 +167,12 @@ export class DOMTemplate {
       }
     }
 
+    if (fragment.childNodes.length === 0) {
+      // Ensure at least one static child node exists, as DOMBlock assumes
+      // `staticNodes` is non-empty.
+      fragment.appendChild(document.createComment(''));
+    }
+
     return new DOMBlock(fragment, parts);
   }
 }
@@ -179,6 +185,13 @@ export class DOMBlock implements Block {
   private readonly _parts: DOMPart[];
 
   constructor(fragment: DocumentFragment, parts: DOMPart[]) {
+    DEBUG: {
+      if (fragment.childNodes.length === 0) {
+        throw new DOMAdapterError(
+          'The DOMBlock must have at least one child node.',
+        );
+      }
+    }
     this._fragment = fragment;
     this._staticNodes = Array.from(fragment.childNodes);
     this._parts = parts;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { TemplateMode } from '@/core.js';
-import { DOMTemplate } from '@/dom/template.js';
+import { DOMBlock, DOMTemplate } from '@/dom/template.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
 
@@ -82,6 +82,14 @@ describe('DOMTemplate', () => {
         template.render();
       }).toThrow('There is no node that the hole indicates.');
     });
+  });
+});
+
+describe('DOMBlock', () => {
+  it('throws for an empty fragment', () => {
+    expect(() => {
+      new DOMBlock(document.createDocumentFragment(), []);
+    }).toThrow('The DOMBlock must have at least one child node.');
   });
 });
 
