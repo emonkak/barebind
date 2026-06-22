@@ -22,9 +22,9 @@ export interface Block {
   readonly parts: readonly Part[];
   readonly staticNodes: readonly ChildNode[];
   mountBefore(afterNode: ChildNode): void;
-  mountInto(container: ParentNode, afterNode: ChildNode | null): void;
+  mountInto(container: Container, afterNode: ChildNode | null): void;
   moveBefore(afterNode: ChildNode): void;
-  moveInto(container: ParentNode, afterNode: ChildNode | null): void;
+  moveInto(container: Container, afterNode: ChildNode | null): void;
   unmount(): void;
 }
 
@@ -42,6 +42,8 @@ export interface ComponentHandle<TProps> {
   connect(node: RenderNode.ComponentNode<TProps>): void;
   disconnect(): void;
 }
+
+export type Container = DocumentFragment | Element;
 
 export interface Dispatcher {
   nextIdentifier(): string;
@@ -217,7 +219,7 @@ export type VFragment = VNode<
   VElement[]
 >;
 
-export type VPortal<TContainer extends ParentNode = ParentNode> = VNode<
+export type VPortal<TContainer extends Container = Container> = VNode<
   typeof VNODE_KIND_PORTAL,
   TContainer,
   {},
@@ -325,7 +327,7 @@ export function createFragment(children: Iterable<unknown>): VFragment {
   );
 }
 
-export function createPortal<TContainer extends ParentNode>(
+export function createPortal<TContainer extends Container>(
   child: unknown,
   container: TContainer,
 ): VPortal<TContainer> {

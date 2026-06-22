@@ -1,5 +1,5 @@
 import { sequentialEqual } from '../compare.js';
-import type { Block, Part } from '../core.js';
+import type { Block, Container, Part } from '../core.js';
 import { generateNodeFrame } from './debug.js';
 import { DOMAdapterError } from './error.js';
 
@@ -284,9 +284,9 @@ export class ElementPart extends DOMPart {
 }
 
 export class PortalPart extends DOMPart {
-  private readonly _container: ParentNode;
+  private readonly _container: Container;
 
-  constructor(container: ParentNode) {
+  constructor(container: Container) {
     super();
     this._container = container;
   }
