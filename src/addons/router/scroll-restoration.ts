@@ -1,7 +1,7 @@
 import type { HookFunction, RenderContext } from '../../component.js';
 import { HistoryContext, trimHashMark } from './history.js';
 
-export function ScrollRestration(
+export function ScrollRestoration(
   document: Document = window.document,
 ): HookFunction<void> {
   return (context: RenderContext) => {

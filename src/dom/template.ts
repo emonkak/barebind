@@ -274,7 +274,7 @@ function extractAttributeName(s: string): string | undefined {
   return s.match(ATTRIBUTE_NAME_PATTERN)?.[0];
 }
 
-function parseAttribtues(
+function parseAttributes(
   element: Element,
   strings: readonly string[],
   marker: string,
@@ -378,7 +378,7 @@ function parseChildren(
           }
         }
         if ((currentNode as Element).hasAttributes()) {
-          parseAttribtues(
+          parseAttributes(
             currentNode as Element,
             strings,
             marker,

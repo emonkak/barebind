@@ -147,7 +147,7 @@ export class Computed<
     computation: (...values: UnwrapSignals<TDependencies>) => TResult,
     dependencies: TDependencies,
     initialResult: TResult | null = null,
-    initialVersion = -1, // -1 is indicated an uninitialized signal.
+    initialVersion = -1, // -1 is indicates an uninitialized signal.
   ) {
     super();
     this._computation = computation;

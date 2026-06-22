@@ -8,7 +8,7 @@ import {
 
 const NO_FLAGS = 0;
 const FLAG_NEEDS_SNAPSHOT = 0b01;
-const FLAG_PENGING_VALUE = 0b10;
+const FLAG_PENDING_VALUE = 0b10;
 const FLAG_DIRTY = 0b11;
 
 export interface ReactiveOptions {
@@ -92,7 +92,7 @@ export class Reactive<T> extends Signal<T> {
       throw new TypeError('Cannot set value on a read-only signal.');
     }
     this._node.children = null;
-    this._node.flags |= FLAG_PENGING_VALUE;
+    this._node.flags |= FLAG_PENDING_VALUE;
     this._node.flags &= ~FLAG_NEEDS_SNAPSHOT;
     this._node.signal.value = newValue;
   }
@@ -194,7 +194,7 @@ function proxyObject<T>(
       const child = getChild(node, key);
       if (child.signal instanceof Atom) {
         child.children = null;
-        child.flags |= FLAG_PENGING_VALUE;
+        child.flags |= FLAG_PENDING_VALUE;
         child.flags &= ~FLAG_NEEDS_SNAPSHOT;
         child.signal.value = value;
         return true;
@@ -270,9 +270,9 @@ function takeSnapshot<T>(node: ReactiveNode<T>): T {
       const newValue = shallowClone(oldValue);
 
       for (const [key, child] of children!.entries()) {
-        if (child.flags & FLAG_PENGING_VALUE) {
+        if (child.flags & FLAG_PENDING_VALUE) {
           (newValue as any)[key] = takeSnapshot(child);
-          child.flags &= ~FLAG_PENGING_VALUE;
+          child.flags &= ~FLAG_PENDING_VALUE;
         }
       }
 

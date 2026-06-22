@@ -350,7 +350,7 @@ function normalizeStyle(value: unknown): StyleMap {
 
 /**
  * Convert style property names expressed in lowerCamelCase to CSS style
- * propertes in kebab-case.
+ * properties in kebab-case.
  *
  * @example
  * toCSSProperty('webkitFontSmoothing'); // => '-webkit-font-smoothing'

@@ -66,7 +66,7 @@ export function ImperativeHandle<T>(
   };
 }
 
-export function SyncEnternalStore<T>(
+export function SyncExternalStore<T>(
   subscribe: (subscriber: () => void) => (() => void) | void,
   getSnapshot: () => T,
 ): HookFunction<void> {

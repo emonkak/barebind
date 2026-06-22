@@ -24,4 +24,4 @@ export {
   Router,
   route,
 } from './router/router.js';
-export { ScrollRestration } from './router/scroll-restration.js';
+export { ScrollRestoration } from './router/scroll-restoration.js';
