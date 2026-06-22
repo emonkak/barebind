@@ -14,8 +14,10 @@ import {
   type UpdateHandle,
   type UpdateOptions,
   type UpdateTransaction,
-  VComponent,
+  type VComponent,
   type VElement,
+  VNODE_KIND_COMPONENT,
+  VNode,
   wrap,
 } from './core.js';
 import { RenderError } from './error.js';
@@ -455,7 +457,7 @@ export function createComponent<TProps = {}, TReturn = unknown>(
   { arePropsEqual = Object.is }: ComponentOptions<TProps> = {},
 ): Component<TProps> {
   function FunctionComponent(props: TProps): VComponent<TProps> {
-    return new VComponent(FunctionComponent, props, []);
+    return new VNode(VNODE_KIND_COMPONENT, FunctionComponent, props, []);
   }
 
   FunctionComponent.createHandle = (

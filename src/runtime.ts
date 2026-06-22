@@ -15,12 +15,12 @@ import {
   type UpdateHandle,
   type UpdateOptions,
   type UpdateTransaction,
-  VBind,
-  VComponent,
   type VElement,
-  VFragment,
-  VPortal,
-  VTemplate,
+  VNODE_KIND_BIND,
+  VNODE_KIND_COMPONENT,
+  VNODE_KIND_FRAGMENT,
+  VNODE_KIND_PORTAL,
+  VNODE_KIND_TEMPLATE,
 } from './core.js';
 import { assertUnreachable } from './debug.js';
 import {
@@ -74,8 +74,8 @@ export class Runtime implements Renderer, Dispatcher {
     if (oldNode.props === newElement.props) {
       return oldNode;
     }
-    switch (true) {
-      case newElement instanceof VBind: {
+    switch (newElement.kind) {
+      case VNODE_KIND_BIND: {
         return {
           ...(oldNode as RenderNode.BindNode),
           type: newElement.type,
@@ -86,7 +86,7 @@ export class Runtime implements Renderer, Dispatcher {
           dirty: true,
         };
       }
-      case newElement instanceof VComponent: {
+      case VNODE_KIND_COMPONENT: {
         if (
           ((oldNode as RenderNode.ComponentNode).state.handle.pendingLanes &
             this._flushLanes) ===
@@ -126,7 +126,7 @@ export class Runtime implements Renderer, Dispatcher {
         );
         return newNode;
       }
-      case newElement instanceof VFragment: {
+      case VNODE_KIND_FRAGMENT: {
         const newNode: RenderNode.FragmentNode = {
           ...(oldNode as RenderNode.FragmentNode),
           type: newElement.type,
@@ -145,8 +145,8 @@ export class Runtime implements Renderer, Dispatcher {
         );
         return newNode;
       }
-      case newElement instanceof VPortal:
-      case newElement instanceof VTemplate: {
+      case VNODE_KIND_PORTAL:
+      case VNODE_KIND_TEMPLATE: {
         const newNode: RenderNode.BlockNode = {
           ...(oldNode as RenderNode.BlockNode),
           type: newElement.type,
@@ -192,8 +192,8 @@ export class Runtime implements Renderer, Dispatcher {
     parent: RenderNode | RenderRoot,
     part: Part,
   ): RenderNode {
-    switch (true) {
-      case element instanceof VBind: {
+    switch (element.kind) {
+      case VNODE_KIND_BIND: {
         return {
           type: element.type,
           props: element.props,
@@ -206,7 +206,7 @@ export class Runtime implements Renderer, Dispatcher {
           state: null,
         };
       }
-      case element instanceof VComponent: {
+      case VNODE_KIND_COMPONENT: {
         const node: RenderNode.ComponentNode = {
           type: element.type,
           props: element.props,
@@ -231,7 +231,7 @@ export class Runtime implements Renderer, Dispatcher {
         );
         return node;
       }
-      case element instanceof VFragment: {
+      case VNODE_KIND_FRAGMENT: {
         const node: RenderNode.FragmentNode = {
           type: element.type,
           props: element.props,
@@ -254,7 +254,7 @@ export class Runtime implements Renderer, Dispatcher {
         }
         return node;
       }
-      case element instanceof VPortal: {
+      case VNODE_KIND_PORTAL: {
         const block = this._adapter.renderPortal(element);
         const node: RenderNode.BlockNode = {
           type: element.type,
@@ -276,7 +276,7 @@ export class Runtime implements Renderer, Dispatcher {
         );
         return node;
       }
-      case element instanceof VTemplate: {
+      case VNODE_KIND_TEMPLATE: {
         const block = this._adapter.renderTemplate(element);
         const node: RenderNode.BlockNode = {
           type: element.type,
