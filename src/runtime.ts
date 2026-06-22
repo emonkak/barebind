@@ -417,6 +417,7 @@ export class Runtime implements Renderer, Dispatcher {
           type: MUTATION_TYPE_UPDATE,
           oldNode: oldChild,
           newNode: newChild,
+          index: newHead,
         });
         newChildren[newHead] = newChild;
         oldHead++;
@@ -434,6 +435,7 @@ export class Runtime implements Renderer, Dispatcher {
           type: MUTATION_TYPE_UPDATE,
           oldNode: oldChild,
           newNode: newChild,
+          index: newTail,
         });
         newChildren[newTail] = newChild;
         oldTail--;
@@ -461,12 +463,14 @@ export class Runtime implements Renderer, Dispatcher {
           oldNode: oldChildren[oldTail]!,
           newNode: tailChild,
           afterNode: oldChildren[oldHead],
+          index: newHead,
         });
         mutations.push({
           type: MUTATION_TYPE_UPDATE_AND_MOVE,
           oldNode: oldChildren[oldHead]!,
           newNode: headChild,
           afterNode: newChildren[newTail + 1],
+          index: newTail,
         });
         newChildren[newHead] = tailChild;
         newChildren[newTail] = headChild;
@@ -513,6 +517,7 @@ export class Runtime implements Renderer, Dispatcher {
               oldNode: oldChildren[oldIndex]!,
               newNode: newChild,
               afterNode: newChildren[newTail + 1],
+              index: newTail,
             });
             newChildren[newTail] = newChild;
             oldChildren[oldIndex] = undefined;
