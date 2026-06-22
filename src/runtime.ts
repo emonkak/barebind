@@ -135,6 +135,7 @@ export class Runtime implements Renderer, Dispatcher {
           index,
           parent,
           children: new Array(newElement.children.length),
+          dirty: true,
           state: { mutations: [] },
         };
         this._diffChildren(
@@ -412,13 +413,11 @@ export class Runtime implements Renderer, Dispatcher {
           newHead,
           newParent,
         );
-        if (oldChild !== newChild) {
-          mutations.push({
-            type: MUTATION_TYPE_UPDATE,
-            oldNode: oldChild,
-            newNode: newChild,
-          });
-        }
+        mutations.push({
+          type: MUTATION_TYPE_UPDATE,
+          oldNode: oldChild,
+          newNode: newChild,
+        });
         newChildren[newHead] = newChild;
         oldHead++;
         newHead++;
@@ -431,13 +430,11 @@ export class Runtime implements Renderer, Dispatcher {
           newTail,
           newParent,
         );
-        if (oldChild !== newChild) {
-          mutations.push({
-            type: MUTATION_TYPE_UPDATE,
-            oldNode: oldChild,
-            newNode: newChild,
-          });
-        }
+        mutations.push({
+          type: MUTATION_TYPE_UPDATE,
+          oldNode: oldChild,
+          newNode: newChild,
+        });
         newChildren[newTail] = newChild;
         oldTail--;
         newTail--;
@@ -539,8 +536,6 @@ export class Runtime implements Renderer, Dispatcher {
         }
       }
     }
-
-    newParent.dirty = mutations.length > 0;
   }
 
   private async _flush(): Promise<void> {
