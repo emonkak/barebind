@@ -138,7 +138,7 @@ describe('DOMAdapter', () => {
       'uses startViewTransition when available',
       async () => {
         const callback = vi.fn();
-        await adapter.startViewTransition(callback);
+        await adapter.startViewTransition(callback, []);
         expect(callback).toHaveBeenCalledOnce();
       },
     );
@@ -152,7 +152,7 @@ describe('DOMAdapter', () => {
         'get',
       ).mockReturnValue(undefined);
       const callback = vi.fn();
-      await adapter.startViewTransition(callback);
+      await adapter.startViewTransition(callback, []);
       expect(callback).toHaveBeenCalledOnce();
     });
   });
