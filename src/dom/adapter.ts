@@ -80,8 +80,17 @@ export class DOMAdapter implements HostAdapter {
   }
 
   requestCommit(callback: () => void): Promise<void> {
-    return new Promise((resolve) => {
-      requestAnimationFrame(resolve);
+    return new Promise<void>((resolve) => {
+      const frame = requestAnimationFrame(() => {
+        clearTimeout(timer);
+        resolve();
+      });
+      // Fallback: requestAnimationFrame never fires when the document
+      // is not visible (e.g. hidden iframe, background tab throttling).
+      const timer = setTimeout(() => {
+        cancelAnimationFrame(frame);
+        resolve();
+      }, 100);
     }).then(callback);
   }
 
