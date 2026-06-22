@@ -123,6 +123,14 @@ describe('DOMAdapter', () => {
       await adapter.requestCommit(callback);
       expect(callback).toHaveBeenCalledOnce();
     });
+
+    it('falls back to setTimeout when requestAnimationFrame never fires', async () => {
+      const callback = vi.fn();
+      vi.stubGlobal('requestAnimationFrame', (_cb: FrameRequestCallback) => 0);
+      vi.stubGlobal('cancelAnimationFrame', (_id: number) => {});
+      await adapter.requestCommit(callback);
+      expect(callback).toHaveBeenCalledOnce();
+    });
   });
 
   describe('startViewTransition()', () => {
