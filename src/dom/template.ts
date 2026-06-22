@@ -1,4 +1,4 @@
-import type { Block, TemplateMode } from '../core.js';
+import type { Block, Container, TemplateMode } from '../core.js';
 import { DOMAdapterError } from './error.js';
 import {
   AttributePart,
@@ -217,7 +217,7 @@ export class DOMBlock implements Block {
     afterNode.before(this._fragment);
   }
 
-  mountInto(container: ParentNode, afterNode: ChildNode | null): void {
+  mountInto(container: Container, afterNode: ChildNode | null): void {
     insertBefore.call(container, this._fragment, afterNode);
   }
 
@@ -227,7 +227,7 @@ export class DOMBlock implements Block {
     }
   }
 
-  moveInto(container: ParentNode, afterNode: ChildNode | null): void {
+  moveInto(container: Container, afterNode: ChildNode | null): void {
     for (const node of collectChildNodes(this._staticNodes)) {
       moveBefore.call(container, node, afterNode);
     }

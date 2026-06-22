@@ -29,7 +29,7 @@ export class DOMAdapter implements HostAdapter {
 
   renderPortal(element: VPortal): DOMBlock {
     const container = element.type;
-    const document = container.ownerDocument!;
+    const document = container.ownerDocument;
     const fragment = document.createDocumentFragment();
     const part = new PortalPart(container);
     fragment.appendChild(document.createComment(''));
