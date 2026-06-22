@@ -66,34 +66,83 @@ describe('templates', () => {
     expect(container.innerHTML).toBe('<!---->');
   });
 
-  describe('nested templates', () => {
-    it('warns when mounting a template block in a text hole', async () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  it('preserves sibling element positions when switching templates', async () => {
+    const render = (child1: unknown, child2: unknown) => html`
+      <div>
+        <${child1}>
+        <hr>
+        <${child2}>
+      </div>
+    `;
+    const template1 = html`<div>A</div>`;
+    const template2 = html`<div>B</div>`;
 
-      const template = html`
+    await root.render(render(template1, template2)).finished;
+    expect(container.innerHTML).toBe(
+      '<div><div>A</div><!----><hr><div>B</div><!----></div>',
+    );
+
+    await root.render(render(template1, null)).finished;
+    expect(container.innerHTML).toBe(
+      '<div><div>A</div><!----><hr><!----></div>',
+    );
+
+    await root.render(render(null, template2)).finished;
+    expect(container.innerHTML).toBe(
+      '<div><!----><hr><div>B</div><!----></div>',
+    );
+
+    await root.render(render(template1, null)).finished;
+    expect(container.innerHTML).toBe(
+      '<div><div>A</div><!----><hr><!----></div>',
+    );
+  });
+
+  it('respects template part boundaries when inserting adjacent parts', async () => {
+    const render = (a: unknown, b: unknown) => html`
+      <div>
+        <${a}>
+        <${b}>
+      </div>
+    `;
+    const templateA = html`<span>A</span>`;
+    const templateB = html`<span>B</span>`;
+
+    await root.render(render(null, templateB)).finished;
+    expect(container.innerHTML).toBe('<div><!----><span>B</span><!----></div>');
+
+    await root.render(render(templateA, templateB)).finished;
+    expect(container.innerHTML).toBe(
+      '<div><span>A</span><!----><span>B</span><!----></div>',
+    );
+  });
+
+  it('warns when mounting a template block in a text hole', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const template = html`
         <div>${html`<span>nested</span>`}</div>
       `;
-      await root.render(template).finished;
+    await root.render(template).finished;
 
-      expect(warnSpy).toHaveBeenCalledOnce();
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Template blocks can only be mounted as child nodes. ',
-        ),
-      );
-    });
+    expect(warnSpy).toHaveBeenCalledOnce();
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Template blocks can only be mounted as child nodes. ',
+      ),
+    );
+  });
 
-    it('does not warn when mounting a template block in a child node hole', async () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  it('does not warn when mounting a template block in a child node hole', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      const template = html`
+    const template = html`
         <div>
           <${html`<span>nested</span>`}>
         </div>
       `;
-      await root.render(template).finished;
+    await root.render(template).finished;
 
-      expect(warnSpy).not.toHaveBeenCalled();
-    });
+    expect(warnSpy).not.toHaveBeenCalled();
   });
 });

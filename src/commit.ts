@@ -48,7 +48,7 @@ function applyPatch(
   }
   if (oldNode.type !== newNode.type || oldNode.key !== newNode.key) {
     unmountChild(oldNode);
-    mountChild(newNode, getBlockSibling(oldNode));
+    mountChild(newNode, getSiblingNode(oldNode));
   } else if (newNode.type === Bind) {
     newNode.part.commitUpdate(
       (oldNode as RenderNode.BindNode).props.value,
@@ -69,7 +69,7 @@ function applyPatch(
           mountChild(
             mutation.node,
             mutation.afterNode !== undefined
-              ? getBlockDescendant(mutation.afterNode)
+              ? getDescendantNode(mutation.afterNode)
               : null,
           );
           break;
@@ -81,7 +81,7 @@ function applyPatch(
           moveChild(
             mutation.newNode,
             mutation.afterNode !== undefined
-              ? getBlockDescendant(mutation.afterNode)
+              ? getDescendantNode(mutation.afterNode)
               : null,
           );
           break;
@@ -93,26 +93,31 @@ function applyPatch(
   }
 }
 
-function getBlockDescendant(node: RenderNode): ChildNode | null {
+function getDescendantNode(node: RenderNode): ChildNode | null {
   if (typeof node.type === 'object') {
     return node.state.block.staticNodes[0]!;
   }
   for (const child of node.children) {
-    const blockNode = getBlockDescendant(child);
-    if (blockNode !== null) {
-      return blockNode;
+    const descendantNode = getDescendantNode(child);
+    if (descendantNode !== null) {
+      return descendantNode;
     }
   }
-  return getBlockSibling(node);
+  return getSiblingNode(node);
 }
 
-function getBlockSibling(node: RenderNode): ChildNode | null {
+function getSiblingNode(node: RenderNode): ChildNode | null {
+  const part = node.part;
   while (node.parent.type !== Root) {
     const children = node.parent.children;
     for (let i = node.index + 1, l = children.length; i < l; i++) {
-      const blockNode = getBlockDescendant(children[i]!);
-      if (blockNode !== null) {
-        return blockNode;
+      const child = children[i]!;
+      if (child.part !== part) {
+        break;
+      }
+      const descendantNode = getDescendantNode(child);
+      if (descendantNode !== null) {
+        return descendantNode;
       }
     }
     node = node.parent;
