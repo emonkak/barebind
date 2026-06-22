@@ -154,7 +154,7 @@ export namespace RenderNode {
 
 export interface RenderRoot {
   type: typeof Root;
-  current: RenderNode | null;
+  children: [RenderNode | undefined];
 }
 
 export interface Renderer {

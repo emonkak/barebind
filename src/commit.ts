@@ -161,12 +161,7 @@ function reparentChild(
 }
 
 function replaceChild(child: RenderNode): void {
-  const parent = child.parent;
-  if (parent.type === Root) {
-    parent.current = child;
-  } else {
-    parent.children[child.index] = child;
-  }
+  child.parent.children[child.index] = child;
 }
 
 function unmountChild(child: RenderNode, cascade: boolean = false): void {

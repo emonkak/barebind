@@ -14,7 +14,10 @@ import { PortalPart } from './part.js';
 export class DOMRoot {
   private readonly _container: Element;
   private readonly _dispatcher: Dispatcher;
-  private readonly _root: RenderRoot = { type: Root, current: null };
+  private readonly _root: RenderRoot = {
+    type: Root,
+    children: [undefined],
+  };
 
   constructor(container: Element, dispatcher: Dispatcher) {
     this._container = container;
@@ -30,8 +33,14 @@ export class DOMRoot {
           const element = wrap(value);
           const scope = Scope.root();
           const root =
-            this._root.current !== null
-              ? renderer.diff(this._root.current, element, scope, 0, this._root)
+            this._root.children[0] !== undefined
+              ? renderer.diff(
+                  this._root.children[0],
+                  element,
+                  scope,
+                  0,
+                  this._root,
+                )
               : renderer.render(
                   element,
                   scope,
@@ -40,8 +49,8 @@ export class DOMRoot {
                   new PortalPart(this._container),
                 );
           return () => {
-            if (this._root.current !== null) {
-              patch(this._root.current, root);
+            if (this._root.children[0] !== undefined) {
+              patch(this._root.children[0], root);
             } else {
               mount(root);
             }
@@ -59,9 +68,9 @@ export class DOMRoot {
         pendingLanes: AllLanes,
         prepare: () => {
           return () => {
-            if (this._root.current !== null) {
-              unmount(this._root.current);
-              this._root.current = null;
+            if (this._root.children[0] !== undefined) {
+              unmount(this._root.children[0]);
+              this._root.children[0] = undefined;
             }
           };
         },
