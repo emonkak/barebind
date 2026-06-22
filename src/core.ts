@@ -64,7 +64,7 @@ export interface HostAdapter {
     callback: () => void | PromiseLike<void>,
     options?: SchedulerPostTaskOptions,
   ): Promise<void>;
-  startViewTransition(callback: () => void): Promise<void>;
+  startViewTransition(update: () => void, types: string[]): Promise<void>;
   yieldToMain(): Promise<void>;
 }
 
@@ -189,7 +189,7 @@ export interface UpdateOptions {
   flushSync?: boolean;
   priority?: TaskPriority;
   transition?: number;
-  viewTransition?: boolean;
+  viewTransition?: string[] | boolean;
 }
 
 export interface UpdateTransaction {

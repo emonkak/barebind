@@ -606,31 +606,6 @@ describe('components', () => {
       expect(container.innerHTML).toBe('<div>100</div>');
     });
 
-    it('handles the update in the view transition', async () => {
-      const App = createComponent(function App() {
-        const [count, setCount] = this.useState(0);
-        return html`
-          <button
-            @click=${() => {
-              setCount(count + 1, { viewTransition: true });
-            }}
-          >
-            ${count}
-          </button>
-        `;
-      });
-
-      await root.render(App({})).finished;
-      const button = container.querySelector('button')!;
-      expect(button.innerHTML).toBe('0');
-      expect(document.activeViewTransition).toBe(null);
-
-      button.click();
-      await waitForStep(runtime);
-      expect(button.innerHTML).toBe('1');
-      expect(document.activeViewTransition).not.toBe(null);
-    });
-
     it('resolves UpdateHandle.finished after the state update is committed', async () => {
       let increment!: () => UpdateHandle;
       const App = createComponent(function App() {
@@ -974,6 +949,69 @@ describe('components', () => {
       }
 
       expect(new Set(handles.map((handle) => handle.lanes)).size).toBe(24);
+    });
+  });
+
+  describe('view transitions', () => {
+    afterEach(() => {
+      document.activeViewTransition?.skipTransition();
+    });
+
+    it('commits the update in the view transition', async () => {
+      const App = createComponent(function App() {
+        const [count, setCount] = this.useState(0);
+        return html`
+          <button
+            @click=${() => {
+              setCount(count + 1, { viewTransition: true });
+            }}
+          >
+            ${count}
+          </button>
+        `;
+      });
+
+      await root.render(App({})).finished;
+      const button = container.querySelector('button')!;
+      expect(button.innerHTML).toBe('0');
+      expect(document.activeViewTransition).toBe(null);
+
+      button.click();
+      await waitForStep(runtime);
+      expect(button.innerHTML).toBe('1');
+      expect(document.activeViewTransition).toBeInstanceOf(ViewTransition);
+      expect([...document.activeViewTransition!.types]).toStrictEqual([]);
+    });
+
+    it('commits the update with in view transition with types', async () => {
+      const App = createComponent(function App() {
+        const [count, setCount] = this.useState(0);
+        return html`
+          <button
+            @click=${() => {
+              setCount(count + 1, {
+                viewTransition: ['slide', 'fade'],
+              });
+            }}
+          >
+            ${count}
+          </button>
+        `;
+      });
+
+      await root.render(App({})).finished;
+      const button = container.querySelector('button')!;
+      expect(button.innerHTML).toBe('0');
+      expect(document.activeViewTransition).toBe(null);
+
+      button.click();
+      await waitForStep(runtime);
+      expect(button.innerHTML).toBe('1');
+      expect(document.activeViewTransition).toBeInstanceOf(ViewTransition);
+      expect([...document.activeViewTransition!.types]).toStrictEqual([
+        'slide',
+        'fade',
+      ]);
     });
   });
 });

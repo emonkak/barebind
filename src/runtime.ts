@@ -37,6 +37,7 @@ import { PriorityQueue } from './queue.js';
 interface Update {
   id: number;
   lanes: Lanes;
+  types: string[];
   transaction: UpdateTransaction;
   controller: PromiseWithResolvers<void>;
 }
@@ -313,15 +314,19 @@ export class Runtime implements Renderer, Dispatcher {
     transaction: UpdateTransaction,
     options: UpdateOptions = {},
   ): UpdateHandle {
-    const controller = Promise.withResolvers<void>();
     const id = this._updateCount++;
     const lanes =
       getRenderLanes(options) ||
       getLaneFromPriority(this._adapter.getTaskPriority());
+    const controller = Promise.withResolvers<void>();
 
     this._updateQueue.enqueue({
       id,
       lanes,
+      types:
+        typeof options.viewTransition === 'object'
+          ? options.viewTransition
+          : [],
       transaction,
       controller,
     });
@@ -593,7 +598,10 @@ export class Runtime implements Renderer, Dispatcher {
           if (flushSync) {
             callback();
           } else if (this._flushLanes & ViewTransitionLane) {
-            await this._adapter.startViewTransition(callback);
+            await this._adapter.startViewTransition(
+              callback,
+              this._updateBatch.flatMap((update) => update.types),
+            );
           } else {
             await this._adapter.requestCommit(callback);
           }
