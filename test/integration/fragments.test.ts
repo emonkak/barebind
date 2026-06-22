@@ -154,11 +154,14 @@ describe('fragments', () => {
     const refs = new Map<string, HTMLDivElement>();
     const render = (items: string[]) =>
       items.map((item) =>
-        html`<div
-          ${(element: HTMLDivElement) => {
-            refs.set(item, element);
-          }}
-        >${item}</div>`.withKey(item),
+        html`
+          <div
+            ${(element: HTMLDivElement) => {
+              refs.set(item, element);
+            }}
+          >
+          ${item}
+        </div>`.withKey(item),
       );
     await root.render(render(['A', 'C', 'B'])).finished;
     const refB = refs.get('B')!;
@@ -171,11 +174,15 @@ describe('fragments', () => {
     const refs = new Map<string, HTMLDivElement>();
     const render = (items: string[]) =>
       items.map((item) =>
-        html`<div
-          ${(element: HTMLDivElement) => {
-            refs.set(item, element);
-          }}
-        >${item}</div>`.withKey(item),
+        html`
+          <div
+            ${(element: HTMLDivElement) => {
+              refs.set(item, element);
+            }}
+          >
+            ${item}
+          </div>
+        `.withKey(item),
       );
     await root.render(render(['A', 'B', 'C', 'D'])).finished;
     const refA = refs.get('A')!;
@@ -210,11 +217,15 @@ describe('fragments', () => {
     const refs = new Map<string, HTMLDivElement>();
     const render = (items: string[]) =>
       items.map((item) =>
-        html`<div
-          ${(element: HTMLDivElement) => {
-            refs.set(item, element);
-          }}
-        >${item}</div>`.withKey(item),
+        html`
+          <div
+            ${(element: HTMLDivElement) => {
+              refs.set(item, element);
+            }}
+          >
+            ${item}
+          </div>
+        `.withKey(item),
       );
     await root.render(render(['A', 'B', 'C', 'D'])).finished;
     const refA = refs.get('A')!;
