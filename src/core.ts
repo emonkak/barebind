@@ -87,12 +87,14 @@ export type Mutation =
       type: typeof MUTATION_TYPE_UPDATE;
       oldNode: RenderNode;
       newNode: RenderNode;
+      index: number;
     }
   | {
       type: typeof MUTATION_TYPE_UPDATE_AND_MOVE;
       oldNode: RenderNode;
       newNode: RenderNode;
       afterNode: RenderNode | undefined;
+      index: number;
     }
   | {
       type: typeof MUTATION_TYPE_REMOVE;

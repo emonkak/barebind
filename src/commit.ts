@@ -20,7 +20,7 @@ export function unmount(node: RenderNode): void {
 }
 
 export function patch(oldNode: RenderNode, newNode: RenderNode) {
-  applyPatch(oldNode, newNode, newNode.parent);
+  applyPatch(oldNode, newNode, newNode.index, newNode.parent);
   afterCommit(newNode);
   replaceChild(newNode);
 }
@@ -40,10 +40,11 @@ function afterCommit(node: RenderNode): void {
 function applyPatch(
   oldNode: RenderNode,
   newNode: RenderNode,
+  index: number,
   parent: RenderNode | RenderRoot,
 ): void {
   if (oldNode === newNode) {
-    reparentChild(newNode, parent);
+    reparentChild(oldNode, index, parent);
     return;
   }
   if (oldNode.type !== newNode.type || oldNode.key !== newNode.key) {
@@ -58,10 +59,10 @@ function applyPatch(
     const oldChildren = oldNode.children;
     const newChildren = newNode.children;
     for (let i = 0, l = newChildren.length; i < l; i++) {
-      applyPatch(oldChildren[i]!, newChildren[i]!, newNode);
+      applyPatch(oldChildren[i]!, newChildren[i]!, i, newNode);
     }
   } else if (typeof newNode.type === 'function') {
-    applyPatch(oldNode.children[0]!, newNode.children[0]!, newNode);
+    applyPatch(oldNode.children[0]!, newNode.children[0]!, 0, newNode);
   } else {
     for (const mutation of newNode.state.mutations.splice(0)) {
       switch (mutation.type) {
@@ -74,10 +75,20 @@ function applyPatch(
           );
           break;
         case MUTATION_TYPE_UPDATE:
-          applyPatch(mutation.oldNode, mutation.newNode, newNode);
+          applyPatch(
+            mutation.oldNode,
+            mutation.newNode,
+            mutation.index,
+            newNode,
+          );
           break;
         case MUTATION_TYPE_UPDATE_AND_MOVE:
-          applyPatch(mutation.oldNode, mutation.newNode, newNode);
+          applyPatch(
+            mutation.oldNode,
+            mutation.newNode,
+            mutation.index,
+            newNode,
+          );
           moveChild(
             mutation.newNode,
             mutation.afterNode !== undefined
@@ -152,11 +163,14 @@ function moveChild(child: RenderNode, afterNode: ChildNode | null): void {
 
 function reparentChild(
   child: RenderNode,
+  index: number,
   parent: RenderNode | RenderRoot,
 ): void {
-  for (const grandchild of child.children) {
-    reparentChild(grandchild, child);
+  for (let i = 0, l = child.children.length; i < l; i++) {
+    const grandchild = child.children[i]!;
+    reparentChild(grandchild, i, child);
   }
+  child.index = index;
   child.parent = parent;
 }
 
