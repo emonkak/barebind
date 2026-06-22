@@ -48,7 +48,7 @@ export function EffectEvent<T extends (...args: any[]) => any>(
 }
 
 export function ImperativeHandle<T>(
-  ref: Ref<T | null> | ((handle: T) => void),
+  ref: Ref<T | null> | ((handle: T) => void) | null | undefined,
   createHandle: () => T,
   dependencies?: unknown[],
 ): HookFunction<void> {
@@ -56,7 +56,7 @@ export function ImperativeHandle<T>(
     context.useEffect(() => {
       if (typeof ref === 'function') {
         return ref(createHandle());
-      } else {
+      } else if (ref != null) {
         ref.current = createHandle();
         return () => {
           ref.current = null;
