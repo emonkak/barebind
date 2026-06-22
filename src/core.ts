@@ -8,6 +8,12 @@ export const MUTATION_TYPE_UPDATE = 1;
 export const MUTATION_TYPE_UPDATE_AND_MOVE = 2;
 export const MUTATION_TYPE_REMOVE = 3;
 
+export const VNODE_KIND_BIND = 0;
+export const VNODE_KIND_COMPONENT = 1;
+export const VNODE_KIND_FRAGMENT = 2;
+export const VNODE_KIND_PORTAL = 3;
+export const VNODE_KIND_TEMPLATE = 4;
+
 export interface Bindable {
   [toElement](): VElement;
 }
@@ -188,7 +194,42 @@ export interface UpdateTransaction {
   prepare(lanes: Lanes, renderer: Renderer): Commit;
 }
 
+export type VBind<T = unknown> = VNode<
+  typeof VNODE_KIND_BIND,
+  typeof Bind,
+  { value: T },
+  []
+>;
+
+export type VComponent<TProps = any> = VNode<
+  typeof VNODE_KIND_COMPONENT,
+  Component<TProps>,
+  TProps,
+  []
+>;
+
 export type VElement = VComponent | VFragment | VBind | VPortal | VTemplate;
+
+export type VFragment = VNode<
+  typeof VNODE_KIND_FRAGMENT,
+  typeof Fragment,
+  {},
+  VElement[]
+>;
+
+export type VPortal<TContainer extends ParentNode = ParentNode> = VNode<
+  typeof VNODE_KIND_PORTAL,
+  TContainer,
+  {},
+  [VElement]
+>;
+
+export type VTemplate = VNode<
+  typeof VNODE_KIND_TEMPLATE,
+  readonly string[],
+  { mode: TemplateMode },
+  VElement[]
+>;
 
 export class Ref<T> implements Bindable {
   current: T;
@@ -242,13 +283,21 @@ export class Scope {
   }
 }
 
-export class VNode<TType, TProps, const TChildren extends VElement[]> {
+export class VNode<TKind, TType, TProps, const TChildren extends VElement[]> {
+  readonly kind: TKind;
   readonly type: TType;
   readonly props: TProps;
   readonly children: TChildren;
   readonly key: unknown;
 
-  constructor(type: TType, props: TProps, children: TChildren, key?: unknown) {
+  constructor(
+    kind: TKind,
+    type: TType,
+    props: TProps,
+    children: TChildren,
+    key?: unknown,
+  ) {
+    this.kind = kind;
     this.type = type;
     this.props = props;
     this.children = children;
@@ -258,51 +307,29 @@ export class VNode<TType, TProps, const TChildren extends VElement[]> {
     }
   }
 
-  withKey(key: unknown): this {
-    return new (this.constructor as typeof VNode)(
-      this.type,
-      this.props,
-      this.children,
-      key,
-    ) as this;
+  withKey(key: unknown): VNode<TKind, TType, TProps, TChildren> {
+    return new VNode(this.kind, this.type, this.props, this.children, key);
   }
 }
 
-export class VBind<T = unknown> extends VNode<typeof Bind, { value: T }, []> {}
-
-export class VComponent<TProps = any> extends VNode<
-  Component<TProps>,
-  TProps,
-  []
-> {}
-
-export class VFragment extends VNode<typeof Fragment, {}, VElement[]> {}
-
-export class VPortal<TContainer extends ParentNode = ParentNode> extends VNode<
-  TContainer,
-  {},
-  [VElement]
-> {}
-
-export class VTemplate extends VNode<
-  readonly string[],
-  { mode: TemplateMode },
-  VElement[]
-> {}
-
 export function createBind<T>(value: T): VBind<T> {
-  return new VBind(Bind, { value }, []);
+  return new VNode(VNODE_KIND_BIND, Bind, { value }, []);
 }
 
 export function createFragment(children: Iterable<unknown>): VFragment {
-  return new VFragment(Fragment, {}, Array.from(children, wrap));
+  return new VNode(
+    VNODE_KIND_FRAGMENT,
+    Fragment,
+    {},
+    Array.from(children, wrap),
+  );
 }
 
 export function createPortal<TContainer extends ParentNode>(
   child: unknown,
   container: TContainer,
 ): VPortal<TContainer> {
-  return new VPortal(container, {}, [wrap(child)]);
+  return new VNode(VNODE_KIND_PORTAL, container, {}, [wrap(child)]);
 }
 
 export function createTemplate(
@@ -310,7 +337,8 @@ export function createTemplate(
   strings: readonly string[],
   children: readonly unknown[],
 ): VTemplate {
-  return new VTemplate(
+  return new VNode(
+    VNODE_KIND_TEMPLATE,
     strings,
     {
       mode,
