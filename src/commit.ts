@@ -166,10 +166,6 @@ function reparentChild(
   index: number,
   parent: RenderNode | RenderRoot,
 ): void {
-  for (let i = 0, l = child.children.length; i < l; i++) {
-    const grandchild = child.children[i]!;
-    reparentChild(grandchild, i, child);
-  }
   child.index = index;
   child.parent = parent;
 }
