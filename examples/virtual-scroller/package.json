@@ -1,0 +1,14 @@
+{
+  "name": "virtual-scroller",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc --build",
+    "watch": "tsc --build --watch --preserveWatchOutput",
+    "clean": "rm -fr lib"
+  },
+  "dependencies": {
+    "barebind": "workspace:*"
+  }
+}
