@@ -11,7 +11,7 @@ import {
   DeferredValue,
   EffectEvent,
   ImperativeHandle,
-  SyncEnternalStore,
+  SyncExternalStore,
   Transition,
 } from 'barebind/addons/hooks';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -116,7 +116,7 @@ describe('addon hooks', () => {
     });
   });
 
-  describe('SyncEnternalStore', () => {
+  describe('SyncExternalStore', () => {
     it('returns the current snapshot and re-renders on store changes', async () => {
       let value = 0;
       let subscriber: (() => void) | null = null;
@@ -129,7 +129,7 @@ describe('addon hooks', () => {
       const getSnapshot = vi.fn(() => value);
 
       const App = createComponent(function App() {
-        const snapshot = this.use(SyncEnternalStore(subscribe, getSnapshot));
+        const snapshot = this.use(SyncExternalStore(subscribe, getSnapshot));
         return html`<div>${snapshot}</div>`;
       });
 
@@ -151,7 +151,7 @@ describe('addon hooks', () => {
         .mockReturnValue('updated');
 
       const App = createComponent(function App() {
-        const snapshot = this.use(SyncEnternalStore(subscribe, getSnapshot));
+        const snapshot = this.use(SyncExternalStore(subscribe, getSnapshot));
         return html`<div>${snapshot}</div>`;
       });
 
@@ -170,7 +170,7 @@ describe('addon hooks', () => {
       });
 
       const App = createComponent(function App() {
-        this.use(SyncEnternalStore(subscribe, () => 0));
+        this.use(SyncExternalStore(subscribe, () => 0));
         return html`<div>content</div>`;
       });
 

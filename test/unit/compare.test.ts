@@ -1,34 +1,34 @@
 import { describe, expect, it } from 'vitest';
 import {
-  areDependenciesChange,
+  areDependenciesChanged,
   sequentialEqual,
   shallowEqual,
 } from '@/compare.js';
 
-describe('areDependenciesChange()', () => {
+describe('areDependenciesChanged()', () => {
   it('returns true when next is null', () => {
-    expect(areDependenciesChange(null, [1, 2])).toBe(true);
+    expect(areDependenciesChanged(null, [1, 2])).toBe(true);
   });
 
   it('returns true when prev is null', () => {
-    expect(areDependenciesChange([1, 2], null)).toBe(true);
+    expect(areDependenciesChanged([1, 2], null)).toBe(true);
   });
 
   it('returns true when both are null', () => {
-    expect(areDependenciesChange(null, null)).toBe(true);
+    expect(areDependenciesChanged(null, null)).toBe(true);
   });
 
   it('returns false when arrays are equal', () => {
-    expect(areDependenciesChange([1, 2], [1, 2])).toBe(false);
+    expect(areDependenciesChanged([1, 2], [1, 2])).toBe(false);
   });
 
   it('returns true when arrays differ', () => {
-    expect(areDependenciesChange([1, 2], [1, 3])).toBe(true);
+    expect(areDependenciesChanged([1, 2], [1, 3])).toBe(true);
   });
 
   it('returns false for the same reference', () => {
     const deps = [1, 2];
-    expect(areDependenciesChange(deps, deps)).toBe(false);
+    expect(areDependenciesChanged(deps, deps)).toBe(false);
   });
 });
 

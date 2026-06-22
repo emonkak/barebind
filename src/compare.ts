@@ -1,4 +1,4 @@
-export function areDependenciesChange(
+export function areDependenciesChanged(
   oldDeps: readonly unknown[] | null | undefined,
   newDeps: readonly unknown[] | null | undefined,
 ): boolean {

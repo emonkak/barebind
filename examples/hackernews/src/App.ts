@@ -1,5 +1,5 @@
 import { createComponent, html } from 'barebind';
-import { HashHistory, ScrollRestration } from 'barebind/addons/router';
+import { HashHistory, ScrollRestoration } from 'barebind/addons/router';
 
 import { Nav } from './Nav.js';
 import { NotFound } from './NotFound.js';
@@ -16,7 +16,7 @@ export const App = createComponent<AppProps>(function App({ store }) {
 
   this.provide(store);
 
-  this.use(ScrollRestration());
+  this.use(ScrollRestoration());
 
   return html`
     <header class="header">

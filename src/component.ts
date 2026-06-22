@@ -1,5 +1,5 @@
 import { patch } from './commit.js';
-import { areDependenciesChange } from './compare.js';
+import { areDependenciesChanged } from './compare.js';
 import {
   type Commit,
   type Component,
@@ -272,7 +272,7 @@ export class RenderContext {
       currentHook = {
         ...currentHook,
         dirty:
-          currentHook.dirty || areDependenciesChange(currentHook.deps, deps),
+          currentHook.dirty || areDependenciesChanged(currentHook.deps, deps),
         setup,
         deps,
       };
@@ -315,7 +315,7 @@ export class RenderContext {
     if (currentHook !== undefined) {
       ensureHookType(MemoType, currentHook);
 
-      if (areDependenciesChange(currentHook.deps, deps)) {
+      if (areDependenciesChanged(currentHook.deps, deps)) {
         currentHook = {
           ...currentHook,
           result: computation(),
