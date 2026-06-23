@@ -139,20 +139,20 @@ export class DOMTemplate {
     const parts: DOMPart[] = new Array(holes.length);
 
     if (holes.length > 0) {
-      const templateWalker = createTreeWalker(fragment);
+      const treeWalker = createTreeWalker(fragment);
       let nodeIndex = 0;
 
       for (let holeIndex = 0, l = holes.length; holeIndex < l; holeIndex++) {
         const hole = holes[holeIndex]!;
         for (; nodeIndex <= hole.index; nodeIndex++) {
-          if (templateWalker.nextNode() === null) {
+          if (treeWalker.nextNode() === null) {
             throw DOMAdapterError.withNode(
-              templateWalker.currentNode,
+              treeWalker.currentNode,
               'There is no node that the hole indicates. The template may have been modified.',
             );
           }
         }
-        parts[holeIndex] = resolvePart(hole, templateWalker);
+        parts[holeIndex] = resolvePart(hole, treeWalker);
       }
     }
 
@@ -351,9 +351,9 @@ function parseTemplate(
   template: HTMLTemplateElement,
   marker: string,
 ): DOMTemplate {
-  const sourceTree = createTreeWalker(template.content);
+  const treeWalker = createTreeWalker(template.content);
   const holes: Hole[] = [];
-  let nextNode = sourceTree.nextNode();
+  let nextNode = treeWalker.nextNode();
   let nodeIndex = 0;
 
   while (nextNode !== null) {
@@ -418,7 +418,7 @@ function parseTemplate(
         }
 
         if (wholeText === '' && components.length === 1) {
-          nextNode = sourceTree.nextNode();
+          nextNode = treeWalker.nextNode();
           (currentNode as Text).remove();
           continue;
         }
@@ -428,7 +428,7 @@ function parseTemplate(
       }
     }
 
-    nextNode = sourceTree.nextNode();
+    nextNode = treeWalker.nextNode();
     nodeIndex++;
   }
 
