@@ -135,12 +135,6 @@ export class EventPart extends AttributePart implements EventListenerObject {
     this._currentListener = value;
   }
 
-  override commitUpdate(oldValue: unknown, newValue: unknown): void {
-    if (oldValue !== newValue) {
-      this.commitMount(newValue);
-    }
-  }
-
   override commitUnmount(_value: unknown, _cascade: boolean): void {
     if (this._currentListener != null) {
       this._node.removeEventListener(
@@ -177,12 +171,6 @@ export class LivePart extends AttributePart {
 export class PropertyPart extends AttributePart {
   override commitMount(value: unknown): void {
     (this._node as any)[this._name] = value;
-  }
-
-  override commitUpdate(oldValue: unknown, newValue: unknown): void {
-    if (!Object.is(oldValue, newValue)) {
-      this.commitMount(newValue);
-    }
   }
 }
 
