@@ -7,7 +7,7 @@ const TEMPLATE_PLACEHOLDER = '__test__';
 describe('DOMTemplate', () => {
   describe('parse()', () => {
     it('creates an HTML template', () => {
-      const [template] = html`
+      const template = html`
         <div id="a">hello</div>
       `;
 
@@ -22,7 +22,7 @@ describe('DOMTemplate', () => {
     });
 
     it('creates a MathML template', () => {
-      const [template] = math`
+      const template = math`
         <mn id="a">100</mn>
       `;
 
@@ -35,7 +35,7 @@ describe('DOMTemplate', () => {
     });
 
     it('creates an SVG template', () => {
-      const [template] = svg`
+      const template = svg`
         <rect id="a" width="100" height="100"></rect>
       `;
 
@@ -50,7 +50,7 @@ describe('DOMTemplate', () => {
     });
 
     it('creates a text template', () => {
-      const [template] = text`
+      const template = text`
         <div>hello</div>
       `;
       expect(template.element.content.textContent).toBe('<div>hello</div>');
@@ -96,15 +96,15 @@ describe('DOMBlock', () => {
 function html(
   strings: TemplateStringsArray,
   ...values: unknown[]
-): [template: DOMTemplate, values: unknown[]] {
-  return [parse(strings, values, 'html'), values];
+): DOMTemplate {
+  return parse(strings, values, 'html');
 }
 
 function math(
   strings: TemplateStringsArray,
   ...values: unknown[]
-): [template: DOMTemplate, values: unknown[]] {
-  return [parse(strings, values, 'math'), values];
+): DOMTemplate {
+  return parse(strings, values, 'math');
 }
 
 function parse(
@@ -121,16 +121,13 @@ function parse(
   );
 }
 
-function svg(
-  strings: TemplateStringsArray,
-  ...values: unknown[]
-): [template: DOMTemplate, values: unknown[]] {
-  return [parse(strings, values, 'svg'), values];
+function svg(strings: TemplateStringsArray, ...values: unknown[]): DOMTemplate {
+  return parse(strings, values, 'svg');
 }
 
 function text(
   strings: TemplateStringsArray,
   ...values: unknown[]
-): [template: DOMTemplate, values: unknown[]] {
-  return [parse(strings, values, 'textarea'), values];
+): DOMTemplate {
+  return parse(strings, values, 'textarea');
 }
