@@ -31,4 +31,7 @@ export default defineConfig({
     unstubGlobals: true,
     unstubEnvs: true,
   },
+  benchmark: {
+    include: ['test/**/*.bench.ts'],
+  },
 });
