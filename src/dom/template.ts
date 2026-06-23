@@ -93,8 +93,8 @@ namespace Hole {
 }
 
 export class DOMTemplate {
-  readonly template: HTMLTemplateElement;
-  readonly holes: Hole[];
+  private readonly _template: HTMLTemplateElement;
+  private readonly _holes: Hole[];
 
   static parse(
     strings: readonly string[],
@@ -128,14 +128,14 @@ export class DOMTemplate {
   }
 
   constructor(template: HTMLTemplateElement, holes: Hole[]) {
-    this.template = template;
-    this.holes = holes;
+    this._template = template;
+    this._holes = holes;
   }
 
   render(): DOMBlock {
-    const document = this.template.ownerDocument;
-    const fragment = document.importNode(this.template.content, true);
-    const holes = this.holes;
+    const document = this._template.ownerDocument;
+    const fragment = document.importNode(this._template.content, true);
+    const holes = this._holes;
     const parts: DOMPart[] = new Array(holes.length);
 
     if (holes.length > 0) {
