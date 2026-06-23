@@ -95,7 +95,6 @@ namespace Hole {
 export class DOMTemplate {
   readonly element: HTMLTemplateElement;
   readonly holes: Hole[];
-  readonly mode: TemplateMode;
 
   static parse(
     strings: readonly string[],
@@ -134,13 +133,12 @@ export class DOMTemplate {
       );
     }
 
-    return new DOMTemplate(element, holes, mode);
+    return new DOMTemplate(element, holes);
   }
 
-  constructor(element: HTMLTemplateElement, holes: Hole[], mode: TemplateMode) {
+  constructor(element: HTMLTemplateElement, holes: Hole[]) {
     this.element = element;
     this.holes = holes;
-    this.mode = mode;
   }
 
   render(): DOMBlock {
