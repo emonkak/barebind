@@ -18,7 +18,6 @@ describe('DOMTemplate', () => {
         'http://www.w3.org/1999/xhtml',
       );
       expect(template.holes).toStrictEqual([]);
-      expect(template.mode).toBe('html');
     });
 
     it('creates a MathML template', () => {
@@ -31,7 +30,6 @@ describe('DOMTemplate', () => {
         'http://www.w3.org/1998/Math/MathML',
       );
       expect(template.holes).toStrictEqual([]);
-      expect(template.mode).toBe('math');
     });
 
     it('creates an SVG template', () => {
@@ -46,7 +44,6 @@ describe('DOMTemplate', () => {
         'http://www.w3.org/2000/svg',
       );
       expect(template.holes).toStrictEqual([]);
-      expect(template.mode).toBe('svg');
     });
 
     it('creates a text template', () => {
@@ -55,7 +52,6 @@ describe('DOMTemplate', () => {
       `;
       expect(template.element.content.textContent).toBe('<div>hello</div>');
       expect(template.holes).toStrictEqual([]);
-      expect(template.mode).toBe('textarea');
     });
 
     it('throws for an invalid placeholder', () => {
@@ -67,17 +63,13 @@ describe('DOMTemplate', () => {
 
   describe('render()', () => {
     it('throws for an invalid template', () => {
-      const template = new DOMTemplate(
-        document.createElement('template'),
-        [
-          {
-            type: 0, // HOLE_TYPE_ATTRIBUTE,
-            index: 0,
-            name: 'id',
-          },
-        ],
-        'html',
-      );
+      const template = new DOMTemplate(document.createElement('template'), [
+        {
+          type: 0, // HOLE_TYPE_ATTRIBUTE,
+          index: 0,
+          name: 'id',
+        },
+      ]);
       expect(() => {
         template.render();
       }).toThrow('There is no node that the hole indicates.');
