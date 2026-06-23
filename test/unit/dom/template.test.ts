@@ -11,10 +11,10 @@ describe('DOMTemplate', () => {
         <div id="a">hello</div>
       `;
 
-      expect(template.element.innerHTML).toStrictEqual(
+      expect(template.template.innerHTML).toStrictEqual(
         '<div id="a">hello</div>',
       );
-      expect(template.element.content.querySelector('#a')?.namespaceURI).toBe(
+      expect(template.template.content.querySelector('#a')?.namespaceURI).toBe(
         'http://www.w3.org/1999/xhtml',
       );
       expect(template.holes).toStrictEqual([]);
@@ -25,8 +25,8 @@ describe('DOMTemplate', () => {
         <mn id="a">100</mn>
       `;
 
-      expect(template.element.innerHTML).toBe(`<mn id="a">100</mn>`);
-      expect(template.element.content.querySelector('#a')?.namespaceURI).toBe(
+      expect(template.template.innerHTML).toBe(`<mn id="a">100</mn>`);
+      expect(template.template.content.querySelector('#a')?.namespaceURI).toBe(
         'http://www.w3.org/1998/Math/MathML',
       );
       expect(template.holes).toStrictEqual([]);
@@ -37,10 +37,10 @@ describe('DOMTemplate', () => {
         <rect id="a" width="100" height="100"></rect>
       `;
 
-      expect(template.element.innerHTML).toBe(
+      expect(template.template.innerHTML).toBe(
         '<rect id="a" width="100" height="100"></rect>',
       );
-      expect(template.element.content.querySelector('#a')?.namespaceURI).toBe(
+      expect(template.template.content.querySelector('#a')?.namespaceURI).toBe(
         'http://www.w3.org/2000/svg',
       );
       expect(template.holes).toStrictEqual([]);
@@ -50,7 +50,7 @@ describe('DOMTemplate', () => {
       const template = text`
         <div>hello</div>
       `;
-      expect(template.element.content.textContent).toBe('<div>hello</div>');
+      expect(template.template.content.textContent).toBe('<div>hello</div>');
       expect(template.holes).toStrictEqual([]);
     });
 
