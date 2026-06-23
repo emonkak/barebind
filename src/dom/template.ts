@@ -467,15 +467,17 @@ function resolvePart(hole: Hole, treeWalker: TreeWalker): DOMPart {
     case HOLE_TYPE_TEXT: {
       if (hole.splitIndex > 0) {
         currentNode = (currentNode as Text).splitText(0);
+        treeWalker.currentNode = currentNode;
       }
       if (hole.leadingSpan > 0) {
         currentNode = (currentNode as Text).splitText(hole.leadingSpan);
+        treeWalker.currentNode = currentNode;
       }
       const part = new CharacterDataPart(currentNode as Text);
       if (hole.trailingSpan > 0) {
         currentNode = (currentNode as Text).splitText(0);
+        treeWalker.currentNode = currentNode;
       }
-      treeWalker.currentNode = currentNode;
       return part;
     }
   }
