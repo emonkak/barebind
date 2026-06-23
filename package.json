@@ -39,6 +39,7 @@
     "lint": "biome ci",
     "ci": "pnpm run clean:all && pnpm run lint && pnpm run build:all && pnpm test --coverage",
     "test": "vitest run",
+    "bench": "vitest bench --run",
     "watch": "tsc --build --watch --preserveWatchOutput",
     "watch:all": "pnpm run --include-workspace-root --recursive --parallel watch"
   },
