@@ -93,12 +93,12 @@ namespace Hole {
 }
 
 export class DOMTemplate {
-  readonly element: HTMLTemplateElement;
+  readonly template: HTMLTemplateElement;
   readonly holes: Hole[];
 
   static parse(
     strings: readonly string[],
-    exprs: readonly unknown[],
+    values: readonly unknown[],
     mode: TemplateMode,
     placeholder: string,
     document: Document,
@@ -111,39 +111,30 @@ export class DOMTemplate {
       }
     }
 
-    const element = document.createElement('template');
+    const template = document.createElement('template');
     const marker = createMarker(placeholder);
     const html = stripWhitespaces(strings.join(marker));
 
     if (mode === 'html') {
-      element.setHTMLUnsafe(html);
+      template.setHTMLUnsafe(html);
     } else {
-      element.setHTMLUnsafe(`<${mode}>${html}</${mode}>`);
-      element.content.replaceChildren(
-        ...element.content.firstChild!.childNodes,
+      template.setHTMLUnsafe(`<${mode}>${html}</${mode}>`);
+      template.content.replaceChildren(
+        ...template.content.firstChild!.childNodes,
       );
     }
 
-    const holes = parseChildren(strings, marker, element);
-
-    if (holes.length !== exprs.length) {
-      throw DOMAdapterError.withNode(
-        element.content,
-        `The number of holes must be ${exprs.length}, but got ${holes.length}. Multiple holes indicate the same attribute.`,
-      );
-    }
-
-    return new DOMTemplate(element, holes);
+    return parseTemplate(strings, values, template, marker);
   }
 
-  constructor(element: HTMLTemplateElement, holes: Hole[]) {
-    this.element = element;
+  constructor(template: HTMLTemplateElement, holes: Hole[]) {
+    this.template = template;
     this.holes = holes;
   }
 
   render(): DOMBlock {
-    const document = this.element.ownerDocument;
-    const fragment = document.importNode(this.element.content, true);
+    const document = this.template.ownerDocument;
+    const fragment = document.importNode(this.template.content, true);
     const holes = this.holes;
     const parts: DOMPart[] = new Array(holes.length);
 
@@ -354,11 +345,12 @@ function extractAttributeName(s: string): string | undefined {
   return s.match(ATTRIBUTE_NAME_PATTERN)?.[0];
 }
 
-function parseChildren(
+function parseTemplate(
   strings: readonly string[],
-  marker: string,
+  values: readonly unknown[],
   template: HTMLTemplateElement,
-): Hole[] {
+  marker: string,
+): DOMTemplate {
   const sourceTree = createTreeWalker(template.content);
   const holes: Hole[] = [];
   let nextNode = sourceTree.nextNode();
@@ -440,7 +432,14 @@ function parseChildren(
     nodeIndex++;
   }
 
-  return holes;
+  if (holes.length !== values.length) {
+    throw DOMAdapterError.withNode(
+      template.content,
+      `The number of holes must be ${values.length}, but got ${holes.length}. Multiple holes indicate the same attribute.`,
+    );
+  }
+
+  return new DOMTemplate(template, holes);
 }
 
 function resolvePart(hole: Hole, treeWalker: TreeWalker): DOMPart {
