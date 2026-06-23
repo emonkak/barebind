@@ -234,7 +234,7 @@ function collectAttributeHoles(
   strings: readonly string[],
   marker: string,
   holes: Hole[],
-  nodeIndex: number,
+  index: number,
 ): void {
   for (const name of element.getAttributeNames()) {
     const value = element.getAttribute(name)!;
@@ -243,7 +243,7 @@ function collectAttributeHoles(
     if (name === marker && value === '') {
       hole = {
         type: HOLE_TYPE_ELEMENT,
-        index: nodeIndex,
+        index,
       };
     } else if (value === marker) {
       const caseSensitiveName = extractAttributeName(strings[holes.length]!);
@@ -261,28 +261,28 @@ function collectAttributeHoles(
         case '@':
           hole = {
             type: HOLE_TYPE_EVENT,
-            index: nodeIndex,
+            index,
             name: caseSensitiveName.slice(1),
           };
           break;
         case '$':
           hole = {
             type: HOLE_TYPE_LIVE,
-            index: nodeIndex,
+            index,
             name: caseSensitiveName.slice(1),
           };
           break;
         case '.':
           hole = {
             type: HOLE_TYPE_PROPERTY,
-            index: nodeIndex,
+            index,
             name: caseSensitiveName.slice(1),
           };
           break;
         default:
           hole = {
             type: HOLE_TYPE_ATTRIBUTE,
-            index: nodeIndex,
+            index,
             name: caseSensitiveName,
           };
           break;
@@ -295,7 +295,6 @@ function collectAttributeHoles(
             'Expressions are not allowed as an attribute name.',
           );
         }
-
         if (value.includes(marker)) {
           throw DOMAdapterError.withNode(
             element.getAttributeNode(name)!,
@@ -353,11 +352,10 @@ function parseTemplate(
 ): DOMTemplate {
   const treeWalker = createTreeWalker(template.content);
   const holes: Hole[] = [];
-  let nextNode = treeWalker.nextNode();
-  let nodeIndex = 0;
+  let currentNode = treeWalker.nextNode();
+  let index = 0;
 
-  while (nextNode !== null) {
-    const currentNode = nextNode;
+  while (currentNode !== null) {
     switch (currentNode.nodeType) {
       case Node.ELEMENT_NODE: {
         DEBUG: {
@@ -374,7 +372,7 @@ function parseTemplate(
             strings,
             marker,
             holes,
-            nodeIndex,
+            index,
           );
         }
         break;
@@ -385,7 +383,7 @@ function parseTemplate(
         ) {
           holes.push({
             type: HOLE_TYPE_CHILD_NODE,
-            index: nodeIndex,
+            index,
           });
           (currentNode as Comment).data = '';
         } else {
@@ -410,7 +408,7 @@ function parseTemplate(
         for (let i = 1; i <= tail; i++) {
           holes.push({
             type: HOLE_TYPE_TEXT,
-            index: nodeIndex,
+            index,
             splitIndex: i - 1,
             leadingSpan: components[i - 1]!.length,
             trailingSpan: i < tail ? 0 : components[i]!.length,
@@ -418,8 +416,9 @@ function parseTemplate(
         }
 
         if (wholeText === '' && components.length === 1) {
-          nextNode = treeWalker.nextNode();
-          (currentNode as Text).remove();
+          const previousNode = currentNode as Text;
+          currentNode = treeWalker.nextNode();
+          (previousNode as Text).remove();
           continue;
         }
 
@@ -428,8 +427,8 @@ function parseTemplate(
       }
     }
 
-    nextNode = treeWalker.nextNode();
-    nodeIndex++;
+    currentNode = treeWalker.nextNode();
+    index++;
   }
 
   if (holes.length !== values.length) {
