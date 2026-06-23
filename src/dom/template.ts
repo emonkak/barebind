@@ -240,63 +240,30 @@ export class DOMBlock implements Block {
   }
 }
 
-function collectChildNodes(staticNodes: ChildNode[]): ChildNode[] {
-  const firstNode = staticNodes[0] ?? null;
-  const lastNode = staticNodes.at(-1) ?? null;
-  const childNodes = [];
-
-  for (
-    let currentNode = firstNode;
-    currentNode !== null;
-    currentNode = currentNode.nextSibling
-  ) {
-    childNodes.push(currentNode);
-    if (currentNode === lastNode) {
-      break;
-    }
-  }
-
-  return childNodes;
-}
-
-function createMarker(placeholder: string): string {
-  return `?${placeholder}?`;
-}
-
-function createTreeWalker(container: DocumentFragment | Element): TreeWalker {
-  return container.ownerDocument.createTreeWalker(
-    container,
-    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
-  );
-}
-
-function extractAttributeName(s: string): string | undefined {
-  return s.match(ATTRIBUTE_NAME_PATTERN)?.[0];
-}
-
-function parseAttributes(
+function collectAttributeHoles(
   element: Element,
   strings: readonly string[],
   marker: string,
   holes: Hole[],
   nodeIndex: number,
 ): void {
-  for (const attribute of Array.from(element.attributes)) {
+  for (const name of element.getAttributeNames()) {
+    const value = element.getAttribute(name)!;
     let hole: Hole;
 
-    if (attribute.name === marker && attribute.value === '') {
+    if (name === marker && value === '') {
       hole = {
         type: HOLE_TYPE_ELEMENT,
         index: nodeIndex,
       };
-    } else if (attribute.value === marker) {
+    } else if (value === marker) {
       const caseSensitiveName = extractAttributeName(strings[holes.length]!);
 
       DEBUG: {
-        if (caseSensitiveName?.toLowerCase() !== attribute.name) {
+        if (caseSensitiveName?.toLowerCase() !== name) {
           throw DOMAdapterError.withNode(
-            attribute,
-            `The attribute name must be "${attribute.name}", but got "${caseSensitiveName}". There are unclosed tags or duplicate attributes.`,
+            element.getAttributeNode(name)!,
+            `The attribute name must be "${name}", but got "${caseSensitiveName}". There are unclosed tags or duplicate attributes.`,
           );
         }
       }
@@ -333,16 +300,16 @@ function parseAttributes(
       }
     } else {
       DEBUG: {
-        if (attribute.name.includes(marker)) {
+        if (name.includes(marker)) {
           throw DOMAdapterError.withNode(
-            attribute,
+            element.getAttributeNode(name)!,
             'Expressions are not allowed as an attribute name.',
           );
         }
 
-        if (attribute.value.includes(marker)) {
+        if (value.includes(marker)) {
           throw DOMAdapterError.withNode(
-            attribute,
+            element.getAttributeNode(name)!,
             'Expressions inside an attribute must make up the entire attribute value.',
           );
         }
@@ -351,8 +318,42 @@ function parseAttributes(
     }
 
     holes.push(hole);
-    element.removeAttributeNode(attribute);
+    element.removeAttribute(name);
   }
+}
+
+function collectChildNodes(staticNodes: ChildNode[]): ChildNode[] {
+  const firstNode = staticNodes[0] ?? null;
+  const lastNode = staticNodes.at(-1) ?? null;
+  const childNodes = [];
+
+  for (
+    let currentNode = firstNode;
+    currentNode !== null;
+    currentNode = currentNode.nextSibling
+  ) {
+    childNodes.push(currentNode);
+    if (currentNode === lastNode) {
+      break;
+    }
+  }
+
+  return childNodes;
+}
+
+function createMarker(placeholder: string): string {
+  return `?${placeholder}?`;
+}
+
+function createTreeWalker(container: DocumentFragment | Element): TreeWalker {
+  return container.ownerDocument.createTreeWalker(
+    container,
+    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
+  );
+}
+
+function extractAttributeName(s: string): string | undefined {
+  return s.match(ATTRIBUTE_NAME_PATTERN)?.[0];
 }
 
 function parseChildren(
@@ -378,7 +379,7 @@ function parseChildren(
           }
         }
         if ((currentNode as Element).hasAttributes()) {
-          parseAttributes(
+          collectAttributeHoles(
             currentNode as Element,
             strings,
             marker,
