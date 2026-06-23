@@ -11,13 +11,13 @@ describe('DOMTemplate', () => {
         <div id="a">hello</div>
       `;
 
-      expect(template.template.innerHTML).toStrictEqual(
+      expect(template['_template'].innerHTML).toStrictEqual(
         '<div id="a">hello</div>',
       );
-      expect(template.template.content.querySelector('#a')?.namespaceURI).toBe(
-        'http://www.w3.org/1999/xhtml',
-      );
-      expect(template.holes).toStrictEqual([]);
+      expect(
+        template['_template'].content.querySelector('#a')?.namespaceURI,
+      ).toBe('http://www.w3.org/1999/xhtml');
+      expect(template['_holes']).toStrictEqual([]);
     });
 
     it('creates a MathML template', () => {
@@ -25,11 +25,11 @@ describe('DOMTemplate', () => {
         <mn id="a">100</mn>
       `;
 
-      expect(template.template.innerHTML).toBe(`<mn id="a">100</mn>`);
-      expect(template.template.content.querySelector('#a')?.namespaceURI).toBe(
-        'http://www.w3.org/1998/Math/MathML',
-      );
-      expect(template.holes).toStrictEqual([]);
+      expect(template['_template'].innerHTML).toBe(`<mn id="a">100</mn>`);
+      expect(
+        template['_template'].content.querySelector('#a')?.namespaceURI,
+      ).toBe('http://www.w3.org/1998/Math/MathML');
+      expect(template['_holes']).toStrictEqual([]);
     });
 
     it('creates an SVG template', () => {
@@ -37,21 +37,23 @@ describe('DOMTemplate', () => {
         <rect id="a" width="100" height="100"></rect>
       `;
 
-      expect(template.template.innerHTML).toBe(
+      expect(template['_template'].innerHTML).toBe(
         '<rect id="a" width="100" height="100"></rect>',
       );
-      expect(template.template.content.querySelector('#a')?.namespaceURI).toBe(
-        'http://www.w3.org/2000/svg',
-      );
-      expect(template.holes).toStrictEqual([]);
+      expect(
+        template['_template'].content.querySelector('#a')?.namespaceURI,
+      ).toBe('http://www.w3.org/2000/svg');
+      expect(template['_holes']).toStrictEqual([]);
     });
 
     it('creates a text template', () => {
       const template = text`
         <div>hello</div>
       `;
-      expect(template.template.content.textContent).toBe('<div>hello</div>');
-      expect(template.holes).toStrictEqual([]);
+      expect(template['_template'].content.textContent).toBe(
+        '<div>hello</div>',
+      );
+      expect(template['_holes']).toStrictEqual([]);
     });
 
     it('throws for an invalid placeholder', () => {
