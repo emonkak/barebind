@@ -165,7 +165,7 @@ export class DOMTemplate {
       // children, or when the first child is a hole (comment placeholder that
       // will be replaced) so ChildNodePart has a preceding node for block
       // insertion and replacement.
-      fragment.insertBefore(document.createComment(''), fragment.firstChild);
+      fragment.prepend(document.createComment(''));
     }
 
     return new DOMBlock(fragment, parts);
