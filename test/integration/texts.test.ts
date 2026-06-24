@@ -94,7 +94,9 @@ describe('texts', () => {
 
   it('binds multiple text holes with a separator', async () => {
     const template = html`
-      <div>${'a'}b${'c'}</div>
+      <div>
+        ${'a'}b${'c'}
+      </div>
     `;
     await root.render(template).finished;
     expect(container.innerHTML).toBe('<div>abc</div>');
@@ -103,7 +105,9 @@ describe('texts', () => {
 
   it('binds multiple text nodes between constants', async () => {
     const template = html`
-      <div>a${'b'}c${'d'}e</div>
+      <div>
+        a${'b'}c${'d'}e
+      </div>
     `;
     await root.render(template).finished;
     expect(container.innerHTML).toBe('<div>abcde</div>');
