@@ -20,11 +20,11 @@ describe('DOMTemplate', () => {
       expect(template['_holes']).toStrictEqual([
         {
           type: 6, // HOLE_TYPE_TEXT
-          index: 1,
+          path: [0, 0],
         },
         {
           type: 6, // HOLE_TYPE_TEXT
-          index: 3,
+          path: [0, 2],
         },
       ]);
     });
@@ -47,15 +47,15 @@ describe('DOMTemplate', () => {
       expect(template['_holes']).toStrictEqual([
         {
           type: 6, // HOLE_TYPE_TEXT
-          index: 1,
+          path: [0, 0],
         },
         {
           type: 6, // HOLE_TYPE_TEXT
-          index: 5,
+          path: [2, 0],
         },
         {
           type: 6, // HOLE_TYPE_TEXT
-          index: 9,
+          path: [4, 0],
         },
       ]);
     });
@@ -76,11 +76,11 @@ describe('DOMTemplate', () => {
       expect(template['_holes']).toStrictEqual([
         {
           type: 6, // HOLE_TYPE_TEXT
-          index: 1,
+          path: [0, 0],
         },
         {
           type: 6, // HOLE_TYPE_TEXT
-          index: 3,
+          path: [0, 2],
         },
       ]);
     });
@@ -93,11 +93,11 @@ describe('DOMTemplate', () => {
       expect(template['_holes']).toStrictEqual([
         {
           type: 6, // HOLE_TYPE_TEXT
-          index: 1,
+          path: [1],
         },
         {
           type: 6, // HOLE_TYPE_TEXT
-          index: 3,
+          path: [3],
         },
       ]);
     });
@@ -110,11 +110,60 @@ describe('DOMTemplate', () => {
   });
 
   describe('render()', () => {
-    it('throws for an invalid template', () => {
+    it('climbs up from a nested hole to reach a top-level sibling', () => {
+      const element = document.createElement('template');
+      element.innerHTML = '<ul><li><span></span></li></ul><p></p>';
+      const template = new DOMTemplate(element, [
+        {
+          type: 2, // HOLE_TYPE_ELEMENT
+          path: [0, 0, 0], // span inside li inside ul
+        },
+        {
+          type: 2,
+          path: [1], // p at top level
+        },
+      ]);
+      const block = template.render();
+      expect(block.parts).toHaveLength(2);
+    });
+
+    it('throws when a hole path points to a non-existent node', () => {
       const template = new DOMTemplate(document.createElement('template'), [
         {
           type: 2, // HOLE_TYPE_ELEMENT
-          index: 0,
+          path: [0],
+        },
+      ]);
+      expect(() => {
+        template.render();
+      }).toThrow('There is no node that the hole indicates.');
+    });
+
+    it('throws when a sibling at the same level is missing', () => {
+      const element = document.createElement('template');
+      element.innerHTML = '<div><span></span></div>';
+      const template = new DOMTemplate(element, [
+        {
+          type: 2, // HOLE_TYPE_ELEMENT
+          path: [0, 0], // span
+        },
+        {
+          type: 2, // HOLE_TYPE_ELEMENT
+          path: [0, 1], // missing second child
+        },
+      ]);
+      expect(() => {
+        template.render();
+      }).toThrow('There is no node that the hole indicates.');
+    });
+
+    it('throws when a sibling is missing during descent', () => {
+      const element = document.createElement('template');
+      element.innerHTML = '<div><span></span></div>';
+      const template = new DOMTemplate(element, [
+        {
+          type: 2, // HOLE_TYPE_ELEMENT
+          path: [0, 1], // second child, but only one exists
         },
       ]);
       expect(() => {
