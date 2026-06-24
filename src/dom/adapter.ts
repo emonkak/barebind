@@ -1,6 +1,7 @@
 import type { HostAdapter, VPortal, VTemplate } from '../core.js';
+import { DOMBlock } from './block.js';
 import { PortalPart } from './part.js';
-import { DOMBlock, DOMTemplate } from './template.js';
+import { DOMTemplate } from './template.js';
 
 export class DOMAdapter implements HostAdapter {
   private readonly _document: Document;
