@@ -139,17 +139,21 @@ export class DOMTemplate {
     const parts: DOMPart[] = new Array(holes.length);
 
     if (holes.length > 0) {
-      const cursor = createCursor(fragment);
+      let currentNode: Node | null = fragment;
+      let currentPath: number[] = [];
 
       for (let i = 0, l = holes.length; i < l; i++) {
         const hole = holes[i]!;
-        if (!moveCursor(cursor, hole.path)) {
+        const nextNode = navigateNode(currentNode, currentPath, hole.path);
+        if (nextNode === null) {
           throw DOMAdapterError.withNode(
-            cursor.currentNode,
+            currentNode,
             'There is no node that the hole indicates. The template may have been modified.',
           );
         }
-        parts[i] = resolvePart(hole, cursor.currentNode);
+        currentNode = nextNode;
+        currentPath = hole.path;
+        parts[i] = resolvePart(hole, currentNode);
       }
     }
 
@@ -287,6 +291,10 @@ function extractAttributeName(s: string): string | undefined {
   return s.match(ATTRIBUTE_NAME_PATTERN)?.[0];
 }
 
+function incrementCursor(cursor: Cursor): void {
+  cursor.path[cursor.path.length - 1]!++;
+}
+
 function isFirstRootNodeHole(hole: Hole): boolean {
   return (
     hole.type === HOLE_TYPE_CHILD_NODE &&
@@ -295,19 +303,20 @@ function isFirstRootNodeHole(hole: Hole): boolean {
   );
 }
 
-function incrementCursor(cursor: Cursor): void {
-  cursor.path[cursor.path.length - 1]!++;
-}
-
-function moveCursor(cursor: Cursor, newPath: number[]): boolean {
-  const oldPath = cursor.path;
-  let currentNode: Node | null = cursor.currentNode;
+function navigateNode(
+  initialNode: Node,
+  oldPath: number[],
+  newPath: number[],
+): Node | null {
+  const oldLevel = oldPath.length;
+  const newLevel = newPath.length;
+  let currentNode: Node | null = initialNode;
 
   // Find the first level where paths differ.
   let prefixIndex = 0;
   while (
-    prefixIndex < oldPath.length &&
-    prefixIndex < newPath.length &&
+    prefixIndex < oldLevel &&
+    prefixIndex < newLevel &&
     oldPath[prefixIndex] === newPath[prefixIndex]
   ) {
     prefixIndex++;
@@ -316,54 +325,47 @@ function moveCursor(cursor: Cursor, newPath: number[]): boolean {
   // Go up from current node to the common ancestor.
   let pivotNode: Node | null = null;
   let pivotIndex: number = 0;
-  while (oldPath.length > prefixIndex) {
-    pivotIndex = oldPath.pop()!;
+  for (let i = oldLevel - 1; i >= prefixIndex; i--) {
+    pivotIndex = oldPath[i]!;
     pivotNode = currentNode;
-    currentNode = currentNode.parentNode;
-    if (currentNode === null) {
-      return false;
-    }
+    // SAFETY: The traversal always starts from the fragment root, and
+    // currentPath is the path from a previous successful traversal, so
+    // currentNode is always a descendant of the fragment. We never ascend
+    // past the fragment itself.
+    currentNode = currentNode.parentNode!;
   }
 
   // Move horizontally from the old child to the new target at the divergence
   // level.
   if (
     pivotNode !== null &&
-    prefixIndex < newPath.length &&
-    newPath[prefixIndex]! > pivotIndex
+    prefixIndex < newLevel &&
+    pivotIndex < newPath[prefixIndex]!
   ) {
     const targetIndex = newPath[prefixIndex]!;
-    const siblingSteps = targetIndex - pivotIndex;
     currentNode = pivotNode;
-    for (let i = 0; i < siblingSteps; i++) {
-      currentNode = currentNode.nextSibling;
-      if (currentNode === null) {
-        return false;
+    for (let i = pivotIndex; i < targetIndex; i++) {
+      if ((currentNode = currentNode.nextSibling) === null) {
+        return null;
       }
     }
-    oldPath.push(targetIndex);
     prefixIndex++;
   }
 
   // Descend from current node to the target.
   for (let i = prefixIndex; i < newPath.length; i++) {
-    const targetIndex = newPath[i]!;
-    currentNode = currentNode.firstChild;
-    if (currentNode === null) {
-      return false;
+    if ((currentNode = currentNode.firstChild) === null) {
+      return null;
     }
+    const targetIndex = newPath[i]!;
     for (let j = 0; j < targetIndex; j++) {
-      currentNode = currentNode.nextSibling;
-      if (currentNode === null) {
-        return false;
+      if ((currentNode = currentNode.nextSibling) === null) {
+        return null;
       }
     }
-    oldPath.push(targetIndex);
   }
 
-  cursor.currentNode = currentNode;
-
-  return true;
+  return currentNode;
 }
 
 function parseTemplate(
