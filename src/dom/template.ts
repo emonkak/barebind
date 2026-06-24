@@ -143,7 +143,7 @@ export class DOMTemplate {
 
       for (let i = 0, l = holes.length; i < l; i++) {
         const hole = holes[i]!;
-        if (!moveCursor(cursor, hole.path, fragment)) {
+        if (!moveCursor(cursor, hole.path)) {
           throw DOMAdapterError.withNode(
             cursor.currentNode,
             'There is no node that the hole indicates. The template may have been modified.',
@@ -299,18 +299,69 @@ function incrementCursor(cursor: Cursor): void {
   cursor.path[cursor.path.length - 1]!++;
 }
 
-function moveCursor(cursor: Cursor, newPath: number[], root: Node): boolean {
-  let newNode: Node | undefined = root;
+function moveCursor(cursor: Cursor, newPath: number[]): boolean {
+  const oldPath = cursor.path;
+  let currentNode: Node | null = cursor.currentNode;
 
-  for (const index of newPath) {
-    newNode = newNode.childNodes[index];
-    if (newNode === undefined) {
+  // Find the first level where paths differ.
+  let prefixIndex = 0;
+  while (
+    prefixIndex < oldPath.length &&
+    prefixIndex < newPath.length &&
+    oldPath[prefixIndex] === newPath[prefixIndex]
+  ) {
+    prefixIndex++;
+  }
+
+  // Go up from current node to the common ancestor.
+  let pivotNode: Node | null = null;
+  let pivotIndex: number = 0;
+  while (oldPath.length > prefixIndex) {
+    pivotIndex = oldPath.pop()!;
+    pivotNode = currentNode;
+    currentNode = currentNode.parentNode;
+    if (currentNode === null) {
       return false;
     }
   }
 
-  cursor.currentNode = newNode;
-  cursor.path = newPath;
+  // Move horizontally from the old child to the new target at the divergence
+  // level.
+  if (
+    pivotNode !== null &&
+    prefixIndex < newPath.length &&
+    newPath[prefixIndex]! > pivotIndex
+  ) {
+    const targetIndex = newPath[prefixIndex]!;
+    const siblingSteps = targetIndex - pivotIndex;
+    currentNode = pivotNode;
+    for (let i = 0; i < siblingSteps; i++) {
+      currentNode = currentNode.nextSibling;
+      if (currentNode === null) {
+        return false;
+      }
+    }
+    oldPath.push(targetIndex);
+    prefixIndex++;
+  }
+
+  // Descend from current node to the target.
+  for (let i = prefixIndex; i < newPath.length; i++) {
+    const targetIndex = newPath[i]!;
+    currentNode = currentNode.firstChild;
+    if (currentNode === null) {
+      return false;
+    }
+    for (let j = 0; j < targetIndex; j++) {
+      currentNode = currentNode.nextSibling;
+      if (currentNode === null) {
+        return false;
+      }
+    }
+    oldPath.push(targetIndex);
+  }
+
+  cursor.currentNode = currentNode;
 
   return true;
 }
