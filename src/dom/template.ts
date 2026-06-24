@@ -84,9 +84,6 @@ namespace Hole {
   export interface TextHole {
     type: typeof HOLE_TYPE_TEXT;
     index: number;
-    splitIndex: number;
-    leadingSpan: number;
-    trailingSpan: number;
   }
 }
 
@@ -150,20 +147,22 @@ export class DOMTemplate {
             );
           }
         }
-        parts[holeIndex] = resolvePart(hole, treeWalker);
+        parts[holeIndex] = resolvePart(hole, treeWalker.currentNode);
       }
     }
 
     if (
       fragment.childNodes.length === 0 ||
-      (holes.length > 0 && isFirstRootNodeHole(holes[0]!))
+      (holes.length > 0 &&
+        holes[0]!.type === HOLE_TYPE_CHILD_NODE &&
+        holes[0]!.index === 0)
     ) {
       // DOMBlock requires its `staticNodes` to be non-empty. Insert a
       // placeholder comment as a static anchor when the template has no
       // children, or when the first child is a hole (comment placeholder that
       // will be replaced) so ChildNodePart has a preceding node for block
       // insertion and replacement.
-      fragment.prepend(document.createComment(''));
+      fragment.insertBefore(document.createComment(''), fragment.firstChild);
     }
 
     return new DOMBlock(fragment, parts);
@@ -266,10 +265,6 @@ function extractAttributeName(s: string): string | undefined {
   return s.match(ATTRIBUTE_NAME_PATTERN)?.[0];
 }
 
-function isFirstRootNodeHole(hole: Hole): boolean {
-  return hole.type === HOLE_TYPE_CHILD_NODE && hole.index === 0;
-}
-
 function parseTemplate(
   strings: readonly string[],
   values: readonly unknown[],
@@ -283,7 +278,7 @@ function parseTemplate(
 
   while (currentNode !== null) {
     switch (currentNode.nodeType) {
-      case Node.ELEMENT_NODE: {
+      case Node.ELEMENT_NODE:
         DEBUG: {
           if ((currentNode as Element).localName.includes(marker)) {
             throw DOMAdapterError.withNode(
@@ -302,8 +297,7 @@ function parseTemplate(
           );
         }
         break;
-      }
-      case Node.COMMENT_NODE: {
+      case Node.COMMENT_NODE:
         if (
           stripTrailingSlash((currentNode as Comment).data).trim() === marker
         ) {
@@ -323,32 +317,39 @@ function parseTemplate(
           }
         }
         break;
-      }
       case Node.TEXT_NODE: {
         const components = (currentNode as Text).data
           .split(marker)
           .map(stripWhitespaces);
-        const wholeText = components.join('');
-        const tail = components.length - 1;
+        const suffixIndex = components.length - 1;
+        const suffixComponent = components[suffixIndex]!;
 
-        for (let i = 1; i <= tail; i++) {
+        for (let i = 0; i < suffixIndex; i++) {
+          const prefixComponent = components[i]!;
+          if (prefixComponent !== '') {
+            const prefixNode = currentNode;
+            currentNode = (currentNode as Text).splitText(0);
+            (prefixNode as Text).data = prefixComponent;
+            treeWalker.nextNode();
+            index++;
+          }
           holes.push({
             type: HOLE_TYPE_TEXT,
             index,
-            splitIndex: i - 1,
-            leadingSpan: components[i - 1]!.length,
-            trailingSpan: i < tail ? 0 : components[i]!.length,
           });
+          currentNode = (currentNode as Text).splitText(0);
+          treeWalker.nextNode();
+          index++;
         }
 
-        if (wholeText === '' && components.length === 1) {
-          const previousNode = currentNode as Text;
-          currentNode = treeWalker.nextNode();
-          (previousNode as Text).remove();
+        if (suffixComponent === '') {
+          const lookaheadNode = treeWalker.nextNode();
+          (currentNode as Text).remove();
+          currentNode = lookaheadNode;
           continue;
         }
 
-        (currentNode as Text).data = wholeText;
+        (currentNode as Text).data = suffixComponent;
         break;
       }
     }
@@ -367,44 +368,29 @@ function parseTemplate(
   return new DOMTemplate(template, holes);
 }
 
-function resolvePart(hole: Hole, treeWalker: TreeWalker): DOMPart {
-  let currentNode = treeWalker.currentNode;
+function resolvePart(hole: Hole, node: Node): DOMPart {
   switch (hole.type) {
     case HOLE_TYPE_ATTRIBUTE:
       switch (hole.name.toLowerCase()) {
         case 'class':
-          return new ClassPart(currentNode as Element, hole.name);
+          return new ClassPart(node as Element, hole.name);
         case 'style':
-          return new StylePart(currentNode as Element, hole.name);
+          return new StylePart(node as Element, hole.name);
         default:
-          return new AttributePart(currentNode as Element, hole.name);
+          return new AttributePart(node as Element, hole.name);
       }
     case HOLE_TYPE_EVENT:
-      return new EventPart(currentNode as Element, hole.name);
+      return new EventPart(node as Element, hole.name);
     case HOLE_TYPE_CHILD_NODE:
-      return new ChildNodePart(currentNode as Comment);
+      return new ChildNodePart(node as Comment);
     case HOLE_TYPE_ELEMENT:
-      return new ElementPart(currentNode as Element);
+      return new ElementPart(node as Element);
     case HOLE_TYPE_LIVE:
-      return new LivePart(currentNode as Element, hole.name);
+      return new LivePart(node as Element, hole.name);
     case HOLE_TYPE_PROPERTY:
-      return new PropertyPart(currentNode as Element, hole.name);
-    case HOLE_TYPE_TEXT: {
-      if (hole.splitIndex > 0) {
-        currentNode = (currentNode as Text).splitText(0);
-        treeWalker.currentNode = currentNode;
-      }
-      if (hole.leadingSpan > 0) {
-        currentNode = (currentNode as Text).splitText(hole.leadingSpan);
-        treeWalker.currentNode = currentNode;
-      }
-      const part = new CharacterDataPart(currentNode as Text);
-      if (hole.trailingSpan > 0) {
-        currentNode = (currentNode as Text).splitText(0);
-        treeWalker.currentNode = currentNode;
-      }
-      return part;
-    }
+      return new PropertyPart(node as Element, hole.name);
+    case HOLE_TYPE_TEXT:
+      return new CharacterDataPart(node as Text);
   }
 }
 
