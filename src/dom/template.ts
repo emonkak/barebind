@@ -37,6 +37,11 @@ const ATTRIBUTE_NAME_PATTERN = new RegExp(
   'u',
 );
 
+interface Cursor {
+  node: Node;
+  path: number[];
+}
+
 type Hole =
   | Hole.AttributeHole
   | Hole.ChildNodeHole
@@ -49,41 +54,41 @@ type Hole =
 namespace Hole {
   export interface AttributeHole {
     type: typeof HOLE_TYPE_ATTRIBUTE;
-    index: number;
+    path: number[];
     name: string;
   }
 
   export interface ChildNodeHole {
     type: typeof HOLE_TYPE_CHILD_NODE;
-    index: number;
+    path: number[];
   }
 
   export interface ElementHole {
     type: typeof HOLE_TYPE_ELEMENT;
-    index: number;
+    path: number[];
   }
 
   export interface EventHole {
     type: typeof HOLE_TYPE_EVENT;
-    index: number;
+    path: number[];
     name: string;
   }
 
   export interface LiveHole {
     type: typeof HOLE_TYPE_LIVE;
-    index: number;
+    path: number[];
     name: string;
   }
 
   export interface PropertyHole {
     type: typeof HOLE_TYPE_PROPERTY;
-    index: number;
+    path: number[];
     name: string;
   }
 
   export interface TextHole {
     type: typeof HOLE_TYPE_TEXT;
-    index: number;
+    path: number[];
   }
 }
 
@@ -134,39 +139,52 @@ export class DOMTemplate {
     const parts: DOMPart[] = new Array(holes.length);
 
     if (holes.length > 0) {
-      const treeWalker = createTreeWalker(fragment);
-      let nodeIndex = 0;
+      const cursor = createCursor(fragment);
 
-      for (let holeIndex = 0, l = holes.length; holeIndex < l; holeIndex++) {
-        const hole = holes[holeIndex]!;
-        for (; nodeIndex <= hole.index; nodeIndex++) {
-          if (treeWalker.nextNode() === null) {
-            throw DOMAdapterError.withNode(
-              treeWalker.currentNode,
-              'There is no node that the hole indicates. The template may have been modified.',
-            );
-          }
+      for (let i = 0, l = holes.length; i < l; i++) {
+        const hole = holes[i]!;
+        if (!moveCursor(cursor, hole.path, fragment)) {
+          throw DOMAdapterError.withNode(
+            cursor.currentNode,
+            'There is no node that the hole indicates. The template may have been modified.',
+          );
         }
-        parts[holeIndex] = resolvePart(hole, treeWalker.currentNode);
+        parts[i] = resolvePart(hole, cursor.currentNode);
       }
     }
 
     if (
       fragment.childNodes.length === 0 ||
-      (holes.length > 0 &&
-        holes[0]!.type === HOLE_TYPE_CHILD_NODE &&
-        holes[0]!.index === 0)
+      (holes.length > 0 && isFirstRootNodeHole(holes[0]!))
     ) {
       // DOMBlock requires its `staticNodes` to be non-empty. Insert a
       // placeholder comment as a static anchor when the template has no
       // children, or when the first child is a hole (comment placeholder that
       // will be replaced) so ChildNodePart has a preceding node for block
       // insertion and replacement.
-      fragment.insertBefore(document.createComment(''), fragment.firstChild);
+      fragment.prepend(document.createComment(''));
     }
 
     return new DOMBlock(fragment, parts);
   }
+}
+
+function advanceCursor(cursor: Cursor): Node | null {
+  let currentNode: Node | null = cursor.node;
+  let nextNode: Node | null;
+  if ((nextNode = currentNode.firstChild) !== null) {
+    cursor.path.push(0);
+  } else {
+    while ((nextNode = currentNode.nextSibling) === null) {
+      if ((currentNode = currentNode.parentNode) === null) {
+        return null;
+      }
+      cursor.path.pop();
+    }
+    incrementCursor(cursor);
+  }
+  cursor.node = nextNode;
+  return nextNode;
 }
 
 function collectAttributeHoles(
@@ -174,7 +192,7 @@ function collectAttributeHoles(
   strings: readonly string[],
   marker: string,
   holes: Hole[],
-  index: number,
+  path: number[],
 ): void {
   for (const name of element.getAttributeNames()) {
     const value = element.getAttribute(name)!;
@@ -183,7 +201,7 @@ function collectAttributeHoles(
     if (name === marker && value === '') {
       hole = {
         type: HOLE_TYPE_ELEMENT,
-        index,
+        path: path.slice(),
       };
     } else if (value === marker) {
       const caseSensitiveName = extractAttributeName(strings[holes.length]!);
@@ -201,28 +219,28 @@ function collectAttributeHoles(
         case '@':
           hole = {
             type: HOLE_TYPE_EVENT,
-            index,
+            path: path.slice(),
             name: caseSensitiveName.slice(1),
           };
           break;
         case '$':
           hole = {
             type: HOLE_TYPE_LIVE,
-            index,
+            path: path.slice(),
             name: caseSensitiveName.slice(1),
           };
           break;
         case '.':
           hole = {
             type: HOLE_TYPE_PROPERTY,
-            index,
+            path: path.slice(),
             name: caseSensitiveName.slice(1),
           };
           break;
         default:
           hole = {
             type: HOLE_TYPE_ATTRIBUTE,
-            index,
+            path: path.slice(),
             name: caseSensitiveName,
           };
           break;
@@ -250,19 +268,51 @@ function collectAttributeHoles(
   }
 }
 
+function createCursor(node: Node): Cursor {
+  return {
+    node,
+    path: [],
+  };
+}
+
 function createMarker(placeholder: string): string {
   return `?${placeholder}?`;
 }
 
-function createTreeWalker(container: DocumentFragment | Element): TreeWalker {
-  return container.ownerDocument.createTreeWalker(
-    container,
-    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
-  );
+function decrementCursor(cursor: Cursor): void {
+  cursor.path[cursor.path.length - 1]!--;
 }
 
 function extractAttributeName(s: string): string | undefined {
   return s.match(ATTRIBUTE_NAME_PATTERN)?.[0];
+}
+
+function isFirstRootNodeHole(hole: Hole): boolean {
+  return (
+    hole.type === HOLE_TYPE_CHILD_NODE &&
+    hole.path.length === 1 &&
+    hole.path[0] === 0
+  );
+}
+
+function incrementCursor(cursor: Cursor): void {
+  cursor.path[cursor.path.length - 1]!++;
+}
+
+function moveCursor(cursor: Cursor, newPath: number[], root: Node): boolean {
+  let newNode: Node | undefined = root;
+
+  for (const index of newPath) {
+    newNode = newNode.childNodes[index];
+    if (newNode === undefined) {
+      return false;
+    }
+  }
+
+  cursor.currentNode = newNode;
+  cursor.path = newPath;
+
+  return true;
 }
 
 function parseTemplate(
@@ -271,10 +321,9 @@ function parseTemplate(
   template: HTMLTemplateElement,
   marker: string,
 ): DOMTemplate {
-  const treeWalker = createTreeWalker(template.content);
+  const cursor = createCursor(template.content);
   const holes: Hole[] = [];
-  let currentNode = treeWalker.nextNode();
-  let index = 0;
+  let currentNode = advanceCursor(cursor);
 
   while (currentNode !== null) {
     switch (currentNode.nodeType) {
@@ -293,7 +342,7 @@ function parseTemplate(
             strings,
             marker,
             holes,
-            index,
+            cursor.path,
           );
         }
         break;
@@ -303,7 +352,7 @@ function parseTemplate(
         ) {
           holes.push({
             type: HOLE_TYPE_CHILD_NODE,
-            index,
+            path: cursor.path.slice(),
           });
           (currentNode as Comment).data = '';
         } else {
@@ -330,20 +379,19 @@ function parseTemplate(
             const prefixNode = currentNode;
             currentNode = (currentNode as Text).splitText(0);
             (prefixNode as Text).data = prefixComponent;
-            treeWalker.nextNode();
-            index++;
+            advanceCursor(cursor);
           }
           holes.push({
             type: HOLE_TYPE_TEXT,
-            index,
+            path: cursor.path.slice(),
           });
           currentNode = (currentNode as Text).splitText(0);
-          treeWalker.nextNode();
-          index++;
+          advanceCursor(cursor);
         }
 
         if (suffixComponent === '') {
-          const lookaheadNode = treeWalker.nextNode();
+          decrementCursor(cursor);
+          const lookaheadNode = advanceCursor(cursor);
           (currentNode as Text).remove();
           currentNode = lookaheadNode;
           continue;
@@ -353,9 +401,7 @@ function parseTemplate(
         break;
       }
     }
-
-    currentNode = treeWalker.nextNode();
-    index++;
+    currentNode = advanceCursor(cursor);
   }
 
   if (holes.length !== values.length) {
