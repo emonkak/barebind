@@ -156,9 +156,7 @@ export class DOMTemplate {
 
     if (
       fragment.childNodes.length === 0 ||
-      (holes.length > 0 &&
-        holes[0]!.type === HOLE_TYPE_CHILD_NODE &&
-        holes[0]!.index === 0)
+      (holes.length > 0 && isFirstRootNodeHole(holes[0]!))
     ) {
       // DOMBlock requires its `staticNodes` to be non-empty. Insert a
       // placeholder comment as a static anchor when the template has no
@@ -266,6 +264,10 @@ function createTreeWalker(container: DocumentFragment | Element): TreeWalker {
 
 function extractAttributeName(s: string): string | undefined {
   return s.match(ATTRIBUTE_NAME_PATTERN)?.[0];
+}
+
+function isFirstRootNodeHole(hole: Hole): boolean {
+  return hole.type === HOLE_TYPE_CHILD_NODE && hole.index === 0;
 }
 
 function parseTemplate(
