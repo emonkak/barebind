@@ -1,5 +1,6 @@
 import { mount, patch, unmount } from '../commit.js';
 import {
+  type Container,
   type Dispatcher,
   type RenderRoot,
   Root,
@@ -12,14 +13,14 @@ import { AllLanes } from '../lane.js';
 import { PortalPart } from './part.js';
 
 export class DOMRoot {
-  private readonly _container: Element;
+  private readonly _container: Container;
   private readonly _dispatcher: Dispatcher;
   private readonly _root: RenderRoot = {
     type: Root,
     children: [undefined],
   };
 
-  constructor(container: Element, dispatcher: Dispatcher) {
+  constructor(container: Container, dispatcher: Dispatcher) {
     this._container = container;
     this._dispatcher = dispatcher;
   }
@@ -31,7 +32,7 @@ export class DOMRoot {
         pendingLanes: AllLanes,
         prepare: (_lanes, renderer) => {
           const element = wrap(value);
-          const scope = Scope.root();
+          const scope = Scope.root(this);
           const oldChild = this._root.children[0];
           const newChild =
             oldChild !== undefined

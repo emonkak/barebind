@@ -1,32 +1,32 @@
-import type { Component, Scope } from './core.js';
+import type { Owner, Scope } from './core.js';
 
 export function assertUnreachable(value: never): never {
   /** v8 ignore next @preserve */
   throw new Error(`Unreachable case: ${JSON.stringify(value)}`);
 }
 
-export function formatComponentStack(
-  componentStack: Component<unknown>[],
-): string {
-  const tail = componentStack.length - 1;
-  return componentStack
-    .map((type, i) => {
+export function formatOwnerStack(ownerStack: Owner[]): string {
+  const tail = ownerStack.length - 1;
+  return ownerStack
+    .map((owner, i) => {
       const prefix = i === tail ? '' : '   '.repeat(tail - i - 1) + '`- ';
       const suffix = i === 0 ? ' <- ERROR occurred here!' : '';
-      return prefix + type.name + suffix;
+      const name =
+        typeof owner === 'function' ? owner.name : owner.constructor.name;
+      return prefix + name + suffix;
     })
     .reverse()
     .join('\n');
 }
 
-export function getComponentStack(scope: Scope): Component<unknown>[] {
-  const componentStack: Component<unknown>[] = [];
+export function getOwnerStack(scope: Scope): Owner[] {
+  const ownerStack: Owner[] = [];
   let current: Scope | null = scope;
 
-  while (current !== null && current.owner !== null) {
-    componentStack.push(current.owner!);
+  do {
+    ownerStack.push(current.owner);
     current = current.parent;
-  }
+  } while (current !== null);
 
-  return componentStack;
+  return ownerStack;
 }
