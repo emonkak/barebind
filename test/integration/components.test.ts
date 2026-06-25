@@ -130,8 +130,9 @@ describe('components', () => {
       expect(caughtError!.message).toBe(
         [
           'An error occurred during rendering.',
-          App.name,
-          '`- Child2 <- ERROR occurred here!',
+          DOMRoot.name,
+          `\`- ${App.name}`,
+          `   \`- ${Child.name} <- ERROR occurred here!`,
         ].join('\n'),
       );
       expect(caughtError!.cause).toBeInstanceOf(Error);
@@ -162,7 +163,8 @@ describe('components', () => {
       expect(caughtError!.message).toBe(
         [
           'An error occurred during rendering.',
-          `${App.name} <- ERROR occurred here!`,
+          DOMRoot.name,
+          `\`- ${App.name} <- ERROR occurred here!`,
         ].join('\n'),
       );
       expect(caughtError!.cause).toBeInstanceOf(Error);

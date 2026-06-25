@@ -100,6 +100,8 @@ export type Mutation =
       node: RenderNode;
     };
 
+export type Owner = object;
+
 export interface Part {
   splitPart(): Part;
   mountBlock(block: Block, afterNode: ChildNode | null): void;
@@ -255,24 +257,24 @@ export class Ref<T> implements Bindable {
 }
 
 export class Scope {
-  readonly parent: Scope | null;
+  readonly owner: Owner;
   readonly level: number;
-  readonly owner: Component<unknown> | null = null;
+  readonly parent: Scope | null;
   readonly instances: object[];
 
-  static root(): Scope {
-    return new Scope(null, 0, null, []);
+  static root(owner: Owner): Scope {
+    return new Scope(owner, 0, null);
   }
 
   private constructor(
-    parent: Scope | null,
+    owner: Owner,
     level: number,
-    owner: Component<unknown> | null,
-    instances: object[],
+    parent: Scope | null,
+    instances: object[] = [],
   ) {
-    this.parent = parent;
-    this.level = level;
     this.owner = owner;
+    this.level = level;
+    this.parent = parent;
     this.instances = instances;
     DEBUG: {
       Object.freeze(this);
@@ -281,15 +283,15 @@ export class Scope {
 
   detach(): Scope {
     return new Scope(
-      null,
-      this.level,
       this.owner,
+      this.level,
+      null,
       Object.freeze([] as object[]) as object[],
     );
   }
 
   enter(owner: Component<unknown>): Scope {
-    return new Scope(this, this.level + 1, owner, []);
+    return new Scope(owner, this.level + 1, this);
   }
 }
 
