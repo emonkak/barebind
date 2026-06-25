@@ -7,6 +7,7 @@ import {
   MUTATION_TYPE_REMOVE,
   MUTATION_TYPE_UPDATE,
   MUTATION_TYPE_UPDATE_AND_MOVE,
+  type Mutation,
   type Part,
   type Renderer,
   type RenderNode,
@@ -108,10 +109,6 @@ export class Runtime implements Renderer, Dispatcher {
           parent,
           children: oldNode.children.slice(),
           dirty: true,
-          state: {
-            handle: (oldNode as RenderNode.ComponentNode).state.handle,
-            scope,
-          },
         };
         const subScope = scope.enter(newElement.type);
         newNode.children[0] = this.diff(
@@ -125,6 +122,7 @@ export class Runtime implements Renderer, Dispatcher {
           0,
           newNode,
         );
+        newNode.state.scope = scope;
         return newNode;
       }
       case VNODE_KIND_FRAGMENT: {
@@ -137,9 +135,8 @@ export class Runtime implements Renderer, Dispatcher {
           parent,
           children: new Array(newElement.children.length),
           dirty: true,
-          state: { mutations: [] },
         };
-        this._diffChildren(
+        newNode.state.mutations = this._diffChildren(
           oldNode as RenderNode.FragmentNode,
           newNode,
           newElement.children,
@@ -354,16 +351,16 @@ export class Runtime implements Renderer, Dispatcher {
   }
 
   private _diffChildren(
-    oldParent: RenderNode.FragmentNode,
-    newParent: RenderNode.FragmentNode,
+    oldParent: RenderNode,
+    newParent: RenderNode,
     newElements: VElement[],
     scope: Scope,
-  ): void {
+  ): Mutation[] {
     const oldChildren: (RenderNode | undefined)[] = oldParent.children.slice();
     const newChildren = newParent.children;
     const oldKeys = oldChildren.map((child) => child!.key);
     const newKeys = newElements.map((element) => element.key);
-    const { mutations } = newParent.state;
+    const newMutations: Mutation[] = [];
 
     let oldHead = 0;
     let newHead = 0;
@@ -377,7 +374,7 @@ export class Runtime implements Renderer, Dispatcher {
         while (oldHead <= oldTail) {
           const oldChild = oldChildren[oldHead];
           if (oldChild !== undefined) {
-            mutations.push({
+            newMutations.push({
               type: MUTATION_TYPE_REMOVE,
               node: oldChild,
             });
@@ -395,7 +392,7 @@ export class Runtime implements Renderer, Dispatcher {
             newParent,
             newParent.part.splitPart(),
           );
-          mutations.push({
+          newMutations.push({
             type: MUTATION_TYPE_INSERT,
             node: newChild,
             afterNode: newChildren[newTail + 1],
@@ -418,7 +415,7 @@ export class Runtime implements Renderer, Dispatcher {
           newHead,
           newParent,
         );
-        mutations.push({
+        newMutations.push({
           type: MUTATION_TYPE_UPDATE,
           oldNode: oldChild,
           newNode: newChild,
@@ -436,7 +433,7 @@ export class Runtime implements Renderer, Dispatcher {
           newTail,
           newParent,
         );
-        mutations.push({
+        newMutations.push({
           type: MUTATION_TYPE_UPDATE,
           oldNode: oldChild,
           newNode: newChild,
@@ -463,14 +460,14 @@ export class Runtime implements Renderer, Dispatcher {
           newTail,
           newParent,
         );
-        mutations.push({
+        newMutations.push({
           type: MUTATION_TYPE_UPDATE_AND_MOVE,
           oldNode: oldChildren[oldTail]!,
           newNode: tailChild,
           afterNode: oldChildren[oldHead],
           index: newHead,
         });
-        mutations.push({
+        newMutations.push({
           type: MUTATION_TYPE_UPDATE_AND_MOVE,
           oldNode: oldChildren[oldHead]!,
           newNode: headChild,
@@ -488,14 +485,14 @@ export class Runtime implements Renderer, Dispatcher {
 
         if (!newKeyToIndexMap.has(oldKeys[oldHead]!)) {
           const oldChild = oldChildren[oldHead]!;
-          mutations.push({
+          newMutations.push({
             type: MUTATION_TYPE_REMOVE,
             node: oldChild,
           });
           oldHead++;
         } else if (!newKeyToIndexMap.has(oldKeys[oldTail]!)) {
           const oldChild = oldChildren[oldTail]!;
-          mutations.push({
+          newMutations.push({
             type: MUTATION_TYPE_REMOVE,
             node: oldChild,
           });
@@ -517,7 +514,7 @@ export class Runtime implements Renderer, Dispatcher {
               newTail,
               newParent,
             );
-            mutations.push({
+            newMutations.push({
               type: MUTATION_TYPE_UPDATE_AND_MOVE,
               oldNode: oldChildren[oldIndex]!,
               newNode: newChild,
@@ -534,7 +531,7 @@ export class Runtime implements Renderer, Dispatcher {
               newParent,
               newParent.part.splitPart(),
             );
-            mutations.push({
+            newMutations.push({
               type: MUTATION_TYPE_INSERT,
               node: newChild,
               afterNode: newChildren[newTail + 1],
@@ -546,6 +543,8 @@ export class Runtime implements Renderer, Dispatcher {
         }
       }
     }
+
+    return newMutations;
   }
 
   private async _flush(): Promise<void> {
