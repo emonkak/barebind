@@ -65,7 +65,6 @@ export interface HostAdapter {
     options?: SchedulerPostTaskOptions,
   ): Promise<void>;
   startViewTransition(update: () => void, types: string[]): Promise<void>;
-  yieldToMain(): Promise<void>;
 }
 
 export interface Injectable<TInstance, TDefault> {

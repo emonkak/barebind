@@ -573,19 +573,12 @@ export class Runtime implements Renderer, Dispatcher {
 
       try {
         const commitBatch: Commit[] = [];
-        const flushSync = (this._flushLanes & SyncLane) === SyncLane;
 
         for (const update of this._updateBatch) {
           const { lanes, transaction } = update;
-
           if ((transaction.pendingLanes & lanes) === NoLanes) {
             continue;
           }
-
-          if (!flushSync && commitBatch.length > 0) {
-            await this._adapter.yieldToMain();
-          }
-
           commitBatch.push(transaction.prepare(this._flushLanes, this));
         }
 
@@ -595,7 +588,7 @@ export class Runtime implements Renderer, Dispatcher {
               commit();
             }
           };
-          if (flushSync) {
+          if ((this._flushLanes & SyncLane) === SyncLane) {
             callback();
           } else if (this._flushLanes & ViewTransitionLane) {
             await this._adapter.startViewTransition(

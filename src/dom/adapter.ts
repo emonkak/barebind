@@ -100,14 +100,6 @@ export class DOMAdapter implements HostAdapter {
       ? this._document.startViewTransition({ update, types }).updateCallbackDone
       : Promise.resolve().then(update);
   }
-
-  yieldToMain(): Promise<void> {
-    return typeof window.scheduler?.yield === 'function'
-      ? scheduler.yield()
-      : new Promise((resolve) => {
-          setTimeout(resolve);
-        });
-  }
 }
 
 function generateUniqueIdentifier(length: number): string {
