@@ -258,31 +258,38 @@ export class Scope {
   readonly parent: Scope | null;
   readonly level: number;
   readonly owner: Component<unknown> | null = null;
-  readonly instances: object[] = [];
+  readonly instances: object[];
 
   static root(): Scope {
-    return new Scope(null, 0, null);
+    return new Scope(null, 0, null, []);
   }
 
   private constructor(
     parent: Scope | null,
     level: number,
     owner: Component<unknown> | null,
+    instances: object[],
   ) {
     this.parent = parent;
     this.level = level;
     this.owner = owner;
+    this.instances = instances;
     DEBUG: {
       Object.freeze(this);
     }
   }
 
   detach(): Scope {
-    return new Scope(null, this.level, this.owner);
+    return new Scope(
+      null,
+      this.level,
+      this.owner,
+      Object.freeze([] as object[]) as object[],
+    );
   }
 
   enter(owner: Component<unknown>): Scope {
-    return new Scope(this, this.level + 1, owner);
+    return new Scope(this, this.level + 1, owner, []);
   }
 }
 
