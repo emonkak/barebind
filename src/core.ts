@@ -33,10 +33,10 @@ export type Commit = () => void;
 export interface Component<TProps> {
   (props: TProps): VComponent<TProps>;
   arePropsEqual(oldProps: TProps, newProps: TProps): boolean;
-  createHandle(dispatcher: Dispatcher): ComponentHandle<TProps>;
+  createInstance(dispatcher: Dispatcher): ComponentInstance<TProps>;
 }
 
-export interface ComponentHandle<TProps> {
+export interface ComponentInstance<TProps> {
   readonly pendingLanes: Lanes;
   render(props: TProps, scope: Scope, lanes: Lanes): VElement;
   connect(node: RenderNode.ComponentNode<TProps>): void;
@@ -135,7 +135,7 @@ export namespace RenderNode {
 
   export interface ComponentNode<TProps = unknown> extends Node<VComponent> {
     state: {
-      handle: ComponentHandle<TProps>;
+      instance: ComponentInstance<TProps>;
       scope: Scope;
     };
   }

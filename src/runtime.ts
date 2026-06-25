@@ -90,7 +90,7 @@ export class Runtime implements Renderer, Dispatcher {
       }
       case VNODE_KIND_COMPONENT: {
         if (
-          ((oldNode as RenderNode.ComponentNode).state.handle.pendingLanes &
+          ((oldNode as RenderNode.ComponentNode).state.instance.pendingLanes &
             this._flushLanes) ===
             NoLanes &&
           (oldNode as RenderNode.ComponentNode).type.arePropsEqual(
@@ -113,7 +113,7 @@ export class Runtime implements Renderer, Dispatcher {
         const subScope = scope.enter(newElement.type);
         newNode.children[0] = this.diff(
           newNode.children[0]!,
-          newNode.state.handle.render(
+          newNode.state.instance.render(
             newNode.props,
             subScope,
             this._flushLanes,
@@ -216,13 +216,13 @@ export class Runtime implements Renderer, Dispatcher {
           children: new Array(1),
           dirty: true,
           state: {
-            handle: element.type.createHandle(this),
+            instance: element.type.createInstance(this),
             scope,
           },
         };
         const subScope = scope.enter(element.type);
         node.children[0] = this.render(
-          node.state.handle.render(node.props, subScope, this._flushLanes),
+          node.state.instance.render(node.props, subScope, this._flushLanes),
           subScope,
           0,
           node,
