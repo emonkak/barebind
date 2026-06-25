@@ -293,6 +293,31 @@ describe('components', () => {
 
       await expect(root.render(App({})).finished).rejects.toThrow(RenderError);
     });
+
+    it('throws when providing the instance after rendering', async () => {
+      const App = createComponent(function App() {
+        this.useEffect(() => {
+          this.provide(new Context('a'));
+        });
+        return null;
+      });
+
+      await expect(root.render(App({})).finished).rejects.toThrow(TypeError);
+    });
+
+    it('throws inject the instance after rendering', async () => {
+      const App = createComponent(function App() {
+        this.provide(new Context('a'));
+        this.useEffect(() => {
+          this.inject(Context);
+        });
+        return null;
+      });
+
+      await expect(root.render(App({})).finished).rejects.toThrow(
+        ReferenceError,
+      );
+    });
   });
 
   describe('state hooks', () => {
