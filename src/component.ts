@@ -511,7 +511,14 @@ class UpdateComponent implements UpdateTransaction {
       newNode,
     );
     return () => {
-      patch(oldNode, newNode);
+      // Read _connectedNode at commit time, not captured from prepare().
+      // A prior transaction's commit (e.g. triggered by a lane added to
+      // pendingLanes during render) may have already patched and replaced
+      // the connected node, making the captured reference stale.
+      const oldNode = this._handle._connectedNode;
+      if (oldNode !== null) {
+        patch(oldNode, newNode);
+      }
     };
   }
 }
