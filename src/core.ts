@@ -123,12 +123,12 @@ export namespace RenderNode {
     type: TElement['type'];
     props: TElement['props'];
     key: TElement['key'];
-    part: Part;
     index: number;
     parent: RenderNode | RenderRoot;
     children: RenderNode[];
-    dirty: boolean;
+    part: Part;
     state: unknown;
+    dirty: boolean;
   }
 
   export interface BindNode extends Node<VBind> {
