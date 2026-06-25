@@ -135,6 +135,12 @@ export namespace RenderNode {
     state: null;
   }
 
+  export interface BlockNode extends Node<VPortal | VTemplate> {
+    state: {
+      block: Block;
+    };
+  }
+
   export interface ComponentNode<TProps = unknown> extends Node<VComponent> {
     state: {
       instance: ComponentInstance<TProps>;
@@ -145,12 +151,6 @@ export namespace RenderNode {
   export interface FragmentNode extends Node<VFragment> {
     state: {
       mutations: Mutation[];
-    };
-  }
-
-  export interface BlockNode extends Node<VPortal | VTemplate> {
-    state: {
-      block: Block;
     };
   }
 }
