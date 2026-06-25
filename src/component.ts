@@ -3,7 +3,7 @@ import { areDependenciesChanged } from './compare.js';
 import {
   type Commit,
   type Component,
-  type ComponentHandle,
+  type ComponentInstance,
   type Dispatcher,
   type Injectable,
   type Lanes,
@@ -119,8 +119,8 @@ namespace Hook {
 
 type Usable<TReturn> = HookObject<TReturn> | HookFunction<TReturn>;
 
-export class FunctionComponentHandle<TProps = any, TReturn = unknown>
-  implements ComponentHandle<TProps>
+export class FunctionComponent<TProps = any, TReturn = unknown>
+  implements ComponentInstance<TProps>
 {
   /** @internal */
   readonly _componentFn: ComponentFunction<TProps, TReturn>;
@@ -188,7 +188,7 @@ export class FunctionComponentHandle<TProps = any, TReturn = unknown>
 }
 
 export class RenderContext {
-  private readonly _handle: FunctionComponentHandle;
+  private readonly _instance: FunctionComponent;
   private readonly _lanes: Lanes;
   /** @internal */
   readonly _hooks: Hook[];
@@ -198,19 +198,19 @@ export class RenderContext {
   _scope: Scope;
 
   constructor(
-    instance: FunctionComponentHandle,
+    instance: FunctionComponent,
     hooks: Hook[],
     scope: Scope,
     lanes: Lanes,
   ) {
-    this._handle = instance;
+    this._instance = instance;
     this._hooks = hooks;
     this._scope = scope;
     this._lanes = lanes;
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    const instance = this._handle;
+    const instance = this._instance;
     const handle = instance._dispatcher.schedule(
       new UpdateComponent(instance, this._scope.level),
       options,
@@ -247,7 +247,7 @@ export class RenderContext {
   }
 
   startTransition<T>(callback: (transition: number) => T): T {
-    return callback(this._handle._dispatcher.nextTransition());
+    return callback(this._instance._dispatcher.nextTransition());
   }
 
   use<TReturn>(usable: Usable<TReturn>): TReturn {
@@ -297,7 +297,7 @@ export class RenderContext {
     } else {
       currentHook = {
         type: IdType,
-        id: this._handle._dispatcher.nextIdentifier(),
+        id: this._instance._dispatcher.nextIdentifier(),
       };
     }
 
@@ -456,31 +456,31 @@ export function createComponent<TProps = {}, TReturn = unknown>(
   componentFn: ComponentFunction<TProps, TReturn>,
   { arePropsEqual = Object.is }: ComponentOptions<TProps> = {},
 ): Component<TProps> {
-  function FunctionComponent(props: TProps): VComponent<TProps> {
-    return new VNode(VNODE_KIND_COMPONENT, FunctionComponent, props, []);
+  function Component(props: TProps): VComponent<TProps> {
+    return new VNode(VNODE_KIND_COMPONENT, Component, props, []);
   }
 
-  FunctionComponent.createHandle = (
+  Component.createInstance = (
     dispatcher: Dispatcher,
-  ): ComponentHandle<TProps> =>
-    new FunctionComponentHandle(componentFn, dispatcher);
-  FunctionComponent.arePropsEqual = arePropsEqual;
+  ): ComponentInstance<TProps> =>
+    new FunctionComponent(componentFn, dispatcher);
+  Component.arePropsEqual = arePropsEqual;
 
   DEBUG: {
-    Object.defineProperty(FunctionComponent, 'name', {
+    Object.defineProperty(Component, 'name', {
       value: componentFn.name,
     });
   }
 
-  return FunctionComponent;
+  return Component;
 }
 
 class UpdateComponent implements UpdateTransaction {
-  private readonly _handle: FunctionComponentHandle;
+  private readonly _instance: FunctionComponent;
   private readonly _level: number;
 
-  constructor(handle: FunctionComponentHandle, level: number) {
-    this._handle = handle;
+  constructor(instance: FunctionComponent, level: number) {
+    this._instance = instance;
     this._level = level;
   }
 
@@ -489,11 +489,11 @@ class UpdateComponent implements UpdateTransaction {
   }
 
   get pendingLanes(): Lanes {
-    return this._handle._pendingLanes;
+    return this._instance._pendingLanes;
   }
 
   prepare(lanes: Lanes, renderer: Renderer): Commit {
-    const oldNode = this._handle._connectedNode;
+    const oldNode = this._instance._connectedNode;
     if (oldNode === null) {
       return noOp;
     }
@@ -505,7 +505,7 @@ class UpdateComponent implements UpdateTransaction {
     const subScope = newNode.state.scope.enter(newNode.type);
     newNode.children[0] = renderer.diff(
       newNode.children[0]!,
-      newNode.state.handle.render(newNode.props, subScope, lanes),
+      newNode.state.instance.render(newNode.props, subScope, lanes),
       subScope,
       0,
       newNode,
@@ -515,7 +515,7 @@ class UpdateComponent implements UpdateTransaction {
       // A prior transaction's commit (e.g. triggered by a lane added to
       // pendingLanes during render) may have already patched and replaced
       // the connected node, making the captured reference stale.
-      const oldNode = this._handle._connectedNode;
+      const oldNode = this._instance._connectedNode;
       if (oldNode !== null) {
         patch(oldNode, newNode);
       }

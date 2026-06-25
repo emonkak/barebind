@@ -31,7 +31,7 @@ function afterCommit(node: RenderNode): void {
       afterCommit(child);
     }
     if (typeof node.type === 'function') {
-      node.state.handle.connect(node);
+      node.state.instance.connect(node);
     }
     node.dirty = false;
   }
@@ -184,7 +184,7 @@ function unmountChild(child: RenderNode, cascade: boolean = false): void {
     }
   } else {
     if (typeof child.type === 'function') {
-      child.state.handle.disconnect();
+      child.state.instance.disconnect();
     }
     for (const grandchild of child.children) {
       unmountChild(grandchild, cascade);
