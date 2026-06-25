@@ -57,21 +57,21 @@ export interface StateOptions {
   passthrough?: boolean;
 }
 
-interface Action<TState, TPayload> {
-  payload: TPayload;
+interface Action<TState, TAction> {
+  payload: TAction;
   eagerState: TState | undefined;
   lanes: Lanes;
   revertLanes: Lanes;
 }
 
-interface ActionHandler<TState, TPayload> {
+interface ActionDispatcher<TState, TAction> {
   dispatch: (
-    payload: TPayload,
+    action: TAction,
     options?: DispatchOptions<TState>,
   ) => UpdateHandle;
-  reducer: (state: TState, action: TPayload) => TState;
+  reducer: (state: TState, action: TAction) => TState;
   currentState: TState;
-  pendingActions: Action<TState, TPayload>[];
+  pendingActions: Action<TState, TAction>[];
 }
 
 type EffectCleanup = () => void;
@@ -111,7 +111,7 @@ namespace Hook {
 
   export interface ReducerHook<TState, TAction> {
     type: typeof ReducerType;
-    handler: ActionHandler<TState, TAction>;
+    dispatcher: ActionDispatcher<TState, TAction>;
     memoizedActions: Action<TState, TAction>[];
     memoizedState: TState;
   }
@@ -351,14 +351,14 @@ export class RenderContext {
     if (currentHook !== undefined) {
       ensureHookType(ReducerType, currentHook);
 
-      const { handler, memoizedState, memoizedActions } = currentHook;
+      const { dispatcher, memoizedState, memoizedActions } = currentHook;
       const renderLanes = this._lanes;
       let nextState = options.passthrough
         ? getInitialState(initialState)
         : memoizedState;
       let skipLanes = NoLanes;
 
-      memoizedActions.push(...handler.pendingActions);
+      memoizedActions.push(...dispatcher.pendingActions);
 
       for (const action of memoizedActions) {
         const { payload, lanes, revertLanes } = action;
@@ -379,13 +379,13 @@ export class RenderContext {
         };
       }
 
-      handler.reducer = reducer;
-      handler.currentState = nextState;
-      handler.pendingActions = [];
+      dispatcher.reducer = reducer;
+      dispatcher.currentState = nextState;
+      dispatcher.pendingActions = [];
     } else {
-      const handler: ActionHandler<TState, TAction> = {
+      const dispatcher: ActionDispatcher<TState, TAction> = {
         dispatch: (payload, options = {}) => {
-          const { pendingActions, currentState, reducer } = handler;
+          const { pendingActions, currentState, reducer } = dispatcher;
           let eagerState: TState | undefined;
 
           if (pendingActions.length === 0) {
@@ -416,15 +416,18 @@ export class RenderContext {
       };
       currentHook = {
         type: ReducerType,
-        memoizedState: handler.currentState,
+        memoizedState: dispatcher.currentState,
         memoizedActions: [],
-        handler,
+        dispatcher,
       };
     }
 
     this._hooks[this._hookIndex++] = currentHook;
 
-    return [currentHook.handler.currentState, currentHook.handler.dispatch];
+    return [
+      currentHook.dispatcher.currentState,
+      currentHook.dispatcher.dispatch,
+    ];
   }
 
   useRef<T>(initialValue: T): Ref<T> {
