@@ -93,8 +93,8 @@ namespace Hook {
   export interface EffectHook {
     type: typeof EffectType;
     setup: EffectSetup;
-    cleanup: EffectCleanup | void;
     deps: readonly unknown[] | null | undefined;
+    cleanup: EffectCleanup | void;
     dirty: boolean;
   }
 
@@ -131,7 +131,7 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
   /** @internal */
   _pendingLanes: Lanes = NoLanes;
   /** @internal */
-  _hooks: readonly Hook[] = [];
+  _hooks: Hook[] = [];
 
   constructor(
     componentFn: ComponentFunction<TProps, TReturn>,
@@ -148,14 +148,9 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
   render(props: TProps, scope: Scope, lanes: Lanes): VElement {
     try {
       this._pendingLanes &= ~lanes;
-      const context = new RenderContext(
-        this,
-        this._hooks.slice(),
-        scope,
-        lanes,
-      );
+      const context = new RenderContext(this, this._hooks, scope, lanes);
       const returnValue = this._componentFn.call(context, props);
-      this._hooks = finalizeContext(context);
+      finalizeContext(context);
       Object.freeze(scope.instances);
       return wrap(returnValue);
     } catch (cause) {
@@ -191,7 +186,7 @@ export class RenderContext {
   private readonly _instance: FunctionComponent;
   private readonly _lanes: Lanes;
   /** @internal */
-  readonly _hooks: Hook[];
+  _hooks: Hook[];
   /** @internal */
   _hookIndex: number = 0;
   /** @internal */
@@ -265,32 +260,27 @@ export class RenderContext {
     setup: EffectSetup,
     deps?: readonly unknown[] | null | undefined,
   ): void {
-    let currentHook = this._hooks[this._hookIndex];
+    let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
       ensureHookType(EffectType, currentHook);
-      currentHook = {
-        ...currentHook,
-        dirty:
-          currentHook.dirty || areDependenciesChanged(currentHook.deps, deps),
-        setup,
-        deps,
-      };
+      currentHook.dirty ||= areDependenciesChanged(currentHook.deps, deps);
+      currentHook.setup = setup;
+      currentHook.deps = deps;
     } else {
       currentHook = {
         type: EffectType,
         setup,
-        cleanup: undefined,
         deps,
+        cleanup: undefined,
         dirty: true,
       };
+      this._hooks.push(currentHook);
     }
-
-    this._hooks[this._hookIndex++] = currentHook;
   }
 
   useId(): string {
-    let currentHook = this._hooks[this._hookIndex];
+    let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
       ensureHookType(IdType, currentHook);
@@ -299,9 +289,8 @@ export class RenderContext {
         type: IdType,
         id: this._instance._dispatcher.nextIdentifier(),
       };
+      this._hooks.push(currentHook);
     }
-
-    this._hooks[this._hookIndex++] = currentHook;
 
     return currentHook.id;
   }
@@ -310,27 +299,22 @@ export class RenderContext {
     computation: () => TResult,
     deps: readonly unknown[],
   ): TResult {
-    let currentHook = this._hooks[this._hookIndex];
+    let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
       ensureHookType(MemoType, currentHook);
-
       if (areDependenciesChanged(currentHook.deps, deps)) {
-        currentHook = {
-          ...currentHook,
-          result: computation(),
-          deps,
-        };
+        currentHook.result = computation();
       }
+      currentHook.deps = deps;
     } else {
       currentHook = {
         type: MemoType,
         result: computation(),
         deps,
       };
+      this._hooks.push(currentHook);
     }
-
-    this._hooks[this._hookIndex++] = currentHook;
 
     return currentHook.result as TResult;
   }
@@ -346,7 +330,7 @@ export class RenderContext {
       options?: DispatchOptions<TState>,
     ) => UpdateHandle,
   ] {
-    let currentHook = this._hooks[this._hookIndex];
+    let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
       ensureHookType(ReducerType, currentHook);
@@ -372,11 +356,8 @@ export class RenderContext {
       }
 
       if (skipLanes === NoLanes) {
-        currentHook = {
-          ...currentHook,
-          memoizedActions: [],
-          memoizedState: nextState,
-        };
+        currentHook.memoizedActions = [];
+        currentHook.memoizedState = nextState;
       }
 
       dispatcher.reducer = reducer;
@@ -420,9 +401,8 @@ export class RenderContext {
         memoizedActions: [],
         dispatcher,
       };
+      this._hooks.push(currentHook);
     }
-
-    this._hooks[this._hookIndex++] = currentHook;
 
     return [
       currentHook.dispatcher.currentState,
@@ -537,19 +517,18 @@ function ensureHookType<TExpectedType extends Hook['type']>(
   }
 }
 
-function finalizeContext(context: RenderContext): readonly Hook[] {
-  let currentHook = context._hooks[context._hookIndex];
+function finalizeContext(context: RenderContext): void {
+  let currentHook = context._hooks[context._hookIndex++];
 
   if (currentHook !== undefined) {
     ensureHookType(FinalizerType, currentHook);
   } else {
     currentHook = { type: FinalizerType };
+    context._hooks.push(currentHook);
+    Object.freeze(context._hooks);
   }
 
-  context._hooks[context._hookIndex++] = currentHook;
   context._scope = context._scope.detach();
-
-  return Object.freeze(context._hooks);
 }
 
 function getInitialState<TState>(initialState: InitialState<TState>): TState {
