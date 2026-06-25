@@ -32,15 +32,10 @@ export class DOMRoot {
         prepare: (_lanes, renderer) => {
           const element = wrap(value);
           const scope = Scope.root();
-          const root =
-            this._root.children[0] !== undefined
-              ? renderer.diff(
-                  this._root.children[0],
-                  element,
-                  scope,
-                  0,
-                  this._root,
-                )
+          const oldChild = this._root.children[0];
+          const newChild =
+            oldChild !== undefined
+              ? renderer.diff(oldChild, element, scope, 0, this._root)
               : renderer.render(
                   element,
                   scope,
@@ -49,10 +44,11 @@ export class DOMRoot {
                   new PortalPart(this._container),
                 );
           return () => {
-            if (this._root.children[0] !== undefined) {
-              patch(this._root.children[0], root);
+            const oldChild = this._root.children[0];
+            if (oldChild !== undefined) {
+              patch(oldChild, newChild);
             } else {
-              mount(root);
+              mount(newChild);
             }
           };
         },
@@ -68,8 +64,9 @@ export class DOMRoot {
         pendingLanes: AllLanes,
         prepare: () => {
           return () => {
-            if (this._root.children[0] !== undefined) {
-              unmount(this._root.children[0]);
+            const child = this._root.children[0];
+            if (child !== undefined) {
+              unmount(child);
               this._root.children[0] = undefined;
             }
           };
