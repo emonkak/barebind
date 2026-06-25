@@ -79,12 +79,14 @@ export class Runtime implements Renderer, Dispatcher {
     switch (newElement.kind) {
       case VNODE_KIND_BIND: {
         return {
-          ...(oldNode as RenderNode.BindNode),
           type: newElement.type,
           props: newElement.props,
           key: newElement.key,
           index,
           parent,
+          children: oldNode.children,
+          part: oldNode.part,
+          state: (oldNode as RenderNode.BindNode).state,
           dirty: true,
         };
       }
@@ -101,13 +103,14 @@ export class Runtime implements Renderer, Dispatcher {
           return oldNode;
         }
         const newNode: RenderNode.ComponentNode = {
-          ...(oldNode as RenderNode.ComponentNode),
           type: newElement.type,
           props: newElement.props,
           key: newElement.key,
           index,
           parent,
           children: oldNode.children.slice(),
+          part: oldNode.part,
+          state: (oldNode as RenderNode.ComponentNode).state,
           dirty: true,
         };
         const subScope = scope.enter(newElement.type);
@@ -127,13 +130,14 @@ export class Runtime implements Renderer, Dispatcher {
       }
       case VNODE_KIND_FRAGMENT: {
         const newNode: RenderNode.FragmentNode = {
-          ...(oldNode as RenderNode.FragmentNode),
           type: newElement.type,
           props: newElement.props,
           key: newElement.key,
           index,
           parent,
           children: new Array(newElement.children.length),
+          part: oldNode.part,
+          state: (oldNode as RenderNode.FragmentNode).state,
           dirty: true,
         };
         newNode.state.mutations = this._diffChildren(
@@ -147,13 +151,15 @@ export class Runtime implements Renderer, Dispatcher {
       case VNODE_KIND_PORTAL:
       case VNODE_KIND_TEMPLATE: {
         const newNode: RenderNode.BlockNode = {
-          ...(oldNode as RenderNode.BlockNode),
           type: newElement.type,
           props: newElement.props,
           key: newElement.key,
           index,
           parent,
           children: new Array(newElement.children.length),
+          part: oldNode.part,
+          state: (oldNode as RenderNode.BlockNode).state,
+          dirty: false,
         };
         for (let i = 0, l = newElement.children.length; i < l; i++) {
           const newChild = this.diff(
@@ -197,12 +203,12 @@ export class Runtime implements Renderer, Dispatcher {
           type: element.type,
           props: element.props,
           key: element.key,
-          part,
           index,
           parent,
           children: [],
-          dirty: true,
+          part,
           state: null,
+          dirty: true,
         };
       }
       case VNODE_KIND_COMPONENT: {
@@ -210,15 +216,15 @@ export class Runtime implements Renderer, Dispatcher {
           type: element.type,
           props: element.props,
           key: element.key,
-          part,
           index,
           parent,
           children: new Array(1),
-          dirty: true,
+          part,
           state: {
             instance: element.type.createInstance(this),
             scope,
           },
+          dirty: true,
         };
         const subScope = scope.enter(element.type);
         node.children[0] = this.render(
@@ -235,12 +241,12 @@ export class Runtime implements Renderer, Dispatcher {
           type: element.type,
           props: element.props,
           key: element.key,
-          part,
           index,
           parent,
           children: new Array(element.children.length),
-          dirty: element.children.length > 0,
+          part,
           state: { mutations: [] },
+          dirty: element.children.length > 0,
         };
         for (let i = 0, l = element.children.length; i < l; i++) {
           node.children[i] = this.render(
@@ -259,12 +265,12 @@ export class Runtime implements Renderer, Dispatcher {
           type: element.type,
           props: element.props,
           key: element.key,
-          part,
           index,
           parent,
           children: new Array(1),
-          dirty: true,
+          part,
           state: { block },
+          dirty: true,
         };
         node.children[0] = this.render(
           element.children[0],
@@ -281,12 +287,12 @@ export class Runtime implements Renderer, Dispatcher {
           type: element.type,
           props: element.props,
           key: element.key,
-          part,
           index,
           parent,
           children: new Array(element.children.length),
-          dirty: true,
+          part,
           state: { block },
+          dirty: true,
         };
         for (let i = 0, l = element.children.length; i < l; i++) {
           node.children[i] = this.render(

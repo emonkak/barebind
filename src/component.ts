@@ -481,8 +481,14 @@ class UpdateComponent implements UpdateTransaction {
       return noOp;
     }
     const newNode: RenderNode.ComponentNode = {
-      ...oldNode,
+      type: oldNode.type,
+      props: oldNode.props,
+      key: oldNode.key,
+      index: oldNode.index,
+      parent: oldNode.parent,
       children: oldNode.children.slice(),
+      part: oldNode.part,
+      state: oldNode.state,
       dirty: true,
     };
     const subScope = newNode.state.scope.enter(newNode.type);
