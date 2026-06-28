@@ -5,9 +5,9 @@
 
 <img src="logo.svg" alt="Logo" width="200" height="300">
 
-No magic, no custom compiler — just bind data to plain JS templates.
+No magic, no custom compiler: just bind data to plain JS templates.
 
-**Barebind** is a reactive UI library built on native JavaScript tagged template literals (<code>html\`...\`</code>). Think React-like component model with hooks, lane-based scheduling, keyed list diffing, portals, fragments, and composable templates — all without JSX or a custom compiler.
+**Barebind** is a reactive UI library built on native JavaScript tagged template literals (<code>html\`...\`</code>). Think React-like component model with hooks, lane-based scheduling, keyed list diffing, portals, fragments, and composable templates, all without JSX or a custom compiler.
 
 ## Quick Start
 
