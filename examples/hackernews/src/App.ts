@@ -1,5 +1,5 @@
 import { createComponent, html } from 'barebind';
-import { HashHistory, ScrollRestoration } from 'barebind/addons/router';
+import { HashAdapter, SyncNavigation } from 'barebind/addons/router';
 
 import { Nav } from './Nav.js';
 import { NotFound } from './NotFound.js';
@@ -11,12 +11,12 @@ interface AppProps {
 }
 
 export const App = createComponent<AppProps>(function App({ store }) {
-  const { location } = this.use(HashHistory());
-  const page = router.match(location.url) ?? NotFound({ url: location.url });
+  const { scene } = this.use(
+    SyncNavigation(new HashAdapter(), () => ({ viewTransition: true })),
+  );
+  const page = router.match(scene.url) ?? NotFound({ url: scene.url });
 
   this.provide(store);
-
-  this.use(ScrollRestoration());
 
   return html`
     <header class="header">

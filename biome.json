@@ -54,7 +54,9 @@
               "level": "error",
               "options": {
                 "deniedGlobals": {
-                  "document": "document is not allowed."
+                  "document": "global document is not allowed.",
+                  "location": "global location is not allowed.",
+                  "navigation": "global navigation is not allowed."
                 }
               }
             }

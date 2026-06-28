@@ -1,10 +1,3 @@
-export { BrowserHistory } from './router/browser-history.js';
-export { HashHistory } from './router/hash-history.js';
-export {
-  HistoryContext,
-  type HistoryLocation,
-  type HistoryNavigator,
-} from './router/history.js';
 export {
   choice,
   decoded,
@@ -14,7 +7,17 @@ export {
   regexp,
   select,
 } from './router/matchers.js';
-export { RelativeURL } from './router/relative-url.js';
+export {
+  BrowserAdapter,
+  HashAdapter,
+  type HostNavigationAdapterOptions,
+  InMemoryAdapter,
+  type NavigationAdapter,
+  NavigationContext,
+  type NavigationHandler,
+  type NavigationScene,
+  SyncNavigation,
+} from './router/navigation.js';
 export {
   type Matcher,
   noMatch,
@@ -24,4 +27,3 @@ export {
   Router,
   route,
 } from './router/router.js';
-export { ScrollRestoration } from './router/scroll-restoration.js';

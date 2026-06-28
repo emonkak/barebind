@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { Atom, Computed, type InvalidateEvent } from '@/addons/signal.js';
+import {
+  Atom,
+  Computed,
+  type InvalidateEvent,
+} from '@/addons/signal/signal.js';
 
 describe('Atom', () => {
   describe('set value()', () => {
