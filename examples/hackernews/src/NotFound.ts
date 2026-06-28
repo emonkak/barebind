@@ -1,8 +1,7 @@
 import { createComponent, html } from 'barebind';
-import type { RelativeURL } from 'barebind/addons/router';
 
 export interface NotFoundProps {
-  url: RelativeURL;
+  url: string;
 }
 
 export const NotFound = createComponent<NotFoundProps>(function NotFound({

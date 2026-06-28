@@ -1,5 +1,3 @@
-import type { RelativeURL } from './relative-url.js';
-
 export const noMatch: unique symbol = Symbol('noMatch');
 
 export interface Route<
@@ -21,14 +19,11 @@ export interface Route<
 
 export type Pattern = string | Matcher<unknown>;
 
-export type Matcher<T> = (
-  component: string,
-  url: RelativeURL,
-) => T | typeof noMatch;
+export type Matcher<T> = (component: string, url: string) => T | typeof noMatch;
 
 export type Resolver<TResult, TCaptures extends unknown[]> = (
   captures: TCaptures,
-  url: RelativeURL,
+  url: string,
 ) => TResult;
 
 type ApplyPattern<TPattern> = TPattern extends Matcher<infer T> ? [T] : [];
@@ -46,8 +41,8 @@ export class Router<TResult> {
     this._routes = routes;
   }
 
-  match(url: RelativeURL): TResult | null {
-    const components = trimLeadingSlash(url.pathname).split('/');
+  match(url: string): TResult | undefined {
+    const components = stripLeadingSlash(url).split('/');
     const collectedCaptures: unknown[] = [];
 
     let routes = this._routes;
@@ -58,14 +53,15 @@ export class Router<TResult> {
       const { patterns, childRoutes, resolver } = routes[routeIndex]!;
       const captures = collectCaptures(
         patterns,
-        components.slice(componentIndex, componentIndex + patterns.length),
+        components,
+        componentIndex,
         url,
       );
 
       if (captures !== null) {
         collectedCaptures.push(...captures);
         if (components.length === componentIndex + patterns.length) {
-          return resolver?.(collectedCaptures, url) ?? null;
+          return resolver?.(collectedCaptures, url);
         }
         if (childRoutes.length > 0) {
           routes = childRoutes;
@@ -79,7 +75,7 @@ export class Router<TResult> {
       }
     }
 
-    return null;
+    return undefined;
   }
 }
 
@@ -102,14 +98,16 @@ export function route<
 function collectCaptures<TPatterns extends Pattern[]>(
   patterns: TPatterns,
   components: string[],
-  url: RelativeURL,
+  startIndex: number,
+  url: string,
 ): CollectCaptures<TPatterns> | null {
-  if (patterns.length !== components.length) {
+  const endIndex = startIndex + patterns.length;
+  if (endIndex > components.length) {
     return null;
   }
   const captures: unknown[] = [];
-  for (let i = 0, l = patterns.length; i < l; i++) {
-    const pattern = patterns[i]!;
+  for (let i = startIndex; i < endIndex; i++) {
+    const pattern = patterns[i - startIndex]!;
     const component = components[i]!;
     if (typeof pattern === 'string') {
       if (component !== pattern) {
@@ -126,6 +124,6 @@ function collectCaptures<TPatterns extends Pattern[]>(
   return captures as CollectCaptures<TPatterns>;
 }
 
-function trimLeadingSlash(path: string): string {
+function stripLeadingSlash(path: string): string {
   return path[0] === '/' ? path.slice(1) : path;
 }
