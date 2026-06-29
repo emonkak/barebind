@@ -258,15 +258,6 @@ export class Scope {
     }
   }
 
-  detach(): Scope {
-    return new Scope(
-      this.owner,
-      this.level,
-      null,
-      Object.freeze([] as object[]) as object[],
-    );
-  }
-
   enter(owner: Component<unknown>): Scope {
     return new Scope(owner, this.level + 1, this);
   }
