@@ -1,6 +1,5 @@
 export const Bind = Symbol.for('barebind.Bind');
 export const Fragment = Symbol.for('barebind.Fragment');
-export const Root = Symbol.for('barebind.Root');
 export const toElement = Symbol.for('barebind.toElement');
 
 export const MUTATION_TYPE_INSERT = 0;
@@ -147,7 +146,7 @@ export namespace RenderNode {
 }
 
 export interface RenderRoot {
-  type: typeof Root;
+  type: null;
   children: [RenderNode | undefined];
 }
 
