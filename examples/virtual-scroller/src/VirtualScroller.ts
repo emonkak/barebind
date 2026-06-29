@@ -65,9 +65,11 @@ export const VirtualScroller: VirtualScroller = createComponent(
           }
         : { start: 0, end: 0 },
     );
-    const measuredItems = this.useMemo<MeasuredItem[]>(() => [], []);
-    const visibleElements = this.useMemo<Map<number, Element>>(
-      () => new Map(),
+    const { measuredItems, visibleElements } = this.useMemo(
+      () => ({
+        measuredItems: [] as MeasuredItem[],
+        visibleElements: new Map<number, Element>(),
+      }),
       [],
     );
 
