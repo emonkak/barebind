@@ -6,6 +6,7 @@ export {
   RenderContext,
 } from './component.js';
 export {
+  type Bindable,
   type Commit,
   type Component,
   createBind,
