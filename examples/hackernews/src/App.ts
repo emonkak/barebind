@@ -11,8 +11,9 @@ interface AppProps {
 }
 
 export const App = createComponent<AppProps>(function App({ store }) {
+  const adapter = this.useMemo(() => new HashAdapter(), []);
   const { scene } = this.use(
-    SyncNavigation(new HashAdapter(), () => ({ viewTransition: true })),
+    SyncNavigation(adapter, () => ({ viewTransition: true })),
   );
   const page = router.match(scene.url) ?? NotFound({ url: scene.url });
 
