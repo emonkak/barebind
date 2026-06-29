@@ -92,7 +92,7 @@ export function inspectLanes(lanes: Lanes): string[] {
     tags.push('TransitionLane');
   }
   if (lanes & DelayedLanes) {
-    tags.push('DelayedLanes');
+    tags.push('DelayedLane');
   }
   return tags;
 }

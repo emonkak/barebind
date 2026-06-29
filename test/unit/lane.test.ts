@@ -251,11 +251,11 @@ describe('inspectLanes()', () => {
   });
 
   it('identifies DelayedLane1', () => {
-    expect(inspectLanes(DelayedLane1)).toStrictEqual(['DelayedLanes']);
+    expect(inspectLanes(DelayedLane1)).toStrictEqual(['DelayedLane']);
   });
 
   it('identifies DelayedLane2', () => {
-    expect(inspectLanes(DelayedLane2)).toStrictEqual(['DelayedLanes']);
+    expect(inspectLanes(DelayedLane2)).toStrictEqual(['DelayedLane']);
   });
 
   it('returns tags for all lane groups in AllLanes', () => {
@@ -266,7 +266,7 @@ describe('inspectLanes()', () => {
       'UserVisibleLane',
       'BackgroundLane',
       'TransitionLane',
-      'DelayedLanes',
+      'DelayedLane',
     ]);
   });
 });
