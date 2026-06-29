@@ -10,7 +10,7 @@ import {
   wrap,
 } from '../core.js';
 import { AllLanes } from '../lane.js';
-import { PortalPart } from './part.js';
+import { ContainerPart } from './part.js';
 
 export class DOMRoot {
   private readonly _container: Container;
@@ -42,7 +42,7 @@ export class DOMRoot {
                   scope,
                   0,
                   this._root,
-                  new PortalPart(this._container),
+                  new ContainerPart(this._container),
                 );
           return () => {
             const oldChild = this._root.children[0];
