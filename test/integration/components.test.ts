@@ -257,6 +257,20 @@ describe('components', () => {
       expect(container.innerHTML).toBe('<div>default</div>');
     });
 
+    it('injects the instance after rendering', async () => {
+      let context: Context | undefined;
+      const App = createComponent(function App() {
+        this.provide(new Context('a'));
+        this.useEffect(() => {
+          context = this.inject(Context);
+        });
+        return null;
+      });
+
+      await root.render(App({})).finished;
+      expect(context?.value).toBe('a');
+    });
+
     it('inherits the latest instance in child updates', async () => {
       const Child = createComponent(function Child() {
         const context = this.inject(Context);
@@ -305,20 +319,6 @@ describe('components', () => {
       });
 
       await expect(root.render(App({})).finished).rejects.toThrow(TypeError);
-    });
-
-    it('throws inject the instance after rendering', async () => {
-      const App = createComponent(function App() {
-        this.provide(new Context('a'));
-        this.useEffect(() => {
-          this.inject(Context);
-        });
-        return null;
-      });
-
-      await expect(root.render(App({})).finished).rejects.toThrow(
-        ReferenceError,
-      );
     });
   });
 

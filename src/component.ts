@@ -122,21 +122,21 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
   implements ComponentInstance<TProps>
 {
   /** @internal */
-  readonly _componentFn: ComponentFunction<TProps, TReturn>;
+  readonly _component: ComponentFunction<TProps, TReturn>;
   /** @internal */
   readonly _dispatcher: Dispatcher;
   /** @internal */
-  _connectedNode: RenderNode.ComponentNode | null = null;
-  /** @internal */
   _pendingLanes: Lanes = NoLanes;
   /** @internal */
-  _hooks: Hook[] = [];
+  _context: RenderContext | null = null;
+  /** @internal */
+  _connectedNode: RenderNode.ComponentNode | null = null;
 
   constructor(
-    componentFn: ComponentFunction<TProps, TReturn>,
+    component: ComponentFunction<TProps, TReturn>,
     dispatcher: Dispatcher,
   ) {
-    this._componentFn = componentFn;
+    this._component = component;
     this._dispatcher = dispatcher;
   }
 
@@ -145,11 +145,17 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
   }
 
   render(props: TProps, scope: Scope, lanes: Lanes): VElement {
+    this._pendingLanes &= ~lanes;
+    if (this._context !== null) {
+      this._context._scope = scope;
+      this._context._lanes = lanes;
+      this._context._hookIndex = 0;
+    } else {
+      this._context = new RenderContext(this, scope, lanes);
+    }
     try {
-      this._pendingLanes &= ~lanes;
-      const context = new RenderContext(this, this._hooks, scope, lanes);
-      const returnValue = this._componentFn.call(context, props);
-      finalizeContext(context);
+      const returnValue = this._component.call(this._context, props);
+      finalizeContext(this._context);
       Object.freeze(scope.instances);
       return wrap(returnValue);
     } catch (cause) {
@@ -160,7 +166,7 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
   }
 
   connect(node: RenderNode.ComponentNode<TProps>): void {
-    for (const hook of this._hooks) {
+    for (const hook of this._context!._hooks) {
       if (hook.type === EffectType && hook.dirty) {
         hook.cleanup?.();
         hook.cleanup = hook.setup();
@@ -171,7 +177,7 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
   }
 
   disconnect(): void {
-    for (const hook of this._hooks) {
+    for (const hook of this._context!._hooks) {
       if (hook.type === EffectType && hook.cleanup !== undefined) {
         hook.cleanup();
         hook.cleanup = undefined;
@@ -183,22 +189,17 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
 
 export class RenderContext {
   private readonly _instance: FunctionComponent;
-  private readonly _lanes: Lanes;
-  /** @internal */
-  _hooks: Hook[];
-  /** @internal */
-  _hookIndex: number = 0;
   /** @internal */
   _scope: Scope;
+  /** @internal */
+  _lanes: Lanes;
+  /** @internal */
+  _hooks: Hook[] = [];
+  /** @internal */
+  _hookIndex: number = 0;
 
-  constructor(
-    instance: FunctionComponent,
-    hooks: Hook[],
-    scope: Scope,
-    lanes: Lanes,
-  ) {
+  constructor(instance: FunctionComponent, scope: Scope, lanes: Lanes) {
     this._instance = instance;
-    this._hooks = hooks;
     this._scope = scope;
     this._lanes = lanes;
   }
@@ -532,8 +533,6 @@ function finalizeContext(context: RenderContext): void {
     context._hooks.push(currentHook);
     Object.freeze(context._hooks);
   }
-
-  context._scope = context._scope.detach();
 }
 
 function getInitialState<TState>(initialState: InitialState<TState>): TState {
