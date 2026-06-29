@@ -206,7 +206,7 @@ export class RenderContext {
   forceUpdate(options?: UpdateOptions): UpdateHandle {
     const instance = this._instance;
     const handle = instance._dispatcher.schedule(
-      new UpdateComponent(instance, this._scope.level),
+      new UpdateComponent(instance, this._scope),
       options,
     );
     instance._pendingLanes |= handle.lanes;
@@ -459,15 +459,15 @@ export function createComponent<TProps = {}, TReturn = unknown>(
 
 class UpdateComponent implements UpdateTransaction {
   private readonly _instance: FunctionComponent;
-  private readonly _level: number;
+  private readonly _scope: Scope;
 
-  constructor(instance: FunctionComponent, level: number) {
+  constructor(instance: FunctionComponent, scope: Scope) {
     this._instance = instance;
-    this._level = level;
+    this._scope = scope;
   }
 
-  get level(): number {
-    return this._level;
+  get scope(): Scope {
+    return this._scope;
   }
 
   get pendingLanes(): Lanes {

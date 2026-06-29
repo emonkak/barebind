@@ -26,13 +26,13 @@ export class DOMRoot {
   }
 
   render(value: unknown, options?: UpdateOptions): UpdateHandle {
+    const scope = Scope.root(this);
     return this._dispatcher.schedule(
       {
-        level: 0,
+        scope,
         pendingLanes: AllLanes,
         prepare: (_lanes, renderer) => {
           const element = wrap(value);
-          const scope = Scope.root(this);
           const oldChild = this._root.children[0];
           const newChild =
             oldChild !== undefined
@@ -59,9 +59,10 @@ export class DOMRoot {
   }
 
   unmount(options?: UpdateOptions): UpdateHandle {
+    const scope = Scope.root(this);
     return this._dispatcher.schedule(
       {
-        level: 0,
+        scope,
         pendingLanes: AllLanes,
         prepare: () => {
           return () => {
