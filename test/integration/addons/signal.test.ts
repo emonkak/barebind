@@ -4,7 +4,7 @@ import {
   DOMRoot,
   html,
   Runtime,
-  waitForStep,
+  step,
 } from 'barebind';
 import {
   Atom,
@@ -42,7 +42,7 @@ describe('signal addon', () => {
 
       atom.value = 'b';
       await Promise.resolve();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<div>b</div>');
     });
 
@@ -58,7 +58,7 @@ describe('signal addon', () => {
       atom.value = 'b';
       atom.value = 'c';
       await Promise.resolve();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<div>c</div>');
     });
 
@@ -76,12 +76,12 @@ describe('signal addon', () => {
 
       a.value = 'x';
       await Promise.resolve();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<div>x-b</div>');
 
       b.value = 'y';
       await Promise.resolve();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<div>x-y</div>');
     });
 
@@ -94,7 +94,7 @@ describe('signal addon', () => {
       });
 
       await root.render(App({})).finished;
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<div>1</div>');
     });
 
@@ -129,7 +129,7 @@ describe('signal addon', () => {
 
       localAtom!.value = 42;
       await Promise.resolve();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<div>42</div>');
     });
 
@@ -151,12 +151,12 @@ describe('signal addon', () => {
 
       a!.value = 10;
       await Promise.resolve();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<div>12</div>');
 
       b!.value = 20;
       await Promise.resolve();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<div>30</div>');
     });
   });
@@ -174,7 +174,7 @@ describe('signal addon', () => {
 
       atom.value = 'world';
       await Promise.resolve();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<div>world</div>');
     });
 
@@ -190,7 +190,7 @@ describe('signal addon', () => {
 
       atom.value = 'bar';
       await Promise.resolve();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<div class="bar"></div>');
     });
   });
