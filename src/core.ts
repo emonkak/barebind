@@ -188,7 +188,7 @@ export interface UpdateOptions {
 }
 
 export interface UpdateTransaction {
-  readonly level: number;
+  readonly scope: Scope;
   readonly pendingLanes: Lanes;
   prepare(lanes: Lanes, renderer: Renderer): Commit;
 }
