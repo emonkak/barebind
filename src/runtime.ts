@@ -15,9 +15,9 @@ import {
   type RenderNode,
   type RenderRoot,
   type Scope,
+  type Transaction,
   type UpdateHandle,
   type UpdateOptions,
-  type UpdateTransaction,
   type VElement,
   type VPortal,
   type VTemplate,
@@ -37,7 +37,7 @@ interface Update {
   id: number;
   lanes: Lanes;
   types: string[];
-  transaction: UpdateTransaction;
+  transaction: Transaction;
   controller: PromiseWithResolvers<void>;
 }
 
@@ -272,7 +272,7 @@ export class Runtime implements Renderer, Dispatcher {
   }
 
   schedule(
-    transaction: UpdateTransaction,
+    transaction: Transaction,
     options: UpdateOptions = {},
   ): UpdateHandle {
     const id = this._updateCount++;
