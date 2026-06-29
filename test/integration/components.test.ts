@@ -7,9 +7,9 @@ import {
   RenderContext,
   RenderError,
   Runtime,
+  type UpdateHandle,
   waitForStep,
 } from 'barebind';
-import type { UpdateHandle } from 'barebind/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('components', () => {
