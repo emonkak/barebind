@@ -1,10 +1,5 @@
 import type { Owner, Scope } from './core.js';
 
-export function assertUnreachable(value: never): never {
-  /** v8 ignore next @preserve */
-  throw new Error(`Unreachable case: ${JSON.stringify(value)}`);
-}
-
 export function formatOwnerStack(ownerStack: Owner[]): string {
   const tail = ownerStack.length - 1;
   return ownerStack
