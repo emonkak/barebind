@@ -3,7 +3,6 @@ import {
   type Container,
   type Dispatcher,
   type RenderRoot,
-  Root,
   Scope,
   type UpdateHandle,
   type UpdateOptions,
@@ -16,7 +15,7 @@ export class DOMRoot {
   private readonly _container: Container;
   private readonly _dispatcher: Dispatcher;
   private readonly _root: RenderRoot = {
-    type: Root,
+    type: null,
     children: [undefined],
   };
 

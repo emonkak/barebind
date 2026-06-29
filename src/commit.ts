@@ -6,7 +6,6 @@ import {
   MUTATION_TYPE_UPDATE_AND_MOVE,
   type RenderNode,
   type RenderRoot,
-  Root,
 } from './core.js';
 
 export function mount(node: RenderNode): void {
@@ -119,7 +118,7 @@ function getDescendantNode(node: RenderNode): ChildNode | null {
 
 function getSiblingNode(node: RenderNode): ChildNode | null {
   const part = node.part;
-  while (node.parent.type !== Root) {
+  while (node.parent.type !== null) {
     const children = node.parent.children;
     for (let i = node.index + 1, l = children.length; i < l; i++) {
       const child = children[i]!;
