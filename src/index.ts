@@ -14,6 +14,7 @@ export {
   createTemplate,
   type Lanes,
   Ref,
+  type Transaction,
   toElement,
   type UpdateHandle,
   type UpdateOptions,

@@ -42,10 +42,7 @@ export type Container = DocumentFragment | Element;
 export interface Dispatcher {
   nextIdentifier(): string;
   nextTransition(): number;
-  schedule(
-    transaction: UpdateTransaction,
-    options?: UpdateOptions,
-  ): UpdateHandle;
+  schedule(transaction: Transaction, options?: UpdateOptions): UpdateHandle;
 }
 
 export interface HostAdapter {
@@ -173,6 +170,12 @@ export interface Renderer {
 
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
+export interface Transaction {
+  readonly scope: Scope;
+  readonly pendingLanes: Lanes;
+  prepare(lanes: Lanes, renderer: Renderer): Commit;
+}
+
 export interface UpdateHandle {
   id: number;
   lanes: Lanes;
@@ -185,12 +188,6 @@ export interface UpdateOptions {
   priority?: TaskPriority;
   transition?: number;
   viewTransition?: string[] | boolean;
-}
-
-export interface UpdateTransaction {
-  readonly scope: Scope;
-  readonly pendingLanes: Lanes;
-  prepare(lanes: Lanes, renderer: Renderer): Commit;
 }
 
 export type VBind<T = unknown> = VNode<typeof Bind, { value: T }, []>;

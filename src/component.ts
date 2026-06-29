@@ -11,9 +11,9 @@ import {
   type Renderer,
   type RenderNode,
   type Scope,
+  type Transaction,
   type UpdateHandle,
   type UpdateOptions,
-  type UpdateTransaction,
   type VComponent,
   type VElement,
   VNode,
@@ -458,7 +458,7 @@ export function createComponent<TProps = {}, TReturn = unknown>(
   return Component;
 }
 
-class UpdateComponent implements UpdateTransaction {
+class UpdateComponent implements Transaction {
   private readonly _instance: FunctionComponent;
   private readonly _scope: Scope;
 
