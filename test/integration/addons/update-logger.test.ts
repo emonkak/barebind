@@ -5,8 +5,8 @@ import {
   html,
   RenderError,
   Runtime,
+  step,
   type UpdateOptions,
-  waitForStep,
 } from 'barebind';
 import { type LoggerAPI, UpdateLogger } from 'barebind/addons/update-logger';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -80,7 +80,7 @@ describe('UpdateLogger', () => {
     await root.render(App({})).finished;
 
     container.querySelector('button')!.click();
-    await waitForStep(runtime);
+    await step(runtime);
 
     expect(logger.log).toHaveBeenCalledTimes(4);
     expect(logger.log).toHaveBeenNthCalledWith(

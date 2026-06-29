@@ -12,9 +12,7 @@ export {
   createFragment,
   createPortal,
   createTemplate,
-  type Lanes,
   Ref,
-  type Transaction,
   toElement,
   type UpdateHandle,
   type UpdateOptions,
@@ -31,7 +29,7 @@ export { RenderError } from './error.js';
 export {
   type Middleware,
   Runtime,
+  step,
   type Update,
-  waitForStep,
 } from './runtime.js';
 export { html, math, Partial, svg, text } from './template.js';

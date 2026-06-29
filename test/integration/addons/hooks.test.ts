@@ -5,7 +5,7 @@ import {
   html,
   Ref,
   Runtime,
-  waitForStep,
+  step,
 } from 'barebind';
 import {
   DeferredValue,
@@ -45,7 +45,7 @@ describe('addon hooks', () => {
       await root.render(App({ value: 'b' })).finished;
       expect(container.innerHTML).toBe('<div>a</div>');
 
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<div>b</div>');
     });
 
@@ -60,7 +60,7 @@ describe('addon hooks', () => {
       await root.render(App({ value: 'a' })).finished;
       expect(container.innerHTML).toBe('<div>initial</div>');
 
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<div>a</div>');
     });
   });
@@ -139,7 +139,7 @@ describe('addon hooks', () => {
 
       value = 1;
       subscriber!();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<div>1</div>');
     });
 
@@ -156,7 +156,7 @@ describe('addon hooks', () => {
       });
 
       await root.render(App({})).finished;
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<div>updated</div>');
     });
 
@@ -213,10 +213,10 @@ describe('addon hooks', () => {
       const button = container.querySelector('button')!;
 
       button.click();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<button>true</button>');
 
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<button>false</button>');
     });
 
@@ -239,12 +239,12 @@ describe('addon hooks', () => {
       const button = container.querySelector('button')!;
 
       button.click();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<button>true</button>');
 
       resolve();
       await promise;
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<button>false</button>');
     });
   });

@@ -588,7 +588,7 @@ export class Runtime implements Renderer, Dispatcher {
   }
 }
 
-export async function waitForStep(runtime: Runtime): Promise<boolean> {
+export async function step(runtime: Runtime): Promise<boolean> {
   if (runtime._updateBatch.length > 0) {
     for (const update of runtime._updateBatch) {
       await update.controller.promise;

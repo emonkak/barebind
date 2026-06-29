@@ -7,8 +7,8 @@ import {
   RenderContext,
   RenderError,
   Runtime,
+  step,
   type UpdateHandle,
-  waitForStep,
 } from 'barebind';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -101,7 +101,7 @@ describe('components', () => {
       );
 
       container.querySelector<HTMLElement>('#b')?.click();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe(
         '<div><button id="b">1</button><button id="a">0</button><!----></div>',
       );
@@ -297,7 +297,7 @@ describe('components', () => {
       expect(container.innerHTML).toBe('<button>second</button>');
 
       button.click();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<button>second</button>');
     });
 
@@ -342,7 +342,7 @@ describe('components', () => {
       expect(button.textContent).toBe('0');
 
       button.click();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(button.textContent).toBe('1');
     });
 
@@ -365,7 +365,7 @@ describe('components', () => {
       expect(button.textContent).toBe('0');
 
       button.click();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(button.textContent).toBe('1');
     });
 
@@ -391,7 +391,7 @@ describe('components', () => {
       expect(button.textContent).toBe('0');
 
       button.click();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(button.textContent).toBe('1');
     });
 
@@ -418,7 +418,7 @@ describe('components', () => {
       expect(button.textContent).toBe('123');
 
       button.click();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(renderCount).toBe(1);
       expect(button.textContent).toBe('123');
     });
@@ -450,7 +450,7 @@ describe('components', () => {
       expect(button.textContent).toBe('1');
 
       button.click();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(renderCount).toBe(1);
       expect(button.textContent).toBe('1');
     });
@@ -499,7 +499,7 @@ describe('components', () => {
       expect(container.innerHTML).toBe('<div>0</div><div>0</div>');
 
       eventTarget.dispatchEvent(new Event('increment'));
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<div>1</div><div>1</div>');
     });
 
@@ -524,7 +524,7 @@ describe('components', () => {
       expect(button.textContent).toBe('0/0');
 
       button.click();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(button.textContent).toBe('1/2');
     });
 
@@ -549,10 +549,10 @@ describe('components', () => {
       expect(button.textContent).toBe('0/0');
 
       button.click();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(button.textContent).toBe('1/0');
 
-      await waitForStep(runtime);
+      await step(runtime);
       expect(button.textContent).toBe('1/2');
     });
 
@@ -579,7 +579,7 @@ describe('components', () => {
       expect(button.textContent).toBe('0');
 
       button.click();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(button.textContent).toBe('3');
     });
 
@@ -607,11 +607,11 @@ describe('components', () => {
       expect(button.textContent).toBe('initial');
 
       button.click();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(button.textContent).toBe('optimistic');
 
       await root.render(App({})).finished;
-      await waitForStep(runtime);
+      await step(runtime);
       expect(button.textContent).toBe('initial');
     });
 
@@ -629,7 +629,7 @@ describe('components', () => {
       await root.render(App({})).finished;
       expect(container.innerHTML).toBe('<div>0</div>');
 
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('<div>100</div>');
     });
 
@@ -714,7 +714,7 @@ describe('components', () => {
       expect(logs).toStrictEqual(['effect']);
 
       button.click();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(button.textContent).toBe('1');
       expect(logs).toStrictEqual(['effect']);
     });
@@ -769,7 +769,7 @@ describe('components', () => {
       await root.unmount().finished;
       expect(log).toStrictEqual(['setup', 'cleanup']);
 
-      await waitForStep(runtime);
+      await step(runtime);
       expect(container.innerHTML).toBe('');
     });
   });
@@ -971,7 +971,7 @@ describe('components', () => {
 
       for (let i = 0; i < 24; i++) {
         button.click();
-        await waitForStep(runtime);
+        await step(runtime);
         expect(button.textContent).toBe(i.toString());
       }
 
@@ -1004,7 +1004,7 @@ describe('components', () => {
       expect(document.activeViewTransition).toBe(null);
 
       button.click();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(button.innerHTML).toBe('1');
       expect(document.activeViewTransition).toBeInstanceOf(ViewTransition);
       expect([...document.activeViewTransition!.types]).toStrictEqual([]);
@@ -1032,7 +1032,7 @@ describe('components', () => {
       expect(document.activeViewTransition).toBe(null);
 
       button.click();
-      await waitForStep(runtime);
+      await step(runtime);
       expect(button.innerHTML).toBe('1');
       expect(document.activeViewTransition).toBeInstanceOf(ViewTransition);
       expect([...document.activeViewTransition!.types]).toStrictEqual([
