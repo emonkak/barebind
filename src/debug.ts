@@ -6,8 +6,7 @@ export function formatOwnerStack(ownerStack: Owner[]): string {
     .map((owner, i) => {
       const prefix = i === tail ? '' : '   '.repeat(tail - i - 1) + '`- ';
       const suffix = i === 0 ? ' <- ERROR occurred here!' : '';
-      const name =
-        typeof owner === 'function' ? owner.name : owner.constructor.name;
+      const name = nameOf(owner);
       return prefix + name + suffix;
     })
     .reverse()
@@ -24,4 +23,8 @@ export function getOwnerStack(scope: Scope): Owner[] {
   } while (current !== null);
 
   return ownerStack;
+}
+
+export function nameOf(owner: Owner): string {
+  return typeof owner === 'function' ? owner.name : owner.constructor.name;
 }
