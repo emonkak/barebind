@@ -28,5 +28,10 @@ export { DOMAdapter } from './dom/adapter.js';
 export { DOMAdapterError } from './dom/error.js';
 export { DOMRoot } from './dom/root.js';
 export { RenderError } from './error.js';
-export { Runtime, waitForStep } from './runtime.js';
+export {
+  type Middleware,
+  Runtime,
+  type Update,
+  waitForStep,
+} from './runtime.js';
 export { html, math, Partial, svg, text } from './template.js';

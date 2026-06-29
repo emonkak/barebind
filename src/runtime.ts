@@ -33,12 +33,16 @@ import {
 } from './lane.js';
 import { PriorityQueue } from './queue.js';
 
-interface Update {
-  id: number;
-  lanes: Lanes;
-  types: string[];
-  transaction: Transaction;
-  controller: PromiseWithResolvers<void>;
+export interface Middleware {
+  handle(update: Update, next: (update: Update) => Commit): Commit;
+}
+
+export interface Update {
+  readonly id: number;
+  readonly lanes: Lanes;
+  readonly types: string[];
+  readonly transaction: Transaction;
+  readonly controller: PromiseWithResolvers<void>;
 }
 
 export class Runtime implements Renderer, Dispatcher {
@@ -50,6 +54,7 @@ export class Runtime implements Renderer, Dispatcher {
   );
   /** @internal */
   _updateBatch: Update[] = [];
+  private _middlewares: Middleware[] = [];
   private _pendingLanes: number = NoLanes;
   private _stagedLanes: number = NoLanes;
   private _flushLanes: number = NoLanes;
@@ -314,6 +319,10 @@ export class Runtime implements Renderer, Dispatcher {
     };
   }
 
+  use(middleware: Middleware): void {
+    this._middlewares.push(middleware);
+  }
+
   private _diffChildren(
     oldParent: RenderNode,
     newParent: RenderNode,
@@ -542,7 +551,7 @@ export class Runtime implements Renderer, Dispatcher {
           if ((transaction.pendingLanes & lanes) === NoLanes) {
             continue;
           }
-          commitBatch.push(transaction.prepare(this._flushLanes, this));
+          commitBatch.push(runPipeline(update, this, this._middlewares));
         }
 
         if (commitBatch.length > 0) {
@@ -616,4 +625,19 @@ function compareUpdates(update1: Update, update2: Update): number {
   const level1 = update1.transaction.scope.level;
   const level2 = update2.transaction.scope.level;
   return level1 - level2;
+}
+
+function runPipeline(
+  update: Update,
+  renderer: Renderer,
+  middlewares: Middleware[],
+) {
+  function resumePipeline(update: Update, index: number): Commit {
+    return (
+      middlewares[index]?.handle(update, (update) =>
+        resumePipeline(update, index + 1),
+      ) ?? update.transaction.prepare(update.lanes, renderer)
+    );
+  }
+  return resumePipeline(update, 0);
 }
