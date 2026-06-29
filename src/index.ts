@@ -6,12 +6,22 @@ export {
   RenderContext,
 } from './component.js';
 export {
+  type Commit,
+  type Component,
   createBind,
   createFragment,
   createPortal,
   createTemplate,
+  type Lanes,
   Ref,
   toElement,
+  type UpdateHandle,
+  type UpdateOptions,
+  type VBind,
+  type VComponent,
+  type VElement,
+  type VPortal,
+  type VTemplate,
 } from './core.js';
 export { DOMAdapter } from './dom/adapter.js';
 export { DOMAdapterError } from './dom/error.js';

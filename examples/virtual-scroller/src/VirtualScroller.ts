@@ -1,9 +1,15 @@
-import { createComponent, html, type Ref, type RenderContext } from 'barebind';
+import {
+  type Component,
+  createComponent,
+  html,
+  type Ref,
+  type RenderContext,
+  type VComponent,
+} from 'barebind';
 import { EffectEvent, ImperativeHandle } from 'barebind/addons/hooks';
-import type { Component, VElement } from 'barebind/core';
 
 export interface VirtualScroller extends Component<VirtualScrollerProps<any>> {
-  <T>(props: VirtualScrollerProps<T>): VElement;
+  <T>(props: VirtualScrollerProps<T>): VComponent;
 }
 
 export interface VirtualScrollerProps<T> {

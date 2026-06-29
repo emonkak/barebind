@@ -7,9 +7,6 @@
     },
     "./addons/*": {
       "import": "./src/addons/*.ts"
-    },
-    "./core": {
-      "import": "./src/core.js"
     }
   },
   "publishConfig": {
@@ -21,10 +18,6 @@
       "./addons/*": {
         "import": "./lib/addons/*.js",
         "types": "./lib/addons/*.d.ts"
-      },
-      "./core": {
-        "import": "./lib/core.js",
-        "types": "./lib/core.d.ts"
       }
     }
   },
