@@ -16,7 +16,6 @@ import {
   type UpdateTransaction,
   type VComponent,
   type VElement,
-  VNODE_KIND_COMPONENT,
   VNode,
   wrap,
 } from './core.js';
@@ -440,7 +439,7 @@ export function createComponent<TProps = {}, TReturn = unknown>(
   { arePropsEqual = Object.is }: ComponentOptions<TProps> = {},
 ): Component<TProps> {
   function Component(props: TProps): VComponent<TProps> {
-    return new VNode(VNODE_KIND_COMPONENT, Component, props, []);
+    return new VNode(Component, props, []);
   }
 
   Component.createInstance = (

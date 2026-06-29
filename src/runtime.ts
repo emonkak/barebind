@@ -1,6 +1,8 @@
 import {
+  Bind,
   type Commit,
   type Dispatcher,
+  Fragment,
   type HostAdapter,
   type Lanes,
   MUTATION_TYPE_INSERT,
@@ -17,13 +19,9 @@ import {
   type UpdateOptions,
   type UpdateTransaction,
   type VElement,
-  VNODE_KIND_BIND,
-  VNODE_KIND_COMPONENT,
-  VNODE_KIND_FRAGMENT,
-  VNODE_KIND_PORTAL,
-  VNODE_KIND_TEMPLATE,
+  type VPortal,
+  type VTemplate,
 } from './core.js';
-import { assertUnreachable } from './debug.js';
 import {
   getHighestPriorityLane,
   getLaneFromPriority,
@@ -76,109 +74,98 @@ export class Runtime implements Renderer, Dispatcher {
     if (oldNode.props === newElement.props) {
       return oldNode;
     }
-    switch (newElement.kind) {
-      case VNODE_KIND_BIND: {
-        return {
-          type: newElement.type,
-          props: newElement.props,
-          key: newElement.key,
-          index,
-          parent,
-          children: oldNode.children,
-          part: oldNode.part,
-          state: (oldNode as RenderNode.BindNode).state,
-          dirty: true,
-        };
+    if (newElement.type === Bind) {
+      return {
+        type: newElement.type,
+        props: newElement.props,
+        key: newElement.key,
+        index,
+        parent,
+        children: oldNode.children,
+        part: oldNode.part,
+        state: (oldNode as RenderNode.BindNode).state,
+        dirty: true,
+      };
+    } else if (newElement.type === Fragment) {
+      const newNode: RenderNode.FragmentNode = {
+        type: newElement.type,
+        props: newElement.props,
+        key: newElement.key,
+        index,
+        parent,
+        children: new Array(newElement.children.length),
+        part: oldNode.part,
+        state: (oldNode as RenderNode.FragmentNode).state,
+        dirty: true,
+      };
+      newNode.state.mutations = this._diffChildren(
+        oldNode as RenderNode.FragmentNode,
+        newNode,
+        newElement.children,
+        scope,
+      );
+      return newNode;
+    } else if (typeof newElement.type === 'function') {
+      if (
+        ((oldNode as RenderNode.ComponentNode).state.instance.pendingLanes &
+          this._flushLanes) ===
+          NoLanes &&
+        (oldNode as RenderNode.ComponentNode).type.arePropsEqual(
+          oldNode.props,
+          newElement.props,
+        )
+      ) {
+        return oldNode;
       }
-      case VNODE_KIND_COMPONENT: {
-        if (
-          ((oldNode as RenderNode.ComponentNode).state.instance.pendingLanes &
-            this._flushLanes) ===
-            NoLanes &&
-          (oldNode as RenderNode.ComponentNode).type.arePropsEqual(
-            oldNode.props,
-            newElement.props,
-          )
-        ) {
-          return oldNode;
-        }
-        const newNode: RenderNode.ComponentNode = {
-          type: newElement.type,
-          props: newElement.props,
-          key: newElement.key,
-          index,
-          parent,
-          children: oldNode.children.slice(),
-          part: oldNode.part,
-          state: (oldNode as RenderNode.ComponentNode).state,
-          dirty: true,
-        };
-        const subScope = scope.enter(newElement.type);
-        newNode.children[0] = this.diff(
-          newNode.children[0]!,
-          newNode.state.instance.render(
-            newNode.props,
-            subScope,
-            this._flushLanes,
-          ),
+      const newNode: RenderNode.ComponentNode = {
+        type: newElement.type,
+        props: newElement.props,
+        key: newElement.key,
+        index,
+        parent,
+        children: oldNode.children.slice(),
+        part: oldNode.part,
+        state: (oldNode as RenderNode.ComponentNode).state,
+        dirty: true,
+      };
+      const subScope = scope.enter(newElement.type);
+      newNode.children[0] = this.diff(
+        newNode.children[0]!,
+        newNode.state.instance.render(
+          newNode.props,
           subScope,
-          0,
-          newNode,
-        );
-        newNode.state.scope = scope;
-        return newNode;
-      }
-      case VNODE_KIND_FRAGMENT: {
-        const newNode: RenderNode.FragmentNode = {
-          type: newElement.type,
-          props: newElement.props,
-          key: newElement.key,
-          index,
-          parent,
-          children: new Array(newElement.children.length),
-          part: oldNode.part,
-          state: (oldNode as RenderNode.FragmentNode).state,
-          dirty: true,
-        };
-        newNode.state.mutations = this._diffChildren(
-          oldNode as RenderNode.FragmentNode,
-          newNode,
-          newElement.children,
+          this._flushLanes,
+        ),
+        subScope,
+        0,
+        newNode,
+      );
+      newNode.state.scope = scope;
+      return newNode;
+    } else {
+      const newNode: RenderNode.BlockNode = {
+        type: newElement.type,
+        props: newElement.props,
+        key: newElement.key,
+        index,
+        parent,
+        children: new Array(newElement.children.length),
+        part: oldNode.part,
+        state: (oldNode as RenderNode.BlockNode).state,
+        dirty: false,
+      };
+      for (let i = 0, l = newElement.children.length; i < l; i++) {
+        const newChild = this.diff(
+          oldNode.children[i]!,
+          newElement.children[i]!,
           scope,
+          i,
+          newNode,
         );
-        return newNode;
+        newNode.children[i] = newChild;
+        newNode.dirty ||= newChild.dirty;
       }
-      case VNODE_KIND_PORTAL:
-      case VNODE_KIND_TEMPLATE: {
-        const newNode: RenderNode.BlockNode = {
-          type: newElement.type,
-          props: newElement.props,
-          key: newElement.key,
-          index,
-          parent,
-          children: new Array(newElement.children.length),
-          part: oldNode.part,
-          state: (oldNode as RenderNode.BlockNode).state,
-          dirty: false,
-        };
-        for (let i = 0, l = newElement.children.length; i < l; i++) {
-          const newChild = this.diff(
-            oldNode.children[i]!,
-            newElement.children[i]!,
-            scope,
-            i,
-            newNode,
-          );
-          newNode.children[i] = newChild;
-          newNode.dirty ||= newChild.dirty;
-        }
-        return newNode;
-      }
-      /** v8 ignore next @preserve */
-      default:
-        DEBUG: {
-          assertUnreachable(newElement);
-        }
+      return newNode;
     }
   }
 
@@ -197,119 +184,90 @@ export class Runtime implements Renderer, Dispatcher {
     parent: RenderNode | RenderRoot,
     part: Part,
   ): RenderNode {
-    switch (element.kind) {
-      case VNODE_KIND_BIND: {
-        return {
-          type: element.type,
-          props: element.props,
-          key: element.key,
-          index,
-          parent,
-          children: [],
-          part,
-          state: null,
-          dirty: true,
-        };
-      }
-      case VNODE_KIND_COMPONENT: {
-        const node: RenderNode.ComponentNode = {
-          type: element.type,
-          props: element.props,
-          key: element.key,
-          index,
-          parent,
-          children: new Array(1),
-          part,
-          state: {
-            instance: element.type.createInstance(this),
-            scope,
-          },
-          dirty: true,
-        };
-        const subScope = scope.enter(element.type);
-        node.children[0] = this.render(
-          node.state.instance.render(node.props, subScope, this._flushLanes),
-          subScope,
-          0,
-          node,
-          part,
-        );
-        return node;
-      }
-      case VNODE_KIND_FRAGMENT: {
-        const node: RenderNode.FragmentNode = {
-          type: element.type,
-          props: element.props,
-          key: element.key,
-          index,
-          parent,
-          children: new Array(element.children.length),
-          part,
-          state: { mutations: [] },
-          dirty: element.children.length > 0,
-        };
-        for (let i = 0, l = element.children.length; i < l; i++) {
-          node.children[i] = this.render(
-            element.children[i]!,
-            scope,
-            i,
-            node,
-            part.splitPart(),
-          );
-        }
-        return node;
-      }
-      case VNODE_KIND_PORTAL: {
-        const block = this._adapter.renderPortal(element);
-        const node: RenderNode.BlockNode = {
-          type: element.type,
-          props: element.props,
-          key: element.key,
-          index,
-          parent,
-          children: new Array(1),
-          part,
-          state: { block },
-          dirty: true,
-        };
-        node.children[0] = this.render(
-          element.children[0],
+    if (element.type === Bind) {
+      return {
+        type: element.type,
+        props: element.props,
+        key: element.key,
+        index,
+        parent,
+        children: [],
+        part,
+        state: null,
+        dirty: true,
+      };
+    } else if (element.type === Fragment) {
+      const node: RenderNode.FragmentNode = {
+        type: element.type,
+        props: element.props,
+        key: element.key,
+        index,
+        parent,
+        children: new Array(element.children.length),
+        part,
+        state: { mutations: [] },
+        dirty: element.children.length > 0,
+      };
+      for (let i = 0, l = element.children.length; i < l; i++) {
+        node.children[i] = this.render(
+          element.children[i]!,
           scope,
-          0,
+          i,
           node,
-          block.parts[0]!,
+          part.splitPart(),
         );
-        return node;
       }
-      case VNODE_KIND_TEMPLATE: {
-        const block = this._adapter.renderTemplate(element);
-        const node: RenderNode.BlockNode = {
-          type: element.type,
-          props: element.props,
-          key: element.key,
-          index,
-          parent,
-          children: new Array(element.children.length),
-          part,
-          state: { block },
-          dirty: true,
-        };
-        for (let i = 0, l = element.children.length; i < l; i++) {
-          node.children[i] = this.render(
-            element.children[i]!,
-            scope,
-            i,
-            node,
-            block.parts[i]!,
-          );
-        }
-        return node;
+      return node;
+    } else if (typeof element.type === 'function') {
+      const node: RenderNode.ComponentNode = {
+        type: element.type,
+        props: element.props,
+        key: element.key,
+        index,
+        parent,
+        children: new Array(1),
+        part,
+        state: {
+          instance: element.type.createInstance(this),
+          scope,
+        },
+        dirty: true,
+      };
+      const subScope = scope.enter(element.type);
+      node.children[0] = this.render(
+        node.state.instance.render(node.props, subScope, this._flushLanes),
+        subScope,
+        0,
+        node,
+        part,
+      );
+      return node;
+    } else {
+      const block =
+        'mode' in element.props
+          ? this._adapter.renderTemplate(element as VTemplate)
+          : this._adapter.renderPortal(element as VPortal);
+      const node: RenderNode.BlockNode = {
+        type: element.type,
+        props: element.props,
+        key: element.key,
+        index,
+        parent,
+        children: new Array(element.children.length),
+        part,
+        state: { block },
+        dirty: true,
+      };
+      for (let i = 0, l = element.children.length; i < l; i++) {
+        node.children[i] = this.render(
+          element.children[i]!,
+          scope,
+          i,
+          node,
+          block.parts[i]!,
+        );
       }
-      /** v8 ignore next @preserve */
-      default:
-        DEBUG: {
-          assertUnreachable(element);
-        }
+      return node;
     }
   }
 
