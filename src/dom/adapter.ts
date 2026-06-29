@@ -1,6 +1,6 @@
 import type { HostAdapter, VPortal, VTemplate } from '../core.js';
 import { DOMBlock } from './block.js';
-import { PortalPart } from './part.js';
+import { ContainerPart } from './part.js';
 import { DOMTemplate } from './template.js';
 
 export class DOMAdapter implements HostAdapter {
@@ -32,7 +32,7 @@ export class DOMAdapter implements HostAdapter {
     const container = element.type;
     const document = container.ownerDocument;
     const fragment = document.createDocumentFragment();
-    const part = new PortalPart(container);
+    const part = new ContainerPart(container);
     fragment.appendChild(document.createComment(''));
     return new DOMBlock(fragment, [part]);
   }

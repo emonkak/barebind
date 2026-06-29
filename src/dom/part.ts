@@ -174,28 +174,6 @@ export class PropertyPart extends AttributePart {
   }
 }
 
-export class StylePart extends AttributePart {
-  override commitMount(value: unknown): void {
-    updateStyle((this._node as HTMLElement).style, {}, normalizeStyle(value));
-  }
-
-  override commitUpdate(oldValue: unknown, newValue: unknown): void {
-    if (!Object.is(oldValue, newValue)) {
-      updateStyle(
-        (this._node as HTMLElement).style,
-        normalizeStyle(oldValue),
-        normalizeStyle(newValue),
-      );
-    }
-  }
-
-  override commitUnmount(value: unknown, cascade: boolean): void {
-    if (!cascade) {
-      updateStyle((this._node as HTMLElement).style, normalizeStyle(value), {});
-    }
-  }
-}
-
 export class CharacterDataPart extends DOMPart {
   protected override readonly _node: CharacterData;
 
@@ -228,6 +206,27 @@ export class ChildNodePart extends CharacterDataPart {
     if (!cascade) {
       block.unmount();
     }
+  }
+}
+
+export class ContainerPart extends DOMPart {
+  private readonly _container: Container;
+
+  constructor(container: Container) {
+    super();
+    this._container = container;
+  }
+
+  override mountBlock(block: Block, afterNode: ChildNode | null): void {
+    block.mountInto(this._container, afterNode);
+  }
+
+  override moveBlock(block: Block, afterNode: ChildNode | null): void {
+    block.moveInto(this._container, afterNode);
+  }
+
+  override unmountBlock(block: Block, _cascade: boolean): void {
+    block.unmount();
   }
 }
 
@@ -271,24 +270,25 @@ export class ElementPart extends DOMPart {
   }
 }
 
-export class PortalPart extends DOMPart {
-  private readonly _container: Container;
-
-  constructor(container: Container) {
-    super();
-    this._container = container;
+export class StylePart extends AttributePart {
+  override commitMount(value: unknown): void {
+    updateStyle((this._node as HTMLElement).style, {}, normalizeStyle(value));
   }
 
-  override mountBlock(block: Block, afterNode: ChildNode | null): void {
-    block.mountInto(this._container, afterNode);
+  override commitUpdate(oldValue: unknown, newValue: unknown): void {
+    if (!Object.is(oldValue, newValue)) {
+      updateStyle(
+        (this._node as HTMLElement).style,
+        normalizeStyle(oldValue),
+        normalizeStyle(newValue),
+      );
+    }
   }
 
-  override moveBlock(block: Block, afterNode: ChildNode | null): void {
-    block.moveInto(this._container, afterNode);
-  }
-
-  override unmountBlock(block: Block, _cascade: boolean): void {
-    block.unmount();
+  override commitUnmount(value: unknown, cascade: boolean): void {
+    if (!cascade) {
+      updateStyle((this._node as HTMLElement).style, normalizeStyle(value), {});
+    }
   }
 }
 
