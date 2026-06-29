@@ -13,8 +13,10 @@ export {
   createFragment,
   createPortal,
   createTemplate,
+  type Middleware,
   Ref,
   toElement,
+  type Update,
   type UpdateHandle,
   type UpdateOptions,
   type VBind,
@@ -28,9 +30,7 @@ export { DOMAdapterError } from './dom/error.js';
 export { DOMRoot } from './dom/root.js';
 export { RenderError } from './error.js';
 export {
-  type Middleware,
   Runtime,
   step,
-  type Update,
 } from './runtime.js';
 export { html, math, Partial, svg, text } from './template.js';
