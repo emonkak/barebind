@@ -1,6 +1,5 @@
-import type { Commit } from '../core.js';
+import type { Commit, Middleware, Update } from '../core.js';
 import { nameOf } from '../debug.js';
-import type { Middleware, Update } from '../runtime.js';
 
 export type UserTimingAPI = Pick<Performance, 'mark' | 'measure'>;
 

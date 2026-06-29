@@ -1,7 +1,6 @@
-import type { Commit, Lanes } from '../core.js';
+import type { Commit, Lanes, Middleware, Update } from '../core.js';
 import { nameOf } from '../debug.js';
 import { getPriorityFromLanes, SyncLane, ViewTransitionLane } from '../lane.js';
-import type { Middleware, Update } from '../runtime.js';
 
 // Blue
 const RENDER_PHASE_STYLE =

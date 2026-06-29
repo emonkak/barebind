@@ -66,6 +66,10 @@ export type Lane = number;
 
 export type Lanes = number;
 
+export interface Middleware {
+  handle(update: Update, next: (update: Update) => Commit): Commit;
+}
+
 export type Mutation =
   | {
       type: typeof MUTATION_TYPE_INSERT;
@@ -173,6 +177,14 @@ export interface Transaction {
   readonly scope: Scope;
   readonly pendingLanes: Lanes;
   prepare(lanes: Lanes, renderer: Renderer): Commit;
+}
+
+export interface Update {
+  readonly id: number;
+  readonly lanes: Lanes;
+  readonly types: string[];
+  readonly transaction: Transaction;
+  readonly controller: PromiseWithResolvers<void>;
 }
 
 export interface UpdateHandle {

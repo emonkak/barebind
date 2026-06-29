@@ -4,7 +4,7 @@ import {
   type Dispatcher,
   Fragment,
   type HostAdapter,
-  type Lanes,
+  type Middleware,
   MUTATION_TYPE_INSERT,
   MUTATION_TYPE_REMOVE,
   MUTATION_TYPE_UPDATE,
@@ -16,6 +16,7 @@ import {
   type RenderRoot,
   type Scope,
   type Transaction,
+  type Update,
   type UpdateHandle,
   type UpdateOptions,
   type VElement,
@@ -32,18 +33,6 @@ import {
   ViewTransitionLane,
 } from './lane.js';
 import { PriorityQueue } from './queue.js';
-
-export interface Middleware {
-  handle(update: Update, next: (update: Update) => Commit): Commit;
-}
-
-export interface Update {
-  readonly id: number;
-  readonly lanes: Lanes;
-  readonly types: string[];
-  readonly transaction: Transaction;
-  readonly controller: PromiseWithResolvers<void>;
-}
 
 export class Runtime implements Renderer, Dispatcher {
   /** @internal */
