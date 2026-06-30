@@ -200,7 +200,7 @@ export class Runtime implements Renderer, Dispatcher {
         children: new Array(element.children.length),
         part,
         state: { mutations: [] },
-        dirty: element.children.length > 0,
+        dirty: true,
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
         node.children[i] = this.render(
