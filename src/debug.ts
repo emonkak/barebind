@@ -4,12 +4,11 @@ export function formatOwnerStack(ownerStack: Owner[]): string {
   const tail = ownerStack.length - 1;
   return ownerStack
     .map((owner, i) => {
-      const prefix = i === tail ? '' : '   '.repeat(tail - i - 1) + '`- ';
-      const suffix = i === 0 ? ' <- ERROR occurred here!' : '';
+      const prefix = i === 0 ? '' : '   '.repeat(i - 1) + '`- ';
+      const suffix = i === tail ? ' <- ERROR occurred here!' : '';
       const name = nameOf(owner);
       return prefix + name + suffix;
     })
-    .reverse()
     .join('\n');
 }
 
@@ -22,7 +21,7 @@ export function getOwnerStack(scope: Scope): Owner[] {
     current = current.parent;
   } while (current !== null);
 
-  return ownerStack;
+  return ownerStack.reverse();
 }
 
 export function nameOf(owner: Owner): string {
