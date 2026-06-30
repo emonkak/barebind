@@ -9,18 +9,18 @@ interface CommentViewProps {
 export const CommentView = createComponent<CommentViewProps>(
   function CommentView({ comment }) {
     return html`
-    <li class="comment">
-      <div class="by">
-        <a href=${`#/users/${comment.user}`}>${comment.user}</a> ${comment.time_ago}
-      </div>
-      <div class="text" .innerHTML=${comment.content}></div>
-      <${
-        comment.comments.length > 0
-          ? CommentList({ comments: comment.comments })
-          : null
-      }>
-    </li>
-  `;
+      <li class="comment">
+        <div class="by">
+          <a href=${`#/users/${comment.user}`}>${comment.user}</a> ${comment.time_ago}
+        </div>
+        <div class="text" .innerHTML=${comment.content}></div>
+        <${
+          comment.comments.length > 0
+            ? CommentList({ comments: comment.comments })
+            : null
+        }>
+      </li>
+    `;
   },
 );
 
