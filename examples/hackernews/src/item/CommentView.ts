@@ -37,21 +37,21 @@ export const CommentList = createComponent<CommentListProps>(
     }, []);
 
     return html`
-    <div :class=${{ _: 'toggle', open: isOpened }}>
-      <a @click=${handleToggleOpen}>
-        ${isOpened ? '[-]' : '[+] ' + pluralize(comments.length) + ' collapsed'}
-      </a>
-    </div>
-    <${
-      isOpened
-        ? html`
-          <ul class="comment-children">
-            <${comments.map((comment) => CommentView({ comment }).withKey(comment.id))}>
-          </ul>
-        `
-        : null
-    }>
-  `;
+      <div class=${{ toggle: true, open: isOpened }}>
+        <a @click=${handleToggleOpen}>
+          ${isOpened ? '[-]' : '[+] ' + pluralize(comments.length) + ' collapsed'}
+        </a>
+      </div>
+      <${
+        isOpened
+          ? html`
+            <ul class="comment-children">
+              <${comments.map((comment) => CommentView({ comment }).withKey(comment.id))}>
+            </ul>
+          `
+          : null
+      }>
+    `;
   },
 );
 
