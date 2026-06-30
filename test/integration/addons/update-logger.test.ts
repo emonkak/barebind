@@ -34,34 +34,17 @@ describe('UpdateLogger', () => {
     document.body.removeChild(container);
   });
 
-  it('logs groupCollapsed, log, and groupEnd on successful render', async () => {
-    await root.render(html`<div>hello</div>`).finished;
-
-    expect(logger.groupCollapsed).toHaveBeenCalledOnce();
-    expect(logger.groupEnd).toHaveBeenCalledOnce();
-    expect(logger.log).toHaveBeenCalledTimes(2);
-  });
-
-  it('logs each render separately', async () => {
-    await root.render(html`<div>first</div>`).finished;
-    await root.render(html`<div>second</div>`).finished;
-
-    expect(logger.groupCollapsed).toHaveBeenCalledTimes(2);
-    expect(logger.groupEnd).toHaveBeenCalledTimes(2);
-    expect(logger.log).toHaveBeenCalledTimes(4);
-  });
-
   it.each<[UpdateOptions, string, string]>([
-    [{ flushSync: true }, 'synchronous', 'user-blocking'],
-    [{ viewTransition: true }, 'view-transition', 'user-blocking'],
-    [{}, 'animation-frame', 'background'],
-  ])('logs updates with $1 mode and $2 priority', async (options, expectedMode, expectedPriority) => {
+    [{ flushSync: true }, 'user-blocking', 'synchronous'],
+    [{ viewTransition: true }, 'user-blocking', 'view-transition'],
+    [{}, 'background', 'animation-frame'],
+  ])('logs updates with $1 priority and $2 mode', async (options, expectedPriority, expectedMode) => {
     await root.render(html`<div>hello</div>`, options).finished;
 
     expect(logger.groupCollapsed).toHaveBeenCalledOnce();
     expect(logger.groupCollapsed).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Update #0 COMPLETED with %c${expectedMode}%c mode and %c${expectedPriority}%c priority in`,
+        `Update #0 %cCOMPLETED%c from %c${DOMRoot.name}%c in %c`,
       ),
       expect.any(String),
       expect.any(String),
@@ -69,9 +52,33 @@ describe('UpdateLogger', () => {
       expect.any(String),
       expect.any(String),
     );
+    expect(logger.log).toHaveBeenCalledTimes(3);
+    expect(logger.log).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining(`Started from %c${DOMRoot.name}`),
+      expect.any(String),
+    );
+    expect(logger.log).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining(
+        `Rendered with %c${expectedPriority}%c priority after %c`,
+      ),
+      expect.any(String),
+      expect.any(String),
+      expect.any(String),
+    );
+    expect(logger.log).toHaveBeenNthCalledWith(
+      3,
+      expect.stringContaining(
+        `Committed with %c${expectedMode}%c mode after %c`,
+      ),
+      expect.any(String),
+      expect.any(String),
+      expect.any(String),
+    );
   });
 
-  it('logs render and commit phases with timing', async () => {
+  it('logs updates from child components', async () => {
     const App = createComponent(function App() {
       const [count, setCount] = this.useState(0);
       return html`<button @click=${() => setCount((c) => c + 1)}>${count}</button>`;
@@ -82,11 +89,11 @@ describe('UpdateLogger', () => {
     container.querySelector('button')!.click();
     await step(runtime);
 
-    expect(logger.log).toHaveBeenCalledTimes(4);
-    expect(logger.log).toHaveBeenNthCalledWith(
-      3,
+    expect(logger.groupCollapsed).toHaveBeenCalledTimes(2);
+    expect(logger.groupCollapsed).toHaveBeenNthCalledWith(
+      2,
       expect.stringContaining(
-        `%cRENDER PHASE:%c Rendered %c<${App.name}>%c after`,
+        `Update #1 %cCOMPLETED%c from %c${App.name}%c in %c`,
       ),
       expect.any(String),
       expect.any(String),
@@ -94,13 +101,26 @@ describe('UpdateLogger', () => {
       expect.any(String),
       expect.any(String),
     );
+    expect(logger.log).toHaveBeenCalledTimes(6);
     expect(logger.log).toHaveBeenNthCalledWith(
       4,
+      expect.stringContaining(`Started from %c${DOMRoot.name} > ${App.name}`),
+      expect.any(String),
+    );
+    expect(logger.log).toHaveBeenNthCalledWith(
+      5,
       expect.stringContaining(
-        `%cCOMMIT PHASE:%c Committed %c<${App.name}>%c after`,
+        `Rendered with %cuser-blocking%c priority after %c`,
       ),
       expect.any(String),
       expect.any(String),
+      expect.any(String),
+    );
+    expect(logger.log).toHaveBeenNthCalledWith(
+      6,
+      expect.stringContaining(
+        `Committed with %canimation-frame%c mode after %c`,
+      ),
       expect.any(String),
       expect.any(String),
       expect.any(String),
@@ -117,7 +137,7 @@ describe('UpdateLogger', () => {
     expect(logger.groupCollapsed).toHaveBeenCalledOnce();
     expect(logger.groupCollapsed).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Update #0 FAILED with %canimation-frame%c mode and %cbackground%c priority in`,
+        `Update #0 %cFAILED%c from %c${DOMRoot.name}%c in %c`,
       ),
       expect.any(String),
       expect.any(String),
@@ -127,9 +147,7 @@ describe('UpdateLogger', () => {
     );
     expect(logger.log).toHaveBeenCalledOnce();
     expect(logger.log).toHaveBeenCalledWith(
-      expect.stringContaining(`%cRENDER PHASE:%c Failed %c<${DOMRoot.name}>`),
-      expect.any(String),
-      expect.any(String),
+      expect.stringContaining(`Started from %c${DOMRoot.name}`),
       expect.any(String),
     );
   });

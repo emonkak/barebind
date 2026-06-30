@@ -1,15 +1,15 @@
 import type { Commit, Lanes, Middleware, Update } from '../core.js';
-import { nameOf } from '../debug.js';
+import { getOwnerStack, nameOf } from '../debug.js';
 import { getPriorityFromLanes, SyncLane, ViewTransitionLane } from '../lane.js';
 
 // Blue
-const RENDER_PHASE_STYLE =
-  'color: light-dark(#0b57d0, #4c8df6); font-weight: bold';
-// Pink
-const COMMIT_PHASE_STYLE =
-  'color: light-dark(#b90063, #ff4896); font-weight: bold';
+const COMPLETE_STYLE = 'color: light-dark(#0b57d0, #4c8df6)';
+// Red
+const FAILED_STYLE = 'color: light-dark(#b3261e, #e46962)';
+// Orange
+const VALUE_STYLE = 'color: light-dark(#9f4312, #e96723)';
 // Gray
-const VALUE_STYLE = 'color: light-dark(#5e5d67, #918f9a)';
+const DURATION_STYLE = 'color: light-dark(#5e5d67, #918f9a)';
 const RESET_STYLE = '';
 
 export type LoggerAPI = Pick<Console, 'groupCollapsed' | 'groupEnd' | 'log'>;
@@ -59,49 +59,42 @@ function emitLog(
   totalDuration: number,
 ): void {
   const status = renderAfter >= 0 ? 'COMPLETED' : 'FAILED';
+  const statusStyle = renderAfter >= 0 ? COMPLETE_STYLE : FAILED_STYLE;
   const priority = getPriorityFromLanes(update.lanes);
-  const mode = getUpdateMode(update.lanes);
-  const owner = nameOf(update.transaction.scope.owner);
+  const mode = getCommitMode(update.lanes);
+  const scope = update.transaction.scope;
+  const ownerName = nameOf(scope.owner);
+  const ownerStack = getOwnerStack(scope).map(nameOf).join(' > ');
 
   logger.groupCollapsed(
-    `Update #${update.id} ${status} with %c${mode}%c mode and %c${priority}%c priority in %c${totalDuration}ms`,
-    VALUE_STYLE,
+    `Update #${update.id} %c${status}%c from %c${ownerName}%c in %c${totalDuration}ms`,
+    statusStyle,
     RESET_STYLE,
     VALUE_STYLE,
     RESET_STYLE,
-    VALUE_STYLE,
+    DURATION_STYLE,
   );
+  logger.log(`Started from %c${ownerStack}`, VALUE_STYLE);
   if (renderAfter >= 0) {
     logger.log(
-      `%cRENDER PHASE:%c Rendered %c<${owner}>%c after %c${renderAfter}ms`,
-      RENDER_PHASE_STYLE,
-      RESET_STYLE,
+      `Rendered with %c${priority}%c priority after %c${renderAfter}ms`,
       VALUE_STYLE,
       RESET_STYLE,
-      VALUE_STYLE,
-    );
-  } else {
-    logger.log(
-      `%cRENDER PHASE:%c Failed %c<${owner}>`,
-      RENDER_PHASE_STYLE,
-      RESET_STYLE,
-      VALUE_STYLE,
+      DURATION_STYLE,
     );
   }
   if (commitAfter >= 0) {
     logger.log(
-      `%cCOMMIT PHASE:%c Committed %c<${owner}>%c after %c${commitAfter}ms`,
-      COMMIT_PHASE_STYLE,
-      RESET_STYLE,
+      `Committed with %c${mode}%c mode after %c${commitAfter}ms`,
       VALUE_STYLE,
       RESET_STYLE,
-      VALUE_STYLE,
+      DURATION_STYLE,
     );
   }
   logger.groupEnd();
 }
 
-function getUpdateMode(lanes: Lanes): string {
+function getCommitMode(lanes: Lanes): string {
   return lanes & SyncLane
     ? 'synchronous'
     : lanes & ViewTransitionLane
