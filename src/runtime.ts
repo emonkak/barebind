@@ -62,7 +62,10 @@ export class Runtime implements Renderer, Dispatcher {
     index: number,
     parent: RenderNode | RenderRoot,
   ): RenderNode {
-    if (oldNode.type !== newElement.type || oldNode.key !== newElement.key) {
+    if (
+      oldNode.type !== newElement.type ||
+      !Object.is(oldNode.key, newElement.key)
+    ) {
       return this.render(newElement, scope, index, parent, oldNode.part);
     }
     if (oldNode.props === newElement.props) {
