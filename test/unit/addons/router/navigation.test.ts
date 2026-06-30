@@ -41,7 +41,7 @@ describe('BrowserAdapter', () => {
     });
 
     it('returns undefined when currentEntry is null', () => {
-      expect(adapter.getCurrentState()).toBeUndefined();
+      expect(adapter.getCurrentState()).toBe(undefined);
     });
   });
 
@@ -231,7 +231,7 @@ describe('HashAdapter', () => {
     });
 
     it('returns undefined when currentEntry is null', () => {
-      expect(adapter.getCurrentState()).toBeUndefined();
+      expect(adapter.getCurrentState()).toBe(undefined);
     });
   });
 
@@ -371,7 +371,7 @@ describe('InMemoryAdapter', () => {
 
     it('returns undefined when no state is given', () => {
       const adapter = new InMemoryAdapter('/foo', undefined);
-      expect(adapter.getCurrentState()).toBeUndefined();
+      expect(adapter.getCurrentState()).toBe(undefined);
     });
   });
 
