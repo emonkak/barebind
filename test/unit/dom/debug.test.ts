@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { generateNodeFrame } from '@/dom/debug.js';
-import { createElement } from '../../dom-helpers.js';
 
 describe('generateNodeFrame()', () => {
   it('generates node frames for attributes', () => {
@@ -158,3 +157,20 @@ describe('generateNodeFrame()', () => {
     expect(generateNodeFrame(node)).toBe(expectedLines.join('\n'));
   });
 });
+
+function createElement(
+  name: string,
+  attributes: { [key: string]: string } = {},
+  ...children: (Node | string)[]
+): HTMLElement {
+  const element = document.createElement(name);
+  for (const key in attributes) {
+    element.setAttribute(key, attributes[key]!);
+  }
+  for (const child of children) {
+    element.appendChild(
+      child instanceof Node ? child : document.createTextNode(child),
+    );
+  }
+  return element;
+}
