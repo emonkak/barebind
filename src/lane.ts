@@ -9,9 +9,9 @@ export const UserVisibleLane: Lane /*    */ = 0b0000000000000000000000000001000;
 export const BackgroundLane: Lane /*     */ = 0b0000000000000000000000000010000;
 export const TransitionLane1: Lane /*    */ = 0b0000000000000000000000000100000;
 export const TransitionLanes: Lanes /*   */ = 0b0011111111111111111111111100000;
-export const DelayedLane1: Lane /*       */ = 0b0100000000000000000000000000000;
-export const DelayedLane2: Lane /*       */ = 0b1000000000000000000000000000000;
-export const DelayedLanes: Lanes /*      */ = 0b1100000000000000000000000000000;
+export const DelayLane1: Lane /*         */ = 0b0100000000000000000000000000000;
+export const DelayLane2: Lane /*         */ = 0b1000000000000000000000000000000;
+export const DelayLanes: Lanes /*        */ = 0b1100000000000000000000000000000;
 
 export const TransitionLaneLength: number = 24;
 
@@ -35,7 +35,7 @@ export function getPriorityFromLanes(lanes: Lanes): TaskPriority {
     ? 'user-blocking'
     : lanes & UserVisibleLane
       ? 'user-visible'
-      : lanes & (BackgroundLane | TransitionLanes | DelayedLanes)
+      : lanes & (BackgroundLane | TransitionLanes | DelayLanes)
         ? 'background'
         : 'user-visible';
 }
@@ -55,7 +55,7 @@ export function getRenderLanes(options: UpdateOptions): Lanes {
     lanes |= TransitionLane1 << (options.transition % TransitionLaneLength);
   }
   if (options.delay !== undefined) {
-    lanes |= options.delay <= 100 ? DelayedLane1 : DelayedLane2;
+    lanes |= options.delay <= 100 ? DelayLane1 : DelayLane2;
   }
   return lanes;
 }
@@ -91,8 +91,8 @@ export function inspectLanes(lanes: Lanes): string[] {
   if (lanes & TransitionLanes) {
     tags.push('TransitionLane');
   }
-  if (lanes & DelayedLanes) {
-    tags.push('DelayedLane');
+  if (lanes & DelayLanes) {
+    tags.push('DelayLane');
   }
   return tags;
 }
