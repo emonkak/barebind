@@ -57,19 +57,19 @@ describe('UpdateProfiler', () => {
     expect(userTiming.measure).toHaveBeenCalledTimes(3);
     expect(userTiming.measure).toHaveBeenNthCalledWith(
       1,
-      `Update <${DOMRoot.name}>`,
+      `Update ${DOMRoot.name}`,
       'barebind:render-start:0',
       'barebind:commit-end:0',
     );
     expect(userTiming.measure).toHaveBeenNthCalledWith(
       2,
-      `Render <${DOMRoot.name}>`,
+      `Render ${DOMRoot.name}`,
       'barebind:render-start:0',
       'barebind:render-end:0',
     );
     expect(userTiming.measure).toHaveBeenNthCalledWith(
       3,
-      `Commit <${DOMRoot.name}>`,
+      `Commit ${DOMRoot.name}`,
       'barebind:commit-start:0',
       'barebind:commit-end:0',
     );
