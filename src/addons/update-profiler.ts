@@ -26,17 +26,17 @@ export class UpdateProfiler implements Middleware {
       commit();
       this._userTiming.mark(commitEndMark);
       this._userTiming.measure(
-        `Update <${name}>`,
+        `Update ${name}`,
         renderStartMark,
         commitEndMark,
       );
       this._userTiming.measure(
-        `Render <${name}>`,
+        `Render ${name}`,
         renderStartMark,
         renderEndMark,
       );
       this._userTiming.measure(
-        `Commit <${name}>`,
+        `Commit ${name}`,
         commitStartMark,
         commitEndMark,
       );
