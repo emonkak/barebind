@@ -48,7 +48,7 @@ function applyPatch(
   }
   if (oldNode.type !== newNode.type || oldNode.key !== newNode.key) {
     unmountChild(oldNode);
-    mountChild(newNode, getSiblingNode(oldNode));
+    mountChild(newNode, getSiblingDOMNode(oldNode));
   } else if (newNode.type === Bind) {
     newNode.part.commitUpdate(
       (oldNode as RenderNode.BindNode).props.value,
@@ -69,7 +69,7 @@ function applyPatch(
           mountChild(
             mutation.node,
             mutation.afterNode !== undefined
-              ? getDescendantNode(mutation.afterNode)
+              ? getChildDOMNode(mutation.afterNode)
               : null,
           );
           break;
@@ -91,7 +91,7 @@ function applyPatch(
           moveChild(
             mutation.newNode,
             mutation.afterNode !== undefined
-              ? getDescendantNode(mutation.afterNode)
+              ? getChildDOMNode(mutation.afterNode)
               : null,
           );
           break;
@@ -103,20 +103,20 @@ function applyPatch(
   }
 }
 
-function getDescendantNode(node: RenderNode): ChildNode | null {
+function getChildDOMNode(node: RenderNode): ChildNode | null {
   if (typeof node.type === 'object') {
     return node.state.block.staticNodes[0]!;
   }
   for (const child of node.children) {
-    const descendantNode = getDescendantNode(child);
-    if (descendantNode !== null) {
-      return descendantNode;
+    const domNode = getChildDOMNode(child);
+    if (domNode !== null) {
+      return domNode;
     }
   }
-  return getSiblingNode(node);
+  return getSiblingDOMNode(node);
 }
 
-function getSiblingNode(node: RenderNode): ChildNode | null {
+function getSiblingDOMNode(node: RenderNode): ChildNode | null {
   const part = node.part;
   while (node.parent.type !== null) {
     const children = node.parent.children;
@@ -125,9 +125,9 @@ function getSiblingNode(node: RenderNode): ChildNode | null {
       if (child.part !== part) {
         break;
       }
-      const descendantNode = getDescendantNode(child);
-      if (descendantNode !== null) {
-        return descendantNode;
+      const domNode = getChildDOMNode(child);
+      if (domNode !== null) {
+        return domNode;
       }
     }
     node = node.parent;
