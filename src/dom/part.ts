@@ -258,15 +258,14 @@ export class ElementPart extends DOMPart {
   override commitUpdate(oldValue: unknown, newValue: unknown): void {
     if (oldValue !== newValue) {
       this._cleanup?.();
+      this._cleanup = undefined;
       this.commitMount(newValue);
     }
   }
 
-  override commitUnmount(value: unknown, _cascade: boolean): void {
-    if (value != null) {
-      this._cleanup?.();
-      this._cleanup = undefined;
-    }
+  override commitUnmount(_value: unknown, _cascade: boolean): void {
+    this._cleanup?.();
+    this._cleanup = undefined;
   }
 }
 
