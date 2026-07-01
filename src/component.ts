@@ -476,38 +476,17 @@ class UpdateComponent implements Transaction {
   }
 
   prepare(lanes: Lanes, renderer: Renderer): Commit {
-    const oldNode = this._instance._connectedNode;
-    if (oldNode === null) {
+    const node = this._instance._connectedNode;
+    if (node === null) {
       return noOp;
     }
-    const newNode: RenderNode.ComponentNode = {
-      type: oldNode.type,
-      props: oldNode.props,
-      key: oldNode.key,
-      index: oldNode.index,
-      parent: oldNode.parent,
-      children: oldNode.children.slice(),
-      part: oldNode.part,
-      state: oldNode.state,
-      dirty: true,
-    };
-    const subScope = newNode.state.scope.enter(newNode.type);
-    newNode.children[0] = renderer.diff(
-      newNode.children[0]!,
-      newNode.state.instance.render(newNode.props, subScope, lanes),
-      subScope,
-      0,
-      newNode,
-    );
+    const subScope = node.state.scope.enter(node.type);
+    const newElement = node.state.instance.render(node.props, subScope, lanes);
+    node.left = [renderer.diff(node.right[0]!, newElement, subScope, 0, node)];
     return () => {
-      // Read _connectedNode at commit time, not captured from prepare().
-      // A prior transaction's commit (e.g. triggered by a lane added to
-      // pendingLanes during render) may have already patched and replaced
-      // the connected node, making the captured reference stale.
-      const oldNode = this._instance._connectedNode;
-      if (oldNode !== null) {
-        patch(oldNode, newNode);
-      }
+      patch(node.right[0]!, node.left[0]!);
+      node.state.instance.connect(node);
+      node.right = node.left;
     };
   }
 }

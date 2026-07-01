@@ -16,7 +16,8 @@ export class DOMRoot {
   private readonly _dispatcher: Dispatcher;
   private readonly _root: RenderRoot = {
     type: null,
-    children: [undefined],
+    left: null,
+    right: null,
   };
 
   constructor(container: Container, dispatcher: Dispatcher) {
@@ -32,10 +33,9 @@ export class DOMRoot {
         pendingLanes: AllLanes,
         prepare: (_lanes, renderer) => {
           const element = wrap(value);
-          const oldChild = this._root.children[0];
-          const newChild =
-            oldChild !== undefined
-              ? renderer.diff(oldChild, element, scope, 0, this._root)
+          this._root.left =
+            this._root.right !== null
+              ? renderer.diff(this._root.right, element, scope, 0, this._root)
               : renderer.render(
                   element,
                   scope,
@@ -44,12 +44,12 @@ export class DOMRoot {
                   new ContainerPart(this._container),
                 );
           return () => {
-            const oldChild = this._root.children[0];
-            if (oldChild !== undefined) {
-              patch(oldChild, newChild);
+            if (this._root.right !== null) {
+              patch(this._root.right, this._root.left!);
             } else {
-              mount(newChild);
+              mount(this._root.left!);
             }
+            this._root.right = this._root.left;
           };
         },
       },
@@ -65,10 +65,9 @@ export class DOMRoot {
         pendingLanes: AllLanes,
         prepare: () => {
           return () => {
-            const child = this._root.children[0];
-            if (child !== undefined) {
-              unmount(child);
-              this._root.children[0] = undefined;
+            if (this._root.right !== null) {
+              unmount(this._root.right);
+              this._root.right = null;
             }
           };
         },

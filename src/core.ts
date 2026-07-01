@@ -119,10 +119,10 @@ export namespace RenderNode {
     key: TElement['key'];
     index: number;
     parent: RenderNode | RenderRoot;
-    children: RenderNode[];
+    left: RenderNode[];
+    right: RenderNode[];
     part: Part;
     state: unknown;
-    dirty: boolean;
   }
 
   export interface BindNode extends Node<VBind> {
@@ -151,7 +151,8 @@ export namespace RenderNode {
 
 export interface RenderRoot {
   type: null;
-  children: [RenderNode | undefined];
+  left: RenderNode | null;
+  right: RenderNode | null;
 }
 
 export interface Renderer {
