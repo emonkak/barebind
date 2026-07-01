@@ -2,14 +2,11 @@ import type { Commit, Lanes, Middleware, Update } from '../core.js';
 import { getOwnerStack, nameOf } from '../debug.js';
 import { getPriorityFromLanes, SyncLane, ViewTransitionLane } from '../lane.js';
 
-// Blue
-const COMPLETE_STYLE = 'color: light-dark(#0b57d0, #4c8df6)';
-// Red
-const FAILED_STYLE = 'color: light-dark(#b3261e, #e46962)';
-// Orange
-const VALUE_STYLE = 'color: light-dark(#9f4312, #e96723)';
-// Gray
-const DURATION_STYLE = 'color: light-dark(#5e5d67, #918f9a)';
+const RED_STYLE = 'color: light-dark(#b3261e, #e46962)';
+const BLUE_STYLE = 'color: light-dark(#0b57d0, #4c8df6)';
+const ORANGE_STYLE = 'color: light-dark(#9f4312, #e96723)';
+const GRAY_STYLE = 'color: light-dark(#5e5d67, #918f9a)';
+const BOLD_STYLE = 'font-weight: bold';
 const RESET_STYLE = '';
 
 export type LoggerAPI = Pick<Console, 'groupCollapsed' | 'groupEnd' | 'log'>;
@@ -59,7 +56,7 @@ function emitLog(
   totalDuration: number,
 ): void {
   const status = renderAfter >= 0 ? 'COMPLETED' : 'FAILED';
-  const statusStyle = renderAfter >= 0 ? COMPLETE_STYLE : FAILED_STYLE;
+  const statusStyle = renderAfter >= 0 ? BLUE_STYLE : RED_STYLE;
   const priority = getPriorityFromLanes(update.lanes);
   const mode = getCommitMode(update.lanes);
   const scope = update.transaction.scope;
@@ -67,28 +64,28 @@ function emitLog(
   const ownerStack = getOwnerStack(scope).map(nameOf).join(' > ');
 
   logger.groupCollapsed(
-    `Update #${update.id} for %c${ownerName}%c %c${status}%c in %c${totalDuration}ms`,
+    `Update #${update.id} %c${status}%c at %c${ownerName}%c in %c${totalDuration}ms`,
     statusStyle,
     RESET_STYLE,
-    VALUE_STYLE,
+    ORANGE_STYLE,
     RESET_STYLE,
-    DURATION_STYLE,
+    GRAY_STYLE,
   );
-  logger.log(`Triggered by %c${ownerStack}`, VALUE_STYLE);
+  logger.log(`Triggered by %c${ownerStack}`, BOLD_STYLE);
   if (renderAfter >= 0) {
     logger.log(
       `Rendered with %c${priority}%c priority after %c${renderAfter}ms`,
-      VALUE_STYLE,
+      BOLD_STYLE,
       RESET_STYLE,
-      DURATION_STYLE,
+      GRAY_STYLE,
     );
   }
   if (commitAfter >= 0) {
     logger.log(
       `Committed with %c${mode}%c mode after %c${commitAfter}ms`,
-      VALUE_STYLE,
+      BOLD_STYLE,
       RESET_STYLE,
-      DURATION_STYLE,
+      GRAY_STYLE,
     );
   }
   logger.groupEnd();
