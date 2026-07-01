@@ -1,4 +1,4 @@
-import { sequentialEqual } from '../compare.js';
+import { is, sequentialEqual } from '../compare.js';
 import type { Block, Container, Part } from '../core.js';
 import { generateNodeFrame } from './debug.js';
 import { DOMAdapterError } from './error.js';
@@ -65,7 +65,7 @@ export class AttributePart extends DOMPart {
   }
 
   override commitUpdate(oldValue: unknown, newValue: unknown): void {
-    if (!Object.is(oldValue, newValue)) {
+    if (!is(oldValue, newValue)) {
       this.commitMount(newValue);
     }
   }
@@ -77,7 +77,7 @@ export class ClassPart extends AttributePart {
   }
 
   override commitUpdate(oldValue: unknown, newValue: unknown): void {
-    if (!Object.is(oldValue, newValue)) {
+    if (!is(oldValue, newValue)) {
       updateClass(
         this._node.classList,
         normalizeClass(oldValue),
@@ -187,7 +187,7 @@ export class CharacterDataPart extends DOMPart {
   }
 
   override commitUpdate(oldValue: unknown, newValue: unknown): void {
-    if (!Object.is(oldValue, newValue)) {
+    if (!is(oldValue, newValue)) {
       this.commitMount(newValue);
     }
   }
@@ -275,7 +275,7 @@ export class StylePart extends AttributePart {
   }
 
   override commitUpdate(oldValue: unknown, newValue: unknown): void {
-    if (!Object.is(oldValue, newValue)) {
+    if (!is(oldValue, newValue)) {
       updateStyle(
         (this._node as HTMLElement).style,
         normalizeStyle(oldValue),

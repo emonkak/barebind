@@ -1,3 +1,4 @@
+import { is } from '../../compare.js';
 import {
   createComponent,
   type HookObject,
@@ -95,7 +96,7 @@ export class Atom<T> extends Signal<T> {
 
   set value(newValue: T) {
     const oldValue = this._value;
-    if (!Object.is(oldValue, newValue)) {
+    if (!is(oldValue, newValue)) {
       this._value = newValue;
       this.invalidate({
         source: this as Atom<unknown>,

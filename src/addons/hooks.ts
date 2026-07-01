@@ -1,3 +1,4 @@
+import { is } from '../compare.js';
 import type {
   DispatchOptions,
   HookFunction,
@@ -78,14 +79,14 @@ export function SyncExternalStore<T>(
       store.getSnapshot = getSnapshot;
       store.snapshot = snapshot;
 
-      if (!Object.is(getSnapshot(), snapshot)) {
+      if (!is(getSnapshot(), snapshot)) {
         context.forceUpdate({ flushSync: true });
       }
     }, [getSnapshot, snapshot]);
 
     context.useEffect(() => {
       const checkForChanges = () => {
-        if (!Object.is(store.getSnapshot(), store.snapshot)) {
+        if (!is(store.getSnapshot(), store.snapshot)) {
           context.forceUpdate({ flushSync: true });
         }
       };

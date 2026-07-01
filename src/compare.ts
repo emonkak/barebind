@@ -1,3 +1,5 @@
+export const is = Object.is;
+
 export function areDependenciesChanged(
   oldDeps: readonly unknown[] | null | undefined,
   newDeps: readonly unknown[] | null | undefined,
@@ -10,7 +12,7 @@ export function areDependenciesChanged(
 export function sequentialEqual<T>(
   xs: ArrayLike<T>,
   ys: ArrayLike<T>,
-  equals: (x: T, y: T) => boolean = Object.is,
+  equals: (x: T, y: T) => boolean = is,
 ): boolean {
   if (xs !== ys) {
     if (xs.length !== ys.length) {
@@ -30,7 +32,7 @@ export function sequentialEqual<T>(
 export function shallowEqual<T extends {}>(
   xs: T,
   ys: T,
-  equals: <K extends keyof T>(x: T[K], y: T[K]) => boolean = Object.is,
+  equals: <K extends keyof T>(x: T[K], y: T[K]) => boolean = is,
 ): boolean {
   if (xs !== ys) {
     const ks1 = Object.keys(xs);
