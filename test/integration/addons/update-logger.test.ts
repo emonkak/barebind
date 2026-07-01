@@ -44,7 +44,7 @@ describe('UpdateLogger', () => {
     expect(logger.groupCollapsed).toHaveBeenCalledOnce();
     expect(logger.groupCollapsed).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Update #0 for %c${DOMRoot.name}%c %cCOMPLETED%c in %c`,
+        `Update #0 %cCOMPLETED%c at %c${DOMRoot.name}%c in %c`,
       ),
       expect.any(String),
       expect.any(String),
@@ -93,7 +93,7 @@ describe('UpdateLogger', () => {
     expect(logger.groupCollapsed).toHaveBeenNthCalledWith(
       2,
       expect.stringContaining(
-        `Update #1 for %c${App.name}%c %cCOMPLETED%c in %c`,
+        `Update #1 %cCOMPLETED%c at %c${App.name}%c in %c`,
       ),
       expect.any(String),
       expect.any(String),
@@ -137,7 +137,7 @@ describe('UpdateLogger', () => {
     expect(logger.groupCollapsed).toHaveBeenCalledOnce();
     expect(logger.groupCollapsed).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Update #0 for %c${DOMRoot.name}%c %cFAILED%c in %c`,
+        `Update #0 %cFAILED%c at %c${DOMRoot.name}%c in %c`,
       ),
       expect.any(String),
       expect.any(String),
