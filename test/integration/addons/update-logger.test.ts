@@ -55,7 +55,7 @@ describe('UpdateLogger', () => {
     expect(logger.log).toHaveBeenCalledTimes(3);
     expect(logger.log).toHaveBeenNthCalledWith(
       1,
-      expect.stringContaining(`Triggered by %c${DOMRoot.name}`),
+      expect.stringContaining(`Under %c${DOMRoot.name}`),
       expect.any(String),
     );
     expect(logger.log).toHaveBeenNthCalledWith(
@@ -104,7 +104,7 @@ describe('UpdateLogger', () => {
     expect(logger.log).toHaveBeenCalledTimes(6);
     expect(logger.log).toHaveBeenNthCalledWith(
       4,
-      expect.stringContaining(`Triggered by %c${DOMRoot.name} > ${App.name}`),
+      expect.stringContaining(`Under %c${DOMRoot.name} > ${App.name}`),
       expect.any(String),
     );
     expect(logger.log).toHaveBeenNthCalledWith(
@@ -147,7 +147,7 @@ describe('UpdateLogger', () => {
     );
     expect(logger.log).toHaveBeenCalledOnce();
     expect(logger.log).toHaveBeenCalledWith(
-      expect.stringContaining(`Triggered by %c${DOMRoot.name}`),
+      expect.stringContaining(`Under %c${DOMRoot.name}`),
       expect.any(String),
     );
   });

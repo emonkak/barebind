@@ -71,7 +71,7 @@ function emitLog(
     RESET_STYLE,
     GRAY_STYLE,
   );
-  logger.log(`Triggered by %c${ownerStack}`, BOLD_STYLE);
+  logger.log(`Under %c${ownerStack}`, BOLD_STYLE);
   if (renderAfter >= 0) {
     logger.log(
       `Rendered with %c${priority}%c priority after %c${renderAfter}ms`,
