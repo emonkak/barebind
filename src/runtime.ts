@@ -1,3 +1,4 @@
+import { is } from './compare.js';
 import {
   Bind,
   type Commit,
@@ -63,10 +64,7 @@ export class Runtime implements Renderer, Dispatcher {
     index: number,
     parent: RenderNode | RenderRoot,
   ): RenderNode {
-    if (
-      oldNode.type !== newElement.type ||
-      !Object.is(oldNode.key, newElement.key)
-    ) {
+    if (oldNode.type !== newElement.type || !is(oldNode.key, newElement.key)) {
       return this.render(newElement, scope, index, parent, oldNode.part);
     }
     if (oldNode.props === newElement.props) {
@@ -368,7 +366,7 @@ export class Runtime implements Renderer, Dispatcher {
         oldHead++;
       } else if (oldChildren[oldTail] === undefined) {
         oldTail--;
-      } else if (Object.is(oldKeys[oldHead]!, newKeys[newHead]!)) {
+      } else if (is(oldKeys[oldHead]!, newKeys[newHead]!)) {
         const oldChild = oldChildren[oldHead]!;
         const newChild = this.diff(
           oldChild,
@@ -386,7 +384,7 @@ export class Runtime implements Renderer, Dispatcher {
         newChildren[newHead] = newChild;
         oldHead++;
         newHead++;
-      } else if (Object.is(oldKeys[oldTail]!, newKeys[newTail]!)) {
+      } else if (is(oldKeys[oldTail]!, newKeys[newTail]!)) {
         const oldChild = oldChildren[oldTail]!;
         const newChild = this.diff(
           oldChild,
@@ -405,8 +403,8 @@ export class Runtime implements Renderer, Dispatcher {
         oldTail--;
         newTail--;
       } else if (
-        Object.is(oldKeys[oldHead]!, newKeys[newTail]!) &&
-        Object.is(oldKeys[oldTail]!, newKeys[newHead]!)
+        is(oldKeys[oldHead]!, newKeys[newTail]!) &&
+        is(oldKeys[oldTail]!, newKeys[newHead]!)
       ) {
         const tailChild = this.diff(
           oldChildren[oldTail]!,

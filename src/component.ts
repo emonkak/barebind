@@ -1,5 +1,5 @@
 import { patch } from './commit.js';
-import { areDependenciesChanged } from './compare.js';
+import { areDependenciesChanged, is } from './compare.js';
 import {
   type Commit,
   type Component,
@@ -370,7 +370,7 @@ export class RenderContext {
           let eagerState: TState | undefined;
 
           if (pendingActions.length === 0) {
-            const areStatesEqual = options.areStatesEqual ?? Object.is;
+            const areStatesEqual = options.areStatesEqual ?? is;
             eagerState = reducer(currentState, payload);
 
             if (areStatesEqual(eagerState, currentState)) {
@@ -437,7 +437,7 @@ export class RenderContext {
 
 export function createComponent<TProps = {}, TReturn = unknown>(
   componentFn: ComponentFunction<TProps, TReturn>,
-  { arePropsEqual = Object.is }: ComponentOptions<TProps> = {},
+  { arePropsEqual = is }: ComponentOptions<TProps> = {},
 ): Component<TProps> {
   function Component(props: TProps): VComponent<TProps> {
     return new VNode(Component, props, []);
