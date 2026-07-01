@@ -79,10 +79,10 @@ export class Runtime implements Renderer, Dispatcher {
         key: newElement.key,
         index,
         parent,
-        children: oldNode.children,
+        left: oldNode.left,
+        right: oldNode.right,
         part: oldNode.part,
         state: (oldNode as RenderNode.BindNode).state,
-        dirty: true,
       };
     } else if (newElement.type === Fragment) {
       const newNode: RenderNode.FragmentNode = {
@@ -91,13 +91,12 @@ export class Runtime implements Renderer, Dispatcher {
         key: newElement.key,
         index,
         parent,
-        children: new Array(newElement.children.length),
+        left: new Array(newElement.children.length),
+        right: oldNode.right,
         part: oldNode.part,
         state: (oldNode as RenderNode.FragmentNode).state,
-        dirty: true,
       };
       newNode.state.mutations = this._diffChildren(
-        oldNode as RenderNode.FragmentNode,
         newNode,
         newElement.children,
         scope,
@@ -121,14 +120,14 @@ export class Runtime implements Renderer, Dispatcher {
         key: newElement.key,
         index,
         parent,
-        children: oldNode.children.slice(),
+        left: oldNode.right.slice(),
+        right: oldNode.right,
         part: oldNode.part,
         state: (oldNode as RenderNode.ComponentNode).state,
-        dirty: true,
       };
       const subScope = scope.enter(newElement.type);
-      newNode.children[0] = this.diff(
-        newNode.children[0]!,
+      newNode.left[0] = this.diff(
+        newNode.right[0]!,
         newNode.state.instance.render(
           newNode.props,
           subScope,
@@ -147,21 +146,19 @@ export class Runtime implements Renderer, Dispatcher {
         key: newElement.key,
         index,
         parent,
-        children: new Array(newElement.children.length),
+        left: new Array(newElement.children.length),
+        right: oldNode.right,
         part: oldNode.part,
         state: (oldNode as RenderNode.BlockNode).state,
-        dirty: false,
       };
       for (let i = 0, l = newElement.children.length; i < l; i++) {
-        const newChild = this.diff(
-          oldNode.children[i]!,
+        newNode.left[i] = this.diff(
+          newNode.right[i]!,
           newElement.children[i]!,
           scope,
           i,
           newNode,
         );
-        newNode.children[i] = newChild;
-        newNode.dirty ||= newChild.dirty;
       }
       return newNode;
     }
@@ -189,10 +186,10 @@ export class Runtime implements Renderer, Dispatcher {
         key: element.key,
         index,
         parent,
-        children: [],
+        left: [],
+        right: [],
         part,
         state: null,
-        dirty: true,
       };
     } else if (element.type === Fragment) {
       const node: RenderNode.FragmentNode = {
@@ -201,13 +198,13 @@ export class Runtime implements Renderer, Dispatcher {
         key: element.key,
         index,
         parent,
-        children: new Array(element.children.length),
+        left: new Array(element.children.length),
+        right: [],
         part,
         state: { mutations: [] },
-        dirty: true,
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
-        node.children[i] = this.render(
+        node.left[i] = this.render(
           element.children[i]!,
           scope,
           i,
@@ -223,16 +220,16 @@ export class Runtime implements Renderer, Dispatcher {
         key: element.key,
         index,
         parent,
-        children: new Array(1),
+        left: new Array(1),
+        right: [],
         part,
         state: {
           instance: element.type.createInstance(this),
           scope,
         },
-        dirty: true,
       };
       const subScope = scope.enter(element.type);
-      node.children[0] = this.render(
+      node.left[0] = this.render(
         node.state.instance.render(node.props, subScope, this._flushLanes),
         subScope,
         0,
@@ -251,13 +248,13 @@ export class Runtime implements Renderer, Dispatcher {
         key: element.key,
         index,
         parent,
-        children: new Array(element.children.length),
+        left: new Array(element.children.length),
+        right: [],
         part,
         state: { block },
-        dirty: true,
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
-        node.children[i] = this.render(
+        node.left[i] = this.render(
           element.children[i]!,
           scope,
           i,
@@ -317,13 +314,12 @@ export class Runtime implements Renderer, Dispatcher {
   }
 
   private _diffChildren(
-    oldParent: RenderNode,
     newParent: RenderNode,
     newElements: VElement[],
     scope: Scope,
   ): Mutation[] {
-    const oldChildren: (RenderNode | undefined)[] = oldParent.children.slice();
-    const newChildren = newParent.children;
+    const oldChildren: (RenderNode | undefined)[] = newParent.right.slice();
+    const newChildren = newParent.left;
     const oldKeys = oldChildren.map((child) => child!.key);
     const newKeys = newElements.map((element) => element.key);
     const newMutations: Mutation[] = [];
