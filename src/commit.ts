@@ -18,8 +18,10 @@ export function unmount(node: RenderNode): void {
 }
 
 export function patch(oldNode: RenderNode, newNode: RenderNode) {
-  applyPatch(oldNode, newNode, newNode.index, newNode.parent);
-  afterCommit(newNode);
+  if (newNode.parent !== null) {
+    applyPatch(oldNode, newNode, newNode.index, newNode.parent);
+    afterCommit(newNode);
+  }
 }
 
 function afterCommit(node: RenderNode): void {
@@ -46,7 +48,7 @@ function applyPatch(
   }
   if (oldNode.type !== newNode.type || oldNode.key !== newNode.key) {
     unmountChild(oldNode);
-    mountChild(newNode, getSiblingDOMNode(oldNode));
+    mountChild(newNode, getSiblingDOMNode(newNode));
   } else if (newNode.type === Bind) {
     newNode.part.commitUpdate(
       (oldNode as RenderNode.BindNode).props.value,
@@ -116,8 +118,9 @@ function getChildDOMNode(node: RenderNode): ChildNode | null {
 
 function getSiblingDOMNode(node: RenderNode): ChildNode | null {
   const part = node.part;
-  while (node.parent.type !== null) {
-    const children = isCommitted(node) ? node.parent.right : node.parent.left;
+  // Only called on non-detached nodes, so parent is never null.
+  while (node.parent!.type != null) {
+    const children = isCommitted(node) ? node.parent!.right : node.parent!.left;
     for (let i = node.index + 1, l = children.length; i < l; i++) {
       const child = children[i]!;
       if (child.part !== part) {
@@ -128,7 +131,7 @@ function getSiblingDOMNode(node: RenderNode): ChildNode | null {
         return domNode;
       }
     }
-    node = node.parent;
+    node = node.parent!;
   }
   return null;
 }
@@ -187,4 +190,5 @@ function unmountChild(child: RenderNode, cascade: boolean = false): void {
       unmountChild(grandchild, cascade);
     }
   }
+  child.parent = null;
 }

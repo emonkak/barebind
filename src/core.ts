@@ -118,7 +118,7 @@ export namespace RenderNode {
     props: TElement['props'];
     key: TElement['key'];
     index: number;
-    parent: RenderNode | RenderRoot;
+    parent: RenderNode | RenderRoot | null;
     left: RenderNode[];
     right: RenderNode[];
     part: Part;
