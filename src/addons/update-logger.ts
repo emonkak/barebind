@@ -70,10 +70,12 @@ function emitLog(
   const ownerStack = getOwnerStack(scope).map(nameOf).join(' > ');
 
   logger.groupCollapsed(
-    `Update #${update.id} %c${status}%c at %c${ownerName}%c for step ${batchIndex + 1} in %c${totalDuration.toFixed(2)}ms`,
+    `Update #${update.id} %c${status}%c at %c${ownerName}%c for step %c${batchIndex + 1}%c in %c${totalDuration.toFixed(2)}ms`,
     statusStyle,
     RESET_STYLE,
     ORANGE_STYLE,
+    RESET_STYLE,
+    GRAY_STYLE,
     RESET_STYLE,
     GRAY_STYLE,
   );
