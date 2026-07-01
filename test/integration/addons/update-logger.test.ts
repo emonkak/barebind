@@ -44,8 +44,10 @@ describe('UpdateLogger', () => {
     expect(logger.groupCollapsed).toHaveBeenCalledOnce();
     expect(logger.groupCollapsed).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Update #0 %cCOMPLETED%c at %c${DOMRoot.name}%c for step 1 in %c`,
+        `Update #0 %cCOMPLETED%c at %c${DOMRoot.name}%c for step %c1%c in %c`,
       ),
+      expect.any(String),
+      expect.any(String),
       expect.any(String),
       expect.any(String),
       expect.any(String),
@@ -93,8 +95,10 @@ describe('UpdateLogger', () => {
     expect(logger.groupCollapsed).toHaveBeenNthCalledWith(
       2,
       expect.stringContaining(
-        `Update #1 %cCOMPLETED%c at %c${App.name}%c for step 1 in %c`,
+        `Update #1 %cCOMPLETED%c at %c${App.name}%c for step %c1%c in %c`,
       ),
+      expect.any(String),
+      expect.any(String),
       expect.any(String),
       expect.any(String),
       expect.any(String),
@@ -147,8 +151,10 @@ describe('UpdateLogger', () => {
     expect(logger.groupCollapsed).toHaveBeenNthCalledWith(
       2,
       expect.stringContaining(
-        `Update #1 %cCOMPLETED%c at %c${Child.name}%c for step 1 in %c`,
+        `Update #1 %cCOMPLETED%c at %c${Child.name}%c for step %c1%c in %c`,
       ),
+      expect.any(String),
+      expect.any(String),
       expect.any(String),
       expect.any(String),
       expect.any(String),
@@ -158,8 +164,10 @@ describe('UpdateLogger', () => {
     expect(logger.groupCollapsed).toHaveBeenNthCalledWith(
       3,
       expect.stringContaining(
-        `Update #2 %cCOMPLETED%c at %c${Child.name}%c for step 2 in %c`,
+        `Update #2 %cCOMPLETED%c at %c${Child.name}%c for step %c2%c in %c`,
       ),
+      expect.any(String),
+      expect.any(String),
       expect.any(String),
       expect.any(String),
       expect.any(String),
@@ -178,8 +186,10 @@ describe('UpdateLogger', () => {
     expect(logger.groupCollapsed).toHaveBeenCalledOnce();
     expect(logger.groupCollapsed).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Update #0 %cFAILED%c at %c${DOMRoot.name}%c for step 1 in %c`,
+        `Update #0 %cFAILED%c at %c${DOMRoot.name}%c for step %c1%c in %c`,
       ),
+      expect.any(String),
+      expect.any(String),
       expect.any(String),
       expect.any(String),
       expect.any(String),
