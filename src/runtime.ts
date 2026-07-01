@@ -4,6 +4,7 @@ import {
   type Dispatcher,
   Fragment,
   type HostAdapter,
+  type Lanes,
   type Middleware,
   MUTATION_TYPE_INSERT,
   MUTATION_TYPE_REMOVE,
@@ -543,7 +544,9 @@ export class Runtime implements Renderer, Dispatcher {
           if ((transaction.pendingLanes & lanes) === NoLanes) {
             continue;
           }
-          commitBatch.push(runPipeline(update, this, this._middlewares));
+          commitBatch.push(
+            runPipeline(update, this._flushLanes, this._middlewares, this),
+          );
         }
 
         if (commitBatch.length > 0) {
@@ -621,14 +624,15 @@ function compareUpdates(update1: Update, update2: Update): number {
 
 function runPipeline(
   update: Update,
-  renderer: Renderer,
+  flushLanes: Lanes,
   middlewares: Middleware[],
+  renderer: Renderer,
 ) {
   function resumePipeline(update: Update, index: number): Commit {
     return (
       middlewares[index]?.handle(update, (update) =>
         resumePipeline(update, index + 1),
-      ) ?? update.transaction.prepare(update.lanes, renderer)
+      ) ?? update.transaction.prepare(flushLanes, renderer)
     );
   }
   return resumePipeline(update, 0);
