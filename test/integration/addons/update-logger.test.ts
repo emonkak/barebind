@@ -44,7 +44,7 @@ describe('UpdateLogger', () => {
     expect(logger.groupCollapsed).toHaveBeenCalledOnce();
     expect(logger.groupCollapsed).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Update #0 %cCOMPLETED%c from %c${DOMRoot.name}%c in %c`,
+        `Update #0 for %c${DOMRoot.name}%c %cCOMPLETED%c in %c`,
       ),
       expect.any(String),
       expect.any(String),
@@ -55,7 +55,7 @@ describe('UpdateLogger', () => {
     expect(logger.log).toHaveBeenCalledTimes(3);
     expect(logger.log).toHaveBeenNthCalledWith(
       1,
-      expect.stringContaining(`Started from %c${DOMRoot.name}`),
+      expect.stringContaining(`Triggered by %c${DOMRoot.name}`),
       expect.any(String),
     );
     expect(logger.log).toHaveBeenNthCalledWith(
@@ -93,7 +93,7 @@ describe('UpdateLogger', () => {
     expect(logger.groupCollapsed).toHaveBeenNthCalledWith(
       2,
       expect.stringContaining(
-        `Update #1 %cCOMPLETED%c from %c${App.name}%c in %c`,
+        `Update #1 for %c${App.name}%c %cCOMPLETED%c in %c`,
       ),
       expect.any(String),
       expect.any(String),
@@ -104,7 +104,7 @@ describe('UpdateLogger', () => {
     expect(logger.log).toHaveBeenCalledTimes(6);
     expect(logger.log).toHaveBeenNthCalledWith(
       4,
-      expect.stringContaining(`Started from %c${DOMRoot.name} > ${App.name}`),
+      expect.stringContaining(`Triggered by %c${DOMRoot.name} > ${App.name}`),
       expect.any(String),
     );
     expect(logger.log).toHaveBeenNthCalledWith(
@@ -137,7 +137,7 @@ describe('UpdateLogger', () => {
     expect(logger.groupCollapsed).toHaveBeenCalledOnce();
     expect(logger.groupCollapsed).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Update #0 %cFAILED%c from %c${DOMRoot.name}%c in %c`,
+        `Update #0 for %c${DOMRoot.name}%c %cFAILED%c in %c`,
       ),
       expect.any(String),
       expect.any(String),
@@ -147,7 +147,7 @@ describe('UpdateLogger', () => {
     );
     expect(logger.log).toHaveBeenCalledOnce();
     expect(logger.log).toHaveBeenCalledWith(
-      expect.stringContaining(`Started from %c${DOMRoot.name}`),
+      expect.stringContaining(`Triggered by %c${DOMRoot.name}`),
       expect.any(String),
     );
   });
