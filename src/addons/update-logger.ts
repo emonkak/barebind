@@ -67,14 +67,14 @@ function emitLog(
   const ownerStack = getOwnerStack(scope).map(nameOf).join(' > ');
 
   logger.groupCollapsed(
-    `Update #${update.id} %c${status}%c from %c${ownerName}%c in %c${totalDuration}ms`,
+    `Update #${update.id} for %c${ownerName}%c %c${status}%c in %c${totalDuration}ms`,
     statusStyle,
     RESET_STYLE,
     VALUE_STYLE,
     RESET_STYLE,
     DURATION_STYLE,
   );
-  logger.log(`Started from %c${ownerStack}`, VALUE_STYLE);
+  logger.log(`Triggered by %c${ownerStack}`, VALUE_STYLE);
   if (renderAfter >= 0) {
     logger.log(
       `Rendered with %c${priority}%c priority after %c${renderAfter}ms`,
