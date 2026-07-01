@@ -556,31 +556,29 @@ describe('components', () => {
       expect(button.textContent).toBe('1/2');
     });
 
-    it('handles multiple dispatches on the same lanes', async () => {
+    it('handles multiple updates with the same priority on different lanes', async () => {
       const App = createComponent(function App() {
-        const [count, increment] = this.useReducer<number, number>(
-          (count, n) => count + n,
-          0,
-        );
+        const [first, setFirst] = this.useState(0);
+        const [second, setSecond] = this.useState(0);
         return html`
           <button
             @click=${() => {
-              increment(1);
-              increment(2);
+              setFirst(1, { priority: 'user-visible' });
+              setSecond(2, { priority: 'user-visible', flushSync: true });
             }}
           >
-            ${count}
+            ${first}/${second}
           </button>
         `;
       });
 
       await root.render(App({})).finished;
       const button = container.querySelector('button')!;
-      expect(button.textContent).toBe('0');
+      expect(button.textContent).toBe('0/0');
 
       button.click();
       await step(runtime);
-      expect(button.textContent).toBe('3');
+      expect(button.textContent).toBe('1/2');
     });
 
     it('handles transient dispatch with lane mismatch', async () => {
