@@ -14,6 +14,8 @@ export type LoggerAPI = Pick<Console, 'groupCollapsed' | 'groupEnd' | 'log'>;
 export class UpdateLogger implements Middleware {
   private readonly _logger: LoggerAPI;
 
+  private _commitCount: number = 0;
+
   constructor(logger: LoggerAPI = window.console) {
     this._logger = logger;
   }
@@ -37,13 +39,16 @@ export class UpdateLogger implements Middleware {
             renderAfter,
             commitAfter,
             totalDuration,
+            this._commitCount++,
           );
         }
       };
     } catch (error) {
       const totalDuration = performance.now() - renderStart;
-      emitLog(this._logger, update, -1, -1, totalDuration);
+      emitLog(this._logger, update, -1, -1, totalDuration, 0);
       throw error;
+    } finally {
+      this._commitCount = 0;
     }
   }
 }
@@ -54,6 +59,7 @@ function emitLog(
   renderAfter: number,
   commitAfter: number,
   totalDuration: number,
+  batchIndex: number,
 ): void {
   const status = renderAfter >= 0 ? 'COMPLETED' : 'FAILED';
   const statusStyle = renderAfter >= 0 ? BLUE_STYLE : RED_STYLE;
@@ -64,7 +70,7 @@ function emitLog(
   const ownerStack = getOwnerStack(scope).map(nameOf).join(' > ');
 
   logger.groupCollapsed(
-    `Update #${update.id} %c${status}%c at %c${ownerName}%c in %c${totalDuration}ms`,
+    `Update #${update.id} %c${status}%c at %c${ownerName}%c for step ${batchIndex + 1} in %c${totalDuration.toFixed(2)}ms`,
     statusStyle,
     RESET_STYLE,
     ORANGE_STYLE,
@@ -74,7 +80,7 @@ function emitLog(
   logger.log(`Under %c${ownerStack}`, BOLD_STYLE);
   if (renderAfter >= 0) {
     logger.log(
-      `Rendered with %c${priority}%c priority after %c${renderAfter}ms`,
+      `Rendered with %c${priority}%c priority after %c${renderAfter.toFixed(2)}ms`,
       BOLD_STYLE,
       RESET_STYLE,
       GRAY_STYLE,
@@ -82,7 +88,7 @@ function emitLog(
   }
   if (commitAfter >= 0) {
     logger.log(
-      `Committed with %c${mode}%c mode after %c${commitAfter}ms`,
+      `Committed with %c${mode}%c mode after %c${commitAfter.toFixed(2)}ms`,
       BOLD_STYLE,
       RESET_STYLE,
       GRAY_STYLE,
