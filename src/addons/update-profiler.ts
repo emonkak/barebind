@@ -13,18 +13,20 @@ export class UpdateProfiler implements Middleware {
   handle(update: Update, next: (update: Update) => Commit): Commit {
     const renderStartMark = `barebind:render-start:${update.id}`;
     const renderEndMark = `barebind:render-end:${update.id}`;
-    const commitStartMark = `barebind:commit-start:${update.id}`;
-    const commitEndMark = `barebind:commit-end:${update.id}`;
 
     this._userTiming.mark(renderStartMark);
     const commit = next(update);
     this._userTiming.mark(renderEndMark);
 
     return () => {
+      const commitStartMark = `barebind:commit-start:${update.id}`;
+      const commitEndMark = `barebind:commit-end:${update.id}`;
       const name = nameOf(update.transaction.scope.owner);
+
       this._userTiming.mark(commitStartMark);
       commit();
       this._userTiming.mark(commitEndMark);
+
       this._userTiming.measure(
         `Update ${name}`,
         renderStartMark,
