@@ -24,20 +24,20 @@ export class UpdateLogger implements Middleware {
     const renderStart = performance.now();
     try {
       const commit = next(update);
-      const renderAfter = performance.now() - renderStart;
+      const renderDuration = performance.now() - renderStart;
       return () => {
         const commitStart: number = performance.now();
         try {
           commit();
         } finally {
           const commitEnd = performance.now();
-          const commitAfter = commitEnd - commitStart;
+          const commitDuration = commitEnd - commitStart;
           const totalDuration = commitEnd - renderStart;
           emitLog(
             this._logger,
             update,
-            renderAfter,
-            commitAfter,
+            renderDuration,
+            commitDuration,
             totalDuration,
             this._transactionIndex++,
           );
@@ -56,13 +56,13 @@ export class UpdateLogger implements Middleware {
 function emitLog(
   logger: LoggerAPI,
   update: Update,
-  renderAfter: number,
-  commitAfter: number,
+  renderDuration: number,
+  commitDuration: number,
   totalDuration: number,
   transactionIndex: number,
 ): void {
-  const status = renderAfter >= 0 ? 'COMPLETED' : 'FAILED';
-  const statusStyle = renderAfter >= 0 ? BLUE_STYLE : RED_STYLE;
+  const status = renderDuration >= 0 ? 'COMPLETED' : 'FAILED';
+  const statusStyle = renderDuration >= 0 ? BLUE_STYLE : RED_STYLE;
   const priority = getPriorityFromLanes(update.lanes);
   const mode = getCommitMode(update.lanes);
   const scope = update.transaction.scope;
@@ -80,17 +80,17 @@ function emitLog(
     GRAY_STYLE,
   );
   logger.log(`Under %c${ownerStack}`, BOLD_STYLE);
-  if (renderAfter >= 0) {
+  if (renderDuration >= 0) {
     logger.log(
-      `Rendered with %c${priority}%c priority after %c${renderAfter.toFixed(1)}ms`,
+      `Rendered with %c${priority}%c priority after %c${renderDuration.toFixed(1)}ms`,
       BOLD_STYLE,
       RESET_STYLE,
       GRAY_STYLE,
     );
   }
-  if (commitAfter >= 0) {
+  if (commitDuration >= 0) {
     logger.log(
-      `Committed with %c${mode}%c mode after %c${commitAfter.toFixed(1)}ms`,
+      `Committed with %c${mode}%c mode after %c${commitDuration.toFixed(1)}ms`,
       BOLD_STYLE,
       RESET_STYLE,
       GRAY_STYLE,
