@@ -70,7 +70,7 @@ function emitLog(
   const ownerStack = getOwnerStack(scope).map(nameOf).join(' > ');
 
   logger.groupCollapsed(
-    `Update #${update.id} %c${status}%c at %c${ownerName}%c for step %c${batchIndex + 1}%c in %c${totalDuration.toFixed(2)}ms`,
+    `Update #${update.id} %c${status}%c at %c${ownerName}%c for step %c${batchIndex + 1}%c in %c${totalDuration.toFixed(1)}ms`,
     statusStyle,
     RESET_STYLE,
     ORANGE_STYLE,
@@ -82,7 +82,7 @@ function emitLog(
   logger.log(`Under %c${ownerStack}`, BOLD_STYLE);
   if (renderAfter >= 0) {
     logger.log(
-      `Rendered with %c${priority}%c priority after %c${renderAfter.toFixed(2)}ms`,
+      `Rendered with %c${priority}%c priority after %c${renderAfter.toFixed(1)}ms`,
       BOLD_STYLE,
       RESET_STYLE,
       GRAY_STYLE,
@@ -90,7 +90,7 @@ function emitLog(
   }
   if (commitAfter >= 0) {
     logger.log(
-      `Committed with %c${mode}%c mode after %c${commitAfter.toFixed(2)}ms`,
+      `Committed with %c${mode}%c mode after %c${commitAfter.toFixed(1)}ms`,
       BOLD_STYLE,
       RESET_STYLE,
       GRAY_STYLE,
