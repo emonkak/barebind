@@ -113,14 +113,19 @@ export type RenderNode =
   | RenderNode.BlockNode;
 
 export namespace RenderNode {
+  /**
+   * left/right are double-buffer child nodes (like binary tree nodes).
+   * Invariant: left = work-in-progress, right = committed.
+   * left === right means the node is already committed.
+   */
   interface Node<TElement extends VElement> {
     type: TElement['type'];
     props: TElement['props'];
     key: TElement['key'];
     index: number;
     parent: RenderNode | RenderRoot | null;
-    left: RenderNode[];
-    right: RenderNode[];
+    left: RenderNode[]; // work-in-progress children
+    right: RenderNode[]; // committed children
     part: Part;
     state: unknown;
   }
@@ -151,8 +156,8 @@ export namespace RenderNode {
 
 export interface RenderRoot {
   type: null;
-  left: RenderNode | null;
-  right: RenderNode | null;
+  left: RenderNode | null; // work-in-progress child
+  right: RenderNode | null; // committed child
 }
 
 export interface Renderer {
