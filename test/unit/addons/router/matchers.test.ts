@@ -8,7 +8,6 @@ import {
   regexp,
   select,
 } from '@/addons/router/matchers.js';
-import { noMatch } from '@/addons/router/router.js';
 
 describe('decoded()', () => {
   it('decodes URI components', () => {
@@ -35,12 +34,12 @@ describe('integer()', () => {
     expect(integer('100')).toBe(100);
   });
 
-  it('returns noMatch for invalid integers', () => {
-    expect(integer('')).toBe(noMatch);
-    expect(integer('abc')).toBe(noMatch);
-    expect(integer('12a')).toBe(noMatch);
-    expect(integer('3.14')).toBe(noMatch);
-    expect(integer('01')).toBe(noMatch);
+  it('returns undefined for invalid integers', () => {
+    expect(integer('')).toBe(undefined);
+    expect(integer('abc')).toBe(undefined);
+    expect(integer('12a')).toBe(undefined);
+    expect(integer('3.14')).toBe(undefined);
+    expect(integer('01')).toBe(undefined);
   });
 });
 
@@ -48,7 +47,7 @@ describe('keyword()', () => {
   it('matches the exact keyword', () => {
     const matchFoo = keyword('foo');
     expect(matchFoo('foo', '')).toBe('foo');
-    expect(matchFoo('bar', '')).toBe(noMatch);
+    expect(matchFoo('bar', '')).toBe(undefined);
   });
 });
 
@@ -56,7 +55,7 @@ describe('regexp()', () => {
   it('matches against the component', () => {
     const matchId = regexp(/^([a-z0-9]+)$/);
     const result = matchId('abc123', '');
-    expect(result).not.toBe(noMatch);
+    expect(result).not.toBe(undefined);
     expect([...(result as RegExpMatchArray)]).toStrictEqual([
       'abc123',
       'abc123',
@@ -65,7 +64,7 @@ describe('regexp()', () => {
 
   it('returns noMatch on failure', () => {
     const matchDigits = regexp(/^\d+$/);
-    expect(matchDigits('abc', '')).toBe(noMatch);
+    expect(matchDigits('abc', '')).toBe(undefined);
   });
 });
 
@@ -78,7 +77,7 @@ describe('choice()', () => {
 
   it('returns noMatch when none match', () => {
     const m = choice(integer, keyword('foo'));
-    expect(m('bar', '')).toBe(noMatch);
+    expect(m('bar', '')).toBe(undefined);
   });
 });
 
@@ -90,6 +89,6 @@ describe('select()', () => {
 
   it('returns noMatch when the inner matcher fails', () => {
     const m = select(integer, (n) => n * 2);
-    expect(m('abc', '')).toBe(noMatch);
+    expect(m('abc', '')).toBe(undefined);
   });
 });
