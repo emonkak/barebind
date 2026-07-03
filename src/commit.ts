@@ -18,10 +18,8 @@ export function unmount(node: RenderNode): void {
 }
 
 export function patch(oldNode: RenderNode, newNode: RenderNode) {
-  if (newNode.parent !== null) {
-    applyPatch(oldNode, newNode, newNode.index, newNode.parent);
-    afterCommit(newNode);
-  }
+  applyPatch(oldNode, newNode, newNode.index, newNode.parent);
+  afterCommit(newNode);
 }
 
 function afterCommit(node: RenderNode): void {
@@ -40,7 +38,7 @@ function applyPatch(
   oldNode: RenderNode,
   newNode: RenderNode,
   index: number,
-  parent: RenderNode | RenderRoot,
+  parent: RenderNode | RenderRoot | null,
 ): void {
   if (oldNode === newNode && isCommitted(oldNode)) {
     reparentChild(oldNode, index, parent);
@@ -168,7 +166,7 @@ function moveChild(child: RenderNode, afterNode: ChildNode | null): void {
 function reparentChild(
   child: RenderNode,
   index: number,
-  parent: RenderNode | RenderRoot,
+  parent: RenderNode | RenderRoot | null,
 ): void {
   child.index = index;
   child.parent = parent;

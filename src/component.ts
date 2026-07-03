@@ -484,9 +484,11 @@ class UpdateComponent implements Transaction {
     const newElement = node.state.instance.render(node.props, subScope, lanes);
     node.left = [renderer.diff(node.right[0]!, newElement, subScope, 0, node)];
     return () => {
-      patch(node.right[0]!, node.left[0]!);
-      node.state.instance.connect(node);
-      node.right = node.left;
+      if (node.parent !== null) {
+        patch(node.right[0]!, node.left[0]!);
+        node.state.instance.connect(node);
+        node.right = node.left;
+      }
     };
   }
 }
