@@ -21,7 +21,6 @@ export interface VirtualScrollerProps<T> {
   offscreenRatio?: number;
   ref?: Ref<VirtualScrollerHandle | null> | null | undefined;
   renderItem: (item: T, index: number) => unknown;
-  scrollMargin?: string;
 }
 
 export interface VirtualScrollerHandle {
@@ -53,7 +52,6 @@ export const VirtualScroller: VirtualScroller = createComponent(
       offscreenRatio = 1,
       ref,
       renderItem,
-      scrollMargin,
       items,
     }: VirtualScrollerProps<T>,
   ): unknown {
@@ -289,7 +287,7 @@ export const VirtualScroller: VirtualScroller = createComponent(
     return html`
       <div class="VirtualScroller">
         <${aboveSpacer}>
-        <ul class="VirtualScroller-list" style=${{ scrollMargin }}>
+        <ul class="VirtualScroller-list">
           <${renderedItems}>
         </ul>
         <${belowSpacer}>
