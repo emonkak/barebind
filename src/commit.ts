@@ -25,15 +25,15 @@ export function patch(oldNode: RenderNode, newNode: RenderNode) {
 }
 
 function afterCommit(node: RenderNode): void {
-  if (!isCommitted(node)) {
-    for (const child of node.left) {
+  for (const child of node.left) {
+    if (!isCommitted(child)) {
       afterCommit(child);
     }
-    if (typeof node.type === 'function') {
-      node.state.instance.connect(node);
-    }
-    node.right = node.left;
   }
+  if (typeof node.type === 'function') {
+    node.state.instance.connect(node);
+  }
+  node.right = node.left;
 }
 
 function applyPatch(
