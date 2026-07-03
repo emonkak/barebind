@@ -10,12 +10,12 @@ export class UpdateProfiler implements Middleware {
     this._userTiming = userTiming;
   }
 
-  handle(update: Update, next: (update: Update) => Commit): Commit {
+  handle(update: Update, render: (update: Update) => Commit): Commit {
     const renderStartMark = `barebind:render-start:${update.id}`;
     const renderEndMark = `barebind:render-end:${update.id}`;
 
     this._userTiming.mark(renderStartMark);
-    const commit = next(update);
+    const commit = render(update);
     this._userTiming.mark(renderEndMark);
 
     return () => {

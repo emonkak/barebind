@@ -67,7 +67,7 @@ export type Lane = number;
 export type Lanes = number;
 
 export interface Middleware {
-  handle(update: Update, next: (update: Update) => Commit): Commit;
+  handle(update: Update, render: (update: Update) => Commit): Commit;
 }
 
 export type Mutation =
