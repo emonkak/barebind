@@ -692,6 +692,68 @@ describe('components', () => {
       await increment().finished;
       expect(container.innerHTML).toBe('<div>1</div>');
     });
+
+    it('prevents concurrent child update when parent removes child', async () => {
+      const Child = createComponent(function Child({
+        onToggle,
+      }: {
+        onToggle: () => void;
+      }) {
+        const [count, setCount] = this.useState(0);
+        return html`
+          <button @click=${() => {
+            setCount((count) => count + 1);
+            onToggle();
+          }}>
+            ${count}
+          </div>
+        `;
+      });
+      const App = createComponent(function App() {
+        const [shown, setShown] = this.useState(true);
+        return shown
+          ? Child({
+              onToggle: () => {
+                setShown((shown) => !shown);
+              },
+            })
+          : null;
+      });
+
+      await root.render(App({})).finished;
+      const button = container.querySelector('button')!;
+      expect(button.innerHTML).toBe('0');
+
+      button.click();
+      await step(runtime);
+      expect(button.innerHTML).toBe('0');
+    });
+
+    it('prevents subsequent child update after parent removes child', async () => {
+      const Child = createComponent(function Child() {
+        const [count, setCount] = this.useState(0);
+        return html`
+          <button @click=${() => {
+            setCount((count) => count + 1);
+          }}>
+            ${count}
+          </div>
+        `;
+      });
+      const App = createComponent(function App({ shown }: { shown: boolean }) {
+        return shown ? Child({}) : null;
+      });
+
+      await root.render(App({ shown: true })).finished;
+      const button = container.querySelector('button')!;
+      expect(button.innerHTML).toBe('0');
+
+      await root.render(App({ shown: false })).finished;
+      button.click();
+      await step(runtime);
+
+      expect(button.innerHTML).toBe('0');
+    });
   });
 
   describe('effect hooks', () => {
