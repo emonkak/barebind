@@ -20,7 +20,6 @@ export {
 } from './router/navigation.js';
 export {
   type Matcher,
-  noMatch,
   type Pattern,
   type Resolver,
   type Route,

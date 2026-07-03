@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { decoded, integer } from '@/addons/router/matchers.js';
-import { type noMatch, Router, route } from '@/addons/router/router.js';
+import { type Matcher, Router, route } from '@/addons/router/router.js';
 
 describe('Router', () => {
   describe('match()', () => {
@@ -106,10 +106,7 @@ describe('Router', () => {
     });
 
     it('passes url to matchers', () => {
-      const captureUrl: (
-        component: string,
-        url: string,
-      ) => string | typeof noMatch = (_component, url) => url;
+      const captureUrl: Matcher<string> = (_component, url) => url;
       const router = new Router<string>([route([captureUrl], ([u]) => u)]);
       expect(router.match('/foo')).toBe('/foo');
     });

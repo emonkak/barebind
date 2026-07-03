@@ -1,5 +1,3 @@
-export const noMatch: unique symbol = Symbol('noMatch');
-
 export interface Route<
   TResult,
   TPatterns extends Pattern[],
@@ -19,7 +17,7 @@ export interface Route<
 
 export type Pattern = string | Matcher<unknown>;
 
-export type Matcher<T> = (component: string, url: string) => T | typeof noMatch;
+export type Matcher<T> = (component: string, url: string) => T | undefined;
 
 export type Resolver<TResult, TCaptures extends unknown[]> = (
   captures: TCaptures,
@@ -115,7 +113,7 @@ function collectCaptures<TPatterns extends Pattern[]>(
       }
     } else {
       const capture = pattern(component, url);
-      if (capture === noMatch) {
+      if (capture === undefined) {
         return null;
       }
       captures.push(capture);
