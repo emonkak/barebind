@@ -37,15 +37,15 @@ describe('middlewares', () => {
   it('calls multiple middlewares in registration order', async () => {
     const order: number[] = [];
     const middleware1 = {
-      handle(update: Update, next: (update: Update) => Commit): Commit {
+      handle(update: Update, render: (update: Update) => Commit): Commit {
         order.push(1);
-        return next(update);
+        return render(update);
       },
     };
     const middleware2 = {
-      handle(update: Update, next: (update: Update) => Commit): Commit {
+      handle(update: Update, render: (update: Update) => Commit): Commit {
         order.push(2);
-        return next(update);
+        return render(update);
       },
     };
 
@@ -69,6 +69,9 @@ describe('middlewares', () => {
   });
 });
 
-function passthrough(update: Update, next: (update: Update) => Commit): Commit {
-  return next(update);
+function passthrough(
+  update: Update,
+  render: (update: Update) => Commit,
+): Commit {
+  return render(update);
 }

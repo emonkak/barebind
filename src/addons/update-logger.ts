@@ -20,10 +20,10 @@ export class UpdateLogger implements Middleware {
     this._logger = logger;
   }
 
-  handle(update: Update, next: (update: Update) => Commit): Commit {
+  handle(update: Update, render: (update: Update) => Commit): Commit {
     const renderStart = performance.now();
     try {
-      const commit = next(update);
+      const commit = render(update);
       const renderDuration = performance.now() - renderStart;
       return () => {
         const commitStart: number = performance.now();
