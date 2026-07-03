@@ -395,6 +395,53 @@ describe('components', () => {
       expect(button.textContent).toBe('1');
     });
 
+    it('updates parent state via callback from memoized child component', async () => {
+      const Child = createComponent(function Child({
+        onIncrement,
+      }: {
+        onIncrement: () => void;
+      }) {
+        const [count, setCount] = this.useState(0);
+        return html`
+          <button @click=${() => {
+            setCount((count) => count + 1);
+            onIncrement();
+          }}>
+            ${count}
+          </button>
+        `;
+      });
+      const App = createComponent(function App() {
+        const [count, setCount] = this.useState(0);
+        return html`
+          <div>
+            <span>${count}</span>
+            <${this.useMemo(
+              () =>
+                Child({
+                  onIncrement: () => {
+                    setCount((count) => count + 1);
+                  },
+                }),
+              [],
+            )}>
+          </div>
+        `;
+      });
+
+      await root.render(App({})).finished;
+      const button = container.querySelector('button')!;
+      expect(container.innerHTML).toBe(
+        '<div><span>0</span><button>0</button><!----></div>',
+      );
+
+      button.click();
+      await step(runtime);
+      expect(container.innerHTML).toBe(
+        '<div><span>1</span><button>1</button><!----></div>',
+      );
+    });
+
     it('skips re-render when the state is unchanged', async () => {
       let renderCount = 0;
 

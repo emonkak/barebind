@@ -42,7 +42,7 @@ function applyPatch(
   index: number,
   parent: RenderNode | RenderRoot,
 ): void {
-  if (oldNode === newNode) {
+  if (oldNode === newNode && isCommitted(oldNode)) {
     reparentChild(oldNode, index, parent);
     return;
   }
