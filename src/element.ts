@@ -132,6 +132,21 @@ export function createTemplate(
   strings: readonly string[],
   children: readonly unknown[],
 ): VTemplate {
+  DEBUG: {
+    for (const child of children) {
+      if (child instanceof Partial) {
+        console.warn(
+          'A Partial instance was found among template children. ' +
+            'Partial fragments should be composed via Partial.html, Partial.svg, or Partial.math, ' +
+            'not passed directly to html/svg/math/text tags. ' +
+            'Directly binding a Partial calls toString() without sanitization, ' +
+            'which creates an XSS vulnerability or causes an invalid template error.',
+          child,
+        );
+        break;
+      }
+    }
+  }
   return new VNode(
     strings,
     {
