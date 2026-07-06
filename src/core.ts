@@ -246,7 +246,7 @@ export class Scope {
     }
   }
 
-  enter(owner: Component<unknown>): Scope {
+  enter(owner: Owner): Scope {
     return new Scope(owner, this.level + 1, this);
   }
 }
