@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Bind, Fragment } from '@/core.js';
-import { html, math, Partial, svg, text } from '@/template.js';
+import { html, math, Partial, svg, text } from '@/element.js';
 
 describe('html()', () => {
   it('creates a VTemplate with "html" mode', () => {

@@ -6,8 +6,8 @@ import {
   Scope,
   type UpdateHandle,
   type UpdateOptions,
-  wrap,
 } from '../core.js';
+import { wrap } from '../element.js';
 import { AllLanes } from '../lane.js';
 import { ContainerPart } from './part.js';
 

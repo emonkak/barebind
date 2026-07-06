@@ -227,26 +227,6 @@ export type VTemplate = VNode<
   VElement[]
 >;
 
-export class Ref<T> implements Bindable {
-  current: T;
-
-  constructor(current: T) {
-    this.current = current;
-    DEBUG: {
-      Object.seal(this);
-    }
-  }
-
-  [toElement](): VElement {
-    return createBind((instance: T) => {
-      this.current = instance;
-      return () => {
-        this.current = null as T;
-      };
-    });
-  }
-}
-
 export class Scope {
   readonly owner: Owner;
   readonly level: number;
@@ -296,51 +276,4 @@ export class VNode<TType, TProps, const TChildren extends VElement[]> {
   withKey(key: unknown): VNode<TType, TProps, TChildren> {
     return new VNode(this.type, this.props, this.children, key);
   }
-}
-
-export function createBind<T>(value: T): VBind<T> {
-  return new VNode(Bind, { value }, []);
-}
-
-export function createFragment(children: Iterable<unknown>): VFragment {
-  return new VNode(Fragment, {}, Array.from(children, wrap));
-}
-
-export function createPortal<TContainer extends Container>(
-  child: unknown,
-  container: TContainer,
-): VPortal<TContainer> {
-  return new VNode(container, {}, [wrap(child)]);
-}
-
-export function createTemplate(
-  mode: TemplateMode,
-  strings: readonly string[],
-  children: readonly unknown[],
-): VTemplate {
-  return new VNode(
-    strings,
-    {
-      mode,
-    },
-    children.map(wrap),
-  );
-}
-
-export function wrap(value: unknown): VElement {
-  return value instanceof VNode
-    ? value
-    : isBindable(value)
-      ? value[toElement]()
-      : typeof value === 'object' && isIterable(value)
-        ? createFragment(value)
-        : createBind(value);
-}
-
-function isBindable(value: any): value is Bindable {
-  return typeof value?.[toElement] === 'function';
-}
-
-function isIterable(value: any): value is Iterable<unknown> {
-  return typeof value?.[Symbol.iterator] === 'function';
 }
