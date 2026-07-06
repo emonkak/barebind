@@ -121,9 +121,9 @@ describe('Reactive', () => {
       expect(state$.value).toStrictEqual([99, 20, 30]);
     });
 
-    it('returns null for a primitive value', () => {
+    it('returns undefined for a primitive value', () => {
       const state$ = Reactive.from(42);
-      expect(state$.get('toString')).toBe(null);
+      expect(state$.get('toString')).toBe(undefined);
     });
 
     it('returns undefined for a missing key from an object', () => {
