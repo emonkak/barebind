@@ -1,5 +1,18 @@
 import { sequentialEqual } from './compare.js';
-import { createTemplate, type VTemplate } from './core.js';
+import {
+  Bind,
+  type Bindable,
+  type Container,
+  Fragment,
+  type TemplateMode,
+  toElement,
+  type VBind,
+  type VElement,
+  type VFragment,
+  VNode,
+  type VPortal,
+  type VTemplate,
+} from './core.js';
 
 const INTERPOLATION_CACHE = new WeakMap<readonly string[], Interpolation[]>();
 
@@ -99,6 +112,35 @@ export class Partial {
   }
 }
 
+export function createBind<T>(value: T): VBind<T> {
+  return new VNode(Bind, { value }, []);
+}
+
+export function createFragment(children: Iterable<unknown>): VFragment {
+  return new VNode(Fragment, {}, Array.from(children, wrap));
+}
+
+export function createPortal<TContainer extends Container>(
+  child: unknown,
+  container: TContainer,
+): VPortal<TContainer> {
+  return new VNode(container, {}, [wrap(child)]);
+}
+
+export function createTemplate(
+  mode: TemplateMode,
+  strings: readonly string[],
+  children: readonly unknown[],
+): VTemplate {
+  return new VNode(
+    strings,
+    {
+      mode,
+    },
+    children.map(wrap),
+  );
+}
+
 export function html(
   strings: readonly string[],
   ...children: unknown[]
@@ -125,6 +167,24 @@ export function text(
   ...children: unknown[]
 ): VTemplate {
   return createTemplate('textarea', strings, children);
+}
+
+export function wrap(value: unknown): VElement {
+  return value instanceof VNode
+    ? value
+    : isBindable(value)
+      ? value[toElement]()
+      : typeof value === 'object' && isIterable(value)
+        ? createFragment(value)
+        : createBind(value);
+}
+
+function isBindable(value: any): value is Bindable {
+  return typeof value?.[toElement] === 'function';
+}
+
+function isIterable(value: any): value is Iterable<unknown> {
+  return typeof value?.[Symbol.iterator] === 'function';
 }
 
 function interpolatePartials(

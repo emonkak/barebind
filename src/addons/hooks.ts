@@ -3,8 +3,8 @@ import type {
   DispatchOptions,
   HookFunction,
   InitialState,
+  Ref,
 } from '../component.js';
-import type { Ref } from '../core.js';
 
 export interface DeferredValueOptions<T> extends DispatchOptions<T> {
   initialValue?: InitialState<T>;

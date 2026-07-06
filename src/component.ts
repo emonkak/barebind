@@ -1,25 +1,27 @@
 import { patch } from './commit.js';
 import { areDependenciesChanged, is } from './compare.js';
 import {
+  type Bindable,
   type Commit,
   type Component,
   type ComponentInstance,
   type Dispatcher,
   type Injectable,
   type Lanes,
-  Ref,
   type Renderer,
   type RenderNode,
   type Scope,
   type Transaction,
+  toElement,
   type UpdateHandle,
   type UpdateOptions,
   type VComponent,
   type VElement,
   VNode,
-  wrap,
 } from './core.js';
+import { wrap } from './element.js';
 import { RenderError } from './error.js';
+import { createBind } from './index.js';
 import { NoLanes } from './lane.js';
 
 const FinalizerType = 0;
@@ -432,6 +434,26 @@ export class RenderContext {
       initialState,
       options,
     );
+  }
+}
+
+export class Ref<T> implements Bindable {
+  current: T;
+
+  constructor(current: T) {
+    this.current = current;
+    DEBUG: {
+      Object.seal(this);
+    }
+  }
+
+  [toElement](): VElement {
+    return createBind((instance: T) => {
+      this.current = instance;
+      return () => {
+        this.current = null as T;
+      };
+    });
   }
 }
 
