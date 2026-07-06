@@ -9,7 +9,7 @@ export const Header = createComponent<HeaderProps>(function Header() {
   const { state$ } = this.inject(TodoStore);
 
   const handleSubmit = (title: string) => {
-    state$.mutate((state) => {
+    state$.scope((state) => {
       if (title !== '') {
         state.addTodo(title);
       }

@@ -95,7 +95,7 @@ export class AppStore {
   });
 
   async fetchItem(id: number): Promise<void> {
-    return this.itemState$.mutate(async (itemState) => {
+    return this.itemState$.scope(async (itemState) => {
       itemState.isLoading = true;
 
       try {
@@ -119,7 +119,7 @@ export class AppStore {
   }
 
   async fetchUser(id: string): Promise<void> {
-    return this.userState$.mutate(async (userState) => {
+    return this.userState$.scope(async (userState) => {
       userState.isLoading = true;
 
       try {
@@ -141,7 +141,7 @@ export class AppStore {
   }
 
   async fetchStories(type: StoryType, page: number): Promise<void> {
-    return this.storyState$.mutate(async (storyState) => {
+    return this.storyState$.scope(async (storyState) => {
       storyState.isLoading = true;
 
       try {
