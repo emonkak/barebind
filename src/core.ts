@@ -207,7 +207,7 @@ export interface UpdateOptions {
   viewTransition?: string[] | boolean;
 }
 
-export type VBind<T = unknown> = VNode<typeof Bind, { value: T }, []>;
+export type VBind<TValue = unknown> = VNode<typeof Bind, { value: TValue }, []>;
 
 export type VComponent<TProps = any> = VNode<Component<TProps>, TProps, []>;
 
