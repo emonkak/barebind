@@ -231,22 +231,16 @@ export class Scope {
   readonly owner: Owner;
   readonly level: number;
   readonly parent: Scope | null;
-  readonly instances: object[];
+  readonly instances: object[] = [];
 
   static root(owner: Owner): Scope {
     return new Scope(owner, 0, null);
   }
 
-  private constructor(
-    owner: Owner,
-    level: number,
-    parent: Scope | null,
-    instances: object[] = [],
-  ) {
+  private constructor(owner: Owner, level: number, parent: Scope | null) {
     this.owner = owner;
     this.level = level;
     this.parent = parent;
-    this.instances = instances;
     DEBUG: {
       Object.freeze(this);
     }
