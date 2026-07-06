@@ -1,4 +1,4 @@
-import { is, sequentialEqual } from '../compare.js';
+import { is, isObject, sequentialEqual } from '../compare.js';
 import type { Block, Container, Part } from '../core.js';
 import { generateNodeFrame } from './debug.js';
 import { DOMAdapterError } from './error.js';
@@ -317,10 +317,6 @@ function isEventListenerOrNullable(
     typeof value === 'function' ||
     typeof value.handleEvent === 'function'
   );
-}
-
-function isObject(value: unknown): value is object {
-  return typeof value === 'object' && value !== null;
 }
 
 function normalizeClass(value: unknown): ClassMap {

@@ -1,3 +1,4 @@
+import { isObject } from '../../compare.js';
 import {
   Atom,
   Computed,
@@ -195,10 +196,6 @@ function getChild<T>(
   node.children.set(key, child);
 
   return child;
-}
-
-function isObject<T>(value: T): value is T & object {
-  return typeof value === 'object' && value !== null;
 }
 
 function resolveChild<T>(
