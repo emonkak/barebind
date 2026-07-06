@@ -22,8 +22,8 @@ describe('Reactive', () => {
       >();
     });
 
-    it('returns null when the value is null', () => {
-      expectTypeOf(Reactive.from(null).get('foo')).toEqualTypeOf<null>();
+    it('returns undefined when the value is null', () => {
+      expectTypeOf(Reactive.from(null).get('foo')).toEqualTypeOf<undefined>();
     });
 
     it('returns an unknown reactive for an undefined key', () => {

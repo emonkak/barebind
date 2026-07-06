@@ -61,7 +61,7 @@ type ReactiveProperty<T, K extends keyof T> = T extends object
   ? Or<IsWritable<T, K>, IsArray<T>> extends true
     ? Reactive<Get<T, K>>
     : Readonly<Reactive<Get<T, K>>>
-  : null;
+  : undefined;
 
 type StrictEqual<TLhs, TRhs> =
   (<T>() => T extends TLhs ? 1 : 2) extends <T>() => T extends TRhs ? 1 : 2
@@ -108,10 +108,10 @@ export class Reactive<T> extends Signal<T> {
   get(
     key: PropertyKey,
     options?: ReactiveOptions,
-  ): T extends object ? Reactive<unknown> : null;
-  get(key: PropertyKey, options?: ReactiveOptions): Reactive<any> | null {
+  ): T extends object ? Reactive<unknown> : undefined;
+  get(key: PropertyKey, options?: ReactiveOptions): Reactive<any> | undefined {
     if (!isObject(this._node.signal.value)) {
-      return null;
+      return undefined;
     }
     const child = getChild(this._node, key);
     return new Reactive(child, options);
