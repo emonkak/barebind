@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Bind, Fragment } from '@/core.js';
 import { html, math, Partial, svg, text } from '@/element.js';
 
@@ -56,6 +56,19 @@ describe('html()', () => {
     expect(t.children[0]!.props.value).toBe(1);
     expect(t.children[1]!.props.value).toBe(2);
     expect(t.children[2]!.props.value).toBe(3);
+  });
+
+  it('warns when a Partial instance is passed directly as a child', () => {
+    const partial = Partial.parse`<span>${'x'}</span>`;
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    html`<div>${partial}</div>`;
+    expect(warnSpy).toHaveBeenCalledOnce();
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'A Partial instance was found among template children.',
+      ),
+      partial,
+    );
   });
 });
 
