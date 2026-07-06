@@ -21,7 +21,7 @@ export const TodoItem = createComponent<TodoItemProps>(
     };
 
     const handleUpdate = (title: string) => {
-      state$.mutate((todoState) => {
+      state$.scope((todoState) => {
         if (title.length === 0) {
           todoState.removeTodo(todo.id);
         } else {
@@ -32,13 +32,13 @@ export const TodoItem = createComponent<TodoItemProps>(
     };
 
     const handleToggleItem = () => {
-      state$.mutate((todoState) => {
+      state$.scope((todoState) => {
         todoState.toggleTodo(todo.id);
       });
     };
 
     const handleRemoveItem = () => {
-      state$.mutate((todoState) => {
+      state$.scope((todoState) => {
         todoState.removeTodo(todo.id);
       });
     };

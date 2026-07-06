@@ -95,9 +95,9 @@ describe('Reactive', () => {
       expect(state$.version).toBe(1);
     });
 
-    it('increments once per mutate batch', () => {
+    it('increments once per scope batch', () => {
       const state$ = Reactive.from({ a: 1, b: 2 });
-      state$.mutate((s) => {
+      state$.scope((s) => {
         s.a++;
         s.b++;
       });
@@ -198,10 +198,10 @@ describe('Reactive', () => {
     });
   });
 
-  describe('mutate()', () => {
+  describe('scope()', () => {
     it('mutates the value via proxy', () => {
       const state$ = Reactive.from({ count: 0 });
-      state$.mutate((state) => {
+      state$.scope((state) => {
         state.count++;
       });
       expect(state$.value).toStrictEqual({ count: 1 });
@@ -209,7 +209,7 @@ describe('Reactive', () => {
 
     it('increments version on mutation', () => {
       const state$ = Reactive.from({ count: 0 });
-      state$.mutate((state) => {
+      state$.scope((state) => {
         state.count++;
       });
       expect(state$.version).toBe(1);
@@ -217,7 +217,7 @@ describe('Reactive', () => {
 
     it('returns the callback result', () => {
       const state$ = Reactive.from({ count: 0 });
-      const result = state$.mutate((state) => {
+      const result = state$.scope((state) => {
         state.count++;
         return state.count;
       });
@@ -232,26 +232,38 @@ describe('Reactive', () => {
         }
       }
       const state$ = Reactive.from(new Counter());
-      state$.mutate((state) => {
+      state$.scope((state) => {
         state.increment();
       });
       expect(state$.value.count).toBe(1);
     });
 
-    it('throws when mutate is called on a child with a computed signal', () => {
+    it('reads nested properties on a computed child', () => {
       class Store {
-        get id() {
-          return 1;
+        count = 0;
+        get doubled() {
+          return this.count * 2;
         }
       }
       const state$ = Reactive.from(new Store());
-      const id$ = state$.get('id');
-      expect(() => id$.mutate((x: any) => x)).toThrow(
-        'Cannot mutate value on a read-only signal.',
-      );
+      const doubled$ = state$.get('doubled');
+      let result: number;
+      doubled$.scope((v) => {
+        result = v;
+      });
+      expect(result!).toBe(0);
     });
 
-    it('throws when trying to set a getter-only property inside mutate', () => {
+    it('calls callback directly for primitive values', () => {
+      const state$ = Reactive.from(42);
+      let result: number;
+      state$.scope((v) => {
+        result = v;
+      });
+      expect(result!).toBe(42);
+    });
+
+    it('throws when trying to set a getter-only property inside scope', () => {
       class Store {
         count = 0;
         get doubled() {
@@ -260,19 +272,10 @@ describe('Reactive', () => {
       }
       const state$ = Reactive.from(new Store());
       expect(() =>
-        state$.mutate((state: any) => {
+        state$.scope((state: any) => {
           state.doubled = 10;
         }),
       ).toThrow();
-    });
-
-    it('throws when called on a primitive Reactive', () => {
-      const state$ = Reactive.from(42);
-      expect(() =>
-        state$.mutate((state: any) => {
-          state.something;
-        }),
-      ).toThrow('Cannot mutate a non-object value.');
     });
   });
 

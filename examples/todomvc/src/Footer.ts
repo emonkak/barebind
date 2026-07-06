@@ -10,14 +10,14 @@ export const Footer = createComponent<FooterProps>(function Footer() {
 
   const handleChangeFilter = (newFilter: TodoFilter) => (event: Event) => {
     event.preventDefault();
-    state$.mutate((todoState) => {
+    state$.scope((todoState) => {
       todoState.filter = newFilter;
     });
   };
 
   const handleRemoveCompletedTodos = (event: Event) => {
     event.preventDefault();
-    state$.mutate((todoState) => {
+    state$.scope((todoState) => {
       todoState.clearCompletedTodos();
     });
   };

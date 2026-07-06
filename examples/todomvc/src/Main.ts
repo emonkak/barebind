@@ -10,7 +10,7 @@ export const Main = createComponent<MainProps>(function Main() {
   const visibleTodos = this.use(state$.get('visibleTodos'));
 
   const handleToggleAll = () => {
-    state$.mutate((todoState) => {
+    state$.scope((todoState) => {
       todoState.toggleAllTodos();
     });
   };
