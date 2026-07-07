@@ -67,10 +67,10 @@ interface Action<TState, TAction> {
 
 interface ActionDispatcher<TState, TAction> {
   dispatch: (
-    action: TAction,
+    payload: TAction,
     options?: DispatchOptions<TState>,
   ) => UpdateHandle;
-  reducer: (state: TState, action: TAction) => TState;
+  reducer: (state: TState, payload: TAction) => TState;
   currentState: TState;
   pendingActions: Action<TState, TAction>[];
 }
@@ -320,13 +320,13 @@ export class RenderContext {
   }
 
   useReducer<TState, TAction>(
-    reducer: (state: TState, action: TAction) => TState,
+    reducer: (state: TState, payload: TAction) => TState,
     initialState: InitialState<TState>,
     options: StateOptions = {},
   ): [
     state: TState,
     dispatch: (
-      action: TAction,
+      payload: TAction,
       options?: DispatchOptions<TState>,
     ) => UpdateHandle,
   ] {
@@ -425,10 +425,10 @@ export class RenderContext {
     ) => UpdateHandle,
   ] {
     return this.useReducer<TState, NextState<TState>>(
-      (state, action) =>
-        typeof action === 'function'
-          ? (action as (prevState: TState) => TState)(state)
-          : action,
+      (state, payload) =>
+        typeof payload === 'function'
+          ? (payload as (prevState: TState) => TState)(state)
+          : payload,
       initialState,
       options,
     );
