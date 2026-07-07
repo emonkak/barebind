@@ -114,11 +114,14 @@ export type RenderNode =
 
 export namespace RenderNode {
   /**
+   * All node variants share the same shape (monomorphic) — only `state`
+   * differs by type. This avoids hidden-class transitions in JS engines.
+   *
    * left/right are double-buffer child nodes (like binary tree nodes).
    * Invariant: left = work-in-progress, right = committed.
    * left === right means the node is already committed.
    */
-  interface Node<TElement extends VElement> {
+  interface MonomorphicNode<TElement extends VElement> {
     type: TElement['type'];
     props: TElement['props'];
     key: TElement['key'];
@@ -130,24 +133,25 @@ export namespace RenderNode {
     state: unknown;
   }
 
-  export interface BindNode extends Node<VBind> {
+  export interface BindNode extends MonomorphicNode<VBind> {
     state: null;
   }
 
-  export interface BlockNode extends Node<VPortal | VTemplate> {
+  export interface BlockNode extends MonomorphicNode<VPortal | VTemplate> {
     state: {
       block: Block;
     };
   }
 
-  export interface ComponentNode<TProps = unknown> extends Node<VComponent> {
+  export interface ComponentNode<TProps = unknown>
+    extends MonomorphicNode<VComponent> {
     state: {
       instance: ComponentInstance<TProps>;
       scope: Scope;
     };
   }
 
-  export interface FragmentNode extends Node<VFragment> {
+  export interface FragmentNode extends MonomorphicNode<VFragment> {
     state: {
       mutations: Mutation[];
     };
