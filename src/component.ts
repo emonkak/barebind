@@ -498,7 +498,7 @@ class UpdateComponent implements Transaction {
   prepare(lanes: Lanes, renderer: Renderer): Commit {
     const node = this._instance._connectedNode;
     if (node === null) {
-      return noOp;
+      return noop;
     }
     const subScope = node.state.scope.enter(node.type);
     const newElement = node.state.instance.render(node.props, subScope, lanes);
@@ -542,4 +542,4 @@ function getInitialState<TState>(initialState: InitialState<TState>): TState {
     : initialState;
 }
 
-function noOp() {}
+function noop() {}
