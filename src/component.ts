@@ -219,18 +219,16 @@ export class RenderContext {
   inject<TInstance, TDefault = never>(
     injectable: Injectable<TInstance, TDefault>,
   ): TInstance | TDefault {
-    for (
-      let scope: Scope | null = this._scope;
-      scope !== null;
-      scope = scope.parent
-    ) {
+    let scope: Scope | null = this._scope;
+    do {
       for (let i = scope.instances.length - 1; i >= 0; i--) {
         const instance = scope.instances[i]!;
         if (instance instanceof injectable) {
           return instance;
         }
       }
-    }
+      scope = scope.parent;
+    } while (scope !== null);
     if (injectable.getDefault !== undefined) {
       return injectable.getDefault();
     }
