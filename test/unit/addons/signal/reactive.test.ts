@@ -160,19 +160,6 @@ describe('Reactive', () => {
       expect(state$.value).toStrictEqual({ count: 10 });
     });
 
-    it('returns a read-only reactive for a readonly property', () => {
-      class Store {
-        get id() {
-          return 1;
-        }
-      }
-      const state$ = Reactive.from(new Store());
-      const id$ = state$.get('id');
-      expect(() => {
-        (id$ as any).value = 2;
-      }).toThrow('Cannot set value on a read-only signal.');
-    });
-
     it('returns a child that notifies on change', () => {
       const state$ = Reactive.from({ items: [{ id: 1 }] });
       const subscriber = vi.fn();
@@ -200,6 +187,19 @@ describe('Reactive', () => {
       expect(doubled$.value).toBe(0);
       state$.get('count').value = 5;
       expect(doubled$.value).toBe(10);
+    });
+
+    it('throws when trying to set a read-only property', () => {
+      class Store {
+        get id() {
+          return 1;
+        }
+      }
+      const state$ = Reactive.from(new Store());
+      const id$ = state$.get('id');
+      expect(() => {
+        (id$ as any).value = 2;
+      }).toThrow(TypeError);
     });
   });
 
@@ -268,7 +268,7 @@ describe('Reactive', () => {
       expect(result!).toBe(42);
     });
 
-    it('throws when trying to set a getter-only property inside scope', () => {
+    it('throws when trying to set a read-only property inside scope', () => {
       class Store {
         count = 0;
         get doubled() {
