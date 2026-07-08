@@ -12,7 +12,7 @@ import {
 } from 'barebind';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-describe('components', () => {
+describe('Component', () => {
   let container: Element;
   let runtime: Runtime;
   let root: DOMRoot;
@@ -28,7 +28,7 @@ describe('components', () => {
     document.body.removeChild(container);
   });
 
-  describe('render', () => {
+  describe('Render', () => {
     it('renders the props passed as an argument', async () => {
       const App = createComponent(function App({
         message,
@@ -174,7 +174,7 @@ describe('components', () => {
     });
   });
 
-  describe('context', () => {
+  describe('Context', () => {
     class Context {
       value: unknown;
       constructor(value: unknown) {
@@ -322,7 +322,278 @@ describe('components', () => {
     });
   });
 
-  describe('state hooks', () => {
+  describe('Effect hook', () => {
+    it('runs effects in bottom-up order on mount', async () => {
+      const logs: string[] = [];
+      const Child = createComponent(function Child({ name }: { name: string }) {
+        this.useEffect(() => {
+          logs.push(`setup ${name}`);
+        });
+        return html`<div>${name}</div>`;
+      });
+      const App = createComponent(function App() {
+        this.useEffect(() => {
+          logs.push('setup parent');
+        });
+        return [Child({ name: 'child1' }), Child({ name: 'child2' })];
+      });
+
+      await root.render(App({})).finished;
+      expect(logs).toStrictEqual([
+        'setup child1',
+        'setup child2',
+        'setup parent',
+      ]);
+    });
+
+    it('re-runs the effect when dependencies change', async () => {
+      const logs: string[] = [];
+      const App = createComponent(function App({ value }: { value: number }) {
+        this.useEffect(() => {
+          logs.push(`setup ${value}`);
+          return () => {
+            logs.push(`cleanup ${value}`);
+          };
+        }, [value]);
+        return html`<div>${value}</div>`;
+      });
+
+      await root.render(App({ value: 1 })).finished;
+      expect(logs).toStrictEqual(['setup 1']);
+
+      await root.render(App({ value: 2 })).finished;
+      expect(logs).toStrictEqual(['setup 1', 'cleanup 1', 'setup 2']);
+    });
+
+    it('skips the effect when dependencies are unchanged on re-render', async () => {
+      const logs: string[] = [];
+      const App = createComponent(function App() {
+        const [count, setCount] = this.useState(0);
+        this.useEffect(() => {
+          logs.push('effect');
+        }, []);
+        return html`
+          <button
+            @click=${() => setCount(count + 1)}
+          >
+            ${count}
+          </button>
+        `;
+      });
+
+      await root.render(App({})).finished;
+      const button = container.querySelector('button')!;
+      expect(button.textContent).toBe('0');
+      expect(logs).toStrictEqual(['effect']);
+
+      button.click();
+      await step(runtime);
+      expect(button.textContent).toBe('1');
+      expect(logs).toStrictEqual(['effect']);
+    });
+
+    it('cleans up the effect in top-down on unmount', async () => {
+      const logs: string[] = [];
+      const Child = createComponent(function Child({ name }: { name: string }) {
+        this.useEffect(() => {
+          return () => {
+            logs.push(`cleanup ${name}`);
+          };
+        });
+        return html`<div>${name}</div>`;
+      });
+      const App = createComponent(function App() {
+        this.useEffect(() => {
+          return () => {
+            logs.push('cleanup parent');
+          };
+        });
+        return [Child({ name: 'child1' }), Child({ name: 'child2' })];
+      });
+
+      await root.render(App({})).finished;
+      expect(logs).toStrictEqual([]);
+
+      await root.unmount().finished;
+      expect(logs).toStrictEqual([
+        'cleanup parent',
+        'cleanup child1',
+        'cleanup child2',
+      ]);
+    });
+
+    it('handles update scheduled during effect cleanup gracefully', async () => {
+      const log: string[] = [];
+      const App = createComponent(function App() {
+        const [count, setCount] = this.useState(0);
+        this.useEffect(() => {
+          log.push('setup');
+          return () => {
+            log.push('cleanup');
+            setCount(999);
+          };
+        });
+        return html`<div>${count}</div>`;
+      });
+
+      await root.render(App({})).finished;
+      expect(log).toStrictEqual(['setup']);
+
+      await root.unmount().finished;
+      expect(log).toStrictEqual(['setup', 'cleanup']);
+
+      await step(runtime);
+      expect(container.innerHTML).toBe('');
+    });
+  });
+
+  describe('ID hook', () => {
+    it('generates unique ids', async () => {
+      const App = createComponent(function App() {
+        const id = this.useId();
+        return html`<div id=${id}>test</div>`;
+      });
+
+      await root.render(App({})).finished;
+      const target = container.querySelector('div')!;
+      const id = target.id;
+      expect(id).toMatch(/^[a-z0-9]+-\d+$/);
+
+      await root.render(App({})).finished;
+      expect(container.querySelector('div')!).toBe(target);
+      expect(target.id).toBe(id);
+    });
+  });
+
+  describe('Performance hook', () => {
+    it('memoizes computed values', async () => {
+      const App = createComponent(function App({ value }: { value: number }) {
+        const doubled = this.useMemo(() => value * 2, [value]);
+        return html`<div>${doubled}</div>`;
+      });
+
+      await root.render(App({ value: 1 })).finished;
+      expect(container.innerHTML).toBe('<div>2</div>');
+
+      await root.render(App({ value: 2 })).finished;
+      expect(container.innerHTML).toBe('<div>4</div>');
+    });
+
+    it('reuses memoized value when deps are unchanged', async () => {
+      let computeCount = 0;
+      const App = createComponent(function App({ value }: { value: number }) {
+        const computed = this.useMemo(() => {
+          computeCount++;
+          return value * 2;
+        }, [value]);
+        return html`<div>${computed}</div>`;
+      });
+
+      await root.render(App({ value: 1 })).finished;
+      expect(computeCount).toBe(1);
+
+      await root.render(App({ value: 1 })).finished;
+      expect(computeCount).toBe(1);
+    });
+
+    it('memoizes callbacks', async () => {
+      const callbacks: (() => string)[] = [];
+      const App = createComponent(function App() {
+        const callback = this.useCallback(() => 'hello', []);
+        callbacks.push(callback);
+        return html`<div>hello</div>`;
+      });
+
+      await root.render(App({})).finished;
+      await root.render(App({})).finished;
+      expect(callbacks).toHaveLength(2);
+      expect(callbacks[0]).toBe(callbacks[1]);
+    });
+  });
+
+  describe('Ref hook', () => {
+    it('provides stable ref', async () => {
+      const refs: { current: number }[] = [];
+      const App = createComponent(function App() {
+        const ref = this.useRef(refs.length);
+        refs.push(ref);
+        return html`<div>hello</div>`;
+      });
+
+      await root.render(App({})).finished;
+      expect(refs.length).toBe(1);
+      expect(refs[0]!.current).toBe(0);
+
+      await root.render(App({})).finished;
+      expect(refs.length).toBe(2);
+      expect(refs[1]).toBe(refs[0]);
+      expect(refs[1]!.current).toBe(0);
+    });
+
+    it('holds the DOM node on mount', async () => {
+      let ref!: Ref<HTMLDivElement | null>;
+      const App = createComponent(function App() {
+        ref = this.useRef<HTMLDivElement | null>(null);
+        return html`<div ${ref}>hello</div>`;
+      });
+
+      await root.render(App({})).finished;
+      expect(ref).toBeInstanceOf(Ref);
+      expect(ref.current).toBeInstanceOf(HTMLDivElement);
+      expect(ref.current).toBe(container.querySelector('div'));
+    });
+
+    it('holds the DOM node before commit effects', async () => {
+      let element!: HTMLDivElement;
+      const App = createComponent(function App() {
+        const ref = this.useRef<HTMLDivElement | null>(null);
+        this.useEffect(() => {
+          element = ref.current!;
+        });
+        return html`<div ${ref}>hello</div>`;
+      });
+
+      await root.render(App({})).finished;
+      expect(element).toBeInstanceOf(HTMLDivElement);
+      expect(element).toBe(container.querySelector('div'));
+    });
+
+    it('holds the DOM node before clean up effects', async () => {
+      let element!: HTMLDivElement;
+      const App = createComponent(function App() {
+        const ref = this.useRef<HTMLDivElement | null>(null);
+        this.useEffect(() => {
+          return () => {
+            element = ref.current!;
+          };
+        });
+        return html`<div ${ref}>hello</div>`;
+      });
+
+      await root.render(App({})).finished;
+      const target = container.querySelector('div');
+
+      await root.unmount().finished;
+      expect(element).toBeInstanceOf(HTMLDivElement);
+      expect(element).toBe(target);
+    });
+
+    it('unholds the DOM node on unmount', async () => {
+      let ref!: Ref<HTMLDivElement | null>;
+      const App = createComponent(function App() {
+        ref = this.useRef<HTMLDivElement | null>(null);
+        return html`<div ${ref}>hello</div>`;
+      });
+
+      await root.render(App({})).finished;
+
+      await root.unmount().finished;
+      expect(ref).toBeInstanceOf(Ref);
+      expect(ref.current).toBe(null);
+    });
+  });
+
+  describe('State hook', () => {
     it('updates the state with the new value', async () => {
       const App = createComponent(function App() {
         const [count, setCount] = this.useState(0);
@@ -756,278 +1027,7 @@ describe('components', () => {
     });
   });
 
-  describe('effect hooks', () => {
-    it('runs effects in bottom-up order on mount', async () => {
-      const logs: string[] = [];
-      const Child = createComponent(function Child({ name }: { name: string }) {
-        this.useEffect(() => {
-          logs.push(`setup ${name}`);
-        });
-        return html`<div>${name}</div>`;
-      });
-      const App = createComponent(function App() {
-        this.useEffect(() => {
-          logs.push('setup parent');
-        });
-        return [Child({ name: 'child1' }), Child({ name: 'child2' })];
-      });
-
-      await root.render(App({})).finished;
-      expect(logs).toStrictEqual([
-        'setup child1',
-        'setup child2',
-        'setup parent',
-      ]);
-    });
-
-    it('re-runs the effect when dependencies change', async () => {
-      const logs: string[] = [];
-      const App = createComponent(function App({ value }: { value: number }) {
-        this.useEffect(() => {
-          logs.push(`setup ${value}`);
-          return () => {
-            logs.push(`cleanup ${value}`);
-          };
-        }, [value]);
-        return html`<div>${value}</div>`;
-      });
-
-      await root.render(App({ value: 1 })).finished;
-      expect(logs).toStrictEqual(['setup 1']);
-
-      await root.render(App({ value: 2 })).finished;
-      expect(logs).toStrictEqual(['setup 1', 'cleanup 1', 'setup 2']);
-    });
-
-    it('skips the effect when dependencies are unchanged on re-render', async () => {
-      const logs: string[] = [];
-      const App = createComponent(function App() {
-        const [count, setCount] = this.useState(0);
-        this.useEffect(() => {
-          logs.push('effect');
-        }, []);
-        return html`
-          <button
-            @click=${() => setCount(count + 1)}
-          >
-            ${count}
-          </button>
-        `;
-      });
-
-      await root.render(App({})).finished;
-      const button = container.querySelector('button')!;
-      expect(button.textContent).toBe('0');
-      expect(logs).toStrictEqual(['effect']);
-
-      button.click();
-      await step(runtime);
-      expect(button.textContent).toBe('1');
-      expect(logs).toStrictEqual(['effect']);
-    });
-
-    it('cleans up the effect in top-down on unmount', async () => {
-      const logs: string[] = [];
-      const Child = createComponent(function Child({ name }: { name: string }) {
-        this.useEffect(() => {
-          return () => {
-            logs.push(`cleanup ${name}`);
-          };
-        });
-        return html`<div>${name}</div>`;
-      });
-      const App = createComponent(function App() {
-        this.useEffect(() => {
-          return () => {
-            logs.push('cleanup parent');
-          };
-        });
-        return [Child({ name: 'child1' }), Child({ name: 'child2' })];
-      });
-
-      await root.render(App({})).finished;
-      expect(logs).toStrictEqual([]);
-
-      await root.unmount().finished;
-      expect(logs).toStrictEqual([
-        'cleanup parent',
-        'cleanup child1',
-        'cleanup child2',
-      ]);
-    });
-
-    it('handles update scheduled during effect cleanup gracefully', async () => {
-      const log: string[] = [];
-      const App = createComponent(function App() {
-        const [count, setCount] = this.useState(0);
-        this.useEffect(() => {
-          log.push('setup');
-          return () => {
-            log.push('cleanup');
-            setCount(999);
-          };
-        });
-        return html`<div>${count}</div>`;
-      });
-
-      await root.render(App({})).finished;
-      expect(log).toStrictEqual(['setup']);
-
-      await root.unmount().finished;
-      expect(log).toStrictEqual(['setup', 'cleanup']);
-
-      await step(runtime);
-      expect(container.innerHTML).toBe('');
-    });
-  });
-
-  describe('performance hooks', () => {
-    it('memoizes computed values', async () => {
-      const App = createComponent(function App({ value }: { value: number }) {
-        const doubled = this.useMemo(() => value * 2, [value]);
-        return html`<div>${doubled}</div>`;
-      });
-
-      await root.render(App({ value: 1 })).finished;
-      expect(container.innerHTML).toBe('<div>2</div>');
-
-      await root.render(App({ value: 2 })).finished;
-      expect(container.innerHTML).toBe('<div>4</div>');
-    });
-
-    it('reuses memoized value when deps are unchanged', async () => {
-      let computeCount = 0;
-      const App = createComponent(function App({ value }: { value: number }) {
-        const computed = this.useMemo(() => {
-          computeCount++;
-          return value * 2;
-        }, [value]);
-        return html`<div>${computed}</div>`;
-      });
-
-      await root.render(App({ value: 1 })).finished;
-      expect(computeCount).toBe(1);
-
-      await root.render(App({ value: 1 })).finished;
-      expect(computeCount).toBe(1);
-    });
-
-    it('memoizes callbacks', async () => {
-      const callbacks: (() => string)[] = [];
-      const App = createComponent(function App() {
-        const callback = this.useCallback(() => 'hello', []);
-        callbacks.push(callback);
-        return html`<div>hello</div>`;
-      });
-
-      await root.render(App({})).finished;
-      await root.render(App({})).finished;
-      expect(callbacks).toHaveLength(2);
-      expect(callbacks[0]).toBe(callbacks[1]);
-    });
-  });
-
-  describe('ref hooks', () => {
-    it('provides stable ref', async () => {
-      const refs: { current: number }[] = [];
-      const App = createComponent(function App() {
-        const ref = this.useRef(refs.length);
-        refs.push(ref);
-        return html`<div>hello</div>`;
-      });
-
-      await root.render(App({})).finished;
-      expect(refs.length).toBe(1);
-      expect(refs[0]!.current).toBe(0);
-
-      await root.render(App({})).finished;
-      expect(refs.length).toBe(2);
-      expect(refs[1]).toBe(refs[0]);
-      expect(refs[1]!.current).toBe(0);
-    });
-
-    it('holds the DOM node on mount', async () => {
-      let ref!: Ref<HTMLDivElement | null>;
-      const App = createComponent(function App() {
-        ref = this.useRef<HTMLDivElement | null>(null);
-        return html`<div ${ref}>hello</div>`;
-      });
-
-      await root.render(App({})).finished;
-      expect(ref).toBeInstanceOf(Ref);
-      expect(ref.current).toBeInstanceOf(HTMLDivElement);
-      expect(ref.current).toBe(container.querySelector('div'));
-    });
-
-    it('holds the DOM node before commit effects', async () => {
-      let element!: HTMLDivElement;
-      const App = createComponent(function App() {
-        const ref = this.useRef<HTMLDivElement | null>(null);
-        this.useEffect(() => {
-          element = ref.current!;
-        });
-        return html`<div ${ref}>hello</div>`;
-      });
-
-      await root.render(App({})).finished;
-      expect(element).toBeInstanceOf(HTMLDivElement);
-      expect(element).toBe(container.querySelector('div'));
-    });
-
-    it('holds the DOM node before clean up effects', async () => {
-      let element!: HTMLDivElement;
-      const App = createComponent(function App() {
-        const ref = this.useRef<HTMLDivElement | null>(null);
-        this.useEffect(() => {
-          return () => {
-            element = ref.current!;
-          };
-        });
-        return html`<div ${ref}>hello</div>`;
-      });
-
-      await root.render(App({})).finished;
-      const target = container.querySelector('div');
-
-      await root.unmount().finished;
-      expect(element).toBeInstanceOf(HTMLDivElement);
-      expect(element).toBe(target);
-    });
-
-    it('unholds the DOM node on unmount', async () => {
-      let ref!: Ref<HTMLDivElement | null>;
-      const App = createComponent(function App() {
-        ref = this.useRef<HTMLDivElement | null>(null);
-        return html`<div ${ref}>hello</div>`;
-      });
-
-      await root.render(App({})).finished;
-
-      await root.unmount().finished;
-      expect(ref).toBeInstanceOf(Ref);
-      expect(ref.current).toBe(null);
-    });
-  });
-
-  describe('id hooks', () => {
-    it('generates unique ids', async () => {
-      const App = createComponent(function App() {
-        const id = this.useId();
-        return html`<div id=${id}>test</div>`;
-      });
-
-      await root.render(App({})).finished;
-      const target = container.querySelector('div')!;
-      const id = target.id;
-      expect(id).toMatch(/^[a-z0-9]+-\d+$/);
-
-      await root.render(App({})).finished;
-      expect(container.querySelector('div')!).toBe(target);
-      expect(target.id).toBe(id);
-    });
-  });
-
-  describe('usable functions/objects', () => {
+  describe('Usable', () => {
     it('calls a usable function with the render context', async () => {
       const usable = vi.fn().mockReturnValue('hello');
       const App = createComponent(function App() {
@@ -1055,7 +1055,7 @@ describe('components', () => {
     });
   });
 
-  describe('transitions', () => {
+  describe('Transition', () => {
     it('starts transitions in unique lanes', async () => {
       const handles: UpdateHandle[] = [];
       const App = createComponent(function App() {
@@ -1086,7 +1086,7 @@ describe('components', () => {
     });
   });
 
-  describe('view transitions', () => {
+  describe('View transition', () => {
     afterEach(() => {
       document.activeViewTransition?.skipTransition();
     });

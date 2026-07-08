@@ -1,7 +1,7 @@
 import { createPortal, DOMAdapter, DOMRoot, html, Runtime } from 'barebind';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-describe('portal', () => {
+describe('Portal', () => {
   let container: Element;
   let runtime: Runtime;
   let root: DOMRoot;

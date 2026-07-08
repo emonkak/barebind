@@ -1,7 +1,7 @@
 import { DOMAdapter, DOMRoot, html, Runtime } from 'barebind';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-describe('elements', () => {
+describe('Element binding', () => {
   let container: Element;
   let runtime: Runtime;
   let root: DOMRoot;

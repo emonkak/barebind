@@ -30,7 +30,41 @@ describe('Signal addon', () => {
     document.body.removeChild(container);
   });
 
-  describe('signal hooks', () => {
+  describe('Bindings', () => {
+    it('renders an Atom directly as a text node', async () => {
+      const atom = new Atom('hello');
+
+      const App = createComponent(function App() {
+        return html`<div>${atom}</div>`;
+      });
+
+      await root.render(App({})).finished;
+      expect(container.innerHTML).toBe('<div>hello</div>');
+
+      atom.value = 'world';
+      await Promise.resolve();
+      await step(runtime);
+      expect(container.innerHTML).toBe('<div>world</div>');
+    });
+
+    it('sets an Atom to an attribute', async () => {
+      const atom = new Atom('foo');
+
+      const App = createComponent(function App() {
+        return html`<div class="${atom}"></div>`;
+      });
+
+      await root.render(App({})).finished;
+      expect(container.innerHTML).toBe('<div class="foo"></div>');
+
+      atom.value = 'bar';
+      await Promise.resolve();
+      await step(runtime);
+      expect(container.innerHTML).toBe('<div class="bar"></div>');
+    });
+  });
+
+  describe('Hook', () => {
     it('renders an Atom value via use() and updates on change', async () => {
       const atom = new Atom('a');
       const App = createComponent(function App() {
@@ -158,40 +192,6 @@ describe('Signal addon', () => {
       await Promise.resolve();
       await step(runtime);
       expect(container.innerHTML).toBe('<div>30</div>');
-    });
-  });
-
-  describe('signal bindings', () => {
-    it('renders an Atom directly as a text node', async () => {
-      const atom = new Atom('hello');
-
-      const App = createComponent(function App() {
-        return html`<div>${atom}</div>`;
-      });
-
-      await root.render(App({})).finished;
-      expect(container.innerHTML).toBe('<div>hello</div>');
-
-      atom.value = 'world';
-      await Promise.resolve();
-      await step(runtime);
-      expect(container.innerHTML).toBe('<div>world</div>');
-    });
-
-    it('sets an Atom to an attribute', async () => {
-      const atom = new Atom('foo');
-
-      const App = createComponent(function App() {
-        return html`<div class="${atom}"></div>`;
-      });
-
-      await root.render(App({})).finished;
-      expect(container.innerHTML).toBe('<div class="foo"></div>');
-
-      atom.value = 'bar';
-      await Promise.resolve();
-      await step(runtime);
-      expect(container.innerHTML).toBe('<div class="bar"></div>');
     });
   });
 });
