@@ -384,7 +384,7 @@ function parseTemplate(
         DEBUG: {
           if ((currentNode as Element).localName.includes(marker)) {
             throw DOMAdapterError.withNode(
-              currentNode as Element,
+              currentNode,
               'Expressions are not allowed as a tag name.',
             );
           }
