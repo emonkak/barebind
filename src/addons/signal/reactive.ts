@@ -243,13 +243,14 @@ function resolveChild<T>(
           (version, dependency) => version + dependency.version,
           0,
         );
-        const signal = new Computed<unknown>(
-          () => get.call(createProxy(parent)),
-          dependencies,
-          initialResult,
-          initialVersion,
+        return createNode(
+          new Computed<unknown>(
+            () => get.call(createProxy(parent)),
+            dependencies,
+            initialResult,
+            initialVersion,
+          ),
         );
-        return createNode(signal);
       } else {
         return createNode(new Atom(value, signal.version));
       }
