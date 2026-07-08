@@ -121,13 +121,18 @@ describe('Reactive', () => {
       expect(state$.value).toStrictEqual([99, 20, 30]);
     });
 
+    it('returns a reactive for an function name', () => {
+      const state$ = Reactive.from(function f() {});
+      expect(state$.get('name').value).toStrictEqual('f');
+    });
+
     it('returns undefined for a primitive value', () => {
       const state$ = Reactive.from(42);
       expect(state$.get('toString')).toBe(undefined);
     });
 
     it('returns undefined for a missing key from an object', () => {
-      const state$ = Reactive.from({} as Record<string, number>);
+      const state$ = Reactive.from({});
       expect(state$.get('foo').value).toBe(undefined);
     });
 
