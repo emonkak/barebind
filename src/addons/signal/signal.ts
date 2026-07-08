@@ -5,6 +5,7 @@ import {
   type RenderContext,
 } from '../../component.js';
 import { type Bindable, toElement, type VElement } from '../../core.js';
+import { LinkedList } from './linked-list.js';
 
 export interface InvalidateEvent<T = any> {
   readonly source: Atom<T>;
@@ -80,7 +81,7 @@ export abstract class Signal<T> implements Bindable, HookObject<T> {
 export class Atom<T> extends Signal<T> {
   private _value: T;
   private _version: number;
-  private readonly _subscribers = new Set<Subscriber>();
+  private readonly _subscribers = new LinkedList<Subscriber>();
 
   constructor(initialValue: T, initialVersion: number = 0) {
     super();
@@ -117,9 +118,9 @@ export class Atom<T> extends Signal<T> {
   }
 
   subscribe(subscriber: Subscriber): Unsubscribe {
-    this._subscribers.add(subscriber);
+    const node = this._subscribers.push(subscriber);
     return () => {
-      this._subscribers.delete(subscriber);
+      this._subscribers.delete(node);
     };
   }
 
