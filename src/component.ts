@@ -161,9 +161,13 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
       Object.freeze(scope.instances);
       return wrap(returnValue);
     } catch (cause) {
-      throw new RenderError(scope, 'An error occurred during rendering.', {
-        cause,
-      });
+      throw RenderError.withScope(
+        scope,
+        'An error occurred during rendering.',
+        {
+          cause,
+        },
+      );
     }
   }
 
