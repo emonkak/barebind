@@ -77,9 +77,9 @@ export class Runtime implements Renderer, Dispatcher {
         key: newElement.key,
         index,
         parent,
+        part: oldNode.part,
         left: oldNode.left,
         right: oldNode.right,
-        part: oldNode.part,
         state: (oldNode as RenderNode.BindNode).state,
       };
     } else if (newElement.type === Fragment) {
@@ -89,9 +89,9 @@ export class Runtime implements Renderer, Dispatcher {
         key: newElement.key,
         index,
         parent,
+        part: oldNode.part,
         left: new Array(newElement.children.length),
         right: oldNode.right,
-        part: oldNode.part,
         state: (oldNode as RenderNode.FragmentNode).state,
       };
       newNode.state.mutations = this._diffChildren(
@@ -118,9 +118,9 @@ export class Runtime implements Renderer, Dispatcher {
         key: newElement.key,
         index,
         parent,
+        part: oldNode.part,
         left: oldNode.right.slice(),
         right: oldNode.right,
-        part: oldNode.part,
         state: (oldNode as RenderNode.ComponentNode).state,
       };
       const subScope = scope.enter(newElement.type);
@@ -144,9 +144,9 @@ export class Runtime implements Renderer, Dispatcher {
         key: newElement.key,
         index,
         parent,
+        part: oldNode.part,
         left: new Array(newElement.children.length),
         right: oldNode.right,
-        part: oldNode.part,
         state: (oldNode as RenderNode.BlockNode).state,
       };
       for (let i = 0, l = newElement.children.length; i < l; i++) {
@@ -184,9 +184,9 @@ export class Runtime implements Renderer, Dispatcher {
         key: element.key,
         index,
         parent,
+        part,
         left: [],
         right: [],
-        part,
         state: null,
       };
     } else if (element.type === Fragment) {
@@ -196,9 +196,9 @@ export class Runtime implements Renderer, Dispatcher {
         key: element.key,
         index,
         parent,
+        part,
         left: new Array(element.children.length),
         right: [],
-        part,
         state: { mutations: [] },
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
@@ -218,9 +218,9 @@ export class Runtime implements Renderer, Dispatcher {
         key: element.key,
         index,
         parent,
+        part,
         left: new Array(1),
         right: [],
-        part,
         state: {
           instance: element.type.createInstance(this),
           scope,
@@ -246,9 +246,9 @@ export class Runtime implements Renderer, Dispatcher {
         key: element.key,
         index,
         parent,
+        part,
         left: new Array(element.children.length),
         right: [],
-        part,
         state: { block },
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
