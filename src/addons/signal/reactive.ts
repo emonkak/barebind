@@ -56,6 +56,12 @@ type ReactiveProperty<T, K extends keyof T> = T extends object
     : Readonly<Reactive<Get<T, K>>>
   : undefined;
 
+type ReactiveValue<T, K extends keyof T> = T extends object
+  ? IsWritable<T, K> extends true
+    ? Get<T, K>
+    : never
+  : never;
+
 type StrictEqual<TLhs, TRhs> =
   (<T>() => T extends TLhs ? 1 : 2) extends <T>() => T extends TRhs ? 1 : 2
     ? true
@@ -81,10 +87,7 @@ export class Reactive<T> extends Signal<T> {
   }
 
   set value(newValue: T) {
-    this._node.children = null;
-    this._node.flags |= FLAG_PENDING_VALUE;
-    this._node.flags &= ~FLAG_NEEDS_SNAPSHOT;
-    (this._node.signal as Atom<T>).value = newValue;
+    setValue(this._node, newValue);
   }
 
   get version(): number {
@@ -105,6 +108,16 @@ export class Reactive<T> extends Signal<T> {
     }
     const child = getChild(this._node, key);
     return new Reactive(child, options);
+  }
+
+  set<K extends ReactiveKeys<T>>(key: K, newValue: ReactiveValue<T, K>): void;
+  set(key: PropertyKey, newValue: never): void;
+  set(key: PropertyKey, newValue: unknown): void {
+    if (isPrimitive(this._node.signal.value)) {
+      throw new TypeError('Cannot set property on a primitive value.');
+    }
+    const child = getChild(this._node, key);
+    setValue(child, newValue);
   }
 
   scope<TResult>(callback: (value: T) => TResult): TResult {
@@ -128,6 +141,13 @@ export class Reactive<T> extends Signal<T> {
   }
 }
 
+function setValue<T>(node: ReactiveNode<T>, newValue: T): void {
+  node.children = null;
+  node.flags |= FLAG_PENDING_VALUE;
+  node.flags &= ~FLAG_NEEDS_SNAPSHOT;
+  (node.signal as Atom<T>).value = newValue;
+}
+
 function createNode<T>(signal: Signal<T>): ReactiveNode<T> {
   return {
     signal,
@@ -148,10 +168,7 @@ function createProxy<T>(
     set(target, key, value, receiver) {
       const child = getChild(node, key);
       if (child.signal instanceof Atom) {
-        child.children = null;
-        child.flags |= FLAG_PENDING_VALUE;
-        child.flags &= ~FLAG_NEEDS_SNAPSHOT;
-        child.signal.value = value;
+        setValue(child, value);
         return true;
       } else {
         return Reflect.set(target, key, value, receiver);
