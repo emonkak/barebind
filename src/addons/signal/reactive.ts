@@ -143,24 +143,24 @@ export class Reactive<T> extends Signal<T> {
 
 function commitValue<T>(node: ReactiveNode<T>): T {
   const { children, flags, signal } = node;
+  let value = signal.value;
 
   if (flags & FLAG_NEEDS_COMMIT) {
-    const oldValue = signal.value;
-    if (isObject(oldValue)) {
-      const newValue = shallowClone(oldValue);
+    if (isObject(value)) {
+      value = shallowClone(value);
       for (const [key, child] of children!.entries()) {
         if (child.flags & FLAG_PENDING_VALUE) {
-          (newValue as any)[key] = commitValue(child);
+          (value as any)[key] = commitValue(child);
           child.flags &= ~FLAG_PENDING_VALUE;
         }
       }
       // Update the value without invalidation.
-      (signal as Atom<T>).write(newValue);
+      (signal as Atom<T>).write(value);
     }
     node.flags &= ~FLAG_NEEDS_COMMIT;
   }
 
-  return signal.value;
+  return value;
 }
 
 function createNode<T>(signal: Signal<T>): ReactiveNode<T> {
