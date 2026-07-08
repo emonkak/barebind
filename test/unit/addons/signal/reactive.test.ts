@@ -203,6 +203,45 @@ describe('Reactive', () => {
     });
   });
 
+  describe('set()', () => {
+    it('sets a property value', () => {
+      const state$ = Reactive.from({ count: 0 });
+      state$.set('count', 1);
+      expect(state$.value).toStrictEqual({ count: 1 });
+    });
+
+    it('throws when setting a property on a primitive value', () => {
+      const state$ = Reactive.from(42);
+      expect(() => state$.set('toString', 'foo' as never)).toThrow(
+        'Cannot set property on a primitive value.',
+      );
+    });
+
+    it('throws when setting a read-only property', () => {
+      class Store {
+        get id() {
+          return 1;
+        }
+      }
+      const state$ = Reactive.from(new Store());
+      expect(() => state$.set('id', 2 as never)).toThrow(TypeError);
+    });
+
+    it('notifies subscribers on property set', () => {
+      const state$ = Reactive.from({ count: 0 });
+      const subscriber = vi.fn();
+      state$.subscribe(subscriber);
+      state$.set('count', 10);
+      expect(subscriber).toHaveBeenCalledOnce();
+      expect(subscriber).toHaveBeenCalledWith({
+        source: expect.any(Atom),
+        path: ['count'],
+        oldValue: 0,
+        newValue: 10,
+      });
+    });
+  });
+
   describe('scope()', () => {
     it('mutates the value via proxy', () => {
       const state$ = Reactive.from({ count: 0 });
