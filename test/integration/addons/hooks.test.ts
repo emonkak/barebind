@@ -16,7 +16,7 @@ import {
 } from 'barebind/addons/hooks';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-describe('addon hooks', () => {
+describe('Hooks addon', () => {
   let container: Element;
   let runtime: Runtime;
   let root: DOMRoot;

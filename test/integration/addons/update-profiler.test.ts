@@ -5,7 +5,7 @@ import {
 } from 'barebind/addons/update-profiler';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-describe('UpdateProfiler', () => {
+describe('UpdateProfiler addon', () => {
   let userTiming: UserTimingAPI;
   let container: Element;
   let runtime: Runtime;

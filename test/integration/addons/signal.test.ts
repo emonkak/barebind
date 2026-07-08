@@ -14,7 +14,7 @@ import {
 } from 'barebind/addons/signal';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-describe('signal addon', () => {
+describe('Signal addon', () => {
   let container: Element;
   let runtime: Runtime;
   let root: DOMRoot;

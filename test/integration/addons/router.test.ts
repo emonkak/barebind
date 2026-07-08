@@ -6,7 +6,7 @@ import {
 } from 'barebind/addons/router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-describe('Router integration', () => {
+describe('Router addon', () => {
   let container: Element;
   let runtime: Runtime;
   let root: DOMRoot;
