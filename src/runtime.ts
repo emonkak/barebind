@@ -38,13 +38,12 @@ import { PriorityQueue } from './queue.js';
 
 export class Runtime implements Renderer, Dispatcher {
   /** @internal */
-  readonly _adapter: HostAdapter;
-  /** @internal */
   readonly _updateQueue: PriorityQueue<Update> = new PriorityQueue(
     compareUpdates,
   );
   /** @internal */
   _updateBatch: Update[] = [];
+  private readonly _adapter: HostAdapter;
   private _middlewares: Middleware[] = [];
   private _pendingLanes: number = NoLanes;
   private _stagedLanes: number = NoLanes;
