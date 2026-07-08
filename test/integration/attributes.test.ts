@@ -17,7 +17,7 @@ describe('attributes', () => {
     document.body.removeChild(container);
   });
 
-  it('sets an attribute', async () => {
+  it('binds a value to the attribute', async () => {
     const template = html`
       <div data-a=${'a'}></div>
     `;
@@ -25,7 +25,7 @@ describe('attributes', () => {
     expect(container.innerHTML).toBe('<div data-a="a"></div>');
   });
 
-  it('sets a double-quoted attribute', async () => {
+  it('binds a value to the double-quoted attribute', async () => {
     const template = html`
       <div data-a="${'a'}"></div>
     `;
@@ -33,7 +33,7 @@ describe('attributes', () => {
     expect(container.innerHTML).toBe('<div data-a="a"></div>');
   });
 
-  it('sets a single-quoted attribute', async () => {
+  it('binds a value to the single-quoted attribute', async () => {
     const template = html`
       <div data-a='${'a'}'></div>
     `;
@@ -41,7 +41,7 @@ describe('attributes', () => {
     expect(container.innerHTML).toBe('<div data-a="a"></div>');
   });
 
-  it('sets multiple attributes', async () => {
+  it('binds a value to multiple attributes', async () => {
     const template = html`
       <div data-a=${'a'} data-b=${'b'} data-c=${'c'}></div>
     `;
@@ -51,16 +51,23 @@ describe('attributes', () => {
     );
   });
 
-  it('sets string representations of numbers as attributes', async () => {
+  it('sets a string representation of the number as an attribute', async () => {
     const template = html`<div data-a=${123}></div>`;
     await root.render(template).finished;
     expect(container.innerHTML).toBe('<div data-a="123"></div>');
   });
 
-  it('sets string representations of objects as attributes', async () => {
+  it('sets a string representation of the object as an attribute', async () => {
     const template = html`<div data-a=${{ toString: () => 'a' }}></div>`;
     await root.render(template).finished;
     expect(container.innerHTML).toBe('<div data-a="a"></div>');
+  });
+
+  it('sets an empty string when the object has no prototype', async () => {
+    const template = html`<div data-a=${{ __proto__: null }}></div>`;
+
+    await root.render(template).finished;
+    expect(container.innerHTML).toBe('<div data-a=""></div>');
   });
 
   it('creates empty attributes when the value is true', async () => {
