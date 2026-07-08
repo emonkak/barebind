@@ -212,7 +212,7 @@ export function SyncNavigation(
     context.useEffect(() => {
       return adapter.installHandler((url, state, navigationType) => {
         const scene: NavigationScene = { url, state, navigationType };
-        const options = getUpdateOptions?.(scene) ?? {};
+        const options = getUpdateOptions?.(scene);
         return setScene(scene, options).finished;
       });
     }, [adapter]);
