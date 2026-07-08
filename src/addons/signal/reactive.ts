@@ -29,8 +29,6 @@ type FunctionKeys<T> = {
 type Get<T, K extends keyof T> =
   K extends ExplicitKeys<T> ? T[K] : T[K] | undefined;
 
-type IsArray<T> = T extends readonly any[] ? true : false;
-
 type IsPropertyKey<K> = string extends K
   ? true
   : number extends K
@@ -44,12 +42,6 @@ type IsWritable<T, K extends keyof T> = StrictEqual<
   Pick<T, K>
 >;
 
-type Or<TLhs extends boolean, TRhs extends boolean> = TLhs extends true
-  ? true
-  : TRhs extends true
-    ? true
-    : false;
-
 interface ReactiveNode<T> {
   readonly signal: Signal<T>;
   children: Map<PropertyKey, ReactiveNode<unknown>> | null;
@@ -59,7 +51,7 @@ interface ReactiveNode<T> {
 type ReactiveKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
 
 type ReactiveProperty<T, K extends keyof T> = T extends object
-  ? Or<IsWritable<T, K>, IsArray<T>> extends true
+  ? IsWritable<T, K> extends true
     ? Reactive<Get<T, K>>
     : Readonly<Reactive<Get<T, K>>>
   : undefined;
