@@ -79,9 +79,7 @@ export abstract class Signal<T> implements Bindable, HookObject<T> {
 
 export class Atom<T> extends Signal<T> {
   private _value: T;
-
   private _version: number;
-
   private readonly _subscribers = new Set<Subscriber>();
 
   constructor(initialValue: T, initialVersion: number = 0) {
@@ -137,11 +135,8 @@ export class Computed<
   private readonly _computation: (
     ...signals: UnwrapSignals<TDependencies>
   ) => TResult;
-
   private readonly _dependencies: TDependencies;
-
   private _memoizedResult: TResult | null;
-
   private _memoizedVersion;
 
   constructor(

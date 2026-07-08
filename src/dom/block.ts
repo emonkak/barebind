@@ -7,9 +7,7 @@ const moveBefore = Element.prototype.moveBefore ?? insertBefore;
 
 export class DOMBlock implements Block {
   private readonly _fragment: DocumentFragment;
-
   private readonly _staticNodes: ChildNode[];
-
   private readonly _parts: DOMPart[];
 
   constructor(fragment: DocumentFragment, parts: DOMPart[]) {

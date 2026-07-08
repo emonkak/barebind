@@ -1,6 +1,5 @@
 export class PriorityQueue<T> {
   private readonly _heap: T[] = [];
-
   private readonly _compare: (x: T, y: T) => number;
 
   constructor(compare: (x: T, y: T) => number) {
