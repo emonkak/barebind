@@ -202,8 +202,7 @@ function getChild<T>(
   }
 
   child = resolveChild(parent, key);
-
-  if (parent.signal instanceof Atom && child.signal instanceof Atom) {
+  if (child.signal instanceof Atom) {
     child.signal.subscribe((event) => {
       parent.flags |= FLAG_DIRTY;
       (parent.signal as Atom<T>).invalidate({
