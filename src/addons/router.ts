@@ -13,11 +13,11 @@ export {
   HashAdapter,
   type HashAdapterOptions,
   InMemoryAdapter,
+  Navigation,
   type NavigationAdapter,
   NavigationContext,
   type NavigationHandler,
   type NavigationScene,
-  SyncNavigation,
 } from './router/navigation.js';
 export {
   type Matcher,

@@ -1,5 +1,5 @@
 import { createComponent, html } from 'barebind';
-import { HashAdapter, SyncNavigation } from 'barebind/addons/router';
+import { HashAdapter, Navigation } from 'barebind/addons/router';
 
 import { Nav } from './Nav.js';
 import { NotFound } from './NotFound.js';
@@ -13,7 +13,7 @@ interface AppProps {
 export const App = createComponent<AppProps>(function App({ store }) {
   const adapter = this.useMemo(() => new HashAdapter(), []);
   const { scene } = this.use(
-    SyncNavigation(adapter, () => ({ viewTransition: true })),
+    Navigation(adapter, () => ({ viewTransition: true })),
   );
   const page = router.match(scene.url) ?? NotFound({ url: scene.url });
 
