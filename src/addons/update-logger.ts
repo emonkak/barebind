@@ -1,5 +1,5 @@
 import type { Commit, Lanes, Middleware, Update } from '../core.js';
-import { getOwnerStack, nameOf } from '../debug.js';
+import { captureOwnerStack, nameOf } from '../debug.js';
 import { getPriorityFromLanes, SyncLane, ViewTransitionLane } from '../lane.js';
 
 const RED_STYLE = 'color: light-dark(#b3261e, #e46962)';
@@ -66,7 +66,7 @@ function emitLog(
   const mode = getCommitMode(update.lanes);
   const scope = update.transaction.scope;
   const ownerName = nameOf(scope.owner);
-  const ownerStack = getOwnerStack(scope).map(nameOf).join(' > ');
+  const ownerStack = captureOwnerStack(scope).map(nameOf).join(' > ');
 
   logger.groupCollapsed(
     `Update #${update.id} %c${status}%c at %c${ownerName}%c for %ctx${transactionIndex}%c in %c${totalDuration.toFixed(1)}ms`,
