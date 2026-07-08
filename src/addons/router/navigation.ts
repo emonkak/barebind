@@ -1,6 +1,13 @@
 import type { HookFunction } from '../../component.js';
 import type { UpdateOptions } from '../../core.js';
 
+export interface NavigationAdapter {
+  getCurrentURL(): string;
+  getCurrentState(): unknown;
+  installHandler(interceptor: NavigationHandler): () => void;
+  navigate(url: string, options?: NavigationNavigateOptions): Promise<void>;
+}
+
 export type NavigationHandler = (
   url: string,
   state: unknown,
@@ -13,14 +20,12 @@ export interface NavigationScene {
   navigationType: NavigationType | null;
 }
 
-export interface NavigationAdapter {
-  getCurrentURL(): string;
-  getCurrentState(): unknown;
-  installHandler(interceptor: NavigationHandler): () => void;
-  navigate(url: string, options?: NavigationNavigateOptions): Promise<void>;
+export interface BrowserAdapterOptions {
+  location?: Location;
+  navigation?: Navigation;
 }
 
-export interface HostNavigationAdapterOptions {
+export interface HashAdapterOptions {
   location?: Location;
   navigation?: Navigation;
 }
@@ -47,7 +52,7 @@ export class BrowserAdapter implements NavigationAdapter {
   constructor({
     location = window.location,
     navigation = window.navigation,
-  }: HostNavigationAdapterOptions = {}) {
+  }: BrowserAdapterOptions = {}) {
     this._location = location;
     this._navigation = navigation;
   }
@@ -101,7 +106,7 @@ export class HashAdapter implements NavigationAdapter {
   constructor({
     location = window.location,
     navigation = window.navigation,
-  }: HostNavigationAdapterOptions = {}) {
+  }: HashAdapterOptions = {}) {
     this._location = location;
     this._navigation = navigation;
   }

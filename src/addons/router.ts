@@ -9,8 +9,9 @@ export {
 } from './router/matchers.js';
 export {
   BrowserAdapter,
+  type BrowserAdapterOptions,
   HashAdapter,
-  type HostNavigationAdapterOptions,
+  type HashAdapterOptions,
   InMemoryAdapter,
   type NavigationAdapter,
   NavigationContext,
