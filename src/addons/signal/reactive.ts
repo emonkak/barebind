@@ -8,7 +8,7 @@ import {
 } from './signal.js';
 
 const NO_FLAGS = 0;
-const FLAG_NEEDS_SNAPSHOT = 0b01;
+const FLAG_NEEDS_COMMIT = 0b01;
 const FLAG_PENDING_VALUE = 0b10;
 const FLAG_DIRTY = 0b11;
 
@@ -83,7 +83,7 @@ export class Reactive<T> extends Signal<T> {
   }
 
   get value(): T {
-    return takeSnapshot(this._node);
+    return commitValue(this._node);
   }
 
   set value(newValue: T) {
@@ -141,11 +141,26 @@ export class Reactive<T> extends Signal<T> {
   }
 }
 
-function setValue<T>(node: ReactiveNode<T>, newValue: T): void {
-  node.children = null;
-  node.flags |= FLAG_PENDING_VALUE;
-  node.flags &= ~FLAG_NEEDS_SNAPSHOT;
-  (node.signal as Atom<T>).value = newValue;
+function commitValue<T>(node: ReactiveNode<T>): T {
+  const { children, flags, signal } = node;
+
+  if (flags & FLAG_NEEDS_COMMIT) {
+    const oldValue = signal.value;
+    if (isObject(oldValue)) {
+      const newValue = shallowClone(oldValue);
+      for (const [key, child] of children!.entries()) {
+        if (child.flags & FLAG_PENDING_VALUE) {
+          (newValue as any)[key] = commitValue(child);
+          child.flags &= ~FLAG_PENDING_VALUE;
+        }
+      }
+      // Update the value without invalidation.
+      (signal as Atom<T>).write(newValue);
+    }
+    node.flags &= ~FLAG_NEEDS_COMMIT;
+  }
+
+  return signal.value;
 }
 
 function createNode<T>(signal: Signal<T>): ReactiveNode<T> {
@@ -158,7 +173,7 @@ function createNode<T>(signal: Signal<T>): ReactiveNode<T> {
 
 function createProxy<T>(
   parent: ReactiveNode<T>,
-  getValue: (node: ReactiveNode<unknown>) => unknown = takeSnapshot,
+  getValue: (node: ReactiveNode<unknown>) => unknown = commitValue,
 ): T {
   return new Proxy(parent.signal.value as T & object, {
     get(_target, key, _receiver) {
@@ -223,7 +238,7 @@ function resolveChild<T>(
         const dependencies: Signal<unknown>[] = [];
         const proxy = createProxy(parent, (node) => {
           dependencies.push(node.signal);
-          return takeSnapshot(node);
+          return commitValue(node);
         });
         const initialResult = get.call(proxy);
         const initialVersion = dependencies.reduce(
@@ -248,6 +263,13 @@ function resolveChild<T>(
   return createNode(new Atom<unknown>(undefined, signal.version));
 }
 
+function setValue<T>(node: ReactiveNode<T>, newValue: T): void {
+  node.children = null;
+  node.flags |= FLAG_PENDING_VALUE;
+  node.flags &= ~FLAG_NEEDS_COMMIT;
+  (node.signal as Atom<T>).value = newValue;
+}
+
 function shallowClone<T extends object>(object: T): T {
   if (Array.isArray(object)) {
     return object.slice() as T;
@@ -257,30 +279,4 @@ function shallowClone<T extends object>(object: T): T {
       Object.getOwnPropertyDescriptors(object),
     );
   }
-}
-
-function takeSnapshot<T>(node: ReactiveNode<T>): T {
-  const { children, flags, signal } = node;
-
-  if (flags & FLAG_NEEDS_SNAPSHOT) {
-    const oldValue = signal.value;
-
-    if (isObject(oldValue)) {
-      const newValue = shallowClone(oldValue);
-
-      for (const [key, child] of children!.entries()) {
-        if (child.flags & FLAG_PENDING_VALUE) {
-          (newValue as any)[key] = takeSnapshot(child);
-          child.flags &= ~FLAG_PENDING_VALUE;
-        }
-      }
-
-      // Update the value without invalidation.
-      (signal as Atom<T>).write(newValue);
-    }
-
-    node.flags &= ~FLAG_NEEDS_SNAPSHOT;
-  }
-
-  return signal.value;
 }
