@@ -1,7 +1,7 @@
 import { DOMAdapter, DOMRoot, html, math, Runtime, svg, text } from 'barebind';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-describe('templates', () => {
+describe('Template', () => {
   let container: Element;
   let runtime: Runtime;
   let root: DOMRoot;

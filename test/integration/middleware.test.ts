@@ -8,7 +8,7 @@ import {
 } from 'barebind';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-describe('middlewares', () => {
+describe('Middleware', () => {
   let container: Element;
   let runtime: Runtime;
   let root: DOMRoot;
