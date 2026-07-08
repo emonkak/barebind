@@ -198,7 +198,7 @@ export class InMemoryAdapter implements NavigationAdapter {
   }
 }
 
-export function SyncNavigation(
+export function Navigation(
   adapter: NavigationAdapter,
   getUpdateOptions?: (scene: NavigationScene) => UpdateOptions,
 ): HookFunction<NavigationContext> {
