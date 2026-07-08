@@ -1,5 +1,17 @@
 import type { Owner, Scope } from './core.js';
 
+export function captureOwnerStack(scope: Scope): Owner[] {
+  const ownerStack: Owner[] = [];
+  let current: Scope | null = scope;
+
+  do {
+    ownerStack.push(current.owner);
+    current = current.parent;
+  } while (current !== null);
+
+  return ownerStack.reverse();
+}
+
 export function formatOwnerStack(ownerStack: Owner[]): string {
   const tail = ownerStack.length - 1;
   return ownerStack
@@ -10,18 +22,6 @@ export function formatOwnerStack(ownerStack: Owner[]): string {
       return prefix + name + suffix;
     })
     .join('\n');
-}
-
-export function getOwnerStack(scope: Scope): Owner[] {
-  const ownerStack: Owner[] = [];
-  let current: Scope | null = scope;
-
-  do {
-    ownerStack.push(current.owner);
-    current = current.parent;
-  } while (current !== null);
-
-  return ownerStack.reverse();
 }
 
 export function nameOf(owner: Owner): string {
