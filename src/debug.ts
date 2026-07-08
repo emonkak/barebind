@@ -12,18 +12,6 @@ export function captureOwnerStack(scope: Scope): Owner[] {
   return ownerStack.reverse();
 }
 
-export function formatOwnerStack(ownerStack: Owner[]): string {
-  const tail = ownerStack.length - 1;
-  return ownerStack
-    .map((owner, i) => {
-      const prefix = i === 0 ? '' : '   '.repeat(i - 1) + '`- ';
-      const suffix = i === tail ? ' <- ERROR occurred here!' : '';
-      const name = nameOf(owner);
-      return prefix + name + suffix;
-    })
-    .join('\n');
-}
-
 export function nameOf(owner: Owner): string {
   return typeof owner === 'function' ? owner.name : owner.constructor.name;
 }
