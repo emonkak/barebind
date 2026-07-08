@@ -127,9 +127,9 @@ export namespace RenderNode {
     key: TElement['key'];
     index: number;
     parent: RenderNode | RenderRoot | null;
+    part: Part;
     left: RenderNode[]; // work-in-progress children
     right: RenderNode[]; // committed children
-    part: Part;
     state: unknown;
   }
 
