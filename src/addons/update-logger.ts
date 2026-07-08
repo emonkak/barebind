@@ -13,7 +13,6 @@ export type LoggerAPI = Pick<Console, 'groupCollapsed' | 'groupEnd' | 'log'>;
 
 export class UpdateLogger implements Middleware {
   private readonly _logger: LoggerAPI;
-
   private _transactionIndex: number = 0;
 
   constructor(logger: LoggerAPI = window.console) {

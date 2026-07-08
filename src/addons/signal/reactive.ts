@@ -69,7 +69,6 @@ type StrictEqual<TLhs, TRhs> =
 
 export class Reactive<T> extends Signal<T> {
   private readonly _node: ReactiveNode<T>;
-
   private readonly _shallow: boolean;
 
   static from<T>(value: T, options?: ReactiveOptions): Reactive<T> {
