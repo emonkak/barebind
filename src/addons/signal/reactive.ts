@@ -157,16 +157,16 @@ function createNode<T>(signal: Signal<T>): ReactiveNode<T> {
 }
 
 function createProxy<T>(
-  node: ReactiveNode<T>,
+  parent: ReactiveNode<T>,
   getValue: (node: ReactiveNode<unknown>) => unknown = takeSnapshot,
 ): T {
-  return new Proxy(node.signal.value as T & object, {
+  return new Proxy(parent.signal.value as T & object, {
     get(_target, key, _receiver) {
-      const child = getChild(node, key);
+      const child = getChild(parent, key);
       return getValue(child);
     },
     set(target, key, value, receiver) {
-      const child = getChild(node, key);
+      const child = getChild(parent, key);
       if (child.signal instanceof Atom) {
         setValue(child, value);
         return true;
@@ -178,37 +178,37 @@ function createProxy<T>(
 }
 
 function getChild<T>(
-  node: ReactiveNode<T>,
+  parent: ReactiveNode<T>,
   key: PropertyKey,
 ): ReactiveNode<unknown> {
-  let child = node.children?.get(key);
+  let child = parent.children?.get(key);
   if (child !== undefined) {
     return child;
   }
 
-  child = resolveChild(node, key);
+  child = resolveChild(parent, key);
 
-  if (node.signal instanceof Atom && child.signal instanceof Atom) {
+  if (parent.signal instanceof Atom && child.signal instanceof Atom) {
     child.signal.subscribe((event) => {
-      node.flags |= FLAG_DIRTY;
-      (node.signal as Atom<T>).invalidate({
+      parent.flags |= FLAG_DIRTY;
+      (parent.signal as Atom<T>).invalidate({
         ...event,
         path: [key, ...event.path],
       });
     });
   }
 
-  node.children ??= new Map();
-  node.children.set(key, child);
+  parent.children ??= new Map();
+  parent.children.set(key, child);
 
   return child;
 }
 
 function resolveChild<T>(
-  node: ReactiveNode<T>,
+  parent: ReactiveNode<T>,
   key: PropertyKey,
 ): ReactiveNode<unknown> {
-  const { signal } = node;
+  const { signal } = parent;
   let prototype = signal.value;
 
   do {
@@ -218,10 +218,10 @@ function resolveChild<T>(
       const { get, set, value } = propertyDescriptor;
 
       if (get !== undefined && set !== undefined) {
-        return createNode(new Atom(get.call(createProxy(node))));
+        return createNode(new Atom(get.call(createProxy(parent))));
       } else if (get !== undefined) {
         const dependencies: Signal<unknown>[] = [];
-        const proxy = createProxy(node, (node) => {
+        const proxy = createProxy(parent, (node) => {
           dependencies.push(node.signal);
           return takeSnapshot(node);
         });
@@ -231,7 +231,7 @@ function resolveChild<T>(
           0,
         );
         const signal = new Computed<unknown>(
-          () => get.call(createProxy(node)),
+          () => get.call(createProxy(parent)),
           dependencies,
           initialResult,
           initialVersion,
