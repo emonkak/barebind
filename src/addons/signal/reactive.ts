@@ -226,10 +226,10 @@ function resolveChild<T>(
   let prototype = signal.value;
 
   do {
-    const propertyDescriptor = Object.getOwnPropertyDescriptor(prototype, key);
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, key);
 
-    if (propertyDescriptor !== undefined) {
-      const { get, set, value } = propertyDescriptor;
+    if (descriptor !== undefined) {
+      const { get, set, value } = descriptor;
 
       if (get !== undefined && set !== undefined) {
         return createNode(new Atom(get.call(createProxy(parent))));
@@ -257,7 +257,7 @@ function resolveChild<T>(
     }
 
     prototype = Object.getPrototypeOf(prototype);
-  } while (prototype !== null && prototype !== Object.prototype);
+  } while (prototype !== null);
 
   return createNode(new Atom<unknown>(undefined, signal.version));
 }
