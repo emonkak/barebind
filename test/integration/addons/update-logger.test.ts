@@ -11,7 +11,7 @@ import {
 import { type LoggerAPI, UpdateLogger } from 'barebind/addons/update-logger';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-describe('UpdateLogger', () => {
+describe('UpdateLogger addon', () => {
   let logger: LoggerAPI;
   let container: Element;
   let runtime: Runtime;
