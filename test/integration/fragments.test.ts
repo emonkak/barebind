@@ -105,7 +105,7 @@ describe('fragments', () => {
     expect(container.innerHTML).toBe('<ul><li>C</li><li>D</li><!----></ul>');
   });
 
-  it('binds a last value in the list as a text content', async () => {
+  it('sets a last value in the list as a text content', async () => {
     const render = (items: string[]) => html`<div>${items}</div>`;
     await root.render(render(['A', 'B'])).finished;
     expect(container.innerHTML).toBe('<div>B</div>');

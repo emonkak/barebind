@@ -17,7 +17,7 @@ describe('child nodes', () => {
     document.body.removeChild(container);
   });
 
-  it('binds a child node', async () => {
+  it('binds a value to the child node', async () => {
     const template = html`
       <${'a'}>
     `;
@@ -25,7 +25,7 @@ describe('child nodes', () => {
     expect(container.innerHTML).toBe('<!----><!--a-->');
   });
 
-  it('binds a child node in children', async () => {
+  it('binds a value to the nested child node', async () => {
     const template = html`
       <div>
         <${'a'}>
@@ -35,7 +35,7 @@ describe('child nodes', () => {
     expect(container.innerHTML).toBe('<div><!--a--></div>');
   });
 
-  it('binds a child node before a slash', async () => {
+  it('binds a value to the child node before a slash', async () => {
     const template = html`
       <${'a'} />
     `;

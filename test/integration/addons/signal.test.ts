@@ -178,7 +178,7 @@ describe('Signal addon', () => {
       expect(container.innerHTML).toBe('<div>world</div>');
     });
 
-    it('binds an Atom to an attribute', async () => {
+    it('sets an Atom to an attribute', async () => {
       const atom = new Atom('foo');
 
       const App = createComponent(function App() {

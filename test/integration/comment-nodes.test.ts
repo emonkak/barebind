@@ -17,7 +17,7 @@ describe('comment nodes', () => {
     document.body.removeChild(container);
   });
 
-  it('binds a comment node', async () => {
+  it('binds a value to the comment node', async () => {
     const template = html`
       <!--${'a'}-->
     `;
@@ -25,7 +25,7 @@ describe('comment nodes', () => {
     expect(container.innerHTML).toBe('<!----><!--a-->');
   });
 
-  it('binds a comment node before a slash', async () => {
+  it('binds a value to the comment node before a slash', async () => {
     const template = html`
       <!-- ${'a'} /-->
     `;

@@ -17,7 +17,7 @@ describe('texts', () => {
     document.body.removeChild(container);
   });
 
-  it.each([null, undefined])('binds %s as empty string', async (value) => {
+  it.each([null, undefined])('sets %s as an empty string', async (value) => {
     const template = html`
       <div>${value}</div>
     `;
@@ -26,7 +26,16 @@ describe('texts', () => {
     expect(collectTexts(container)).toStrictEqual(['']);
   });
 
-  it('binds a text node', async () => {
+  it('sets an object without prototype as an empty string', async () => {
+    const template = html`
+      <div>${{ __proto__: null }}</div>
+    `;
+    await root.render(template).finished;
+    expect(container.innerHTML).toBe('<div></div>');
+    expect(collectTexts(container)).toStrictEqual(['']);
+  });
+
+  it('binds a value to the text node', async () => {
     const template = html`
       <div>${'a'}</div>
     `;
@@ -35,7 +44,7 @@ describe('texts', () => {
     expect(collectTexts(container)).toStrictEqual(['a']);
   });
 
-  it('binds a text node after a constant', async () => {
+  it('binds a value to the text node after a constant', async () => {
     const template = html`
       <div>a${'b'}</div>
     `;
@@ -44,7 +53,7 @@ describe('texts', () => {
     expect(collectTexts(container)).toStrictEqual(['a', 'b']);
   });
 
-  it('binds a text node before a constant', async () => {
+  it('binds a value to the text node before a constant', async () => {
     const template = html`
       <div>${'a'}b</div>
     `;
@@ -53,7 +62,7 @@ describe('texts', () => {
     expect(collectTexts(container)).toStrictEqual(['a', 'b']);
   });
 
-  it('binds a text hole between constants', async () => {
+  it('binds a value to the text hole between constants', async () => {
     const template = html`
       <div>a${'b'}c</div>
     `;
@@ -62,16 +71,7 @@ describe('texts', () => {
     expect(collectTexts(container)).toStrictEqual(['a', 'b', 'c']);
   });
 
-  it('updates a text node', async () => {
-    const render = (value: string) => html`
-      <div>${value}</div>
-    `;
-    await root.render(render('a')).finished;
-    await root.render(render('b')).finished;
-    expect(container.innerHTML).toBe('<div>b</div>');
-  });
-
-  it('binds multiple text holes', async () => {
+  it('binds a value to multiple text nodes', async () => {
     const template = html`
       <div>${'a'}${'b'}</div>
     `;
@@ -80,7 +80,7 @@ describe('texts', () => {
     expect(collectTexts(container)).toStrictEqual(['a', 'b']);
   });
 
-  it('binds multiple text nodes with new-lines', async () => {
+  it('binds a value to multiple text nodes with new-lines', async () => {
     const template = html`
       <div>
         ${'a'}
@@ -92,7 +92,7 @@ describe('texts', () => {
     expect(collectTexts(container)).toStrictEqual(['a', 'b']);
   });
 
-  it('binds multiple text holes with a separator', async () => {
+  it('binds a value to multiple text nodes with separators', async () => {
     const template = html`
       <div>
         ${'a'}b${'c'}
@@ -103,7 +103,7 @@ describe('texts', () => {
     expect(collectTexts(container)).toStrictEqual(['a', 'b', 'c']);
   });
 
-  it('binds multiple text nodes between constants', async () => {
+  it('binds a value to multiple text nodes between constants', async () => {
     const template = html`
       <div>
         a${'b'}c${'d'}e
@@ -112,6 +112,15 @@ describe('texts', () => {
     await root.render(template).finished;
     expect(container.innerHTML).toBe('<div>abcde</div>');
     expect(collectTexts(container)).toStrictEqual(['a', 'b', 'c', 'd', 'e']);
+  });
+
+  it('updates a text node', async () => {
+    const render = (value: string) => html`
+      <div>${value}</div>
+    `;
+    await root.render(render('a')).finished;
+    await root.render(render('b')).finished;
+    expect(container.innerHTML).toBe('<div>b</div>');
   });
 });
 
