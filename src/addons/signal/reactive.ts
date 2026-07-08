@@ -1,4 +1,4 @@
-import { isObject } from '../../compare.js';
+import { isObject, isPrimitive } from '../../compare.js';
 import {
   Atom,
   Computed,
@@ -111,7 +111,7 @@ export class Reactive<T> extends Signal<T> {
     options?: ReactiveOptions,
   ): T extends object ? Reactive<unknown> : undefined;
   get(key: PropertyKey, options?: ReactiveOptions): Reactive<any> | undefined {
-    if (!isObject(this._node.signal.value)) {
+    if (isPrimitive(this._node.signal.value)) {
       return undefined;
     }
     const child = getChild(this._node, key);
