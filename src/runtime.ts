@@ -44,7 +44,7 @@ export class Runtime implements Renderer, Dispatcher {
   /** @internal */
   _updateBatch: Update[] = [];
   private readonly _adapter: HostAdapter;
-  private _middlewares: Middleware[] = [];
+  private readonly _middlewares: Middleware[] = [];
   private _pendingLanes: number = NoLanes;
   private _stagedLanes: number = NoLanes;
   private _flushLanes: number = NoLanes;
