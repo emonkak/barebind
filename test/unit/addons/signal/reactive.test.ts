@@ -321,6 +321,26 @@ describe('Reactive', () => {
         }),
       ).toThrow();
     });
+
+    it('revokes the proxy after the callback completes', () => {
+      const state$ = Reactive.from({ count: 0 });
+      const proxy = state$.scope((state) => state);
+      expect(() => proxy.count).toThrow(TypeError);
+    });
+
+    it('revokes the proxy even when the callback throws', () => {
+      const state$ = Reactive.from({ count: 0 });
+      let proxy: any;
+      try {
+        state$.scope((state) => {
+          proxy = state;
+          throw new Error('callback error');
+        });
+      } catch {
+        // expected
+      }
+      expect(() => proxy.count).toThrow(TypeError);
+    });
   });
 
   describe('subscribe()', () => {
