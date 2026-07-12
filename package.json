@@ -37,13 +37,13 @@
     "watch:all": "pnpm run --include-workspace-root --recursive --parallel watch"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.0",
-    "@vitest/browser": "^4.1.9",
-    "@vitest/browser-playwright": "^4.1.9",
-    "@vitest/coverage-v8": "4.1.9",
-    "playwright": "^1.61.0",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.9"
+    "@biomejs/biome": "^2.5.3",
+    "@vitest/browser": "^4.1.10",
+    "@vitest/browser-playwright": "^4.1.10",
+    "@vitest/coverage-v8": "4.1.10",
+    "playwright": "^1.61.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
   },
   "sideEffects": false
 }
