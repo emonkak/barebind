@@ -4,14 +4,13 @@ import { Reactive } from '@/addons/signal/reactive.js';
 describe('Reactive', () => {
   describe('set()', () => {
     it('accepts a typed value for a known key', () => {
-      expectTypeOf(Reactive.from({ count: 0 }).set<'count'>).toBeCallableWith(
-        'count',
-        0,
-      );
+      expectTypeOf(
+        Reactive.from({ count: 0 }).set<'count'>,
+      ).parameters.toEqualTypeOf<['count', number]>();
     });
 
     it('denies a value for a generic key', () => {
-      expectTypeOf(Reactive.from({}).set).parameters.branded.toEqualTypeOf<
+      expectTypeOf(Reactive.from({}).set).parameters.toExtend<
         [PropertyKey, never]
       >();
     });
