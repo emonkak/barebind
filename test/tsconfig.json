@@ -5,8 +5,7 @@
     "noEmit": true,
     "paths": {
       "@/*": ["../src/*"]
-    },
-    "typeRoots": ["../typings"]
+    }
   },
-  "include": ["../src/**/*.ts", "./**/*.ts", "./**/*.tsx"]
+  "include": ["../src/**/*", "./**/*"]
 }
