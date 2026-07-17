@@ -121,7 +121,7 @@ export class Reactive<T> extends Signal<T> {
 
   scope<TResult>(callback: (value: T) => TResult): TResult {
     const value = this._node.signal.value;
-    return isObject(value) ? usingProxy(this._node, callback) : callback(value);
+    return callback(isObject(value) ? createProxy(this._node) : value);
   }
 
   subscribe(subscriber: Subscriber): Unsubscribe {
@@ -168,6 +168,27 @@ function createNode<T>(signal: Signal<T>): ReactiveNode<T> {
   };
 }
 
+function createProxy<T>(
+  parent: ReactiveNode<T>,
+  getValue: <T>(node: ReactiveNode<T>) => T = commitValue,
+): T {
+  return new Proxy(parent.signal.value as T & object, {
+    get(_target, key, _receiver) {
+      const child = getChild(parent, key);
+      return getValue(child);
+    },
+    set(target, key, value, receiver) {
+      const child = getChild(parent, key);
+      if (child.signal instanceof Atom) {
+        setValue(child, value);
+        return true;
+      } else {
+        return Reflect.set(target, key, value, receiver);
+      }
+    },
+  });
+}
+
 function getChild<T>(
   parent: ReactiveNode<T>,
   key: PropertyKey,
@@ -208,22 +229,23 @@ function resolveChild<T>(
       const { get, set, value } = descriptor;
 
       if (get !== undefined) {
-        const getter = (proxy: unknown) => get.call(proxy);
         if (set !== undefined) {
-          return createNode(new Atom(usingProxy(parent, getter)));
+          return createNode(new Atom(get.call(createProxy(parent))));
         } else {
           const dependencies: Signal<unknown>[] = [];
-          const initialResult = usingProxy(parent, getter, (node) => {
-            dependencies.push(node.signal as Signal<unknown>);
-            return commitValue(node);
-          });
+          const initialResult = get.call(
+            createProxy(parent, (node) => {
+              dependencies.push(node.signal as Signal<unknown>);
+              return commitValue(node);
+            }),
+          );
           const initialVersion = dependencies.reduce(
             (version, dependency) => version + dependency.version,
             0,
           );
           return createNode(
             new Computed<unknown>(
-              () => usingProxy(parent, getter),
+              () => get.call(createProxy(parent)),
               dependencies,
               initialResult,
               initialVersion,
@@ -256,35 +278,5 @@ function shallowClone<T extends object>(object: T): T {
       Object.getPrototypeOf(object),
       Object.getOwnPropertyDescriptors(object),
     );
-  }
-}
-
-function usingProxy<TProxy, TResult>(
-  parent: ReactiveNode<TProxy>,
-  callback: (proxy: TProxy) => TResult,
-  getValue: <T>(node: ReactiveNode<T>) => T = commitValue,
-): TResult {
-  const { proxy, revoke } = Proxy.revocable(
-    parent.signal.value as TProxy & object,
-    {
-      get(_target, key, _receiver) {
-        const child = getChild(parent, key);
-        return getValue(child);
-      },
-      set(target, key, value, receiver) {
-        const child = getChild(parent, key);
-        if (child.signal instanceof Atom) {
-          setValue(child, value);
-          return true;
-        } else {
-          return Reflect.set(target, key, value, receiver);
-        }
-      },
-    },
-  );
-  try {
-    return callback(proxy);
-  } finally {
-    revoke();
   }
 }
