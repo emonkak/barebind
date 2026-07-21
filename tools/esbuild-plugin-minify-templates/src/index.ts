@@ -22,12 +22,12 @@ export function minifyTemplates(
         const input = await fs.readFile(args.path, 'utf8');
         const loader = path.extname(args.path).slice(1) as esbuild.Loader;
         try {
-          const contents = transformTemplates(input, tagNames);
+          const contents = await transformTemplates(input, loader, tagNames);
           return { contents, loader };
         } catch (error) {
           console.warn(
-            `Warning: Could not parse ${args.path}, skipping transformation:`,
-            String(error),
+            `Could not parse ${args.path}, skipping transformation.`,
+            error,
           );
           return undefined;
         }

@@ -2,5 +2,6 @@ packages:
   - 'examples/*'
   - 'tools/*'
 allowBuilds:
+  '@swc/core': true
   esbuild: true
   msw: true
