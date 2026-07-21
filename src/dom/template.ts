@@ -14,7 +14,7 @@ import {
   StylePart,
 } from './part.js';
 
-const PLACEHOLDER_PATTERN = /^[0-9a-z_-]+$/;
+const TOKEN_PATTERN = /^[0-9a-z_-]+$/;
 
 const LEADING_NEWLINE_PATTERN = /^\s*\n/;
 const TRAILING_NEWLINE_PATTERN = /\n\s*$/;
@@ -102,19 +102,19 @@ export class DOMTemplate {
     strings: readonly string[],
     values: readonly unknown[],
     mode: TemplateMode,
-    placeholder: string,
+    token: string,
     document: Document,
   ) {
     DEBUG: {
-      if (!PLACEHOLDER_PATTERN.test(placeholder)) {
+      if (!TOKEN_PATTERN.test(token)) {
         throw new DOMAdapterError(
-          `Placeholders must match pattern /${PLACEHOLDER_PATTERN.source}/, but got "${placeholder}".`,
+          `Tokens must match pattern /${TOKEN_PATTERN.source}/, but got "${token}".`,
         );
       }
     }
 
     const template = document.createElement('template');
-    const marker = createMarker(placeholder);
+    const marker = createMarker(token);
     const html = stripWhitespaces(strings.join(marker));
 
     if (mode === 'html') {
@@ -281,8 +281,8 @@ function createCursor(node: Node): Cursor {
   };
 }
 
-function createMarker(placeholder: string): string {
-  return `?${placeholder}?`;
+function createMarker(token: string): string {
+  return `?${token}?`;
 }
 
 function decrementCursor(cursor: Cursor): void {
