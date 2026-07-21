@@ -131,9 +131,37 @@ describe('Reactive', () => {
       expect(state$.get('toString')).toBe(undefined);
     });
 
-    it('returns undefined for a missing key from an object', () => {
+    it('returns undefined for a missing key', () => {
       const state$ = Reactive.from({});
       expect(state$.get('foo').value).toBe(undefined);
+    });
+
+    it('returns a read-only reactive for a read-only accessor', () => {
+      const store = {
+        count: 0,
+        get doublyCount(): number {
+          return this.count * 2;
+        },
+      };
+      const state$ = Reactive.from(store);
+      const count$ = state$.get('count');
+      const doublyCount$ = state$.get('doublyCount');
+      count$.value++;
+      expect(doublyCount$.value).toBe(2);
+    });
+
+    it('returns a nested reactive for a read-only accessor returning an object', () => {
+      const store = {
+        count: 0,
+        get counter(): { count: number } {
+          return { count: this.count };
+        },
+      };
+      const state$ = Reactive.from(store);
+      const count$ = state$.get('count');
+      const counterCount$ = state$.get('counter').get('count');
+      count$.value++;
+      expect(counterCount$.value).toBe(1);
     });
 
     it('returns a writable reactive for a read-write accessor', () => {
@@ -204,12 +232,90 @@ describe('Reactive', () => {
   });
 
   describe('scope()', () => {
-    it('mutates the value via proxy', () => {
+    it('mutates the property via proxy', () => {
       const state$ = Reactive.from({ count: 0 });
+      const count$ = state$.get('count');
       state$.scope((state) => {
         state.count++;
       });
       expect(state$.value).toStrictEqual({ count: 1 });
+      expect(count$.value).toBe(1);
+    });
+
+    it('mutates the nested property via proxy', () => {
+      const state$ = Reactive.from({ counter: { count: 0 } });
+      const counter$ = state$.get('counter');
+      const counterCount$ = counter$.get('count');
+      state$.scope((state) => {
+        state.counter.count++;
+      });
+      expect(state$.value).toStrictEqual({ counter: { count: 1 } });
+      expect(counter$.value).toStrictEqual({ count: 1 });
+      expect(counterCount$.value).toBe(1);
+    });
+
+    it('mutates the array via proxy', () => {
+      const state$ = Reactive.from([] as number[]);
+      state$.scope((state) => {
+        state.push(0);
+        state.push(1);
+        state.push(2);
+        state.splice(1, 1);
+      });
+      expect(state$.value).toStrictEqual([0, 2]);
+    });
+
+    it('returns object keys via proxy', () => {
+      const state$ = Reactive.from({ a: 0, b: 1 });
+      const keys = state$.scope((state) => Object.keys(state));
+      expect(keys).toStrictEqual(['a', 'b']);
+    });
+
+    it('adds a dynamic property via proxy', () => {
+      const state$ = Reactive.from({} as Record<string, number>);
+      state$.scope((state) => {
+        state['a'] = 0;
+        state['b'] = 1;
+        expect(state['a']).toBe(0);
+        expect(state['b']).toBe(1);
+        expect('a' in state).toBe(true);
+        expect('b' in state).toBe(true);
+        expect(Object.hasOwn(state, 'a')).toBe(true);
+        expect(Object.hasOwn(state, 'b')).toBe(true);
+        expect(Object.keys(state)).toStrictEqual(['a', 'b']);
+      });
+      expect(state$.value).toStrictEqual({ a: 0, b: 1 });
+    });
+
+    it('deletes a property via proxy', () => {
+      const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
+      state$.scope((state) => {
+        delete state['a'];
+        expect(state['a']).toBe(undefined);
+        expect(state['b']).toBe(1);
+        expect('a' in state).toBe(false);
+        expect('b' in state).toBe(true);
+        expect(Object.hasOwn(state, 'a')).toBe(false);
+        expect(Object.hasOwn(state, 'b')).toBe(true);
+        expect(Object.keys(state)).toStrictEqual(['b']);
+      });
+      expect(state$.value).toStrictEqual({ b: 1 });
+    });
+
+    it('notifies when a property is deleted', () => {
+      const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
+      const subscriber = vi.fn();
+      state$.subscribe(subscriber);
+      state$.scope((state) => {
+        delete state['a'];
+      });
+      expect(subscriber).toHaveBeenCalledOnce();
+      expect(subscriber).toHaveBeenCalledWith({
+        source: expect.any(Atom),
+        path: ['a'],
+        oldValue: 0,
+        newValue: undefined,
+      });
     });
 
     it('increments version on mutation', () => {

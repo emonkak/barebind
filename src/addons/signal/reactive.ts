@@ -7,10 +7,13 @@ import {
   type Unsubscribe,
 } from './signal.js';
 
-const NO_FLAGS = 0;
-const FLAG_NEEDS_COMMIT = 0b01;
-const FLAG_PENDING_VALUE = 0b10;
-const FLAG_DIRTY = 0b11;
+const NO_FLAGS /*              */ = 0;
+const FLAG_NEEDS_COMMIT /*     */ = 0b00001;
+const FLAG_PENDING_VALUE /*    */ = 0b00010;
+const FLAG_DIRTY /*            */ = 0b00011;
+const FLAG_ENUMERABLE_VALUE /* */ = 0b00100;
+const FLAG_DYNAMIC_VALUE /*    */ = 0b01000;
+const FLAG_DELETED_PROPERTY /* */ = 0b10000;
 
 export interface ReactiveOptions {
   shallow?: boolean;
@@ -43,7 +46,7 @@ type IsWritable<T, K extends keyof T> = StrictEqual<
 >;
 
 interface ReactiveNode<T> {
-  readonly signal: Signal<T>;
+  signal: Signal<T>;
   children: Map<PropertyKey, ReactiveNode<unknown>> | null;
   flags: number;
 }
@@ -80,7 +83,7 @@ export class Reactive<T> extends Signal<T> {
   }
 
   set value(newValue: T) {
-    setValue(this._node, newValue);
+    setPendingValue(this._node, newValue);
   }
 
   get version(): number {
@@ -124,53 +127,174 @@ export class Reactive<T> extends Signal<T> {
 
 function commitValue<T>(node: ReactiveNode<T>): T {
   const { children, flags, signal } = node;
-  let value = signal.value;
+  let pendingValue = signal.value;
 
   if (flags & FLAG_NEEDS_COMMIT) {
-    if (isObject(value)) {
-      value = shallowClone(value);
+    if (isObject(pendingValue)) {
+      pendingValue = shallowClone(pendingValue);
       for (const [key, child] of children!.entries()) {
-        if (child.flags & FLAG_PENDING_VALUE) {
-          (value as any)[key] = commitValue(child);
+        if (child.flags & FLAG_DELETED_PROPERTY) {
+          delete (pendingValue as any)[key];
+        } else if (child.flags & FLAG_PENDING_VALUE) {
+          (pendingValue as any)[key] = commitValue(child);
           child.flags &= ~FLAG_PENDING_VALUE;
         }
       }
-      // Update the value without invalidation.
-      (signal as Atom<T>).write(value);
+      // Safety: A signal of the node with dirty flag is always Atom.
+      (signal as Atom<T>).write(pendingValue);
     }
     node.flags &= ~FLAG_NEEDS_COMMIT;
   }
 
-  return value;
+  return pendingValue;
 }
 
-function createNode<T>(signal: Signal<T>): ReactiveNode<T> {
+function resolveChild<T>(
+  parent: ReactiveNode<T>,
+  key: PropertyKey,
+): ReactiveNode<unknown> {
+  const { signal } = parent;
+
+  if (signal instanceof Atom) {
+    let proto = signal.value;
+    do {
+      const descriptor = Object.getOwnPropertyDescriptor(proto, key);
+      if (descriptor !== undefined) {
+        const { get, set, value, enumerable } = descriptor;
+        const flags = enumerable ? FLAG_ENUMERABLE_VALUE : NO_FLAGS;
+        if (get !== undefined) {
+          if (set !== undefined) {
+            return createNode(new Atom(get.call(createProxy(parent))), flags);
+          } else {
+            const dependencies: Signal<unknown>[] = [];
+            const initialResult = get.call(
+              createProxy(parent, (node) => {
+                dependencies.push(node.signal as Signal<unknown>);
+                return commitValue(node);
+              }),
+            );
+            const initialVersion = dependencies.reduce(
+              (version, dependency) => version + dependency.version,
+              0,
+            );
+            return createNode(
+              new Computed(
+                () => get.call(createProxy(parent)),
+                dependencies,
+                initialResult,
+                initialVersion,
+              ),
+              flags,
+            );
+          }
+        } else {
+          return createNode(new Atom(value, signal.version), flags);
+        }
+      }
+      proto = Object.getPrototypeOf(proto);
+    } while (proto !== null);
+
+    return createNode(
+      new Atom<unknown>(undefined, signal.version),
+      FLAG_DYNAMIC_VALUE,
+    );
+  } else {
+    return createNode(
+      new Computed<unknown>(() => (signal.value as any)[key], [signal]),
+    );
+  }
+}
+
+function createNode<T>(signal: Signal<T>, flags = NO_FLAGS): ReactiveNode<T> {
   return {
     signal,
     children: null,
-    flags: NO_FLAGS,
+    flags,
   };
 }
 
 function createProxy<T>(
-  parent: ReactiveNode<T>,
-  getValue: <T>(node: ReactiveNode<T>) => T = commitValue,
+  node: ReactiveNode<T>,
+  finalizeValue: <T>(node: ReactiveNode<T>) => T = commitValue,
 ): T {
-  return new Proxy(parent.signal.value as T & object, {
-    get(_target, key, _receiver) {
-      const child = getChild(parent, key);
-      return getValue(child);
-    },
-    set(target, key, value, receiver) {
-      const child = getChild(parent, key);
-      if (child.signal instanceof Atom) {
-        setValue(child, value);
-        return true;
-      } else {
-        return Reflect.set(target, key, value, receiver);
-      }
-    },
-  });
+  const { signal } = node;
+  return signal instanceof Atom
+    ? new Proxy(signal.value, {
+        deleteProperty(_target, key) {
+          const prop = getChild(node, key);
+          signal.invalidate({
+            source: prop.signal,
+            path: [key],
+            oldValue: prop.signal.value,
+            newValue: undefined,
+          });
+          node.flags |= FLAG_DIRTY;
+          prop.flags |= FLAG_DELETED_PROPERTY;
+          return true;
+        },
+        get(target, key, receiver) {
+          const prop = getChild(node, key);
+          if (prop.flags & FLAG_DELETED_PROPERTY) {
+            return undefined;
+          }
+          if (!(prop.flags & (FLAG_PENDING_VALUE | FLAG_ENUMERABLE_VALUE))) {
+            return Reflect.get(target, key, receiver);
+          }
+          if (isObject(prop.signal.value)) {
+            return createProxy(prop);
+          }
+          return finalizeValue(prop);
+        },
+        getOwnPropertyDescriptor(target, key) {
+          const prop = getChild(node, key);
+          if (prop.flags & FLAG_DELETED_PROPERTY) {
+            return undefined;
+          }
+          if (prop.flags & FLAG_DYNAMIC_VALUE) {
+            return {
+              value: prop.signal.value,
+              writable: true,
+              enumerable: true,
+              configurable: true,
+            };
+          }
+          return Reflect.getOwnPropertyDescriptor(target, key);
+        },
+        set(_target, key, value, _receiver) {
+          const prop = getChild(node, key);
+          setPendingValue(prop, value);
+          return true;
+        },
+        has(target, key) {
+          const prop = node.children?.get(key);
+          return prop !== undefined
+            ? !(prop.flags & FLAG_DELETED_PROPERTY)
+            : Reflect.has(target, key);
+        },
+        ownKeys(target) {
+          const baseKeys = Reflect.ownKeys(target);
+          if (node.children !== null) {
+            const dynamicKeys: PropertyKey[] = [];
+            const deletedKeys: PropertyKey[] = [];
+            for (const [key, child] of node.children.entries()) {
+              if (child.flags & FLAG_DELETED_PROPERTY) {
+                deletedKeys.push(key);
+              } else if (child.flags & FLAG_DYNAMIC_VALUE) {
+                dynamicKeys.push(key);
+              }
+            }
+            if (dynamicKeys.length > 0 || deletedKeys.length > 0) {
+              return [
+                ...new Set(baseKeys)
+                  .difference(new Set(deletedKeys))
+                  .union(new Set(dynamicKeys)),
+              ] as (string | symbol)[];
+            }
+          }
+          return baseKeys;
+        },
+      })
+    : finalizeValue(node);
 }
 
 function getChild<T>(
@@ -183,13 +307,16 @@ function getChild<T>(
   }
 
   child = resolveChild(parent, key);
+
   if (child.signal instanceof Atom) {
     child.signal.subscribe((event) => {
-      parent.flags |= FLAG_DIRTY;
       (parent.signal as Atom<T>).invalidate({
-        ...event,
+        source: event.source,
         path: [key, ...event.path],
+        oldValue: event.oldValue,
+        newValue: event.newValue,
       });
+      parent.flags |= FLAG_DIRTY;
     });
   }
 
@@ -199,68 +326,22 @@ function getChild<T>(
   return child;
 }
 
-function resolveChild<T>(
-  parent: ReactiveNode<T>,
-  key: PropertyKey,
-): ReactiveNode<unknown> {
-  const { signal } = parent;
-  let prototype = signal.value;
-
-  do {
-    const descriptor = Object.getOwnPropertyDescriptor(prototype, key);
-
-    if (descriptor !== undefined) {
-      const { get, set, value } = descriptor;
-
-      if (get !== undefined) {
-        if (set !== undefined) {
-          return createNode(new Atom(get.call(createProxy(parent))));
-        } else {
-          const dependencies: Signal<unknown>[] = [];
-          const initialResult = get.call(
-            createProxy(parent, (node) => {
-              dependencies.push(node.signal as Signal<unknown>);
-              return commitValue(node);
-            }),
-          );
-          const initialVersion = dependencies.reduce(
-            (version, dependency) => version + dependency.version,
-            0,
-          );
-          return createNode(
-            new Computed<unknown>(
-              () => get.call(createProxy(parent)),
-              dependencies,
-              initialResult,
-              initialVersion,
-            ),
-          );
-        }
-      } else {
-        return createNode(new Atom(value, signal.version));
-      }
-    }
-
-    prototype = Object.getPrototypeOf(prototype);
-  } while (prototype !== null);
-
-  return createNode(new Atom<unknown>(undefined, signal.version));
-}
-
-function setValue<T>(node: ReactiveNode<T>, newValue: T): void {
-  node.children = null;
-  node.flags |= FLAG_PENDING_VALUE;
-  node.flags &= ~FLAG_NEEDS_COMMIT;
+function setPendingValue<T>(node: ReactiveNode<T>, newValue: T): void {
   (node.signal as Atom<T>).value = newValue;
+  node.children?.clear();
+  node.flags |= FLAG_PENDING_VALUE;
+  node.flags &= ~(FLAG_NEEDS_COMMIT | FLAG_DELETED_PROPERTY);
 }
 
-function shallowClone<T extends object>(object: T): T {
-  if (Array.isArray(object)) {
-    return object.slice() as T;
+function shallowClone<T extends object>(target: T): T {
+  if (Array.isArray(target)) {
+    return target.slice() as T;
   } else {
-    return Object.create(
-      Object.getPrototypeOf(object),
-      Object.getOwnPropertyDescriptors(object),
-    );
+    const clone = { ...target };
+    const proto = Object.getPrototypeOf(target);
+    if (proto !== Object.prototype) {
+      Object.setPrototypeOf(clone, proto);
+    }
+    return clone;
   }
 }

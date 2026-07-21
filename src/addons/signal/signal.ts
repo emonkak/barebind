@@ -8,7 +8,7 @@ import { type Bindable, toElement, type VElement } from '../../core.js';
 import { LinkedList } from './linked-list.js';
 
 export interface InvalidateEvent<T = any> {
-  readonly source: Atom<T>;
+  readonly source: Signal<T>;
   readonly path: readonly PropertyKey[];
   readonly oldValue: T;
   readonly newValue: T;
