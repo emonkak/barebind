@@ -1,50 +1,37 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import esbuild from 'esbuild';
 import { expect, test } from 'vitest';
 
 import { minifyTemplates } from '@/index.js';
 
-interface TemporaryDirectoryFixture {
-  outdir: string;
-}
+const FIXTURES_DIR = path.join(__dirname, '../fixtures');
 
-export const temporaryDirectoryTest = test.extend<TemporaryDirectoryFixture>({
-  outdir: async ({}, use) => {
-    const prefix = path.join(os.tmpdir(), 'vitest-');
-    const outdir = await fs.mkdtemp(prefix);
-    try {
-      await use(outdir);
-    } finally {
-      await fs.rm(outdir, { recursive: true });
-    }
-  },
-});
-
-temporaryDirectoryTest.for([
+test.for([
   'function-call.js',
   'ignored-template.js',
   'method-call.js',
   'nested-templates.js',
-])('minify template literals in %s', async (filename, { outdir }) => {
-  const inputPath = path.join(__dirname, '../fixtures/', filename);
-  const outputPath = path.join(outdir, filename);
+])('minify template literals in %s', async (filename) => {
+  const inputPath = path.join(FIXTURES_DIR, filename);
   const expectedPath = path.join(
-    __dirname,
-    '../fixtures',
+    FIXTURES_DIR,
     path.basename(filename, '.js') + '.expected.js',
   );
 
-  await esbuild.build({
+  const output = await bundle(inputPath);
+  const expected = await fs.readFile(expectedPath, 'utf8');
+
+  expect(output).toBe(expected);
+});
+
+async function bundle(entryPoint: string): Promise<string> {
+  const result = await esbuild.build({
     bundle: true,
-    entryPoints: [inputPath],
+    entryPoints: [entryPoint],
     format: 'esm',
-    outdir,
+    write: false,
     plugins: [minifyTemplates()],
   });
-
-  expect(await fs.readFile(outputPath, 'utf8')).toBe(
-    await fs.readFile(expectedPath, 'utf8'),
-  );
-});
+  return result.outputFiles[0]!.text;
+}
