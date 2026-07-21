@@ -45,9 +45,11 @@ type IsWritable<T, K extends keyof T> = StrictEqual<
   Pick<T, K>
 >;
 
+type NormalizedKey = string | symbol;
+
 interface ReactiveNode<T> {
   signal: Signal<T>;
-  children: Map<PropertyKey, ReactiveNode<unknown>> | null;
+  children: Map<NormalizedKey, ReactiveNode<unknown>> | null;
   flags: number;
 }
 
@@ -102,7 +104,7 @@ export class Reactive<T> extends Signal<T> {
     if (isPrimitive(this._node.signal.value)) {
       return undefined;
     }
-    const child = getChild(this._node, key);
+    const child = getChild(this._node, normalizeKey(key));
     return new Reactive(child, options);
   }
 
@@ -218,8 +220,8 @@ function createProxy<T>(
       ownKeys(target) {
         const baseKeys = Reflect.ownKeys(target);
         if (node.children !== null) {
-          const dynamicKeys: PropertyKey[] = [];
-          const deletedKeys: PropertyKey[] = [];
+          const dynamicKeys: NormalizedKey[] = [];
+          const deletedKeys: NormalizedKey[] = [];
           for (const [key, child] of node.children.entries()) {
             if (child.flags & FLAG_DELETED_PROPERTY) {
               deletedKeys.push(key);
@@ -232,7 +234,6 @@ function createProxy<T>(
               new Set(baseKeys)
                 .difference(new Set(deletedKeys))
                 .union(new Set(dynamicKeys)),
-              normalizeKey,
             );
           }
         }
@@ -246,7 +247,7 @@ function createProxy<T>(
 
 function getChild<T>(
   parent: ReactiveNode<T>,
-  key: PropertyKey,
+  key: NormalizedKey,
 ): ReactiveNode<unknown> {
   let child = parent.children?.get(key);
   if (child !== undefined) {

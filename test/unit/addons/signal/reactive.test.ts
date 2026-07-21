@@ -197,7 +197,7 @@ describe('Reactive', () => {
       expect(subscriber).toHaveBeenCalledOnce();
       expect(subscriber).toHaveBeenCalledWith({
         source: expect.any(Atom),
-        path: ['items', 0, 'id'],
+        path: ['items', '0', 'id'],
         oldValue: 1,
         newValue: 2,
       });
@@ -423,7 +423,7 @@ describe('Reactive', () => {
       expect(subscriber).toHaveBeenCalledOnce();
       expect(subscriber).toHaveBeenCalledWith({
         source: expect.any(Atom),
-        path: ['items', 0, 'id'],
+        path: ['items', '0', 'id'],
         oldValue: 1,
         newValue: 2,
       });
