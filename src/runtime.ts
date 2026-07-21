@@ -7,11 +7,8 @@ import {
   type HostAdapter,
   type Lanes,
   type Middleware,
-  MUTATION_TYPE_INSERT,
-  MUTATION_TYPE_REMOVE,
-  MUTATION_TYPE_UPDATE,
-  MUTATION_TYPE_UPDATE_AND_MOVE,
   type Mutation,
+  MutationType,
   type Part,
   type Renderer,
   type RenderNode,
@@ -334,7 +331,7 @@ export class Runtime implements Renderer, Dispatcher {
           const oldChild = oldChildren[oldHead];
           if (oldChild !== undefined) {
             newMutations.push({
-              type: MUTATION_TYPE_REMOVE,
+              type: MutationType.REMOVE,
               node: oldChild,
             });
           }
@@ -352,7 +349,7 @@ export class Runtime implements Renderer, Dispatcher {
             newParent.part.splitPart(),
           );
           newMutations.push({
-            type: MUTATION_TYPE_INSERT,
+            type: MutationType.INSERT,
             node: newChild,
             afterNode: newChildren[newTail + 1],
           });
@@ -375,7 +372,7 @@ export class Runtime implements Renderer, Dispatcher {
           newParent,
         );
         newMutations.push({
-          type: MUTATION_TYPE_UPDATE,
+          type: MutationType.UPDATE,
           oldNode: oldChild,
           newNode: newChild,
           index: newHead,
@@ -393,7 +390,7 @@ export class Runtime implements Renderer, Dispatcher {
           newParent,
         );
         newMutations.push({
-          type: MUTATION_TYPE_UPDATE,
+          type: MutationType.UPDATE,
           oldNode: oldChild,
           newNode: newChild,
           index: newTail,
@@ -420,14 +417,14 @@ export class Runtime implements Renderer, Dispatcher {
           newParent,
         );
         newMutations.push({
-          type: MUTATION_TYPE_UPDATE_AND_MOVE,
+          type: MutationType.UPDATE_AND_MOVE,
           oldNode: oldChildren[oldTail]!,
           newNode: tailChild,
           afterNode: oldChildren[oldHead],
           index: newHead,
         });
         newMutations.push({
-          type: MUTATION_TYPE_UPDATE_AND_MOVE,
+          type: MutationType.UPDATE_AND_MOVE,
           oldNode: oldChildren[oldHead]!,
           newNode: headChild,
           afterNode: newChildren[newTail + 1],
@@ -445,14 +442,14 @@ export class Runtime implements Renderer, Dispatcher {
         if (!newKeyToIndexMap.has(oldKeys[oldHead]!)) {
           const oldChild = oldChildren[oldHead]!;
           newMutations.push({
-            type: MUTATION_TYPE_REMOVE,
+            type: MutationType.REMOVE,
             node: oldChild,
           });
           oldHead++;
         } else if (!newKeyToIndexMap.has(oldKeys[oldTail]!)) {
           const oldChild = oldChildren[oldTail]!;
           newMutations.push({
-            type: MUTATION_TYPE_REMOVE,
+            type: MutationType.REMOVE,
             node: oldChild,
           });
           oldTail--;
@@ -474,7 +471,7 @@ export class Runtime implements Renderer, Dispatcher {
               newParent,
             );
             newMutations.push({
-              type: MUTATION_TYPE_UPDATE_AND_MOVE,
+              type: MutationType.UPDATE_AND_MOVE,
               oldNode: oldChildren[oldIndex]!,
               newNode: newChild,
               afterNode: newChildren[newTail + 1],
@@ -491,7 +488,7 @@ export class Runtime implements Renderer, Dispatcher {
               newParent.part.splitPart(),
             );
             newMutations.push({
-              type: MUTATION_TYPE_INSERT,
+              type: MutationType.INSERT,
               node: newChild,
               afterNode: newChildren[newTail + 1],
             });

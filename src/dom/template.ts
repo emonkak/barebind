@@ -14,14 +14,6 @@ import {
   StylePart,
 } from './part.js';
 
-const HOLE_TYPE_ATTRIBUTE = 0;
-const HOLE_TYPE_CHILD_NODE = 1;
-const HOLE_TYPE_ELEMENT = 2;
-const HOLE_TYPE_EVENT = 3;
-const HOLE_TYPE_LIVE = 4;
-const HOLE_TYPE_PROPERTY = 5;
-const HOLE_TYPE_TEXT = 6;
-
 const PLACEHOLDER_PATTERN = /^[0-9a-z_-]+$/;
 
 const LEADING_NEWLINE_PATTERN = /^\s*\n/;
@@ -36,6 +28,16 @@ const ATTRIBUTE_NAME_PATTERN = new RegExp(
   `${ATTRIBUTE_NAME_CLASS}+(?=${WHITESPACE_CLASS}*=${WHITESPACE_CLASS}*${QUOTE_CLASS}?$)`,
   'u',
 );
+
+const enum HoleType {
+  ATTRIBUTE = 0,
+  CHILD_NODE = 1,
+  ELEMENT = 2,
+  EVENT = 3,
+  LIVE = 4,
+  PROPERTY = 5,
+  TEXT = 6,
+}
 
 interface Cursor {
   node: Node;
@@ -53,41 +55,41 @@ type Hole =
 
 namespace Hole {
   export interface AttributeHole {
-    type: typeof HOLE_TYPE_ATTRIBUTE;
+    type: HoleType.ATTRIBUTE;
     path: number[];
     name: string;
   }
 
   export interface ChildNodeHole {
-    type: typeof HOLE_TYPE_CHILD_NODE;
+    type: HoleType.CHILD_NODE;
     path: number[];
   }
 
   export interface ElementHole {
-    type: typeof HOLE_TYPE_ELEMENT;
+    type: HoleType.ELEMENT;
     path: number[];
   }
 
   export interface EventHole {
-    type: typeof HOLE_TYPE_EVENT;
+    type: HoleType.EVENT;
     path: number[];
     name: string;
   }
 
   export interface LiveHole {
-    type: typeof HOLE_TYPE_LIVE;
+    type: HoleType.LIVE;
     path: number[];
     name: string;
   }
 
   export interface PropertyHole {
-    type: typeof HOLE_TYPE_PROPERTY;
+    type: HoleType.PROPERTY;
     path: number[];
     name: string;
   }
 
   export interface TextHole {
-    type: typeof HOLE_TYPE_TEXT;
+    type: HoleType.TEXT;
     path: number[];
   }
 }
@@ -204,7 +206,7 @@ function collectAttributeHoles(
 
     if (name === marker && value === '') {
       hole = {
-        type: HOLE_TYPE_ELEMENT,
+        type: HoleType.ELEMENT,
         path: path.slice(),
       };
     } else if (value === marker) {
@@ -222,28 +224,28 @@ function collectAttributeHoles(
       switch (caseSensitiveName[0]) {
         case '@':
           hole = {
-            type: HOLE_TYPE_EVENT,
+            type: HoleType.EVENT,
             path: path.slice(),
             name: caseSensitiveName.slice(1),
           };
           break;
         case '$':
           hole = {
-            type: HOLE_TYPE_LIVE,
+            type: HoleType.LIVE,
             path: path.slice(),
             name: caseSensitiveName.slice(1),
           };
           break;
         case '.':
           hole = {
-            type: HOLE_TYPE_PROPERTY,
+            type: HoleType.PROPERTY,
             path: path.slice(),
             name: caseSensitiveName.slice(1),
           };
           break;
         default:
           hole = {
-            type: HOLE_TYPE_ATTRIBUTE,
+            type: HoleType.ATTRIBUTE,
             path: path.slice(),
             name: caseSensitiveName,
           };
@@ -297,7 +299,7 @@ function incrementCursor(cursor: Cursor): void {
 
 function isFirstRootNodeHole(hole: Hole): boolean {
   return (
-    hole.type === HOLE_TYPE_CHILD_NODE &&
+    hole.type === HoleType.CHILD_NODE &&
     hole.path.length === 1 &&
     hole.path[0] === 0
   );
@@ -404,7 +406,7 @@ function parseTemplate(
           stripTrailingSlash((currentNode as Comment).data).trim() === marker
         ) {
           holes.push({
-            type: HOLE_TYPE_CHILD_NODE,
+            type: HoleType.CHILD_NODE,
             path: cursor.path.slice(),
           });
           (currentNode as Comment).data = '';
@@ -435,7 +437,7 @@ function parseTemplate(
             advanceCursor(cursor);
           }
           holes.push({
-            type: HOLE_TYPE_TEXT,
+            type: HoleType.TEXT,
             path: cursor.path.slice(),
           });
           currentNode = (currentNode as Text).splitText(0);
@@ -469,7 +471,7 @@ function parseTemplate(
 
 function resolvePart(hole: Hole, node: Node): DOMPart {
   switch (hole.type) {
-    case HOLE_TYPE_ATTRIBUTE:
+    case HoleType.ATTRIBUTE:
       switch (hole.name.toLowerCase()) {
         case 'class':
           return new ClassPart(node as Element, hole.name);
@@ -478,17 +480,17 @@ function resolvePart(hole: Hole, node: Node): DOMPart {
         default:
           return new AttributePart(node as Element, hole.name);
       }
-    case HOLE_TYPE_EVENT:
+    case HoleType.EVENT:
       return new EventPart(node as Element, hole.name);
-    case HOLE_TYPE_CHILD_NODE:
+    case HoleType.CHILD_NODE:
       return new ChildNodePart(node as Comment);
-    case HOLE_TYPE_ELEMENT:
+    case HoleType.ELEMENT:
       return new ElementPart(node as Element);
-    case HOLE_TYPE_LIVE:
+    case HoleType.LIVE:
       return new LivePart(node as Element, hole.name);
-    case HOLE_TYPE_PROPERTY:
+    case HoleType.PROPERTY:
       return new PropertyPart(node as Element, hole.name);
-    case HOLE_TYPE_TEXT:
+    case HoleType.TEXT:
       return new CharacterDataPart(node as Text);
   }
 }

@@ -1,9 +1,6 @@
 import {
   Bind,
-  MUTATION_TYPE_INSERT,
-  MUTATION_TYPE_REMOVE,
-  MUTATION_TYPE_UPDATE,
-  MUTATION_TYPE_UPDATE_AND_MOVE,
+  MutationType,
   type RenderNode,
   type RenderRoot,
 } from './core.js';
@@ -63,7 +60,7 @@ function applyPatch(
   } else {
     for (const mutation of newNode.state.mutations.splice(0)) {
       switch (mutation.type) {
-        case MUTATION_TYPE_INSERT:
+        case MutationType.INSERT:
           mountChild(
             mutation.node,
             mutation.afterNode !== undefined
@@ -71,7 +68,7 @@ function applyPatch(
               : null,
           );
           break;
-        case MUTATION_TYPE_UPDATE:
+        case MutationType.UPDATE:
           applyPatch(
             mutation.oldNode,
             mutation.newNode,
@@ -79,7 +76,7 @@ function applyPatch(
             newNode,
           );
           break;
-        case MUTATION_TYPE_UPDATE_AND_MOVE:
+        case MutationType.UPDATE_AND_MOVE:
           applyPatch(
             mutation.oldNode,
             mutation.newNode,
@@ -93,7 +90,7 @@ function applyPatch(
               : null,
           );
           break;
-        case MUTATION_TYPE_REMOVE:
+        case MutationType.REMOVE:
           unmountChild(mutation.node);
           break;
       }
