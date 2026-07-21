@@ -2,31 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { generateNodeFrame } from '@/dom/debug.js';
 
 describe('generateNodeFrame()', () => {
-  it('generates node frames for attributes', () => {
-    const element = createElement('div', { id: 'a', class: 'b' });
-    // biome-ignore format: keep expected lines
-    const expectedLines = [
-      '<div id="a" class="b">',
-      '            ^^^^^^^^^',
-      '</div>',
-    ];
-    expect(generateNodeFrame(element.getAttributeNode('class')!)).toBe(
-      expectedLines.join('\n'),
-    );
-  });
-
-  it('generates node frames for attributes in void elements', () => {
-    const element = createElement('input', { id: 'a', class: 'b' });
-    // biome-ignore format: keep expected lines
-    const expectedLines = [
-      '<input id="a" class="b">',
-      '       ^^^^^^',
-    ];
-    expect(generateNodeFrame(element.getAttributeNode('id')!)).toBe(
-      expectedLines.join('\n'),
-    );
-  });
-
   it('generates node frames for elements', () => {
     const node = createElement(
       'div',
@@ -64,6 +39,41 @@ describe('generateNodeFrame()', () => {
       '  "A"',
       '  <!--B-->',
       '</div>',
+    ];
+    expect(generateNodeFrame(node)).toBe(expectedLines.join('\n'));
+  });
+
+  it('generates node frames for attributes', () => {
+    const element = createElement('div', { id: 'a', class: 'b' });
+    // biome-ignore format: keep expected lines
+    const expectedLines = [
+      '<div id="a" class="b">',
+      '            ^^^^^^^^^',
+      '</div>',
+    ];
+    expect(generateNodeFrame(element.getAttributeNode('class')!)).toBe(
+      expectedLines.join('\n'),
+    );
+  });
+
+  it('generates node frames for attributes in void elements', () => {
+    const element = createElement('input', { id: 'a', class: 'b' });
+    // biome-ignore format: keep expected lines
+    const expectedLines = [
+      '<input id="a" class="b">',
+      '       ^^^^^^',
+    ];
+    expect(generateNodeFrame(element.getAttributeNode('id')!)).toBe(
+      expectedLines.join('\n'),
+    );
+  });
+
+  it('generates node frames for processing instruction nodes', () => {
+    const node = document.createProcessingInstruction('A', '');
+    // biome-ignore format: keep expected lines
+    const expectedLines = [
+      '<?A ?>',
+      '^^^^^^',
     ];
     expect(generateNodeFrame(node)).toBe(expectedLines.join('\n'));
   });
