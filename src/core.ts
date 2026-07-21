@@ -2,10 +2,12 @@ export const Bind = Symbol.for('barebind.Bind');
 export const Fragment = Symbol.for('barebind.Fragment');
 export const toElement = Symbol.for('barebind.toElement');
 
-export const MUTATION_TYPE_INSERT = 0;
-export const MUTATION_TYPE_UPDATE = 1;
-export const MUTATION_TYPE_UPDATE_AND_MOVE = 2;
-export const MUTATION_TYPE_REMOVE = 3;
+export const enum MutationType {
+  INSERT = 0,
+  UPDATE = 1,
+  UPDATE_AND_MOVE = 2,
+  REMOVE = 3,
+}
 
 export interface Bindable {
   [toElement](): VElement;
@@ -72,25 +74,25 @@ export interface Middleware {
 
 export type Mutation =
   | {
-      type: typeof MUTATION_TYPE_INSERT;
+      type: MutationType.INSERT;
       node: RenderNode;
       afterNode: RenderNode | undefined;
     }
   | {
-      type: typeof MUTATION_TYPE_UPDATE;
+      type: MutationType.UPDATE;
       oldNode: RenderNode;
       newNode: RenderNode;
       index: number;
     }
   | {
-      type: typeof MUTATION_TYPE_UPDATE_AND_MOVE;
+      type: MutationType.UPDATE_AND_MOVE;
       oldNode: RenderNode;
       newNode: RenderNode;
       afterNode: RenderNode | undefined;
       index: number;
     }
   | {
-      type: typeof MUTATION_TYPE_REMOVE;
+      type: MutationType.REMOVE;
       node: RenderNode;
     };
 

@@ -24,11 +24,13 @@ import { RenderError } from './error.js';
 import { createBind } from './index.js';
 import { NoLanes } from './lane.js';
 
-const HOOK_TYPE_FINALIZER = 0;
-const HOOK_TYPE_EFFECT = 1;
-const HOOK_TYPE_ID = 2;
-const HOOK_TYPE_MEMO = 3;
-const HOOK_TYPE_REDUCER = 4;
+const enum HookType {
+  FINALIZER = 0,
+  EFFECT = 1,
+  ID = 2,
+  MEMO = 3,
+  REDUCER = 4,
+}
 
 export type ComponentFunction<TProps, TReturn> = (
   this: RenderContext,
@@ -88,11 +90,11 @@ type Hook =
 
 namespace Hook {
   export interface FinalizerHook {
-    type: typeof HOOK_TYPE_FINALIZER;
+    type: HookType.FINALIZER;
   }
 
   export interface EffectHook {
-    type: typeof HOOK_TYPE_EFFECT;
+    type: HookType.EFFECT;
     setup: EffectSetup;
     deps: readonly unknown[] | null | undefined;
     cleanup: EffectCleanup | void;
@@ -100,18 +102,18 @@ namespace Hook {
   }
 
   export interface IdHook {
-    type: typeof HOOK_TYPE_ID;
+    type: HookType.ID;
     id: string;
   }
 
   export interface MemoHook<TResult> {
-    type: typeof HOOK_TYPE_MEMO;
+    type: HookType.MEMO;
     result: TResult;
     deps: readonly unknown[] | null | undefined;
   }
 
   export interface ReducerHook<TState, TAction> {
-    type: typeof HOOK_TYPE_REDUCER;
+    type: HookType.REDUCER;
     dispatcher: ActionDispatcher<TState, TAction>;
     memoizedActions: Action<TState, TAction>[];
     memoizedState: TState;
@@ -173,7 +175,7 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
 
   connect(node: RenderNode.ComponentNode<TProps>): void {
     for (const hook of this._context!._hooks) {
-      if (hook.type === HOOK_TYPE_EFFECT && hook.dirty) {
+      if (hook.type === HookType.EFFECT && hook.dirty) {
         hook.cleanup?.();
         hook.cleanup = hook.setup();
         hook.dirty = false;
@@ -184,7 +186,7 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
 
   disconnect(): void {
     for (const hook of this._context!._hooks) {
-      if (hook.type === HOOK_TYPE_EFFECT && hook.cleanup !== undefined) {
+      if (hook.type === HookType.EFFECT && hook.cleanup !== undefined) {
         hook.cleanup();
         hook.cleanup = undefined;
       }
@@ -267,13 +269,13 @@ export class RenderContext {
     let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
-      ensureHookType(HOOK_TYPE_EFFECT, currentHook);
+      ensureHookType(HookType.EFFECT, currentHook);
       currentHook.dirty ||= areDependenciesChanged(currentHook.deps, deps);
       currentHook.setup = setup;
       currentHook.deps = deps;
     } else {
       currentHook = {
-        type: HOOK_TYPE_EFFECT,
+        type: HookType.EFFECT,
         setup,
         deps,
         cleanup: undefined,
@@ -287,10 +289,10 @@ export class RenderContext {
     let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
-      ensureHookType(HOOK_TYPE_ID, currentHook);
+      ensureHookType(HookType.ID, currentHook);
     } else {
       currentHook = {
-        type: HOOK_TYPE_ID,
+        type: HookType.ID,
         id: this._instance._dispatcher.nextIdentifier(),
       };
       this._hooks.push(currentHook);
@@ -306,14 +308,14 @@ export class RenderContext {
     let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
-      ensureHookType(HOOK_TYPE_MEMO, currentHook);
+      ensureHookType(HookType.MEMO, currentHook);
       if (areDependenciesChanged(currentHook.deps, deps)) {
         currentHook.result = computation();
       }
       currentHook.deps = deps;
     } else {
       currentHook = {
-        type: HOOK_TYPE_MEMO,
+        type: HookType.MEMO,
         result: computation(),
         deps,
       };
@@ -337,7 +339,7 @@ export class RenderContext {
     let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
-      ensureHookType(HOOK_TYPE_REDUCER, currentHook);
+      ensureHookType(HookType.REDUCER, currentHook);
 
       const { dispatcher, memoizedState, memoizedActions } = currentHook;
       const renderLanes = this._lanes;
@@ -400,7 +402,7 @@ export class RenderContext {
         pendingActions: [],
       };
       currentHook = {
-        type: HOOK_TYPE_REDUCER,
+        type: HookType.REDUCER,
         memoizedState: dispatcher.currentState,
         memoizedActions: [],
         dispatcher,
@@ -532,9 +534,9 @@ function finalizeContext(context: RenderContext): void {
   let currentHook = context._hooks[context._hookIndex++];
 
   if (currentHook !== undefined) {
-    ensureHookType(HOOK_TYPE_FINALIZER, currentHook);
+    ensureHookType(HookType.FINALIZER, currentHook);
   } else {
-    currentHook = { type: HOOK_TYPE_FINALIZER };
+    currentHook = { type: HookType.FINALIZER };
     context._hooks.push(currentHook);
     Object.freeze(context._hooks);
   }

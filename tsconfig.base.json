@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "allowUnusedLabels": true,
-    "erasableSyntaxOnly": true,
     "exactOptionalPropertyTypes": true,
     "isolatedModules": true,
     "module": "nodenext",
