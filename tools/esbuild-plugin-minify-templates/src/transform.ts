@@ -1,3 +1,4 @@
+import { tsPlugin } from '@sveltejs/acorn-typescript';
 import * as acorn from 'acorn';
 import * as walk from 'acorn-walk';
 import * as astring from 'astring';
@@ -5,8 +6,10 @@ import * as astring from 'astring';
 const VOID_WHITESPACE_PATTERN = /(?<=[<>])\r?\n\s*|\r?\n\s*(?=[<>])/g;
 const WHITESPACE_PATTERN = /\r?\n\s*/g;
 
+const tsParser = acorn.Parser.extend(tsPlugin());
+
 export function transformTemplates(input: string, tagNames: string[]): string {
-  const ast = acorn.parse(input, {
+  const ast = tsParser.parse(input, {
     ecmaVersion: 'latest',
     sourceType: 'module',
   });
