@@ -271,6 +271,14 @@ describe('Reactive', () => {
       expect(keys).toStrictEqual(['a', 'b']);
     });
 
+    it('returns numeric keys via proxy', () => {
+      const state$ = Reactive.from([]);
+      state$.get(0).value = 0;
+      state$.get(1).value = 2;
+      const keys = state$.scope((state) => Object.keys(state));
+      expect(keys).toStrictEqual(['0', '1']);
+    });
+
     it('adds a dynamic property via proxy', () => {
       const state$ = Reactive.from({} as Record<string, number>);
       state$.scope((state) => {

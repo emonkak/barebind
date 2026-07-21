@@ -149,62 +149,6 @@ function commitValue<T>(node: ReactiveNode<T>): T {
   return pendingValue;
 }
 
-function resolveChild<T>(
-  parent: ReactiveNode<T>,
-  key: PropertyKey,
-): ReactiveNode<unknown> {
-  const { signal } = parent;
-
-  if (signal instanceof Atom) {
-    let proto = signal.value;
-    do {
-      const descriptor = Object.getOwnPropertyDescriptor(proto, key);
-      if (descriptor !== undefined) {
-        const { get, set, value, enumerable } = descriptor;
-        const flags = enumerable ? FLAG_ENUMERABLE_VALUE : NO_FLAGS;
-        if (get !== undefined) {
-          if (set !== undefined) {
-            return createNode(new Atom(get.call(createProxy(parent))), flags);
-          } else {
-            const dependencies: Signal<unknown>[] = [];
-            const initialResult = get.call(
-              createProxy(parent, (node) => {
-                dependencies.push(node.signal as Signal<unknown>);
-                return commitValue(node);
-              }),
-            );
-            const initialVersion = dependencies.reduce(
-              (version, dependency) => version + dependency.version,
-              0,
-            );
-            return createNode(
-              new Computed(
-                () => get.call(createProxy(parent)),
-                dependencies,
-                initialResult,
-                initialVersion,
-              ),
-              flags,
-            );
-          }
-        } else {
-          return createNode(new Atom(value, signal.version), flags);
-        }
-      }
-      proto = Object.getPrototypeOf(proto);
-    } while (proto !== null);
-
-    return createNode(
-      new Atom<unknown>(undefined, signal.version),
-      FLAG_DYNAMIC_VALUE,
-    );
-  } else {
-    return createNode(
-      new Computed<unknown>(() => (signal.value as any)[key], [signal]),
-    );
-  }
-}
-
 function createNode<T>(signal: Signal<T>, flags = NO_FLAGS): ReactiveNode<T> {
   return {
     signal,
@@ -284,11 +228,12 @@ function createProxy<T>(
               }
             }
             if (dynamicKeys.length > 0 || deletedKeys.length > 0) {
-              return [
-                ...new Set(baseKeys)
+              return Array.from(
+                new Set(baseKeys)
                   .difference(new Set(deletedKeys))
                   .union(new Set(dynamicKeys)),
-              ] as (string | symbol)[];
+                normalizeKey,
+              );
             }
           }
           return baseKeys;
@@ -324,6 +269,66 @@ function getChild<T>(
   parent.children.set(key, child);
 
   return child;
+}
+
+function normalizeKey(key: PropertyKey): string | symbol {
+  return typeof key === 'number' ? key.toString() : key;
+}
+
+function resolveChild<T>(
+  parent: ReactiveNode<T>,
+  key: PropertyKey,
+): ReactiveNode<unknown> {
+  const { signal } = parent;
+
+  if (signal instanceof Atom) {
+    let proto = signal.value;
+    do {
+      const descriptor = Object.getOwnPropertyDescriptor(proto, key);
+      if (descriptor !== undefined) {
+        const { get, set, value, enumerable } = descriptor;
+        const flags = enumerable ? FLAG_ENUMERABLE_VALUE : NO_FLAGS;
+        if (get !== undefined) {
+          if (set !== undefined) {
+            return createNode(new Atom(get.call(createProxy(parent))), flags);
+          } else {
+            const dependencies: Signal<unknown>[] = [];
+            const initialResult = get.call(
+              createProxy(parent, (node) => {
+                dependencies.push(node.signal as Signal<unknown>);
+                return commitValue(node);
+              }),
+            );
+            const initialVersion = dependencies.reduce(
+              (version, dependency) => version + dependency.version,
+              0,
+            );
+            return createNode(
+              new Computed(
+                () => get.call(createProxy(parent)),
+                dependencies,
+                initialResult,
+                initialVersion,
+              ),
+              flags,
+            );
+          }
+        } else {
+          return createNode(new Atom(value, signal.version), flags);
+        }
+      }
+      proto = Object.getPrototypeOf(proto);
+    } while (proto !== null);
+
+    return createNode(
+      new Atom<unknown>(undefined, signal.version),
+      FLAG_DYNAMIC_VALUE,
+    );
+  } else {
+    return createNode(
+      new Computed<unknown>(() => (signal.value as any)[key], [signal]),
+    );
+  }
 }
 
 function setPendingValue<T>(node: ReactiveNode<T>, newValue: T): void {
