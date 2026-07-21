@@ -1,6 +1,6 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import * as esbuild from 'esbuild';
+import type * as esbuild from 'esbuild';
 
 import { transformTemplates } from './transform.js';
 
@@ -20,22 +20,10 @@ export function minifyTemplates(
     setup(build) {
       build.onLoad({ filter: FILTER_PATTERN }, async (args) => {
         const input = await fs.readFile(args.path, 'utf8');
-        const extension = path.extname(args.path);
-        const loader = getLoader(extension);
-
+        const loader = path.extname(args.path).slice(1) as esbuild.Loader;
         try {
-          // Strip types from the code.
-          const result = await esbuild.transform(input, {
-            loader,
-          });
-
-          // Remove whitespaces in templates.
-          const transformedCode = transformTemplates(result.code, tagNames);
-
-          return {
-            contents: transformedCode,
-            loader,
-          };
+          const contents = transformTemplates(input, tagNames);
+          return { contents, loader };
         } catch (error) {
           console.warn(
             `Warning: Could not parse ${args.path}, skipping transformation:`,
@@ -46,16 +34,4 @@ export function minifyTemplates(
       });
     },
   };
-}
-
-function getLoader(extension: string): esbuild.Loader {
-  switch (extension) {
-    case '.js':
-    case '.jsx':
-    case '.ts':
-    case '.tsx':
-      return extension.slice(1) as esbuild.Loader;
-    default:
-      return 'js';
-  }
 }
