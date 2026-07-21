@@ -133,7 +133,7 @@ describe('Element binding', () => {
       <${0} id="a">
     `;
     await expect(root.render(template).finished).rejects.toThrow(
-      'Expressions inside a comment must make up the entire comment value.',
+      'Expressions inside a tag must represent the entire tag',
     );
   });
 
@@ -142,7 +142,7 @@ describe('Element binding', () => {
       <${0}-x id="a">
     `;
     await expect(root.render(template).finished).rejects.toThrow(
-      'Expressions inside a comment must make up the entire comment value.',
+      'Expressions inside a tag must represent the entire tag',
     );
   });
 

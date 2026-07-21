@@ -282,7 +282,7 @@ function createCursor(node: Node): Cursor {
 }
 
 function createMarker(token: string): string {
-  return `?${token}?`;
+  return `?$${token}`;
 }
 
 function decrementCursor(cursor: Cursor): void {
@@ -401,26 +401,6 @@ function parseTemplate(
           );
         }
         break;
-      case Node.COMMENT_NODE:
-        if (
-          stripTrailingSlash((currentNode as Comment).data).trim() === marker
-        ) {
-          holes.push({
-            type: HoleType.CHILD_NODE,
-            path: cursor.path.slice(),
-          });
-          (currentNode as Comment).data = '';
-        } else {
-          DEBUG: {
-            if ((currentNode as Comment).data.includes(marker)) {
-              throw DOMAdapterError.withNode(
-                currentNode,
-                'Expressions inside a comment must make up the entire comment value.',
-              );
-            }
-          }
-        }
-        break;
       case Node.TEXT_NODE: {
         const components = (currentNode as Text).data
           .split(marker)
@@ -455,6 +435,26 @@ function parseTemplate(
         (currentNode as Text).data = suffixComponent;
         break;
       }
+      case Node.COMMENT_NODE:
+        if (
+          stripTrailingSlash((currentNode as Comment).data).trim() === marker
+        ) {
+          holes.push({
+            type: HoleType.CHILD_NODE,
+            path: cursor.path.slice(),
+          });
+          (currentNode as Comment).data = '';
+        } else {
+          DEBUG: {
+            if ((currentNode as Comment).data.includes(marker)) {
+              throw DOMAdapterError.withNode(
+                currentNode,
+                'Expressions inside a tag must represent the entire tag',
+              );
+            }
+          }
+        }
+        break;
     }
     currentNode = advanceCursor(cursor);
   }

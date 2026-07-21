@@ -47,7 +47,7 @@ describe('Comment node binding', () => {
       <!-- ${0}-x -->
     `;
     await expect(root.render(template).finished).rejects.toThrow(
-      'Expressions inside a comment must make up the entire comment value.',
+      'Expressions inside a tag must represent the entire tag',
     );
   });
 
@@ -56,7 +56,7 @@ describe('Comment node binding', () => {
       <!-- x-${0} -->
     `;
     await expect(root.render(template).finished).rejects.toThrow(
-      'Expressions inside a comment must make up the entire comment value.',
+      'Expressions inside a tag must represent the entire tag',
     );
   });
 });
