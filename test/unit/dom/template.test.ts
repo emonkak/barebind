@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { TemplateMode } from '@/core.js';
 import { DOMTemplate } from '@/dom/template.js';
 
-const TEMPLATE_PLACEHOLDER = '__test__';
+const TEMPLATE_TOKEN = '__test__';
 
 describe('DOMTemplate', () => {
   describe('parse()', () => {
@@ -102,10 +102,10 @@ describe('DOMTemplate', () => {
       ]);
     });
 
-    it('throws for an invalid placeholder', () => {
+    it('throws for an invalid token', () => {
       expect(() => {
-        DOMTemplate.parse([], [], 'html', 'INVALID_PLACEHOLDER', document);
-      }).toThrow('Placeholders must match pattern /^[0-9a-z_-]+$/');
+        DOMTemplate.parse([], [], 'html', 'INVALID_TOKEN', document);
+      }).toThrow('Tokens must match pattern /^[0-9a-z_-]+$/');
     });
   });
 
@@ -192,13 +192,7 @@ function parse(
   values: unknown[],
   mode: TemplateMode,
 ): DOMTemplate {
-  return DOMTemplate.parse(
-    strings,
-    values,
-    mode,
-    TEMPLATE_PLACEHOLDER,
-    document,
-  );
+  return DOMTemplate.parse(strings, values, mode, TEMPLATE_TOKEN, document);
 }
 
 function svg(strings: TemplateStringsArray, ...values: unknown[]): DOMTemplate {
