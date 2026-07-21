@@ -56,12 +56,6 @@ type ReactiveProperty<T, K extends keyof T> = T extends object
     : Readonly<Reactive<Get<T, K>>>
   : undefined;
 
-type ReactiveValue<T, K extends keyof T> = T extends object
-  ? IsWritable<T, K> extends true
-    ? Get<T, K>
-    : never
-  : never;
-
 type StrictEqual<TLhs, TRhs> =
   (<T>() => T extends TLhs ? 1 : 2) extends <T>() => T extends TRhs ? 1 : 2
     ? true
@@ -107,16 +101,6 @@ export class Reactive<T> extends Signal<T> {
     }
     const child = getChild(this._node, key);
     return new Reactive(child, options);
-  }
-
-  set<K extends ReactiveKeys<T>>(key: K, newValue: ReactiveValue<T, K>): void;
-  set(key: PropertyKey, newValue: never): void;
-  set(key: PropertyKey, newValue: unknown): void {
-    if (isPrimitive(this._node.signal.value)) {
-      throw new TypeError('Cannot set property on a primitive value.');
-    }
-    const child = getChild(this._node, key);
-    setValue(child, newValue);
   }
 
   scope<TResult>(callback: (value: T) => TResult): TResult {

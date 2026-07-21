@@ -2,26 +2,6 @@ import { describe, expectTypeOf, it } from 'vitest';
 import { Reactive } from '@/addons/signal/reactive.js';
 
 describe('Reactive', () => {
-  describe('set()', () => {
-    it('accepts a typed value for a known key', () => {
-      expectTypeOf(
-        Reactive.from({ count: 0 }).set<'count'>,
-      ).parameters.toEqualTypeOf<['count', number]>();
-    });
-
-    it('denies a value for a generic key', () => {
-      expectTypeOf(Reactive.from({}).set).parameters.toExtend<
-        [PropertyKey, never]
-      >();
-    });
-
-    it('denies a value for a readonly property', () => {
-      expectTypeOf(
-        Reactive.from({ foo: 124 } as Readonly<{ foo: number }>).set<'foo'>,
-      ).parameters.toEqualTypeOf<['foo', never]>();
-    });
-  });
-
   describe('get()', () => {
     it('returns a nullable reactive for a generic index signature', () => {
       expectTypeOf(
