@@ -102,17 +102,18 @@ function annotateElement(element: Element): string[] {
 
 function annotateNode(node: Node): string[] {
   switch (node.nodeType) {
-    case Node.ATTRIBUTE_NODE:
-      return annotateAttribute(node as Attr);
     case Node.ELEMENT_NODE:
       return annotateElement(node as Element);
-    case Node.COMMENT_NODE: {
-      const line = serializeNode(node);
-      return [line, CARET_CHAR.repeat(line.length)];
-    }
+    case Node.ATTRIBUTE_NODE:
+      return annotateAttribute(node as Attr);
     case Node.TEXT_NODE: {
       const line = serializeNode(node);
       return [`"${line}"`, CARET_CHAR.repeat(line.length + 2)];
+    }
+    case Node.PROCESSING_INSTRUCTION_NODE:
+    case Node.COMMENT_NODE: {
+      const line = serializeNode(node);
+      return [line, CARET_CHAR.repeat(line.length)];
     }
     default: {
       const lines = [
@@ -178,11 +179,11 @@ function prettyPrintNode(
         lines[0] += toCloseTag(node as Element);
       }
       break;
-    case Node.COMMENT_NODE:
-      lines.push(indentString + serializeNode(node));
-      break;
     case Node.TEXT_NODE:
       lines.push(`${indentString}"${serializeNode(node)}"`);
+      break;
+    default:
+      lines.push(indentString + serializeNode(node));
       break;
   }
 
