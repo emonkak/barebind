@@ -101,11 +101,8 @@ function isTaggedTemplateExpression(
 
 function shouldIgnoreProperty(key: string): boolean {
   switch (key) {
-    case 'start':
-    case 'end':
+    case 'span':
     case 'type':
-    case 'range':
-    case 'loc':
       return true;
     default:
       return false;
