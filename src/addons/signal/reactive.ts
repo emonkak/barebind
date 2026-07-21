@@ -162,84 +162,86 @@ function createProxy<T>(
   finalizeValue: <T>(node: ReactiveNode<T>) => T = commitValue,
 ): T {
   const { signal } = node;
-  return signal instanceof Atom
-    ? new Proxy(signal.value, {
-        deleteProperty(_target, key) {
-          const prop = getChild(node, key);
-          signal.invalidate({
-            source: prop.signal,
-            path: [key],
-            oldValue: prop.signal.value,
-            newValue: undefined,
-          });
-          node.flags |= FLAG_DIRTY;
-          prop.flags |= FLAG_DELETED_PROPERTY;
-          return true;
-        },
-        get(target, key, receiver) {
-          const prop = getChild(node, key);
-          if (prop.flags & FLAG_DELETED_PROPERTY) {
-            return undefined;
-          }
-          if (!(prop.flags & (FLAG_PENDING_VALUE | FLAG_ENUMERABLE_VALUE))) {
-            return Reflect.get(target, key, receiver);
-          }
-          if (isObject(prop.signal.value)) {
-            return createProxy(prop);
-          }
-          return finalizeValue(prop);
-        },
-        getOwnPropertyDescriptor(target, key) {
-          const prop = getChild(node, key);
-          if (prop.flags & FLAG_DELETED_PROPERTY) {
-            return undefined;
-          }
-          if (prop.flags & FLAG_DYNAMIC_VALUE) {
-            return {
-              value: prop.signal.value,
-              writable: true,
-              enumerable: true,
-              configurable: true,
-            };
-          }
-          return Reflect.getOwnPropertyDescriptor(target, key);
-        },
-        set(_target, key, value, _receiver) {
-          const prop = getChild(node, key);
-          setPendingValue(prop, value);
-          return true;
-        },
-        has(target, key) {
-          const prop = node.children?.get(key);
-          return prop !== undefined
-            ? !(prop.flags & FLAG_DELETED_PROPERTY)
-            : Reflect.has(target, key);
-        },
-        ownKeys(target) {
-          const baseKeys = Reflect.ownKeys(target);
-          if (node.children !== null) {
-            const dynamicKeys: PropertyKey[] = [];
-            const deletedKeys: PropertyKey[] = [];
-            for (const [key, child] of node.children.entries()) {
-              if (child.flags & FLAG_DELETED_PROPERTY) {
-                deletedKeys.push(key);
-              } else if (child.flags & FLAG_DYNAMIC_VALUE) {
-                dynamicKeys.push(key);
-              }
-            }
-            if (dynamicKeys.length > 0 || deletedKeys.length > 0) {
-              return Array.from(
-                new Set(baseKeys)
-                  .difference(new Set(deletedKeys))
-                  .union(new Set(dynamicKeys)),
-                normalizeKey,
-              );
+  if (signal instanceof Atom) {
+    return new Proxy(signal.value, {
+      deleteProperty(_target, key) {
+        const prop = getChild(node, key);
+        signal.invalidate({
+          source: prop.signal,
+          path: [key],
+          oldValue: prop.signal.value,
+          newValue: undefined,
+        });
+        node.flags |= FLAG_DIRTY;
+        prop.flags |= FLAG_DELETED_PROPERTY;
+        return true;
+      },
+      get(target, key, receiver) {
+        const prop = getChild(node, key);
+        if (prop.flags & FLAG_DELETED_PROPERTY) {
+          return undefined;
+        }
+        if (!(prop.flags & (FLAG_PENDING_VALUE | FLAG_ENUMERABLE_VALUE))) {
+          return Reflect.get(target, key, receiver);
+        }
+        if (isObject(prop.signal.value)) {
+          return createProxy(prop);
+        }
+        return finalizeValue(prop);
+      },
+      getOwnPropertyDescriptor(target, key) {
+        const prop = getChild(node, key);
+        if (prop.flags & FLAG_DELETED_PROPERTY) {
+          return undefined;
+        }
+        if (prop.flags & FLAG_DYNAMIC_VALUE) {
+          return {
+            value: prop.signal.value,
+            writable: true,
+            enumerable: true,
+            configurable: true,
+          };
+        }
+        return Reflect.getOwnPropertyDescriptor(target, key);
+      },
+      set(_target, key, value, _receiver) {
+        const prop = getChild(node, key);
+        setPendingValue(prop, value);
+        return true;
+      },
+      has(target, key) {
+        const prop = node.children?.get(key);
+        return prop !== undefined
+          ? !(prop.flags & FLAG_DELETED_PROPERTY)
+          : Reflect.has(target, key);
+      },
+      ownKeys(target) {
+        const baseKeys = Reflect.ownKeys(target);
+        if (node.children !== null) {
+          const dynamicKeys: PropertyKey[] = [];
+          const deletedKeys: PropertyKey[] = [];
+          for (const [key, child] of node.children.entries()) {
+            if (child.flags & FLAG_DELETED_PROPERTY) {
+              deletedKeys.push(key);
+            } else if (child.flags & FLAG_DYNAMIC_VALUE) {
+              dynamicKeys.push(key);
             }
           }
-          return baseKeys;
-        },
-      })
-    : finalizeValue(node);
+          if (dynamicKeys.length > 0 || deletedKeys.length > 0) {
+            return Array.from(
+              new Set(baseKeys)
+                .difference(new Set(deletedKeys))
+                .union(new Set(dynamicKeys)),
+              normalizeKey,
+            );
+          }
+        }
+        return baseKeys;
+      },
+    });
+  } else {
+    return finalizeValue(node);
+  }
 }
 
 function getChild<T>(
