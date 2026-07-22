@@ -1,0 +1,15 @@
+engine biome(1.0)
+language js
+
+or {
+  `createComponent(function($...) { $... })` where {
+    register_diagnostic(span=$this, message="createComponent() must take a named function expression, anonymous functions are not allowed.", severity="warn")
+  },
+  `createComponent(($...) => $...)` where {
+    register_diagnostic(span=$this, message="createComponent() must take a named function expression, arrow functions are not allowed.", severity="warn")
+  },
+  `const $const_name = createComponent(function $fn_name($...) { $... })` where {
+    not $fn_name <: $const_name,
+    register_diagnostic(span=$fn_name, message="Component function name must match the assigned const variable name.", severity="warn")
+  }
+}
