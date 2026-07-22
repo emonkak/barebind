@@ -1,4 +1,4 @@
-import { isObject, isPrimitive } from '../../compare.js';
+import { isObject } from '../../compare.js';
 import {
   Atom,
   Computed,
@@ -101,7 +101,7 @@ export class Reactive<T> extends Signal<T> {
     options?: ReactiveOptions,
   ): T extends object ? Reactive<unknown> : undefined;
   get(key: PropertyKey, options?: ReactiveOptions): Reactive<any> | undefined {
-    if (isPrimitive(this._node.signal.value)) {
+    if (!isObject(this._node.signal.value)) {
       return undefined;
     }
     const child = getChild(this._node, normalizeKey(key));
@@ -189,7 +189,7 @@ function createDraft<T>(
           if (!(prop.flags & (FLAG_PENDING_VALUE | FLAG_ENUMERABLE_PROPERTY))) {
             return Reflect.get(target, key, receiver);
           }
-          if (isPrimitive(prop.signal.value)) {
+          if (!isObject(prop.signal.value)) {
             return finalizeValue(prop);
           }
           return createDraft(prop, snapshotTag);

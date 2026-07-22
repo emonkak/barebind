@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   areDependenciesChanged,
   isObject,
-  isPrimitive,
   sequentialEqual,
   shallowEqual,
 } from '@/compare.js';
@@ -47,22 +46,6 @@ describe('isObject()', () => {
     expect(isObject(Symbol())).toBe(false);
     expect(isObject(null)).toBe(false);
     expect(isObject(undefined)).toBe(false);
-  });
-});
-
-describe('isPrimitive()', () => {
-  it('returns true if the value is a primitive', () => {
-    expect(isPrimitive([])).toBe(false);
-    expect(isPrimitive({})).toBe(false);
-    expect(isPrimitive(() => {})).toBe(false);
-    expect(isPrimitive('foo')).toBe(true);
-    expect(isPrimitive(123)).toBe(true);
-    expect(isPrimitive(true)).toBe(true);
-    expect(isPrimitive(false)).toBe(true);
-    expect(isPrimitive(BigInt(123))).toBe(true);
-    expect(isPrimitive(Symbol())).toBe(true);
-    expect(isPrimitive(null)).toBe(true);
-    expect(isPrimitive(undefined)).toBe(true);
   });
 });
 
