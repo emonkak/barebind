@@ -123,7 +123,7 @@ export namespace RenderNode {
    * Invariant: left = work-in-progress, right = committed.
    * left === right means the node is already committed.
    */
-  interface MonomorphicNode<TElement extends VElement> {
+  interface Node<TElement extends VElement> {
     type: TElement['type'];
     props: TElement['props'];
     key: TElement['key'];
@@ -135,25 +135,24 @@ export namespace RenderNode {
     state: unknown;
   }
 
-  export interface BindNode extends MonomorphicNode<VBind> {
+  export interface BindNode extends Node<VBind> {
     state: null;
   }
 
-  export interface BlockNode extends MonomorphicNode<VPortal | VTemplate> {
+  export interface BlockNode extends Node<VPortal | VTemplate> {
     state: {
       block: Block;
     };
   }
 
-  export interface ComponentNode<TProps = unknown>
-    extends MonomorphicNode<VComponent> {
+  export interface ComponentNode<TProps = unknown> extends Node<VComponent> {
     state: {
       instance: ComponentInstance<TProps>;
       scope: Scope;
     };
   }
 
-  export interface FragmentNode extends MonomorphicNode<VFragment> {
+  export interface FragmentNode extends Node<VFragment> {
     state: {
       mutations: Mutation[];
     };
