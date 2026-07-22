@@ -270,7 +270,9 @@ function getChild<T>(
         // SAFETY: When the child is Atom, the parent is also Atom.
         (parent.signal as Atom<T>).invalidate({
           ...event,
-          path: [key, ...event.path],
+          get path() {
+            return [key, ...event.path];
+          },
         });
         parent.flags |= FLAG_DIRTY_VALUE;
       });
