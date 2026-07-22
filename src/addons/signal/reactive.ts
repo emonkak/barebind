@@ -108,9 +108,9 @@ export class Reactive<T> extends Signal<T> {
     return new Reactive(child, options);
   }
 
-  scope<TResult>(callback: (value: T) => TResult): TResult {
+  scope<TResult>(callback: (draft: T) => TResult): TResult {
     const value = this._node.signal.value;
-    return callback(isObject(value) ? createProxy(this._node) : value);
+    return callback(isObject(value) ? createDraft(this._node) : value);
   }
 
   subscribe(subscriber: Subscriber): Unsubscribe {
@@ -151,15 +151,7 @@ function commitValue<T>(node: ReactiveNode<T>): T {
   return pendingValue;
 }
 
-function createNode<T>(signal: Signal<T>, flags = NO_FLAGS): ReactiveNode<T> {
-  return {
-    signal,
-    children: null,
-    flags,
-  };
-}
-
-function createProxy<T>(
+function createDraft<T>(
   node: ReactiveNode<T>,
   finalizeValue: <T>(node: ReactiveNode<T>) => T = commitValue,
 ): T {
@@ -187,7 +179,7 @@ function createProxy<T>(
           return Reflect.get(target, key, receiver);
         }
         if (isObject(prop.signal.value)) {
-          return createProxy(prop);
+          return createDraft(prop);
         }
         return finalizeValue(prop);
       },
@@ -245,6 +237,14 @@ function createProxy<T>(
   }
 }
 
+function createNode<T>(signal: Signal<T>, flags = NO_FLAGS): ReactiveNode<T> {
+  return {
+    signal,
+    children: null,
+    flags,
+  };
+}
+
 function getChild<T>(
   parent: ReactiveNode<T>,
   key: NormalizedKey,
@@ -294,11 +294,11 @@ function resolveChild<T>(
         const flags = enumerable ? FLAG_ENUMERABLE_VALUE : NO_FLAGS;
         if (get !== undefined) {
           if (set !== undefined) {
-            return createNode(new Atom(get.call(createProxy(parent))), flags);
+            return createNode(new Atom(get.call(createDraft(parent))), flags);
           } else {
             const dependencies: Signal<unknown>[] = [];
             const initialResult = get.call(
-              createProxy(parent, (node) => {
+              createDraft(parent, (node) => {
                 dependencies.push(node.signal as Signal<unknown>);
                 return commitValue(node);
               }),
@@ -309,7 +309,7 @@ function resolveChild<T>(
             );
             return createNode(
               new Computed(
-                () => get.call(createProxy(parent)),
+                () => get.call(createDraft(parent)),
                 dependencies,
                 initialResult,
                 initialVersion,

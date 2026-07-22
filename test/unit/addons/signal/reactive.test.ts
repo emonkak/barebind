@@ -97,9 +97,9 @@ describe('Reactive', () => {
 
     it('increments once per scope batch', () => {
       const state$ = Reactive.from({ a: 1, b: 2 });
-      state$.scope((s) => {
-        s.a++;
-        s.b++;
+      state$.scope((draft) => {
+        draft.a++;
+        draft.b++;
       });
       expect(state$.version).toBe(2);
     });
@@ -235,8 +235,8 @@ describe('Reactive', () => {
     it('mutates the property via proxy', () => {
       const state$ = Reactive.from({ count: 0 });
       const count$ = state$.get('count');
-      state$.scope((state) => {
-        state.count++;
+      state$.scope((draft) => {
+        draft.count++;
       });
       expect(state$.value).toStrictEqual({ count: 1 });
       expect(count$.value).toBe(1);
@@ -246,8 +246,8 @@ describe('Reactive', () => {
       const state$ = Reactive.from({ counter: { count: 0 } });
       const counter$ = state$.get('counter');
       const counterCount$ = counter$.get('count');
-      state$.scope((state) => {
-        state.counter.count++;
+      state$.scope((draft) => {
+        draft.counter.count++;
       });
       expect(state$.value).toStrictEqual({ counter: { count: 1 } });
       expect(counter$.value).toStrictEqual({ count: 1 });
@@ -256,18 +256,18 @@ describe('Reactive', () => {
 
     it('mutates the array via proxy', () => {
       const state$ = Reactive.from([] as number[]);
-      state$.scope((state) => {
-        state.push(0);
-        state.push(1);
-        state.push(2);
-        state.splice(1, 1);
+      state$.scope((draft) => {
+        draft.push(0);
+        draft.push(1);
+        draft.push(2);
+        draft.splice(1, 1);
       });
       expect(state$.value).toStrictEqual([0, 2]);
     });
 
     it('returns object keys via proxy', () => {
       const state$ = Reactive.from({ a: 0, b: 1 });
-      const keys = state$.scope((state) => Object.keys(state));
+      const keys = state$.scope((draft) => Object.keys(draft));
       expect(keys).toStrictEqual(['a', 'b']);
     });
 
@@ -275,37 +275,37 @@ describe('Reactive', () => {
       const state$ = Reactive.from([]);
       state$.get(0).value = 0;
       state$.get(1).value = 2;
-      const keys = state$.scope((state) => Object.keys(state));
+      const keys = state$.scope((draft) => Object.keys(draft));
       expect(keys).toStrictEqual(['0', '1']);
     });
 
     it('adds a dynamic property via proxy', () => {
       const state$ = Reactive.from({} as Record<string, number>);
-      state$.scope((state) => {
-        state['a'] = 0;
-        state['b'] = 1;
-        expect(state['a']).toBe(0);
-        expect(state['b']).toBe(1);
-        expect('a' in state).toBe(true);
-        expect('b' in state).toBe(true);
-        expect(Object.hasOwn(state, 'a')).toBe(true);
-        expect(Object.hasOwn(state, 'b')).toBe(true);
-        expect(Object.keys(state)).toStrictEqual(['a', 'b']);
+      state$.scope((draft) => {
+        draft['a'] = 0;
+        draft['b'] = 1;
+        expect(draft['a']).toBe(0);
+        expect(draft['b']).toBe(1);
+        expect('a' in draft).toBe(true);
+        expect('b' in draft).toBe(true);
+        expect(Object.hasOwn(draft, 'a')).toBe(true);
+        expect(Object.hasOwn(draft, 'b')).toBe(true);
+        expect(Object.keys(draft)).toStrictEqual(['a', 'b']);
       });
       expect(state$.value).toStrictEqual({ a: 0, b: 1 });
     });
 
     it('deletes a property via proxy', () => {
       const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
-      state$.scope((state) => {
-        delete state['a'];
-        expect(state['a']).toBe(undefined);
-        expect(state['b']).toBe(1);
-        expect('a' in state).toBe(false);
-        expect('b' in state).toBe(true);
-        expect(Object.hasOwn(state, 'a')).toBe(false);
-        expect(Object.hasOwn(state, 'b')).toBe(true);
-        expect(Object.keys(state)).toStrictEqual(['b']);
+      state$.scope((draft) => {
+        delete draft['a'];
+        expect(draft['a']).toBe(undefined);
+        expect(draft['b']).toBe(1);
+        expect('a' in draft).toBe(false);
+        expect('b' in draft).toBe(true);
+        expect(Object.hasOwn(draft, 'a')).toBe(false);
+        expect(Object.hasOwn(draft, 'b')).toBe(true);
+        expect(Object.keys(draft)).toStrictEqual(['b']);
       });
       expect(state$.value).toStrictEqual({ b: 1 });
     });
@@ -314,8 +314,8 @@ describe('Reactive', () => {
       const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
       const subscriber = vi.fn();
       state$.subscribe(subscriber);
-      state$.scope((state) => {
-        delete state['a'];
+      state$.scope((draft) => {
+        delete draft['a'];
       });
       expect(subscriber).toHaveBeenCalledOnce();
       expect(subscriber).toHaveBeenCalledWith({
@@ -328,17 +328,17 @@ describe('Reactive', () => {
 
     it('increments version on mutation', () => {
       const state$ = Reactive.from({ count: 0 });
-      state$.scope((state) => {
-        state.count++;
+      state$.scope((draft) => {
+        draft.count++;
       });
       expect(state$.version).toBe(1);
     });
 
     it('returns the callback result', () => {
       const state$ = Reactive.from({ count: 0 });
-      const result = state$.scope((state) => {
-        state.count++;
-        return state.count;
+      const result = state$.scope((draft) => {
+        draft.count++;
+        return draft.count;
       });
       expect(result).toBe(1);
     });
@@ -351,8 +351,8 @@ describe('Reactive', () => {
         }
       }
       const state$ = Reactive.from(new Counter());
-      state$.scope((state) => {
-        state.increment();
+      state$.scope((draft) => {
+        draft.increment();
       });
       expect(state$.value.count).toBe(1);
     });
@@ -367,19 +367,16 @@ describe('Reactive', () => {
       const state$ = Reactive.from(new Store());
       const doubled$ = state$.get('doubled');
       let result: number;
-      doubled$.scope((v) => {
-        result = v;
+      doubled$.scope((draft) => {
+        result = draft;
       });
       expect(result!).toBe(0);
     });
 
     it('calls callback directly for primitive values', () => {
       const state$ = Reactive.from(42);
-      let result: number;
-      state$.scope((v) => {
-        result = v;
-      });
-      expect(result!).toBe(42);
+      const result = state$.scope((draft) => draft);
+      expect(result).toBe(42);
     });
 
     it('throws when trying to set a read-only property inside scope', () => {
@@ -391,8 +388,8 @@ describe('Reactive', () => {
       }
       const state$ = Reactive.from(new Store());
       expect(() =>
-        state$.scope((state: any) => {
-          state.doubled = 10;
+        state$.scope((draft: any) => {
+          draft.doubled = 10;
         }),
       ).toThrow();
     });
