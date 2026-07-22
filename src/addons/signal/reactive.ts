@@ -286,7 +286,7 @@ function getChild<T>(
   return child;
 }
 
-function normalizeKey(key: PropertyKey): string | symbol {
+function normalizeKey(key: PropertyKey): NormalizedKey {
   return typeof key === 'number' ? key.toString() : key;
 }
 
