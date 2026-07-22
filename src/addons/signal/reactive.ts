@@ -317,16 +317,13 @@ function resolveChild<T>(
             );
           }
         } else {
-          return createNode(new Atom(value, signal.version), flags);
+          return createNode(new Atom(value), flags);
         }
       }
       proto = Object.getPrototypeOf(proto);
     } while (proto !== null);
 
-    return createNode(
-      new Atom<unknown>(undefined, signal.version),
-      FLAG_DYNAMIC_VALUE,
-    );
+    return createNode(new Atom<unknown>(undefined), FLAG_DYNAMIC_VALUE);
   } else {
     return createNode(
       new Computed<unknown>(() => (signal.value as any)[key], [signal]),
