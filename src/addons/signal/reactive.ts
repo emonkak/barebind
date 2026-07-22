@@ -234,11 +234,11 @@ function createDraft<T>(
             }
           }
           if (dynamicKeys.length > 0 || deletedKeys.length > 0) {
-            return Array.from(
-              new Set(baseKeys)
+            return [
+              ...new Set(baseKeys)
                 .difference(new Set(deletedKeys))
                 .union(new Set(dynamicKeys)),
-            );
+            ];
           }
         }
         return baseKeys;
