@@ -142,7 +142,7 @@ function commitValue<T>(node: ReactiveNode<T>): T {
           child.flags &= ~FLAG_PENDING_VALUE;
         }
       }
-      // Safety: A signal of the node with dirty flag is always Atom.
+      // SAFETY: A signal of the node with dirty flag is always Atom.
       (signal as Atom<T>).write(pendingValue);
     }
     node.flags &= ~FLAG_NEEDS_COMMIT;
@@ -258,6 +258,7 @@ function getChild<T>(
 
   if (child.signal instanceof Atom) {
     child.signal.subscribe((event) => {
+      // SAFETY: When the child is Atom, the parent is also Atom.
       (parent.signal as Atom<T>).invalidate({
         source: event.source,
         path: [key, ...event.path],
@@ -332,6 +333,7 @@ function resolveChild<T>(
 }
 
 function setPendingValue<T>(node: ReactiveNode<T>, newValue: T): void {
+  // Intentionally throws a TypeError if signal is a Computed (which has no setter).
   (node.signal as Atom<T>).value = newValue;
   node.children?.clear();
   node.flags |= FLAG_PENDING_VALUE;
