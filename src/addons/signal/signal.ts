@@ -7,7 +7,7 @@ import {
 } from '../../component.js';
 import { LinkedList } from './linked-list.js';
 
-export type InvalidateEvent<T = any> =
+export type InvalidateEvent<T = unknown> =
   | {
       readonly type: 'set';
       readonly source: Signal<T>;
@@ -106,7 +106,7 @@ export class Atom<T> extends Signal<T> {
       this._value = newValue;
       this.invalidate({
         type: 'set',
-        source: this as Atom<unknown>,
+        source: this as Signal<unknown>,
         path: [],
         oldValue,
         newValue,

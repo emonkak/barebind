@@ -3,6 +3,7 @@ import {
   Atom,
   Computed,
   type InvalidateEvent,
+  type Signal,
 } from '@/addons/signal/signal.js';
 
 describe('Atom', () => {
@@ -23,9 +24,9 @@ describe('Atom', () => {
   describe('invalidate()', () => {
     it('increments the version and notifies subscribers', () => {
       const atom = new Atom('a');
-      const event: InvalidateEvent<string> = {
+      const event: InvalidateEvent = {
         type: 'set',
-        source: atom,
+        source: atom as Signal<unknown>,
         path: [],
         oldValue: 'b',
         newValue: 'a',
