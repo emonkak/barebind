@@ -238,7 +238,7 @@ describe('Component', () => {
         this.provide(new Context('child'));
         return GrandChild({});
       });
-      const App = createComponent(function app() {
+      const App = createComponent(function App() {
         this.provide(new Context('parent'));
         return Child({});
       });
@@ -248,7 +248,7 @@ describe('Component', () => {
     });
 
     it('injects the default instance from getDefault()', async () => {
-      const App = createComponent(function Child() {
+      const App = createComponent(function App() {
         const context = this.inject(ContextWithDefault);
         return html`<div>${context.value}</div>`;
       });

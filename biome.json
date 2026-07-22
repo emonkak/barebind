@@ -78,5 +78,6 @@
         }
       }
     }
-  ]
+  ],
+  "plugins": ["biome/use-named-component.grit"]
 }
