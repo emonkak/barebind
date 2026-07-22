@@ -1,4 +1,4 @@
-export function Greet(props) {
+export const Greet = createComponent(function Greet(props) {
   return html`
     <div
       class="greet"
@@ -6,4 +6,4 @@ export function Greet(props) {
       ${props.greet}, <span>${props.name}</span>!
     </div>
   `;
-}
+});
