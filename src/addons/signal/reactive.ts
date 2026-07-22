@@ -7,13 +7,13 @@ import {
   type Unsubscribe,
 } from './signal.js';
 
-const NO_FLAGS /*              */ = 0;
-const FLAG_NEEDS_COMMIT /*     */ = 0b00001;
-const FLAG_PENDING_VALUE /*    */ = 0b00010;
-const FLAG_DIRTY /*            */ = 0b00011;
-const FLAG_ENUMERABLE_VALUE /* */ = 0b00100;
-const FLAG_DYNAMIC_VALUE /*    */ = 0b01000;
-const FLAG_DELETED_PROPERTY /* */ = 0b10000;
+const NO_FLAGS /*                 */ = 0;
+const FLAG_NEEDS_COMMIT /*        */ = 0b00001;
+const FLAG_PENDING_VALUE /*       */ = 0b00010;
+const FLAG_DIRTY_VALUE /*         */ = 0b00011;
+const FLAG_ENUMERABLE_PROPERTY /* */ = 0b00100;
+const FLAG_DYNAMIC_PROPERTY /*    */ = 0b01000;
+const FLAG_DELETED_PROPERTY /*    */ = 0b10000;
 
 export interface ReactiveOptions {
   shallow?: boolean;
@@ -166,7 +166,7 @@ function createDraft<T>(
           oldValue: prop.signal.value,
           newValue: undefined,
         });
-        node.flags |= FLAG_DIRTY;
+        node.flags |= FLAG_DIRTY_VALUE;
         prop.flags |= FLAG_DELETED_PROPERTY;
         return true;
       },
@@ -175,7 +175,7 @@ function createDraft<T>(
         if (prop.flags & FLAG_DELETED_PROPERTY) {
           return undefined;
         }
-        if (!(prop.flags & (FLAG_PENDING_VALUE | FLAG_ENUMERABLE_VALUE))) {
+        if (!(prop.flags & (FLAG_PENDING_VALUE | FLAG_ENUMERABLE_PROPERTY))) {
           return Reflect.get(target, key, receiver);
         }
         if (isObject(prop.signal.value)) {
@@ -188,7 +188,7 @@ function createDraft<T>(
         if (prop.flags & FLAG_DELETED_PROPERTY) {
           return undefined;
         }
-        if (prop.flags & FLAG_DYNAMIC_VALUE) {
+        if (prop.flags & FLAG_DYNAMIC_PROPERTY) {
           return {
             value: prop.signal.value,
             writable: true,
@@ -217,7 +217,7 @@ function createDraft<T>(
           for (const [key, child] of node.children.entries()) {
             if (child.flags & FLAG_DELETED_PROPERTY) {
               deletedKeys.push(key);
-            } else if (child.flags & FLAG_DYNAMIC_VALUE) {
+            } else if (child.flags & FLAG_DYNAMIC_PROPERTY) {
               dynamicKeys.push(key);
             }
           }
@@ -265,7 +265,7 @@ function getChild<T>(
         oldValue: event.oldValue,
         newValue: event.newValue,
       });
-      parent.flags |= FLAG_DIRTY;
+      parent.flags |= FLAG_DIRTY_VALUE;
     });
   }
 
@@ -291,7 +291,7 @@ function resolveChild<T>(
       const descriptor = Object.getOwnPropertyDescriptor(proto, key);
       if (descriptor !== undefined) {
         const { get, set, value, enumerable } = descriptor;
-        const flags = enumerable ? FLAG_ENUMERABLE_VALUE : NO_FLAGS;
+        const flags = enumerable ? FLAG_ENUMERABLE_PROPERTY : NO_FLAGS;
         if (get !== undefined) {
           if (set !== undefined) {
             return createNode(new Atom(get.call(createDraft(parent))), flags);
@@ -324,7 +324,7 @@ function resolveChild<T>(
       proto = Object.getPrototypeOf(proto);
     } while (proto !== null);
 
-    return createNode(new Atom<unknown>(undefined), FLAG_DYNAMIC_VALUE);
+    return createNode(new Atom<unknown>(undefined), FLAG_DYNAMIC_PROPERTY);
   } else {
     return createNode(
       new Computed<unknown>(() => (signal.value as any)[key], [signal]),
