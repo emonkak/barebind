@@ -38,7 +38,7 @@ export async function transformTemplates(
 }
 
 function collectTaggedTemplateExpressions(
-  node: swc.Node,
+  node: unknown,
   tagNames: string[],
   expressions: swc.TaggedTemplateExpression[],
 ): void {
@@ -49,19 +49,19 @@ function collectTaggedTemplateExpressions(
     }
   }
 
-  for (const key of Object.keys(node)) {
-    if (shouldIgnoreProperty(key)) {
-      continue;
-    }
-    const value = (node as any)[key];
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        if (isNode(item)) {
+  if (isObject(node)) {
+    for (const key of Object.keys(node)) {
+      if (shouldIgnoreProperty(key)) {
+        continue;
+      }
+      const value = (node as any)[key];
+      if (Array.isArray(value)) {
+        for (const item of value) {
           collectTaggedTemplateExpressions(item, tagNames, expressions);
         }
+      } else {
+        collectTaggedTemplateExpressions(value, tagNames, expressions);
       }
-    } else if (isNode(value)) {
-      collectTaggedTemplateExpressions(value, tagNames, expressions);
     }
   }
 }
@@ -85,18 +85,18 @@ function getIdentifierName(expression: swc.Expression): string {
   return '';
 }
 
-function isNode(value: any): value is swc.Node {
-  return (
-    value !== null &&
-    typeof value === 'object' &&
-    typeof value.type === 'string'
-  );
+function isObject(value: any): value is object {
+  return value !== null && typeof value === 'object';
 }
 
 function isTaggedTemplateExpression(
-  node: swc.Node,
-): node is swc.TaggedTemplateExpression {
-  return node.type === 'TaggedTemplateExpression';
+  value: any,
+): value is swc.TaggedTemplateExpression {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    value.type === 'TaggedTemplateExpression'
+  );
 }
 
 function shouldIgnoreProperty(key: string): boolean {
