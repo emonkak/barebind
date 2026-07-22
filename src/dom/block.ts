@@ -1,4 +1,4 @@
-import type { Block, Container } from '../core.js';
+import type { Block, Container } from '../base.js';
 import { DOMAdapterError } from './error.js';
 import type { DOMPart } from './part.js';
 

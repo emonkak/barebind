@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Bind, Fragment } from '@/core.js';
+import { Bind, Fragment } from '@/base.js';
 import { html, math, Partial, svg, text } from '@/element.js';
 
 describe('html()', () => {

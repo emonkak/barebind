@@ -1,5 +1,3 @@
-import { patch } from './commit.js';
-import { areDependenciesChanged, is } from './compare.js';
 import {
   type Bindable,
   type Commit,
@@ -18,7 +16,9 @@ import {
   type VComponent,
   type VElement,
   VNode,
-} from './core.js';
+} from './base.js';
+import { patch } from './commit.js';
+import { areDependenciesChanged, is } from './compare.js';
 import { wrap } from './element.js';
 import { RenderError } from './error.js';
 import { createBind } from './index.js';

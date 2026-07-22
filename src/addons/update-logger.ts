@@ -1,4 +1,4 @@
-import type { Commit, Lanes, Middleware, Update } from '../core.js';
+import type { Commit, Lanes, Middleware, Update } from '../base.js';
 import { captureOwnerStack, nameOf } from '../debug.js';
 import { getPriorityFromLanes, SyncLane, ViewTransitionLane } from '../lane.js';
 

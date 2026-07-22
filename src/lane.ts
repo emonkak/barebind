@@ -1,4 +1,4 @@
-import type { Lane, Lanes, UpdateOptions } from './core.js';
+import type { Lane, Lanes, UpdateOptions } from './base.js';
 
 export const AllLanes: Lanes /*          */ = -1;
 export const NoLanes: Lanes /*           */ = 0b0000000000000000000000000000000;

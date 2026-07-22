@@ -1,4 +1,4 @@
-import type { HostAdapter, VPortal, VTemplate } from '../core.js';
+import type { HostAdapter, VPortal, VTemplate } from '../base.js';
 import { DOMBlock } from './block.js';
 import { ContainerPart } from './part.js';
 import { DOMTemplate } from './template.js';

@@ -3,7 +3,7 @@ import {
   MutationType,
   type RenderNode,
   type RenderRoot,
-} from './core.js';
+} from './base.js';
 
 export function mount(node: RenderNode): void {
   mountChild(node, null);

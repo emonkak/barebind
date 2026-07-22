@@ -1,10 +1,10 @@
+import { type Bindable, toElement, type VElement } from '../../base.js';
 import { is } from '../../compare.js';
 import {
   createComponent,
   type HookObject,
   type RenderContext,
 } from '../../component.js';
-import { type Bindable, toElement, type VElement } from '../../core.js';
 import { LinkedList } from './linked-list.js';
 
 export type InvalidateEvent<T = any> =

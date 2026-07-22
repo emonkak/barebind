@@ -1,5 +1,5 @@
+import type { UpdateOptions } from '../../base.js';
 import type { HookFunction } from '../../component.js';
-import type { UpdateOptions } from '../../core.js';
 
 export interface NavigationAdapter {
   getCurrentURL(): string;

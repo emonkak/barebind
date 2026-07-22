@@ -1,5 +1,5 @@
+import type { Block, Container, Part } from '../base.js';
 import { is, isObject, sequentialEqual } from '../compare.js';
-import type { Block, Container, Part } from '../core.js';
 import { generateNodeFrame } from './debug.js';
 import { DOMAdapterError } from './error.js';
 

@@ -1,4 +1,4 @@
-import type { Owner, Scope } from './core.js';
+import type { Owner, Scope } from './base.js';
 import { captureOwnerStack, nameOf } from './debug.js';
 
 export class RenderError extends Error {

@@ -1,4 +1,3 @@
-import { is } from './compare.js';
 import {
   Bind,
   type Commit,
@@ -21,7 +20,8 @@ import {
   type VElement,
   type VPortal,
   type VTemplate,
-} from './core.js';
+} from './base.js';
+import { is } from './compare.js';
 import {
   getHighestPriorityLane,
   getLaneFromPriority,
