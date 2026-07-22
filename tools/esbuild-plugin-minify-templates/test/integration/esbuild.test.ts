@@ -1,36 +1,113 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
+import * as fs from 'node:fs/promises';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import esbuild from 'esbuild';
-import { expect, test } from 'vitest';
-
+import { afterAll, beforeAll, expect, test } from 'vitest';
 import { minifyTemplates } from '@/index.js';
 
-const FIXTURES_DIR = path.join(__dirname, '../fixtures');
+let tmpDir: string;
 
-test.for([
-  'function-call.js',
-  'method-call.js',
-  'nested-templates.js',
-])('minify template literals in %s', async (filename) => {
-  const inputPath = path.join(FIXTURES_DIR, filename);
-  const expectedPath = path.join(
-    FIXTURES_DIR,
-    path.basename(filename, '.js') + '.expected.js',
+beforeAll(async () => {
+  tmpDir = await fs.mkdtemp(os.tmpdir() + path.sep);
+});
+
+afterAll(async () => {
+  await fs.rm(tmpDir, { recursive: true, force: true });
+});
+
+test('minifies template literals in html tag', async () => {
+  const output = await bundle(
+    [
+      'export const Greet = createComponent(function Greet(props) {',
+      '  return html`',
+      '    <div',
+      '      class="greet"',
+      '    >',
+      '      ${props.greet}, <span>${props.name}</span>!',
+      '    </div>',
+      '  `;',
+      '});',
+    ].join('\n'),
   );
-
-  const output = await bundle(inputPath);
-  const expected = await fs.readFile(expectedPath, 'utf8');
-
+  const expected = [
+    'var Greet = createComponent(function Greet2(props) {',
+    '  return html`<div class="greet">${props.greet}, <span>${props.name}</span>!</div>`;',
+    '});',
+    'export {',
+    '  Greet',
+    '};',
+  ].join('\n');
   expect(output).toBe(expected);
 });
 
-async function bundle(entryPoint: string): Promise<string> {
+test('minifies template literals in Partial.html tag', async () => {
+  const output = await bundle(
+    [
+      'export const Greet = createComponent(function Greet(props) {',
+      '  return Partial.html`',
+      '    <div',
+      '      class="greet"',
+      '    >',
+      '      ${props.greet}, <span>${props.name}</span>!',
+      '    </div>',
+      '  `;',
+      '});',
+    ].join('\n'),
+  );
+  const expected = [
+    'var Greet = createComponent(function Greet2(props) {',
+    '  return Partial.html`<div class="greet">${props.greet}, <span>${props.name}</span>!</div>`;',
+    '});',
+    'export {',
+    '  Greet',
+    '};',
+  ].join('\n');
+  expect(output).toBe(expected);
+});
+
+test('minifies nested html template literals', async () => {
+  const output = await bundle(
+    [
+      'export function Greet(props) {',
+      '  return html`',
+      '    <div>',
+      '      ${html`',
+      '        <p>',
+      '          ${props.greet}, <span>${props.name}</span>!',
+      '        </p>',
+      '      `}',
+      '    </div>',
+      '  `;',
+      '}',
+    ].join('\n'),
+  );
+  const expected = [
+    'function Greet(props) {',
+    '  return html`<div>${html`<p>${props.greet}, <span>${props.name}</span>!</p>`}</div>`;',
+    '}',
+    'export {',
+    '  Greet',
+    '};',
+  ].join('\n');
+  expect(output).toBe(expected);
+});
+
+async function bundle(code: string): Promise<string> {
+  const inputPath = path.join(tmpDir, 'input.js');
+
+  await fs.writeFile(inputPath, code);
+
   const result = await esbuild.build({
     bundle: true,
-    entryPoints: [entryPoint],
+    entryPoints: [inputPath],
     format: 'esm',
     write: false,
     plugins: [minifyTemplates()],
   });
-  return result.outputFiles[0]!.text;
+
+  return stripCommentHeader(result.outputFiles[0]!.text).trimEnd();
+}
+
+function stripCommentHeader(code: string): string {
+  return code.replace(/^\/\/.*\n/, '');
 }
