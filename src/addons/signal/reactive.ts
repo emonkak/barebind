@@ -109,14 +109,14 @@ export class Reactive<T> extends Signal<T> {
   }
 
   scope<TResult>(
-    callback: (draft: T, toSnapshot: <T>(draft: T) => T) => TResult,
+    callback: (draft: T, unwrap: <T>(draft: T) => T) => TResult,
   ): TResult {
     const value = this._node.signal.value;
-    const snapshotTag = Symbol();
-    const toSnapshot = (draft: any) => draft[snapshotTag] ?? draft;
+    const unwrapTag = Symbol();
+    const unwrap = (draft: any) => draft[unwrapTag] ?? draft;
     return callback(
-      isObject(value) ? createDraft(this._node, snapshotTag) : value,
-      toSnapshot,
+      isObject(value) ? createDraft(this._node, unwrapTag) : value,
+      unwrap,
     );
   }
 
@@ -160,7 +160,7 @@ function commitValue<T>(node: ReactiveNode<T>): T {
 
 function createDraft<T>(
   node: ReactiveNode<T>,
-  snapshotTag: Symbol = Symbol(),
+  unwrapTag: Symbol = Symbol(),
   finalizeValue: <T>(node: ReactiveNode<T>) => T = commitValue,
 ): T {
   const { signal } = node;
@@ -178,7 +178,7 @@ function createDraft<T>(
         return true;
       },
       get(target, key, receiver) {
-        if (key === snapshotTag) {
+        if (key === unwrapTag) {
           return finalizeValue(node);
         } else {
           const prop = getChild(node, key);
@@ -191,7 +191,7 @@ function createDraft<T>(
           if (!isObject(prop.signal.value)) {
             return finalizeValue(prop);
           }
-          return createDraft(prop, snapshotTag);
+          return createDraft(prop, unwrapTag);
         }
       },
       getOwnPropertyDescriptor(target, key) {
