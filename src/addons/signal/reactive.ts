@@ -108,9 +108,16 @@ export class Reactive<T> extends Signal<T> {
     return new Reactive(child, options);
   }
 
-  scope<TResult>(callback: (draft: T) => TResult): TResult {
+  scope<TResult>(
+    callback: (draft: T, toSnapshot: <T>(draft: T) => T) => TResult,
+  ): TResult {
     const value = this._node.signal.value;
-    return callback(isObject(value) ? createDraft(this._node) : value);
+    const snapshotTag = Symbol();
+    const toSnapshot = (draft: any) => draft[snapshotTag] ?? draft;
+    return callback(
+      isObject(value) ? createDraft(this._node, snapshotTag) : value,
+      toSnapshot,
+    );
   }
 
   subscribe(subscriber: Subscriber): Unsubscribe {
@@ -153,6 +160,7 @@ function commitValue<T>(node: ReactiveNode<T>): T {
 
 function createDraft<T>(
   node: ReactiveNode<T>,
+  snapshotTag: Symbol = Symbol(),
   finalizeValue: <T>(node: ReactiveNode<T>) => T = commitValue,
 ): T {
   const { signal } = node;
@@ -171,17 +179,21 @@ function createDraft<T>(
         return true;
       },
       get(target, key, receiver) {
-        const prop = getChild(node, key);
-        if (prop.flags & FLAG_DELETED_PROPERTY) {
-          return undefined;
+        if (key === snapshotTag) {
+          return finalizeValue(node);
+        } else {
+          const prop = getChild(node, key);
+          if (prop.flags & FLAG_DELETED_PROPERTY) {
+            return undefined;
+          }
+          if (!(prop.flags & (FLAG_PENDING_VALUE | FLAG_ENUMERABLE_PROPERTY))) {
+            return Reflect.get(target, key, receiver);
+          }
+          if (isPrimitive(prop.signal.value)) {
+            return finalizeValue(prop);
+          }
+          return createDraft(prop, snapshotTag);
         }
-        if (!(prop.flags & (FLAG_PENDING_VALUE | FLAG_ENUMERABLE_PROPERTY))) {
-          return Reflect.get(target, key, receiver);
-        }
-        if (isObject(prop.signal.value)) {
-          return createDraft(prop);
-        }
-        return finalizeValue(prop);
       },
       getOwnPropertyDescriptor(target, key) {
         const prop = getChild(node, key);
@@ -298,7 +310,7 @@ function resolveChild<T>(
           } else {
             const dependencies: Signal<unknown>[] = [];
             const initialResult = get.call(
-              createDraft(parent, (node) => {
+              createDraft(parent, undefined, (node) => {
                 dependencies.push(node.signal as Signal<unknown>);
                 return commitValue(node);
               }),
