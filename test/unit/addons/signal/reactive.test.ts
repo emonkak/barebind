@@ -379,6 +379,42 @@ describe('Reactive', () => {
       expect(result).toBe(42);
     });
 
+    it('returns a plain object from toSnapshot', () => {
+      const state$ = Reactive.from({ count: 0 });
+      state$.scope((draft, toSnapshot) => {
+        const snapshot = toSnapshot(draft);
+        expect(snapshot).toStrictEqual({ count: 0 });
+        expect(snapshot).toBe(state$.value);
+      });
+    });
+
+    it('returns the same value for primitive via toSnapshot', () => {
+      const state$ = Reactive.from(42);
+      const snapshot = state$.scope((draft, toSnapshot) => toSnapshot(draft));
+      expect(snapshot).toBe(42);
+    });
+
+    it('reflects mutations made in scope via toSnapshot', () => {
+      const state$ = Reactive.from({ a: 0, b: 1 });
+      const snapshot = state$.scope((draft, toSnapshot) => {
+        draft.a = 2;
+        draft.b = 3;
+        return toSnapshot(draft);
+      });
+      expect(snapshot).toStrictEqual({ a: 2, b: 3 });
+      expect(structuredClone(snapshot)).toStrictEqual({ a: 2, b: 3 });
+    });
+
+    it('reflects nested mutations made in scope via toSnapshot', () => {
+      const state$ = Reactive.from({ nested: { value: 1 } });
+      const snapshot = state$.scope((draft, toSnapshot) => {
+        draft.nested.value = 2;
+        return toSnapshot(draft.nested);
+      });
+      expect(snapshot).toStrictEqual({ value: 2 });
+      expect(structuredClone(snapshot)).toStrictEqual({ value: 2 });
+    });
+
     it('throws when trying to set a read-only property inside scope', () => {
       class Store {
         count = 0;
