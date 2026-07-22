@@ -8,18 +8,24 @@ import {
 import { LinkedList } from './linked-list.js';
 
 export type InvalidateEvent<T = unknown> =
-  | {
-      readonly type: 'set';
-      readonly source: Signal<T>;
-      readonly path: PropertyKey[];
-      readonly oldValue: T;
-      readonly newValue: T;
-    }
-  | {
-      readonly type: 'delete';
-      readonly source: Signal<T>;
-      readonly path: PropertyKey[];
-    };
+  | InvalidateEvent.DeleteEvent<T>
+  | InvalidateEvent.SetEvent<T>;
+
+export namespace InvalidateEvent {
+  export interface DeleteEvent<T = unknown> {
+    readonly type: 'delete';
+    readonly source: Signal<T>;
+    readonly path: PropertyKey[];
+  }
+
+  export interface SetEvent<T = unknown> {
+    readonly type: 'set';
+    readonly source: Signal<T>;
+    readonly path: PropertyKey[];
+    readonly oldValue: T;
+    readonly newValue: T;
+  }
+}
 
 export type Subscriber = (event: InvalidateEvent) => void;
 
