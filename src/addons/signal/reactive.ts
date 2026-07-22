@@ -344,11 +344,6 @@ function shallowClone<T extends object>(target: T): T {
   if (Array.isArray(target)) {
     return target.slice() as T;
   } else {
-    const clone = { ...target };
-    const proto = Object.getPrototypeOf(target);
-    if (proto !== Object.prototype) {
-      Object.setPrototypeOf(clone, proto);
-    }
-    return clone;
+    return { ...target, __proto__: Object.getPrototypeOf(target) };
   }
 }
