@@ -1,4 +1,4 @@
-import type { Owner, Scope } from './core.js';
+import type { Owner, Scope } from './base.js';
 
 export function captureOwnerStack(scope: Scope): Owner[] {
   const ownerStack: Owner[] = [];

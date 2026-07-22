@@ -1,4 +1,3 @@
-import { mount, patch, unmount } from '../commit.js';
 import {
   type Container,
   type Dispatcher,
@@ -6,7 +5,8 @@ import {
   Scope,
   type UpdateHandle,
   type UpdateOptions,
-} from '../core.js';
+} from '../base.js';
+import { mount, patch, unmount } from '../commit.js';
 import { wrap } from '../element.js';
 import { AllLanes } from '../lane.js';
 import { ContainerPart } from './part.js';

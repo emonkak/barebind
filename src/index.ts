@@ -1,11 +1,3 @@
-export { sequentialEqual, shallowEqual } from './compare.js';
-export {
-  createComponent,
-  type HookFunction,
-  type HookObject,
-  Ref,
-  RenderContext,
-} from './component.js';
 export {
   type Bindable,
   type Commit,
@@ -20,7 +12,15 @@ export {
   type VElement,
   type VPortal,
   type VTemplate,
-} from './core.js';
+} from './base.js';
+export { sequentialEqual, shallowEqual } from './compare.js';
+export {
+  createComponent,
+  type HookFunction,
+  type HookObject,
+  Ref,
+  RenderContext,
+} from './component.js';
 export { DOMAdapter } from './dom/adapter.js';
 export { DOMAdapterError } from './dom/error.js';
 export { DOMRoot } from './dom/root.js';

@@ -1,4 +1,3 @@
-import { sequentialEqual } from './compare.js';
 import {
   Bind,
   type Bindable,
@@ -12,7 +11,8 @@ import {
   VNode,
   type VPortal,
   type VTemplate,
-} from './core.js';
+} from './base.js';
+import { sequentialEqual } from './compare.js';
 
 const INTERPOLATION_CACHE = new WeakMap<readonly string[], Interpolation[]>();
 
