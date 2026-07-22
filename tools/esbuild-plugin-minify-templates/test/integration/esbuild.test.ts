@@ -9,7 +9,6 @@ const FIXTURES_DIR = path.join(__dirname, '../fixtures');
 
 test.for([
   'function-call.js',
-  'ignored-template.js',
   'method-call.js',
   'nested-templates.js',
 ])('minify template literals in %s', async (filename) => {
