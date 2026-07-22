@@ -262,27 +262,26 @@ function getChild<T>(
   key: NormalizedKey,
 ): ReactiveNode<unknown> {
   let child = parent.children?.get(key);
-  if (child !== undefined) {
-    return child;
-  }
 
-  child = resolveChild(parent, key);
+  if (child === undefined) {
+    child = resolveChild(parent, key);
 
-  if (child.signal instanceof Atom) {
-    child.signal.subscribe((event) => {
-      // SAFETY: When the child is Atom, the parent is also Atom.
-      (parent.signal as Atom<T>).invalidate({
-        source: event.source,
-        path: [key, ...event.path],
-        oldValue: event.oldValue,
-        newValue: event.newValue,
+    if (child.signal instanceof Atom) {
+      child.signal.subscribe((event) => {
+        // SAFETY: When the child is Atom, the parent is also Atom.
+        (parent.signal as Atom<T>).invalidate({
+          source: event.source,
+          path: [key, ...event.path],
+          oldValue: event.oldValue,
+          newValue: event.newValue,
+        });
+        parent.flags |= FLAG_DIRTY_VALUE;
       });
-      parent.flags |= FLAG_DIRTY_VALUE;
-    });
-  }
+    }
 
-  parent.children ??= new Map();
-  parent.children.set(key, child);
+    parent.children ??= new Map();
+    parent.children.set(key, child);
+  }
 
   return child;
 }
