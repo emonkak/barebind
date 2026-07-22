@@ -241,7 +241,7 @@ function createProxy<T>(
       },
     });
   } else {
-    return finalizeValue(node);
+    return node.signal.value;
   }
 }
 
