@@ -7,12 +7,19 @@ import {
 import { type Bindable, toElement, type VElement } from '../../core.js';
 import { LinkedList } from './linked-list.js';
 
-export interface InvalidateEvent<T = any> {
-  readonly source: Signal<T>;
-  readonly path: readonly PropertyKey[];
-  readonly oldValue: T;
-  readonly newValue: T;
-}
+export type InvalidateEvent<T = any> =
+  | {
+      readonly type: 'set';
+      readonly source: Signal<T>;
+      readonly path: PropertyKey[];
+      readonly oldValue: T;
+      readonly newValue: T;
+    }
+  | {
+      readonly type: 'delete';
+      readonly source: Signal<T>;
+      readonly path: PropertyKey[];
+    };
 
 export type Subscriber = (event: InvalidateEvent) => void;
 
@@ -98,6 +105,7 @@ export class Atom<T> extends Signal<T> {
     if (!is(oldValue, newValue)) {
       this._value = newValue;
       this.invalidate({
+        type: 'set',
         source: this as Atom<unknown>,
         path: [],
         oldValue,

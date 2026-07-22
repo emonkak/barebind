@@ -67,6 +67,7 @@ describe('Reactive', () => {
       state$.value = { count: 1 };
       expect(subscriber).toHaveBeenCalledOnce();
       expect(subscriber).toHaveBeenLastCalledWith({
+        type: 'set',
         source: expect.any(Atom),
         path: [],
         oldValue: { count: 0 },
@@ -191,6 +192,7 @@ describe('Reactive', () => {
       item$.get('id')!.value = 2;
       expect(subscriber).toHaveBeenCalledOnce();
       expect(subscriber).toHaveBeenCalledWith({
+        type: 'set',
         source: expect.any(Atom),
         path: ['items', '0', 'id'],
         oldValue: 1,
@@ -314,10 +316,9 @@ describe('Reactive', () => {
       });
       expect(subscriber).toHaveBeenCalledOnce();
       expect(subscriber).toHaveBeenCalledWith({
+        type: 'delete',
         source: expect.any(Atom),
         path: ['a'],
-        oldValue: 0,
-        newValue: undefined,
       });
     });
 
@@ -435,6 +436,7 @@ describe('Reactive', () => {
 
       expect(subscriber).toHaveBeenCalledOnce();
       expect(subscriber).toHaveBeenCalledWith({
+        type: 'set',
         source: expect.any(Atom),
         path: [],
         oldValue: { count: 0 },
@@ -450,6 +452,7 @@ describe('Reactive', () => {
 
       expect(subscriber).toHaveBeenCalledOnce();
       expect(subscriber).toHaveBeenCalledWith({
+        type: 'set',
         source: expect.any(Atom),
         path: ['items', '0', 'id'],
         oldValue: 1,

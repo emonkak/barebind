@@ -169,10 +169,9 @@ function createDraft<T>(
       deleteProperty(_target, key) {
         const prop = getChild(node, key);
         signal.invalidate({
+          type: 'delete',
           source: prop.signal,
           path: [key],
-          oldValue: prop.signal.value,
-          newValue: undefined,
         });
         node.flags |= FLAG_DIRTY_VALUE;
         prop.flags |= FLAG_DELETED_PROPERTY;
@@ -270,10 +269,8 @@ function getChild<T>(
       child.signal.subscribe((event) => {
         // SAFETY: When the child is Atom, the parent is also Atom.
         (parent.signal as Atom<T>).invalidate({
-          source: event.source,
+          ...event,
           path: [key, ...event.path],
-          oldValue: event.oldValue,
-          newValue: event.newValue,
         });
         parent.flags |= FLAG_DIRTY_VALUE;
       });

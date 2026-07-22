@@ -24,6 +24,7 @@ describe('Atom', () => {
     it('increments the version and notifies subscribers', () => {
       const atom = new Atom('a');
       const event: InvalidateEvent<string> = {
+        type: 'set',
         source: atom,
         path: [],
         oldValue: 'b',
@@ -81,6 +82,7 @@ describe('Atom', () => {
       atom.value = 'b';
       expect(subscriber).toHaveBeenCalledTimes(1);
       expect(subscriber).toHaveBeenLastCalledWith({
+        type: 'set',
         source: atom,
         path: [],
         oldValue: 'a',
@@ -157,6 +159,7 @@ describe('Computed', () => {
       first.value++;
       expect(subscriber).toHaveBeenCalledTimes(1);
       expect(subscriber).toHaveBeenLastCalledWith({
+        type: 'set',
         source: first,
         path: [],
         oldValue: 1,
@@ -166,6 +169,7 @@ describe('Computed', () => {
       second.value++;
       expect(subscriber).toHaveBeenCalledTimes(2);
       expect(subscriber).toHaveBeenLastCalledWith({
+        type: 'set',
         source: second,
         path: [],
         oldValue: 2,
