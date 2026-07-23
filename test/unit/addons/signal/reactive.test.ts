@@ -11,11 +11,11 @@ describe('Reactive', () => {
     });
 
     it('creates a Reactive from a class instance', () => {
-      class Store {
+      class State {
         count = 0;
       }
-      const state$ = Reactive.from(new Store());
-      expect(state$.value).toBeInstanceOf(Store);
+      const state$ = Reactive.from(new State());
+      expect(state$.value).toBeInstanceOf(State);
       expect(state$.value.count).toBe(0);
     });
 
@@ -133,13 +133,13 @@ describe('Reactive', () => {
     });
 
     it('returns a read-only reactive for a read-only accessor', () => {
-      const store = {
+      const State = {
         count: 0,
         get doublyCount(): number {
           return this.count * 2;
         },
       };
-      const state$ = Reactive.from(store);
+      const state$ = Reactive.from(State);
       const count$ = state$.get('count');
       const doublyCount$ = state$.get('doublyCount');
       count$.value++;
@@ -147,13 +147,13 @@ describe('Reactive', () => {
     });
 
     it('returns a nested reactive for a read-only accessor returning an object', () => {
-      const store = {
+      const state = {
         count: 0,
         get counter(): { count: number } {
           return { count: this.count };
         },
       };
-      const state$ = Reactive.from(store);
+      const state$ = Reactive.from(state);
       const count$ = state$.get('count');
       const counterCount$ = state$.get('counter').get('count');
       count$.value++;
@@ -161,7 +161,7 @@ describe('Reactive', () => {
     });
 
     it('returns a writable reactive for a read-write accessor', () => {
-      const store = {
+      const state = {
         _count: 0,
         get count(): number {
           return this._count;
@@ -170,7 +170,7 @@ describe('Reactive', () => {
           this._count = count;
         },
       };
-      const state$ = Reactive.from(store);
+      const state$ = Reactive.from(state);
       const count$ = state$.get('count');
       count$.value = 5;
       expect(state$.value.count).toBe(5);
@@ -201,13 +201,13 @@ describe('Reactive', () => {
     });
 
     it('re-evaluates a computed reactive when a dependency changes', () => {
-      class Store {
+      class State {
         count = 0;
         get doubled() {
           return this.count * 2;
         }
       }
-      const state$ = Reactive.from(new Store());
+      const state$ = Reactive.from(new State());
       const doubled$ = state$.get('doubled');
       expect(doubled$.value).toBe(0);
       state$.get('count').value = 5;
@@ -215,12 +215,12 @@ describe('Reactive', () => {
     });
 
     it('throws when trying to set a read-only property', () => {
-      class Store {
+      class State {
         get id() {
           return 1;
         }
       }
-      const state$ = Reactive.from(new Store());
+      const state$ = Reactive.from(new State());
       const id$ = state$.get('id');
       expect(() => {
         (id$ as any).value = 2;
@@ -229,37 +229,12 @@ describe('Reactive', () => {
   });
 
   describe('scope()', () => {
-    it('mutates a property via proxy', () => {
+    it('increments version on mutation', () => {
       const state$ = Reactive.from({ count: 0 });
-      const count$ = state$.get('count');
       state$.scope((draft) => {
         draft.count++;
       });
-      expect(state$.value).toStrictEqual({ count: 1 });
-      expect(count$.value).toBe(1);
-    });
-
-    it('mutates a nested property via proxy', () => {
-      const state$ = Reactive.from({ counter: { count: 0 } });
-      const counter$ = state$.get('counter');
-      const counterCount$ = counter$.get('count');
-      state$.scope((draft) => {
-        draft.counter.count++;
-      });
-      expect(state$.value).toStrictEqual({ counter: { count: 1 } });
-      expect(counter$.value).toStrictEqual({ count: 1 });
-      expect(counterCount$.value).toBe(1);
-    });
-
-    it('mutates an array via proxy', () => {
-      const state$ = Reactive.from([] as number[]);
-      state$.scope((draft) => {
-        draft.push(0);
-        draft.push(1);
-        draft.push(2);
-        draft.splice(1, 1);
-      });
-      expect(state$.value).toStrictEqual([0, 2]);
+      expect(state$.version).toBe(1);
     });
 
     it('returns object keys via proxy', () => {
@@ -292,16 +267,76 @@ describe('Reactive', () => {
 
     it('returns a computed value via getter returning object', () => {
       const state$ = Reactive.from({
-        count: 0,
+        counter: { count: 0 },
         get doublyCounter() {
-          return { count: this.count * 2 };
+          return { count: this.counter.count * 2 };
         },
       });
       const doublyCount = state$.scope((draft) => {
-        draft.count++;
+        draft.counter.count++;
         return draft.doublyCounter.count;
       });
       expect(doublyCount).toStrictEqual(2);
+    });
+
+    it('returns the same value for primitive values', () => {
+      const state$ = Reactive.from(123);
+      const result = state$.scope((draft) => draft);
+      expect(result).toBe(123);
+    });
+
+    it('returns the same value for primitive via unwrap', () => {
+      const state$ = Reactive.from(123);
+      const snapshot = state$.scope((draft) => unwrap(draft));
+      expect(snapshot).toBe(123);
+    });
+
+    it('returns a plain object from unwrap', () => {
+      const state$ = Reactive.from({ count: 0 });
+      state$.scope((draft) => {
+        const snapshot = unwrap(draft);
+        expect(snapshot).toStrictEqual({ count: 0 });
+        expect(snapshot).toBe(state$.value);
+      });
+    });
+
+    it.for([null, undefined])('returns the same value for %s', (value) => {
+      const state$ = Reactive.from(value);
+      const snapshot = state$.scope((draft) => unwrap(draft));
+      expect(snapshot).toBe(value);
+    });
+
+    it('mutates a property via proxy', () => {
+      const state$ = Reactive.from({ count: 0 });
+      const count$ = state$.get('count');
+      state$.scope((draft) => {
+        draft.count++;
+      });
+      expect(state$.value).toStrictEqual({ count: 1 });
+      expect(count$.value).toBe(1);
+    });
+
+    it('mutates a nested property via proxy', () => {
+      const state$ = Reactive.from({ counter: { count: 0 } });
+      const counter$ = state$.get('counter');
+      const counterCount$ = counter$.get('count');
+      state$.scope((draft) => {
+        draft.counter.count++;
+      });
+      expect(state$.value).toStrictEqual({ counter: { count: 1 } });
+      expect(counter$.value).toStrictEqual({ count: 1 });
+      expect(counterCount$.value).toBe(1);
+    });
+
+    it('mutates an array via proxy', () => {
+      const state$ = Reactive.from([] as number[]);
+      state$.scope((draft) => {
+        draft.push(0);
+        draft.push(1);
+        draft.push(2);
+        draft.splice(1, 1);
+      });
+      expect(state$.value).toStrictEqual([0, 2]);
     });
 
     it('adds a dynamic property via proxy', () => {
@@ -350,23 +385,6 @@ describe('Reactive', () => {
       });
     });
 
-    it('increments version on mutation', () => {
-      const state$ = Reactive.from({ count: 0 });
-      state$.scope((draft) => {
-        draft.count++;
-      });
-      expect(state$.version).toBe(1);
-    });
-
-    it('returns the callback result', () => {
-      const state$ = Reactive.from({ count: 0 });
-      const result = state$.scope((draft) => {
-        draft.count++;
-        return draft.count;
-      });
-      expect(result).toBe(1);
-    });
-
     it('preserves class methods through mutations', () => {
       class Counter {
         count = 0;
@@ -379,49 +397,6 @@ describe('Reactive', () => {
         draft.increment();
       });
       expect(state$.value.count).toBe(1);
-    });
-
-    it('reads nested properties on a computed child', () => {
-      class Store {
-        count = 0;
-        get doubled() {
-          return this.count * 2;
-        }
-      }
-      const state$ = Reactive.from(new Store());
-      const doubled$ = state$.get('doubled');
-      let result: number;
-      doubled$.scope((draft) => {
-        result = draft;
-      });
-      expect(result!).toBe(0);
-    });
-
-    it('calls callback directly for primitive values', () => {
-      const state$ = Reactive.from(123);
-      const result = state$.scope((draft) => draft);
-      expect(result).toBe(123);
-    });
-
-    it('returns a plain object from unwrap', () => {
-      const state$ = Reactive.from({ count: 0 });
-      state$.scope((draft) => {
-        const snapshot = unwrap(draft);
-        expect(snapshot).toStrictEqual({ count: 0 });
-        expect(snapshot).toBe(state$.value);
-      });
-    });
-
-    it('returns the same value for primitive via unwrap', () => {
-      const state$ = Reactive.from(123);
-      const snapshot = state$.scope((draft) => unwrap(draft));
-      expect(snapshot).toBe(123);
-    });
-
-    it.for([null, undefined])('returns the same value for %s', (value) => {
-      const state$ = Reactive.from(value);
-      const snapshot = state$.scope((draft) => unwrap(draft));
-      expect(snapshot).toBe(value);
     });
 
     it('reflects mutations made in scope via unwrap', () => {
@@ -455,13 +430,13 @@ describe('Reactive', () => {
     });
 
     it('throws when trying to set a read-only property inside scope', () => {
-      class Store {
+      class State {
         count = 0;
         get doubled() {
           return this.count * 2;
         }
       }
-      const state$ = Reactive.from(new Store());
+      const state$ = Reactive.from(new State());
       expect(() =>
         state$.scope((draft: any) => {
           draft.doubled = 10;

@@ -160,6 +160,7 @@ function commitValue<T>(node: ReactiveNode<T>): T {
 function createDraft<T>(
   node: ReactiveNode<T>,
   finalizeValue: <T>(node: ReactiveNode<T>) => T = commitValue,
+  chainValue: <T>(node: ReactiveNode<T>) => T = createDraft,
 ): T {
   const { signal } = node;
   if (signal instanceof Atom) {
@@ -177,7 +178,7 @@ function createDraft<T>(
       },
       get(target, key, receiver) {
         if (key === UNWRAP_TAG) {
-          return finalizeValue(node);
+          return commitValue(node);
         } else {
           const prop = getChild(node, key);
           if (prop.flags & FLAG_DELETED_PROPERTY) {
@@ -189,7 +190,7 @@ function createDraft<T>(
           if (!isObject(prop.signal.value)) {
             return finalizeValue(prop);
           }
-          return createDraft(prop);
+          return chainValue(prop);
         }
       },
       getOwnPropertyDescriptor(target, key) {
@@ -306,10 +307,17 @@ function resolveChild<T>(
           } else {
             const dependencies: Signal<unknown>[] = [];
             const initialResult = get.call(
-              createDraft(parent, (node) => {
-                dependencies.push(node.signal as Signal<unknown>);
-                return commitValue(node);
-              }),
+              createDraft(
+                parent,
+                (node) => {
+                  dependencies.push(node.signal as Signal<unknown>);
+                  return commitValue(node);
+                },
+                (node) => {
+                  dependencies.push(node.signal as Signal<unknown>);
+                  return createDraft(node);
+                },
+              ),
             );
             const initialVersion = dependencies.reduce(
               (version, dependency) => version + dependency.version,
