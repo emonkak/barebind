@@ -65,10 +65,41 @@ test('minifies template literals in Partial.html tag', async () => {
   expect(output).toBe(expected);
 });
 
+test('does not minify template literals in Partial bracket notation', async () => {
+  const output = await bundle(
+    [
+      'export const Greet = createComponent(function Greet(props) {',
+      '  return Partial["html"]`',
+      '    <div',
+      '      class="greet"',
+      '    >',
+      '      ${props.greet}, <span>${props.name}</span>!',
+      '    </div>',
+      '  `;',
+      '});',
+    ].join('\n'),
+  );
+  const expected = [
+    'var Greet = createComponent(function Greet2(props) {',
+    '  return Partial["html"]`',
+    '    <div',
+    '      class="greet"',
+    '    >',
+    '      ${props.greet}, <span>${props.name}</span>!',
+    '    </div>',
+    '  `;',
+    '});',
+    'export {',
+    '  Greet',
+    '};',
+  ].join('\n');
+  expect(output).toBe(expected);
+});
+
 test('minifies nested html template literals', async () => {
   const output = await bundle(
     [
-      'export function Greet(props) {',
+      'export const Greet = createComponent(function Greet(props) {',
       '  return html`',
       '    <div>',
       '      ${html`',
@@ -78,13 +109,36 @@ test('minifies nested html template literals', async () => {
       '      `}',
       '    </div>',
       '  `;',
-      '}',
+      '});',
     ].join('\n'),
   );
   const expected = [
-    'function Greet(props) {',
+    'var Greet = createComponent(function Greet2(props) {',
     '  return html`<div>${html`<p>${props.greet}, <span>${props.name}</span>!</p>`}</div>`;',
-    '}',
+    '});',
+    'export {',
+    '  Greet',
+    '};',
+  ].join('\n');
+  expect(output).toBe(expected);
+});
+
+test('preserves whitespace in String.raw', async () => {
+  const output = await bundle(
+    [
+      'export const Greet = createComponent(function Greet(props) {',
+      '  return String.raw`',
+      '    ${props.greet}, ${props.name}!',
+      '  `;',
+      '});',
+    ].join('\n'),
+  );
+  const expected = [
+    'var Greet = createComponent(function Greet2(props) {',
+    '  return String.raw`',
+    '    ${props.greet}, ${props.name}!',
+    '  `;',
+    '});',
     'export {',
     '  Greet',
     '};',

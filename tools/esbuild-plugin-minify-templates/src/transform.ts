@@ -69,16 +69,12 @@ function collectTaggedTemplateExpressions(
 function getIdentifierName(expression: swc.Expression): string {
   switch (expression.type) {
     case 'Identifier':
-      return expression.value ?? '';
+      return expression.value;
     case 'MemberExpression': {
       const property = expression.property;
       switch (property.type) {
-        case 'PrivateName':
-          return property.id.value ?? '';
         case 'Identifier':
-          return property.value ?? '';
-        default:
-          return '';
+          return property.value;
       }
     }
   }
