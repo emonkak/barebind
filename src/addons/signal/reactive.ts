@@ -130,7 +130,7 @@ export class Reactive<T> extends Signal<T> {
 }
 
 export function unwrap<T>(draft: T): T {
-  return (draft as any)[UNWRAP_TAG] ?? draft;
+  return (draft as any)?.[UNWRAP_TAG] ?? draft;
 }
 
 function commitValue<T>(node: ReactiveNode<T>): T {

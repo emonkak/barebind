@@ -123,7 +123,7 @@ describe('Reactive', () => {
     });
 
     it('returns undefined for a primitive value', () => {
-      const state$ = Reactive.from(42);
+      const state$ = Reactive.from(123);
       expect(state$.get('toString')).toBe(undefined);
     });
 
@@ -398,9 +398,9 @@ describe('Reactive', () => {
     });
 
     it('calls callback directly for primitive values', () => {
-      const state$ = Reactive.from(42);
+      const state$ = Reactive.from(123);
       const result = state$.scope((draft) => draft);
-      expect(result).toBe(42);
+      expect(result).toBe(123);
     });
 
     it('returns a plain object from unwrap', () => {
@@ -413,9 +413,15 @@ describe('Reactive', () => {
     });
 
     it('returns the same value for primitive via unwrap', () => {
-      const state$ = Reactive.from(42);
+      const state$ = Reactive.from(123);
       const snapshot = state$.scope((draft) => unwrap(draft));
-      expect(snapshot).toBe(42);
+      expect(snapshot).toBe(123);
+    });
+
+    it.for([null, undefined])('returns the same value for %s', (value) => {
+      const state$ = Reactive.from(value);
+      const snapshot = state$.scope((draft) => unwrap(draft));
+      expect(snapshot).toBe(value);
     });
 
     it('reflects mutations made in scope via unwrap', () => {
