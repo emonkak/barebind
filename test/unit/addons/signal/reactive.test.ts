@@ -229,7 +229,7 @@ describe('Reactive', () => {
   });
 
   describe('scope()', () => {
-    it('mutates the property via proxy', () => {
+    it('mutates a property via proxy', () => {
       const state$ = Reactive.from({ count: 0 });
       const count$ = state$.get('count');
       state$.scope((draft) => {
@@ -239,7 +239,7 @@ describe('Reactive', () => {
       expect(count$.value).toBe(1);
     });
 
-    it('mutates the nested property via proxy', () => {
+    it('mutates a nested property via proxy', () => {
       const state$ = Reactive.from({ counter: { count: 0 } });
       const counter$ = state$.get('counter');
       const counterCount$ = counter$.get('count');
@@ -251,7 +251,7 @@ describe('Reactive', () => {
       expect(counterCount$.value).toBe(1);
     });
 
-    it('mutates the array via proxy', () => {
+    it('mutates an array via proxy', () => {
       const state$ = Reactive.from([] as number[]);
       state$.scope((draft) => {
         draft.push(0);
@@ -274,6 +274,34 @@ describe('Reactive', () => {
       state$.get(1).value = 2;
       const keys = state$.scope((draft) => Object.keys(draft));
       expect(keys).toStrictEqual(['0', '1']);
+    });
+
+    it('returns a computed value via getter', () => {
+      const state$ = Reactive.from({
+        count: 0,
+        get doublyCount() {
+          return this.count * 2;
+        },
+      });
+      const doublyCount = state$.scope((draft) => {
+        draft.count++;
+        return draft.doublyCount;
+      });
+      expect(doublyCount).toStrictEqual(2);
+    });
+
+    it('returns a computed value via getter returning object', () => {
+      const state$ = Reactive.from({
+        count: 0,
+        get doublyCounter() {
+          return { count: this.count * 2 };
+        },
+      });
+      const doublyCount = state$.scope((draft) => {
+        draft.count++;
+        return draft.doublyCounter.count;
+      });
+      expect(doublyCount).toStrictEqual(2);
     });
 
     it('adds a dynamic property via proxy', () => {
