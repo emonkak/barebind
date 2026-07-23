@@ -7,6 +7,8 @@ import {
   type Unsubscribe,
 } from './signal.js';
 
+const UNWRAP_TAG = Symbol();
+
 const NO_FLAGS /*                 */ = 0;
 const FLAG_NEEDS_COMMIT /*        */ = 0b00001;
 const FLAG_PENDING_VALUE /*       */ = 0b00010;
@@ -108,16 +110,9 @@ export class Reactive<T> extends Signal<T> {
     return new Reactive(child, options);
   }
 
-  scope<TResult>(
-    callback: (draft: T, unwrap: <T>(draft: T) => T) => TResult,
-  ): TResult {
+  scope<TResult>(callback: (draft: T) => TResult): TResult {
     const value = this._node.signal.value;
-    const unwrapTag = Symbol();
-    const unwrap = (draft: any) => draft[unwrapTag] ?? draft;
-    return callback(
-      isObject(value) ? createDraft(this._node, unwrapTag) : value,
-      unwrap,
-    );
+    return callback(isObject(value) ? createDraft(this._node) : value);
   }
 
   subscribe(subscriber: Subscriber): Unsubscribe {
@@ -132,6 +127,10 @@ export class Reactive<T> extends Signal<T> {
       return signal.subscribe(subscriber);
     }
   }
+}
+
+export function unwrap<T>(draft: T): T {
+  return (draft as any)[UNWRAP_TAG] ?? draft;
 }
 
 function commitValue<T>(node: ReactiveNode<T>): T {
@@ -160,7 +159,6 @@ function commitValue<T>(node: ReactiveNode<T>): T {
 
 function createDraft<T>(
   node: ReactiveNode<T>,
-  unwrapTag: Symbol = Symbol(),
   finalizeValue: <T>(node: ReactiveNode<T>) => T = commitValue,
 ): T {
   const { signal } = node;
@@ -178,7 +176,7 @@ function createDraft<T>(
         return true;
       },
       get(target, key, receiver) {
-        if (key === unwrapTag) {
+        if (key === UNWRAP_TAG) {
           return finalizeValue(node);
         } else {
           const prop = getChild(node, key);
@@ -191,7 +189,7 @@ function createDraft<T>(
           if (!isObject(prop.signal.value)) {
             return finalizeValue(prop);
           }
-          return createDraft(prop, unwrapTag);
+          return createDraft(prop);
         }
       },
       getOwnPropertyDescriptor(target, key) {
@@ -308,7 +306,7 @@ function resolveChild<T>(
           } else {
             const dependencies: Signal<unknown>[] = [];
             const initialResult = get.call(
-              createDraft(parent, undefined, (node) => {
+              createDraft(parent, (node) => {
                 dependencies.push(node.signal as Signal<unknown>);
                 return commitValue(node);
               }),

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Reactive } from '@/addons/signal/reactive.js';
+import { Reactive, unwrap } from '@/addons/signal/reactive.js';
 import { Atom } from '@/addons/signal/signal.js';
 
 describe('Reactive', () => {
@@ -405,7 +405,7 @@ describe('Reactive', () => {
 
     it('returns a plain object from unwrap', () => {
       const state$ = Reactive.from({ count: 0 });
-      state$.scope((draft, unwrap) => {
+      state$.scope((draft) => {
         const snapshot = unwrap(draft);
         expect(snapshot).toStrictEqual({ count: 0 });
         expect(snapshot).toBe(state$.value);
@@ -414,13 +414,13 @@ describe('Reactive', () => {
 
     it('returns the same value for primitive via unwrap', () => {
       const state$ = Reactive.from(42);
-      const snapshot = state$.scope((draft, unwrap) => unwrap(draft));
+      const snapshot = state$.scope((draft) => unwrap(draft));
       expect(snapshot).toBe(42);
     });
 
     it('reflects mutations made in scope via unwrap', () => {
       const state$ = Reactive.from({ a: 0, b: 1 });
-      const snapshot = state$.scope((draft, unwrap) => {
+      const snapshot = state$.scope((draft) => {
         draft.a = 2;
         draft.b = 3;
         return unwrap(draft);
@@ -431,7 +431,7 @@ describe('Reactive', () => {
 
     it('reflects nested mutations made in scope via unwrap', () => {
       const state$ = Reactive.from({ nested: { value: 1 } });
-      const snapshot = state$.scope((draft, unwrap) => {
+      const snapshot = state$.scope((draft) => {
         draft.nested.value = 2;
         return unwrap(draft.nested);
       });

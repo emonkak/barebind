@@ -5,6 +5,7 @@ export {
 export {
   Reactive,
   type ReactiveOptions,
+  unwrap,
 } from './signal/reactive.js';
 export {
   Atom,
