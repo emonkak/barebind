@@ -445,6 +445,15 @@ describe('Reactive', () => {
       expect(structuredClone(snapshot)).toStrictEqual({ value: 2 });
     });
 
+    it('unwraps reactive value on assignment in scope', () => {
+      const state$ = Reactive.from({ a: { value: 1 }, b: { value: 2 } });
+      state$.scope((draft) => {
+        draft.b = draft.a;
+      });
+      expect(state$.value).toStrictEqual({ a: { value: 1 }, b: { value: 1 } });
+      expect(state$.value.a).toBe(state$.value.b);
+    });
+
     it('throws when trying to set a read-only property inside scope', () => {
       class Store {
         count = 0;

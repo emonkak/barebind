@@ -342,7 +342,7 @@ function resolveChild<T>(
 
 function setPendingValue<T>(node: ReactiveNode<T>, newValue: T): void {
   // Intentionally throws a TypeError if signal is a Computed (which has no setter).
-  (node.signal as Atom<T>).value = newValue;
+  (node.signal as Atom<T>).value = unwrap(newValue);
   node.children?.clear();
   node.flags |= FLAG_PENDING_VALUE;
   node.flags &= ~(FLAG_NEEDS_COMMIT | FLAG_DELETED_PROPERTY);
