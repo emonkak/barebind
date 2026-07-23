@@ -431,7 +431,7 @@ describe('Reactive', () => {
     it('unwraps reactive value on assignment in scope', () => {
       const state$ = Reactive.from({ a: { value: 1 }, b: { value: 2 } });
       state$.scope((draft) => {
-        draft.b = draft.a;
+        draft.b = unwrap(draft.a);
       });
       expect(state$.value).toStrictEqual({ a: { value: 1 }, b: { value: 1 } });
       expect(state$.value.a).toBe(state$.value.b);
