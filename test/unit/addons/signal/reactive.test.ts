@@ -439,6 +439,28 @@ describe('Reactive', () => {
       expect(state$.value.a).toBe(state$.value.b);
     });
 
+    it('ignores stale child mutations after property reassignment', () => {
+      const state$ = Reactive.from({ nested: { value: 0 } });
+      state$.scope((draft) => {
+        const { nested } = draft;
+        draft.nested = { value: 1 };
+        nested.value = 2;
+      });
+      expect(state$.value).toStrictEqual({ nested: { value: 1 } });
+    });
+
+    it('ignores stale child mutations after property set to null', () => {
+      const state$ = Reactive.from({ nested: { value: 0 } } as {
+        nested: { value: number } | null;
+      });
+      state$.scope((draft) => {
+        const { nested } = draft;
+        draft.nested = null;
+        nested!.value = 2;
+      });
+      expect(state$.value).toStrictEqual({ nested: null });
+    });
+
     it('throws when trying to set a read-only property inside scope', () => {
       class State {
         count = 0;

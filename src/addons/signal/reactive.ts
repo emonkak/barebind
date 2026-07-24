@@ -104,16 +104,19 @@ export class Reactive<T> extends Signal<T> {
     options?: ReactiveOptions,
   ): T extends object ? Reactive<unknown> : undefined;
   get(key: PropertyKey, options?: ReactiveOptions): Reactive<any> | undefined {
-    if (!isObject(this._node.signal.value)) {
+    const { value, version } = this._node.signal;
+    if (!isObject(value)) {
       return undefined;
     }
-    const child = getChild(this._node, normalizeKey(key));
+    const child = getChild(this._node, normalizeKey(key), value, version);
     return new Reactive(child, options);
   }
 
   scope<TResult>(callback: (draft: T) => TResult): TResult {
-    const value = this._node.signal.value;
-    return callback(isObject(value) ? createDraft(this._node) : value);
+    const { value, version } = this._node.signal;
+    return callback(
+      isObject(value) ? createDraft(this._node, value, version) : value,
+    );
   }
 
   subscribe(subscriber: Subscriber): Unsubscribe {
@@ -159,50 +162,57 @@ function commitValue<T>(node: ReactiveNode<T>): T {
 }
 
 function createDraft<T>(
-  node: ReactiveNode<T>,
-  finalizeValue: <T>(node: ReactiveNode<T>) => T = commitValue,
-  chainValue: <T>(node: ReactiveNode<T>) => T = createDraft,
+  parent: ReactiveNode<T>,
+  targetValue: T & object,
+  targetVersion: number,
+  finalizeValue: typeof commitValue = commitValue,
+  chainValue: typeof createDraft = createDraft,
 ): T {
-  const { signal } = node;
+  const { signal } = parent;
   if (signal instanceof Atom) {
-    return new Proxy(signal.value, {
+    return new Proxy(targetValue, {
       deleteProperty(_target, key) {
-        const prop = getChild(node, key);
-        signal.invalidate({
-          type: 'delete',
-          source: prop.signal,
-          path: [key],
-        });
-        node.flags |= FLAG_DIRTY_VALUE;
-        prop.flags |= FLAG_DELETED_PROPERTY;
-        node.version++;
+        const child = getChild(parent, key, targetValue, targetVersion);
+        if (parent.signal.version === targetVersion) {
+          signal.invalidate({
+            type: 'delete',
+            source: child.signal,
+            path: [key],
+          });
+          parent.flags |= FLAG_DIRTY_VALUE;
+          child.flags |= FLAG_DELETED_PROPERTY;
+          parent.version++;
+        }
         return true;
       },
       get(target, key, receiver) {
         if (key === UNWRAP_TAG) {
-          return commitValue(node);
+          return commitValue(parent);
         } else {
-          const prop = getChild(node, key);
-          if (prop.flags & FLAG_DELETED_PROPERTY) {
+          const child = getChild(parent, key, targetValue, targetVersion);
+          if (child.flags & FLAG_DELETED_PROPERTY) {
             return undefined;
           }
-          if (!(prop.flags & (FLAG_PENDING_VALUE | FLAG_ENUMERABLE_PROPERTY))) {
+          if (
+            !(child.flags & (FLAG_PENDING_VALUE | FLAG_ENUMERABLE_PROPERTY))
+          ) {
             return Reflect.get(target, key, receiver);
           }
-          if (!isObject(prop.signal.value)) {
-            return finalizeValue(prop);
+          const { value, version } = child.signal;
+          if (!isObject(value)) {
+            return finalizeValue(child);
           }
-          return chainValue(prop);
+          return chainValue(child, value, version);
         }
       },
       getOwnPropertyDescriptor(target, key) {
-        const prop = getChild(node, key);
-        if (prop.flags & FLAG_DELETED_PROPERTY) {
+        const child = getChild(parent, key, targetValue, targetVersion);
+        if (child.flags & FLAG_DELETED_PROPERTY) {
           return undefined;
         }
-        if (prop.flags & FLAG_DYNAMIC_PROPERTY) {
+        if (child.flags & FLAG_DYNAMIC_PROPERTY) {
           return {
-            value: prop.signal.value,
+            value: child.signal.value,
             writable: true,
             enumerable: true,
             configurable: true,
@@ -211,22 +221,22 @@ function createDraft<T>(
         return Reflect.getOwnPropertyDescriptor(target, key);
       },
       set(_target, key, value, _receiver) {
-        const prop = getChild(node, key);
-        setPendingValue(prop, unwrap(value));
+        const prop = getChild(parent, key, targetValue, targetVersion);
+        setPendingValue(prop, value);
         return true;
       },
       has(target, key) {
-        const prop = node.children?.get(key);
-        return prop !== undefined
-          ? !(prop.flags & FLAG_DELETED_PROPERTY)
+        const child = parent.children?.get(key);
+        return child !== undefined
+          ? !(child.flags & FLAG_DELETED_PROPERTY)
           : Reflect.has(target, key);
       },
       ownKeys(target) {
         const baseKeys = Reflect.ownKeys(target);
-        if (node.children !== null) {
+        if (parent.children !== null) {
           const dynamicKeys: NormalizedKey[] = [];
           const deletedKeys: NormalizedKey[] = [];
-          for (const [key, child] of node.children.entries()) {
+          for (const [key, child] of parent.children.entries()) {
             if (child.flags & FLAG_DELETED_PROPERTY) {
               deletedKeys.push(key);
             } else if (child.flags & FLAG_DYNAMIC_PROPERTY) {
@@ -245,7 +255,7 @@ function createDraft<T>(
       },
     });
   } else {
-    return node.signal.value;
+    return targetValue;
   }
 }
 
@@ -253,31 +263,35 @@ function createNode<T>(signal: Signal<T>, flags = NO_FLAGS): ReactiveNode<T> {
   return {
     signal,
     children: null,
-    flags,
     version: 0,
+    flags,
   };
 }
 
 function getChild<T>(
   parent: ReactiveNode<T>,
   key: NormalizedKey,
+  targetValue: T & object,
+  targetVersion: number,
 ): ReactiveNode<unknown> {
   let child = parent.children?.get(key);
 
   if (child === undefined) {
-    child = resolveChild(parent, key);
+    child = resolveChild(parent, key, targetValue, targetVersion);
 
     if (child.signal instanceof Atom) {
       child.signal.subscribe((event) => {
-        // SAFETY: When the child is Atom, the parent is also Atom.
-        (parent.signal as Atom<T>).invalidate({
-          ...event,
-          get path() {
-            return [key, ...event.path];
-          },
-        });
-        parent.flags |= FLAG_DIRTY_VALUE;
-        parent.version++;
+        if (parent.signal.version === targetVersion) {
+          // SAFETY: When the child is Atom, the parent is also Atom.
+          (parent.signal as Atom<T>).invalidate({
+            ...event,
+            get path() {
+              return [key, ...event.path];
+            },
+          });
+          parent.flags |= FLAG_DIRTY_VALUE;
+          parent.version++;
+        }
       });
     }
 
@@ -295,10 +309,10 @@ function normalizeKey(key: PropertyKey): NormalizedKey {
 function resolveChild<T>(
   parent: ReactiveNode<T>,
   key: PropertyKey,
+  targetValue: T & object,
+  targetVersion: number,
 ): ReactiveNode<unknown> {
-  const { signal } = parent;
-
-  let proto = signal.value;
+  let proto = targetValue;
   do {
     const descriptor = Object.getOwnPropertyDescriptor(proto, key);
     if (descriptor !== undefined) {
@@ -306,19 +320,24 @@ function resolveChild<T>(
       const flags = enumerable ? FLAG_ENUMERABLE_PROPERTY : NO_FLAGS;
       if (get !== undefined) {
         if (set !== undefined) {
-          return createNode(new Atom(get.call(createDraft(parent))), flags);
+          return createNode(
+            new Atom(get.call(createDraft(parent, targetValue, targetVersion))),
+            flags,
+          );
         } else {
           const dependencies: Signal<unknown>[] = [];
           const initialResult = get.call(
             createDraft(
               parent,
-              (node) => {
-                dependencies.push(node.signal as Signal<unknown>);
-                return commitValue(node);
+              targetValue,
+              targetVersion,
+              (child) => {
+                dependencies.push(child.signal as Signal<unknown>);
+                return commitValue(child);
               },
-              (node) => {
-                dependencies.push(node.signal as Signal<unknown>);
-                return createDraft(node);
+              (child, value, version) => {
+                dependencies.push(child.signal as Signal<unknown>);
+                return createDraft(child, value, version);
               },
             ),
           );
@@ -328,7 +347,7 @@ function resolveChild<T>(
           );
           return createNode(
             new Computed(
-              () => get.call(createDraft(parent)),
+              () => get.call(createDraft(parent, targetValue, targetVersion)),
               dependencies,
               initialResult,
               initialVersion,
