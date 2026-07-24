@@ -155,9 +155,11 @@ describe('Reactive', () => {
       };
       const state$ = Reactive.from(state);
       const count$ = state$.get('count');
-      const counterCount$ = state$.get('counter').get('count');
+      const counter$ = state$.get('counter');
+      const counterCount$ = counter$.get('count');
       count$.value++;
-      expect(counterCount$.value).toBe(1);
+      expect(counter$.value).toStrictEqual({ count: 1 });
+      expect(counterCount$.value).toBe(0);
     });
 
     it('returns a writable reactive for a read-write accessor', () => {

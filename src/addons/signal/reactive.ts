@@ -298,58 +298,52 @@ function resolveChild<T>(
 ): ReactiveNode<unknown> {
   const { signal } = parent;
 
-  if (signal instanceof Atom) {
-    let proto = signal.value;
-    do {
-      const descriptor = Object.getOwnPropertyDescriptor(proto, key);
-      if (descriptor !== undefined) {
-        const { get, set, value, enumerable } = descriptor;
-        const flags = enumerable ? FLAG_ENUMERABLE_PROPERTY : NO_FLAGS;
-        if (get !== undefined) {
-          if (set !== undefined) {
-            return createNode(new Atom(get.call(createDraft(parent))), flags);
-          } else {
-            const dependencies: Signal<unknown>[] = [];
-            const initialResult = get.call(
-              createDraft(
-                parent,
-                (node) => {
-                  dependencies.push(node.signal as Signal<unknown>);
-                  return commitValue(node);
-                },
-                (node) => {
-                  dependencies.push(node.signal as Signal<unknown>);
-                  return createDraft(node);
-                },
-              ),
-            );
-            const initialVersion = dependencies.reduce(
-              (version, dependency) => version + dependency.version,
-              0,
-            );
-            return createNode(
-              new Computed(
-                () => get.call(createDraft(parent)),
-                dependencies,
-                initialResult,
-                initialVersion,
-              ),
-              flags,
-            );
-          }
+  let proto = signal.value;
+  do {
+    const descriptor = Object.getOwnPropertyDescriptor(proto, key);
+    if (descriptor !== undefined) {
+      const { get, set, value, enumerable } = descriptor;
+      const flags = enumerable ? FLAG_ENUMERABLE_PROPERTY : NO_FLAGS;
+      if (get !== undefined) {
+        if (set !== undefined) {
+          return createNode(new Atom(get.call(createDraft(parent))), flags);
         } else {
-          return createNode(new Atom(value), flags);
+          const dependencies: Signal<unknown>[] = [];
+          const initialResult = get.call(
+            createDraft(
+              parent,
+              (node) => {
+                dependencies.push(node.signal as Signal<unknown>);
+                return commitValue(node);
+              },
+              (node) => {
+                dependencies.push(node.signal as Signal<unknown>);
+                return createDraft(node);
+              },
+            ),
+          );
+          const initialVersion = dependencies.reduce(
+            (version, dependency) => version + dependency.version,
+            0,
+          );
+          return createNode(
+            new Computed(
+              () => get.call(createDraft(parent)),
+              dependencies,
+              initialResult,
+              initialVersion,
+            ),
+            flags,
+          );
         }
+      } else {
+        return createNode(new Atom(value), flags);
       }
-      proto = Object.getPrototypeOf(proto);
-    } while (proto !== null);
+    }
+    proto = Object.getPrototypeOf(proto);
+  } while (proto !== null);
 
-    return createNode(new Atom<unknown>(undefined), FLAG_DYNAMIC_PROPERTY);
-  } else {
-    return createNode(
-      new Computed<unknown>(() => (signal.value as any)[key], [signal]),
-    );
-  }
+  return createNode(new Atom<unknown>(undefined), FLAG_DYNAMIC_PROPERTY);
 }
 
 function setPendingValue<T>(node: ReactiveNode<T>, newValue: T): void {
