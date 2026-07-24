@@ -53,6 +53,7 @@ interface ReactiveNode<T> {
   signal: Signal<T>;
   children: Map<NormalizedKey, ReactiveNode<unknown>> | null;
   flags: number;
+  version: number;
 }
 
 type ReactiveKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
@@ -91,7 +92,7 @@ export class Reactive<T> extends Signal<T> {
   }
 
   get version(): number {
-    return this._node.signal.version;
+    return this._node.version;
   }
 
   get<K extends ReactiveKeys<T>>(
@@ -174,6 +175,7 @@ function createDraft<T>(
         });
         node.flags |= FLAG_DIRTY_VALUE;
         prop.flags |= FLAG_DELETED_PROPERTY;
+        node.version++;
         return true;
       },
       get(target, key, receiver) {
@@ -252,6 +254,7 @@ function createNode<T>(signal: Signal<T>, flags = NO_FLAGS): ReactiveNode<T> {
     signal,
     children: null,
     flags,
+    version: 0,
   };
 }
 
@@ -274,6 +277,7 @@ function getChild<T>(
           },
         });
         parent.flags |= FLAG_DIRTY_VALUE;
+        parent.version++;
       });
     }
 
@@ -354,6 +358,7 @@ function setPendingValue<T>(node: ReactiveNode<T>, newValue: T): void {
   node.children?.clear();
   node.flags |= FLAG_PENDING_VALUE;
   node.flags &= ~(FLAG_NEEDS_COMMIT | FLAG_DELETED_PROPERTY);
+  node.version++;
 }
 
 function shallowClone<T extends object>(target: T): T {

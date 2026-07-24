@@ -22,7 +22,7 @@ describe('Atom', () => {
   });
 
   describe('invalidate()', () => {
-    it('increments the version and notifies subscribers', () => {
+    it('notifies subscribers', () => {
       const atom = new Atom('a');
       const event: InvalidateEvent = {
         type: 'set',
@@ -39,7 +39,7 @@ describe('Atom', () => {
       expect(subscriber).toHaveBeenCalledOnce();
       expect(subscriber).toHaveBeenCalledWith(event);
       expect(atom.value).toBe('a');
-      expect(atom.version).toBe(1);
+      expect(atom.version).toBe(0);
     });
   });
 

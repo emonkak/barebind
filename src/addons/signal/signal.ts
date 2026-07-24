@@ -110,6 +110,7 @@ export class Atom<T> extends Signal<T> {
     const oldValue = this._value;
     if (!is(oldValue, newValue)) {
       this._value = newValue;
+      this._version += 1;
       this.invalidate({
         type: 'set',
         source: this as Signal<unknown>,
@@ -125,7 +126,6 @@ export class Atom<T> extends Signal<T> {
   }
 
   invalidate(event: InvalidateEvent): void {
-    this._version += 1;
     for (const subscriber of this._subscribers) {
       subscriber(event);
     }

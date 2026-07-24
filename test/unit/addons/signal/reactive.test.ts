@@ -237,6 +237,14 @@ describe('Reactive', () => {
       expect(state$.version).toBe(1);
     });
 
+    it('increments version on deletion', () => {
+      const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
+      state$.scope((draft) => {
+        delete draft['a'];
+      });
+      expect(state$.version).toBe(1);
+    });
+
     it('returns object keys via proxy', () => {
       const state$ = Reactive.from({ a: 0, b: 1 });
       const keys = state$.scope((draft) => Object.keys(draft));
