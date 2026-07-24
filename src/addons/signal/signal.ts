@@ -91,29 +91,25 @@ export abstract class Signal<T> implements Bindable, HookObject<T> {
   }
 }
 
-export class Atom<T> extends Signal<T> {
-  private _value: T;
-  private _version: number;
+export abstract class WritableSignal<T> extends Signal<T> {
+  protected _version: number = 0;
   private readonly _subscribers = new LinkedList<Subscriber>();
 
-  constructor(initialValue: T, initialVersion: number = 0) {
-    super();
-    this._value = initialValue;
-    this._version = initialVersion;
+  get version(): number {
+    return this._version;
   }
 
   get value(): T {
-    return this._value;
+    return this.read();
   }
 
   set value(newValue: T) {
-    const oldValue = this._value;
+    const oldValue = this.read();
     if (!is(oldValue, newValue)) {
-      this._value = newValue;
-      this._version += 1;
+      this.write(newValue);
       this.invalidate({
         type: 'set',
-        source: this as Signal<unknown>,
+        source: this,
         path: [],
         oldValue,
         newValue,
@@ -121,13 +117,10 @@ export class Atom<T> extends Signal<T> {
     }
   }
 
-  get version(): number {
-    return this._version;
-  }
-
-  invalidate(event: InvalidateEvent): void {
+  invalidate<T>(event: InvalidateEvent<T>): void {
+    this._version++;
     for (const subscriber of this._subscribers) {
-      subscriber(event);
+      subscriber(event as InvalidateEvent<unknown>);
     }
   }
 
@@ -138,8 +131,46 @@ export class Atom<T> extends Signal<T> {
     };
   }
 
+  abstract read(): T;
+
+  abstract write(value: T): void;
+}
+
+export class Atom<T> extends WritableSignal<T> {
+  private _value: T;
+
+  constructor(initialValue: T) {
+    super();
+    this._value = initialValue;
+  }
+
+  read(): T {
+    return this._value;
+  }
+
   write(value: T): void {
     this._value = value;
+  }
+}
+
+export class Accessor<T> extends WritableSignal<T> {
+  private readonly _read: () => T;
+  private readonly _write: (value: T) => void;
+
+  constructor(read: () => T, write: (value: T) => void) {
+    super();
+    this._read = read;
+    this._write = write;
+  }
+
+  read(): T {
+    const read = this._read;
+    return read();
+  }
+
+  write(value: T): void {
+    const write = this._write;
+    write(value);
   }
 }
 

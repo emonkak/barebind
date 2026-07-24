@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  Accessor,
   Atom,
   Computed,
   type InvalidateEvent,
@@ -22,7 +23,7 @@ describe('Atom', () => {
   });
 
   describe('invalidate()', () => {
-    it('notifies subscribers', () => {
+    it('increments the version and then notifies subscribers', () => {
       const atom = new Atom('a');
       const event: InvalidateEvent = {
         type: 'set',
@@ -39,7 +40,7 @@ describe('Atom', () => {
       expect(subscriber).toHaveBeenCalledOnce();
       expect(subscriber).toHaveBeenCalledWith(event);
       expect(atom.value).toBe('a');
-      expect(atom.version).toBe(0);
+      expect(atom.version).toBe(1);
     });
   });
 
@@ -60,15 +61,10 @@ describe('Atom', () => {
       const subscriber = vi.fn();
 
       atom.subscribe(subscriber);
-
-      expect(atom.value).toBe('a');
-      expect(atom.version).toBe(0);
-
       atom.write('b');
 
       expect(subscriber).not.toHaveBeenCalled();
       expect(atom.value).toBe('b');
-      expect(atom.version).toBe(0);
     });
   });
 
@@ -99,6 +95,88 @@ describe('Atom', () => {
       expect(subscriber).not.toHaveBeenCalled();
 
       atom.value = 'b';
+      expect(subscriber).not.toHaveBeenCalled();
+      expect(atom.value).toBe('b');
+    });
+  });
+});
+
+describe('Accessor', () => {
+  describe('value', () => {
+    it('returns the value from the getter', () => {
+      let value = 'a';
+      const accessor = new Accessor(
+        () => value,
+        (newValue) => {
+          value = newValue;
+        },
+      );
+
+      expect(accessor.value).toBe('a');
+    });
+  });
+
+  describe('set value()', () => {
+    it('increments the version on update', () => {
+      let value = 'a';
+      const accessor = new Accessor(
+        () => value,
+        (newValue) => {
+          value = newValue;
+        },
+      );
+
+      expect(accessor.version).toBe(0);
+
+      accessor.value = 'b';
+
+      expect(accessor.value).toBe('b');
+      expect(accessor.version).toBe(1);
+    });
+
+    it('calls the setter function', () => {
+      let value = 'a';
+      const accessor = new Accessor(
+        () => value,
+        (newValue) => {
+          value = newValue;
+        },
+      );
+
+      accessor.value = 'b';
+
+      expect(value).toBe('b');
+    });
+
+    it('does nothing when the value is the same', () => {
+      let value = 'a';
+      const accessor = new Accessor(
+        () => value,
+        (newValue: string) => {
+          value = newValue;
+        },
+      );
+
+      accessor.value = 'a';
+
+      expect(accessor.version).toBe(0);
+    });
+  });
+
+  describe('write()', () => {
+    it('writes the value without events', () => {
+      let value = 'a';
+      const accessor = new Accessor(
+        () => value,
+        (newValue) => {
+          value = newValue;
+        },
+      );
+      const subscriber = vi.fn();
+
+      accessor.subscribe(subscriber);
+      accessor.write('b');
+
       expect(subscriber).not.toHaveBeenCalled();
     });
   });
