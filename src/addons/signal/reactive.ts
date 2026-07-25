@@ -43,28 +43,28 @@ export class Reactive<T> extends Signal<T> {
   /** @internal */
   _signal: Signal<T>;
   /** @internal */
-  _path: PropertyKey[];
+  _owner: Reactive<unknown> | null;
   /** @internal */
-  _parent: Reactive<unknown> | null;
+  _path: PropertyKey[];
   /** @internal */
   _flags: number;
   /** @internal */
-  _children: Map<NormalizedKey, Reactive<unknown>> | null = null;
+  _properties: Map<NormalizedKey, Reactive<unknown>> | null = null;
 
   static from<T>(value: T): Reactive<T> {
-    return new Reactive(new Atom(value), [], null, NO_FLAGS);
+    return new Reactive(new Atom(value), null, [], NO_FLAGS);
   }
 
   constructor(
     signal: Signal<T>,
+    owner: Reactive<unknown> | null,
     path: PropertyKey[],
-    parent: Reactive<unknown> | null,
     flags: number,
   ) {
     super();
     this._signal = signal;
     this._path = path;
-    this._parent = parent;
+    this._owner = owner;
     this._flags = flags;
   }
 
@@ -87,7 +87,7 @@ export class Reactive<T> extends Signal<T> {
   get(key: PropertyKey): Reactive<any> | undefined {
     const target = this._signal.value;
     return isNonPrimitive(target)
-      ? getChild(this, normalizeKey(key), target)
+      ? getProperty(this, normalizeKey(key), target)
       : undefined;
   }
 
@@ -110,50 +110,50 @@ export class Reactive<T> extends Signal<T> {
   }
 }
 
-function commitValue<T>(reactive: Reactive<T>): T {
-  let value = reactive._signal.value;
-  if (reactive._flags & FLAG_NEEDS_COMMIT) {
+function commitValue<T>(receiver: Reactive<T>): T {
+  let value = receiver._signal.value;
+  if (receiver._flags & FLAG_NEEDS_COMMIT) {
     value = shallowClone(value);
-    for (const [key, child] of reactive._children!.entries()) {
-      if (child._flags & FLAG_DELETED_PROPERTY) {
+    for (const [key, prop] of receiver._properties!.entries()) {
+      if (prop._flags & FLAG_DELETED_PROPERTY) {
         delete (value as any)[key];
-      } else if (child._flags & FLAG_PENDING_VALUE) {
-        (value as any)[key] = child.value;
-        child._flags &= ~FLAG_PENDING_VALUE;
+      } else if (prop._flags & FLAG_PENDING_VALUE) {
+        (value as any)[key] = prop.value;
+        prop._flags &= ~FLAG_PENDING_VALUE;
       }
     }
-    (reactive._signal as WritableSignal<T>).write(value);
-    reactive._flags &= ~FLAG_NEEDS_COMMIT;
+    (receiver._signal as WritableSignal<T>).write(value);
+    receiver._flags &= ~FLAG_NEEDS_COMMIT;
   }
   return value;
 }
 
 function createDraft<T>(
-  parent: Reactive<T>,
+  receiver: Reactive<T>,
   target: T & object,
   commit: typeof commitValue = commitValue,
 ): { proxy: T; revoke: () => void } {
   return Proxy.revocable(target, {
     deleteProperty(target, key) {
-      const child = getChild(parent, key, target);
-      deleteProperty(child);
+      const prop = getProperty(receiver, key, target);
+      deleteProperty(prop);
       return true;
     },
-    get(target, key, _receiver) {
-      const child = getChild(parent, key, target);
-      if (child._flags & FLAG_DELETED_PROPERTY) {
+    get(target, key, _proxy) {
+      const prop = getProperty(receiver, key, target);
+      if (prop._flags & FLAG_DELETED_PROPERTY) {
         return undefined;
       }
-      return commit(child);
+      return commit(prop);
     },
     getOwnPropertyDescriptor(target, key) {
-      const child = getChild(parent, key, target);
-      if (child._flags & FLAG_DELETED_PROPERTY) {
+      const prop = getProperty(receiver, key, target);
+      if (prop._flags & FLAG_DELETED_PROPERTY) {
         return undefined;
       }
-      if (child._flags & FLAG_DYNAMIC_PROPERTY) {
+      if (prop._flags & FLAG_DYNAMIC_PROPERTY) {
         return {
-          value: child._signal.value,
+          value: prop._signal.value,
           writable: true,
           enumerable: true,
           configurable: true,
@@ -161,26 +161,26 @@ function createDraft<T>(
       }
       return Reflect.getOwnPropertyDescriptor(target, key);
     },
-    set(target, key, value, _receiver) {
-      const child = getChild(parent, key, target);
-      child.value = value;
-      return !!(child._flags & FLAG_WRITABLE_PROPERTY);
+    set(target, key, value, _proxy) {
+      const prop = getProperty(receiver, key, target);
+      setPendingValue(prop, value);
+      return !!(prop._flags & FLAG_WRITABLE_PROPERTY);
     },
     has(target, key) {
-      const child = parent._children?.get(key);
-      return child !== undefined
-        ? !(child._flags & FLAG_DELETED_PROPERTY)
+      const prop = receiver._properties?.get(key);
+      return prop !== undefined
+        ? !(prop._flags & FLAG_DELETED_PROPERTY)
         : Reflect.has(target, key);
     },
     ownKeys(target) {
       const baseKeys = Reflect.ownKeys(target);
-      if (parent._children !== null) {
+      if (receiver._properties !== null) {
         const dynamicKeys: NormalizedKey[] = [];
         const deletedKeys: NormalizedKey[] = [];
-        for (const [key, child] of parent._children.entries()) {
-          if (child._flags & FLAG_DELETED_PROPERTY) {
+        for (const [key, prop] of receiver._properties.entries()) {
+          if (prop._flags & FLAG_DELETED_PROPERTY) {
             deletedKeys.push(key);
-          } else if (child._flags & FLAG_DYNAMIC_PROPERTY) {
+          } else if (prop._flags & FLAG_DYNAMIC_PROPERTY) {
             dynamicKeys.push(key);
           }
         }
@@ -197,39 +197,39 @@ function createDraft<T>(
   });
 }
 
-function deleteProperty<T>(reactive: Reactive<T>): void {
+function deleteProperty<T>(prop: Reactive<T>): void {
   for (
-    let parent = reactive._parent, level = 1;
-    parent !== null;
-    parent = parent._parent
+    let owner = prop._owner, level = 1;
+    owner !== null;
+    owner = owner._owner
   ) {
-    if (parent._signal instanceof WritableSignal) {
-      parent._signal.invalidate({
+    if (owner._signal instanceof WritableSignal) {
+      owner._signal.invalidate({
         type: 'delete',
-        source: reactive._signal,
+        source: prop._signal,
         get path() {
-          return reactive._path.slice(-level);
+          return prop._path.slice(-level);
         },
       });
     }
-    parent._flags |= FLAG_DIRTY_VALUE;
+    owner._flags |= FLAG_DIRTY_VALUE;
     level++;
   }
-  reactive._flags |= FLAG_DELETED_PROPERTY;
+  prop._flags |= FLAG_DELETED_PROPERTY;
 }
 
-function getChild<T>(
-  reactive: Reactive<T>,
+function getProperty<T>(
+  receiver: Reactive<T>,
   key: NormalizedKey,
   target: T & object,
 ): Reactive<unknown> {
-  let child = reactive._children?.get(key);
-  if (child === undefined) {
-    child = resolveChild(reactive, target, key);
-    reactive._children ??= new Map();
-    reactive._children.set(key, child);
+  let prop = receiver._properties?.get(key);
+  if (prop === undefined) {
+    prop = resolveProperty(receiver, target, key);
+    receiver._properties ??= new Map();
+    receiver._properties.set(key, prop);
   }
-  return child;
+  return prop;
 }
 
 function getPropertyDescriptor(
@@ -247,7 +247,7 @@ function getPropertyDescriptor(
   return descriptor;
 }
 
-function getPropertyDescriptorFlags(descriptor: PropertyDescriptor): number {
+function getPropertyFlags(descriptor: PropertyDescriptor): number {
   let flags = NO_FLAGS;
   if (descriptor.writable ?? true) {
     flags |= FLAG_WRITABLE_PROPERTY;
@@ -265,31 +265,31 @@ function normalizeKey(key: PropertyKey): NormalizedKey {
   return typeof key === 'number' ? key.toString() : key;
 }
 
-function resolveChild<T>(
-  parent: Reactive<T>,
+function resolveProperty<T>(
+  receiver: Reactive<T>,
   target: T & object,
   key: PropertyKey,
 ): Reactive<unknown> {
+  const path = receiver._path.concat(key);
   const descriptor = getPropertyDescriptor(target, key);
-  const path = parent._path.concat(key);
 
   if (descriptor === undefined) {
     return new Reactive(
       new Atom<unknown>(undefined),
+      receiver as Reactive<unknown>,
       path,
-      parent as Reactive<unknown>,
       FLAG_WRITABLE_PROPERTY | FLAG_DYNAMIC_PROPERTY,
     );
   }
 
   const { get, set, value } = descriptor;
-  const flags = getPropertyDescriptorFlags(descriptor);
+  const flags = getPropertyFlags(descriptor);
 
   if (get !== undefined && set !== undefined) {
     return new Reactive(
       new Accessor(
         () => {
-          const { proxy, revoke } = createDraft(parent, target);
+          const { proxy, revoke } = createDraft(receiver, target);
           try {
             return get.call(proxy);
           } finally {
@@ -297,7 +297,7 @@ function resolveChild<T>(
           }
         },
         (newValue) => {
-          const { proxy, revoke } = createDraft(parent, target);
+          const { proxy, revoke } = createDraft(receiver, target);
           try {
             set.call(proxy, newValue);
           } finally {
@@ -305,16 +305,16 @@ function resolveChild<T>(
           }
         },
       ),
+      receiver as Reactive<unknown>,
       path,
-      parent as Reactive<unknown>,
       flags,
     );
   }
 
   if (get !== undefined) {
-    const { proxy, revoke } = createDraft(parent, target, (child) => {
-      dependencies.push(child);
-      return commitValue(child);
+    const { proxy, revoke } = createDraft(receiver, target, (prop) => {
+      dependencies.push(prop);
+      return commitValue(prop);
     });
     const dependencies: Signal<any>[] = [];
     try {
@@ -326,7 +326,7 @@ function resolveChild<T>(
       return new Reactive(
         new Computed(
           () => {
-            const { proxy, revoke } = createDraft(parent, target);
+            const { proxy, revoke } = createDraft(receiver, target);
             try {
               return get.call(proxy);
             } finally {
@@ -337,8 +337,8 @@ function resolveChild<T>(
           initialResult,
           initialVersion,
         ),
+        receiver as Reactive<unknown>,
         path,
-        parent as Reactive<unknown>,
         flags,
       );
     } finally {
@@ -348,42 +348,42 @@ function resolveChild<T>(
 
   return new Reactive(
     new Atom(value),
+    receiver as Reactive<unknown>,
     path,
-    parent as Reactive<unknown>,
     flags,
   );
 }
 
-function setPendingValue<T>(reactive: Reactive<T>, newValue: T): void {
-  const oldValue = reactive._signal.value;
-  (reactive._signal as WritableSignal<T>).value = newValue;
+function setPendingValue<T>(receiver: Reactive<T>, newValue: T): void {
+  const oldValue = receiver._signal.value;
+  (receiver._signal as WritableSignal<T>).value = newValue;
   for (
-    let parent = reactive._parent, level = 1;
-    parent !== null;
-    parent = parent._parent
+    let owner = receiver._owner, level = 1;
+    owner !== null;
+    owner = owner._owner
   ) {
-    if (parent._signal instanceof WritableSignal) {
-      parent._signal.invalidate({
+    if (owner._signal instanceof WritableSignal) {
+      owner._signal.invalidate({
         type: 'set',
-        source: reactive._signal,
+        source: receiver._signal,
         get path() {
-          return reactive._path.slice(-level);
+          return receiver._path.slice(-level);
         },
         oldValue,
         newValue,
       });
     }
-    parent._flags |= FLAG_DIRTY_VALUE;
+    owner._flags |= FLAG_DIRTY_VALUE;
     level++;
   }
-  if (reactive._children !== null) {
-    for (const child of reactive._children.values()) {
-      child._parent = null;
+  if (receiver._properties !== null) {
+    for (const prop of receiver._properties.values()) {
+      prop._owner = null;
     }
-    reactive._children.clear();
+    receiver._properties.clear();
   }
-  reactive._flags |= FLAG_PENDING_VALUE;
-  reactive._flags &= ~FLAG_NEEDS_COMMIT;
+  receiver._flags |= FLAG_PENDING_VALUE;
+  receiver._flags &= ~FLAG_NEEDS_COMMIT;
 }
 
 function shallowClone<T>(target: T): T {
