@@ -16,22 +16,11 @@ const FLAG_WRITABLE_PROPERTY /* */ = 0b00100;
 const FLAG_DYNAMIC_PROPERTY /*  */ = 0b01000;
 const FLAG_DELETED_PROPERTY /*  */ = 0b10000;
 
-type Get<T, K extends keyof T> =
-  IsIndexAccess<T, K> extends true ? T[K] | undefined : T[K];
-
-type IsIndexAccess<T, K extends PropertyKey> = string extends keyof T
-  ? K extends string
-    ? true
-    : false
-  : number extends keyof T
-    ? K extends number
-      ? true
-      : false
-    : symbol extends keyof T
-      ? K extends symbol
-        ? true
-        : false
-      : false;
+type Get<T, K extends keyof T, P = PropertyKey> = P extends keyof T
+  ? K extends P
+    ? T[K] | undefined
+    : T[K]
+  : T[K];
 
 type NonPrimitive<T> = Exclude<T, Primitive>;
 
@@ -82,8 +71,8 @@ export class Reactive<T> extends Signal<T> {
 
   get<K extends keyof NonPrimitive<T>>(
     key: K,
-  ): T extends Primitive ? undefined : Reactive<Get<NonPrimitive<T>, K>>;
-  get(key: PropertyKey): T extends Primitive ? undefined : Reactive<unknown>;
+  ): T extends object ? Reactive<Get<NonPrimitive<T>, K>> : undefined;
+  get(key: PropertyKey): T extends object ? Reactive<unknown> : undefined;
   get(key: PropertyKey): Reactive<any> | undefined {
     const target = this._signal.value;
     return isNonPrimitive(target)
