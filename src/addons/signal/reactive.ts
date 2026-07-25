@@ -8,12 +8,13 @@ import {
   WritableSignal,
 } from './signal.js';
 
-const NO_FLAGS /*              */ = 0;
-const FLAG_NEEDS_COMMIT /*     */ = 0b0001;
-const FLAG_PENDING_VALUE /*    */ = 0b0010;
-const FLAG_DIRTY_VALUE /*      */ = 0b0011;
-const FLAG_DYNAMIC_PROPERTY /* */ = 0b0100;
-const FLAG_DELETED_PROPERTY /* */ = 0b1000;
+const NO_FLAGS /*               */ = 0;
+const FLAG_NEEDS_COMMIT /*      */ = 0b00001;
+const FLAG_PENDING_VALUE /*     */ = 0b00010;
+const FLAG_DIRTY_VALUE /*       */ = 0b00011;
+const FLAG_WRITABLE_PROPERTY /* */ = 0b00100;
+const FLAG_DYNAMIC_PROPERTY /*  */ = 0b01000;
+const FLAG_DELETED_PROPERTY /*  */ = 0b10000;
 
 type Get<T, K extends keyof T> =
   IsIndexAccess<T, K> extends true ? T[K] | undefined : T[K];
@@ -46,14 +47,14 @@ export class Reactive<T> extends Signal<T> {
   _children: Map<NormalizedKey, Reactive<unknown>> | null = null;
 
   static from<T>(value: T): Reactive<T> {
-    return new Reactive(new Atom(value), [], null);
+    return new Reactive(new Atom(value), [], null, NO_FLAGS);
   }
 
   constructor(
     signal: Signal<T>,
     path: PropertyKey[],
     parent: Reactive<unknown> | null,
-    flags: number = NO_FLAGS,
+    flags: number,
   ) {
     super();
     this._signal = signal;
@@ -158,7 +159,7 @@ function createDraft<T>(
     set(target, key, value, _receiver) {
       const child = getChild(parent, key, target);
       child.value = value;
-      return true;
+      return !!(child._flags & FLAG_WRITABLE_PROPERTY);
     },
     has(target, key) {
       const child = parent._children?.get(key);
@@ -241,6 +242,14 @@ function getPropertyDescriptor(
   return descriptor;
 }
 
+function getPropertyDescriptorFlags(descriptor: PropertyDescriptor): number {
+  let flags = NO_FLAGS;
+  if (descriptor.writable ?? true) {
+    flags |= FLAG_WRITABLE_PROPERTY;
+  }
+  return flags;
+}
+
 function isNonPrimitive(value: unknown): value is object {
   return (
     value !== null && (typeof value === 'object' || typeof value === 'function')
@@ -264,11 +273,12 @@ function resolveChild<T>(
       new Atom<unknown>(undefined),
       path,
       parent as Reactive<unknown>,
-      FLAG_DYNAMIC_PROPERTY,
+      FLAG_WRITABLE_PROPERTY | FLAG_DYNAMIC_PROPERTY,
     );
   }
 
   const { get, set, value } = descriptor;
+  const flags = getPropertyDescriptorFlags(descriptor);
 
   if (get !== undefined && set !== undefined) {
     return new Reactive(
@@ -292,6 +302,7 @@ function resolveChild<T>(
       ),
       path,
       parent as Reactive<unknown>,
+      flags,
     );
   }
 
@@ -323,13 +334,19 @@ function resolveChild<T>(
         ),
         path,
         parent as Reactive<unknown>,
+        flags,
       );
     } finally {
       revoke();
     }
   }
 
-  return new Reactive(new Atom(value), path, parent as Reactive<unknown>);
+  return new Reactive(
+    new Atom(value),
+    path,
+    parent as Reactive<unknown>,
+    flags,
+  );
 }
 
 function setPendingValue<T>(reactive: Reactive<T>, newValue: T): void {

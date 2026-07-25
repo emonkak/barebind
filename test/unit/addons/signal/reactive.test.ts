@@ -445,18 +445,28 @@ describe('Reactive', () => {
     });
 
     it('throws when trying to set a read-only property inside scope', () => {
-      class State {
-        count = 0;
-        get doubled() {
+      const state$ = Reactive.from({
+        count: 0,
+        get doubledCount() {
           return this.count * 2;
-        }
-      }
-      const state$ = Reactive.from(new State());
+        },
+      });
+      expect(() =>
+        state$.scope((draft) => {
+          (draft as any).doubledCount = 10;
+        }),
+      ).toThrow(
+        'Cannot set property value of #<Computed> which has only a getter',
+      );
+    });
+
+    it('throws when trying to mutate a frozen object', () => {
+      const state$ = Reactive.from(Object.freeze({ count: 0 }));
       expect(() =>
         state$.scope((draft: any) => {
-          draft.doubled = 10;
+          draft.count++;
         }),
-      ).toThrow();
+      ).toThrow("'set' on proxy: trap returned falsish for property 'count'");
     });
   });
 
