@@ -499,18 +499,58 @@ describe('Reactive', () => {
     });
 
     it('notifies on nested property change', () => {
-      const state$ = Reactive.from({ items: [{ id: 1 }] });
+      const state$ = Reactive.from({ nested: { value: 1 } });
       const subscriber = vi.fn();
       state$.subscribe(subscriber);
-      state$.get('items').get(0).get('id')!.value = 2;
+      state$.get('nested').subscribe(subscriber);
+      state$.get('nested').get('value').subscribe(subscriber);
+      state$.get('nested').get('value').value = 2;
 
-      expect(subscriber).toHaveBeenCalledOnce();
-      expect(subscriber).toHaveBeenCalledWith({
+      expect(subscriber).toHaveBeenCalledTimes(3);
+      expect(subscriber).toHaveBeenNthCalledWith(1, {
         type: 'set',
         source: expect.any(Signal),
-        path: ['items', '0', 'id'],
+        path: [],
         oldValue: 1,
         newValue: 2,
+      });
+      expect(subscriber).toHaveBeenNthCalledWith(2, {
+        type: 'set',
+        source: expect.any(Signal),
+        path: ['value'],
+        oldValue: 1,
+        newValue: 2,
+      });
+      expect(subscriber).toHaveBeenNthCalledWith(3, {
+        type: 'set',
+        source: expect.any(Signal),
+        path: ['nested', 'value'],
+        oldValue: 1,
+        newValue: 2,
+      });
+    });
+
+    it('notifies when nested property is deleted', () => {
+      const state$ = Reactive.from({
+        nested: { a: 1, b: 2 } as Record<string, number>,
+      });
+      const subscriber = vi.fn();
+      state$.subscribe(subscriber);
+      state$.get('nested').subscribe(subscriber);
+      state$.get('nested').scope((nested) => {
+        delete nested['a'];
+      });
+
+      expect(subscriber).toHaveBeenCalledTimes(2);
+      expect(subscriber).toHaveBeenNthCalledWith(1, {
+        type: 'delete',
+        source: expect.any(Signal),
+        path: ['a'],
+      });
+      expect(subscriber).toHaveBeenNthCalledWith(2, {
+        type: 'delete',
+        source: expect.any(Signal),
+        path: ['nested', 'a'],
       });
     });
 

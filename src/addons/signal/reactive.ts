@@ -45,7 +45,7 @@ export class Reactive<T> extends Signal<T> {
   /** @internal */
   _owner: Reactive<unknown> | null;
   /** @internal */
-  _path: PropertyKey[];
+  _path: NormalizedKey[];
   /** @internal */
   _flags: number;
   /** @internal */
@@ -58,7 +58,7 @@ export class Reactive<T> extends Signal<T> {
   constructor(
     signal: Signal<T>,
     owner: Reactive<unknown> | null,
-    path: PropertyKey[],
+    path: NormalizedKey[],
     flags: number,
   ) {
     super();
@@ -207,11 +207,12 @@ function deleteProperty<T>(prop: Reactive<T>): void {
     owner = owner._owner
   ) {
     if (owner._signal instanceof WritableSignal) {
+      const capturedLevel = level;
       owner._signal.invalidate({
         type: 'delete',
         source: prop._signal,
         get path() {
-          return prop._path.slice(-level);
+          return prop._path.slice(-capturedLevel);
         },
       });
     }
@@ -271,7 +272,7 @@ function normalizeKey(key: PropertyKey): NormalizedKey {
 function resolveProperty<T>(
   receiver: Reactive<T>,
   target: T & object,
-  key: PropertyKey,
+  key: NormalizedKey,
 ): Reactive<unknown> {
   const path = receiver._path.concat(key);
   const descriptor = getPropertyDescriptor(target, key);
@@ -366,11 +367,12 @@ function setPendingValue<T>(receiver: Reactive<T>, newValue: T): void {
     owner = owner._owner
   ) {
     if (owner._signal instanceof WritableSignal) {
+      const capturedLevel = level;
       owner._signal.invalidate({
         type: 'set',
         source: receiver._signal,
         get path() {
-          return receiver._path.slice(-level);
+          return receiver._path.slice(-capturedLevel);
         },
         oldValue,
         newValue,
