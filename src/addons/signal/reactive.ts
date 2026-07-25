@@ -63,8 +63,8 @@ export class Reactive<T> extends Signal<T> {
   ) {
     super();
     this._signal = signal;
-    this._path = path;
     this._owner = owner;
+    this._path = path;
     this._flags = flags;
   }
 
