@@ -118,9 +118,6 @@ function commitValue<T>(reactive: Reactive<T>): T {
     }
     (reactive._signal as WritableSignal<T>).write(value);
     reactive._flags &= ~FLAG_NEEDS_COMMIT;
-    DEBUG: {
-      Object.freeze(value);
-    }
   }
   return value;
 }
