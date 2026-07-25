@@ -95,71 +95,78 @@ export class AppStore {
   });
 
   async fetchItem(id: number): Promise<void> {
-    return this.itemState$.scope(async (itemState) => {
-      itemState.isLoading = true;
+    const isLoading$ = this.itemState$.get('isLoading');
+    const item$ = this.itemState$.get('item');
+    const error$ = this.itemState$.get('error');
 
-      try {
-        const url = STORY_API_ORIGIN + '/item/' + id;
-        const response = await fetch(url);
-        const data = response.ok
-          ? await response.json()
-          : { error: response.statusText };
+    isLoading$.value = true;
 
-        if (typeof data?.error === 'string') {
-          itemState.item = null;
-          itemState.error = data;
-        } else {
-          itemState.item = data;
-          itemState.error = null;
-        }
-      } finally {
-        itemState.isLoading = false;
+    try {
+      const url = STORY_API_ORIGIN + '/item/' + id;
+      const response = await fetch(url);
+      const data = response.ok
+        ? await response.json()
+        : { error: response.statusText };
+
+      if (typeof data?.error === 'string') {
+        item$.value = null;
+        error$.value = data;
+      } else {
+        item$.value = data;
+        error$.value = null;
       }
-    });
+    } finally {
+      isLoading$.value = false;
+    }
   }
 
   async fetchUser(id: string): Promise<void> {
-    return this.userState$.scope(async (userState) => {
-      userState.isLoading = true;
+    const isLoading$ = this.userState$.get('isLoading');
+    const user$ = this.userState$.get('user');
+    const error$ = this.userState$.get('error');
 
-      try {
-        const url = USER_API_ORIGIN + '/v0/user/' + id + '.json';
-        const response = await fetch(url);
-        const data = response.ok ? await response.json() : null;
+    isLoading$.value = true;
 
-        if (data === null) {
-          userState.user = null;
-          userState.error = { error: `User ${id} not found.` };
-        } else {
-          userState.user = data;
-          userState.error = null;
-        }
-      } finally {
-        userState.isLoading = false;
+    try {
+      const url = USER_API_ORIGIN + '/v0/user/' + id + '.json';
+      const response = await fetch(url);
+      const data = response.ok ? await response.json() : null;
+
+      if (data === null) {
+        user$.value = null;
+        error$.value = { error: `User ${id} not found.` };
+      } else {
+        user$.value = data;
+        error$.value = null;
       }
-    });
+    } finally {
+      isLoading$.value = false;
+    }
   }
 
   async fetchStories(type: StoryType, page: number): Promise<void> {
-    return this.storyState$.scope(async (storyState) => {
-      storyState.isLoading = true;
+    const isLoading$ = this.storyState$.get('isLoading');
+    const stories$ = this.storyState$.get('stories');
+    const type$ = this.storyState$.get('type');
+    const page$ = this.storyState$.get('page');
 
-      try {
-        const url =
-          STORY_API_ORIGIN +
-          '/' +
-          type +
-          '?' +
-          new URLSearchParams({ page: page.toString() });
-        const response = await fetch(url);
-        if (response.ok) {
-          storyState.stories = await response.json();
-          storyState.type = type;
-          storyState.page = page;
-        }
-      } finally {
-        storyState.isLoading = false;
+    isLoading$.value = true;
+
+    try {
+      const url =
+        STORY_API_ORIGIN +
+        '/' +
+        type +
+        '?' +
+        new URLSearchParams({ page: page.toString() });
+      const response = await fetch(url);
+      if (response.ok) {
+        stories$.value = await response.json();
+        type$.value = type;
+        page$.value = page;
       }
-    });
+    } finally {
+      isLoading$.value = false;
+    }
   }
 }

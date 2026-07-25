@@ -2,11 +2,7 @@ export {
   LocalAtom,
   LocalComputed,
 } from './signal/hooks.js';
-export {
-  Reactive,
-  type ReactiveOptions,
-  unwrap,
-} from './signal/reactive.js';
+export { Reactive } from './signal/reactive.js';
 export {
   Accessor,
   Atom,

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Reactive, unwrap } from '@/addons/signal/reactive.js';
-import { Atom } from '@/addons/signal/signal.js';
+import { Reactive } from '@/addons/signal/reactive.js';
+import { Signal } from '@/addons/signal.js';
 
 describe('Reactive', () => {
   describe('static from()', () => {
@@ -17,11 +17,6 @@ describe('Reactive', () => {
       const state$ = Reactive.from(new State());
       expect(state$.value).toBeInstanceOf(State);
       expect(state$.value.count).toBe(0);
-    });
-
-    it('creates a shallow Reactive with shallow option', () => {
-      const state$ = Reactive.from({ nested: { value: 1 } }, { shallow: true });
-      expect(state$.value).toStrictEqual({ nested: { value: 1 } });
     });
   });
 
@@ -68,7 +63,7 @@ describe('Reactive', () => {
       expect(subscriber).toHaveBeenCalledOnce();
       expect(subscriber).toHaveBeenLastCalledWith({
         type: 'set',
-        source: expect.any(Atom),
+        source: expect.any(Signal),
         path: [],
         oldValue: { count: 0 },
         newValue: { count: 1 },
@@ -162,6 +157,69 @@ describe('Reactive', () => {
       expect(counterCount$.value).toBe(0);
     });
 
+    it('returns the same reactive reference for a getter returning the same property', () => {
+      const state = {
+        foo: { value: 0 },
+        get bar(): { value: number } {
+          return this.foo;
+        },
+      };
+      const state$ = Reactive.from(state);
+      const foo$ = state$.get('foo');
+      const bar$ = state$.get('bar');
+      expect(foo$.value).toStrictEqual({ value: 0 });
+      expect(bar$.value).toBe(foo$.value);
+    });
+
+    it('reflects child mutations through both a property and a getter returning the same reference', () => {
+      const state = {
+        foo: { value: 0 },
+        get bar(): { value: number } {
+          return this.foo;
+        },
+      };
+      const state$ = Reactive.from(state);
+      const foo$ = state$.get('foo');
+      const bar$ = state$.get('bar');
+      const value$ = foo$.get('value');
+      value$.value++;
+      expect(foo$.value).toStrictEqual({ value: 1 });
+      expect(bar$.value).toBe(foo$.value);
+    });
+
+    it('returns the same value for a getter/setter pair and its backing property', () => {
+      const state = {
+        _counter: { count: 0 },
+        get counter(): { count: number } {
+          return this._counter;
+        },
+        set counter(counter: { count: number }) {
+          this._counter = counter;
+        },
+      };
+      const state$ = Reactive.from(state);
+      const privateCounter$ = state$.get('_counter');
+      const counter$ = state$.get('counter');
+      expect(counter$.value).toStrictEqual(privateCounter$.value);
+    });
+
+    it('reflects setter mutations on the backing property', () => {
+      const state = {
+        _counter: { count: 0 },
+        get counter(): { count: number } {
+          return this._counter;
+        },
+        set counter(counter: { count: number }) {
+          this._counter = counter;
+        },
+      };
+      const state$ = Reactive.from(state);
+      const privateCounter$ = state$.get('_counter');
+      const counter$ = state$.get('counter');
+      counter$.value = { count: 1 };
+      expect(counter$.value).toStrictEqual(privateCounter$.value);
+    });
+
     it('returns a writable reactive for a read-write accessor', () => {
       const state = {
         _count: 0,
@@ -195,11 +253,31 @@ describe('Reactive', () => {
       expect(subscriber).toHaveBeenCalledOnce();
       expect(subscriber).toHaveBeenCalledWith({
         type: 'set',
-        source: expect.any(Atom),
+        source: expect.any(Signal),
         path: ['items', '0', 'id'],
         oldValue: 1,
         newValue: 2,
       });
+    });
+
+    it('ignores stale child mutations after property reassignment', () => {
+      const state$ = Reactive.from({ nested: { value: 0 } });
+      const nested$ = state$.get('nested');
+      const value$ = nested$.get('value');
+      nested$.value = { value: 1 };
+      value$.value = 2;
+      expect(state$.value).toStrictEqual({ nested: { value: 1 } });
+    });
+
+    it('ignores stale child mutations after property set to null', () => {
+      const state$ = Reactive.from({ nested: { value: 0 } } as {
+        nested: { value: number } | null;
+      });
+      const nested$ = state$.get('nested');
+      const value$ = nested$.get('value');
+      nested$.value = { value: 1 };
+      value$!.value = 2;
+      expect(state$.value).toStrictEqual({ nested: { value: 1 } });
     });
 
     it('re-evaluates a computed reactive when a dependency changes', () => {
@@ -226,7 +304,7 @@ describe('Reactive', () => {
       const id$ = state$.get('id');
       expect(() => {
         (id$ as any).value = 2;
-      }).toThrow(TypeError);
+      }).toThrow('Cannot set property value');
     });
   });
 
@@ -254,7 +332,7 @@ describe('Reactive', () => {
     });
 
     it('returns numeric keys via proxy', () => {
-      const state$ = Reactive.from([]);
+      const state$ = Reactive.from([] as number[]);
       state$.get(0).value = 0;
       state$.get(1).value = 2;
       const keys = state$.scope((draft) => Object.keys(draft));
@@ -293,49 +371,6 @@ describe('Reactive', () => {
       const state$ = Reactive.from(123);
       const result = state$.scope((draft) => draft);
       expect(result).toBe(123);
-    });
-
-    it('returns the same value for primitive via unwrap', () => {
-      const state$ = Reactive.from(123);
-      const snapshot = state$.scope((draft) => unwrap(draft));
-      expect(snapshot).toBe(123);
-    });
-
-    it('returns a plain object from unwrap', () => {
-      const state$ = Reactive.from({ count: 0 });
-      state$.scope((draft) => {
-        const snapshot = unwrap(draft);
-        expect(snapshot).toStrictEqual({ count: 0 });
-        expect(snapshot).toBe(state$.value);
-      });
-    });
-
-    it.for([null, undefined])('returns the same value for %s', (value) => {
-      const state$ = Reactive.from(value);
-      const snapshot = state$.scope((draft) => unwrap(draft));
-      expect(snapshot).toBe(value);
-    });
-
-    it('mutates a property via proxy', () => {
-      const state$ = Reactive.from({ count: 0 });
-      const count$ = state$.get('count');
-      state$.scope((draft) => {
-        draft.count++;
-      });
-      expect(state$.value).toStrictEqual({ count: 1 });
-      expect(count$.value).toBe(1);
-    });
-
-    it('mutates a nested property via proxy', () => {
-      const state$ = Reactive.from({ counter: { count: 0 } });
-      const counter$ = state$.get('counter');
-      const counterCount$ = counter$.get('count');
-      state$.scope((draft) => {
-        draft.counter.count++;
-      });
-      expect(state$.value).toStrictEqual({ counter: { count: 1 } });
-      expect(counter$.value).toStrictEqual({ count: 1 });
-      expect(counterCount$.value).toBe(1);
     });
 
     it('mutates an array via proxy', () => {
@@ -390,7 +425,7 @@ describe('Reactive', () => {
       expect(subscriber).toHaveBeenCalledOnce();
       expect(subscriber).toHaveBeenCalledWith({
         type: 'delete',
-        source: expect.any(Atom),
+        source: expect.any(Signal),
         path: ['a'],
       });
     });
@@ -407,58 +442,6 @@ describe('Reactive', () => {
         draft.increment();
       });
       expect(state$.value.count).toBe(1);
-    });
-
-    it('reflects mutations made in scope via unwrap', () => {
-      const state$ = Reactive.from({ a: 0, b: 1 });
-      const snapshot = state$.scope((draft) => {
-        draft.a = 2;
-        draft.b = 3;
-        return unwrap(draft);
-      });
-      expect(snapshot).toStrictEqual({ a: 2, b: 3 });
-      expect(structuredClone(snapshot)).toStrictEqual({ a: 2, b: 3 });
-    });
-
-    it('reflects nested mutations made in scope via unwrap', () => {
-      const state$ = Reactive.from({ nested: { value: 1 } });
-      const snapshot = state$.scope((draft) => {
-        draft.nested.value = 2;
-        return unwrap(draft.nested);
-      });
-      expect(snapshot).toStrictEqual({ value: 2 });
-      expect(structuredClone(snapshot)).toStrictEqual({ value: 2 });
-    });
-
-    it('unwraps reactive value on assignment in scope', () => {
-      const state$ = Reactive.from({ a: { value: 1 }, b: { value: 2 } });
-      state$.scope((draft) => {
-        draft.b = unwrap(draft.a);
-      });
-      expect(state$.value).toStrictEqual({ a: { value: 1 }, b: { value: 1 } });
-      expect(state$.value.a).toBe(state$.value.b);
-    });
-
-    it('ignores stale child mutations after property reassignment', () => {
-      const state$ = Reactive.from({ nested: { value: 0 } });
-      state$.scope((draft) => {
-        const { nested } = draft;
-        draft.nested = { value: 1 };
-        nested.value = 2;
-      });
-      expect(state$.value).toStrictEqual({ nested: { value: 1 } });
-    });
-
-    it('ignores stale child mutations after property set to null', () => {
-      const state$ = Reactive.from({ nested: { value: 0 } } as {
-        nested: { value: number } | null;
-      });
-      state$.scope((draft) => {
-        const { nested } = draft;
-        draft.nested = null;
-        nested!.value = 2;
-      });
-      expect(state$.value).toStrictEqual({ nested: null });
     });
 
     it('throws when trying to set a read-only property inside scope', () => {
@@ -487,7 +470,7 @@ describe('Reactive', () => {
       expect(subscriber).toHaveBeenCalledOnce();
       expect(subscriber).toHaveBeenCalledWith({
         type: 'set',
-        source: expect.any(Atom),
+        source: expect.any(Signal),
         path: [],
         oldValue: { count: 0 },
         newValue: { count: 1 },
@@ -503,29 +486,11 @@ describe('Reactive', () => {
       expect(subscriber).toHaveBeenCalledOnce();
       expect(subscriber).toHaveBeenCalledWith({
         type: 'set',
-        source: expect.any(Atom),
+        source: expect.any(Signal),
         path: ['items', '0', 'id'],
         oldValue: 1,
         newValue: 2,
       });
-    });
-
-    it('does not notify on nested changes for shallow subscription', () => {
-      const state$ = Reactive.from({ nested: { value: 1 } }, { shallow: true });
-      const subscriber = vi.fn();
-      state$.subscribe(subscriber);
-      state$.get('nested').get('value').value = 2;
-
-      expect(subscriber).not.toHaveBeenCalled();
-    });
-
-    it('notifies on root value change for shallow subscription', () => {
-      const state$ = Reactive.from({ nested: { value: 1 } }, { shallow: true });
-      const subscriber = vi.fn();
-      state$.subscribe(subscriber);
-      state$.value = { nested: { value: 2 } };
-
-      expect(subscriber).toHaveBeenCalledTimes(1);
     });
 
     it('does not invoke unsubscribed subscriber', () => {

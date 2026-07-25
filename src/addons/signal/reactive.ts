@@ -1,305 +1,253 @@
-import { isObject } from '../../compare.js';
 import {
+  Accessor,
   Atom,
   Computed,
   Signal,
   type Subscriber,
   type Unsubscribe,
+  WritableSignal,
 } from './signal.js';
 
-const UNWRAP_TAG = Symbol();
-
-const NO_FLAGS /*                 */ = 0;
-const FLAG_NEEDS_COMMIT /*        */ = 0b00001;
-const FLAG_PENDING_VALUE /*       */ = 0b00010;
-const FLAG_DIRTY_VALUE /*         */ = 0b00011;
-const FLAG_ENUMERABLE_PROPERTY /* */ = 0b00100;
-const FLAG_DYNAMIC_PROPERTY /*    */ = 0b01000;
-const FLAG_DELETED_PROPERTY /*    */ = 0b10000;
-
-export interface ReactiveOptions {
-  shallow?: boolean;
-}
-
-type AllKeys<T> = T extends any ? keyof T : never;
-
-type ExplicitKeys<T> = {
-  [K in AllKeys<T>]: IsPropertyKey<K> extends true ? never : K;
-}[AllKeys<T>];
-
-type FunctionKeys<T> = {
-  [K in AllKeys<T>]: T[K] extends Function ? K : never;
-}[AllKeys<T>];
+const NO_FLAGS /*              */ = 0;
+const FLAG_NEEDS_COMMIT /*     */ = 0b0001;
+const FLAG_PENDING_VALUE /*    */ = 0b0010;
+const FLAG_DIRTY_VALUE /*      */ = 0b0011;
+const FLAG_DYNAMIC_PROPERTY /* */ = 0b0100;
+const FLAG_DELETED_PROPERTY /* */ = 0b1000;
 
 type Get<T, K extends keyof T> =
-  K extends ExplicitKeys<T> ? T[K] : T[K] | undefined;
+  IsIndexAccess<T, K> extends true ? T[K] | undefined : T[K];
 
-type IsPropertyKey<K> = string extends K
-  ? true
-  : number extends K
+type IsIndexAccess<T, K extends PropertyKey> = string extends keyof T
+  ? K extends string
     ? true
-    : symbol extends K
+    : false
+  : number extends keyof T
+    ? K extends number
       ? true
+      : false
+    : symbol extends keyof T
+      ? K extends symbol
+        ? true
+        : false
       : false;
 
-type IsWritable<T, K extends keyof T> = StrictEqual<
-  { -readonly [P in K]-?: T[P] },
-  Pick<T, K>
->;
+type NonPrimitive<T> = Exclude<T, Primitive>;
 
 type NormalizedKey = string | symbol;
 
-interface ReactiveNode<T> {
-  signal: Signal<T>;
-  children: Map<NormalizedKey, ReactiveNode<unknown>> | null;
-  flags: number;
-  version: number;
-}
-
-type ReactiveKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
-
-type ReactiveProperty<T, K extends keyof T> = T extends object
-  ? IsWritable<T, K> extends true
-    ? Reactive<Get<T, K>>
-    : Readonly<Reactive<Get<T, K>>>
-  : undefined;
-
-type StrictEqual<TLhs, TRhs> =
-  (<T>() => T extends TLhs ? 1 : 2) extends <T>() => T extends TRhs ? 1 : 2
-    ? true
-    : false;
+type Primitive = bigint | string | number | symbol | null | undefined;
 
 export class Reactive<T> extends Signal<T> {
-  private readonly _node: ReactiveNode<T>;
-  private readonly _shallow: boolean;
+  _signal: Signal<T>;
+  _path: PropertyKey[];
+  _parent: Reactive<unknown> | null;
+  _flags: number;
+  _children: Map<NormalizedKey, Reactive<unknown>> | null = null;
 
-  static from<T>(value: T, options?: ReactiveOptions): Reactive<T> {
-    return new Reactive(createNode(new Atom(value)), options);
+  static from<T>(value: T): Reactive<T> {
+    return new Reactive(new Atom(value), [], null);
   }
 
-  private constructor(node: ReactiveNode<T>, options: ReactiveOptions = {}) {
+  constructor(
+    signal: Signal<T>,
+    path: PropertyKey[],
+    parent: Reactive<unknown> | null,
+    flags: number = NO_FLAGS,
+  ) {
     super();
-    this._node = node;
-    this._shallow = options.shallow ?? false;
-  }
-
-  get value(): T {
-    return commitValue(this._node);
-  }
-
-  set value(newValue: T) {
-    setPendingValue(this._node, newValue);
+    this._signal = signal;
+    this._path = path;
+    this._parent = parent;
+    this._flags = flags;
   }
 
   get version(): number {
-    return this._node.version;
+    return this._signal.version;
   }
 
-  get<K extends ReactiveKeys<T>>(
+  get value(): T {
+    return commitValue(this);
+  }
+
+  set value(newValue: T) {
+    setPendingValue(this, newValue);
+  }
+
+  get<K extends keyof NonPrimitive<T>>(
     key: K,
-    options?: ReactiveOptions,
-  ): ReactiveProperty<T, K>;
-  get(
-    key: PropertyKey,
-    options?: ReactiveOptions,
-  ): T extends object ? Reactive<unknown> : undefined;
-  get(key: PropertyKey, options?: ReactiveOptions): Reactive<any> | undefined {
-    const { value, version } = this._node.signal;
-    if (!isObject(value)) {
-      return undefined;
-    }
-    const child = getChild(this._node, normalizeKey(key), value, version);
-    return new Reactive(child, options);
+  ): T extends Primitive ? undefined : Reactive<Get<NonPrimitive<T>, K>>;
+  get(key: PropertyKey): T extends Primitive ? undefined : Reactive<unknown>;
+  get(key: PropertyKey): Reactive<any> | undefined {
+    const target = this._signal.value;
+    return isNonPrimitive(target)
+      ? getChild(this, normalizeKey(key), target)
+      : undefined;
   }
 
   scope<TResult>(callback: (draft: T) => TResult): TResult {
-    const { value, version } = this._node.signal;
-    return callback(
-      isObject(value) ? createDraft(this._node, value, version) : value,
-    );
+    const target = this._signal.value;
+    if (isNonPrimitive(target)) {
+      const { proxy, revoke } = createDraft(this, target);
+      try {
+        return callback(proxy);
+      } finally {
+        revoke();
+      }
+    } else {
+      return callback(target);
+    }
   }
 
   subscribe(subscriber: Subscriber): Unsubscribe {
-    const { signal } = this._node;
-    if (this._shallow) {
-      return signal.subscribe((event) => {
-        if (event.source === signal) {
-          subscriber(event);
-        }
-      });
-    } else {
-      return signal.subscribe(subscriber);
-    }
+    return this._signal.subscribe(subscriber);
   }
 }
 
-export function unwrap<T>(draft: T): T {
-  return (draft as any)?.[UNWRAP_TAG] ?? draft;
-}
-
-function commitValue<T>(node: ReactiveNode<T>): T {
-  const { children, flags, signal } = node;
-  let pendingValue = signal.value;
-
-  if (flags & FLAG_NEEDS_COMMIT) {
-    if (isObject(pendingValue)) {
-      pendingValue = shallowClone(pendingValue);
-      for (const [key, child] of children!.entries()) {
-        if (child.flags & FLAG_DELETED_PROPERTY) {
-          delete (pendingValue as any)[key];
-        } else if (child.flags & FLAG_PENDING_VALUE) {
-          (pendingValue as any)[key] = commitValue(child);
-          child.flags &= ~FLAG_PENDING_VALUE;
-        }
+function commitValue<T>(reactive: Reactive<T>): T {
+  let value = reactive._signal.value;
+  if (reactive._flags & FLAG_NEEDS_COMMIT) {
+    value = shallowClone(value);
+    for (const [key, child] of reactive._children!.entries()) {
+      if (child._flags & FLAG_DELETED_PROPERTY) {
+        delete (value as any)[key];
+      } else if (child._flags & FLAG_PENDING_VALUE) {
+        (value as any)[key] = child.value;
+        child._flags &= ~FLAG_PENDING_VALUE;
       }
-      // SAFETY: A signal of the node with dirty flag is always Atom.
-      (signal as Atom<T>).write(pendingValue);
     }
-    node.flags &= ~FLAG_NEEDS_COMMIT;
+    (reactive._signal as WritableSignal<T>).write(value);
+    reactive._flags &= ~FLAG_NEEDS_COMMIT;
+    DEBUG: {
+      Object.freeze(value);
+    }
   }
-
-  return pendingValue;
+  return value;
 }
 
 function createDraft<T>(
-  parent: ReactiveNode<T>,
-  targetValue: T & object,
-  targetVersion: number,
-  finalizeValue: typeof commitValue = commitValue,
-  chainValue: typeof createDraft = createDraft,
-): T {
-  const { signal } = parent;
-  if (signal instanceof Atom) {
-    return new Proxy(targetValue, {
-      deleteProperty(_target, key) {
-        const child = getChild(parent, key, targetValue, targetVersion);
-        if (parent.signal.version === targetVersion) {
-          signal.invalidate({
-            type: 'delete',
-            source: child.signal,
-            path: [key],
-          });
-          parent.flags |= FLAG_DIRTY_VALUE;
-          child.flags |= FLAG_DELETED_PROPERTY;
-          parent.version++;
-        }
-        return true;
-      },
-      get(target, key, receiver) {
-        if (key === UNWRAP_TAG) {
-          return commitValue(parent);
-        } else {
-          const child = getChild(parent, key, targetValue, targetVersion);
-          if (child.flags & FLAG_DELETED_PROPERTY) {
-            return undefined;
-          }
-          if (
-            !(child.flags & (FLAG_PENDING_VALUE | FLAG_ENUMERABLE_PROPERTY))
-          ) {
-            return Reflect.get(target, key, receiver);
-          }
-          const { value, version } = child.signal;
-          if (!isObject(value)) {
-            return finalizeValue(child);
-          }
-          return chainValue(child, value, version);
-        }
-      },
-      getOwnPropertyDescriptor(target, key) {
-        const child = getChild(parent, key, targetValue, targetVersion);
-        if (child.flags & FLAG_DELETED_PROPERTY) {
-          return undefined;
-        }
-        if (child.flags & FLAG_DYNAMIC_PROPERTY) {
-          return {
-            value: child.signal.value,
-            writable: true,
-            enumerable: true,
-            configurable: true,
-          };
-        }
-        return Reflect.getOwnPropertyDescriptor(target, key);
-      },
-      set(_target, key, value, _receiver) {
-        const prop = getChild(parent, key, targetValue, targetVersion);
-        setPendingValue(prop, value);
-        return true;
-      },
-      has(target, key) {
-        const child = parent.children?.get(key);
-        return child !== undefined
-          ? !(child.flags & FLAG_DELETED_PROPERTY)
-          : Reflect.has(target, key);
-      },
-      ownKeys(target) {
-        const baseKeys = Reflect.ownKeys(target);
-        if (parent.children !== null) {
-          const dynamicKeys: NormalizedKey[] = [];
-          const deletedKeys: NormalizedKey[] = [];
-          for (const [key, child] of parent.children.entries()) {
-            if (child.flags & FLAG_DELETED_PROPERTY) {
-              deletedKeys.push(key);
-            } else if (child.flags & FLAG_DYNAMIC_PROPERTY) {
-              dynamicKeys.push(key);
-            }
-          }
-          if (dynamicKeys.length > 0 || deletedKeys.length > 0) {
-            return [
-              ...new Set(baseKeys)
-                .difference(new Set(deletedKeys))
-                .union(new Set(dynamicKeys)),
-            ];
+  parent: Reactive<T>,
+  target: T & object,
+  commit: typeof commitValue = commitValue,
+): { proxy: T; revoke: () => void } {
+  return Proxy.revocable(target, {
+    deleteProperty(target, key) {
+      const child = getChild(parent, key, target);
+      deleteProperty(child);
+      return true;
+    },
+    get(target, key, _receiver) {
+      const child = getChild(parent, key, target);
+      if (child._flags & FLAG_DELETED_PROPERTY) {
+        return undefined;
+      }
+      return commit(child);
+    },
+    getOwnPropertyDescriptor(target, key) {
+      const child = getChild(parent, key, target);
+      if (child._flags & FLAG_DELETED_PROPERTY) {
+        return undefined;
+      }
+      if (child._flags & FLAG_DYNAMIC_PROPERTY) {
+        return {
+          value: child._signal.value,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        };
+      }
+      return Reflect.getOwnPropertyDescriptor(target, key);
+    },
+    set(target, key, value, _receiver) {
+      const child = getChild(parent, key, target);
+      child.value = value;
+      return true;
+    },
+    has(target, key) {
+      const child = parent._children?.get(key);
+      return child !== undefined
+        ? !(child._flags & FLAG_DELETED_PROPERTY)
+        : Reflect.has(target, key);
+    },
+    ownKeys(target) {
+      const baseKeys = Reflect.ownKeys(target);
+      if (parent._children !== null) {
+        const dynamicKeys: NormalizedKey[] = [];
+        const deletedKeys: NormalizedKey[] = [];
+        for (const [key, child] of parent._children.entries()) {
+          if (child._flags & FLAG_DELETED_PROPERTY) {
+            deletedKeys.push(key);
+          } else if (child._flags & FLAG_DYNAMIC_PROPERTY) {
+            dynamicKeys.push(key);
           }
         }
-        return baseKeys;
-      },
-    });
-  } else {
-    return targetValue;
-  }
+        if (dynamicKeys.length > 0 || deletedKeys.length > 0) {
+          return [
+            ...new Set(baseKeys)
+              .difference(new Set(deletedKeys))
+              .union(new Set(dynamicKeys)),
+          ];
+        }
+      }
+      return baseKeys;
+    },
+  });
 }
 
-function createNode<T>(signal: Signal<T>, flags = NO_FLAGS): ReactiveNode<T> {
-  return {
-    signal,
-    children: null,
-    version: 0,
-    flags,
-  };
+function deleteProperty<T>(reactive: Reactive<T>): void {
+  for (
+    let parent = reactive._parent, level = 1;
+    parent !== null;
+    parent = parent._parent
+  ) {
+    if (parent._signal instanceof WritableSignal) {
+      parent._signal.invalidate({
+        type: 'delete',
+        source: reactive._signal,
+        get path() {
+          return reactive._path.slice(-level);
+        },
+      });
+    }
+    parent._flags |= FLAG_DIRTY_VALUE;
+    level++;
+  }
+  reactive._flags |= FLAG_DELETED_PROPERTY;
 }
 
 function getChild<T>(
-  parent: ReactiveNode<T>,
+  reactive: Reactive<T>,
   key: NormalizedKey,
-  targetValue: T & object,
-  targetVersion: number,
-): ReactiveNode<unknown> {
-  let child = parent.children?.get(key);
-
+  target: T & object,
+): Reactive<unknown> {
+  let child = reactive._children?.get(key);
   if (child === undefined) {
-    child = resolveChild(parent, key, targetValue, targetVersion);
-
-    if (child.signal instanceof Atom) {
-      child.signal.subscribe((event) => {
-        if (parent.signal.version === targetVersion) {
-          // SAFETY: When the child is Atom, the parent is also Atom.
-          (parent.signal as Atom<T>).invalidate({
-            ...event,
-            get path() {
-              return [key, ...event.path];
-            },
-          });
-          parent.flags |= FLAG_DIRTY_VALUE;
-          parent.version++;
-        }
-      });
-    }
-
-    parent.children ??= new Map();
-    parent.children.set(key, child);
+    child = resolveChild(reactive, target, key);
+    reactive._children ??= new Map();
+    reactive._children.set(key, child);
   }
-
   return child;
+}
+
+function getPropertyDescriptor(
+  target: object,
+  key: PropertyKey,
+): PropertyDescriptor | undefined {
+  let descriptor: PropertyDescriptor | undefined;
+  do {
+    descriptor = Object.getOwnPropertyDescriptor(target, key);
+    if (descriptor !== undefined) {
+      break;
+    }
+    target = Object.getPrototypeOf(target);
+  } while (target !== null);
+  return descriptor;
+}
+
+function isNonPrimitive(value: unknown): value is object {
+  return (
+    value !== null && (typeof value === 'object' || typeof value === 'function')
+  );
 }
 
 function normalizeKey(key: PropertyKey): NormalizedKey {
@@ -307,77 +255,120 @@ function normalizeKey(key: PropertyKey): NormalizedKey {
 }
 
 function resolveChild<T>(
-  parent: ReactiveNode<T>,
+  parent: Reactive<T>,
+  target: T & object,
   key: PropertyKey,
-  targetValue: T & object,
-  targetVersion: number,
-): ReactiveNode<unknown> {
-  let proto = targetValue;
-  do {
-    const descriptor = Object.getOwnPropertyDescriptor(proto, key);
-    if (descriptor !== undefined) {
-      const { get, set, value, enumerable } = descriptor;
-      const flags = enumerable ? FLAG_ENUMERABLE_PROPERTY : NO_FLAGS;
-      if (get !== undefined) {
-        if (set !== undefined) {
-          return createNode(
-            new Atom(get.call(createDraft(parent, targetValue, targetVersion))),
-            flags,
-          );
-        } else {
-          const dependencies: Signal<unknown>[] = [];
-          const initialResult = get.call(
-            createDraft(
-              parent,
-              targetValue,
-              targetVersion,
-              (child) => {
-                dependencies.push(child.signal as Signal<unknown>);
-                return commitValue(child);
-              },
-              (child, value, version) => {
-                dependencies.push(child.signal as Signal<unknown>);
-                return createDraft(child, value, version);
-              },
-            ),
-          );
-          const initialVersion = dependencies.reduce(
-            (version, dependency) => version + dependency.version,
-            0,
-          );
-          return createNode(
-            new Computed(
-              () => get.call(createDraft(parent, targetValue, targetVersion)),
-              dependencies,
-              initialResult,
-              initialVersion,
-            ),
-            flags,
-          );
-        }
-      } else {
-        return createNode(new Atom(value), flags);
-      }
-    }
-    proto = Object.getPrototypeOf(proto);
-  } while (proto !== null);
+): Reactive<unknown> {
+  const descriptor = getPropertyDescriptor(target, key);
+  const path = parent._path.concat(key);
 
-  return createNode(new Atom<unknown>(undefined), FLAG_DYNAMIC_PROPERTY);
-}
-
-function setPendingValue<T>(node: ReactiveNode<T>, newValue: T): void {
-  // Intentionally throws a TypeError if signal is a Computed (which has no setter).
-  (node.signal as Atom<T>).value = newValue;
-  node.children?.clear();
-  node.flags |= FLAG_PENDING_VALUE;
-  node.flags &= ~(FLAG_NEEDS_COMMIT | FLAG_DELETED_PROPERTY);
-  node.version++;
-}
-
-function shallowClone<T extends object>(target: T): T {
-  if (Array.isArray(target)) {
-    return target.slice() as T;
-  } else {
-    return { ...target, __proto__: Object.getPrototypeOf(target) };
+  if (descriptor === undefined) {
+    return new Reactive(
+      new Atom<unknown>(undefined),
+      path,
+      parent as Reactive<unknown>,
+      FLAG_DYNAMIC_PROPERTY,
+    );
   }
+
+  const { get, set, value } = descriptor;
+
+  if (get !== undefined && set !== undefined) {
+    return new Reactive(
+      new Accessor(
+        () => {
+          const { proxy, revoke } = createDraft(parent, target);
+          try {
+            return get.call(proxy);
+          } finally {
+            revoke();
+          }
+        },
+        (newValue) => {
+          const { proxy, revoke } = createDraft(parent, target);
+          try {
+            set.call(proxy, newValue);
+          } finally {
+            revoke();
+          }
+        },
+      ),
+      path,
+      parent as Reactive<unknown>,
+    );
+  }
+
+  if (get !== undefined) {
+    const { proxy, revoke } = createDraft(parent, target, (child) => {
+      dependencies.push(child);
+      return commitValue(child);
+    });
+    const dependencies: Signal<any>[] = [];
+    try {
+      const initialResult = get.call(proxy);
+      const initialVersion = dependencies.reduce(
+        (version, dependency) => version + dependency.version,
+        0,
+      );
+      return new Reactive(
+        new Computed(
+          () => {
+            const { proxy, revoke } = createDraft(parent, target);
+            try {
+              return get.call(proxy);
+            } finally {
+              revoke();
+            }
+          },
+          dependencies,
+          initialResult,
+          initialVersion,
+        ),
+        path,
+        parent as Reactive<unknown>,
+      );
+    } finally {
+      revoke();
+    }
+  }
+
+  return new Reactive(new Atom(value), path, parent as Reactive<unknown>);
+}
+
+function setPendingValue<T>(reactive: Reactive<T>, newValue: T): void {
+  const oldValue = reactive._signal.value;
+  (reactive._signal as WritableSignal<T>).value = newValue;
+  for (
+    let parent = reactive._parent, level = 1;
+    parent !== null;
+    parent = parent._parent
+  ) {
+    if (parent._signal instanceof WritableSignal) {
+      parent._signal.invalidate({
+        type: 'set',
+        source: reactive._signal,
+        get path() {
+          return reactive._path.slice(-level);
+        },
+        oldValue,
+        newValue,
+      });
+    }
+    parent._flags |= FLAG_DIRTY_VALUE;
+    level++;
+  }
+  if (reactive._children !== null) {
+    for (const child of reactive._children.values()) {
+      child._parent = null;
+    }
+    reactive._children.clear();
+  }
+  reactive._flags |= FLAG_PENDING_VALUE;
+  reactive._flags &= ~FLAG_NEEDS_COMMIT;
+}
+
+function shallowClone<T>(target: T): T {
+  return Array.isArray(target)
+    ? (target.slice() as T)
+    : { ...target, __proto__: Object.getPrototypeOf(target) };
 }
