@@ -40,10 +40,15 @@ type NormalizedKey = string | symbol;
 type Primitive = bigint | string | number | symbol | null | undefined;
 
 export class Reactive<T> extends Signal<T> {
+  /** @internal */
   _signal: Signal<T>;
+  /** @internal */
   _path: PropertyKey[];
+  /** @internal */
   _parent: Reactive<unknown> | null;
+  /** @internal */
   _flags: number;
+  /** @internal */
   _children: Map<NormalizedKey, Reactive<unknown>> | null = null;
 
   static from<T>(value: T): Reactive<T> {
