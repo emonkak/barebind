@@ -137,7 +137,7 @@ function createDraft<T>(
     deleteProperty(target, key) {
       const prop = getProperty(receiver, key, target);
       deleteProperty(prop);
-      return true;
+      return !!(prop._flags & FLAG_WRITABLE_PROPERTY);
     },
     get(target, key, _proxy) {
       const prop = getProperty(receiver, key, target);

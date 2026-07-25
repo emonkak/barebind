@@ -444,7 +444,7 @@ describe('Reactive', () => {
       expect(state$.value.count).toBe(1);
     });
 
-    it('throws when trying to set a read-only property inside scope', () => {
+    it('throws when trying to set a read-only property', () => {
       const state$ = Reactive.from({
         count: 0,
         get doubledCount() {
@@ -460,13 +460,24 @@ describe('Reactive', () => {
       );
     });
 
-    it('throws when trying to mutate a frozen object', () => {
+    it('throws when trying to set a frozen property', () => {
       const state$ = Reactive.from(Object.freeze({ count: 0 }));
       expect(() =>
         state$.scope((draft: any) => {
           draft.count++;
         }),
       ).toThrow("'set' on proxy: trap returned falsish for property 'count'");
+    });
+
+    it('throws when trying to delete a frozen property', () => {
+      const state$ = Reactive.from(Object.freeze({ count: 0 }));
+      expect(() =>
+        state$.scope((draft: any) => {
+          delete draft.count;
+        }),
+      ).toThrow(
+        "'deleteProperty' on proxy: trap returned falsish for property 'count'",
+      );
     });
   });
 
