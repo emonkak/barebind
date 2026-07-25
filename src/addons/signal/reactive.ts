@@ -175,8 +175,8 @@ function createDraft<T>(
     ownKeys(target) {
       const baseKeys = Reflect.ownKeys(target);
       if (receiver._properties !== null) {
-        const dynamicKeys: NormalizedKey[] = [];
         const deletedKeys: NormalizedKey[] = [];
+        const dynamicKeys: NormalizedKey[] = [];
         for (const [key, prop] of receiver._properties.entries()) {
           if (prop._flags & FLAG_DELETED_PROPERTY) {
             deletedKeys.push(key);
@@ -184,12 +184,15 @@ function createDraft<T>(
             dynamicKeys.push(key);
           }
         }
-        if (dynamicKeys.length > 0 || deletedKeys.length > 0) {
-          return [
-            ...new Set(baseKeys)
-              .difference(new Set(deletedKeys))
-              .union(new Set(dynamicKeys)),
-          ];
+        if (deletedKeys.length > 0 || dynamicKeys.length > 0) {
+          const uniqueKeys = new Set(baseKeys);
+          for (const key of deletedKeys) {
+            uniqueKeys.delete(key);
+          }
+          for (const key of dynamicKeys) {
+            uniqueKeys.add(key);
+          }
+          return [...uniqueKeys];
         }
       }
       return baseKeys;
