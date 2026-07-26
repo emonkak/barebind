@@ -350,7 +350,7 @@ function shallowClone<T>(target: T): T {
 function trapTarget<T>(
   receiver: Reactive<T>,
   target: T & object,
-  chain: typeof trapTarget = trapTarget,
+  wrap: typeof trapTarget = trapTarget,
   finalize: typeof commitValue = commitValue,
 ): { proxy: T; revoke: () => void } {
   const { proxy, revoke } = Proxy.revocable(target, {
@@ -370,7 +370,7 @@ function trapTarget<T>(
       if (prop._flags & FLAG_ENUMERABLE_PROPERTY) {
         const target = prop._signal.value;
         if (isNonPrimitive(target)) {
-          const { proxy, revoke } = chain(prop, target);
+          const { proxy, revoke } = wrap(prop, target);
           revokeFunctions.push(revoke);
           return proxy;
         }
