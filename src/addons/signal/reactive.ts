@@ -100,21 +100,21 @@ export class Reactive<T> extends Signal<T> {
 }
 
 function commitValue<T>(receiver: Reactive<T>): T {
-  let value = receiver._signal.value;
+  let pendingValue = receiver._signal.value;
   if (receiver._flags & FLAG_NEEDS_COMMIT) {
-    value = shallowClone(value);
+    pendingValue = shallowClone(pendingValue);
     for (const [key, prop] of receiver._properties!.entries()) {
       if (prop._flags & FLAG_DELETED_PROPERTY) {
-        delete (value as any)[key];
+        delete (pendingValue as any)[key];
       } else if (prop._flags & FLAG_PENDING_VALUE) {
-        (value as any)[key] = prop.value;
+        (pendingValue as any)[key] = prop.value;
         prop._flags &= ~FLAG_PENDING_VALUE;
       }
     }
-    (receiver._signal as WritableSignal<T>).write(value);
+    (receiver._signal as WritableSignal<T>).write(pendingValue);
     receiver._flags &= ~FLAG_NEEDS_COMMIT;
   }
-  return value;
+  return pendingValue;
 }
 
 function createDraft<T>(
