@@ -246,7 +246,7 @@ function getPropertyDescriptor(
 
 function getPropertyFlags(descriptor: PropertyDescriptor): number {
   let flags = NO_FLAGS;
-  if (descriptor.writable ?? true) {
+  if (descriptor.writable) {
     flags |= FLAG_WRITABLE_PROPERTY;
   }
   return flags;
