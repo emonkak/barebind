@@ -372,7 +372,7 @@ describe('Reactive', () => {
       expect(result).toBe(123);
     });
 
-    it('mutates an array via proxy', () => {
+    it('mutates an array', () => {
       const state$ = Reactive.from([] as number[]);
       state$.scope((draft) => {
         draft.push(0);
@@ -383,7 +383,7 @@ describe('Reactive', () => {
       expect(state$.value).toStrictEqual([0, 2]);
     });
 
-    it('adds a dynamic property via proxy', () => {
+    it('adds a dynamic property', () => {
       const state$ = Reactive.from({} as Record<string, number>);
       state$.scope((draft) => {
         draft['a'] = 0;
@@ -399,7 +399,7 @@ describe('Reactive', () => {
       expect(state$.value).toStrictEqual({ a: 0, b: 1 });
     });
 
-    it('deletes a property via proxy', () => {
+    it('deletes a property', () => {
       const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
       state$.scope((draft) => {
         delete draft['a'];
@@ -412,6 +412,15 @@ describe('Reactive', () => {
         expect(Object.keys(draft)).toStrictEqual(['b']);
       });
       expect(state$.value).toStrictEqual({ b: 1 });
+    });
+
+    it('resets a deleted property', () => {
+      const state$ = Reactive.from({ a: 0 } as Record<string, number>);
+      state$.scope((draft) => {
+        delete draft['a'];
+        draft['a'] = 1;
+      });
+      expect(state$.value).toStrictEqual({ a: 1 });
     });
 
     it('notifies when a property is deleted', () => {

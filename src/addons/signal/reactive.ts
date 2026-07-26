@@ -371,7 +371,7 @@ function setPendingValue<T>(receiver: Reactive<T>, newValue: T): void {
     receiver._properties.clear();
   }
   receiver._flags |= FLAG_PENDING_VALUE;
-  receiver._flags &= ~FLAG_NEEDS_COMMIT;
+  receiver._flags &= ~(FLAG_NEEDS_COMMIT | FLAG_DELETED_PROPERTY);
 }
 
 function shallowClone<T>(target: T): T {
