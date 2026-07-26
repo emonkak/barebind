@@ -10,14 +10,15 @@ import {
 
 const UNWRAP_TAG = Symbol();
 
-const NO_FLAGS /*                  */ = 0;
-const FLAG_NEEDS_COMMIT /*         */ = 0b000001;
-const FLAG_PENDING_VALUE /*        */ = 0b000010;
-const FLAG_DIRTY_VALUE /*          */ = 0b000011;
-const FLAG_ENUMERABLE_PROPERTY /*  */ = 0b000100;
-const FLAG_WRITABLE_PROPERTY /*    */ = 0b001000;
-const FLAG_DYNAMIC_PROPERTY /*     */ = 0b010000;
-const FLAG_DELETED_PROPERTY /*     */ = 0b100000;
+const NO_FLAGS /*                   */ = 0;
+const FLAG_NEEDS_COMMIT /*          */ = 0b0000001;
+const FLAG_PENDING_VALUE /*         */ = 0b0000010;
+const FLAG_DIRTY_VALUE /*           */ = 0b0000011;
+const FLAG_CONFIGURABLE_PROPERTY /* */ = 0b0000100;
+const FLAG_ENUMERABLE_PROPERTY /*   */ = 0b0001000;
+const FLAG_WRITABLE_PROPERTY /*     */ = 0b0010000;
+const FLAG_DYNAMIC_PROPERTY /*      */ = 0b0100000;
+const FLAG_DELETED_PROPERTY /*      */ = 0b1000000;
 
 type Get<T, K extends keyof T, P = PropertyKey> = P extends keyof T
   ? K extends P
@@ -190,6 +191,9 @@ function getPropertyDescriptor(
 
 function getPropertyFlags(descriptor: PropertyDescriptor): number {
   let flags = NO_FLAGS;
+  if (descriptor.configurable) {
+    flags |= FLAG_CONFIGURABLE_PROPERTY;
+  }
   if (descriptor.enumerable) {
     flags |= FLAG_ENUMERABLE_PROPERTY;
   }
@@ -221,7 +225,10 @@ function resolveProperty<T>(
       new Atom<unknown>(undefined),
       receiver,
       key,
-      FLAG_WRITABLE_PROPERTY | FLAG_DYNAMIC_PROPERTY,
+      FLAG_CONFIGURABLE_PROPERTY |
+        FLAG_ENUMERABLE_PROPERTY |
+        FLAG_WRITABLE_PROPERTY |
+        FLAG_DYNAMIC_PROPERTY,
     );
   }
 
@@ -356,11 +363,11 @@ function trapTarget<T>(
   const { proxy, revoke } = Proxy.revocable(target, {
     deleteProperty(target, key) {
       const prop = getProperty(receiver, target, key);
-      const writable = !!(prop._flags & FLAG_WRITABLE_PROPERTY);
-      if (writable) {
+      const success = !!(prop._flags & FLAG_CONFIGURABLE_PROPERTY);
+      if (success) {
         deleteProperty(prop);
       }
-      return writable;
+      return success;
     },
     get(target, key, _proxyReceiver) {
       if (key === UNWRAP_TAG) {
@@ -397,11 +404,11 @@ function trapTarget<T>(
     },
     set(target, key, value, _proxyReceiver) {
       const prop = getProperty(receiver, target, key);
-      const writable = !!(prop._flags & FLAG_WRITABLE_PROPERTY);
-      if (writable) {
+      const success = !!(prop._flags & FLAG_WRITABLE_PROPERTY);
+      if (success) {
         setPendingValue(prop, value);
       }
-      return writable;
+      return success;
     },
     has(target, key) {
       const prop = receiver._properties?.get(key);
