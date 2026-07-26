@@ -87,7 +87,7 @@ export class Reactive<T> extends Signal<T> {
   scope<TReturn>(callback: (draft: T) => TReturn): TReturn {
     const target = this._signal.value;
     if (isNonPrimitive(target)) {
-      const { proxy, revoke } = createDraft(this, target);
+      const { proxy, revoke } = trapValue(this, target);
       try {
         return callback(proxy);
       } finally {
@@ -119,78 +119,6 @@ function commitValue<T>(receiver: Reactive<T>): T {
     receiver._flags &= ~FLAG_NEEDS_COMMIT;
   }
   return pendingValue;
-}
-
-function createDraft<T>(
-  receiver: Reactive<T>,
-  target: T & object,
-  commit: typeof commitValue = commitValue,
-): { proxy: T; revoke: () => void } {
-  return Proxy.revocable(target, {
-    deleteProperty(target, key) {
-      const prop = getProperty(receiver, target, key);
-      deleteProperty(prop);
-      return !!(prop._flags & FLAG_WRITABLE_PROPERTY);
-    },
-    get(target, key, _proxyReceiver) {
-      const prop = getProperty(receiver, target, key);
-      if (prop._flags & FLAG_DELETED_PROPERTY) {
-        return undefined;
-      }
-      return commit(prop);
-    },
-    getOwnPropertyDescriptor(target, key) {
-      const prop = getProperty(receiver, target, key);
-      if (prop._flags & FLAG_DELETED_PROPERTY) {
-        return undefined;
-      }
-      if (prop._flags & FLAG_DYNAMIC_PROPERTY) {
-        return {
-          value: prop._signal.value,
-          writable: true,
-          enumerable: true,
-          configurable: true,
-        };
-      }
-      return Reflect.getOwnPropertyDescriptor(target, key);
-    },
-    set(target, key, value, _proxyReceiver) {
-      const prop = getProperty(receiver, target, key);
-      setPendingValue(prop, value);
-      return !!(prop._flags & FLAG_WRITABLE_PROPERTY);
-    },
-    has(target, key) {
-      const prop = receiver._properties?.get(key);
-      return prop !== undefined
-        ? !(prop._flags & FLAG_DELETED_PROPERTY)
-        : Reflect.has(target, key);
-    },
-    ownKeys(target) {
-      const baseKeys = Reflect.ownKeys(target);
-      if (receiver._properties !== null) {
-        const deletedKeys: NormalizedKey[] = [];
-        const dynamicKeys: NormalizedKey[] = [];
-        for (const [key, prop] of receiver._properties.entries()) {
-          if (prop._flags & FLAG_DELETED_PROPERTY) {
-            deletedKeys.push(key);
-          } else if (prop._flags & FLAG_DYNAMIC_PROPERTY) {
-            dynamicKeys.push(key);
-          }
-        }
-        if (deletedKeys.length > 0 || dynamicKeys.length > 0) {
-          const derivedKeys = new Set(baseKeys);
-          for (const key of deletedKeys) {
-            derivedKeys.delete(key);
-          }
-          for (const key of dynamicKeys) {
-            derivedKeys.add(key);
-          }
-          return [...derivedKeys];
-        }
-      }
-      return baseKeys;
-    },
-  });
 }
 
 function deleteProperty<T>(prop: Reactive<T>): void {
@@ -285,7 +213,7 @@ function resolveProperty<T>(
     return new Reactive(
       new Accessor(
         () => {
-          const { proxy, revoke } = createDraft(receiver, target);
+          const { proxy, revoke } = trapValue(receiver, target);
           try {
             return get.call(proxy);
           } finally {
@@ -293,7 +221,7 @@ function resolveProperty<T>(
           }
         },
         (newValue) => {
-          const { proxy, revoke } = createDraft(receiver, target);
+          const { proxy, revoke } = trapValue(receiver, target);
           try {
             set.call(proxy, newValue);
           } finally {
@@ -309,7 +237,7 @@ function resolveProperty<T>(
 
   if (get !== undefined) {
     const dependencies: Signal<any>[] = [];
-    const { proxy, revoke } = createDraft(receiver, target, (prop) => {
+    const { proxy, revoke } = trapValue(receiver, target, (prop) => {
       dependencies.push(prop);
       return commitValue(prop);
     });
@@ -322,7 +250,7 @@ function resolveProperty<T>(
       return new Reactive(
         new Computed(
           () => {
-            const { proxy, revoke } = createDraft(receiver, target);
+            const { proxy, revoke } = trapValue(receiver, target);
             try {
               return get.call(proxy);
             } finally {
@@ -382,4 +310,76 @@ function shallowClone<T>(target: T): T {
   return Array.isArray(target)
     ? (target.slice() as T)
     : { ...target, __proto__: Object.getPrototypeOf(target) };
+}
+
+function trapValue<T>(
+  receiver: Reactive<T>,
+  target: T & object,
+  commit: typeof commitValue = commitValue,
+): { proxy: T; revoke: () => void } {
+  return Proxy.revocable(target, {
+    deleteProperty(target, key) {
+      const prop = getProperty(receiver, target, key);
+      deleteProperty(prop);
+      return !!(prop._flags & FLAG_WRITABLE_PROPERTY);
+    },
+    get(target, key, _proxyReceiver) {
+      const prop = getProperty(receiver, target, key);
+      if (prop._flags & FLAG_DELETED_PROPERTY) {
+        return undefined;
+      }
+      return commit(prop);
+    },
+    getOwnPropertyDescriptor(target, key) {
+      const prop = getProperty(receiver, target, key);
+      if (prop._flags & FLAG_DELETED_PROPERTY) {
+        return undefined;
+      }
+      if (prop._flags & FLAG_DYNAMIC_PROPERTY) {
+        return {
+          value: prop._signal.value,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        };
+      }
+      return Reflect.getOwnPropertyDescriptor(target, key);
+    },
+    set(target, key, value, _proxyReceiver) {
+      const prop = getProperty(receiver, target, key);
+      setPendingValue(prop, value);
+      return !!(prop._flags & FLAG_WRITABLE_PROPERTY);
+    },
+    has(target, key) {
+      const prop = receiver._properties?.get(key);
+      return prop !== undefined
+        ? !(prop._flags & FLAG_DELETED_PROPERTY)
+        : Reflect.has(target, key);
+    },
+    ownKeys(target) {
+      const baseKeys = Reflect.ownKeys(target);
+      if (receiver._properties !== null) {
+        const deletedKeys: NormalizedKey[] = [];
+        const dynamicKeys: NormalizedKey[] = [];
+        for (const [key, prop] of receiver._properties.entries()) {
+          if (prop._flags & FLAG_DELETED_PROPERTY) {
+            deletedKeys.push(key);
+          } else if (prop._flags & FLAG_DYNAMIC_PROPERTY) {
+            dynamicKeys.push(key);
+          }
+        }
+        if (deletedKeys.length > 0 || dynamicKeys.length > 0) {
+          const derivedKeys = new Set(baseKeys);
+          for (const key of deletedKeys) {
+            derivedKeys.delete(key);
+          }
+          for (const key of dynamicKeys) {
+            derivedKeys.add(key);
+          }
+          return [...derivedKeys];
+        }
+      }
+      return baseKeys;
+    },
+  });
 }
