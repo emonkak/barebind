@@ -178,14 +178,14 @@ function createDraft<T>(
           }
         }
         if (deletedKeys.length > 0 || dynamicKeys.length > 0) {
-          const uniqueKeys = new Set(baseKeys);
+          const derivedKeys = new Set(baseKeys);
           for (const key of deletedKeys) {
-            uniqueKeys.delete(key);
+            derivedKeys.delete(key);
           }
           for (const key of dynamicKeys) {
-            uniqueKeys.add(key);
+            derivedKeys.add(key);
           }
-          return [...uniqueKeys];
+          return [...derivedKeys];
         }
       }
       return baseKeys;
