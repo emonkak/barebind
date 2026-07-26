@@ -128,7 +128,7 @@ function createDraft<T>(
       deleteProperty(prop);
       return !!(prop._flags & FLAG_WRITABLE_PROPERTY);
     },
-    get(target, key, _proxy) {
+    get(target, key, _proxyReceiver) {
       const prop = getProperty(receiver, target, key);
       if (prop._flags & FLAG_DELETED_PROPERTY) {
         return undefined;
@@ -150,7 +150,7 @@ function createDraft<T>(
       }
       return Reflect.getOwnPropertyDescriptor(target, key);
     },
-    set(target, key, value, _proxy) {
+    set(target, key, value, _proxyReceiver) {
       const prop = getProperty(receiver, target, key);
       setPendingValue(prop, value);
       return !!(prop._flags & FLAG_WRITABLE_PROPERTY);
