@@ -32,7 +32,7 @@ export type Subscriber = (event: InvalidateEvent) => void;
 export type Unsubscribe = () => void;
 
 export type UnwrapSignals<T> = {
-  [K in keyof T]: T[K] extends Signal<infer Value> ? Value : never;
+  [K in keyof T]: T[K] extends Signal<infer V> ? V : never;
 };
 
 const SignalObserver = createComponent<{ signal: Signal<any> }>(
