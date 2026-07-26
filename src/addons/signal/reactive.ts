@@ -92,7 +92,7 @@ export class Reactive<T> extends Signal<T> {
   ): TReturn {
     const target = this._signal.value;
     if (isNonPrimitive(target)) {
-      const { proxy, revoke } = trapValue(this, target);
+      const { proxy, revoke } = trapTarget(this, target);
       try {
         return callback(proxy, unwrapValue);
       } finally {
@@ -106,6 +106,16 @@ export class Reactive<T> extends Signal<T> {
   subscribe(subscriber: Subscriber): Unsubscribe {
     return this._signal.subscribe(subscriber);
   }
+}
+
+function commitTarget<T>(receiver: Reactive<T>): {
+  proxy: T;
+  revoke: () => void;
+} {
+  return {
+    proxy: commitValue(receiver),
+    revoke: () => {},
+  };
 }
 
 function commitValue<T>(receiver: Reactive<T>): T {
@@ -147,16 +157,6 @@ function deleteProperty<T>(prop: Reactive<T>): void {
     reversePath.push(owner._key!);
   }
   prop._flags |= FLAG_DELETED_PROPERTY;
-}
-
-function finalizeValue<T>(receiver: Reactive<T>): {
-  proxy: T;
-  revoke: () => void;
-} {
-  return {
-    proxy: commitValue(receiver),
-    revoke: () => {},
-  };
 }
 
 function getProperty<T>(
@@ -232,7 +232,7 @@ function resolveProperty<T>(
     return new Reactive(
       new Accessor(
         () => {
-          const { proxy, revoke } = trapValue(receiver, target, finalizeValue);
+          const { proxy, revoke } = trapTarget(receiver, target, commitTarget);
           try {
             return get.call(proxy);
           } finally {
@@ -240,7 +240,7 @@ function resolveProperty<T>(
           }
         },
         (newValue) => {
-          const { proxy, revoke } = trapValue(receiver, target, finalizeValue);
+          const { proxy, revoke } = trapTarget(receiver, target, commitTarget);
           try {
             set.call(proxy, newValue);
           } finally {
@@ -256,12 +256,12 @@ function resolveProperty<T>(
 
   if (get !== undefined) {
     const dependencies: Signal<any>[] = [];
-    const { proxy, revoke } = trapValue(
+    const { proxy, revoke } = trapTarget(
       receiver,
       target,
       (prop) => {
         dependencies.push(prop);
-        return finalizeValue(prop);
+        return commitTarget(prop);
       },
       (prop) => {
         dependencies.push(prop);
@@ -277,10 +277,10 @@ function resolveProperty<T>(
       return new Reactive(
         new Computed(
           () => {
-            const { proxy, revoke } = trapValue(
+            const { proxy, revoke } = trapTarget(
               receiver,
               target,
-              finalizeValue,
+              commitTarget,
             );
             try {
               return get.call(proxy);
@@ -347,11 +347,11 @@ function shallowClone<T>(target: T): T {
       );
 }
 
-function trapValue<T>(
+function trapTarget<T>(
   receiver: Reactive<T>,
   target: T & object,
-  trap: typeof trapValue = trapValue,
-  commit: typeof commitValue = commitValue,
+  chain: typeof trapTarget = trapTarget,
+  finalize: typeof commitValue = commitValue,
 ): { proxy: T; revoke: () => void } {
   const { proxy, revoke } = Proxy.revocable(target, {
     deleteProperty(target, key) {
@@ -361,7 +361,7 @@ function trapValue<T>(
     },
     get(target, key, _proxyReceiver) {
       if (key === UNWRAP_TAG) {
-        return commit(receiver);
+        return finalize(receiver);
       }
       const prop = getProperty(receiver, target, key);
       if (prop._flags & FLAG_DELETED_PROPERTY) {
@@ -370,12 +370,12 @@ function trapValue<T>(
       if (prop._flags & FLAG_ENUMERABLE_PROPERTY) {
         const target = prop._signal.value;
         if (isNonPrimitive(target)) {
-          const { proxy, revoke } = trap(prop, target);
+          const { proxy, revoke } = chain(prop, target);
           revokeFunctions.push(revoke);
           return proxy;
         }
       }
-      return commit(prop);
+      return finalize(prop);
     },
     getOwnPropertyDescriptor(target, key) {
       const prop = getProperty(receiver, target, key);
