@@ -361,7 +361,7 @@ function trapTarget<T>(
     },
     get(target, key, _proxyReceiver) {
       if (key === UNWRAP_TAG) {
-        return finalize(receiver);
+        return commitValue(receiver);
       }
       const prop = getProperty(receiver, target, key);
       if (prop._flags & FLAG_DELETED_PROPERTY) {
