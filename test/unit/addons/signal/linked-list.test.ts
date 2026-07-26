@@ -12,36 +12,31 @@ describe('LinkedList', () => {
     it('yields all values in insertion order', () => {
       const list = new LinkedList<string>();
 
-      list.push('a');
-      list.push('b');
-      list.push('c');
+      list.append('a');
+      list.append('b');
+      list.append('c');
 
-      const values: string[] = [];
-      for (const value of list) {
-        values.push(value);
-      }
-
-      expect(values).toStrictEqual(['a', 'b', 'c']);
+      expect([...list]).toStrictEqual(['a', 'b', 'c']);
     });
 
     it('does not yield deleted nodes', () => {
       const list = new LinkedList<number>();
-      const node1 = list.push(1);
+      const node1 = list.append(1);
 
-      list.push(2);
+      list.append(2);
       list.delete(node1);
 
       expect([...list]).toStrictEqual([2]);
     });
 
-    it('handles push and delete interleaved', () => {
+    it('handles append and delete interleaved', () => {
       const list = new LinkedList<number>();
-      const node1 = list.push(1);
-      const node2 = list.push(2);
-      const node3 = list.push(3);
+      const node1 = list.append(1);
+      const node2 = list.append(2);
+      const node3 = list.append(3);
 
       list.delete(node2);
-      const node4 = list.push(4);
+      const node4 = list.append(4);
       list.delete(node1);
 
       expect([...list]).toStrictEqual([3, 4]);
@@ -50,10 +45,10 @@ describe('LinkedList', () => {
     });
   });
 
-  describe('push()', () => {
+  describe('append()', () => {
     it('adds an item to an empty list', () => {
       const list = new LinkedList<number>();
-      const node = list.push(1);
+      const node = list.append(1);
 
       expect([...list]).toStrictEqual([1]);
       expect(node.value).toBe(1);
@@ -64,9 +59,9 @@ describe('LinkedList', () => {
 
     it('links nodes correctly', () => {
       const list = new LinkedList<number>();
-      const node1 = list.push(1);
-      const node2 = list.push(2);
-      const node3 = list.push(3);
+      const node1 = list.append(1);
+      const node2 = list.append(2);
+      const node3 = list.append(3);
 
       expect(node1.prev).toBe(null);
       expect(node1.next).toBe(node2);
@@ -80,7 +75,7 @@ describe('LinkedList', () => {
   describe('delete()', () => {
     it('removes the only node', () => {
       const list = new LinkedList<number>();
-      const node = list.push(1);
+      const node = list.append(1);
 
       expect(list.delete(node)).toBe(true);
       expect([...list]).toStrictEqual([]);
@@ -89,9 +84,9 @@ describe('LinkedList', () => {
 
     it('removes the head node', () => {
       const list = new LinkedList<number>();
-      const head = list.push(1);
-      list.push(2);
-      list.push(3);
+      const head = list.append(1);
+      list.append(2);
+      list.append(3);
 
       expect(list.delete(head)).toBe(true);
       expect([...list]).toStrictEqual([2, 3]);
@@ -100,9 +95,9 @@ describe('LinkedList', () => {
 
     it('removes a middle node', () => {
       const list = new LinkedList<number>();
-      list.push(1);
-      const middle = list.push(2);
-      list.push(3);
+      list.append(1);
+      const middle = list.append(2);
+      list.append(3);
 
       const result = list.delete(middle);
 
@@ -113,9 +108,9 @@ describe('LinkedList', () => {
 
     it('removes the tail node', () => {
       const list = new LinkedList<number>();
-      list.push(1);
-      list.push(2);
-      const tail = list.push(3);
+      list.append(1);
+      list.append(2);
+      const tail = list.append(3);
 
       const result = list.delete(tail);
 
@@ -126,9 +121,9 @@ describe('LinkedList', () => {
 
     it('restores links after deleting a middle node', () => {
       const list = new LinkedList<number>();
-      const node1 = list.push(1);
-      const node2 = list.push(2);
-      const node3 = list.push(3);
+      const node1 = list.append(1);
+      const node2 = list.append(2);
+      const node3 = list.append(3);
 
       list.delete(node2);
 
@@ -138,8 +133,8 @@ describe('LinkedList', () => {
 
     it('restores links after deleting the head node', () => {
       const list = new LinkedList<number>();
-      const node1 = list.push(1);
-      const node2 = list.push(2);
+      const node1 = list.append(1);
+      const node2 = list.append(2);
 
       list.delete(node1);
 
@@ -148,8 +143,8 @@ describe('LinkedList', () => {
 
     it('restores links after deleting the tail node', () => {
       const list = new LinkedList<number>();
-      const node1 = list.push(1);
-      const node2 = list.push(2);
+      const node1 = list.append(1);
+      const node2 = list.append(2);
 
       list.delete(node2);
 
@@ -159,7 +154,7 @@ describe('LinkedList', () => {
     it('returns false for a node owned by a different list', () => {
       const list1 = new LinkedList<number>();
       const list2 = new LinkedList<number>();
-      const node = list1.push(1);
+      const node = list1.append(1);
 
       const result = list2.delete(node);
 
@@ -169,7 +164,7 @@ describe('LinkedList', () => {
 
     it('returns false on double delete', () => {
       const list = new LinkedList<number>();
-      const node = list.push(1);
+      const node = list.append(1);
 
       list.delete(node);
       const result = list.delete(node);

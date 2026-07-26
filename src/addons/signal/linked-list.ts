@@ -24,7 +24,7 @@ export class LinkedList<T> implements Iterable<T> {
     }
   }
 
-  push(value: T): LinkedList.ImmutableNode<T> {
+  append(value: T): LinkedList.ImmutableNode<T> {
     const node: LinkedList.MutableNode<T> = {
       value,
       prev: this._tail,

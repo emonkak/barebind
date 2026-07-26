@@ -125,7 +125,7 @@ export abstract class WritableSignal<T> extends Signal<T> {
   }
 
   subscribe(subscriber: Subscriber): Unsubscribe {
-    const node = this._subscribers.push(subscriber);
+    const node = this._subscribers.append(subscriber);
     return () => {
       this._subscribers.delete(node);
     };
