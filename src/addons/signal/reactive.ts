@@ -304,11 +304,11 @@ function resolveProperty<T>(
   }
 
   if (get !== undefined) {
+    const dependencies: Signal<any>[] = [];
     const { proxy, revoke } = createDraft(receiver, target, (prop) => {
       dependencies.push(prop);
       return commitValue(prop);
     });
-    const dependencies: Signal<any>[] = [];
     try {
       const initialResult = get.call(proxy);
       const initialVersion = dependencies.reduce(
