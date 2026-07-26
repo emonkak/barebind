@@ -93,9 +93,9 @@ describe('Reactive', () => {
 
     it('increments once per scope batch', () => {
       const state$ = Reactive.from({ a: 1, b: 2 });
-      state$.scope((draft) => {
-        draft.a++;
-        draft.b++;
+      state$.scope((state) => {
+        state.a++;
+        state.b++;
       });
       expect(state$.version).toBe(2);
     });
@@ -335,23 +335,23 @@ describe('Reactive', () => {
   describe('scope()', () => {
     it('increments version on mutation', () => {
       const state$ = Reactive.from({ count: 0 });
-      state$.scope((draft) => {
-        draft.count++;
+      state$.scope((state) => {
+        state.count++;
       });
       expect(state$.version).toBe(1);
     });
 
     it('increments version on deletion', () => {
       const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
-      state$.scope((draft) => {
-        delete draft['a'];
+      state$.scope((state) => {
+        delete state['a'];
       });
       expect(state$.version).toBe(1);
     });
 
     it('returns object keys via proxy', () => {
       const state$ = Reactive.from({ a: 0, b: 1 });
-      const keys = state$.scope((draft) => Object.keys(draft));
+      const keys = state$.scope((state) => Object.keys(state));
       expect(keys).toStrictEqual(['a', 'b']);
     });
 
@@ -359,35 +359,35 @@ describe('Reactive', () => {
       const state$ = Reactive.from([] as number[]);
       state$.get(0).value = 0;
       state$.get(1).value = 2;
-      const keys = state$.scope((draft) => Object.keys(draft));
+      const keys = state$.scope((state) => Object.keys(state));
       expect(keys).toStrictEqual(['0', '1']);
     });
 
     it('returns the same object via unwrap', () => {
       const state$ = Reactive.from({ count: 0 });
-      const result = state$.scope((draft, unwrap) => unwrap(draft));
-      expect(result).toBe(state$.value);
+      const state = state$.scope((state, unwrap) => unwrap(state));
+      expect(state).toBe(state$.value);
     });
 
     it('returns a modified object via unwrap', () => {
       const state$ = Reactive.from({ count: 0 });
-      const result = state$.scope((draft, unwrap) => {
-        draft.count++;
-        return unwrap(draft);
+      const state = state$.scope((state, unwrap) => {
+        state.count++;
+        return unwrap(state);
       });
-      expect(result).toStrictEqual({ count: 1 });
+      expect(state).toStrictEqual({ count: 1 });
     });
 
     it('returns the same value for primitives', () => {
       const state$ = Reactive.from(123);
-      const result = state$.scope((draft) => draft);
-      expect(result).toBe(123);
+      const state = state$.scope((state) => state);
+      expect(state).toBe(123);
     });
 
     it('returns the same value for primitives via unwrap', () => {
       const state$ = Reactive.from(123);
-      const result = state$.scope((draft, unwrap) => unwrap(draft));
-      expect(result).toBe(123);
+      const state = state$.scope((state, unwrap) => unwrap(state));
+      expect(state).toBe(123);
     });
 
     it.for([
@@ -406,9 +406,9 @@ describe('Reactive', () => {
           return this.count * 2;
         },
       });
-      const doubledCount = state$.scope((draft) => {
-        draft.count++;
-        return draft.doubledCount;
+      const doubledCount = state$.scope((state) => {
+        state.count++;
+        return state.doubledCount;
       });
       expect(doubledCount).toStrictEqual(2);
     });
@@ -420,60 +420,60 @@ describe('Reactive', () => {
           return { count: this.counter.count * 2 };
         },
       });
-      const doubledCount = state$.scope((draft) => {
-        draft.counter.count++;
-        return draft.doubledCounter.count;
+      const doubledCount = state$.scope((state) => {
+        state.counter.count++;
+        return state.doubledCounter.count;
       });
       expect(doubledCount).toStrictEqual(2);
     });
 
     it('mutates an array', () => {
       const state$ = Reactive.from([] as number[]);
-      state$.scope((draft) => {
-        draft.push(0);
-        draft.push(1);
-        draft.push(2);
-        draft.splice(1, 1);
+      state$.scope((state) => {
+        state.push(0);
+        state.push(1);
+        state.push(2);
+        state.splice(1, 1);
       });
       expect(state$.value).toStrictEqual([0, 2]);
     });
 
     it('adds a dynamic property', () => {
       const state$ = Reactive.from({} as Record<string, number>);
-      state$.scope((draft) => {
-        draft['a'] = 0;
-        draft['b'] = 1;
-        expect(draft['a']).toBe(0);
-        expect(draft['b']).toBe(1);
-        expect('a' in draft).toBe(true);
-        expect('b' in draft).toBe(true);
-        expect(Object.hasOwn(draft, 'a')).toBe(true);
-        expect(Object.hasOwn(draft, 'b')).toBe(true);
-        expect(Object.keys(draft)).toStrictEqual(['a', 'b']);
+      state$.scope((state) => {
+        state['a'] = 0;
+        state['b'] = 1;
+        expect(state['a']).toBe(0);
+        expect(state['b']).toBe(1);
+        expect('a' in state).toBe(true);
+        expect('b' in state).toBe(true);
+        expect(Object.hasOwn(state, 'a')).toBe(true);
+        expect(Object.hasOwn(state, 'b')).toBe(true);
+        expect(Object.keys(state)).toStrictEqual(['a', 'b']);
       });
       expect(state$.value).toStrictEqual({ a: 0, b: 1 });
     });
 
     it('deletes a property', () => {
       const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
-      state$.scope((draft) => {
-        delete draft['a'];
-        expect(draft['a']).toBe(undefined);
-        expect(draft['b']).toBe(1);
-        expect('a' in draft).toBe(false);
-        expect('b' in draft).toBe(true);
-        expect(Object.hasOwn(draft, 'a')).toBe(false);
-        expect(Object.hasOwn(draft, 'b')).toBe(true);
-        expect(Object.keys(draft)).toStrictEqual(['b']);
+      state$.scope((state) => {
+        delete state['a'];
+        expect(state['a']).toBe(undefined);
+        expect(state['b']).toBe(1);
+        expect('a' in state).toBe(false);
+        expect('b' in state).toBe(true);
+        expect(Object.hasOwn(state, 'a')).toBe(false);
+        expect(Object.hasOwn(state, 'b')).toBe(true);
+        expect(Object.keys(state)).toStrictEqual(['b']);
       });
       expect(state$.value).toStrictEqual({ b: 1 });
     });
 
     it('resets a deleted property', () => {
       const state$ = Reactive.from({ a: 0 } as Record<string, number>);
-      state$.scope((draft) => {
-        delete draft['a'];
-        draft['a'] = 1;
+      state$.scope((state) => {
+        delete state['a'];
+        state['a'] = 1;
       });
       expect(state$.value).toStrictEqual({ a: 1 });
     });
@@ -482,8 +482,8 @@ describe('Reactive', () => {
       const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
       const subscriber = vi.fn();
       state$.subscribe(subscriber);
-      state$.scope((draft) => {
-        delete draft['a'];
+      state$.scope((state) => {
+        delete state['a'];
       });
       expect(subscriber).toHaveBeenCalledOnce();
       expect(subscriber).toHaveBeenCalledWith({
@@ -501,8 +501,8 @@ describe('Reactive', () => {
         }
       }
       const state$ = Reactive.from(new Counter());
-      state$.scope((draft) => {
-        draft.increment();
+      state$.scope((state) => {
+        state.increment();
       });
       expect(state$.value.count).toBe(1);
     });
@@ -515,8 +515,8 @@ describe('Reactive', () => {
         },
       });
       expect(() =>
-        state$.scope((draft) => {
-          (draft as any).doubledCount = 10;
+        state$.scope((state) => {
+          (state as any).doubledCount = 11;
         }),
       ).toThrow(
         'Cannot set property value of #<Computed> which has only a getter',
@@ -526,8 +526,8 @@ describe('Reactive', () => {
     it('throws when trying to set a frozen property', () => {
       const state$ = Reactive.from(Object.freeze({ count: 0 }));
       expect(() =>
-        state$.scope((draft: any) => {
-          draft.count++;
+        state$.scope((state: any) => {
+          state.count++;
         }),
       ).toThrow("'set' on proxy: trap returned falsish for property 'count'");
     });
@@ -535,8 +535,8 @@ describe('Reactive', () => {
     it('throws when trying to delete a frozen property', () => {
       const state$ = Reactive.from(Object.freeze({ count: 0 }));
       expect(() =>
-        state$.scope((draft: any) => {
-          delete draft.count;
+        state$.scope((state: any) => {
+          delete state.count;
         }),
       ).toThrow(
         "'deleteProperty' on proxy: trap returned falsish for property 'count'",
