@@ -8,6 +8,8 @@ import {
   WritableSignal,
 } from './signal.js';
 
+const UNWRAP_TAG = Symbol();
+
 const NO_FLAGS /*                  */ = 0;
 const FLAG_NEEDS_COMMIT /*         */ = 0b000001;
 const FLAG_PENDING_VALUE /*        */ = 0b000010;
@@ -85,17 +87,19 @@ export class Reactive<T> extends Signal<T> {
       : undefined;
   }
 
-  scope<TReturn>(callback: (draft: T) => TReturn): TReturn {
+  scope<TReturn>(
+    callback: (draft: T, unwrap: <T>(value: T) => T) => TReturn,
+  ): TReturn {
     const target = this._signal.value;
     if (isNonPrimitive(target)) {
       const { proxy, revoke } = trapValue(this, target);
       try {
-        return callback(proxy);
+        return callback(proxy, unwrapValue);
       } finally {
         revoke();
       }
     } else {
-      return callback(target);
+      return callback(target, unwrapValue);
     }
   }
 
@@ -354,6 +358,9 @@ function trapValue<T>(
       return !!(prop._flags & FLAG_WRITABLE_PROPERTY);
     },
     get(target, key, _proxyReceiver) {
+      if (key === UNWRAP_TAG) {
+        return commit(receiver);
+      }
       const prop = getProperty(receiver, target, key);
       if (prop._flags & FLAG_DELETED_PROPERTY) {
         return undefined;
@@ -429,4 +436,8 @@ function trapValue<T>(
       }
     },
   };
+}
+
+function unwrapValue<T>(value: T): T {
+  return (value as any)?.[UNWRAP_TAG] ?? value;
 }

@@ -363,6 +363,42 @@ describe('Reactive', () => {
       expect(keys).toStrictEqual(['0', '1']);
     });
 
+    it('returns the same object via unwrap', () => {
+      const state$ = Reactive.from({ count: 0 });
+      const result = state$.scope((draft, unwrap) => unwrap(draft));
+      expect(result).toBe(state$.value);
+    });
+
+    it('returns a modified object via unwrap', () => {
+      const state$ = Reactive.from({ count: 0 });
+      const result = state$.scope((draft, unwrap) => {
+        draft.count++;
+        return unwrap(draft);
+      });
+      expect(result).toStrictEqual({ count: 1 });
+    });
+
+    it('returns the same value for primitives', () => {
+      const state$ = Reactive.from(123);
+      const result = state$.scope((draft) => draft);
+      expect(result).toBe(123);
+    });
+
+    it('returns the same value for primitives via unwrap', () => {
+      const state$ = Reactive.from(123);
+      const result = state$.scope((draft, unwrap) => unwrap(draft));
+      expect(result).toBe(123);
+    });
+
+    it.for([
+      null,
+      undefined,
+    ])('returns %s for primitives via unwrap', (value) => {
+      const state$ = Reactive.from(value);
+      const state = state$.scope((state, unwrap) => unwrap(state));
+      expect(state).toBe(value);
+    });
+
     it('returns a computed value via getter', () => {
       const state$ = Reactive.from({
         count: 0,
@@ -389,12 +425,6 @@ describe('Reactive', () => {
         return draft.doubledCounter.count;
       });
       expect(doubledCount).toStrictEqual(2);
-    });
-
-    it('returns the same value for primitive values', () => {
-      const state$ = Reactive.from(123);
-      const result = state$.scope((draft) => draft);
-      expect(result).toBe(123);
     });
 
     it('mutates an array', () => {
