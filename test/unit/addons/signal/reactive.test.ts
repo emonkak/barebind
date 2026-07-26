@@ -519,7 +519,7 @@ describe('Reactive', () => {
           (state as any).doubledCount = 11;
         }),
       ).toThrow(
-        'Cannot set property value of #<Computed> which has only a getter',
+        "'set' on proxy: trap returned falsish for property 'doubledCount'",
       );
     });
 

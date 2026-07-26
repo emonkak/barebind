@@ -356,8 +356,11 @@ function trapTarget<T>(
   const { proxy, revoke } = Proxy.revocable(target, {
     deleteProperty(target, key) {
       const prop = getProperty(receiver, target, key);
-      deleteProperty(prop);
-      return !!(prop._flags & FLAG_WRITABLE_PROPERTY);
+      const writable = !!(prop._flags & FLAG_WRITABLE_PROPERTY);
+      if (writable) {
+        deleteProperty(prop);
+      }
+      return writable;
     },
     get(target, key, _proxyReceiver) {
       if (key === UNWRAP_TAG) {
@@ -394,8 +397,11 @@ function trapTarget<T>(
     },
     set(target, key, value, _proxyReceiver) {
       const prop = getProperty(receiver, target, key);
-      setPendingValue(prop, value);
-      return !!(prop._flags & FLAG_WRITABLE_PROPERTY);
+      const writable = !!(prop._flags & FLAG_WRITABLE_PROPERTY);
+      if (writable) {
+        setPendingValue(prop, value);
+      }
+      return writable;
     },
     has(target, key) {
       const prop = receiver._properties?.get(key);
