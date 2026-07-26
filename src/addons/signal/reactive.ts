@@ -8,13 +8,14 @@ import {
   WritableSignal,
 } from './signal.js';
 
-const NO_FLAGS /*               */ = 0;
-const FLAG_NEEDS_COMMIT /*      */ = 0b00001;
-const FLAG_PENDING_VALUE /*     */ = 0b00010;
-const FLAG_DIRTY_VALUE /*       */ = 0b00011;
-const FLAG_WRITABLE_PROPERTY /* */ = 0b00100;
-const FLAG_DYNAMIC_PROPERTY /*  */ = 0b01000;
-const FLAG_DELETED_PROPERTY /*  */ = 0b10000;
+const NO_FLAGS /*                  */ = 0;
+const FLAG_NEEDS_COMMIT /*         */ = 0b000001;
+const FLAG_PENDING_VALUE /*        */ = 0b000010;
+const FLAG_DIRTY_VALUE /*          */ = 0b000011;
+const FLAG_ENUMERABLE_PROPERTY /*  */ = 0b000100;
+const FLAG_WRITABLE_PROPERTY /*    */ = 0b001000;
+const FLAG_DYNAMIC_PROPERTY /*     */ = 0b010000;
+const FLAG_DELETED_PROPERTY /*     */ = 0b100000;
 
 type Get<T, K extends keyof T, P = PropertyKey> = P extends keyof T
   ? K extends P
@@ -143,6 +144,16 @@ function deleteProperty<T>(prop: Reactive<T>): void {
   prop._flags |= FLAG_DELETED_PROPERTY;
 }
 
+function finalizeValue<T>(receiver: Reactive<T>): {
+  proxy: T;
+  revoke: () => void;
+} {
+  return {
+    proxy: commitValue(receiver),
+    revoke: () => {},
+  };
+}
+
 function getProperty<T>(
   receiver: Reactive<T>,
   target: T & object,
@@ -174,6 +185,9 @@ function getPropertyDescriptor(
 
 function getPropertyFlags(descriptor: PropertyDescriptor): number {
   let flags = NO_FLAGS;
+  if (descriptor.enumerable) {
+    flags |= FLAG_ENUMERABLE_PROPERTY;
+  }
   if (descriptor.writable) {
     flags |= FLAG_WRITABLE_PROPERTY;
   }
@@ -213,7 +227,7 @@ function resolveProperty<T>(
     return new Reactive(
       new Accessor(
         () => {
-          const { proxy, revoke } = trapValue(receiver, target);
+          const { proxy, revoke } = trapValue(receiver, target, finalizeValue);
           try {
             return get.call(proxy);
           } finally {
@@ -221,7 +235,7 @@ function resolveProperty<T>(
           }
         },
         (newValue) => {
-          const { proxy, revoke } = trapValue(receiver, target);
+          const { proxy, revoke } = trapValue(receiver, target, finalizeValue);
           try {
             set.call(proxy, newValue);
           } finally {
@@ -237,10 +251,18 @@ function resolveProperty<T>(
 
   if (get !== undefined) {
     const dependencies: Signal<any>[] = [];
-    const { proxy, revoke } = trapValue(receiver, target, (prop) => {
-      dependencies.push(prop);
-      return commitValue(prop);
-    });
+    const { proxy, revoke } = trapValue(
+      receiver,
+      target,
+      (prop) => {
+        dependencies.push(prop);
+        return finalizeValue(prop);
+      },
+      (prop) => {
+        dependencies.push(prop);
+        return commitValue(prop);
+      },
+    );
     try {
       const initialResult = get.call(proxy);
       const initialVersion = dependencies.reduce(
@@ -250,7 +272,11 @@ function resolveProperty<T>(
       return new Reactive(
         new Computed(
           () => {
-            const { proxy, revoke } = trapValue(receiver, target);
+            const { proxy, revoke } = trapValue(
+              receiver,
+              target,
+              finalizeValue,
+            );
             try {
               return get.call(proxy);
             } finally {
@@ -318,9 +344,10 @@ function shallowClone<T>(target: T): T {
 function trapValue<T>(
   receiver: Reactive<T>,
   target: T & object,
+  trap: typeof trapValue = trapValue,
   commit: typeof commitValue = commitValue,
 ): { proxy: T; revoke: () => void } {
-  return Proxy.revocable(target, {
+  const { proxy, revoke } = Proxy.revocable(target, {
     deleteProperty(target, key) {
       const prop = getProperty(receiver, target, key);
       deleteProperty(prop);
@@ -330,6 +357,14 @@ function trapValue<T>(
       const prop = getProperty(receiver, target, key);
       if (prop._flags & FLAG_DELETED_PROPERTY) {
         return undefined;
+      }
+      if (prop._flags & FLAG_ENUMERABLE_PROPERTY) {
+        const target = prop._signal.value;
+        if (isNonPrimitive(target)) {
+          const { proxy, revoke } = trap(prop, target);
+          revokeFunctions.push(revoke);
+          return proxy;
+        }
       }
       return commit(prop);
     },
@@ -385,4 +420,13 @@ function trapValue<T>(
       return baseKeys;
     },
   });
+  const revokeFunctions = [revoke];
+  return {
+    proxy,
+    revoke: () => {
+      for (const revoke of revokeFunctions) {
+        revoke();
+      }
+    },
+  };
 }

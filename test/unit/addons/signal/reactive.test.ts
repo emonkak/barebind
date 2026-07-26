@@ -512,6 +512,22 @@ describe('Reactive', () => {
         "'deleteProperty' on proxy: trap returned falsish for property 'count'",
       );
     });
+
+    it('revokes the proxy after call', () => {
+      const state$ = Reactive.from({});
+      const state = state$.scope((state) => state);
+      expect(() => state.toString()).toThrow(
+        "Cannot perform 'get' on a proxy that has been revoked",
+      );
+    });
+
+    it('revokes the nested proxy after call', () => {
+      const state$ = Reactive.from({ nested: {} });
+      const nested = state$.scope((state) => state.nested);
+      expect(() => nested.toString()).toThrow(
+        "Cannot perform 'get' on a proxy that has been revoked",
+      );
+    });
   });
 
   describe('subscribe()', () => {
