@@ -154,23 +154,23 @@ export class Atom<T> extends WritableSignal<T> {
 }
 
 export class Accessor<T> extends WritableSignal<T> {
-  private readonly _read: () => T;
-  private readonly _write: (value: T) => void;
+  private readonly _getter: () => T;
+  private readonly _setter: (value: T) => void;
 
-  constructor(read: () => T, write: (value: T) => void) {
+  constructor(getter: () => T, setter: (value: T) => void) {
     super();
-    this._read = read;
-    this._write = write;
+    this._getter = getter;
+    this._setter = setter;
   }
 
   read(): T {
-    const read = this._read;
-    return read();
+    const get = this._getter;
+    return get();
   }
 
   write(value: T): void {
-    const write = this._write;
-    write(value);
+    const set = this._setter;
+    set(value);
   }
 }
 
