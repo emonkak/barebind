@@ -120,6 +120,7 @@ function commitValue<T>(receiver: Reactive<T>): T {
         prop._flags &= ~FLAG_PENDING_VALUE;
       }
     }
+    // SAFETY: The signal is always WritableSignal if FLAG_NEEDS_COMMIT is set.
     (receiver._signal as WritableSignal<T>).write(pendingValue);
     receiver._flags &= ~FLAG_NEEDS_COMMIT;
   }
@@ -305,6 +306,7 @@ function resolveProperty<T>(
 
 function setPendingValue<T>(receiver: Reactive<T>, newValue: T): void {
   const oldValue = receiver._signal.value;
+  // Intentionally throws a TypeError if signal is a Computed (which has no setter).
   (receiver._signal as WritableSignal<T>).value = newValue;
   for (
     let owner = receiver._owner, reversePath = [receiver._key!];
