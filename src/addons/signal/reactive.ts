@@ -80,7 +80,7 @@ export class Reactive<T> extends Signal<T> {
       : undefined;
   }
 
-  scope<TResult>(callback: (draft: T) => TResult): TResult {
+  scope<TReturn>(callback: (draft: T) => TReturn): TReturn {
     const target = this._signal.value;
     if (isNonPrimitive(target)) {
       const { proxy, revoke } = createDraft(this, target);
