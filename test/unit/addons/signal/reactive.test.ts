@@ -307,6 +307,26 @@ describe('Reactive', () => {
     });
   });
 
+  describe('delete()', () => {
+    it('increments version', () => {
+      const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
+      state$.get('a').delete();
+      expect(state$.version).toBe(1);
+    });
+
+    it('deletes a property of the owner', () => {
+      const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
+      state$.get('a').delete();
+      expect(state$.value).toStrictEqual({ b: 1 });
+    });
+
+    it('does nothing when the root owner is deleted', () => {
+      const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
+      state$.delete();
+      expect(state$.value).toStrictEqual({ a: 0, b: 1 });
+    });
+  });
+
   describe('scope()', () => {
     it('increments version on mutation', () => {
       const state$ = Reactive.from({ count: 0 });

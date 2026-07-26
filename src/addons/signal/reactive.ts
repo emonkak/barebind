@@ -69,6 +69,10 @@ export class Reactive<T> extends Signal<T> {
     setPendingValue(this, newValue);
   }
 
+  delete(): void {
+    deleteProperty(this);
+  }
+
   get<K extends keyof NonPrimitive<T>>(
     key: K,
   ): T extends object ? Reactive<Get<NonPrimitive<T>, K>> : undefined;
