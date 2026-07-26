@@ -309,7 +309,10 @@ function setPendingValue<T>(receiver: Reactive<T>, newValue: T): void {
 function shallowClone<T>(target: T): T {
   return Array.isArray(target)
     ? (target.slice() as T)
-    : { ...target, __proto__: Object.getPrototypeOf(target) };
+    : Object.create(
+        Object.getPrototypeOf(target),
+        Object.getOwnPropertyDescriptors(target),
+      );
 }
 
 function trapValue<T>(

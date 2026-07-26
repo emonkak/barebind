@@ -138,23 +138,28 @@ describe('Reactive', () => {
       const count$ = state$.get('count');
       const doubledCount$ = state$.get('doubledCount');
       count$.value++;
+      expect(state$.value).toStrictEqual({ count: 1, doubledCount: 2 });
       expect(doubledCount$.value).toBe(2);
     });
 
     it('returns a nested reactive for a read-only accessor returning an object', () => {
       const state = {
-        count: 0,
-        get counter(): { count: number } {
-          return { count: this.count };
+        counter: { count: 0 },
+        get doubledCounter(): { count: number } {
+          return { count: this.counter.count * 2 };
         },
       };
       const state$ = Reactive.from(state);
-      const count$ = state$.get('count');
-      const counter$ = state$.get('counter');
-      const counterCount$ = counter$.get('count');
+      const count$ = state$.get('counter').get('count');
+      const doubledCounter$ = state$.get('doubledCounter');
+      const doubledCount$ = doubledCounter$.get('count');
       count$.value++;
-      expect(counter$.value).toStrictEqual({ count: 1 });
-      expect(counterCount$.value).toBe(0);
+      expect(state$.value).toStrictEqual({
+        counter: { count: 1 },
+        doubledCounter: { count: 2 },
+      });
+      expect(doubledCounter$.value).toStrictEqual({ count: 2 });
+      expect(doubledCount$.value).toBe(0);
     });
 
     it('returns the same reactive reference for a getter returning the same property', () => {
