@@ -76,7 +76,7 @@ export class Reactive<T> extends Signal<T> {
   get(key: PropertyKey): Reactive<any> | undefined {
     const target = this._signal.value;
     return isNonPrimitive(target)
-      ? getProperty(this, normalizeKey(key), target)
+      ? getProperty(this, target, normalizeKey(key))
       : undefined;
   }
 
@@ -124,19 +124,19 @@ function createDraft<T>(
 ): { proxy: T; revoke: () => void } {
   return Proxy.revocable(target, {
     deleteProperty(target, key) {
-      const prop = getProperty(receiver, key, target);
+      const prop = getProperty(receiver, target, key);
       deleteProperty(prop);
       return !!(prop._flags & FLAG_WRITABLE_PROPERTY);
     },
     get(target, key, _proxy) {
-      const prop = getProperty(receiver, key, target);
+      const prop = getProperty(receiver, target, key);
       if (prop._flags & FLAG_DELETED_PROPERTY) {
         return undefined;
       }
       return commit(prop);
     },
     getOwnPropertyDescriptor(target, key) {
-      const prop = getProperty(receiver, key, target);
+      const prop = getProperty(receiver, target, key);
       if (prop._flags & FLAG_DELETED_PROPERTY) {
         return undefined;
       }
@@ -151,7 +151,7 @@ function createDraft<T>(
       return Reflect.getOwnPropertyDescriptor(target, key);
     },
     set(target, key, value, _proxy) {
-      const prop = getProperty(receiver, key, target);
+      const prop = getProperty(receiver, target, key);
       setPendingValue(prop, value);
       return !!(prop._flags & FLAG_WRITABLE_PROPERTY);
     },
@@ -213,8 +213,8 @@ function deleteProperty<T>(prop: Reactive<T>): void {
 
 function getProperty<T>(
   receiver: Reactive<T>,
-  key: NormalizedKey,
   target: T & object,
+  key: NormalizedKey,
 ): Reactive<unknown> {
   let prop = receiver._properties?.get(key);
   if (prop === undefined) {
