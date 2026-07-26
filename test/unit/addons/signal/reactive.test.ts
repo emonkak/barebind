@@ -130,15 +130,15 @@ describe('Reactive', () => {
     it('returns a read-only reactive for a read-only accessor', () => {
       const State = {
         count: 0,
-        get doublyCount(): number {
+        get doubledCount(): number {
           return this.count * 2;
         },
       };
       const state$ = Reactive.from(State);
       const count$ = state$.get('count');
-      const doublyCount$ = state$.get('doublyCount');
+      const doubledCount$ = state$.get('doubledCount');
       count$.value++;
-      expect(doublyCount$.value).toBe(2);
+      expect(doubledCount$.value).toBe(2);
     });
 
     it('returns a nested reactive for a read-only accessor returning an object', () => {
@@ -281,17 +281,16 @@ describe('Reactive', () => {
     });
 
     it('re-evaluates a computed reactive when a dependency changes', () => {
-      class State {
-        count = 0;
-        get doubled() {
+      const state$ = Reactive.from({
+        count: 0,
+        get doubledCount() {
           return this.count * 2;
-        }
-      }
-      const state$ = Reactive.from(new State());
-      const doubled$ = state$.get('doubled');
-      expect(doubled$.value).toBe(0);
+        },
+      });
+      const doubledCount$ = state$.get('doubledCount');
+      expect(doubledCount$.value).toBe(0);
       state$.get('count').value = 5;
-      expect(doubled$.value).toBe(10);
+      expect(doubledCount$.value).toBe(10);
     });
 
     it('throws when trying to set a read-only property', () => {
@@ -342,29 +341,29 @@ describe('Reactive', () => {
     it('returns a computed value via getter', () => {
       const state$ = Reactive.from({
         count: 0,
-        get doublyCount() {
+        get doubledCount() {
           return this.count * 2;
         },
       });
-      const doublyCount = state$.scope((draft) => {
+      const doubledCount = state$.scope((draft) => {
         draft.count++;
-        return draft.doublyCount;
+        return draft.doubledCount;
       });
-      expect(doublyCount).toStrictEqual(2);
+      expect(doubledCount).toStrictEqual(2);
     });
 
     it('returns a computed value via getter returning object', () => {
       const state$ = Reactive.from({
         counter: { count: 0 },
-        get doublyCounter() {
+        get doubledCounter() {
           return { count: this.counter.count * 2 };
         },
       });
-      const doublyCount = state$.scope((draft) => {
+      const doubledCount = state$.scope((draft) => {
         draft.counter.count++;
-        return draft.doublyCounter.count;
+        return draft.doubledCounter.count;
       });
-      expect(doublyCount).toStrictEqual(2);
+      expect(doubledCount).toStrictEqual(2);
     });
 
     it('returns the same value for primitive values', () => {
