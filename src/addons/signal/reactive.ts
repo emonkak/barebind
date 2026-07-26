@@ -34,26 +34,26 @@ export class Reactive<T> extends Signal<T> {
   /** @internal */
   _owner: Reactive<unknown> | null;
   /** @internal */
-  _path: NormalizedKey[];
+  _key: NormalizedKey | null;
   /** @internal */
   _flags: number;
   /** @internal */
   _properties: Map<NormalizedKey, Reactive<unknown>> | null = null;
 
   static from<T>(value: T): Reactive<T> {
-    return new Reactive(new Atom(value), null, [], NO_FLAGS);
+    return new Reactive(new Atom(value), null, null, NO_FLAGS);
   }
 
   constructor(
     signal: Signal<T>,
     owner: Reactive<unknown> | null,
-    path: NormalizedKey[],
+    key: NormalizedKey | null,
     flags: number,
   ) {
     super();
     this._signal = signal;
     this._owner = owner;
-    this._path = path;
+    this._key = key;
     this._flags = flags;
   }
 
@@ -191,22 +191,22 @@ function createDraft<T>(
 
 function deleteProperty<T>(prop: Reactive<T>): void {
   for (
-    let owner = prop._owner, level = 1;
+    let owner = prop._owner, reversePath = [prop._key!];
     owner !== null;
     owner = owner._owner
   ) {
     if (owner._signal instanceof WritableSignal) {
-      const capturedLevel = level;
+      const level = reversePath.length;
       owner._signal.invalidate({
         type: 'delete',
         source: prop._signal,
         get path() {
-          return prop._path.slice(-capturedLevel);
+          return reversePath.slice(0, level).reverse();
         },
       });
     }
     owner._flags |= FLAG_DIRTY_VALUE;
-    level++;
+    reversePath.push(owner._key!);
   }
   prop._flags |= FLAG_DELETED_PROPERTY;
 }
@@ -263,14 +263,13 @@ function resolveProperty<T>(
   target: T & object,
   key: NormalizedKey,
 ): Reactive<unknown> {
-  const path = receiver._path.concat(key);
   const descriptor = getPropertyDescriptor(target, key);
 
   if (descriptor === undefined) {
     return new Reactive(
       new Atom<unknown>(undefined),
       receiver as Reactive<unknown>,
-      path,
+      key,
       FLAG_WRITABLE_PROPERTY | FLAG_DYNAMIC_PROPERTY,
     );
   }
@@ -299,7 +298,7 @@ function resolveProperty<T>(
         },
       ),
       receiver as Reactive<unknown>,
-      path,
+      key,
       flags,
     );
   }
@@ -331,7 +330,7 @@ function resolveProperty<T>(
           initialVersion,
         ),
         receiver as Reactive<unknown>,
-        path,
+        key,
         flags,
       );
     } finally {
@@ -342,7 +341,7 @@ function resolveProperty<T>(
   return new Reactive(
     new Atom(value),
     receiver as Reactive<unknown>,
-    path,
+    key,
     flags,
   );
 }
@@ -351,24 +350,24 @@ function setPendingValue<T>(receiver: Reactive<T>, newValue: T): void {
   const oldValue = receiver._signal.value;
   (receiver._signal as WritableSignal<T>).value = newValue;
   for (
-    let owner = receiver._owner, level = 1;
+    let owner = receiver._owner, reversePath = [receiver._key!];
     owner !== null;
     owner = owner._owner
   ) {
     if (owner._signal instanceof WritableSignal) {
-      const capturedLevel = level;
+      const level = reversePath.length;
       owner._signal.invalidate({
         type: 'set',
         source: receiver._signal,
         get path() {
-          return receiver._path.slice(-capturedLevel);
+          return reversePath.slice(0, level).reverse();
         },
         oldValue,
         newValue,
       });
     }
     owner._flags |= FLAG_DIRTY_VALUE;
-    level++;
+    reversePath.push(owner._key!);
   }
   if (receiver._properties !== null) {
     for (const prop of receiver._properties.values()) {
