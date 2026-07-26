@@ -46,7 +46,7 @@ export class Reactive<T> extends Signal<T> {
 
   constructor(
     signal: Signal<T>,
-    owner: Reactive<unknown> | null,
+    owner: Reactive<any> | null,
     key: NormalizedKey | null,
     flags: number,
   ) {
@@ -268,7 +268,7 @@ function resolveProperty<T>(
   if (descriptor === undefined) {
     return new Reactive(
       new Atom<unknown>(undefined),
-      receiver as Reactive<unknown>,
+      receiver,
       key,
       FLAG_WRITABLE_PROPERTY | FLAG_DYNAMIC_PROPERTY,
     );
@@ -297,7 +297,7 @@ function resolveProperty<T>(
           }
         },
       ),
-      receiver as Reactive<unknown>,
+      receiver,
       key,
       flags,
     );
@@ -329,7 +329,7 @@ function resolveProperty<T>(
           initialResult,
           initialVersion,
         ),
-        receiver as Reactive<unknown>,
+        receiver,
         key,
         flags,
       );
@@ -338,12 +338,7 @@ function resolveProperty<T>(
     }
   }
 
-  return new Reactive(
-    new Atom(value),
-    receiver as Reactive<unknown>,
-    key,
-    flags,
-  );
+  return new Reactive(new Atom(value), receiver, key, flags);
 }
 
 function setPendingValue<T>(receiver: Reactive<T>, newValue: T): void {
