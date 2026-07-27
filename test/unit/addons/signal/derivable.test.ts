@@ -543,6 +543,38 @@ describe('Derivable', () => {
       );
     });
 
+    it('throws when a proxy leaks into a property', () => {
+      const state$ = Derivable.from({ a: { value: 0 }, b: { value: 1 } });
+      expect(() => {
+        state$.scope((state) => {
+          state.b = state.a;
+        });
+      }).toThrow('A proxy leaked into the property at path "b"');
+    });
+
+    it('throws when a proxy leaks into a nested property', () => {
+      const state$ = Derivable.from({
+        nested: { a: { value: 0 }, b: { value: 1 } },
+      });
+      expect(() => {
+        state$.scope((state) => {
+          state.nested.b = state.nested.a;
+        });
+      }).toThrow('A proxy leaked into the property at path "nested.b"');
+    });
+
+    it('throws when a proxy leaks into a new object property', () => {
+      const state$ = Derivable.from({
+        a: { nested: { value: 0 } },
+        b: { nested: { value: 1 } },
+      });
+      expect(() => {
+        state$.scope((state) => {
+          state.b = { nested: state.a.nested };
+        });
+      }).toThrow('A proxy leaked into the property at path "b"');
+    });
+
     it('revokes the proxy after call', () => {
       const state$ = Derivable.from({});
       const state = state$.scope((state) => state);

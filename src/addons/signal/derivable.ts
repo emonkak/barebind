@@ -95,6 +95,9 @@ export class Derivable<T> extends Signal<T> {
       try {
         return callback(proxy);
       } finally {
+        DEBUG: {
+          assertNoProxyLeaks(this);
+        }
         revoke();
       }
     } else {
@@ -109,6 +112,33 @@ export class Derivable<T> extends Signal<T> {
 
 export function unwrap<T>(value: T): T {
   return (value as any)?.[UNWRAP_TAG] ?? value;
+}
+
+function assertNoProxyLeaks(receiver: Derivable<any>): void {
+  const target = receiver._signal.value;
+  if (receiver._flags & FLAG_PENDING_VALUE && containsProxy(target)) {
+    throw new Error(
+      'A proxy leaked into the property at path "' +
+        collectPath(receiver).join('.') +
+        '". ' +
+        'Proxies received from scope() must not be stored back into the property. ' +
+        'Use unwrap() to get the underlying value before storing.',
+    );
+  }
+  if (receiver._properties !== null) {
+    for (const prop of receiver._properties.values()) {
+      assertNoProxyLeaks(prop);
+    }
+  }
+}
+
+function collectPath(receiver: Derivable<any>): NormalizedKey[] {
+  const path: NormalizedKey[] = [];
+  while (receiver._owner !== null) {
+    path.push(receiver._key!);
+    receiver = receiver._owner;
+  }
+  return path.reverse();
 }
 
 function commitTarget<T>(receiver: Derivable<T>): {
@@ -138,6 +168,20 @@ function commitValue<T>(receiver: Derivable<T>): T {
     receiver._flags &= ~FLAG_NEEDS_COMMIT;
   }
   return pendingValue;
+}
+
+function containsProxy(target: unknown): boolean {
+  if (isNonPrimitive(target)) {
+    if (UNWRAP_TAG in target) {
+      return true;
+    }
+    for (const key of Object.keys(target)) {
+      if (containsProxy((target as any)[key])) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 function deleteProperty<T>(prop: Derivable<T>): void {
@@ -413,6 +457,9 @@ function trapTarget<T>(
       return success;
     },
     has(target, key) {
+      if (key === UNWRAP_TAG) {
+        return true;
+      }
       const prop = receiver._properties?.get(key);
       return prop !== undefined
         ? !(prop._flags & FLAG_DELETED_PROPERTY)
