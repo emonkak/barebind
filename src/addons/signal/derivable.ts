@@ -142,15 +142,20 @@ export function unwrap<T>(value: T): T {
 }
 
 function assertNoProxyLeaks(receiver: Derivable<any>): void {
-  const target = receiver._signal.value;
-  if (receiver._flags & FLAG_PENDING_VALUE && containsProxy(target)) {
-    throw new Error(
-      'A proxy leaked into the property at path "' +
-        collectPath(receiver).join('.') +
-        '". ' +
-        'Proxies received from scope() must not be stored back into the property. ' +
-        'Use unwrap() to get the underlying value before storing.',
-    );
+  if (!(receiver._flags & FLAG_PENDING_VALUE)) {
+    return;
+  }
+  if (!(receiver._flags & FLAG_NEEDS_COMMIT)) {
+    const target = receiver._signal.value;
+    if (containsProxy(target)) {
+      throw new Error(
+        'A proxy leaked into the property at path "' +
+          collectPath(receiver).join('.') +
+          '". ' +
+          'Proxies received from scope() must not be stored back into the property. ' +
+          'Use unwrap() to get the underlying value before storing.',
+      );
+    }
   }
   if (receiver._properties !== null) {
     for (const prop of receiver._properties.values()) {
