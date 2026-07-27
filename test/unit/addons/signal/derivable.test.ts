@@ -546,16 +546,16 @@ describe('Derivable', () => {
     it('revokes the proxy after call', () => {
       const state$ = Derivable.from({});
       const state = state$.scope((state) => state);
-      expect(() => state.toString()).toThrow(
-        "Cannot perform 'get' on a proxy that has been revoked",
+      expect(() => Object.getPrototypeOf(state)).toThrow(
+        "Cannot perform 'getPrototypeOf' on a proxy that has been revoked",
       );
     });
 
     it('revokes the nested proxy after call', () => {
       const state$ = Derivable.from({ nested: {} });
       const nested = state$.scope((state) => state.nested);
-      expect(() => nested.toString()).toThrow(
-        "Cannot perform 'get' on a proxy that has been revoked",
+      expect(() => Object.getPrototypeOf(nested)).toThrow(
+        "Cannot perform 'getPrototypeOf' on a proxy that has been revoked",
       );
     });
   });
