@@ -362,6 +362,12 @@ describe('Derivable', () => {
       expect(state).toBe(123);
     });
 
+    it('returns the same value for nested primitives', () => {
+      const state$ = Derivable.from({ nested: { value: 123 } });
+      const state = state$.scope((state) => state.nested.value, { deep: true });
+      expect(state).toBe(123);
+    });
+
     it.for([
       null,
       undefined,
