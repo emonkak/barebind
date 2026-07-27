@@ -55,44 +55,35 @@ export interface User {
   submitted: number[];
 }
 
-export interface ItemState {
-  item: Item | null;
-  isLoading: boolean;
-  error: APIError | null;
+export class ItemState {
+  item: Item | null = null;
+  isLoading: boolean = false;
+  error: APIError | null = null;
 }
 
-export interface StoryState {
-  stories: Story[];
-  type: StoryType | null;
-  page: number;
-  isLoading: boolean;
+export class StoryState {
+  stories: Story[] = [];
+  type: StoryType | null = null;
+  page: number = 0;
+  isLoading: boolean = false;
 }
 
-export interface UserState {
-  user: User | null;
-  isLoading: boolean;
-  error: APIError | null;
+export class UserState {
+  user: User | null = null;
+  isLoading: boolean = false;
+  error: APIError | null = null;
 }
 
 export class AppStore {
-  readonly itemState$: Derivable<ItemState> = Derivable.from<ItemState>({
-    item: null,
-    isLoading: false,
-    error: null,
-  });
-
-  readonly storyState$: Derivable<StoryState> = Derivable.from<StoryState>({
-    stories: [],
-    type: null,
-    page: 0,
-    isLoading: false,
-  });
-
-  readonly userState$: Derivable<UserState> = Derivable.from<UserState>({
-    user: null,
-    isLoading: false,
-    error: null,
-  });
+  readonly itemState$: Derivable<ItemState> = Derivable.from<ItemState>(
+    new ItemState(),
+  );
+  readonly storyState$: Derivable<StoryState> = Derivable.from<StoryState>(
+    new StoryState(),
+  );
+  readonly userState$: Derivable<UserState> = Derivable.from<UserState>(
+    new UserState(),
+  );
 
   async fetchItem(id: number): Promise<void> {
     const isLoading$ = this.itemState$.get('isLoading');
