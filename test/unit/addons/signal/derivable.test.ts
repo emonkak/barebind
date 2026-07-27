@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Derivable } from '@/addons/signal/derivable.js';
-import { Signal } from '@/addons/signal.js';
+import { Signal, unwrap } from '@/addons/signal.js';
 
 describe('Derivable', () => {
   describe('static from()', () => {
@@ -365,13 +365,13 @@ describe('Derivable', () => {
 
     it('returns the same object via unwrap', () => {
       const state$ = Derivable.from({ count: 0 });
-      const state = state$.scope((state, unwrap) => unwrap(state));
+      const state = state$.scope((state) => unwrap(state));
       expect(state).toBe(state$.value);
     });
 
     it('returns a modified object via unwrap', () => {
       const state$ = Derivable.from({ count: 0 });
-      const state = state$.scope((state, unwrap) => {
+      const state = state$.scope((state) => {
         state.count++;
         return unwrap(state);
       });
@@ -386,7 +386,7 @@ describe('Derivable', () => {
 
     it('returns the same value for primitives via unwrap', () => {
       const state$ = Derivable.from(123);
-      const state = state$.scope((state, unwrap) => unwrap(state));
+      const state = state$.scope((state) => unwrap(state));
       expect(state).toBe(123);
     });
 
@@ -395,7 +395,7 @@ describe('Derivable', () => {
       undefined,
     ])('returns %s for primitives via unwrap', (value) => {
       const state$ = Derivable.from(value);
-      const state = state$.scope((state, unwrap) => unwrap(state));
+      const state = state$.scope((state) => unwrap(state));
       expect(state).toBe(value);
     });
 

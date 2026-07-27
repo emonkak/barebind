@@ -88,25 +88,27 @@ export class Derivable<T> extends Signal<T> {
       : undefined;
   }
 
-  scope<TReturn>(
-    callback: (value: T, unwrap: <T>(value: T) => T) => TReturn,
-  ): TReturn {
+  scope<TReturn>(callback: (value: T) => TReturn): TReturn {
     const target = this._signal.value;
     if (isNonPrimitive(target)) {
       const { proxy, revoke } = trapTarget(this, target);
       try {
-        return callback(proxy, unwrapValue);
+        return callback(proxy);
       } finally {
         revoke();
       }
     } else {
-      return callback(target, unwrapValue);
+      return callback(target);
     }
   }
 
   subscribe(subscriber: Subscriber): Unsubscribe {
     return this._signal.subscribe(subscriber);
   }
+}
+
+export function unwrap<T>(value: T): T {
+  return (value as any)?.[UNWRAP_TAG] ?? value;
 }
 
 function commitTarget<T>(receiver: Derivable<T>): {
@@ -451,8 +453,4 @@ function trapTarget<T>(
       }
     },
   };
-}
-
-function unwrapValue<T>(value: T): T {
-  return (value as any)?.[UNWRAP_TAG] ?? value;
 }

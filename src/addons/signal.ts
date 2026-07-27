@@ -1,4 +1,4 @@
-export { Derivable } from './signal/derivable.js';
+export { Derivable, unwrap } from './signal/derivable.js';
 export {
   LocalAtom,
   LocalComputed,
