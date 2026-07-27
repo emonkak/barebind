@@ -333,40 +333,12 @@ describe('Derivable', () => {
   });
 
   describe('scope()', () => {
-    it('increments version on mutation', () => {
+    it('returns a modified value of the property', () => {
       const state$ = Derivable.from({ count: 0 });
-      state$.scope((state) => {
-        state.count++;
+      const count = state$.scope((state) => {
+        return ++state.count;
       });
-      expect(state$.version).toBe(1);
-    });
-
-    it('increments version on deletion', () => {
-      const state$ = Derivable.from({ a: 0, b: 1 } as Record<string, number>);
-      state$.scope((state) => {
-        delete state['a'];
-      });
-      expect(state$.version).toBe(1);
-    });
-
-    it('returns object keys via proxy', () => {
-      const state$ = Derivable.from({ a: 0, b: 1 });
-      const keys = state$.scope((state) => Object.keys(state));
-      expect(keys).toStrictEqual(['a', 'b']);
-    });
-
-    it('returns numeric keys via proxy', () => {
-      const state$ = Derivable.from([] as number[]);
-      state$.get(0).value = 0;
-      state$.get(1).value = 2;
-      const keys = state$.scope((state) => Object.keys(state));
-      expect(keys).toStrictEqual(['0', '1']);
-    });
-
-    it('returns the same object via unwrap', () => {
-      const state$ = Derivable.from({ count: 0 });
-      const state = state$.scope((state) => unwrap(state));
-      expect(state).toBe(state$.value);
+      expect(count).toBe(1);
     });
 
     it('returns a modified object via unwrap', () => {
@@ -399,6 +371,20 @@ describe('Derivable', () => {
       expect(state).toBe(value);
     });
 
+    it('returns the same object of the property', () => {
+      const state$ = Derivable.from({ counter: { count: 0 } });
+      const counter = state$.scope((state) => {
+        return state.counter;
+      });
+      expect(counter).toBe(state$.value.counter);
+    });
+
+    it('returns the same object via unwrap', () => {
+      const state$ = Derivable.from({ count: 0 });
+      const state = state$.scope((state) => unwrap(state));
+      expect(state).toBe(state$.value);
+    });
+
     it('returns a computed value via getter', () => {
       const state$ = Derivable.from({
         count: 0,
@@ -425,6 +411,36 @@ describe('Derivable', () => {
         return state.doubledCounter.count;
       });
       expect(doubledCount).toStrictEqual(2);
+    });
+
+    it('returns object keys via proxy', () => {
+      const state$ = Derivable.from({ a: 0, b: 1 });
+      const keys = state$.scope((state) => Object.keys(state));
+      expect(keys).toStrictEqual(['a', 'b']);
+    });
+
+    it('returns numeric keys via proxy', () => {
+      const state$ = Derivable.from([] as number[]);
+      state$.get(0).value = 0;
+      state$.get(1).value = 2;
+      const keys = state$.scope((state) => Object.keys(state));
+      expect(keys).toStrictEqual(['0', '1']);
+    });
+
+    it('increments version on mutation', () => {
+      const state$ = Derivable.from({ count: 0 });
+      state$.scope((state) => {
+        state.count++;
+      });
+      expect(state$.version).toBe(1);
+    });
+
+    it('increments version on deletion', () => {
+      const state$ = Derivable.from({ a: 0, b: 1 } as Record<string, number>);
+      state$.scope((state) => {
+        delete state['a'];
+      });
+      expect(state$.version).toBe(1);
     });
 
     it('mutates an array', () => {
@@ -546,9 +562,12 @@ describe('Derivable', () => {
     it('throws when a proxy leaks into a property', () => {
       const state$ = Derivable.from({ a: { value: 0 }, b: { value: 1 } });
       expect(() => {
-        state$.scope((state) => {
-          state.b = state.a;
-        });
+        state$.scope(
+          (state) => {
+            state.b = state.a;
+          },
+          { deep: true },
+        );
       }).toThrow('A proxy leaked into the property at path "b"');
     });
 
@@ -557,9 +576,12 @@ describe('Derivable', () => {
         nested: { a: { value: 0 }, b: { value: 1 } },
       });
       expect(() => {
-        state$.scope((state) => {
-          state.nested.b = state.nested.a;
-        });
+        state$.scope(
+          (state) => {
+            state.nested.b = state.nested.a;
+          },
+          { deep: true },
+        );
       }).toThrow('A proxy leaked into the property at path "nested.b"');
     });
 
@@ -569,9 +591,12 @@ describe('Derivable', () => {
         b: { nested: { value: 1 } },
       });
       expect(() => {
-        state$.scope((state) => {
-          state.b = { nested: state.a.nested };
-        });
+        state$.scope(
+          (state) => {
+            state.b = { nested: state.a.nested };
+          },
+          { deep: true },
+        );
       }).toThrow('A proxy leaked into the property at path "b"');
     });
 
@@ -585,7 +610,7 @@ describe('Derivable', () => {
 
     it('revokes the nested proxy after call', () => {
       const state$ = Derivable.from({ nested: {} });
-      const nested = state$.scope((state) => state.nested);
+      const nested = state$.scope((state) => state.nested, { deep: true });
       expect(() => Object.getPrototypeOf(nested)).toThrow(
         "Cannot perform 'getPrototypeOf' on a proxy that has been revoked",
       );

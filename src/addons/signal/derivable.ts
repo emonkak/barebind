@@ -32,6 +32,10 @@ type NormalizedKey = string | symbol;
 
 type Primitive = bigint | string | number | symbol | null | undefined;
 
+interface ScopeOptions {
+  deep?: boolean;
+}
+
 export class Derivable<T> extends Signal<T> {
   /** @internal */
   _signal: Signal<T>;
@@ -88,17 +92,40 @@ export class Derivable<T> extends Signal<T> {
       : undefined;
   }
 
-  scope<TReturn>(callback: (value: T) => TReturn): TReturn {
+  scope<TReturn>(
+    callback: (value: T) => TReturn,
+    options: ScopeOptions = {},
+  ): TReturn {
     const target = this._signal.value;
     if (isNonPrimitive(target)) {
-      const { proxy, revoke } = trapTarget(this, target);
+      const finalizeValue: typeof commitValue = options.deep
+        ? (prop) => {
+            if (prop._flags & FLAG_ENUMERABLE_PROPERTY) {
+              const target = prop._signal.value;
+              if (isNonPrimitive(target)) {
+                const { proxy, revoke } = trapTarget(
+                  prop,
+                  target,
+                  finalizeValue,
+                );
+                revokeBatch.push(revoke);
+                return proxy;
+              }
+            }
+            return commitValue(prop);
+          }
+        : commitValue;
+      const { proxy, revoke } = trapTarget(this, target, finalizeValue);
+      const revokeBatch = [revoke];
       try {
         return callback(proxy);
       } finally {
         DEBUG: {
           assertNoProxyLeaks(this);
         }
-        revoke();
+        for (const revoke of revokeBatch) {
+          revoke();
+        }
       }
     } else {
       return callback(target);
@@ -139,16 +166,6 @@ function collectPath(receiver: Derivable<any>): NormalizedKey[] {
     receiver = receiver._owner;
   }
   return path.reverse();
-}
-
-function commitTarget<T>(receiver: Derivable<T>): {
-  proxy: T;
-  revoke: () => void;
-} {
-  return {
-    proxy: commitValue(receiver),
-    revoke: () => {},
-  };
 }
 
 function commitValue<T>(receiver: Derivable<T>): T {
@@ -285,7 +302,7 @@ function resolveProperty<T>(
     return new Derivable(
       new Accessor(
         () => {
-          const { proxy, revoke } = trapTarget(receiver, target, commitTarget);
+          const { proxy, revoke } = trapTarget(receiver, target);
           try {
             return get.call(proxy);
           } finally {
@@ -293,7 +310,7 @@ function resolveProperty<T>(
           }
         },
         (newValue) => {
-          const { proxy, revoke } = trapTarget(receiver, target, commitTarget);
+          const { proxy, revoke } = trapTarget(receiver, target);
           try {
             set.call(proxy, newValue);
           } finally {
@@ -309,18 +326,10 @@ function resolveProperty<T>(
 
   if (get !== undefined) {
     const dependencies: Signal<any>[] = [];
-    const { proxy, revoke } = trapTarget(
-      receiver,
-      target,
-      (prop) => {
-        dependencies.push(prop);
-        return commitTarget(prop);
-      },
-      (prop) => {
-        dependencies.push(prop);
-        return commitValue(prop);
-      },
-    );
+    const { proxy, revoke } = trapTarget(receiver, target, (prop) => {
+      dependencies.push(prop);
+      return commitValue(prop);
+    });
     try {
       const initialResult = get.call(proxy);
       const initialVersion = dependencies.reduce(
@@ -330,11 +339,7 @@ function resolveProperty<T>(
       return new Derivable(
         new Computed(
           () => {
-            const { proxy, revoke } = trapTarget(
-              receiver,
-              target,
-              commitTarget,
-            );
+            const { proxy, revoke } = trapTarget(receiver, target);
             try {
               return get.call(proxy);
             } finally {
@@ -403,10 +408,9 @@ function shallowClone<T>(target: T): T {
 function trapTarget<T>(
   receiver: Derivable<T>,
   target: T & object,
-  wrap: typeof trapTarget = trapTarget,
-  finalize: typeof commitValue = commitValue,
+  finalizeValue: typeof commitValue = commitValue,
 ): { proxy: T; revoke: () => void } {
-  const { proxy, revoke } = Proxy.revocable(target, {
+  return Proxy.revocable(target, {
     deleteProperty(target, key) {
       const prop = getProperty(receiver, target, key);
       const success = !!(prop._flags & FLAG_CONFIGURABLE_PROPERTY);
@@ -417,21 +421,13 @@ function trapTarget<T>(
     },
     get(target, key, _proxyReceiver) {
       if (key === UNWRAP_TAG) {
-        return finalize(receiver);
+        return commitValue(receiver);
       }
       const prop = getProperty(receiver, target, key);
       if (prop._flags & FLAG_DELETED_PROPERTY) {
         return undefined;
       }
-      if (prop._flags & FLAG_ENUMERABLE_PROPERTY) {
-        const target = prop._signal.value;
-        if (isNonPrimitive(target)) {
-          const { proxy, revoke } = wrap(prop, target);
-          revokeFunctions.push(revoke);
-          return proxy;
-        }
-      }
-      return finalize(prop);
+      return finalizeValue(prop);
     },
     getOwnPropertyDescriptor(target, key) {
       const prop = getProperty(receiver, target, key);
@@ -491,13 +487,4 @@ function trapTarget<T>(
       return baseKeys;
     },
   });
-  const revokeFunctions = [revoke];
-  return {
-    proxy,
-    revoke: () => {
-      for (const revoke of revokeFunctions) {
-        revoke();
-      }
-    },
-  };
 }
