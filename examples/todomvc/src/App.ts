@@ -3,7 +3,7 @@ import { createComponent, html } from 'barebind';
 import { Footer } from './Footer.js';
 import { Header } from './Header.js';
 import { Main } from './Main.js';
-import type { TodoStore } from './state.js';
+import type { TodoStore } from './store.js';
 
 interface AppProps {
   store: TodoStore;

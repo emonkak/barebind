@@ -9,8 +9,7 @@ export interface Todo {
 export type TodoFilter = 'all' | 'active' | 'completed';
 
 export class TodoState {
-  todos: readonly Todo[] = [];
-
+  todos: Todo[] = [];
   filter: TodoFilter = 'all';
 
   get activeTodos(): readonly Todo[] {
@@ -29,47 +28,6 @@ export class TodoState {
         return [];
     }
   }
-
-  addTodo(title: string): void {
-    this.todos = this.todos.concat({
-      id: getUUID(),
-      title,
-      completed: false,
-    });
-  }
-
-  clearCompletedTodos(): void {
-    this.todos = this.todos.filter((todo) => !todo.completed);
-  }
-
-  removeTodo(id: string): void {
-    this.todos = this.todos.filter((todo) => todo.id !== id);
-  }
-
-  toggleTodo(id: string): void {
-    this.todos = this.todos.map((todo) => {
-      if (todo.id !== id) {
-        return todo;
-      }
-      return { ...todo, completed: !todo.completed };
-    });
-  }
-
-  toggleAllTodos(): void {
-    this.todos = this.todos.map((todo) => ({
-      ...todo,
-      completed: !todo.completed,
-    }));
-  }
-
-  updateTodo(id: string, title: string): void {
-    this.todos = this.todos.map((todo) => {
-      if (todo.id !== id) {
-        return todo;
-      }
-      return { ...todo, title };
-    });
-  }
 }
 
 export class TodoStore {
@@ -77,6 +35,71 @@ export class TodoStore {
 
   constructor(initialState: TodoState) {
     this.state$ = Derivable.from(initialState);
+  }
+
+  addTodo(title: string): void {
+    this.state$.get('todos').scope((todos) => {
+      todos.push({
+        id: getUUID(),
+        title,
+        completed: false,
+      });
+    });
+  }
+
+  changeFilter(filter: TodoFilter): void {
+    this.state$.scope((state) => {
+      state.filter = filter;
+    });
+  }
+
+  clearCompletedTodos(): void {
+    this.state$.scope((state) => {
+      state.todos = state.todos.filter((todo) => !todo.completed);
+    });
+  }
+
+  removeTodo(id: string): void {
+    this.state$.scope((state) => {
+      state.todos = state.todos.filter((todo) => todo.id !== id);
+    });
+  }
+
+  toggleTodo(id: string): void {
+    this.state$.get('todos').scope(
+      (todos) => {
+        for (const todo of todos) {
+          if (todo.id === id) {
+            todo.completed = !todo.completed;
+          }
+        }
+      },
+      { deep: true },
+    );
+  }
+
+  toggleAllTodos(): void {
+    this.state$.get('todos').scope(
+      (todos) => {
+        for (const todo of todos) {
+          todo.completed = !todo.completed;
+        }
+      },
+      { deep: true },
+    );
+  }
+
+  updateTodo(id: string, title: string): void {
+    this.state$.get('todos').scope(
+      (todos) => {
+        for (const todo of todos) {
+          if (todo.id === id) {
+            todo.title = title;
+          }
+        }
+      },
+      { deep: true },
+    );
   }
 }
 

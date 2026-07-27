@@ -1,25 +1,21 @@
 import { createComponent, html } from 'barebind';
 
-import { type TodoFilter, TodoStore } from './state.js';
+import { type TodoFilter, TodoStore } from './store.js';
 
 export interface FooterProps {}
 
 export const Footer = createComponent<FooterProps>(function Footer() {
-  const { state$ } = this.inject(TodoStore);
-  const { todos, activeTodos, filter } = this.use(state$);
+  const store = this.inject(TodoStore);
+  const { todos, activeTodos, filter } = this.use(store.state$);
 
   const handleChangeFilter = (newFilter: TodoFilter) => (event: Event) => {
     event.preventDefault();
-    state$.scope((todoState) => {
-      todoState.filter = newFilter;
-    });
+    store.changeFilter(newFilter);
   };
 
   const handleRemoveCompletedTodos = (event: Event) => {
     event.preventDefault();
-    state$.scope((todoState) => {
-      todoState.clearCompletedTodos();
-    });
+    store.clearCompletedTodos();
   };
 
   if (todos.length === 0) {

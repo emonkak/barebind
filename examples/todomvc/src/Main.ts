@@ -1,18 +1,16 @@
 import { createComponent, html } from 'barebind';
 
-import { TodoStore } from './state.js';
+import { TodoStore } from './store.js';
 import { TodoItem } from './TodoItem.js';
 
 export interface MainProps {}
 
 export const Main = createComponent<MainProps>(function Main() {
-  const { state$ } = this.inject(TodoStore);
-  const visibleTodos = this.use(state$.get('visibleTodos'));
+  const store = this.inject(TodoStore);
+  const visibleTodos = this.use(store.state$.get('visibleTodos'));
 
   const handleToggleAll = () => {
-    state$.scope((todoState) => {
-      todoState.toggleAllTodos();
-    });
+    store.toggleAllTodos();
   };
 
   return html`

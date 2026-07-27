@@ -1,19 +1,15 @@
 import { createComponent, html } from 'barebind';
 
-import { TodoStore } from './state.js';
+import { TodoStore } from './store.js';
 import { TodoInput } from './TodoInput.js';
 
 export interface HeaderProps {}
 
 export const Header = createComponent<HeaderProps>(function Header() {
-  const { state$ } = this.inject(TodoStore);
+  const store = this.inject(TodoStore);
 
   const handleSubmit = (title: string) => {
-    state$.scope((state) => {
-      if (title !== '') {
-        state.addTodo(title);
-      }
-    });
+    store.addTodo(title);
   };
 
   return html`

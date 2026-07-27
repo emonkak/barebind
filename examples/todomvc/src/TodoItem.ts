@@ -1,6 +1,6 @@
 import { createComponent, html, shallowEqual } from 'barebind';
 
-import { type Todo, TodoStore } from './state.js';
+import { type Todo, TodoStore } from './store.js';
 import { TodoInput } from './TodoInput.js';
 
 export interface TodoItemProps {
@@ -10,7 +10,7 @@ export interface TodoItemProps {
 export const TodoItem = createComponent<TodoItemProps>(
   function TodoItem({ todo }) {
     const [isEditing, setIsEditing] = this.useState(false);
-    const { state$ } = this.inject(TodoStore);
+    const store = this.inject(TodoStore);
 
     const handleStartEditing = () => {
       setIsEditing(true);
@@ -21,26 +21,20 @@ export const TodoItem = createComponent<TodoItemProps>(
     };
 
     const handleUpdate = (title: string) => {
-      state$.scope((todoState) => {
-        if (title.length === 0) {
-          todoState.removeTodo(todo.id);
-        } else {
-          todoState.updateTodo(todo.id, title);
-        }
-      });
+      if (title.length === 0) {
+        store.removeTodo(todo.id);
+      } else {
+        store.updateTodo(todo.id, title);
+      }
       setIsEditing(false);
     };
 
     const handleToggleItem = () => {
-      state$.scope((todoState) => {
-        todoState.toggleTodo(todo.id);
-      });
+      store.toggleTodo(todo.id);
     };
 
     const handleRemoveItem = () => {
-      state$.scope((todoState) => {
-        todoState.removeTodo(todo.id);
-      });
+      store.removeTodo(todo.id);
     };
 
     return html`
