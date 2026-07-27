@@ -149,10 +149,10 @@ function assertNoProxyLeaks(receiver: Derivable<any>): void {
     const target = receiver._signal.value;
     if (containsProxy(target)) {
       throw new Error(
-        'A proxy leaked into the property at path "' +
+        'A proxy leaked into the property at the path "' +
           collectPath(receiver).join('.') +
           '". ' +
-          'Proxies received from scope() must not be stored back into the property. ' +
+          'Proxies received from scope() must not be stored back into a property. ' +
           'Use unwrap() to get the underlying value before storing.',
       );
     }

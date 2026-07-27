@@ -574,7 +574,7 @@ describe('Derivable', () => {
           },
           { deep: true },
         );
-      }).toThrow('A proxy leaked into the property at path "b"');
+      }).toThrow('A proxy leaked into the property at the path "b".');
     });
 
     it('throws when a proxy leaks into a nested property', () => {
@@ -588,7 +588,7 @@ describe('Derivable', () => {
           },
           { deep: true },
         );
-      }).toThrow('A proxy leaked into the property at path "nested.b"');
+      }).toThrow('A proxy leaked into the property at the path "nested.b".');
     });
 
     it('throws when a proxy leaks into a new object property', () => {
@@ -603,7 +603,7 @@ describe('Derivable', () => {
           },
           { deep: true },
         );
-      }).toThrow('A proxy leaked into the property at path "b"');
+      }).toThrow('A proxy leaked into the property at the path "b".');
     });
 
     it('revokes the proxy after call', () => {
