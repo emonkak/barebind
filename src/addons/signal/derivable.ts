@@ -197,7 +197,7 @@ function containsProxy(target: unknown): boolean {
     if (UNWRAP_TAG in target) {
       return true;
     }
-    for (const key of Object.keys(target)) {
+    for (const key of Reflect.ownKeys(target)) {
       if (containsProxy((target as any)[key])) {
         return true;
       }
