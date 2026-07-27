@@ -1,4 +1,4 @@
-import { Reactive } from 'barebind/addons/signal';
+import { Derivable } from 'barebind/addons/signal';
 
 export interface Todo {
   id: string;
@@ -73,10 +73,10 @@ export class TodoState {
 }
 
 export class TodoStore {
-  readonly state$: Reactive<TodoState>;
+  readonly state$: Derivable<TodoState>;
 
   constructor(initialState: TodoState) {
-    this.state$ = Reactive.from(initialState);
+    this.state$ = Derivable.from(initialState);
   }
 }
 

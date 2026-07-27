@@ -1,4 +1,4 @@
-import { Reactive } from 'barebind/addons/signal';
+import { Derivable } from 'barebind/addons/signal';
 
 const STORY_API_ORIGIN = 'https://node-hnapi.herokuapp.com';
 const USER_API_ORIGIN = 'https://hacker-news.firebaseio.com';
@@ -75,20 +75,20 @@ export interface UserState {
 }
 
 export class AppStore {
-  readonly itemState$: Reactive<ItemState> = Reactive.from<ItemState>({
+  readonly itemState$: Derivable<ItemState> = Derivable.from<ItemState>({
     item: null,
     isLoading: false,
     error: null,
   });
 
-  readonly storyState$: Reactive<StoryState> = Reactive.from<StoryState>({
+  readonly storyState$: Derivable<StoryState> = Derivable.from<StoryState>({
     stories: [],
     type: null,
     page: 0,
     isLoading: false,
   });
 
-  readonly userState$: Reactive<UserState> = Reactive.from<UserState>({
+  readonly userState$: Derivable<UserState> = Derivable.from<UserState>({
     user: null,
     isLoading: false,
     error: null,

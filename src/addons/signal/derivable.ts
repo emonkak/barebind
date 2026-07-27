@@ -32,25 +32,25 @@ type NormalizedKey = string | symbol;
 
 type Primitive = bigint | string | number | symbol | null | undefined;
 
-export class Reactive<T> extends Signal<T> {
+export class Derivable<T> extends Signal<T> {
   /** @internal */
   _signal: Signal<T>;
   /** @internal */
-  _owner: Reactive<unknown> | null;
+  _owner: Derivable<unknown> | null;
   /** @internal */
   _key: NormalizedKey | null;
   /** @internal */
   _flags: number;
   /** @internal */
-  _properties: Map<NormalizedKey, Reactive<unknown>> | null = null;
+  _properties: Map<NormalizedKey, Derivable<unknown>> | null = null;
 
-  static from<T>(value: T): Reactive<T> {
-    return new Reactive(new Atom(value), null, null, NO_FLAGS);
+  static from<T>(value: T): Derivable<T> {
+    return new Derivable(new Atom(value), null, null, NO_FLAGS);
   }
 
   constructor(
     signal: Signal<T>,
-    owner: Reactive<any> | null,
+    owner: Derivable<any> | null,
     key: NormalizedKey | null,
     flags: number,
   ) {
@@ -79,9 +79,9 @@ export class Reactive<T> extends Signal<T> {
 
   get<K extends keyof NonPrimitive<T>>(
     key: K,
-  ): T extends object ? Reactive<Get<NonPrimitive<T>, K>> : undefined;
-  get(key: PropertyKey): T extends object ? Reactive<unknown> : undefined;
-  get(key: PropertyKey): Reactive<any> | undefined {
+  ): T extends object ? Derivable<Get<NonPrimitive<T>, K>> : undefined;
+  get(key: PropertyKey): T extends object ? Derivable<unknown> : undefined;
+  get(key: PropertyKey): Derivable<any> | undefined {
     const target = this._signal.value;
     return isNonPrimitive(target)
       ? getProperty(this, target, normalizeKey(key))
@@ -109,7 +109,7 @@ export class Reactive<T> extends Signal<T> {
   }
 }
 
-function commitTarget<T>(receiver: Reactive<T>): {
+function commitTarget<T>(receiver: Derivable<T>): {
   proxy: T;
   revoke: () => void;
 } {
@@ -119,7 +119,7 @@ function commitTarget<T>(receiver: Reactive<T>): {
   };
 }
 
-function commitValue<T>(receiver: Reactive<T>): T {
+function commitValue<T>(receiver: Derivable<T>): T {
   let pendingValue = receiver._signal.value;
   if (receiver._flags & FLAG_NEEDS_COMMIT) {
     pendingValue = shallowClone(pendingValue);
@@ -138,7 +138,7 @@ function commitValue<T>(receiver: Reactive<T>): T {
   return pendingValue;
 }
 
-function deleteProperty<T>(prop: Reactive<T>): void {
+function deleteProperty<T>(prop: Derivable<T>): void {
   for (
     let owner = prop._owner, reversePath = [prop._key!];
     owner !== null;
@@ -161,10 +161,10 @@ function deleteProperty<T>(prop: Reactive<T>): void {
 }
 
 function getProperty<T>(
-  receiver: Reactive<T>,
+  receiver: Derivable<T>,
   target: T & object,
   key: NormalizedKey,
-): Reactive<unknown> {
+): Derivable<unknown> {
   let prop = receiver._properties?.get(key);
   if (prop === undefined) {
     prop = resolveProperty(receiver, target, key);
@@ -214,14 +214,14 @@ function normalizeKey(key: PropertyKey): NormalizedKey {
 }
 
 function resolveProperty<T>(
-  receiver: Reactive<T>,
+  receiver: Derivable<T>,
   target: T & object,
   key: NormalizedKey,
-): Reactive<unknown> {
+): Derivable<unknown> {
   const descriptor = getPropertyDescriptor(target, key);
 
   if (descriptor === undefined) {
-    return new Reactive(
+    return new Derivable(
       new Atom<unknown>(undefined),
       receiver,
       key,
@@ -236,7 +236,7 @@ function resolveProperty<T>(
   const flags = getPropertyFlags(descriptor);
 
   if (get !== undefined && set !== undefined) {
-    return new Reactive(
+    return new Derivable(
       new Accessor(
         () => {
           const { proxy, revoke } = trapTarget(receiver, target, commitTarget);
@@ -281,7 +281,7 @@ function resolveProperty<T>(
         (version, dependency) => version + dependency.version,
         0,
       );
-      return new Reactive(
+      return new Derivable(
         new Computed(
           () => {
             const { proxy, revoke } = trapTarget(
@@ -308,10 +308,10 @@ function resolveProperty<T>(
     }
   }
 
-  return new Reactive(new Atom(value), receiver, key, flags);
+  return new Derivable(new Atom(value), receiver, key, flags);
 }
 
-function setPendingValue<T>(receiver: Reactive<T>, newValue: T): void {
+function setPendingValue<T>(receiver: Derivable<T>, newValue: T): void {
   const oldValue = receiver._signal.value;
   // Intentionally throws a TypeError if signal is a Computed (which has no setter).
   (receiver._signal as WritableSignal<T>).value = newValue;
@@ -355,7 +355,7 @@ function shallowClone<T>(target: T): T {
 }
 
 function trapTarget<T>(
-  receiver: Reactive<T>,
+  receiver: Derivable<T>,
   target: T & object,
   wrap: typeof trapTarget = trapTarget,
   finalize: typeof commitValue = commitValue,

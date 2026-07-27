@@ -1,8 +1,8 @@
+export { Derivable } from './signal/derivable.js';
 export {
   LocalAtom,
   LocalComputed,
 } from './signal/hooks.js';
-export { Reactive } from './signal/reactive.js';
 export {
   Accessor,
   Atom,

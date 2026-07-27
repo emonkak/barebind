@@ -1,20 +1,20 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Reactive } from '@/addons/signal/reactive.js';
+import { Derivable } from '@/addons/signal/derivable.js';
 import { Signal } from '@/addons/signal.js';
 
-describe('Reactive', () => {
+describe('Derivable', () => {
   describe('static from()', () => {
-    it('creates a Reactive from a plain object', () => {
-      const state$ = Reactive.from({ count: 0 });
+    it('creates a Derivable from a plain object', () => {
+      const state$ = Derivable.from({ count: 0 });
       expect(state$.value).toStrictEqual({ count: 0 });
       expect(state$.version).toBe(0);
     });
 
-    it('creates a Reactive from a class instance', () => {
+    it('creates a Derivable from a class instance', () => {
       class State {
         count = 0;
       }
-      const state$ = Reactive.from(new State());
+      const state$ = Derivable.from(new State());
       expect(state$.value).toBeInstanceOf(State);
       expect(state$.value.count).toBe(0);
     });
@@ -23,17 +23,17 @@ describe('Reactive', () => {
   describe('get value()', () => {
     it('returns the initial state at first', () => {
       const intialState = {};
-      const state$ = Reactive.from(intialState);
+      const state$ = Derivable.from(intialState);
       expect(state$.value).toBe(intialState);
     });
 
     it('returns the same reference if no changes were made', () => {
-      const state$ = Reactive.from({ count: 0 });
+      const state$ = Derivable.from({ count: 0 });
       expect(state$.value).toBe(state$.value);
     });
 
-    it('reflects pending child changes after reading', () => {
-      const state$ = Reactive.from({ count: 0 });
+    it('reflects pending property changes after reading', () => {
+      const state$ = Derivable.from({ count: 0 });
       const count$ = state$.get('count');
       count$.value = 5;
       expect(state$.value).toStrictEqual({ count: 5 });
@@ -42,21 +42,21 @@ describe('Reactive', () => {
 
   describe('set value()', () => {
     it('replaces the entire value', () => {
-      const state$ = Reactive.from({ count: 0 });
+      const state$ = Derivable.from({ count: 0 });
       const nextState = { count: 10 };
       state$.value = nextState;
       expect(state$.value).toBe(nextState);
     });
 
     it('increments version', () => {
-      const state$ = Reactive.from({ count: 0 });
+      const state$ = Derivable.from({ count: 0 });
       expect(state$.version).toBe(0);
       state$.value = { count: 1 };
       expect(state$.version).toBe(1);
     });
 
     it('notifies subscribers', () => {
-      const state$ = Reactive.from({ count: 0 });
+      const state$ = Derivable.from({ count: 0 });
       const subscriber = vi.fn();
       state$.subscribe(subscriber);
       state$.value = { count: 1 };
@@ -73,12 +73,12 @@ describe('Reactive', () => {
 
   describe('get version()', () => {
     it('starts at 0', () => {
-      const state$ = Reactive.from({});
+      const state$ = Derivable.from({});
       expect(state$.version).toBe(0);
     });
 
     it('increments on root value assignment', () => {
-      const state$ = Reactive.from({ count: 0 });
+      const state$ = Derivable.from({ count: 0 });
       state$.value = { count: 1 };
       expect(state$.version).toBe(1);
       state$.value = { count: 2 };
@@ -86,13 +86,13 @@ describe('Reactive', () => {
     });
 
     it('increments on nested property assignment', () => {
-      const state$ = Reactive.from({ count: 0 });
+      const state$ = Derivable.from({ count: 0 });
       state$.get('count').value = 5;
       expect(state$.version).toBe(1);
     });
 
     it('increments once per scope batch', () => {
-      const state$ = Reactive.from({ a: 1, b: 2 });
+      const state$ = Derivable.from({ a: 1, b: 2 });
       state$.scope((state) => {
         state.a++;
         state.b++;
@@ -102,15 +102,15 @@ describe('Reactive', () => {
   });
 
   describe('get()', () => {
-    it('returns a child reactive for a nested property', () => {
-      const state$ = Reactive.from({ count: 0 });
+    it('returns a derivable for a nested property', () => {
+      const state$ = Derivable.from({ count: 0 });
       const count$ = state$.get('count');
-      expect(count$).toBeInstanceOf(Reactive);
+      expect(count$).toBeInstanceOf(Derivable);
       expect(count$.value).toBe(0);
     });
 
-    it('returns a reactive for an array index', () => {
-      const state$ = Reactive.from([10, 20, 30]);
+    it('returns a derivable for an array index', () => {
+      const state$ = Derivable.from([10, 20, 30]);
       const item$ = state$.get(0);
       expect(item$.value).toBe(10);
       item$.value = 99;
@@ -118,23 +118,23 @@ describe('Reactive', () => {
     });
 
     it('returns undefined for a primitive value', () => {
-      const state$ = Reactive.from(123);
+      const state$ = Derivable.from(123);
       expect(state$.get('toString')).toBe(undefined);
     });
 
     it('returns undefined for a missing key', () => {
-      const state$ = Reactive.from({});
+      const state$ = Derivable.from({});
       expect(state$.get('foo').value).toBe(undefined);
     });
 
-    it('returns a read-only reactive for a read-only accessor', () => {
+    it('returns a read-only derivable for a read-only accessor', () => {
       const State = {
         count: 0,
         get doubledCount(): number {
           return this.count * 2;
         },
       };
-      const state$ = Reactive.from(State);
+      const state$ = Derivable.from(State);
       const count$ = state$.get('count');
       const doubledCount$ = state$.get('doubledCount');
       count$.value++;
@@ -142,14 +142,14 @@ describe('Reactive', () => {
       expect(doubledCount$.value).toBe(2);
     });
 
-    it('returns a nested reactive for a read-only accessor returning an object', () => {
+    it('returns a nested derivable for a read-only accessor returning an object', () => {
       const state = {
         counter: { count: 0 },
         get doubledCounter(): { count: number } {
           return { count: this.counter.count * 2 };
         },
       };
-      const state$ = Reactive.from(state);
+      const state$ = Derivable.from(state);
       const count$ = state$.get('counter').get('count');
       const doubledCounter$ = state$.get('doubledCounter');
       const doubledCount$ = doubledCounter$.get('count');
@@ -162,28 +162,28 @@ describe('Reactive', () => {
       expect(doubledCount$.value).toBe(0);
     });
 
-    it('returns the same reactive reference for a getter returning the same property', () => {
+    it('returns the same derivable reference for a getter returning the same property', () => {
       const state = {
         foo: { value: 0 },
         get bar(): { value: number } {
           return this.foo;
         },
       };
-      const state$ = Reactive.from(state);
+      const state$ = Derivable.from(state);
       const foo$ = state$.get('foo');
       const bar$ = state$.get('bar');
       expect(foo$.value).toStrictEqual({ value: 0 });
       expect(bar$.value).toBe(foo$.value);
     });
 
-    it('reflects child mutations through both a property and a getter returning the same reference', () => {
+    it('reflects property mutations through both a property and a getter returning the same reference', () => {
       const state = {
         foo: { value: 0 },
         get bar(): { value: number } {
           return this.foo;
         },
       };
-      const state$ = Reactive.from(state);
+      const state$ = Derivable.from(state);
       const foo$ = state$.get('foo');
       const bar$ = state$.get('bar');
       const value$ = foo$.get('value');
@@ -202,7 +202,7 @@ describe('Reactive', () => {
           this._counter = counter;
         },
       };
-      const state$ = Reactive.from(state);
+      const state$ = Derivable.from(state);
       const privateCounter$ = state$.get('_counter');
       const counter$ = state$.get('counter');
       expect(counter$.value).toStrictEqual(privateCounter$.value);
@@ -218,14 +218,14 @@ describe('Reactive', () => {
           this._counter = counter;
         },
       };
-      const state$ = Reactive.from(state);
+      const state$ = Derivable.from(state);
       const privateCounter$ = state$.get('_counter');
       const counter$ = state$.get('counter');
       counter$.value = { count: 1 };
       expect(counter$.value).toStrictEqual(privateCounter$.value);
     });
 
-    it('returns a writable reactive for a read-write accessor', () => {
+    it('returns a writable derivable for a read-write accessor', () => {
       const state = {
         _count: 0,
         get count(): number {
@@ -235,22 +235,22 @@ describe('Reactive', () => {
           this._count = count;
         },
       };
-      const state$ = Reactive.from(state);
+      const state$ = Derivable.from(state);
       const count$ = state$.get('count');
       count$.value = 5;
       expect(state$.value.count).toBe(5);
     });
 
-    it('returns a writable reactive for a writable property', () => {
-      const state$ = Reactive.from({ count: 0 });
+    it('returns a writable derivable for a writable property', () => {
+      const state$ = Derivable.from({ count: 0 });
       const count$ = state$.get('count');
       count$.value = 10;
       expect(count$.value).toBe(10);
       expect(state$.value).toStrictEqual({ count: 10 });
     });
 
-    it('returns a child that notifies on change', () => {
-      const state$ = Reactive.from({ items: [{ id: 1 }] });
+    it('notifies when property changes', () => {
+      const state$ = Derivable.from({ items: [{ id: 1 }] });
       const subscriber = vi.fn();
       state$.subscribe(subscriber);
       const item$ = state$.get('items').get(0);
@@ -265,8 +265,8 @@ describe('Reactive', () => {
       });
     });
 
-    it('ignores stale child mutations after property reassignment', () => {
-      const state$ = Reactive.from({ nested: { value: 0 } });
+    it('ignores stale property mutations after property reassignment', () => {
+      const state$ = Derivable.from({ nested: { value: 0 } });
       const nested$ = state$.get('nested');
       const value$ = nested$.get('value');
       nested$.value = { value: 1 };
@@ -274,8 +274,8 @@ describe('Reactive', () => {
       expect(state$.value).toStrictEqual({ nested: { value: 1 } });
     });
 
-    it('ignores stale child mutations after property set to null', () => {
-      const state$ = Reactive.from({ nested: { value: 0 } } as {
+    it('ignores stale property mutations after property set to null', () => {
+      const state$ = Derivable.from({ nested: { value: 0 } } as {
         nested: { value: number } | null;
       });
       const nested$ = state$.get('nested');
@@ -285,8 +285,8 @@ describe('Reactive', () => {
       expect(state$.value).toStrictEqual({ nested: { value: 1 } });
     });
 
-    it('re-evaluates a computed reactive when a dependency changes', () => {
-      const state$ = Reactive.from({
+    it('re-evaluates a computed derivable when a dependency changes', () => {
+      const state$ = Derivable.from({
         count: 0,
         get doubledCount() {
           return this.count * 2;
@@ -304,7 +304,7 @@ describe('Reactive', () => {
           return 1;
         }
       }
-      const state$ = Reactive.from(new State());
+      const state$ = Derivable.from(new State());
       const id$ = state$.get('id');
       expect(() => {
         (id$ as any).value = 2;
@@ -314,19 +314,19 @@ describe('Reactive', () => {
 
   describe('delete()', () => {
     it('increments version', () => {
-      const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
+      const state$ = Derivable.from({ a: 0, b: 1 } as Record<string, number>);
       state$.get('a').delete();
       expect(state$.version).toBe(1);
     });
 
     it('deletes a property of the owner', () => {
-      const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
+      const state$ = Derivable.from({ a: 0, b: 1 } as Record<string, number>);
       state$.get('a').delete();
       expect(state$.value).toStrictEqual({ b: 1 });
     });
 
     it('does nothing when the root owner is deleted', () => {
-      const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
+      const state$ = Derivable.from({ a: 0, b: 1 } as Record<string, number>);
       state$.delete();
       expect(state$.value).toStrictEqual({ a: 0, b: 1 });
     });
@@ -334,7 +334,7 @@ describe('Reactive', () => {
 
   describe('scope()', () => {
     it('increments version on mutation', () => {
-      const state$ = Reactive.from({ count: 0 });
+      const state$ = Derivable.from({ count: 0 });
       state$.scope((state) => {
         state.count++;
       });
@@ -342,7 +342,7 @@ describe('Reactive', () => {
     });
 
     it('increments version on deletion', () => {
-      const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
+      const state$ = Derivable.from({ a: 0, b: 1 } as Record<string, number>);
       state$.scope((state) => {
         delete state['a'];
       });
@@ -350,13 +350,13 @@ describe('Reactive', () => {
     });
 
     it('returns object keys via proxy', () => {
-      const state$ = Reactive.from({ a: 0, b: 1 });
+      const state$ = Derivable.from({ a: 0, b: 1 });
       const keys = state$.scope((state) => Object.keys(state));
       expect(keys).toStrictEqual(['a', 'b']);
     });
 
     it('returns numeric keys via proxy', () => {
-      const state$ = Reactive.from([] as number[]);
+      const state$ = Derivable.from([] as number[]);
       state$.get(0).value = 0;
       state$.get(1).value = 2;
       const keys = state$.scope((state) => Object.keys(state));
@@ -364,13 +364,13 @@ describe('Reactive', () => {
     });
 
     it('returns the same object via unwrap', () => {
-      const state$ = Reactive.from({ count: 0 });
+      const state$ = Derivable.from({ count: 0 });
       const state = state$.scope((state, unwrap) => unwrap(state));
       expect(state).toBe(state$.value);
     });
 
     it('returns a modified object via unwrap', () => {
-      const state$ = Reactive.from({ count: 0 });
+      const state$ = Derivable.from({ count: 0 });
       const state = state$.scope((state, unwrap) => {
         state.count++;
         return unwrap(state);
@@ -379,13 +379,13 @@ describe('Reactive', () => {
     });
 
     it('returns the same value for primitives', () => {
-      const state$ = Reactive.from(123);
+      const state$ = Derivable.from(123);
       const state = state$.scope((state) => state);
       expect(state).toBe(123);
     });
 
     it('returns the same value for primitives via unwrap', () => {
-      const state$ = Reactive.from(123);
+      const state$ = Derivable.from(123);
       const state = state$.scope((state, unwrap) => unwrap(state));
       expect(state).toBe(123);
     });
@@ -394,13 +394,13 @@ describe('Reactive', () => {
       null,
       undefined,
     ])('returns %s for primitives via unwrap', (value) => {
-      const state$ = Reactive.from(value);
+      const state$ = Derivable.from(value);
       const state = state$.scope((state, unwrap) => unwrap(state));
       expect(state).toBe(value);
     });
 
     it('returns a computed value via getter', () => {
-      const state$ = Reactive.from({
+      const state$ = Derivable.from({
         count: 0,
         get doubledCount() {
           return this.count * 2;
@@ -414,7 +414,7 @@ describe('Reactive', () => {
     });
 
     it('returns a computed value via getter returning object', () => {
-      const state$ = Reactive.from({
+      const state$ = Derivable.from({
         counter: { count: 0 },
         get doubledCounter() {
           return { count: this.counter.count * 2 };
@@ -428,7 +428,7 @@ describe('Reactive', () => {
     });
 
     it('mutates an array', () => {
-      const state$ = Reactive.from([] as number[]);
+      const state$ = Derivable.from([] as number[]);
       state$.scope((state) => {
         state.push(0);
         state.push(1);
@@ -439,7 +439,7 @@ describe('Reactive', () => {
     });
 
     it('adds a dynamic property', () => {
-      const state$ = Reactive.from({} as Record<string, number>);
+      const state$ = Derivable.from({} as Record<string, number>);
       state$.scope((state) => {
         state['a'] = 0;
         state['b'] = 1;
@@ -455,7 +455,7 @@ describe('Reactive', () => {
     });
 
     it('deletes a property', () => {
-      const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
+      const state$ = Derivable.from({ a: 0, b: 1 } as Record<string, number>);
       state$.scope((state) => {
         delete state['a'];
         expect(state['a']).toBe(undefined);
@@ -470,7 +470,7 @@ describe('Reactive', () => {
     });
 
     it('resets a deleted property', () => {
-      const state$ = Reactive.from({ a: 0 } as Record<string, number>);
+      const state$ = Derivable.from({ a: 0 } as Record<string, number>);
       state$.scope((state) => {
         delete state['a'];
         state['a'] = 1;
@@ -479,7 +479,7 @@ describe('Reactive', () => {
     });
 
     it('notifies when a property is deleted', () => {
-      const state$ = Reactive.from({ a: 0, b: 1 } as Record<string, number>);
+      const state$ = Derivable.from({ a: 0, b: 1 } as Record<string, number>);
       const subscriber = vi.fn();
       state$.subscribe(subscriber);
       state$.scope((state) => {
@@ -500,7 +500,7 @@ describe('Reactive', () => {
           this.count++;
         }
       }
-      const state$ = Reactive.from(new Counter());
+      const state$ = Derivable.from(new Counter());
       state$.scope((state) => {
         state.increment();
       });
@@ -508,7 +508,7 @@ describe('Reactive', () => {
     });
 
     it('throws when trying to set a read-only property', () => {
-      const state$ = Reactive.from({
+      const state$ = Derivable.from({
         count: 0,
         get doubledCount() {
           return this.count * 2;
@@ -524,7 +524,7 @@ describe('Reactive', () => {
     });
 
     it('throws when trying to set a frozen property', () => {
-      const state$ = Reactive.from(Object.freeze({ count: 0 }));
+      const state$ = Derivable.from(Object.freeze({ count: 0 }));
       expect(() =>
         state$.scope((state: any) => {
           state.count++;
@@ -533,7 +533,7 @@ describe('Reactive', () => {
     });
 
     it('throws when trying to delete a frozen property', () => {
-      const state$ = Reactive.from(Object.freeze({ count: 0 }));
+      const state$ = Derivable.from(Object.freeze({ count: 0 }));
       expect(() =>
         state$.scope((state: any) => {
           delete state.count;
@@ -544,7 +544,7 @@ describe('Reactive', () => {
     });
 
     it('revokes the proxy after call', () => {
-      const state$ = Reactive.from({});
+      const state$ = Derivable.from({});
       const state = state$.scope((state) => state);
       expect(() => state.toString()).toThrow(
         "Cannot perform 'get' on a proxy that has been revoked",
@@ -552,7 +552,7 @@ describe('Reactive', () => {
     });
 
     it('revokes the nested proxy after call', () => {
-      const state$ = Reactive.from({ nested: {} });
+      const state$ = Derivable.from({ nested: {} });
       const nested = state$.scope((state) => state.nested);
       expect(() => nested.toString()).toThrow(
         "Cannot perform 'get' on a proxy that has been revoked",
@@ -562,7 +562,7 @@ describe('Reactive', () => {
 
   describe('subscribe()', () => {
     it('notifies on root value change', () => {
-      const state$ = Reactive.from({ count: 0 });
+      const state$ = Derivable.from({ count: 0 });
       const subscriber = vi.fn();
       state$.subscribe(subscriber);
       state$.value = { count: 1 };
@@ -578,7 +578,7 @@ describe('Reactive', () => {
     });
 
     it('notifies on nested property change', () => {
-      const state$ = Reactive.from({ nested: { value: 1 } });
+      const state$ = Derivable.from({ nested: { value: 1 } });
       const subscriber = vi.fn();
       state$.subscribe(subscriber);
       state$.get('nested').subscribe(subscriber);
@@ -610,7 +610,7 @@ describe('Reactive', () => {
     });
 
     it('notifies when nested property is deleted', () => {
-      const state$ = Reactive.from({
+      const state$ = Derivable.from({
         nested: { a: 1, b: 2 } as Record<string, number>,
       });
       const subscriber = vi.fn();
@@ -634,7 +634,7 @@ describe('Reactive', () => {
     });
 
     it('does not invoke unsubscribed subscriber', () => {
-      const state$ = Reactive.from({ count: 0 });
+      const state$ = Derivable.from({ count: 0 });
       const subscriber = vi.fn();
       const unsubscribe = state$.subscribe(subscriber);
       unsubscribe();
