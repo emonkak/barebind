@@ -48,13 +48,6 @@ describe('Derivable', () => {
       expect(state$.value).toBe(nextState);
     });
 
-    it('increments version', () => {
-      const state$ = Derivable.from({ count: 0 });
-      expect(state$.version).toBe(0);
-      state$.value = { count: 1 };
-      expect(state$.version).toBe(1);
-    });
-
     it('notifies subscribers', () => {
       const state$ = Derivable.from({ count: 0 });
       const subscriber = vi.fn();
@@ -85,49 +78,128 @@ describe('Derivable', () => {
       expect(state$.version).toBe(2);
     });
 
-    it('increments on nested property assignment', () => {
+    it('increments on property assignment', () => {
       const state$ = Derivable.from({ count: 0 });
       state$.get('count').value = 5;
       expect(state$.version).toBe(1);
     });
 
-    it('increments once per scope batch', () => {
-      const state$ = Derivable.from({ a: 1, b: 2 });
+    it('increments on property assignment in scope', () => {
+      const state$ = Derivable.from({ count: 0 });
       state$.scope((state) => {
-        state.a++;
-        state.b++;
+        state.count++;
       });
-      expect(state$.version).toBe(2);
+      expect(state$.version).toBe(1);
+    });
+
+    it('increments on property deletion', () => {
+      const state$ = Derivable.from({ a: 0, b: 1 } as Record<string, number>);
+      state$.get('a').delete();
+      expect(state$.version).toBe(1);
+    });
+
+    it('increments on property deletion in scope', () => {
+      const state$ = Derivable.from({ a: 0, b: 1 } as Record<string, number>);
+      state$.scope((state) => {
+        delete state['a'];
+      });
+      expect(state$.version).toBe(1);
     });
   });
 
   describe('get()', () => {
-    it('returns a derivable for a nested property', () => {
+    it('returns a Derivable for a writable property', () => {
+      const state$ = Derivable.from({ value: 123 });
+      const value$ = state$.get('value');
+      expect(value$.value).toBe(123);
+    });
+
+    it('returns a Derivable for a read-only accessor', () => {
+      const State = {
+        get value() {
+          return 123;
+        },
+      };
+      const state$ = Derivable.from(State);
+      const value$ = state$.get('value');
+      expect(value$.value).toBe(123);
+    });
+
+    it('returns a Derivable for a read-only accessor returning a reference to other property', () => {
+      const state = {
+        internalCounter: { count: 0 },
+        get counter(): { count: number } {
+          return this.internalCounter;
+        },
+      };
+      const state$ = Derivable.from(state);
+      const internalCounter$ = state$.get('internalCounter');
+      const counter$ = state$.get('counter');
+      expect(counter$.value).toStrictEqual(internalCounter$.value);
+    });
+
+    it('returns a Derivable for a read-write accessor', () => {
+      const state = {
+        internalValue: 123,
+        get value(): number {
+          return this.internalValue;
+        },
+        set value(value: number) {
+          this.internalValue = value;
+        },
+      };
+      const state$ = Derivable.from(state);
+      const value$ = state$.get('value');
+      expect(value$.value).toBe(123);
+    });
+
+    it('returns a Derivable for a read-write accessor returning a reference to other property', () => {
+      const state = {
+        internalCounter: { count: 0 },
+        get counter(): { count: number } {
+          return this.internalCounter;
+        },
+        set counter(counter: { count: number }) {
+          this.internalCounter = counter;
+        },
+      };
+      const state$ = Derivable.from(state);
+      const internalCounter$ = state$.get('internalCounter');
+      const counter$ = state$.get('counter');
+      expect(counter$.value).toBe(internalCounter$.value);
+    });
+
+    it('returns a Derivable for an array index', () => {
+      const state$ = Derivable.from([1, 2, 3]);
+      const item$ = state$.get(0);
+      expect(item$.value).toBe(1);
+    });
+
+    it('returns the same Derivable instance for the same property', () => {
       const state$ = Derivable.from({ count: 0 });
       const count$ = state$.get('count');
-      expect(count$).toBeInstanceOf(Derivable);
-      expect(count$.value).toBe(0);
+      expect(state$.get('count')).toBe(count$);
     });
 
-    it('returns a derivable for an array index', () => {
-      const state$ = Derivable.from([10, 20, 30]);
-      const item$ = state$.get(0);
-      expect(item$.value).toBe(10);
-      item$.value = 99;
-      expect(state$.value).toStrictEqual([99, 20, 30]);
-    });
-
-    it('returns undefined for a primitive value', () => {
+    it('returns undefined for primitives', () => {
       const state$ = Derivable.from(123);
       expect(state$.get('toString')).toBe(undefined);
     });
 
-    it('returns undefined for a missing key', () => {
+    it('returns undefined for missing keys', () => {
       const state$ = Derivable.from({});
       expect(state$.get('foo').value).toBe(undefined);
     });
 
-    it('returns a read-only derivable for a read-only accessor', () => {
+    it('reflects mutations for a writable property', () => {
+      const state$ = Derivable.from({ count: 0 });
+      const count$ = state$.get('count');
+      count$.value = 10;
+      expect(state$.value).toStrictEqual({ count: 10 });
+      expect(count$.value).toBe(10);
+    });
+
+    it('reflects mutations for a read-only accessor', () => {
       const State = {
         count: 0,
         get doubledCount(): number {
@@ -142,7 +214,7 @@ describe('Derivable', () => {
       expect(doubledCount$.value).toBe(2);
     });
 
-    it('returns a nested derivable for a read-only accessor returning an object', () => {
+    it('reflects mutations for a read-only accessor returning an object', () => {
       const state = {
         counter: { count: 0 },
         get doubledCounter(): { count: number } {
@@ -162,50 +234,65 @@ describe('Derivable', () => {
       expect(doubledCount$.value).toBe(0);
     });
 
-    it('returns the same derivable reference for a getter returning the same property', () => {
+    it('reflects mutations for a read-write accessor', () => {
       const state = {
-        foo: { value: 0 },
-        get bar(): { value: number } {
-          return this.foo;
+        internalCount: 0,
+        get count(): number {
+          return this.internalCount;
+        },
+        set count(count: number) {
+          this.internalCount = count;
         },
       };
       const state$ = Derivable.from(state);
-      const foo$ = state$.get('foo');
-      const bar$ = state$.get('bar');
-      expect(foo$.value).toStrictEqual({ value: 0 });
-      expect(bar$.value).toBe(foo$.value);
+      const count$ = state$.get('count');
+      count$.value++;
+      expect(state$.value).toStrictEqual({ internalCount: 1, count: 1 });
+      expect(count$.value).toBe(1);
     });
 
-    it('reflects property mutations through both a property and a getter returning the same reference', () => {
+    it('reflects mutations for a read-write accessor returning an object', () => {
       const state = {
-        foo: { value: 0 },
-        get bar(): { value: number } {
-          return this.foo;
-        },
-      };
-      const state$ = Derivable.from(state);
-      const foo$ = state$.get('foo');
-      const bar$ = state$.get('bar');
-      const value$ = foo$.get('value');
-      value$.value++;
-      expect(foo$.value).toStrictEqual({ value: 1 });
-      expect(bar$.value).toBe(foo$.value);
-    });
-
-    it('returns the same value for a getter/setter pair and its backing property', () => {
-      const state = {
-        _counter: { count: 0 },
+        internalCounter: { count: 0 },
         get counter(): { count: number } {
-          return this._counter;
+          return this.internalCounter;
         },
         set counter(counter: { count: number }) {
-          this._counter = counter;
+          this.internalCounter = counter;
         },
       };
       const state$ = Derivable.from(state);
-      const privateCounter$ = state$.get('_counter');
+      const internalCounter$ = state$.get('internalCounter');
       const counter$ = state$.get('counter');
-      expect(counter$.value).toStrictEqual(privateCounter$.value);
+      internalCounter$.value = { count: 1 };
+      expect(state$.value).toStrictEqual({
+        internalCounter: { count: 1 },
+        counter: { count: 1 },
+      });
+      expect(internalCounter$.value).toStrictEqual({ count: 1 });
+      expect(counter$.value).toStrictEqual({ count: 1 });
+    });
+
+    it('reflects mutations for an array', () => {
+      const state$ = Derivable.from([1, 2, 3]);
+      state$.get(0).value = 10;
+      expect(state$.value).toStrictEqual([10, 2, 3]);
+    });
+
+    it('reflects mutations to read-only property it depends on', () => {
+      const state = {
+        internalCounter: { count: 0 },
+        get counter(): { count: number } {
+          return this.internalCounter;
+        },
+      };
+      const state$ = Derivable.from(state);
+      const internalCounter$ = state$.get('internalCounter');
+      const counter$ = state$.get('counter');
+      const count$ = internalCounter$.get('count');
+      count$.value++;
+      expect(internalCounter$.value).toStrictEqual({ count: 1 });
+      expect(counter$.value).toBe(internalCounter$.value);
     });
 
     it('reflects setter mutations on the backing property', () => {
@@ -225,46 +312,6 @@ describe('Derivable', () => {
       expect(counter$.value).toStrictEqual(privateCounter$.value);
     });
 
-    it('returns a writable derivable for a read-write accessor', () => {
-      const state = {
-        _count: 0,
-        get count(): number {
-          return this._count;
-        },
-        set count(count: number) {
-          this._count = count;
-        },
-      };
-      const state$ = Derivable.from(state);
-      const count$ = state$.get('count');
-      count$.value = 5;
-      expect(state$.value.count).toBe(5);
-    });
-
-    it('returns a writable derivable for a writable property', () => {
-      const state$ = Derivable.from({ count: 0 });
-      const count$ = state$.get('count');
-      count$.value = 10;
-      expect(count$.value).toBe(10);
-      expect(state$.value).toStrictEqual({ count: 10 });
-    });
-
-    it('notifies when property changes', () => {
-      const state$ = Derivable.from({ items: [{ id: 1 }] });
-      const subscriber = vi.fn();
-      state$.subscribe(subscriber);
-      const item$ = state$.get('items').get(0);
-      item$.get('id')!.value = 2;
-      expect(subscriber).toHaveBeenCalledOnce();
-      expect(subscriber).toHaveBeenCalledWith({
-        type: 'set',
-        source: expect.any(Signal),
-        path: ['items', '0', 'id'],
-        oldValue: 1,
-        newValue: 2,
-      });
-    });
-
     it('ignores stale property mutations after property reassignment', () => {
       const state$ = Derivable.from({ nested: { value: 0 } });
       const nested$ = state$.get('nested');
@@ -274,28 +321,15 @@ describe('Derivable', () => {
       expect(state$.value).toStrictEqual({ nested: { value: 1 } });
     });
 
-    it('ignores stale property mutations after property set to null', () => {
+    it('ignores stale property mutations after owner is set to null', () => {
       const state$ = Derivable.from({ nested: { value: 0 } } as {
         nested: { value: number } | null;
       });
       const nested$ = state$.get('nested');
       const value$ = nested$.get('value');
-      nested$.value = { value: 1 };
+      nested$.value = null;
       value$!.value = 2;
-      expect(state$.value).toStrictEqual({ nested: { value: 1 } });
-    });
-
-    it('re-evaluates a computed derivable when a dependency changes', () => {
-      const state$ = Derivable.from({
-        count: 0,
-        get doubledCount() {
-          return this.count * 2;
-        },
-      });
-      const doubledCount$ = state$.get('doubledCount');
-      expect(doubledCount$.value).toBe(0);
-      state$.get('count').value = 5;
-      expect(doubledCount$.value).toBe(10);
+      expect(state$.value).toStrictEqual({ nested: null });
     });
 
     it('throws when trying to set a read-only property', () => {
@@ -313,12 +347,6 @@ describe('Derivable', () => {
   });
 
   describe('delete()', () => {
-    it('increments version', () => {
-      const state$ = Derivable.from({ a: 0, b: 1 } as Record<string, number>);
-      state$.get('a').delete();
-      expect(state$.version).toBe(1);
-    });
-
     it('deletes a property of the owner', () => {
       const state$ = Derivable.from({ a: 0, b: 1 } as Record<string, number>);
       state$.get('a').delete();
@@ -330,65 +358,61 @@ describe('Derivable', () => {
       state$.delete();
       expect(state$.value).toStrictEqual({ a: 0, b: 1 });
     });
+
+    it('notifies when a property is deleted', () => {
+      const state$ = Derivable.from({ a: 0, b: 1 } as Record<string, number>);
+      const subscriber = vi.fn();
+      state$.subscribe(subscriber);
+      state$.get('a').delete();
+      expect(subscriber).toHaveBeenCalledOnce();
+      expect(subscriber).toHaveBeenCalledWith({
+        type: 'delete',
+        source: expect.any(Signal),
+        path: ['a'],
+      });
+    });
   });
 
   describe('scope()', () => {
-    it('returns a modified value of the property', () => {
-      const state$ = Derivable.from({ count: 0 });
-      const count = state$.scope((state) => {
-        return ++state.count;
-      });
-      expect(count).toBe(1);
-    });
-
-    it('returns a modified object via unwrap', () => {
-      const state$ = Derivable.from({ count: 0 });
-      const state = state$.scope((state) => {
-        state.count++;
-        return unwrap(state);
-      });
-      expect(state).toStrictEqual({ count: 1 });
-    });
-
-    it('returns the same value for primitives', () => {
+    it('returns the same primitive value of the state', () => {
       const state$ = Derivable.from(123);
       const state = state$.scope((state) => state);
       expect(state).toBe(123);
     });
 
-    it('returns the same value for primitives via unwrap', () => {
-      const state$ = Derivable.from(123);
-      const state = state$.scope((state) => unwrap(state));
+    it('returns the same primitive value for properties', () => {
+      const state$ = Derivable.from({ value: 123 });
+      const state = state$.scope((state) => state.value);
       expect(state).toBe(123);
     });
 
-    it('returns the same value for nested primitives', () => {
-      const state$ = Derivable.from({ nested: { value: 123 } });
-      const state = state$.scope((state) => state.nested.value, { deep: true });
-      expect(state).toBe(123);
-    });
-
-    it.for([
-      null,
-      undefined,
-    ])('returns %s for primitives via unwrap', (value) => {
-      const state$ = Derivable.from(value);
-      const state = state$.scope((state) => unwrap(state));
-      expect(state).toBe(value);
-    });
-
-    it('returns the same object of the property', () => {
-      const state$ = Derivable.from({ counter: { count: 0 } });
-      const counter = state$.scope((state) => {
-        return state.counter;
-      });
-      expect(counter).toBe(state$.value.counter);
-    });
-
-    it('returns the same object via unwrap', () => {
+    it('returns a new primitive value when changed', () => {
       const state$ = Derivable.from({ count: 0 });
+      const count = state$.scope((state) => ++state.count);
+      expect(count).toBe(1);
+    });
+
+    it('returns the same object reference of the state', () => {
+      const state$ = Derivable.from({ value: 123 });
       const state = state$.scope((state) => unwrap(state));
       expect(state).toBe(state$.value);
+    });
+
+    it('returns the same object reference for properties', () => {
+      const state$ = Derivable.from({ nested: { value: 123 } });
+      const state = state$.scope((state) => unwrap(state.nested));
+      expect(state).toBe(state$.value.nested);
+    });
+
+    it('returns a new object when the object is modified', () => {
+      const initialState = { count: 0 };
+      const state$ = Derivable.from(initialState);
+      const state = state$.scope((state) => {
+        state.count++;
+        return unwrap(state);
+      });
+      expect(state).not.toBe(initialState);
+      expect(state).toStrictEqual({ count: 1 });
     });
 
     it('returns a computed value via getter', () => {
@@ -425,7 +449,7 @@ describe('Derivable', () => {
       expect(keys).toStrictEqual(['a', 'b']);
     });
 
-    it('returns numeric keys via proxy', () => {
+    it('returns array keys via proxy', () => {
       const state$ = Derivable.from([] as number[]);
       state$.get(0).value = 0;
       state$.get(1).value = 2;
@@ -433,20 +457,18 @@ describe('Derivable', () => {
       expect(keys).toStrictEqual(['0', '1']);
     });
 
-    it('increments version on mutation', () => {
-      const state$ = Derivable.from({ count: 0 });
+    it('mutates an class instance via methods', () => {
+      class Counter {
+        count = 0;
+        increment() {
+          this.count++;
+        }
+      }
+      const state$ = Derivable.from(new Counter());
       state$.scope((state) => {
-        state.count++;
+        state.increment();
       });
-      expect(state$.version).toBe(1);
-    });
-
-    it('increments version on deletion', () => {
-      const state$ = Derivable.from({ a: 0, b: 1 } as Record<string, number>);
-      state$.scope((state) => {
-        delete state['a'];
-      });
-      expect(state$.version).toBe(1);
+      expect(state$.value.count).toBe(1);
     });
 
     it('mutates an array', () => {
@@ -458,6 +480,14 @@ describe('Derivable', () => {
         state.splice(1, 1);
       });
       expect(state$.value).toStrictEqual([0, 2]);
+    });
+
+    it('filters an array', () => {
+      const state$ = Derivable.from({ items: [0, 1, 2, 3] });
+      state$.scope((state) => {
+        state.items = state.items.filter((n) => n % 2 === 0);
+      });
+      expect(state$.value).toStrictEqual({ items: [0, 2] });
     });
 
     it('adds a dynamic property', () => {
@@ -500,33 +530,20 @@ describe('Derivable', () => {
       expect(state$.value).toStrictEqual({ a: 1 });
     });
 
-    it('notifies when a property is deleted', () => {
-      const state$ = Derivable.from({ a: 0, b: 1 } as Record<string, number>);
-      const subscriber = vi.fn();
-      state$.subscribe(subscriber);
-      state$.scope((state) => {
-        delete state['a'];
-      });
-      expect(subscriber).toHaveBeenCalledOnce();
-      expect(subscriber).toHaveBeenCalledWith({
-        type: 'delete',
-        source: expect.any(Signal),
-        path: ['a'],
-      });
+    it('revokes the proxy after call', () => {
+      const state$ = Derivable.from({});
+      const state = state$.scope((state) => state);
+      expect(() => Object.getPrototypeOf(state)).toThrow(
+        "Cannot perform 'getPrototypeOf' on a proxy that has been revoked",
+      );
     });
 
-    it('preserves class methods through mutations', () => {
-      class Counter {
-        count = 0;
-        increment() {
-          this.count++;
-        }
-      }
-      const state$ = Derivable.from(new Counter());
-      state$.scope((state) => {
-        state.increment();
-      });
-      expect(state$.value.count).toBe(1);
+    it('revokes the nested proxy after call', () => {
+      const state$ = Derivable.from({ nested: {} });
+      const nested = state$.scope((state) => state.nested);
+      expect(() => Object.getPrototypeOf(nested)).toThrow(
+        "Cannot perform 'getPrototypeOf' on a proxy that has been revoked",
+      );
     });
 
     it('throws when trying to set a read-only property', () => {
@@ -564,63 +581,6 @@ describe('Derivable', () => {
         "'deleteProperty' on proxy: trap returned falsish for property 'count'",
       );
     });
-
-    it('throws when a proxy leaks into a property', () => {
-      const state$ = Derivable.from({ a: { value: 0 }, b: { value: 1 } });
-      expect(() => {
-        state$.scope(
-          (state) => {
-            state.b = state.a;
-          },
-          { deep: true },
-        );
-      }).toThrow('A proxy leaked into the property at the path "b".');
-    });
-
-    it('throws when a proxy leaks into a nested property', () => {
-      const state$ = Derivable.from({
-        nested: { a: { value: 0 }, b: { value: 1 } },
-      });
-      expect(() => {
-        state$.scope(
-          (state) => {
-            state.nested.b = state.nested.a;
-          },
-          { deep: true },
-        );
-      }).toThrow('A proxy leaked into the property at the path "nested.b".');
-    });
-
-    it('throws when a proxy leaks into a new object property', () => {
-      const state$ = Derivable.from({
-        a: { nested: { value: 0 } },
-        b: { nested: { value: 1 } },
-      });
-      expect(() => {
-        state$.scope(
-          (state) => {
-            state.b = { nested: state.a.nested };
-          },
-          { deep: true },
-        );
-      }).toThrow('A proxy leaked into the property at the path "b".');
-    });
-
-    it('revokes the proxy after call', () => {
-      const state$ = Derivable.from({});
-      const state = state$.scope((state) => state);
-      expect(() => Object.getPrototypeOf(state)).toThrow(
-        "Cannot perform 'getPrototypeOf' on a proxy that has been revoked",
-      );
-    });
-
-    it('revokes the nested proxy after call', () => {
-      const state$ = Derivable.from({ nested: {} });
-      const nested = state$.scope((state) => state.nested, { deep: true });
-      expect(() => Object.getPrototypeOf(nested)).toThrow(
-        "Cannot perform 'getPrototypeOf' on a proxy that has been revoked",
-      );
-    });
   });
 
   describe('subscribe()', () => {
@@ -637,6 +597,23 @@ describe('Derivable', () => {
         path: [],
         oldValue: { count: 0 },
         newValue: { count: 1 },
+      });
+    });
+
+    it('notifies on property change', () => {
+      const state$ = Derivable.from({ items: [{ id: 1 }] });
+      const subscriber = vi.fn();
+      state$.subscribe(subscriber);
+      const item$ = state$.get('items').get(0);
+      item$.get('id')!.value = 2;
+
+      expect(subscriber).toHaveBeenCalledOnce();
+      expect(subscriber).toHaveBeenCalledWith({
+        type: 'set',
+        source: expect.any(Signal),
+        path: ['items', '0', 'id'],
+        oldValue: 1,
+        newValue: 2,
       });
     });
 
@@ -705,5 +682,20 @@ describe('Derivable', () => {
 
       expect(subscriber).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('unwrap()', () => {
+  it('returns the same value for primitives', () => {
+    expect(unwrap(123)).toBe(123);
+  });
+
+  it('returns the same value for non-proxy objects', () => {
+    const value = {};
+    expect(unwrap(value)).toBe(value);
+  });
+
+  it.for([null, undefined])('returns the same value for %s', (value) => {
+    expect(unwrap(value)).toBe(value);
   });
 });

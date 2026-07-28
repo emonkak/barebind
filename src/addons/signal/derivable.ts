@@ -32,10 +32,6 @@ type NormalizedKey = string | symbol;
 
 type Primitive = bigint | string | number | symbol | null | undefined;
 
-interface ScopeOptions {
-  deep?: boolean;
-}
-
 export class Derivable<T> extends Signal<T> {
   /** @internal */
   _signal: Signal<T>;
@@ -92,40 +88,14 @@ export class Derivable<T> extends Signal<T> {
       : undefined;
   }
 
-  scope<TReturn>(
-    callback: (value: T) => TReturn,
-    options: ScopeOptions = {},
-  ): TReturn {
+  scope<TReturn>(callback: (draft: T) => TReturn): TReturn {
     const target = this._signal.value;
     if (isNonPrimitive(target)) {
-      const resolveValue = options.deep
-        ? <T>(prop: Derivable<T>): T => {
-            if (prop._flags & FLAG_ENUMERABLE_PROPERTY) {
-              const target = prop._signal.value;
-              if (isNonPrimitive(target)) {
-                const { proxy, revoke } = trapTarget(
-                  prop,
-                  target,
-                  resolveValue,
-                );
-                revokeBatch.push(revoke);
-                return proxy;
-              }
-            }
-            return commitValue(prop);
-          }
-        : commitValue;
-      const { proxy, revoke } = trapTarget(this, target, resolveValue);
-      const revokeBatch = [revoke];
+      const { proxy, revoke } = draftTarget(this, target);
       try {
         return callback(proxy);
       } finally {
-        DEBUG: {
-          assertNoProxyLeaks(this);
-        }
-        for (const revoke of revokeBatch) {
-          revoke();
-        }
+        revoke();
       }
     } else {
       return callback(target);
@@ -139,38 +109,6 @@ export class Derivable<T> extends Signal<T> {
 
 export function unwrap<T>(value: T): T {
   return (value as any)?.[UNWRAP_TAG] ?? value;
-}
-
-function assertNoProxyLeaks<T>(receiver: Derivable<T>): void {
-  if (!(receiver._flags & FLAG_PENDING_VALUE)) {
-    return;
-  }
-  if (!(receiver._flags & FLAG_NEEDS_COMMIT)) {
-    const target = receiver._signal.value;
-    if (containsProxy(target)) {
-      throw new Error(
-        'A proxy leaked into the property at the path "' +
-          collectPath(receiver).join('.') +
-          '". ' +
-          'Proxies received from scope() must not be stored back into a property. ' +
-          'Use unwrap() to get the underlying value before storing.',
-      );
-    }
-  }
-  if (receiver._properties !== null) {
-    for (const prop of receiver._properties.values()) {
-      assertNoProxyLeaks(prop);
-    }
-  }
-}
-
-function collectPath(receiver: Derivable<any>): NormalizedKey[] {
-  const path: NormalizedKey[] = [];
-  while (receiver._owner !== null) {
-    path.push(receiver._key!);
-    receiver = receiver._owner;
-  }
-  return path.reverse();
 }
 
 function commitValue<T>(receiver: Derivable<T>): T {
@@ -190,20 +128,6 @@ function commitValue<T>(receiver: Derivable<T>): T {
     receiver._flags &= ~FLAG_NEEDS_COMMIT;
   }
   return pendingValue;
-}
-
-function containsProxy(target: unknown): boolean {
-  if (isNonPrimitive(target)) {
-    if (UNWRAP_TAG in target) {
-      return true;
-    }
-    for (const key of Reflect.ownKeys(target)) {
-      if (containsProxy((target as any)[key])) {
-        return true;
-      }
-    }
-  }
-  return false;
 }
 
 function deleteProperty<T>(prop: Derivable<T>): void {
@@ -226,6 +150,123 @@ function deleteProperty<T>(prop: Derivable<T>): void {
     reversePath.push(owner._key!);
   }
   prop._flags |= FLAG_DELETED_PROPERTY;
+}
+
+function draftTarget<T>(
+  receiver: Derivable<T>,
+  target: T & object,
+  trackProperty: typeof getProperty = getProperty,
+): { proxy: T; revoke: () => void } {
+  const { proxy, revoke } = Proxy.revocable(target, {
+    deleteProperty(target, key) {
+      const prop = getProperty(receiver, target, key);
+      const success = !!(prop._flags & FLAG_CONFIGURABLE_PROPERTY);
+      if (success) {
+        deleteProperty(prop);
+      }
+      return success;
+    },
+    get(target, key, _proxyReceiver) {
+      if (key === UNWRAP_TAG) {
+        return commitValue(receiver);
+      }
+      const prop = trackProperty(receiver, target, key);
+      if (prop._flags & FLAG_DELETED_PROPERTY) {
+        return undefined;
+      }
+      if (prop._flags & FLAG_ENUMERABLE_PROPERTY) {
+        const target = prop._signal.value;
+        if (isNonPrimitive(target)) {
+          const { proxy, revoke } = draftTarget(prop, target);
+          revokeBatch.push(revoke);
+          return proxy;
+        }
+      }
+      return commitValue(prop);
+    },
+    getOwnPropertyDescriptor(target, key) {
+      const prop = getProperty(receiver, target, key);
+      if (prop._flags & FLAG_DELETED_PROPERTY) {
+        return undefined;
+      }
+      if (prop._flags & FLAG_DYNAMIC_PROPERTY) {
+        return {
+          value: prop._signal.value,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        };
+      }
+      return Reflect.getOwnPropertyDescriptor(target, key);
+    },
+    set(target, key, value, _proxyReceiver) {
+      const prop = getProperty(receiver, target, key);
+      const success = !!(prop._flags & FLAG_WRITABLE_PROPERTY);
+      if (success) {
+        setPendingValue(prop, finalizeValue(value));
+      }
+      return success;
+    },
+    has(target, key) {
+      if (key === UNWRAP_TAG) {
+        return true;
+      }
+      const prop = receiver._properties?.get(key);
+      return prop !== undefined
+        ? !(prop._flags & FLAG_DELETED_PROPERTY)
+        : Reflect.has(target, key);
+    },
+    ownKeys(target) {
+      const baseKeys = Reflect.ownKeys(target);
+      if (receiver._properties !== null) {
+        const deletedKeys: NormalizedKey[] = [];
+        const dynamicKeys: NormalizedKey[] = [];
+        for (const [key, prop] of receiver._properties.entries()) {
+          if (prop._flags & FLAG_DELETED_PROPERTY) {
+            deletedKeys.push(key);
+          } else if (prop._flags & FLAG_DYNAMIC_PROPERTY) {
+            dynamicKeys.push(key);
+          }
+        }
+        if (deletedKeys.length > 0 || dynamicKeys.length > 0) {
+          const derivedKeys = new Set(baseKeys);
+          for (const key of deletedKeys) {
+            derivedKeys.delete(key);
+          }
+          for (const key of dynamicKeys) {
+            derivedKeys.add(key);
+          }
+          return [...derivedKeys];
+        }
+      }
+      return baseKeys;
+    },
+  });
+  const revokeBatch = [revoke];
+  return {
+    proxy,
+    revoke() {
+      for (const revoke of revokeBatch) {
+        revoke();
+      }
+    },
+  };
+}
+
+function finalizeValue<T>(target: T): T {
+  if (isNonPrimitive(target)) {
+    if (UNWRAP_TAG in target) {
+      target = target[UNWRAP_TAG] as T;
+    }
+    for (const key of Reflect.ownKeys(target as object)) {
+      const originalValue = (target as any)[key];
+      const finalizedValue = finalizeValue(originalValue);
+      if (originalValue !== finalizedValue) {
+        (target as any)[key] = finalizedValue;
+      }
+    }
+  }
+  return target;
 }
 
 function getProperty<T>(
@@ -307,17 +348,17 @@ function resolveProperty<T>(
     return new Derivable(
       new Accessor(
         () => {
-          const { proxy, revoke } = trapTarget(receiver, target);
+          const { proxy, revoke } = draftTarget(receiver, target);
           try {
-            return get.call(proxy);
+            return finalizeValue(get.call(proxy));
           } finally {
             revoke();
           }
         },
         (newValue) => {
-          const { proxy, revoke } = trapTarget(receiver, target);
+          const { proxy, revoke } = draftTarget(receiver, target);
           try {
-            set.call(proxy, newValue);
+            set.call(proxy, finalizeValue(newValue));
           } finally {
             revoke();
           }
@@ -331,12 +372,17 @@ function resolveProperty<T>(
 
   if (get !== undefined) {
     const dependencies: Signal<any>[] = [];
-    const { proxy, revoke } = trapTarget(receiver, target, (prop) => {
-      dependencies.push(prop);
-      return commitValue(prop);
-    });
+    const { proxy, revoke } = draftTarget(
+      receiver,
+      target,
+      (receiver, target, key) => {
+        const prop = getProperty(receiver, target, key);
+        dependencies.push(prop);
+        return prop;
+      },
+    );
     try {
-      const initialResult = get.call(proxy);
+      const initialResult = finalizeValue(get.call(proxy));
       const initialVersion = dependencies.reduce(
         (version, dependency) => version + dependency.version,
         0,
@@ -344,9 +390,9 @@ function resolveProperty<T>(
       return new Derivable(
         new Computed(
           () => {
-            const { proxy, revoke } = trapTarget(receiver, target);
+            const { proxy, revoke } = draftTarget(receiver, target);
             try {
-              return get.call(proxy);
+              return finalizeValue(get.call(proxy));
             } finally {
               revoke();
             }
@@ -408,88 +454,4 @@ function shallowClone<T>(target: T): T {
         Object.getPrototypeOf(target),
         Object.getOwnPropertyDescriptors(target),
       );
-}
-
-function trapTarget<T>(
-  receiver: Derivable<T>,
-  target: T & object,
-  resolveValue: typeof commitValue = commitValue,
-): { proxy: T; revoke: () => void } {
-  return Proxy.revocable(target, {
-    deleteProperty(target, key) {
-      const prop = getProperty(receiver, target, key);
-      const success = !!(prop._flags & FLAG_CONFIGURABLE_PROPERTY);
-      if (success) {
-        deleteProperty(prop);
-      }
-      return success;
-    },
-    get(target, key, _proxyReceiver) {
-      if (key === UNWRAP_TAG) {
-        return commitValue(receiver);
-      }
-      const prop = getProperty(receiver, target, key);
-      if (prop._flags & FLAG_DELETED_PROPERTY) {
-        return undefined;
-      }
-      return resolveValue(prop);
-    },
-    getOwnPropertyDescriptor(target, key) {
-      const prop = getProperty(receiver, target, key);
-      if (prop._flags & FLAG_DELETED_PROPERTY) {
-        return undefined;
-      }
-      if (prop._flags & FLAG_DYNAMIC_PROPERTY) {
-        return {
-          value: prop._signal.value,
-          writable: true,
-          enumerable: true,
-          configurable: true,
-        };
-      }
-      return Reflect.getOwnPropertyDescriptor(target, key);
-    },
-    set(target, key, value, _proxyReceiver) {
-      const prop = getProperty(receiver, target, key);
-      const success = !!(prop._flags & FLAG_WRITABLE_PROPERTY);
-      if (success) {
-        setPendingValue(prop, value);
-      }
-      return success;
-    },
-    has(target, key) {
-      if (key === UNWRAP_TAG) {
-        return true;
-      }
-      const prop = receiver._properties?.get(key);
-      return prop !== undefined
-        ? !(prop._flags & FLAG_DELETED_PROPERTY)
-        : Reflect.has(target, key);
-    },
-    ownKeys(target) {
-      const baseKeys = Reflect.ownKeys(target);
-      if (receiver._properties !== null) {
-        const deletedKeys: NormalizedKey[] = [];
-        const dynamicKeys: NormalizedKey[] = [];
-        for (const [key, prop] of receiver._properties.entries()) {
-          if (prop._flags & FLAG_DELETED_PROPERTY) {
-            deletedKeys.push(key);
-          } else if (prop._flags & FLAG_DYNAMIC_PROPERTY) {
-            dynamicKeys.push(key);
-          }
-        }
-        if (deletedKeys.length > 0 || dynamicKeys.length > 0) {
-          const derivedKeys = new Set(baseKeys);
-          for (const key of deletedKeys) {
-            derivedKeys.delete(key);
-          }
-          for (const key of dynamicKeys) {
-            derivedKeys.add(key);
-          }
-          return [...derivedKeys];
-        }
-      }
-      return baseKeys;
-    },
-  });
 }

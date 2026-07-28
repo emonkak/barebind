@@ -66,40 +66,31 @@ export class TodoStore {
   }
 
   toggleTodo(id: string): void {
-    this.state$.get('todos').scope(
-      (todos) => {
-        for (const todo of todos) {
-          if (todo.id === id) {
-            todo.completed = !todo.completed;
-          }
+    this.state$.get('todos').scope((todos) => {
+      for (const todo of todos) {
+        if (todo.id === id) {
+          todo.completed = !todo.completed;
         }
-      },
-      { deep: true },
-    );
+      }
+    });
   }
 
   toggleAllTodos(): void {
-    this.state$.get('todos').scope(
-      (todos) => {
-        for (const todo of todos) {
-          todo.completed = !todo.completed;
-        }
-      },
-      { deep: true },
-    );
+    this.state$.get('todos').scope((todos) => {
+      for (const todo of todos) {
+        todo.completed = !todo.completed;
+      }
+    });
   }
 
   updateTodo(id: string, title: string): void {
-    this.state$.get('todos').scope(
-      (todos) => {
-        for (const todo of todos) {
-          if (todo.id === id) {
-            todo.title = title;
-          }
+    this.state$.get('todos').scope((todos) => {
+      for (const todo of todos) {
+        if (todo.id === id) {
+          todo.title = title;
         }
-      },
-      { deep: true },
-    );
+      }
+    });
   }
 }
 
