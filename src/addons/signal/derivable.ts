@@ -98,15 +98,15 @@ export class Derivable<T> extends Signal<T> {
   ): TReturn {
     const target = this._signal.value;
     if (isNonPrimitive(target)) {
-      const finalizeValue: typeof commitValue = options.deep
-        ? (prop) => {
+      const resolveValue = options.deep
+        ? <T>(prop: Derivable<T>): T => {
             if (prop._flags & FLAG_ENUMERABLE_PROPERTY) {
               const target = prop._signal.value;
               if (isNonPrimitive(target)) {
                 const { proxy, revoke } = trapTarget(
                   prop,
                   target,
-                  finalizeValue,
+                  resolveValue,
                 );
                 revokeBatch.push(revoke);
                 return proxy;
@@ -115,7 +115,7 @@ export class Derivable<T> extends Signal<T> {
             return commitValue(prop);
           }
         : commitValue;
-      const { proxy, revoke } = trapTarget(this, target, finalizeValue);
+      const { proxy, revoke } = trapTarget(this, target, resolveValue);
       const revokeBatch = [revoke];
       try {
         return callback(proxy);
@@ -413,7 +413,7 @@ function shallowClone<T>(target: T): T {
 function trapTarget<T>(
   receiver: Derivable<T>,
   target: T & object,
-  finalizeValue: typeof commitValue = commitValue,
+  resolveValue: typeof commitValue = commitValue,
 ): { proxy: T; revoke: () => void } {
   return Proxy.revocable(target, {
     deleteProperty(target, key) {
@@ -432,7 +432,7 @@ function trapTarget<T>(
       if (prop._flags & FLAG_DELETED_PROPERTY) {
         return undefined;
       }
-      return finalizeValue(prop);
+      return resolveValue(prop);
     },
     getOwnPropertyDescriptor(target, key) {
       const prop = getProperty(receiver, target, key);
