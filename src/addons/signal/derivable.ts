@@ -141,7 +141,7 @@ export function unwrap<T>(value: T): T {
   return (value as any)?.[UNWRAP_TAG] ?? value;
 }
 
-function assertNoProxyLeaks(receiver: Derivable<any>): void {
+function assertNoProxyLeaks<T>(receiver: Derivable<T>): void {
   if (!(receiver._flags & FLAG_PENDING_VALUE)) {
     return;
   }
