@@ -67,6 +67,30 @@ describe('Middleware', () => {
     await root.render(html`<div>second</div>`).finished;
     expect(handle).toHaveBeenCalledTimes(2);
   });
+
+  it('stops calling a middleware after it is removed', async () => {
+    const handle = vi.fn(passthrough);
+    const remove = runtime.use({ handle });
+
+    await root.render(html`<div>first</div>`).finished;
+    expect(handle).toHaveBeenCalledTimes(1);
+
+    remove();
+
+    await root.render(html`<div>second</div>`).finished;
+    expect(handle).toHaveBeenCalledTimes(1);
+  });
+
+  it('removes a middleware with its removal function once', async () => {
+    const handle = vi.fn(passthrough);
+    const remove = runtime.use({ handle });
+
+    remove();
+    remove();
+
+    await root.render(html`<div>hello</div>`).finished;
+    expect(handle).not.toHaveBeenCalled();
+  });
 });
 
 function passthrough(

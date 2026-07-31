@@ -303,8 +303,17 @@ export class Runtime implements Renderer, Dispatcher {
     };
   }
 
-  use(middleware: Middleware): void {
+  use(middleware: Middleware): () => void {
     this._middlewares.push(middleware);
+    return () => {
+      const index = this._middlewares.indexOf(middleware);
+      if (index >= 0) {
+        // Must not be called from within Middleware.handle() before the
+        // remaining middleware have run; pipeline indices shift, which is
+        // undefined behavior.
+        this._middlewares.splice(index, 1);
+      }
+    };
   }
 
   private _diffChildren(
