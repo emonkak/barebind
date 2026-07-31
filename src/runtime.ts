@@ -628,11 +628,11 @@ function runPipeline(
   renderer: Renderer,
 ) {
   function continuePipeline(update: Update, index: number): Commit {
-    return (
-      middlewares[index]?.handle(update, (update) =>
-        continuePipeline(update, index + 1),
-      ) ?? update.transaction.prepare(flushLanes, renderer)
-    );
+    return index < middlewares.length
+      ? middlewares[index]!.handle(update, (update) =>
+          continuePipeline(update, index + 1),
+        )
+      : update.transaction.prepare(flushLanes, renderer);
   }
   return continuePipeline(update, 0);
 }
