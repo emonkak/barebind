@@ -544,7 +544,7 @@ export class Runtime implements Renderer, Dispatcher {
             continue;
           }
           commitBatch.push(
-            runPipeline(update, this._flushLanes, this._middlewares, this),
+            runPipeline(update, this._middlewares, this._flushLanes, this),
           );
         }
 
@@ -623,8 +623,8 @@ function compareUpdates(update1: Update, update2: Update): number {
 
 function runPipeline(
   update: Update,
-  flushLanes: Lanes,
   middlewares: Middleware[],
+  flushLanes: Lanes,
   renderer: Renderer,
 ) {
   function continuePipeline(update: Update, index: number): Commit {
