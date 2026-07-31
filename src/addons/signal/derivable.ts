@@ -80,8 +80,8 @@ export class Derivable<T> extends Signal<T> {
   get<K extends keyof NonPrimitive<T>>(
     key: K,
   ): T extends object ? Derivable<Get<NonPrimitive<T>, K>> : undefined;
-  get(key: PropertyKey): T extends object ? Derivable<unknown> : undefined;
-  get(key: PropertyKey): Derivable<any> | undefined {
+  get(key: PropertyKey): T extends object ? Derivable<never> : undefined;
+  get(key: PropertyKey): Derivable<any> | Derivable<never> | undefined {
     const target = this._signal.value;
     return isNonPrimitive(target)
       ? getProperty(this, target, normalizeKey(key))

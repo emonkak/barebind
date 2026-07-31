@@ -27,9 +27,9 @@ describe('Derivable', () => {
       ).toEqualTypeOf<Derivable<number> | undefined>();
     });
 
-    it('returns an unknown derivable for undefined keys', () => {
+    it('returns a never derivable for undefined keys', () => {
       expectTypeOf(Derivable.from({}).get('noKey')).toEqualTypeOf<
-        Derivable<unknown>
+        Derivable<never>
       >();
     });
 
