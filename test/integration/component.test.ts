@@ -1087,8 +1087,10 @@ describe('Component', () => {
   });
 
   describe('View transition', () => {
-    afterEach(() => {
-      document.activeViewTransition?.skipTransition();
+    let startViewTransitionSpy!: typeof document.startViewTransition;
+
+    beforeEach(() => {
+      startViewTransitionSpy = vi.spyOn(document, 'startViewTransition');
     });
 
     it('commits the update in the view transition', async () => {
@@ -1108,13 +1110,16 @@ describe('Component', () => {
       await root.render(App({})).finished;
       const button = container.querySelector('button')!;
       expect(button.innerHTML).toBe('0');
-      expect(document.activeViewTransition).toBe(null);
+      expect(startViewTransitionSpy).not.toHaveBeenCalled();
 
       button.click();
       await step(runtime);
       expect(button.innerHTML).toBe('1');
-      expect(document.activeViewTransition).toBeInstanceOf(ViewTransition);
-      expect([...document.activeViewTransition!.types]).toStrictEqual([]);
+      expect(startViewTransitionSpy).toHaveBeenCalledOnce();
+      expect(startViewTransitionSpy).toHaveBeenCalledWith({
+        types: [],
+        update: expect.any(Function),
+      });
     });
 
     it('commits the update with in view transition with types', async () => {
@@ -1136,16 +1141,16 @@ describe('Component', () => {
       await root.render(App({})).finished;
       const button = container.querySelector('button')!;
       expect(button.innerHTML).toBe('0');
-      expect(document.activeViewTransition).toBe(null);
+      expect(startViewTransitionSpy).not.toHaveBeenCalled();
 
       button.click();
       await step(runtime);
       expect(button.innerHTML).toBe('1');
-      expect(document.activeViewTransition).toBeInstanceOf(ViewTransition);
-      expect([...document.activeViewTransition!.types]).toStrictEqual([
-        'slide',
-        'fade',
-      ]);
+      expect(startViewTransitionSpy).toHaveBeenCalledOnce();
+      expect(startViewTransitionSpy).toHaveBeenCalledWith({
+        types: ['slide', 'fade'],
+        update: expect.any(Function),
+      });
     });
   });
 });
