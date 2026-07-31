@@ -38,45 +38,48 @@ describe('UpdateLogger addon', () => {
     [{ flushSync: true }, 'user-blocking', 'synchronous'],
     [{ viewTransition: true }, 'user-blocking', 'view-transition'],
     [{}, 'background', 'animation-frame'],
-  ])('logs an update with $1 priority and $2 mode', async (options, expectedPriority, expectedMode) => {
-    await root.render(html`<div>hello</div>`, options).finished;
+  ])(
+    'logs an update with $1 priority and $2 mode',
+    async (options, expectedPriority, expectedMode) => {
+      await root.render(html`<div>hello</div>`, options).finished;
 
-    expect(logger.groupCollapsed).toHaveBeenCalledOnce();
-    expect(logger.groupCollapsed).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Update #0 %cCOMPLETED%c at %c${DOMRoot.name}%c in %c`,
-      ),
-      expect.any(String),
-      expect.any(String),
-      expect.any(String),
-      expect.any(String),
-      expect.any(String),
-    );
-    expect(logger.log).toHaveBeenCalledTimes(3);
-    expect(logger.log).toHaveBeenNthCalledWith(
-      1,
-      expect.stringContaining(`Under %c${DOMRoot.name}`),
-      expect.any(String),
-    );
-    expect(logger.log).toHaveBeenNthCalledWith(
-      2,
-      expect.stringContaining(
-        `Rendered with %c${expectedPriority}%c priority after %c`,
-      ),
-      expect.any(String),
-      expect.any(String),
-      expect.any(String),
-    );
-    expect(logger.log).toHaveBeenNthCalledWith(
-      3,
-      expect.stringContaining(
-        `Committed with %c${expectedMode}%c mode after %c`,
-      ),
-      expect.any(String),
-      expect.any(String),
-      expect.any(String),
-    );
-  });
+      expect(logger.groupCollapsed).toHaveBeenCalledOnce();
+      expect(logger.groupCollapsed).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Update #0 %cCOMPLETED%c at %c${DOMRoot.name}%c in %c`,
+        ),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+      );
+      expect(logger.log).toHaveBeenCalledTimes(3);
+      expect(logger.log).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining(`Under %c${DOMRoot.name}`),
+        expect.any(String),
+      );
+      expect(logger.log).toHaveBeenNthCalledWith(
+        2,
+        expect.stringContaining(
+          `Rendered with %c${expectedPriority}%c priority after %c`,
+        ),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+      );
+      expect(logger.log).toHaveBeenNthCalledWith(
+        3,
+        expect.stringContaining(
+          `Committed with %c${expectedMode}%c mode after %c`,
+        ),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+      );
+    },
+  );
 
   it('logs an update from the child component', async () => {
     const App = createComponent(function App() {

@@ -141,24 +141,24 @@ describe('Event binding', () => {
     );
   });
 
-  it.each([
-    null,
-    undefined,
-  ])('removes the event listener when the value is %s', async (value) => {
-    const listener = vi.fn();
-    const render = (listener: unknown) => html`
+  it.each([null, undefined])(
+    'removes the event listener when the value is %s',
+    async (value) => {
+      const listener = vi.fn();
+      const render = (listener: unknown) => html`
       <button id="target" @click=${listener}></button>
     `;
 
-    await root.render(render(listener)).finished;
-    const target = container.querySelector<HTMLButtonElement>('#target')!;
-    target.click();
-    expect(listener).toHaveBeenCalledOnce();
+      await root.render(render(listener)).finished;
+      const target = container.querySelector<HTMLButtonElement>('#target')!;
+      target.click();
+      expect(listener).toHaveBeenCalledOnce();
 
-    await root.render(render(value)).finished;
-    target.click();
-    expect(listener).toHaveBeenCalledOnce();
-  });
+      await root.render(render(value)).finished;
+      target.click();
+      expect(listener).toHaveBeenCalledOnce();
+    },
+  );
 
   it('invokes the new function listener when the listener is updated', async () => {
     const listener1 = vi.fn();

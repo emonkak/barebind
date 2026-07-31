@@ -58,19 +58,19 @@ describe('Class binding', () => {
     expect(target.classList.contains('baz')).toBe(true);
   });
 
-  it.each([
-    null,
-    undefined,
-  ])('removes classes when the value is %s', async (value) => {
-    const render = (value: unknown) => html`<div class=${value}></div>`;
+  it.each([null, undefined])(
+    'removes classes when the value is %s',
+    async (value) => {
+      const render = (value: unknown) => html`<div class=${value}></div>`;
 
-    await root.render(render('foo')).finished;
-    const target = container.querySelector('div')!;
-    expect(target.classList.contains('foo')).toBe(true);
+      await root.render(render('foo')).finished;
+      const target = container.querySelector('div')!;
+      expect(target.classList.contains('foo')).toBe(true);
 
-    await root.render(render(value)).finished;
-    expect(target.classList.contains('foo')).toBe(false);
-  });
+      await root.render(render(value)).finished;
+      expect(target.classList.contains('foo')).toBe(false);
+    },
+  );
 
   it('removes classes that are no longer in the object', async () => {
     const render = (value: Record<string, boolean>) => {

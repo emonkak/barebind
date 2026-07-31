@@ -80,20 +80,20 @@ describe('Style binding', () => {
     );
   });
 
-  it.each([
-    null,
-    undefined,
-  ])('removes styles that are set to %s in the object', async (value) => {
-    const render = (props: Record<string, string | null | undefined>) =>
-      html`<div style=${props}></div>`;
+  it.each([null, undefined])(
+    'removes styles that are set to %s in the object',
+    async (value) => {
+      const render = (props: Record<string, string | null | undefined>) =>
+        html`<div style=${props}></div>`;
 
-    await root.render(render({ color: 'red', 'font-size': '16px' })).finished;
-    const target = container.querySelector('div')!;
-    expect(target.style.color).toBe('red');
+      await root.render(render({ color: 'red', 'font-size': '16px' })).finished;
+      const target = container.querySelector('div')!;
+      expect(target.style.color).toBe('red');
 
-    await root.render(render({ color: 'red', 'font-size': value })).finished;
-    expect(target.style.fontSize).toBe('');
-  });
+      await root.render(render({ color: 'red', 'font-size': value })).finished;
+      expect(target.style.fontSize).toBe('');
+    },
+  );
 
   it('removes styles that are no longer in the fragment', async () => {
     const render = (value: unknown) => {

@@ -76,19 +76,18 @@ describe('Attribute binding', () => {
     expect(container.innerHTML).toBe('<div data-a=""></div>');
   });
 
-  it.each([
-    null,
-    undefined,
-    false,
-  ])('removes attributes when the value is %s', async (value) => {
-    const render = (value: unknown) => html`<div data-a=${value}></div>`;
+  it.each([null, undefined, false])(
+    'removes attributes when the value is %s',
+    async (value) => {
+      const render = (value: unknown) => html`<div data-a=${value}></div>`;
 
-    await root.render(render('a')).finished;
-    expect(container.innerHTML).toBe('<div data-a="a"></div>');
+      await root.render(render('a')).finished;
+      expect(container.innerHTML).toBe('<div data-a="a"></div>');
 
-    await root.render(render(value)).finished;
-    expect(container.innerHTML).toBe('<div></div>');
-  });
+      await root.render(render(value)).finished;
+      expect(container.innerHTML).toBe('<div></div>');
+    },
+  );
 
   it('throws when an expression is used as an attribute name', async () => {
     const template = html`

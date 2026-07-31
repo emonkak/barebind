@@ -32,14 +32,14 @@ describe('DOMAdapter', () => {
       expect(adapter.getTaskPriority()).toBe('background');
     });
 
-    it.each([
-      'loading',
-      'interactive',
-    ] as const)('returns "user-blocking" when readyState is "%s" and there is no current event', (readyState) => {
-      vi.spyOn(document, 'readyState', 'get').mockReturnValue(readyState);
-      vi.spyOn(window, 'event', 'get').mockReturnValue(undefined);
-      expect(adapter.getTaskPriority()).toBe('user-blocking');
-    });
+    it.each(['loading', 'interactive'] as const)(
+      'returns "user-blocking" when readyState is "%s" and there is no current event',
+      (readyState) => {
+        vi.spyOn(document, 'readyState', 'get').mockReturnValue(readyState);
+        vi.spyOn(window, 'event', 'get').mockReturnValue(undefined);
+        expect(adapter.getTaskPriority()).toBe('user-blocking');
+      },
+    );
 
     it.each([
       'drag',
