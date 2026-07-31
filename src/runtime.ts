@@ -627,12 +627,12 @@ function runPipeline(
   middlewares: Middleware[],
   renderer: Renderer,
 ) {
-  function resumePipeline(update: Update, index: number): Commit {
+  function continuePipeline(update: Update, index: number): Commit {
     return (
       middlewares[index]?.handle(update, (update) =>
-        resumePipeline(update, index + 1),
+        continuePipeline(update, index + 1),
       ) ?? update.transaction.prepare(flushLanes, renderer)
     );
   }
-  return resumePipeline(update, 0);
+  return continuePipeline(update, 0);
 }
