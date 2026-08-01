@@ -482,12 +482,24 @@ describe('Derivable', () => {
       expect(state$.value).toStrictEqual([0, 2]);
     });
 
-    it('filters an array', () => {
+    it('filters a primitive array', () => {
       const state$ = Derivable.from({ items: [0, 1, 2, 3] });
       state$.scope((state) => {
         state.items = state.items.filter((n) => n % 2 === 0);
       });
       expect(state$.value).toStrictEqual({ items: [0, 2] });
+    });
+
+    it('filters an object array', () => {
+      const state$ = Derivable.from({
+        items: [{ value: 0 }, { value: 1 }, { value: 2 }, { value: 3 }],
+      });
+      state$.scope((state) => {
+        state.items = state.items.filter((item) => item.value % 2 === 0);
+      });
+      expect(state$.value).toStrictEqual({
+        items: [{ value: 0 }, { value: 2 }],
+      });
     });
 
     it('adds a dynamic property', () => {
