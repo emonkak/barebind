@@ -136,23 +136,6 @@ export abstract class WritableSignal<T> extends Signal<T> {
   abstract write(value: T): void;
 }
 
-export class Atom<T> extends WritableSignal<T> {
-  private _value: T;
-
-  constructor(initialValue: T) {
-    super();
-    this._value = initialValue;
-  }
-
-  read(): T {
-    return this._value;
-  }
-
-  write(value: T): void {
-    this._value = value;
-  }
-}
-
 export class Accessor<T> extends WritableSignal<T> {
   private readonly _getter: () => T;
   private readonly _setter: (value: T) => void;
@@ -171,6 +154,23 @@ export class Accessor<T> extends WritableSignal<T> {
   write(value: T): void {
     const set = this._setter;
     set(value);
+  }
+}
+
+export class Atom<T> extends WritableSignal<T> {
+  private _value: T;
+
+  constructor(initialValue: T) {
+    super();
+    this._value = initialValue;
+  }
+
+  read(): T {
+    return this._value;
+  }
+
+  write(value: T): void {
+    this._value = value;
   }
 }
 
@@ -200,7 +200,6 @@ export class Computed<
 
   get value(): TResult {
     const version = this.version;
-
     if (this._memoizedVersion < version) {
       const computation = this._computation;
       this._memoizedResult = computation(
@@ -210,7 +209,6 @@ export class Computed<
       );
       this._memoizedVersion = version;
     }
-
     return this._memoizedResult!;
   }
 
@@ -226,7 +224,6 @@ export class Computed<
     const subscriptions = this._dependencies.map((dependency) =>
       dependency.subscribe(subscriber),
     );
-
     return () => {
       for (const subscription of subscriptions) {
         subscription();

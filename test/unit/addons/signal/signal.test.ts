@@ -7,6 +7,87 @@ import {
   type Signal,
 } from '@/addons/signal/signal.js';
 
+describe('Accessor', () => {
+  describe('value', () => {
+    it('returns the value from the getter', () => {
+      let value = 'a';
+      const accessor = new Accessor(
+        () => value,
+        (newValue) => {
+          value = newValue;
+        },
+      );
+
+      expect(accessor.value).toBe('a');
+    });
+  });
+
+  describe('set value()', () => {
+    it('increments the version on update', () => {
+      let value = 'a';
+      const accessor = new Accessor(
+        () => value,
+        (newValue) => {
+          value = newValue;
+        },
+      );
+
+      expect(accessor.version).toBe(0);
+
+      accessor.value = 'b';
+
+      expect(accessor.value).toBe('b');
+      expect(accessor.version).toBe(1);
+    });
+
+    it('calls the setter function', () => {
+      let value = 'a';
+      const accessor = new Accessor(
+        () => value,
+        (newValue) => {
+          value = newValue;
+        },
+      );
+
+      accessor.value = 'b';
+
+      expect(value).toBe('b');
+    });
+
+    it('does nothing when the value is the same', () => {
+      let value = 'a';
+      const accessor = new Accessor(
+        () => value,
+        (newValue: string) => {
+          value = newValue;
+        },
+      );
+
+      accessor.value = 'a';
+
+      expect(accessor.version).toBe(0);
+    });
+  });
+
+  describe('write()', () => {
+    it('writes the value without events', () => {
+      let value = 'a';
+      const accessor = new Accessor(
+        () => value,
+        (newValue) => {
+          value = newValue;
+        },
+      );
+      const subscriber = vi.fn();
+
+      accessor.subscribe(subscriber);
+      accessor.write('b');
+
+      expect(subscriber).not.toHaveBeenCalled();
+    });
+  });
+});
+
 describe('Atom', () => {
   describe('set value()', () => {
     it('increments the version on update', () => {
@@ -97,87 +178,6 @@ describe('Atom', () => {
       atom.value = 'b';
       expect(subscriber).not.toHaveBeenCalled();
       expect(atom.value).toBe('b');
-    });
-  });
-});
-
-describe('Accessor', () => {
-  describe('value', () => {
-    it('returns the value from the getter', () => {
-      let value = 'a';
-      const accessor = new Accessor(
-        () => value,
-        (newValue) => {
-          value = newValue;
-        },
-      );
-
-      expect(accessor.value).toBe('a');
-    });
-  });
-
-  describe('set value()', () => {
-    it('increments the version on update', () => {
-      let value = 'a';
-      const accessor = new Accessor(
-        () => value,
-        (newValue) => {
-          value = newValue;
-        },
-      );
-
-      expect(accessor.version).toBe(0);
-
-      accessor.value = 'b';
-
-      expect(accessor.value).toBe('b');
-      expect(accessor.version).toBe(1);
-    });
-
-    it('calls the setter function', () => {
-      let value = 'a';
-      const accessor = new Accessor(
-        () => value,
-        (newValue) => {
-          value = newValue;
-        },
-      );
-
-      accessor.value = 'b';
-
-      expect(value).toBe('b');
-    });
-
-    it('does nothing when the value is the same', () => {
-      let value = 'a';
-      const accessor = new Accessor(
-        () => value,
-        (newValue: string) => {
-          value = newValue;
-        },
-      );
-
-      accessor.value = 'a';
-
-      expect(accessor.version).toBe(0);
-    });
-  });
-
-  describe('write()', () => {
-    it('writes the value without events', () => {
-      let value = 'a';
-      const accessor = new Accessor(
-        () => value,
-        (newValue) => {
-          value = newValue;
-        },
-      );
-      const subscriber = vi.fn();
-
-      accessor.subscribe(subscriber);
-      accessor.write('b');
-
-      expect(subscriber).not.toHaveBeenCalled();
     });
   });
 });
