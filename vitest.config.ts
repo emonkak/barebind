@@ -1,16 +1,13 @@
-import path from 'node:path';
+import * as path from 'node:path';
 import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  resolve: {
-    alias: {
-      '@': path.join(__dirname, '/src'),
-    },
-  },
   test: {
+    benchmark: {
+      include: [],
+    },
     browser: {
-      enabled: true,
       headless: true,
       instances: [{ browser: 'chromium' }],
       provider: playwright(),
@@ -20,18 +17,40 @@ export default defineConfig({
       include: ['src/**'],
       exclude: ['src/index.ts'],
     },
-    include: ['test/**/*.test.ts?(x)'],
     projects: [
-      'examples/*/vitest.config.ts',
+      {
+        extends: true,
+        resolve: {
+          alias: {
+            '@': path.join(__dirname, '/src'),
+          },
+        },
+        test: {
+          name: 'unit',
+          benchmark: {
+            include: ['test/unit/**/*.bench.ts'],
+          },
+          browser: {
+            enabled: true,
+          },
+          include: ['test/unit/**/*.test.ts'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'integration',
+          browser: {
+            enabled: true,
+          },
+          include: ['test/integration/**/*.test.ts'],
+        },
+      },
       'tools/*/vitest.config.ts',
-      'vitest.config.ts',
     ],
     restoreMocks: true,
     clearMocks: true,
     unstubGlobals: true,
     unstubEnvs: true,
-  },
-  benchmark: {
-    include: ['test/**/*.bench.ts'],
   },
 });

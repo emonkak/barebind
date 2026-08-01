@@ -2,8 +2,8 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import esbuild from 'esbuild';
+import { minifyTemplates } from 'esbuild-plugin-minify-templates';
 import { afterAll, beforeAll, expect, test } from 'vitest';
-import { minifyTemplates } from '@/index.js';
 
 let tmpDir: string;
 
@@ -147,13 +147,13 @@ test('preserves whitespace in String.raw', async () => {
 });
 
 async function bundle(code: string): Promise<string> {
-  const inputPath = path.join(tmpDir, 'input.js');
+  const inputFile = path.join(tmpDir, 'input.ts');
 
-  await fs.writeFile(inputPath, code);
+  await fs.writeFile(inputFile, code);
 
   const result = await esbuild.build({
     bundle: true,
-    entryPoints: [inputPath],
+    entryPoints: [inputFile],
     format: 'esm',
     write: false,
     plugins: [minifyTemplates()],
