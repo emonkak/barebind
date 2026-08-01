@@ -78,7 +78,7 @@ export abstract class Signal<T> implements Bindable, HookObject<T> {
         }
         batched = false;
       };
-      checkForChanges();
+      queueMicrotask(checkForChanges);
       return this.subscribe(() => {
         if (!batched) {
           batched = true;
