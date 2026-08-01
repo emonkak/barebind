@@ -377,7 +377,7 @@ function resolveProperty<T>(
       target,
       (receiver, target, key) => {
         const prop = getProperty(receiver, target, key);
-        dependencies.push(prop);
+        dependencies.push(prop._signal);
         return prop;
       },
     );
