@@ -34,7 +34,7 @@ type Primitive = bigint | string | number | symbol | null | undefined;
 
 export class Derivable<T> extends Signal<T> {
   /** @internal */
-  _signal: Signal<T>;
+  _source: Signal<T>;
   /** @internal */
   _owner: Derivable<unknown> | null;
   /** @internal */
@@ -49,20 +49,20 @@ export class Derivable<T> extends Signal<T> {
   }
 
   constructor(
-    signal: Signal<T>,
+    source: Signal<T>,
     owner: Derivable<any> | null,
     key: NormalizedKey | null,
     flags: number,
   ) {
     super();
-    this._signal = signal;
+    this._source = source;
     this._owner = owner;
     this._key = key;
     this._flags = flags;
   }
 
   get version(): number {
-    return this._signal.version;
+    return this._source.version;
   }
 
   get value(): T {
@@ -74,7 +74,7 @@ export class Derivable<T> extends Signal<T> {
   }
 
   asShallow(): Signal<T> {
-    return new Shallow(this._signal);
+    return new Shallow(this._source);
   }
 
   delete(): void {
@@ -86,14 +86,14 @@ export class Derivable<T> extends Signal<T> {
   ): T extends object ? Derivable<Get<NonPrimitive<T>, K>> : undefined;
   get(key: PropertyKey): T extends object ? Derivable<never> : undefined;
   get(key: PropertyKey): Derivable<any> | Derivable<never> | undefined {
-    const target = this._signal.value;
+    const target = this._source.value;
     return isNonPrimitive(target)
       ? getProperty(this, target, normalizeKey(key))
       : undefined;
   }
 
   scope<TReturn>(callback: (draft: T) => TReturn): TReturn {
-    const target = this._signal.value;
+    const target = this._source.value;
     if (isNonPrimitive(target)) {
       const { proxy, revoke } = draftTarget(this, target);
       try {
@@ -107,29 +107,29 @@ export class Derivable<T> extends Signal<T> {
   }
 
   subscribe(subscriber: Subscriber): Unsubscribe {
-    return this._signal.subscribe(subscriber);
+    return this._source.subscribe(subscriber);
   }
 }
 
 export class Shallow<T> extends Signal<T> {
-  private readonly _signal: Signal<T>;
+  private readonly _source: Signal<T>;
 
-  constructor(signal: Signal<T>) {
+  constructor(source: Signal<T>) {
     super();
-    this._signal = signal;
+    this._source = source;
   }
 
   get value(): T {
-    return this._signal.value;
+    return this._source.value;
   }
 
   get version(): number {
-    return this._signal.version;
+    return this._source.version;
   }
 
   subscribe(subscriber: Subscriber): Unsubscribe {
-    return this._signal.subscribe((event) => {
-      if (event.source === this._signal) {
+    return this._source.subscribe((event) => {
+      if (event.source === this._source) {
         subscriber(event);
       }
     });
@@ -141,7 +141,7 @@ export function unwrap<T>(value: T): T {
 }
 
 function commitValue<T>(receiver: Derivable<T>): T {
-  let pendingValue = receiver._signal.value;
+  let pendingValue = receiver._source.value;
   if (receiver._flags & FLAG_NEEDS_COMMIT) {
     pendingValue = shallowClone(pendingValue);
     for (const [key, prop] of receiver._properties!.entries()) {
@@ -153,7 +153,7 @@ function commitValue<T>(receiver: Derivable<T>): T {
       }
     }
     // SAFETY: The signal is always WritableSignal if FLAG_NEEDS_COMMIT is set.
-    (receiver._signal as WritableSignal<T>).write(pendingValue);
+    (receiver._source as WritableSignal<T>).write(pendingValue);
     receiver._flags &= ~FLAG_NEEDS_COMMIT;
   }
   return pendingValue;
@@ -165,11 +165,11 @@ function deleteProperty<T>(prop: Derivable<T>): void {
     owner !== null;
     owner = owner._owner
   ) {
-    if (owner._signal instanceof WritableSignal) {
+    if (owner._source instanceof WritableSignal) {
       const level = reversePath.length;
-      owner._signal.invalidate({
+      owner._source.invalidate({
         type: 'delete',
-        source: prop._signal,
+        source: prop._source,
         get path() {
           return reversePath.slice(0, level).reverse();
         },
@@ -204,7 +204,7 @@ function draftTarget<T>(
         return undefined;
       }
       if (prop._flags & FLAG_ENUMERABLE_PROPERTY) {
-        const target = prop._signal.value;
+        const target = prop._source.value;
         if (isNonPrimitive(target)) {
           const { proxy, revoke } = draftTarget(prop, target);
           revokeBatch.push(revoke);
@@ -220,7 +220,7 @@ function draftTarget<T>(
       }
       if (prop._flags & FLAG_DYNAMIC_PROPERTY) {
         return {
-          value: prop._signal.value,
+          value: prop._source.value,
           writable: true,
           enumerable: true,
           configurable: true,
@@ -406,7 +406,7 @@ function resolveProperty<T>(
       target,
       (receiver, target, key) => {
         const prop = getProperty(receiver, target, key);
-        dependencies.push(prop._signal);
+        dependencies.push(prop._source);
         return prop;
       },
     );
@@ -443,19 +443,19 @@ function resolveProperty<T>(
 }
 
 function setPendingValue<T>(receiver: Derivable<T>, newValue: T): void {
-  const oldValue = receiver._signal.value;
+  const oldValue = receiver._source.value;
   // Intentionally throws a TypeError if signal is a Computed (which has no setter).
-  (receiver._signal as WritableSignal<T>).value = newValue;
+  (receiver._source as WritableSignal<T>).value = newValue;
   for (
     let owner = receiver._owner, reversePath = [receiver._key!];
     owner !== null;
     owner = owner._owner
   ) {
-    if (owner._signal instanceof WritableSignal) {
+    if (owner._source instanceof WritableSignal) {
       const level = reversePath.length;
-      owner._signal.invalidate({
+      owner._source.invalidate({
         type: 'set',
-        source: receiver._signal,
+        source: receiver._source,
         get path() {
           return reversePath.slice(0, level).reverse();
         },
