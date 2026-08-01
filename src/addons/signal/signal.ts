@@ -199,15 +199,15 @@ export class Computed<
   }
 
   get value(): TResult {
-    const version = this.version;
-    if (this._memoizedVersion < version) {
+    const currentVersion = this.version;
+    if (this._memoizedVersion < currentVersion) {
       const computation = this._computation;
       this._memoizedResult = computation(
         ...(this._dependencies.map(
           (dependency) => dependency.value,
         ) as UnwrapSignals<TDependencies>),
       );
-      this._memoizedVersion = version;
+      this._memoizedVersion = currentVersion;
     }
     return this._memoizedResult!;
   }
