@@ -7,6 +7,7 @@ or {
     `const $const_name = createComponent<$...>(function $fn_name($args) { $body }, $...)`
   } where {
     not $fn_name <: $const_name,
+    $fn_name => $const_name,
     register_diagnostic(span=$fn_name, message="Component function name must match the assigned const variable name.", severity="warn")
   },
   or {
