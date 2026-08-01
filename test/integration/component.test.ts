@@ -73,7 +73,7 @@ describe('Component', () => {
 
     it('reuses component instances after reorder with internal state update', async () => {
       const Item = createComponent(
-        function (this: RenderContext, { id }: { id: string }) {
+        function Item({ id }: { id: string }) {
           const [count, setCount] = this.useState(0);
           return html`
             <button
