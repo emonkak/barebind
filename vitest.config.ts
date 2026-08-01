@@ -46,6 +46,13 @@ export default defineConfig({
           include: ['test/integration/**/*.test.ts'],
         },
       },
+      {
+        extends: true,
+        test: {
+          name: 'biome',
+          include: ['test/biome/**/*.test.ts'],
+        },
+      },
       'tools/*/vitest.config.ts',
     ],
     restoreMocks: true,

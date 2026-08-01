@@ -1,0 +1,11 @@
+{
+  "formatter": {
+    "enabled": false
+  },
+  "linter": {
+    "rules": {
+      "recommended": false
+    }
+  },
+  "plugins": ["../../biome/use-named-component.grit"]
+}
