@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Derivable } from '@/addons/signal/derivable.js';
+import { Derivable, Shallow } from '@/addons/signal/derivable.js';
 import { Signal, unwrap } from '@/addons/signal.js';
 
 describe('Derivable', () => {
@@ -595,6 +595,13 @@ describe('Derivable', () => {
     });
   });
 
+  describe('asShallow()', () => {
+    it('returns a Shallow', () => {
+      const state$ = Derivable.from({ count: 0 });
+      expect(state$.asShallow()).toBeInstanceOf(Shallow);
+    });
+  });
+
   describe('subscribe()', () => {
     it('notifies on root value change', () => {
       const state$ = Derivable.from({ count: 0 });
@@ -692,6 +699,74 @@ describe('Derivable', () => {
       unsubscribe();
       state$.value = { count: 1 };
 
+      expect(subscriber).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe('Shallow', () => {
+  describe('get value()', () => {
+    it('returns the current value without commit', () => {
+      const initialState = { count: 0 };
+      const state$ = Derivable.from(initialState);
+      const shallow$ = state$.asShallow();
+      state$.get('count').value = 5;
+      expect(shallow$.value).toBe(initialState);
+      expect(state$.value).toStrictEqual({ count: 5 });
+      expect(shallow$.value).toStrictEqual({ count: 5 });
+      expect(shallow$.value).not.toBe(initialState);
+    });
+
+    it('returns the assigned value without cloning', () => {
+      const state$ = Derivable.from({ count: 0 });
+      const nextState = { count: 10 };
+      state$.value = nextState;
+      expect(state$.asShallow().value).toBe(nextState);
+    });
+  });
+
+  describe('get version()', () => {
+    it('delegates to the underlying signal', () => {
+      const state$ = Derivable.from({ count: 0 });
+      const shallow$ = state$.asShallow();
+      expect(shallow$.version).toBe(0);
+      state$.value = { count: 1 };
+      expect(shallow$.version).toBe(1);
+      state$.get('count').value = 2;
+      expect(shallow$.version).toBe(2);
+    });
+  });
+
+  describe('subscribe()', () => {
+    it('notifies on root value assignment', () => {
+      const state$ = Derivable.from({ count: 0 });
+      const subscriber = vi.fn();
+      state$.asShallow().subscribe(subscriber);
+      state$.value = { count: 1 };
+      expect(subscriber).toHaveBeenCalledOnce();
+      expect(subscriber).toHaveBeenCalledWith({
+        type: 'set',
+        source: expect.any(Signal),
+        path: [],
+        oldValue: { count: 0 },
+        newValue: { count: 1 },
+      });
+    });
+
+    it('does not notify on nested property changes', () => {
+      const state$ = Derivable.from({ nested: { value: 1 } });
+      const subscriber = vi.fn();
+      state$.asShallow().subscribe(subscriber);
+      state$.get('nested').get('value').value = 2;
+      expect(subscriber).not.toHaveBeenCalled();
+    });
+
+    it('does not notify after unsubscribing', () => {
+      const state$ = Derivable.from({ count: 0 });
+      const subscriber = vi.fn();
+      const unsubscribe = state$.asShallow().subscribe(subscriber);
+      unsubscribe();
+      state$.value = { count: 1 };
       expect(subscriber).not.toHaveBeenCalled();
     });
   });

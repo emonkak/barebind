@@ -73,6 +73,10 @@ export class Derivable<T> extends Signal<T> {
     setPendingValue(this, newValue);
   }
 
+  asShallow(): Signal<T> {
+    return new Shallow(this._signal);
+  }
+
   delete(): void {
     deleteProperty(this);
   }
@@ -104,6 +108,31 @@ export class Derivable<T> extends Signal<T> {
 
   subscribe(subscriber: Subscriber): Unsubscribe {
     return this._signal.subscribe(subscriber);
+  }
+}
+
+export class Shallow<T> extends Signal<T> {
+  private readonly _signal: Signal<T>;
+
+  constructor(signal: Signal<T>) {
+    super();
+    this._signal = signal;
+  }
+
+  get value(): T {
+    return this._signal.value;
+  }
+
+  get version(): number {
+    return this._signal.version;
+  }
+
+  subscribe(subscriber: Subscriber): Unsubscribe {
+    return this._signal.subscribe((event) => {
+      if (event.source === this._signal) {
+        subscriber(event);
+      }
+    });
   }
 }
 
