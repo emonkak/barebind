@@ -125,7 +125,7 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
   implements ComponentInstance<TProps>
 {
   /** @internal */
-  readonly _component: ComponentFunction<TProps, TReturn>;
+  readonly _componentFn: ComponentFunction<TProps, TReturn>;
   /** @internal */
   readonly _dispatcher: Dispatcher;
   /** @internal */
@@ -136,10 +136,10 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
   _connectedNode: RenderNode.ComponentNode | null = null;
 
   constructor(
-    component: ComponentFunction<TProps, TReturn>,
+    componentFn: ComponentFunction<TProps, TReturn>,
     dispatcher: Dispatcher,
   ) {
-    this._component = component;
+    this._componentFn = componentFn;
     this._dispatcher = dispatcher;
   }
 
@@ -157,7 +157,7 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
       this._context = new RenderContext(this, scope, lanes);
     }
     try {
-      const returnValue = this._component.call(this._context, props);
+      const returnValue = this._componentFn.call(this._context, props);
       finalizeContext(this._context);
       Object.freeze(scope.instances);
       return wrap(returnValue);
