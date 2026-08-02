@@ -13,12 +13,9 @@
   "linter": {
     "rules": {
       "complexity": {
-        "noBannedTypes": "off",
-        "noStaticOnlyClass": "off",
-        "noThisInStatic": "off"
+        "noBannedTypes": "off"
       },
       "correctness": {
-        "noEmptyPattern": "off",
         "noUnusedLabels": "off"
       },
       "style": {
@@ -32,9 +29,7 @@
         "noConstEnum": "off",
         "noEmptyInterface": "off",
         "noExplicitAny": "off",
-        "noNonNullAssertedOptionalChain": "off",
-        "noTemplateCurlyInString": "off",
-        "noThenProperty": "off"
+        "noTemplateCurlyInString": "off"
       }
     }
   },
@@ -64,9 +59,6 @@
         "rules": {
           "complexity": {
             "useLiteralKeys": "off"
-          },
-          "correctness": {
-            "noSelfAssign": "off"
           }
         }
       }
