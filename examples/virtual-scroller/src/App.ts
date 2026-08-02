@@ -8,7 +8,7 @@ export interface AppProps {
   items: { height: number; label: string }[];
 }
 
-export const App = createComponent<AppProps>(function App({ items }) {
+export const App = createComponent(function App({ items }: AppProps) {
   const [selectedIndex, setSelectedIndex] = this.useState(0);
   const virtualScrollerHandle = this.useRef<VirtualScrollerHandle | null>(null);
 

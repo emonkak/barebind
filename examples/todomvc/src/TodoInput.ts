@@ -8,13 +8,13 @@ export interface TodoInputProps {
   placeholder?: string;
 }
 
-export const TodoInput = createComponent<TodoInputProps>(function TodoInput({
+export const TodoInput = createComponent(function TodoInput({
   defaultValue = '',
   label,
   onBlur = null,
   onSubmit = null,
   placeholder,
-}) {
+}: TodoInputProps) {
   const inputRef = this.useRef<HTMLInputElement | null>(null);
 
   this.useEffect(() => {

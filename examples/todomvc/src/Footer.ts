@@ -4,7 +4,7 @@ import { type TodoFilter, TodoStore } from './store.js';
 
 export interface FooterProps {}
 
-export const Footer = createComponent<FooterProps>(function Footer() {
+export const Footer = createComponent(function Footer(_props: FooterProps) {
   const store = this.inject(TodoStore);
   const { todos, activeTodos, filter } = this.use(store.state$);
 

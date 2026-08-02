@@ -35,11 +35,13 @@ export type UnwrapSignals<T> = {
   [K in keyof T]: T[K] extends Signal<infer V> ? V : never;
 };
 
-const SignalObserver = createComponent<{ signal: Signal<any> }>(
-  function SignalObserver({ signal }) {
-    return this.use(signal);
-  },
-);
+const SignalObserver = createComponent(function SignalObserver({
+  signal,
+}: {
+  signal: Signal<any>;
+}) {
+  return this.use(signal);
+});
 
 export abstract class Signal<T> implements Bindable, HookObject<T> {
   abstract get value(): T;

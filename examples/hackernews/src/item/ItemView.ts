@@ -7,9 +7,9 @@ export interface ItemViewProps {
   item: Item;
 }
 
-export const ItemView = createComponent<ItemViewProps>(function ItemView({
+export const ItemView = createComponent(function ItemView({
   item,
-}) {
+}: ItemViewProps) {
   return html`
     <div class="item-view">
       <div class="item-view-header">

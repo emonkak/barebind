@@ -10,7 +10,7 @@ interface AppProps {
   store: AppStore;
 }
 
-export const App = createComponent<AppProps>(function App({ store }) {
+export const App = createComponent(function App({ store }: AppProps) {
   const adapter = this.useMemo(() => new HashAdapter(), []);
   const { scene } = this.use(
     Navigation(adapter, () => ({ viewTransition: true })),

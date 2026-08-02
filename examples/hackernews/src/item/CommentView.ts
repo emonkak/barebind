@@ -6,9 +6,10 @@ interface CommentViewProps {
   comment: Comment;
 }
 
-export const CommentView = createComponent<CommentViewProps>(
-  function CommentView({ comment }) {
-    return html`
+export const CommentView = createComponent(function CommentView({
+  comment,
+}: CommentViewProps) {
+  return html`
       <li class="comment">
         <div class="by">
           <a href=${`#/users/${comment.user}`}>${comment.user}</a> ${comment.time_ago}
@@ -21,22 +22,22 @@ export const CommentView = createComponent<CommentViewProps>(
         }>
       </li>
     `;
-  },
-);
+});
 
 interface CommentListProps {
   comments: Comment[];
 }
 
-export const CommentList = createComponent<CommentListProps>(
-  function CommentList({ comments }): unknown {
-    const [isOpened, setIsOpened] = this.useState<boolean>(true);
+export const CommentList = createComponent(function CommentList({
+  comments,
+}: CommentListProps): unknown {
+  const [isOpened, setIsOpened] = this.useState<boolean>(true);
 
-    const handleToggleOpen = this.useCallback(() => {
-      setIsOpened((isOpened) => !isOpened);
-    }, []);
+  const handleToggleOpen = this.useCallback(() => {
+    setIsOpened((isOpened) => !isOpened);
+  }, []);
 
-    return html`
+  return html`
       <div class=${{ toggle: true, open: isOpened }}>
         <a @click=${handleToggleOpen}>
           ${isOpened ? '[-]' : '[+] ' + pluralize(comments.length) + ' collapsed'}
@@ -52,8 +53,7 @@ export const CommentList = createComponent<CommentListProps>(
           : null
       }>
     `;
-  },
-);
+});
 
 function pluralize(n: number): string {
   return n + (n === 1 ? ' reply' : ' replies');

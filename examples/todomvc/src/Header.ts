@@ -5,7 +5,7 @@ import { TodoInput } from './TodoInput.js';
 
 export interface HeaderProps {}
 
-export const Header = createComponent<HeaderProps>(function Header() {
+export const Header = createComponent(function Header(_props: HeaderProps) {
   const store = this.inject(TodoStore);
 
   const handleSubmit = (title: string) => {

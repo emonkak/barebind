@@ -9,7 +9,7 @@ interface AppProps {
   store: TodoStore;
 }
 
-export const App = createComponent<AppProps>(function App({ store }) {
+export const App = createComponent(function App({ store }: AppProps) {
   this.provide(store);
 
   return html`

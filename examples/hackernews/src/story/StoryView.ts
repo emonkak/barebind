@@ -6,9 +6,9 @@ export interface StoryViewProps {
   story: Story;
 }
 
-export const StoryView = createComponent<StoryViewProps>(function StoryView({
+export const StoryView = createComponent(function StoryView({
   story,
-}) {
+}: StoryViewProps) {
   return html`
     <li class="story-item">
       <div class="score">${story.points}</div>

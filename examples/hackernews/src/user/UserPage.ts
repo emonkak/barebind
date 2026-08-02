@@ -7,9 +7,9 @@ export interface UserPageProps {
   id: string;
 }
 
-export const UserPage = createComponent<UserPageProps>(function UserPage({
+export const UserPage = createComponent(function UserPage({
   id,
-}) {
+}: UserPageProps) {
   const appStore = this.inject(AppStore);
   const userState = this.use(appStore.userState$);
 

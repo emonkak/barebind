@@ -5,7 +5,7 @@ import { TodoItem } from './TodoItem.js';
 
 export interface MainProps {}
 
-export const Main = createComponent<MainProps>(function Main() {
+export const Main = createComponent(function Main(_props: MainProps) {
   const store = this.inject(TodoStore);
   const visibleTodos = this.use(store.state$.get('visibleTodos'));
 

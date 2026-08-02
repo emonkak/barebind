@@ -4,7 +4,7 @@ interface CountProps {
   initialCount: number;
 }
 
-const Counter = createComponent<CountProps>(function Counter({ initialCount }) {
+const Counter = createComponent(function Counter({ initialCount }: CountProps) {
   const [count, setCount] = this.useState(initialCount);
 
   const increment = () => {

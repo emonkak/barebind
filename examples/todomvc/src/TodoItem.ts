@@ -7,8 +7,8 @@ export interface TodoItemProps {
   todo: Todo;
 }
 
-export const TodoItem = createComponent<TodoItemProps>(
-  function TodoItem({ todo }) {
+export const TodoItem = createComponent(
+  function TodoItem({ todo }: TodoItemProps) {
     const [isEditing, setIsEditing] = this.useState(false);
     const store = this.inject(TodoStore);
 

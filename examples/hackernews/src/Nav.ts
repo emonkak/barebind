@@ -2,8 +2,8 @@ import { createComponent, html, shallowEqual } from 'barebind';
 
 export interface NavProps {}
 
-export const Nav = createComponent<NavProps>(
-  function Nav() {
+export const Nav = createComponent(
+  function Nav(_props: NavProps) {
     return html`
       <nav class="inner">
         <a href="#/">

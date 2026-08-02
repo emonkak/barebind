@@ -7,9 +7,9 @@ export interface ItemPageProps {
   id: number;
 }
 
-export const ItemPage = createComponent<ItemPageProps>(function ItemPage({
+export const ItemPage = createComponent(function ItemPage({
   id,
-}): unknown {
+}: ItemPageProps): unknown {
   const appStore = this.inject(AppStore);
   const itemState = this.use(appStore.itemState$);
 

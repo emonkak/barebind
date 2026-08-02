@@ -10,18 +10,20 @@ export interface StoriesPageProps {
 
 const STORIES_PER_PAGE = 30;
 
-export const StoriesPage = createComponent<StoriesPageProps>(
-  function StoriesPage({ type, page = 1 }) {
-    const appStore = this.inject(AppStore);
-    const storyState = this.use(appStore.storyState$);
+export const StoriesPage = createComponent(function StoriesPage({
+  type,
+  page = 1,
+}: StoriesPageProps) {
+  const appStore = this.inject(AppStore);
+  const storyState = this.use(appStore.storyState$);
 
-    this.useEffect(() => {
-      if (storyState.type !== type || storyState.page !== page) {
-        appStore.fetchStories(type, page);
-      }
-    }, [type, page]);
+  this.useEffect(() => {
+    if (storyState.type !== type || storyState.page !== page) {
+      appStore.fetchStories(type, page);
+    }
+  }, [type, page]);
 
-    return html`
+  return html`
       <div class="story-view">
         <div class="story-list-nav">
         <${
@@ -67,8 +69,7 @@ export const StoriesPage = createComponent<StoriesPageProps>(
       </div>
     </div>
   `;
-  },
-);
+});
 
 function storyTypeToPathName(type: StoryType): string {
   switch (type) {
