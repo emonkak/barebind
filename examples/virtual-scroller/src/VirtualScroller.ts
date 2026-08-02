@@ -26,7 +26,7 @@ export interface VirtualScrollerProps<T> {
 export interface VirtualScrollerHandle {
   getMeasuredItems(): MeasuredItem[];
   getVisibleElements(): Element[];
-  getVisibleRange(): Range;
+  getVisibleRange(): VisibleRange;
   scrollToIndex(index: number): void;
 }
 
@@ -36,9 +36,9 @@ export interface MeasuredItem {
 }
 
 // A (half-open) range bounded inclusively below and exclusively above.
-export interface Range {
-  start: number;
-  end: number;
+export interface VisibleRange {
+  readonly start: number;
+  readonly end: number;
 }
 
 export const VirtualScroller: VirtualScroller = createComponent(
@@ -55,7 +55,7 @@ export const VirtualScroller: VirtualScroller = createComponent(
       items,
     }: VirtualScrollerProps<T>,
   ): unknown {
-    const [visibleRange, setVisibleRange] = this.useState<Range>(() =>
+    const [visibleRange, setVisibleRange] = this.useState<VisibleRange>(() =>
       initialItemIndex >= 0
         ? {
             start: initialItemIndex,
@@ -90,7 +90,7 @@ export const VirtualScroller: VirtualScroller = createComponent(
       return height;
     };
 
-    const computeVisibleRange = (top: number, bottom: number): Range => {
+    const computeVisibleRange = (top: number, bottom: number): VisibleRange => {
       const size = items.length;
       let start = 0;
       let y = 0;
@@ -203,8 +203,8 @@ export const VirtualScroller: VirtualScroller = createComponent(
             .sort((x, y) => x[0] - y[0])
             .map((x) => x[1]);
         },
-        getVisibleRange(): Range {
-          return structuredClone(visibleRange);
+        getVisibleRange(): VisibleRange {
+          return visibleRange;
         },
         async scrollToIndex(
           index: number,
@@ -296,7 +296,7 @@ export const VirtualScroller: VirtualScroller = createComponent(
   },
 );
 
-function areRangesEqual(x: Range, y: Range) {
+function areRangesEqual(x: VisibleRange, y: VisibleRange) {
   return x.start === y.start && x.end === y.end;
 }
 
@@ -311,6 +311,6 @@ function isInViewport(el: Element): boolean {
   );
 }
 
-function withinRange(range: Range, index: number): boolean {
+function withinRange(range: VisibleRange, index: number): boolean {
   return range.start <= index && index < range.end;
 }
