@@ -2,24 +2,21 @@ engine biome(1.0)
 language js
 
 or {
-  or {
-    `const $const_name = createComponent(function $fn_name($_) { $_ }, $...)`,
-    `const $const_name = createComponent<$...>(function $fn_name($_) { $_ }, $...)`
-  } where {
+  JsVariableDeclarator(id=$const_name, initializer=JsInitializerClause(expression=$const_expr)) where {
+    $const_expr <: JsCallExpression(callee="createComponent", arguments=JsCallArguments(args=$args)),
+    $args[0] <: JsFunctionExpression(id=$fn_name),
     not $fn_name <: $const_name,
     $fn_name => $const_name,
     register_diagnostic(span=$fn_name, message="Component function name must match the assigned const variable name.", severity="warn")
   },
-  or {
-    `createComponent(function($_) { $_ }, $...)`,
-    `createComponent<$...>(function($_) { $_ }, $...)`
-  } as $call where {
-    register_diagnostic(span=$call, message="createComponent() must take a named function expression, anonymous functions are not allowed.", severity="warn")
-  },
-  or {
-    `createComponent(($_) => $_, $...)`,
-    `createComponent<$...>(($_) => $_, $...)`
-  } as $call where {
-    register_diagnostic(span=$call, message="createComponent() must take a named function expression, arrow functions are not allowed.", severity="warn")
+  JsCallExpression(callee="createComponent", arguments=JsCallArguments(args=$args)) as $call where {
+    $args[0] <: or {
+      JsFunctionExpression(id=.) where {
+        register_diagnostic(span=$call, message="createComponent() must take a named function expression, anonymous functions are not allowed.", severity="warn")
+      },
+      JsArrowFunctionExpression() where {
+        register_diagnostic(span=$call, message="createComponent() must take a named function expression, arrow functions are not allowed.", severity="warn")
+      }
+    }
   }
 }
