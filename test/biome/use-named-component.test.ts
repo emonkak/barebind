@@ -27,7 +27,7 @@ describe('use-create-component-naming.grit', () => {
   describe('without generics', () => {
     it('passs when function name matches variable name', async () => {
       const code = [
-        'const MyComponent = createComponent(function MyComponent() {',
+        'const MyComponent = createComponent(function MyComponent(props: MyComponentProps): VElement {',
         '  return html`<div></div>`;',
         '});',
       ].join('');
@@ -38,7 +38,7 @@ describe('use-create-component-naming.grit', () => {
 
     it('reports a diagnostic when function name mismatches variable name', async () => {
       const code = [
-        'const MyComponent = createComponent(function OtherComponent() {',
+        'const MyComponent = createComponent(function OtherComponent(props: MyComponentProps): VElement {',
         '  return html`<div></div>`;',
         '});',
       ].join('');
@@ -51,7 +51,7 @@ describe('use-create-component-naming.grit', () => {
 
     it('reports a diagnostic when using an anonymous function', async () => {
       const code = [
-        'createComponent(function() { ',
+        'createComponent(function(props: MyComponentProps): VElement { ',
         '  return html`<div></div>`;',
         '});',
       ].join('');
@@ -63,7 +63,9 @@ describe('use-create-component-naming.grit', () => {
     });
 
     it('reports a diagnostic when using an arrow function', async () => {
-      const code = ['createComponent(() => html`<div></div>`);'].join('');
+      const code = [
+        'createComponent((props: MyComponentProps): VElement => html`<div></div>`);',
+      ].join('');
       const result = await lint(code);
       expect(result.stderr).toContain(
         'createComponent() must take a named function expression, arrow functions are not allowed.',
@@ -75,7 +77,7 @@ describe('use-create-component-naming.grit', () => {
   describe('with generics', () => {
     it('passs when function name matches variable name', async () => {
       const code = [
-        'const MyComponent = createComponent<MyComponentProps>(function MyComponent() {',
+        'const MyComponent = createComponent<MyComponentProps, VElement>(function MyComponent(props) {',
         '  return html`<div></div>`;',
         '});',
       ].join('');
@@ -86,7 +88,7 @@ describe('use-create-component-naming.grit', () => {
 
     it('reports a diagnostic when function name mismatches variable name', async () => {
       const code = [
-        'const MyComponent = createComponent<MyComponentProps>(function OtherComponent() {',
+        'const MyComponent = createComponent<MyComponentProps, VElement>(function OtherComponent(props) {',
         '  return html`<div></div>`;',
         '});',
       ].join('');
@@ -99,7 +101,7 @@ describe('use-create-component-naming.grit', () => {
 
     it('reports a diagnostic when using an anonymous function', async () => {
       const code = [
-        'createComponent<MyComponentProps>(function() { ',
+        'createComponent<MyComponentProps, VElement>(function(props) { ',
         '  return html`<div></div>`;',
         '});',
       ].join('');
@@ -112,7 +114,7 @@ describe('use-create-component-naming.grit', () => {
 
     it('reports a diagnostic when using an arrow function', async () => {
       const code = [
-        'createComponent<MyComponentProps>(() => html`<div></div>`);',
+        'createComponent<MyComponentProps, VElement>((props) => html`<div></div>`);',
       ].join('');
       const result = await lint(code);
       expect(result.stderr).toContain(
