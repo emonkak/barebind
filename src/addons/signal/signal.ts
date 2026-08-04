@@ -97,10 +97,6 @@ export abstract class WritableSignal<T> extends Signal<T> {
   protected _version: number = 0;
   private readonly _subscribers = new LinkedList<Subscriber>();
 
-  get version(): number {
-    return this._version;
-  }
-
   get value(): T {
     return this.read();
   }
@@ -117,6 +113,10 @@ export abstract class WritableSignal<T> extends Signal<T> {
         newValue,
       });
     }
+  }
+
+  get version(): number {
+    return this._version;
   }
 
   invalidate<T>(event: InvalidateEvent<T>): void {
