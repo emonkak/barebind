@@ -31,41 +31,24 @@ describe('Signal addon', () => {
     document.body.removeChild(container);
   });
 
-  it('binds an Atom directly as a text node', async () => {
-    const atom = new Atom('hello');
-
+  it('renders an atom value via use() and updates on change', async () => {
+    const a$ = new Atom('foo');
     const App = createComponent(function App() {
-      return html`<div>${atom}</div>`;
+      return html`<div>${this.use(a$)}</div>`;
     });
 
     await root.render(App({})).finished;
-    expect(container.innerHTML).toBe('<div>hello</div>');
+    expect(container.innerHTML).toBe('<div>foo</div>');
 
-    atom.value = 'world';
+    a$.value = 'bar';
     await Promise.resolve();
     await step(runtime);
-    expect(container.innerHTML).toBe('<div>world</div>');
+    expect(container.innerHTML).toBe('<div>bar</div>');
   });
 
-  it('binds an Atom directly as an attribute', async () => {
-    const atom = new Atom('foo');
-
-    const App = createComponent(function App() {
-      return html`<div class="${atom}"></div>`;
-    });
-
-    await root.render(App({})).finished;
-    expect(container.innerHTML).toBe('<div class="foo"></div>');
-
-    atom.value = 'bar';
-    await Promise.resolve();
-    await step(runtime);
-    expect(container.innerHTML).toBe('<div class="bar"></div>');
-  });
-
-  it('binds different signals for each rendering', async () => {
-    const count1$ = new Atom(0);
-    const count2$ = new Atom(100);
+  it('renders different signals for each rendering', async () => {
+    const a$ = new Atom(0);
+    const b$ = new Atom(100);
 
     const App = createComponent(function App({
       count$,
@@ -75,82 +58,83 @@ describe('Signal addon', () => {
       return html`<div>${count$}</div>`;
     });
 
-    await root.render(App({ count$: count1$ })).finished;
+    await root.render(App({ count$: a$ })).finished;
     expect(container.innerHTML).toBe('<div>0</div>');
 
-    count1$.value++;
+    a$.value++;
     await Promise.resolve();
     await step(runtime);
     expect(container.innerHTML).toBe('<div>1</div>');
 
-    await root.render(App({ count$: count2$ })).finished;
+    await root.render(App({ count$: b$ })).finished;
     expect(container.innerHTML).toBe('<div>100</div>');
 
-    count2$.value++;
+    b$.value++;
     await Promise.resolve();
     await step(runtime);
     expect(container.innerHTML).toBe('<div>101</div>');
   });
 
-  it('renders an Atom value via use() and updates on change', async () => {
-    const atom = new Atom('a');
-    const App = createComponent(function App() {
-      return html`<div>${this.use(atom)}</div>`;
-    });
-
-    await root.render(App({})).finished;
-    expect(container.innerHTML).toBe('<div>a</div>');
-
-    atom.value = 'b';
-    await Promise.resolve();
-    await step(runtime);
-    expect(container.innerHTML).toBe('<div>b</div>');
-  });
-
-  it('skips redundant subscriber invocation when already batched', async () => {
-    const atom = new Atom('a');
-    const App = createComponent(function App() {
-      return html`<div>${this.use(atom)}</div>`;
-    });
-
-    await root.render(App({})).finished;
-    expect(container.innerHTML).toBe('<div>a</div>');
-
-    atom.value = 'b';
-    atom.value = 'c';
-    await Promise.resolve();
-    await step(runtime);
-    expect(container.innerHTML).toBe('<div>c</div>');
-  });
-
   it('renders a computed signal via use() and updates when dependencies change', async () => {
-    const a = new Atom('a');
-    const b = new Atom('b');
-    const computed = new Computed((x, y) => `${x}-${y}`, [a, b], 'a-b');
+    const a$ = new Atom('a');
+    const b$ = new Atom('b');
+    const c$ = new Computed((a, b) => `${a}-${b}`, [a$, b$]);
 
     const App = createComponent(function App() {
-      return html`<div>${this.use(computed)}</div>`;
+      return html`<div>${this.use(c$)}</div>`;
     });
 
     await root.render(App({})).finished;
     expect(container.innerHTML).toBe('<div>a-b</div>');
 
-    a.value = 'x';
+    a$.value = 'c';
     await Promise.resolve();
     await step(runtime);
-    expect(container.innerHTML).toBe('<div>x-b</div>');
+    expect(container.innerHTML).toBe('<div>c-b</div>');
 
-    b.value = 'y';
+    b$.value = 'd';
     await Promise.resolve();
     await step(runtime);
-    expect(container.innerHTML).toBe('<div>x-y</div>');
+    expect(container.innerHTML).toBe('<div>c-d</div>');
   });
 
-  it('force-updates when the signal version changes during render', async () => {
-    const atom = new Atom(0);
+  it('skips re-rendering a computed signal when the value is the same', async () => {
+    const a$ = new Atom('foo');
+    const b$ = new Computed((a) => a.length, [a$]);
+
     const App = createComponent(function App() {
-      const value = this.use(atom);
-      atom.value = value + 1;
+      return html`<div>${this.use(b$)}</div>`;
+    });
+
+    await root.render(App({})).finished;
+    expect(container.innerHTML).toBe('<div>3</div>');
+
+    a$.value = 'bar';
+    await Promise.resolve();
+    expect(await step(runtime)).toBe(false);
+  });
+
+  it('skips redundant subscriber invocation when already batched', async () => {
+    const a$ = new Atom('foo');
+    const App = createComponent(function App() {
+      return html`<div>${this.use(a$)}</div>`;
+    });
+
+    await root.render(App({})).finished;
+    expect(container.innerHTML).toBe('<div>foo</div>');
+
+    a$.value = 'bar';
+    a$.value = 'baz';
+    await Promise.resolve();
+    await step(runtime);
+    expect(container.innerHTML).toBe('<div>baz</div>');
+  });
+
+  it('re-renders when the version changes during render', async () => {
+    const a$ = new Atom(0);
+    const App = createComponent(function App() {
+      const value = this.use(a$);
+      a$.value = value + 1;
       return html`<div>${value}</div>`;
     });
 
@@ -159,11 +143,24 @@ describe('Signal addon', () => {
     expect(container.innerHTML).toBe('<div>1</div>');
   });
 
+  it('does nothing when the value is silently written during rendering', async () => {
+    const a$ = new Atom(0);
+    const App = createComponent(function App() {
+      const value = this.use(a$);
+      a$.write(value + 1);
+      return html`<div>${value}</div>`;
+    });
+
+    await root.render(App({})).finished;
+    await step(runtime);
+    expect(container.innerHTML).toBe('<div>0</div>');
+  });
+
   it('does nothing after unmount when the signal changes', async () => {
-    const atom = new Atom(0);
+    const a$ = new Atom(0);
 
     const App = createComponent(function App() {
-      return html`<div>${this.use(atom)}</div>`;
+      return html`<div>${this.use(a$)}</div>`;
     });
 
     await root.render(App({})).finished;
@@ -172,48 +169,50 @@ describe('Signal addon', () => {
     await root.unmount().finished;
     expect(container.innerHTML).toBe('');
 
-    atom.value = 99;
+    a$.value = 99;
     await Promise.resolve();
     expect(container.innerHTML).toBe('');
   });
 
   it('mutates a local Atom and re-renders', async () => {
-    let localAtom: Atom<number> | undefined;
+    let a$!: Atom<number>;
 
     const App = createComponent(function App() {
-      localAtom = this.use(LocalAtom(0));
-      return html`<div>${localAtom}</div>`;
+      a$ = this.use(LocalAtom(0));
+      return html`<div>${a$}</div>`;
     });
 
     await root.render(App({})).finished;
     expect(container.innerHTML).toBe('<div>0</div>');
 
-    localAtom!.value = 42;
+    a$.value = 42;
     await Promise.resolve();
     await step(runtime);
     expect(container.innerHTML).toBe('<div>42</div>');
   });
 
   it('creates a local Computed that updates when dependencies change', async () => {
-    let a: Atom<number> | undefined;
-    let b: Atom<number> | undefined;
+    let a$!: Atom<number>;
+    let b$!: Atom<number>;
 
     const App = createComponent(function App() {
-      a = this.use(LocalAtom(1));
-      b = this.use(LocalAtom(2));
-      const sum = this.use(LocalComputed(() => a!.value + b!.value, [a!, b!]));
+      a$ = this.use(LocalAtom(1));
+      b$ = this.use(LocalAtom(2));
+      const sum = this.use(
+        LocalComputed(() => a$!.value + b$!.value, [a$!, b$!]),
+      );
       return html`<div>${sum}</div>`;
     });
 
     await root.render(App({})).finished;
     expect(container.innerHTML).toBe('<div>3</div>');
 
-    a!.value = 10;
+    a$.value = 10;
     await Promise.resolve();
     await step(runtime);
     expect(container.innerHTML).toBe('<div>12</div>');
 
-    b!.value = 20;
+    b$.value = 20;
     await Promise.resolve();
     await step(runtime);
     expect(container.innerHTML).toBe('<div>30</div>');
