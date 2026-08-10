@@ -554,10 +554,14 @@ export class Runtime implements Renderer, Dispatcher {
           if ((this._flushLanes & SyncLane) === SyncLane) {
             callback();
           } else if (this._flushLanes & ViewTransitionLane) {
-            await this._adapter.startViewTransition(
-              callback,
-              this._updateBatch.flatMap((update) => update.types),
-            );
+            const options = {
+              types: [] as string[],
+              update: callback,
+            };
+            for (const update of this._updateBatch) {
+              options.types.push(...update.types);
+            }
+            await this._adapter.startViewTransition(options);
           } else {
             await this._adapter.requestCommit(callback);
           }

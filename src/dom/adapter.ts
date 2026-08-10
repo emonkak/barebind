@@ -95,10 +95,10 @@ export class DOMAdapter implements HostAdapter {
     }).then(callback);
   }
 
-  startViewTransition(update: () => void, types: string[]): Promise<void> {
+  startViewTransition(options: StartViewTransitionOptions): Promise<void> {
     return typeof this._document.startViewTransition === 'function'
-      ? this._document.startViewTransition({ update, types }).updateCallbackDone
-      : Promise.resolve().then(update);
+      ? this._document.startViewTransition(options).updateCallbackDone
+      : Promise.resolve().then(options.update);
   }
 }
 
