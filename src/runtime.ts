@@ -516,13 +516,10 @@ export class Runtime implements Renderer, Dispatcher {
     while (true) {
       let update: Update | undefined;
 
-      this._flushLanes |= this._stagedLanes;
-      this._stagedLanes = NoLanes;
-
       while ((update = this._updateQueue.peek()) !== undefined) {
         if (
-          (update.lanes & this._flushLanes) !== update.lanes &&
-          getHighestPriorityLane(this._flushLanes) <
+          (update.lanes & this._stagedLanes) !== update.lanes &&
+          getHighestPriorityLane(this._stagedLanes) <
             getHighestPriorityLane(update.lanes)
         ) {
           break;
@@ -575,10 +572,11 @@ export class Runtime implements Renderer, Dispatcher {
         }
       } finally {
         this._updateBatch = [];
+        this._flushLanes = NoLanes;
       }
     }
 
-    this._flushLanes = NoLanes;
+    this._stagedLanes = NoLanes;
   }
 }
 
