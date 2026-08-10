@@ -585,19 +585,12 @@ export class Runtime implements Renderer, Dispatcher {
 }
 
 export async function step(runtime: Runtime): Promise<boolean> {
-  if (runtime._updateBatch.length > 0) {
-    for (const update of runtime._updateBatch) {
-      await update.controller.promise;
-    }
-    return true;
-  } else {
-    const update = runtime._updateQueue.peek();
-    if (update !== undefined) {
-      await update.controller.promise;
-      return true;
-    }
+  const update = runtime._updateBatch[0] ?? runtime._updateQueue.peek();
+  if (update === undefined) {
     return false;
   }
+  await update.controller.promise;
+  return true;
 }
 
 function buildKeyToIndexMap<T>(
