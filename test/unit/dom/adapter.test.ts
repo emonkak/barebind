@@ -135,19 +135,24 @@ describe('DOMAdapter', () => {
 
   describe('startViewTransition()', () => {
     describe('without scope', () => {
-      it.runIf(document.startViewTransition)(
-        'calls Document.startViewTransition when available',
-        async () => {
-          const startViewTransitionSpy = vi.spyOn(
-            document,
-            'startViewTransition',
-          );
-          const update = vi.fn();
-          await adapter.startViewTransition({ update });
-          expect(startViewTransitionSpy).toHaveBeenCalledOnce();
-          expect(update).toHaveBeenCalledOnce();
-        },
-      );
+      it('calls Document.startViewTransition when available', async () => {
+        const startViewTransitionSpy = vi
+          .spyOn(document, 'startViewTransition')
+          .mockImplementation((options) => {
+            (options as StartViewTransitionOptions).update?.();
+            return {
+              finished: Promise.resolve(),
+              ready: Promise.resolve(),
+              skipTransition() {},
+              types: new Set((options as StartViewTransitionOptions).types),
+              updateCallbackDone: Promise.resolve(),
+            };
+          });
+        const update = vi.fn();
+        await adapter.startViewTransition({ update });
+        expect(startViewTransitionSpy).toHaveBeenCalledOnce();
+        expect(update).toHaveBeenCalledOnce();
+      });
 
       it('falls back to Promise.resolve when Document.startViewTransition is unavailable', async () => {
         vi.spyOn(document as any, 'startViewTransition', 'get').mockReturnValue(
@@ -171,39 +176,31 @@ describe('DOMAdapter', () => {
         document.body.removeChild(scope);
       });
 
-      it.runIf(Element.prototype.startViewTransition)(
-        'calls Element.startViewTransition when available',
-        async () => {
-          const startViewTransitionSpy = vi.spyOn(
-            Element.prototype,
-            'startViewTransition',
-          );
-          const update = vi.fn();
-          await adapter.startViewTransition({
-            transitionFor: 'scope',
-            update,
-          });
-          expect(startViewTransitionSpy).toHaveBeenCalledOnce();
-          expect(update).toHaveBeenCalledOnce();
-        },
-      );
+      it('calls Element.startViewTransition when available', async () => {
+        const startViewTransitionSpy = vi
+          .spyOn(Element.prototype, 'startViewTransition')
+          .mockImplementation(startViewTransitionMock);
+        const update = vi.fn();
+        await adapter.startViewTransition({
+          transitionFor: 'scope',
+          update,
+        });
+        expect(startViewTransitionSpy).toHaveBeenCalledOnce();
+        expect(update).toHaveBeenCalledOnce();
+      });
 
-      it.runIf(Element.prototype.startViewTransition)(
-        'falls back to Promise.resolve when the element is not found',
-        async () => {
-          const startViewTransitionSpy = vi.spyOn(
-            Element.prototype,
-            'startViewTransition',
-          );
-          const update = vi.fn();
-          await adapter.startViewTransition({
-            transitionFor: 'invalid-scope',
-            update,
-          });
-          expect(startViewTransitionSpy).not.toHaveBeenCalled();
-          expect(update).toHaveBeenCalledOnce();
-        },
-      );
+      it('falls back to Promise.resolve when the element is not found', async () => {
+        const startViewTransitionSpy = vi
+          .spyOn(Element.prototype, 'startViewTransition')
+          .mockImplementation(startViewTransitionMock);
+        const update = vi.fn();
+        await adapter.startViewTransition({
+          transitionFor: 'invalid-scope',
+          update,
+        });
+        expect(startViewTransitionSpy).not.toHaveBeenCalled();
+        expect(update).toHaveBeenCalledOnce();
+      });
 
       it('falls back to Promise.resolve when Element.startViewTransition is unavailable', async () => {
         vi.spyOn(
@@ -218,3 +215,23 @@ describe('DOMAdapter', () => {
     });
   });
 });
+
+function startViewTransitionMock(
+  callbackOptions?: ViewTransitionUpdateCallback | StartViewTransitionOptions,
+): ViewTransition {
+  const callback =
+    typeof callbackOptions === 'function'
+      ? callbackOptions
+      : callbackOptions?.update;
+  const types = new Set(
+    typeof callbackOptions === 'function' ? undefined : callbackOptions?.types,
+  );
+  callback?.();
+  return {
+    finished: Promise.resolve(),
+    ready: Promise.resolve(),
+    skipTransition() {},
+    types,
+    updateCallbackDone: Promise.resolve(),
+  };
+}

@@ -1088,7 +1088,9 @@ describe('Component', () => {
 
   describe('View transition', () => {
     it('commits the update in the view transition', async () => {
-      const startViewTransitionSpy = vi.spyOn(document, 'startViewTransition');
+      const startViewTransitionSpy = vi
+        .spyOn(document, 'startViewTransition')
+        .mockImplementation(startViewTransitionMock);
       const App = createComponent(function App() {
         const [count, setCount] = this.useState(0);
         return html`
@@ -1153,10 +1155,9 @@ describe('Component', () => {
     });
 
     it('commits the update with in view transition with scope', async () => {
-      const startViewTransitionSpy = vi.spyOn(
-        Element.prototype,
-        'startViewTransition',
-      );
+      const startViewTransitionSpy = vi
+        .spyOn(Element.prototype, 'startViewTransition')
+        .mockImplementation(startViewTransitionMock);
       const App = createComponent(function App() {
         const [count, setCount] = this.useState(0);
         return html`
@@ -1194,3 +1195,23 @@ describe('Component', () => {
     });
   });
 });
+
+function startViewTransitionMock(
+  callbackOptions?: ViewTransitionUpdateCallback | StartViewTransitionOptions,
+): ViewTransition {
+  const callback =
+    typeof callbackOptions === 'function'
+      ? callbackOptions
+      : callbackOptions?.update;
+  const types = new Set(
+    typeof callbackOptions === 'function' ? undefined : callbackOptions?.types,
+  );
+  callback?.();
+  return {
+    finished: Promise.resolve(),
+    ready: Promise.resolve(),
+    types,
+    updateCallbackDone: Promise.resolve(),
+    skipTransition() {},
+  };
+}
