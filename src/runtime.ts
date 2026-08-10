@@ -279,18 +279,20 @@ export class Runtime implements Renderer, Dispatcher {
     });
 
     if (((this._pendingLanes | this._stagedLanes) & lanes) !== lanes) {
-      const priority = getPriorityFromLanes(lanes);
+      const callback = () => {
+        this._pendingLanes &= ~lanes;
+        this._stagedLanes |= lanes;
+        if (this._flushLanes === NoLanes) {
+          this._flush();
+        }
+      };
       this._pendingLanes |= lanes;
-      this._adapter.requestCallback(
-        () => {
-          this._pendingLanes &= ~lanes;
-          this._stagedLanes |= lanes;
-          if (this._flushLanes === NoLanes) {
-            this._flush();
-          }
-        },
-        { ...options, priority },
-      );
+      if (lanes & SyncLane) {
+        queueMicrotask(callback);
+      } else {
+        const priority = getPriorityFromLanes(lanes);
+        this._adapter.requestCallback(callback, { ...options, priority });
+      }
     }
 
     return {
