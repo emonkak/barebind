@@ -13,7 +13,7 @@ interface AppProps {
 export const App = createComponent(function App({ store }: AppProps) {
   const adapter = this.useMemo(() => new HashAdapter(), []);
   const { scene } = this.use(
-    SyncNavigation(adapter, () => ({ viewTransition: true })),
+    SyncNavigation(adapter, () => ({ viewTransition: {} })),
   );
   const page = router.match(scene.url) ?? NotFound({ url: scene.url });
 

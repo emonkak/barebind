@@ -36,7 +36,7 @@ describe('UpdateLogger addon', () => {
 
   it.each<[UpdateOptions, string, string]>([
     [{ flushSync: true }, 'user-blocking', 'synchronous'],
-    [{ viewTransition: true }, 'user-blocking', 'view-transition'],
+    [{ viewTransition: {} }, 'user-blocking', 'view-transition'],
     [{}, 'background', 'animation-frame'],
   ])(
     'logs an update with $1 priority and $2 mode',

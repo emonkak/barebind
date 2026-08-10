@@ -194,8 +194,8 @@ export interface Update {
   readonly id: number;
   readonly lanes: Lanes;
   readonly types: string[];
-  readonly transaction: Transaction;
   readonly controller: PromiseWithResolvers<void>;
+  readonly transaction: Transaction;
 }
 
 export interface UpdateHandle {
@@ -209,7 +209,7 @@ export interface UpdateOptions {
   flushSync?: boolean;
   priority?: TaskPriority;
   transition?: number;
-  viewTransition?: string[] | boolean;
+  viewTransition?: ViewTransitionOptions;
 }
 
 export type VBind<TValue = unknown> = VNode<typeof Bind, { value: TValue }, []>;
@@ -231,6 +231,10 @@ export type VTemplate = VNode<
   { mode: TemplateMode },
   VElement[]
 >;
+
+export interface ViewTransitionOptions {
+  types?: string[];
+}
 
 export class Scope {
   readonly owner: Owner;

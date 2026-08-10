@@ -1099,7 +1099,7 @@ describe('Component', () => {
         return html`
           <button
             @click=${() => {
-              setCount(count + 1, { viewTransition: true });
+              setCount(count + 1, { viewTransition: {} });
             }}
           >
             ${count}
@@ -1129,7 +1129,7 @@ describe('Component', () => {
           <button
             @click=${() => {
               setCount(count + 1, {
-                viewTransition: ['slide', 'fade'],
+                viewTransition: { types: ['slide', 'fade'] },
               });
             }}
           >

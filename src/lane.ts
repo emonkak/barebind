@@ -45,7 +45,7 @@ export function getRenderLanes(options: UpdateOptions): Lanes {
   if (options.flushSync) {
     lanes |= SyncLane;
   }
-  if (options.viewTransition) {
+  if (options.viewTransition !== undefined) {
     lanes |= ViewTransitionLane;
   }
   if (options.priority !== undefined) {

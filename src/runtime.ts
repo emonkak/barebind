@@ -268,17 +268,15 @@ export class Runtime implements Renderer, Dispatcher {
     const lanes =
       getRenderLanes(options) ||
       getLaneFromPriority(this._adapter.getTaskPriority());
+    const types = options.viewTransition?.types ?? [];
     const controller = Promise.withResolvers<void>();
 
     this._updateQueue.enqueue({
       id,
       lanes,
-      types:
-        typeof options.viewTransition === 'object'
-          ? options.viewTransition
-          : [],
-      transaction,
+      types,
       controller,
+      transaction,
     });
 
     if (((this._pendingLanes | this._stagedLanes) & lanes) !== lanes) {

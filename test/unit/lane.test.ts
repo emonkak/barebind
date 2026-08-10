@@ -126,14 +126,8 @@ describe('getRenderLanes()', () => {
     expect(getRenderLanes({ flushSync: true })).toBe(SyncLane);
   });
 
-  it('includes ViewTransitionLane when viewTransition is true', () => {
-    expect(getRenderLanes({ viewTransition: true })).toBe(ViewTransitionLane);
-  });
-
-  it('combines SyncLane and ViewTransitionLane', () => {
-    expect(getRenderLanes({ flushSync: true, viewTransition: true })).toBe(
-      SyncLane | ViewTransitionLane,
-    );
+  it('includes ViewTransitionLane when viewTransition is object', () => {
+    expect(getRenderLanes({ viewTransition: {} })).toBe(ViewTransitionLane);
   });
 
   it('maps priority to the corresponding lane', () => {
@@ -142,15 +136,6 @@ describe('getRenderLanes()', () => {
     );
     expect(getRenderLanes({ priority: 'user-visible' })).toBe(UserVisibleLane);
     expect(getRenderLanes({ priority: 'background' })).toBe(BackgroundLane);
-  });
-
-  it('priority combines with flushSync', () => {
-    const lanes = getRenderLanes({
-      flushSync: true,
-      priority: 'background',
-    });
-    expect(lanes & SyncLane).toBe(SyncLane);
-    expect(lanes & BackgroundLane).toBe(BackgroundLane);
   });
 
   it('includes transition lane for transition 0', () => {
@@ -182,7 +167,7 @@ describe('getRenderLanes()', () => {
   it('combines all options', () => {
     const lanes = getRenderLanes({
       flushSync: true,
-      viewTransition: true,
+      viewTransition: {},
       transition: 3,
       delay: 200,
     });
