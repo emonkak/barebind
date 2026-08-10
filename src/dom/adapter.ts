@@ -1,4 +1,9 @@
-import type { HostAdapter, VPortal, VTemplate } from '../base.js';
+import type {
+  HostAdapter,
+  StartScopedViewTransitionOptions,
+  VPortal,
+  VTemplate,
+} from '../base.js';
 import { DOMBlock } from './block.js';
 import { ContainerPart } from './part.js';
 import { DOMTemplate } from './template.js';
@@ -95,9 +100,15 @@ export class DOMAdapter implements HostAdapter {
     }).then(callback);
   }
 
-  startViewTransition(options: StartViewTransitionOptions): Promise<void> {
-    return typeof this._document.startViewTransition === 'function'
-      ? this._document.startViewTransition(options).updateCallbackDone
+  startViewTransition(
+    options: StartScopedViewTransitionOptions,
+  ): Promise<void> {
+    const scope =
+      options.transitionFor != null
+        ? this._document.getElementById(options.transitionFor)
+        : this._document;
+    return typeof scope?.startViewTransition === 'function'
+      ? scope.startViewTransition(options).updateCallbackDone
       : Promise.resolve().then(options.update);
   }
 }
@@ -134,5 +145,12 @@ function isContinuousEvent(event: Event): boolean {
       return true;
     default:
       return false;
+  }
+}
+
+declare global {
+  interface Element {
+    // biome-ignore lint/style/noRestrictedGlobals: intentional global document reference
+    startViewTransition: typeof document.startViewTransition;
   }
 }

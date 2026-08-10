@@ -268,13 +268,12 @@ export class Runtime implements Renderer, Dispatcher {
     const lanes =
       getRenderLanes(options) ||
       getLaneFromPriority(this._adapter.getTaskPriority());
-    const types = options.viewTransition?.types ?? [];
     const controller = Promise.withResolvers<void>();
 
     this._updateQueue.enqueue({
       id,
       lanes,
-      types,
+      viewTransition: options.viewTransition ?? null,
       controller,
       transaction,
     });
@@ -524,6 +523,12 @@ export class Runtime implements Renderer, Dispatcher {
         }
         this._flushLanes |= update.lanes;
         this._updateBatch.push(this._updateQueue.dequeue()!);
+        if (this._flushLanes & ViewTransitionLane) {
+          // The queue is lane-ordered, so a ViewTransitionLane update can
+          // only be followed by equal/lower-priority updates. Breaking here
+          // commits the view transition as its own batch.
+          break;
+        }
       }
 
       if (this._updateBatch.length === 0) {
@@ -552,14 +557,21 @@ export class Runtime implements Renderer, Dispatcher {
           if ((this._flushLanes & SyncLane) === SyncLane) {
             callback();
           } else if (this._flushLanes & ViewTransitionLane) {
-            const options = {
-              types: [] as string[],
-              update: callback,
-            };
-            for (const update of this._updateBatch) {
-              options.types.push(...update.types);
+            let transitionFor: string | null = null;
+            let types: string[] | null = null;
+            for (const { viewTransition } of this._updateBatch) {
+              if (viewTransition?.transitionFor != null) {
+                transitionFor = viewTransition.transitionFor;
+              }
+              if (viewTransition?.types != null) {
+                types = viewTransition.types;
+              }
             }
-            await this._adapter.startViewTransition(options);
+            await this._adapter.startViewTransition({
+              transitionFor,
+              types,
+              update: callback,
+            });
           } else {
             await this._adapter.requestCommit(callback);
           }

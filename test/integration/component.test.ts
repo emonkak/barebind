@@ -1087,13 +1087,8 @@ describe('Component', () => {
   });
 
   describe('View transition', () => {
-    let startViewTransitionSpy!: typeof document.startViewTransition;
-
-    beforeEach(() => {
-      startViewTransitionSpy = vi.spyOn(document, 'startViewTransition');
-    });
-
     it('commits the update in the view transition', async () => {
+      const startViewTransitionSpy = vi.spyOn(document, 'startViewTransition');
       const App = createComponent(function App() {
         const [count, setCount] = this.useState(0);
         return html`
@@ -1116,13 +1111,16 @@ describe('Component', () => {
       await step(runtime);
       expect(button.innerHTML).toBe('1');
       expect(startViewTransitionSpy).toHaveBeenCalledOnce();
-      expect(startViewTransitionSpy).toHaveBeenCalledWith({
-        types: [],
-        update: expect.any(Function),
-      });
+      expect(startViewTransitionSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          types: [],
+          update: expect.any(Function),
+        }),
+      );
     });
 
     it('commits the update with in view transition with types', async () => {
+      const startViewTransitionSpy = vi.spyOn(document, 'startViewTransition');
       const App = createComponent(function App() {
         const [count, setCount] = this.useState(0);
         return html`
@@ -1147,10 +1145,54 @@ describe('Component', () => {
       await step(runtime);
       expect(button.innerHTML).toBe('1');
       expect(startViewTransitionSpy).toHaveBeenCalledOnce();
-      expect(startViewTransitionSpy).toHaveBeenCalledWith({
-        types: ['slide', 'fade'],
-        update: expect.any(Function),
+      expect(startViewTransitionSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          types: ['slide', 'fade'],
+          update: expect.any(Function),
+        }),
+      );
+    });
+
+    it('commits the update with in view transition with scope', async () => {
+      const startViewTransitionSpy = vi.spyOn(
+        Element.prototype,
+        'startViewTransition',
+      );
+      const App = createComponent(function App() {
+        const [count, setCount] = this.useState(0);
+        return html`
+          <div id="scope">
+            <button
+              @click=${() => {
+                setCount(count + 1, {
+                  viewTransition: { transitionFor: 'scope' },
+                });
+              }}
+            >
+              ${count}
+            </button>
+          <div>
+        `;
       });
+
+      await root.render(App({})).finished;
+      const button = container.querySelector('button')!;
+      expect(button.innerHTML).toBe('0');
+      expect(startViewTransitionSpy).not.toHaveBeenCalled();
+
+      button.click();
+      await step(runtime);
+      expect(button.innerHTML).toBe('1');
+      expect(startViewTransitionSpy).toHaveBeenCalledOnce();
+      expect(startViewTransitionSpy.mock.contexts[0]).toBe(
+        document.getElementById('scope'),
+      );
+      expect(startViewTransitionSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          types: [],
+          update: expect.any(Function),
+        }),
+      );
     });
   });
 });

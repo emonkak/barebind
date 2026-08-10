@@ -56,7 +56,7 @@ export interface HostAdapter {
     callback: () => void | PromiseLike<void>,
     options?: SchedulerPostTaskOptions,
   ): Promise<void>;
-  startViewTransition(options: StartViewTransitionOptions): Promise<void>;
+  startViewTransition(options: StartScopedViewTransitionOptions): Promise<void>;
 }
 
 export interface Injectable<TInstance, TDefault> {
@@ -182,6 +182,15 @@ export interface Renderer {
   ): RenderNode;
 }
 
+export interface StartScopedViewTransitionOptions
+  extends StartViewTransitionOptions,
+    ScopedViewTransitionOptions {}
+
+export interface ScopedViewTransitionOptions {
+  transitionFor?: string | null;
+  types?: string[] | null;
+}
+
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
 export interface Transaction {
@@ -193,7 +202,7 @@ export interface Transaction {
 export interface Update {
   readonly id: number;
   readonly lanes: Lanes;
-  readonly types: string[];
+  readonly viewTransition: ScopedViewTransitionOptions | null;
   readonly controller: PromiseWithResolvers<void>;
   readonly transaction: Transaction;
 }
@@ -209,7 +218,7 @@ export interface UpdateOptions {
   flushSync?: boolean;
   priority?: TaskPriority;
   transition?: number;
-  viewTransition?: ViewTransitionOptions;
+  viewTransition?: ScopedViewTransitionOptions;
 }
 
 export type VBind<TValue = unknown> = VNode<typeof Bind, { value: TValue }, []>;
@@ -231,10 +240,6 @@ export type VTemplate = VNode<
   { mode: TemplateMode },
   VElement[]
 >;
-
-export interface ViewTransitionOptions {
-  types?: string[];
-}
 
 export class Scope {
   readonly owner: Owner;

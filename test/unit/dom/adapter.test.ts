@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DOMAdapter } from '@/dom/adapter.js';
 
 describe('DOMAdapter', () => {
@@ -134,26 +134,87 @@ describe('DOMAdapter', () => {
   });
 
   describe('startViewTransition()', () => {
-    it.runIf(document.startViewTransition)(
-      'uses startViewTransition when available',
-      async () => {
+    describe('without scope', () => {
+      it.runIf(document.startViewTransition)(
+        'calls Document.startViewTransition when available',
+        async () => {
+          const startViewTransitionSpy = vi.spyOn(
+            document,
+            'startViewTransition',
+          );
+          const update = vi.fn();
+          await adapter.startViewTransition({ update });
+          expect(startViewTransitionSpy).toHaveBeenCalledOnce();
+          expect(update).toHaveBeenCalledOnce();
+        },
+      );
+
+      it('falls back to Promise.resolve when Document.startViewTransition is unavailable', async () => {
+        vi.spyOn(document as any, 'startViewTransition', 'get').mockReturnValue(
+          undefined,
+        );
         const update = vi.fn();
         await adapter.startViewTransition({ update });
         expect(update).toHaveBeenCalledOnce();
-      },
-    );
+      });
+    });
 
-    it('falls back to Promise.resolve when startViewTransition is unavailable', async () => {
-      vi.spyOn(
-        document as {
-          startViewTransition: Document['startViewTransition'] | undefined;
+    describe('with scope', () => {
+      const scope = document.createElement('div');
+      scope.setAttribute('id', 'scope');
+
+      beforeEach(() => {
+        document.body.appendChild(scope);
+      });
+
+      afterEach(() => {
+        document.body.removeChild(scope);
+      });
+
+      it.runIf(Element.prototype.startViewTransition)(
+        'calls Element.startViewTransition when available',
+        async () => {
+          const startViewTransitionSpy = vi.spyOn(
+            Element.prototype,
+            'startViewTransition',
+          );
+          const update = vi.fn();
+          await adapter.startViewTransition({
+            transitionFor: 'scope',
+            update,
+          });
+          expect(startViewTransitionSpy).toHaveBeenCalledOnce();
+          expect(update).toHaveBeenCalledOnce();
         },
-        'startViewTransition',
-        'get',
-      ).mockReturnValue(undefined);
-      const update = vi.fn();
-      await adapter.startViewTransition({ update });
-      expect(update).toHaveBeenCalledOnce();
+      );
+
+      it.runIf(Element.prototype.startViewTransition)(
+        'falls back to Promise.resolve when the element is not found',
+        async () => {
+          const startViewTransitionSpy = vi.spyOn(
+            Element.prototype,
+            'startViewTransition',
+          );
+          const update = vi.fn();
+          await adapter.startViewTransition({
+            transitionFor: 'invalid-scope',
+            update,
+          });
+          expect(startViewTransitionSpy).not.toHaveBeenCalled();
+          expect(update).toHaveBeenCalledOnce();
+        },
+      );
+
+      it('falls back to Promise.resolve when Element.startViewTransition is unavailable', async () => {
+        vi.spyOn(
+          Element.prototype as any,
+          'startViewTransition',
+          'get',
+        ).mockReturnValue(undefined);
+        const update = vi.fn();
+        await adapter.startViewTransition({ transitionFor: 'scope', update });
+        expect(update).toHaveBeenCalledOnce();
+      });
     });
   });
 });
