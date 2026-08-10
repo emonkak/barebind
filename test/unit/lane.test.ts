@@ -2,15 +2,15 @@ import { describe, expect, it } from 'vitest';
 import {
   AllLanes,
   BackgroundLane,
-  DelayLane1,
-  DelayLane2,
   getHighestPriorityLane,
   getLaneFromPriority,
   getPriorityFromLanes,
   getRenderLanes,
   getTransitionIndex,
   inspectLanes,
+  LongDelayLane,
   NoLanes,
+  ShortDelayLane,
   SyncLane,
   TransitionLane1,
   TransitionLaneLength,
@@ -86,12 +86,12 @@ describe('getPriorityFromLanes()', () => {
     expect(getPriorityFromLanes(TransitionLane1)).toBe('background');
   });
 
-  it('returns background for DelayLane1', () => {
-    expect(getPriorityFromLanes(DelayLane1)).toBe('background');
+  it('returns background for ShortDelayLane', () => {
+    expect(getPriorityFromLanes(ShortDelayLane)).toBe('background');
   });
 
-  it('returns background for DelayLane2', () => {
-    expect(getPriorityFromLanes(DelayLane2)).toBe('background');
+  it('returns background for LongDelayLane', () => {
+    expect(getPriorityFromLanes(LongDelayLane)).toBe('background');
   });
 
   it('returns user-visible for NoLanes (fallback)', () => {
@@ -167,19 +167,19 @@ describe('getRenderLanes()', () => {
     expect(lanes).toBe(TransitionLane1);
   });
 
-  it('includes DelayLane1 for a short delay', () => {
-    expect(getRenderLanes({ delay: 50 })).toBe(DelayLane1);
-  });
-
-  it('includes DelayLane2 for a long delay', () => {
-    expect(getRenderLanes({ delay: 200 })).toBe(DelayLane2);
+  it('includes ShortDelayLane for a short delay', () => {
+    expect(getRenderLanes({ delay: 50 })).toBe(ShortDelayLane);
   });
 
   it('includes delayed lane for delay exactly 100', () => {
-    expect(getRenderLanes({ delay: 100 })).toBe(DelayLane1);
+    expect(getRenderLanes({ delay: 100 })).toBe(ShortDelayLane);
   });
 
-  it('combines all option categories', () => {
+  it('includes LongDelayLane for a long delay', () => {
+    expect(getRenderLanes({ delay: 200 })).toBe(LongDelayLane);
+  });
+
+  it('combines all options', () => {
     const lanes = getRenderLanes({
       flushSync: true,
       viewTransition: true,
@@ -189,7 +189,7 @@ describe('getRenderLanes()', () => {
     expect(lanes & SyncLane).toBe(SyncLane);
     expect(lanes & ViewTransitionLane).toBe(ViewTransitionLane);
     expect(lanes & (TransitionLane1 << 3)).toBe(TransitionLane1 << 3);
-    expect(lanes & DelayLane2).toBe(DelayLane2);
+    expect(lanes & LongDelayLane).toBe(LongDelayLane);
   });
 });
 
@@ -250,12 +250,12 @@ describe('inspectLanes()', () => {
     }
   });
 
-  it('identifies DelayLane1', () => {
-    expect(inspectLanes(DelayLane1)).toStrictEqual(['DelayLane']);
+  it('identifies ShortDelayLane', () => {
+    expect(inspectLanes(ShortDelayLane)).toStrictEqual(['ShortDelayLane']);
   });
 
-  it('identifies DelayLane2', () => {
-    expect(inspectLanes(DelayLane2)).toStrictEqual(['DelayLane']);
+  it('identifies LongDelayLane', () => {
+    expect(inspectLanes(LongDelayLane)).toStrictEqual(['LongDelayLane']);
   });
 
   it('returns tags for all lane groups in AllLanes', () => {
@@ -266,7 +266,8 @@ describe('inspectLanes()', () => {
       'UserVisibleLane',
       'BackgroundLane',
       'TransitionLane',
-      'DelayLane',
+      'ShortDelayLane',
+      'LongDelayLane',
     ]);
   });
 });

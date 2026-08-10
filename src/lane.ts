@@ -9,8 +9,8 @@ export const UserVisibleLane: Lane /*    */ = 0b0000000000000000000000000001000;
 export const BackgroundLane: Lane /*     */ = 0b0000000000000000000000000010000;
 export const TransitionLane1: Lane /*    */ = 0b0000000000000000000000000100000;
 export const TransitionLanes: Lanes /*   */ = 0b0011111111111111111111111100000;
-export const DelayLane1: Lane /*         */ = 0b0100000000000000000000000000000;
-export const DelayLane2: Lane /*         */ = 0b1000000000000000000000000000000;
+export const ShortDelayLane: Lane /*     */ = 0b0100000000000000000000000000000;
+export const LongDelayLane: Lane /*      */ = 0b1000000000000000000000000000000;
 export const DelayLanes: Lanes /*        */ = 0b1100000000000000000000000000000;
 
 export const TransitionLaneLength: number = 24;
@@ -55,7 +55,7 @@ export function getRenderLanes(options: UpdateOptions): Lanes {
     lanes |= TransitionLane1 << (options.transition % TransitionLaneLength);
   }
   if (options.delay !== undefined) {
-    lanes |= options.delay <= 100 ? DelayLane1 : DelayLane2;
+    lanes |= options.delay <= 100 ? ShortDelayLane : LongDelayLane;
   }
   return lanes;
 }
@@ -91,8 +91,11 @@ export function inspectLanes(lanes: Lanes): string[] {
   if (lanes & TransitionLanes) {
     tags.push('TransitionLane');
   }
-  if (lanes & DelayLanes) {
-    tags.push('DelayLane');
+  if (lanes & ShortDelayLane) {
+    tags.push('ShortDelayLane');
+  }
+  if (lanes & LongDelayLane) {
+    tags.push('LongDelayLane');
   }
   return tags;
 }
