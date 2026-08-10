@@ -513,27 +513,24 @@ export class Runtime implements Renderer, Dispatcher {
 
   private async _flush(): Promise<void> {
     while (true) {
-      let update: Update | undefined;
-
-      while ((update = this._updateQueue.peek()) !== undefined) {
+      // The queue is lane-ordered, so once a ViewTransitionLane update is
+      // dequeued, no higher-priority updates remain. Stopping the loop when
+      // it is included commits the view transition as its own batch.
+      do {
+        const update = this._updateQueue.peek();
         if (
-          (update.lanes & this._stagedLanes) !== update.lanes &&
-          getHighestPriorityLane(this._stagedLanes) <
-            getHighestPriorityLane(update.lanes)
+          update === undefined ||
+          ((update.lanes & this._stagedLanes) !== update.lanes &&
+            getHighestPriorityLane(this._stagedLanes) <
+              getHighestPriorityLane(update.lanes))
         ) {
           break;
         }
         this._flushLanes |= update.lanes;
         this._updateBatch.push(this._updateQueue.dequeue()!);
-        if (this._flushLanes & ViewTransitionLane) {
-          // The queue is lane-ordered, so a ViewTransitionLane update can
-          // only be followed by equal/lower-priority updates. Breaking here
-          // commits the view transition as its own batch.
-          break;
-        }
-      }
+      } while (!(this._flushLanes & ViewTransitionLane));
 
-      if (this._updateBatch.length === 0) {
+      if (this._flushLanes === NoLanes) {
         break;
       }
 
@@ -542,12 +539,11 @@ export class Runtime implements Renderer, Dispatcher {
 
         for (const update of this._updateBatch) {
           const { lanes, transaction } = update;
-          if ((transaction.pendingLanes & lanes) === NoLanes) {
-            continue;
+          if (transaction.pendingLanes & lanes) {
+            commitBatch.push(
+              runPipeline(update, this._middlewares, this._flushLanes, this),
+            );
           }
-          commitBatch.push(
-            runPipeline(update, this._middlewares, this._flushLanes, this),
-          );
         }
 
         if (commitBatch.length > 0) {
