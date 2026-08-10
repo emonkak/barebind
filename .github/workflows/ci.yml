@@ -20,7 +20,7 @@ jobs:
           node-version: latest
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm recursive install
+        run: pnpm recursive ci
       - name: Install chromium for playwright
         run: pnpm exec playwright install chromium
       - name: Run CI
