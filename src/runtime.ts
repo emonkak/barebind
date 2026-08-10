@@ -232,10 +232,9 @@ export class Runtime implements Renderer, Dispatcher {
       );
       return node;
     } else {
-      const block =
-        'mode' in element.props
-          ? this._adapter.renderTemplate(element as VTemplate)
-          : this._adapter.renderPortal(element as VPortal);
+      const block = Array.isArray(element.type)
+        ? this._adapter.renderTemplate(element as VTemplate)
+        : this._adapter.renderPortal(element as VPortal);
       const node: RenderNode.BlockNode = {
         type: element.type,
         props: element.props,
