@@ -1,22 +1,22 @@
 export namespace LinkedList {
-  export interface ImmutableNode<T> {
+  export interface Node<T> {
     readonly value: T;
-    readonly prev: ImmutableNode<T> | null;
-    readonly next: ImmutableNode<T> | null;
+    readonly prev: Node<T> | null;
+    readonly next: Node<T> | null;
     readonly owner: LinkedList<T> | null;
-  }
-
-  export interface MutableNode<T> {
-    value: T;
-    prev: MutableNode<T> | null;
-    next: MutableNode<T> | null;
-    owner: LinkedList<T> | null;
   }
 }
 
+interface InternalNode<T> {
+  value: T;
+  prev: InternalNode<T> | null;
+  next: InternalNode<T> | null;
+  owner: LinkedList<T> | null;
+}
+
 export class LinkedList<T> implements Iterable<T> {
-  private _head: LinkedList.MutableNode<T> | null = null;
-  private _tail: LinkedList.MutableNode<T> | null = null;
+  private _head: InternalNode<T> | null = null;
+  private _tail: InternalNode<T> | null = null;
 
   *[Symbol.iterator](): Generator<T> {
     for (let node = this._head; node !== null; node = node.next) {
@@ -24,8 +24,8 @@ export class LinkedList<T> implements Iterable<T> {
     }
   }
 
-  append(value: T): LinkedList.ImmutableNode<T> {
-    const node: LinkedList.MutableNode<T> = {
+  append(value: T): LinkedList.Node<T> {
+    const node: InternalNode<T> = {
       value,
       prev: this._tail,
       next: null,
@@ -41,7 +41,7 @@ export class LinkedList<T> implements Iterable<T> {
     return node;
   }
 
-  delete(node: LinkedList.ImmutableNode<T>): boolean {
+  delete(node: LinkedList.Node<T>): boolean {
     if (!isNodeOwned(node, this)) {
       return false;
     }
@@ -62,8 +62,8 @@ export class LinkedList<T> implements Iterable<T> {
 }
 
 function isNodeOwned<T>(
-  node: LinkedList.ImmutableNode<T>,
+  node: LinkedList.Node<T>,
   owner: LinkedList<T>,
-): node is LinkedList.MutableNode<T> {
+): node is InternalNode<T> {
   return node.owner === owner;
 }
