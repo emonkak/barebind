@@ -41,16 +41,17 @@ export class DOMAdapter implements HostAdapter {
   }
 
   renderTemplate(element: VTemplate): DOMBlock {
-    const template = this._templateCache.getOrInsertComputed(element.type, () =>
-      DOMTemplate.parse(
-        element.type,
-        element.children,
-        element.props.mode,
-        this._identifier,
-        this._document,
-      ),
-    );
-    return template.render();
+    return this._templateCache
+      .getOrInsertComputed(element.type, () =>
+        DOMTemplate.parse(
+          element.type,
+          element.children,
+          element.props.mode,
+          this._identifier,
+          this._document,
+        ),
+      )
+      .render();
   }
 
   requestCallback(

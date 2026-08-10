@@ -1113,7 +1113,6 @@ describe('Component', () => {
       expect(startViewTransitionSpy).toHaveBeenCalledOnce();
       expect(startViewTransitionSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          types: [],
           update: expect.any(Function),
         }),
       );
@@ -1189,7 +1188,6 @@ describe('Component', () => {
       );
       expect(startViewTransitionSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          types: [],
           update: expect.any(Function),
         }),
       );

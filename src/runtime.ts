@@ -557,19 +557,11 @@ export class Runtime implements Renderer, Dispatcher {
           if ((this._flushLanes & SyncLane) === SyncLane) {
             callback();
           } else if (this._flushLanes & ViewTransitionLane) {
-            let transitionFor: string | null = null;
-            let types: string[] | null = null;
-            for (const { viewTransition } of this._updateBatch) {
-              if (viewTransition?.transitionFor != null) {
-                transitionFor = viewTransition.transitionFor;
-              }
-              if (viewTransition?.types != null) {
-                types = viewTransition.types;
-              }
-            }
+            // The batch ends with the first ViewTransitionLane update by the
+            // same lane-ordering guarantee, so it carries the viewTransition
+            // option.
             await this._adapter.startViewTransition({
-              transitionFor,
-              types,
+              ...this._updateBatch.at(-1)!.viewTransition,
               update: callback,
             });
           } else {
