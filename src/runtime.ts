@@ -512,17 +512,19 @@ export class Runtime implements Renderer, Dispatcher {
 
   private async _flush(): Promise<void> {
     while (true) {
-      // The queue is lane-ordered, so once a UserHandlerLane update is
-      // dequeued, no higher-priority updates remain. Stopping the loop
-      // there commits the handler update as its own batch.
+      // Only updates of equal priority are batched. The queue is lane-ordered,
+      // so a UserHandlerLane update is followed only by equal/lower-priority
+      // updates; stopping there commits it as its own batch.
       do {
         const update = this._updateQueue.peek();
         if (
           update === undefined ||
           ((update.lanes & this._stagedLanes) !== update.lanes &&
-            getHighestPriorityLane(this._stagedLanes) <
+            getHighestPriorityLane(this._flushLanes) <
               getHighestPriorityLane(update.lanes))
         ) {
+          // The update is not staged yet and lower-priority than the batch;
+          // defer it so it commits as its own batch.
           break;
         }
         this._flushLanes |= update.lanes;
