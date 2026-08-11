@@ -289,7 +289,7 @@ export class Runtime implements Renderer, Dispatcher {
       if (lanes & SyncLane) {
         queueMicrotask(callback);
       } else {
-        const priority = getPriorityFromLanes(lanes);
+        const priority = options.priority ?? getPriorityFromLanes(lanes);
         this._adapter.requestCallback(callback, { ...options, priority });
       }
     }
