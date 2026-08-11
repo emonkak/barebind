@@ -29,7 +29,7 @@ import {
   getRenderLanes,
   NoLanes,
   SyncLane,
-  ViewTransitionLane,
+  UserHandlerLane,
 } from './lane.js';
 import { PriorityQueue } from './queue.js';
 
@@ -272,7 +272,7 @@ export class Runtime implements Renderer, Dispatcher {
     this._updateQueue.enqueue({
       id,
       lanes,
-      viewTransition: options.viewTransition ?? null,
+      handler: options.handler ?? null,
       controller,
       transaction,
     });
@@ -512,9 +512,9 @@ export class Runtime implements Renderer, Dispatcher {
 
   private async _flush(): Promise<void> {
     while (true) {
-      // The queue is lane-ordered, so once a ViewTransitionLane update is
-      // dequeued, no higher-priority updates remain. Stopping the loop when
-      // it is included commits the view transition as its own batch.
+      // The queue is lane-ordered, so once a UserHandlerLane update is
+      // dequeued, no higher-priority updates remain. Stopping the loop
+      // there commits the handler update as its own batch.
       do {
         const update = this._updateQueue.peek();
         if (
@@ -527,7 +527,7 @@ export class Runtime implements Renderer, Dispatcher {
         }
         this._flushLanes |= update.lanes;
         this._updateBatch.push(this._updateQueue.dequeue()!);
-      } while (!(this._flushLanes & ViewTransitionLane));
+      } while (!(this._flushLanes & UserHandlerLane));
 
       if (this._flushLanes === NoLanes) {
         break;
@@ -551,16 +551,13 @@ export class Runtime implements Renderer, Dispatcher {
               commit();
             }
           };
-          if ((this._flushLanes & SyncLane) === SyncLane) {
+          if (this._flushLanes & SyncLane) {
             callback();
-          } else if (this._flushLanes & ViewTransitionLane) {
-            // The batch ends with the first ViewTransitionLane update by the
-            // same lane-ordering guarantee, so it carries the viewTransition
-            // option.
-            await this._adapter.startViewTransition({
-              ...this._updateBatch.at(-1)!.viewTransition,
-              update: callback,
-            });
+          } else if (this._flushLanes & UserHandlerLane) {
+            // The loop stops at the first UserHandlerLane update, so the
+            // batch is exactly that update, which carries the handler option.
+            const { handler } = this._updateBatch[0]!;
+            await handler!(callback);
           } else {
             await this._adapter.requestCommit(callback);
           }

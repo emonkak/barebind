@@ -25,6 +25,8 @@ export interface Block {
 
 export type Commit = () => void;
 
+export type CommitHandler = (commit: Commit) => Promise<void> | void;
+
 export interface Component<TProps> {
   (props: TProps): VComponent<TProps>;
   arePropsEqual(oldProps: TProps, newProps: TProps): boolean;
@@ -56,7 +58,6 @@ export interface HostAdapter {
     callback: () => void | PromiseLike<void>,
     options?: SchedulerPostTaskOptions,
   ): Promise<void>;
-  startViewTransition(options: StartScopedViewTransitionOptions): Promise<void>;
 }
 
 export interface Injectable<TInstance, TDefault> {
@@ -182,15 +183,6 @@ export interface Renderer {
   ): RenderNode;
 }
 
-export interface StartScopedViewTransitionOptions
-  extends StartViewTransitionOptions,
-    ScopedViewTransitionOptions {}
-
-export interface ScopedViewTransitionOptions {
-  transitionFor?: string | null;
-  types?: string[] | null;
-}
-
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
 export interface Transaction {
@@ -202,7 +194,7 @@ export interface Transaction {
 export interface Update {
   readonly id: number;
   readonly lanes: Lanes;
-  readonly viewTransition: ScopedViewTransitionOptions | null;
+  readonly handler: CommitHandler | null;
   readonly controller: PromiseWithResolvers<void>;
   readonly transaction: Transaction;
 }
@@ -216,9 +208,9 @@ export interface UpdateHandle {
 export interface UpdateOptions {
   delay?: number;
   flushSync?: boolean;
+  handler?: CommitHandler;
   priority?: TaskPriority;
   transition?: number;
-  viewTransition?: ScopedViewTransitionOptions;
 }
 
 export type VBind<TValue = unknown> = VNode<typeof Bind, { value: TValue }, []>;

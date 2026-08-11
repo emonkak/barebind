@@ -1,17 +1,17 @@
 import type { Lane, Lanes, UpdateOptions } from './base.js';
 
-export const AllLanes: Lanes /*          */ = -1;
-export const NoLanes: Lanes /*           */ = 0b0000000000000000000000000000000;
-export const SyncLane: Lane /*           */ = 0b0000000000000000000000000000001;
-export const ViewTransitionLane: Lane /* */ = 0b0000000000000000000000000000010;
-export const UserBlockingLane: Lane /*   */ = 0b0000000000000000000000000000100;
-export const UserVisibleLane: Lane /*    */ = 0b0000000000000000000000000001000;
-export const BackgroundLane: Lane /*     */ = 0b0000000000000000000000000010000;
-export const TransitionLane1: Lane /*    */ = 0b0000000000000000000000000100000;
-export const TransitionLanes: Lanes /*   */ = 0b0011111111111111111111111100000;
-export const ShortDelayLane: Lane /*     */ = 0b0100000000000000000000000000000;
-export const LongDelayLane: Lane /*      */ = 0b1000000000000000000000000000000;
-export const DelayLanes: Lanes /*        */ = 0b1100000000000000000000000000000;
+export const AllLanes: Lanes /*        */ = -1;
+export const NoLanes: Lanes /*         */ = 0b0000000000000000000000000000000;
+export const SyncLane: Lane /*         */ = 0b0000000000000000000000000000001;
+export const UserHandlerLane: Lane /*  */ = 0b0000000000000000000000000000010;
+export const UserBlockingLane: Lane /* */ = 0b0000000000000000000000000000100;
+export const UserVisibleLane: Lane /*  */ = 0b0000000000000000000000000001000;
+export const BackgroundLane: Lane /*   */ = 0b0000000000000000000000000010000;
+export const TransitionLane1: Lane /*  */ = 0b0000000000000000000000000100000;
+export const TransitionLanes: Lanes /* */ = 0b0011111111111111111111111100000;
+export const ShortDelayLane: Lane /*   */ = 0b0100000000000000000000000000000;
+export const LongDelayLane: Lane /*    */ = 0b1000000000000000000000000000000;
+export const DelayLanes: Lanes /*      */ = 0b1100000000000000000000000000000;
 
 export const TransitionLaneLength: number = 24;
 
@@ -31,7 +31,7 @@ export function getLaneFromPriority(priority: TaskPriority): Lanes {
 }
 
 export function getPriorityFromLanes(lanes: Lanes): TaskPriority {
-  return lanes & (SyncLane | ViewTransitionLane | UserBlockingLane)
+  return lanes & (SyncLane | UserHandlerLane | UserBlockingLane)
     ? 'user-blocking'
     : lanes & UserVisibleLane
       ? 'user-visible'
@@ -45,8 +45,8 @@ export function getRenderLanes(options: UpdateOptions): Lanes {
   if (options.flushSync) {
     lanes |= SyncLane;
   }
-  if (options.viewTransition !== undefined) {
-    lanes |= ViewTransitionLane;
+  if (options.handler !== undefined) {
+    lanes |= UserHandlerLane;
   }
   if (options.priority !== undefined) {
     lanes |= getLaneFromPriority(options.priority);
@@ -76,8 +76,8 @@ export function inspectLanes(lanes: Lanes): string[] {
   if (lanes & SyncLane) {
     tags.push('SyncLane');
   }
-  if (lanes & ViewTransitionLane) {
-    tags.push('ViewTransitionLane');
+  if (lanes & UserHandlerLane) {
+    tags.push('UserHandlerLane');
   }
   if (lanes & UserBlockingLane) {
     tags.push('UserBlockingLane');

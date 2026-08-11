@@ -1086,49 +1086,18 @@ describe('Component', () => {
     });
   });
 
-  describe('View transition', () => {
-    it('commits the update in the view transition', async () => {
-      const startViewTransitionSpy = vi
-        .spyOn(document, 'startViewTransition')
-        .mockImplementation(startViewTransitionMock);
-      const App = createComponent(function App() {
-        const [count, setCount] = this.useState(0);
-        return html`
-          <button
-            @click=${() => {
-              setCount(count + 1, { viewTransition: {} });
-            }}
-          >
-            ${count}
-          </button>
-        `;
+  describe('User handler', () => {
+    it('commits the update with the user handler', async () => {
+      const handler = vi.fn((commit) => {
+        commit();
       });
-
-      await root.render(App({})).finished;
-      const button = container.querySelector('button')!;
-      expect(button.innerHTML).toBe('0');
-      expect(startViewTransitionSpy).not.toHaveBeenCalled();
-
-      button.click();
-      await step(runtime);
-      expect(button.innerHTML).toBe('1');
-      expect(startViewTransitionSpy).toHaveBeenCalledOnce();
-      expect(startViewTransitionSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          update: expect.any(Function),
-        }),
-      );
-    });
-
-    it('commits the update with in view transition with types', async () => {
-      const startViewTransitionSpy = vi.spyOn(document, 'startViewTransition');
       const App = createComponent(function App() {
         const [count, setCount] = this.useState(0);
         return html`
           <button
             @click=${() => {
               setCount(count + 1, {
-                viewTransition: { types: ['slide', 'fade'] },
+                handler,
               });
             }}
           >
@@ -1140,78 +1109,13 @@ describe('Component', () => {
       await root.render(App({})).finished;
       const button = container.querySelector('button')!;
       expect(button.innerHTML).toBe('0');
-      expect(startViewTransitionSpy).not.toHaveBeenCalled();
+      expect(handler).not.toHaveBeenCalled();
 
       button.click();
       await step(runtime);
       expect(button.innerHTML).toBe('1');
-      expect(startViewTransitionSpy).toHaveBeenCalledOnce();
-      expect(startViewTransitionSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          types: ['slide', 'fade'],
-          update: expect.any(Function),
-        }),
-      );
-    });
-
-    it('commits the update with in view transition with scope', async () => {
-      const startViewTransitionSpy = vi
-        .spyOn(Element.prototype, 'startViewTransition')
-        .mockImplementation(startViewTransitionMock);
-      const App = createComponent(function App() {
-        const [count, setCount] = this.useState(0);
-        return html`
-          <div id="scope">
-            <button
-              @click=${() => {
-                setCount(count + 1, {
-                  viewTransition: { transitionFor: 'scope' },
-                });
-              }}
-            >
-              ${count}
-            </button>
-          <div>
-        `;
-      });
-
-      await root.render(App({})).finished;
-      const button = container.querySelector('button')!;
-      expect(button.innerHTML).toBe('0');
-      expect(startViewTransitionSpy).not.toHaveBeenCalled();
-
-      button.click();
-      await step(runtime);
-      expect(button.innerHTML).toBe('1');
-      expect(startViewTransitionSpy).toHaveBeenCalledOnce();
-      expect(startViewTransitionSpy.mock.contexts[0]).toBe(
-        document.getElementById('scope'),
-      );
-      expect(startViewTransitionSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          update: expect.any(Function),
-        }),
-      );
+      expect(handler).toHaveBeenCalledOnce();
+      expect(handler).toHaveBeenCalledWith(expect.any(Function));
     });
   });
 });
-
-function startViewTransitionMock(
-  callbackOptions?: ViewTransitionUpdateCallback | StartViewTransitionOptions,
-): ViewTransition {
-  const callback =
-    typeof callbackOptions === 'function'
-      ? callbackOptions
-      : callbackOptions?.update;
-  const types = new Set(
-    typeof callbackOptions === 'function' ? undefined : callbackOptions?.types,
-  );
-  callback?.();
-  return {
-    finished: Promise.resolve(),
-    ready: Promise.resolve(),
-    types,
-    updateCallbackDone: Promise.resolve(),
-    skipTransition() {},
-  };
-}

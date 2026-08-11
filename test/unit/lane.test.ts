@@ -15,8 +15,8 @@ import {
   TransitionLane1,
   TransitionLaneLength,
   UserBlockingLane,
+  UserHandlerLane,
   UserVisibleLane,
-  ViewTransitionLane,
 } from '@/lane.js';
 
 describe('getHighestPriorityLane()', () => {
@@ -66,8 +66,8 @@ describe('getPriorityFromLanes()', () => {
     expect(getPriorityFromLanes(SyncLane)).toBe('user-blocking');
   });
 
-  it('returns user-blocking for ViewTransitionLane', () => {
-    expect(getPriorityFromLanes(ViewTransitionLane)).toBe('user-blocking');
+  it('returns user-blocking for UserHandlerLane', () => {
+    expect(getPriorityFromLanes(UserHandlerLane)).toBe('user-blocking');
   });
 
   it('returns user-blocking for UserBlockingLane', () => {
@@ -126,8 +126,14 @@ describe('getRenderLanes()', () => {
     expect(getRenderLanes({ flushSync: true })).toBe(SyncLane);
   });
 
-  it('includes ViewTransitionLane when viewTransition is object', () => {
-    expect(getRenderLanes({ viewTransition: {} })).toBe(ViewTransitionLane);
+  it('includes UserHandlerLane when handler is function', () => {
+    expect(
+      getRenderLanes({
+        handler(commit) {
+          commit();
+        },
+      }),
+    ).toBe(UserHandlerLane);
   });
 
   it('maps priority to the corresponding lane', () => {
@@ -166,13 +172,13 @@ describe('getRenderLanes()', () => {
 
   it('combines all options', () => {
     const lanes = getRenderLanes({
-      flushSync: true,
-      viewTransition: {},
-      transition: 3,
       delay: 200,
+      flushSync: true,
+      handler: () => {},
+      transition: 3,
     });
     expect(lanes & SyncLane).toBe(SyncLane);
-    expect(lanes & ViewTransitionLane).toBe(ViewTransitionLane);
+    expect(lanes & UserHandlerLane).toBe(UserHandlerLane);
     expect(lanes & (TransitionLane1 << 3)).toBe(TransitionLane1 << 3);
     expect(lanes & LongDelayLane).toBe(LongDelayLane);
   });
@@ -209,10 +215,8 @@ describe('inspectLanes()', () => {
     expect(inspectLanes(SyncLane)).toStrictEqual(['SyncLane']);
   });
 
-  it('identifies ViewTransitionLane', () => {
-    expect(inspectLanes(ViewTransitionLane)).toStrictEqual([
-      'ViewTransitionLane',
-    ]);
+  it('identifies UserHandlerLane', () => {
+    expect(inspectLanes(UserHandlerLane)).toStrictEqual(['UserHandlerLane']);
   });
 
   it('identifies UserBlockingLane', () => {
@@ -246,7 +250,7 @@ describe('inspectLanes()', () => {
   it('returns tags for all lane groups in AllLanes', () => {
     expect(inspectLanes(AllLanes)).toStrictEqual([
       'SyncLane',
-      'ViewTransitionLane',
+      'UserHandlerLane',
       'UserBlockingLane',
       'UserVisibleLane',
       'BackgroundLane',

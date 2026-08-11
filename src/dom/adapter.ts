@@ -1,9 +1,4 @@
-import type {
-  HostAdapter,
-  StartScopedViewTransitionOptions,
-  VPortal,
-  VTemplate,
-} from '../base.js';
+import type { HostAdapter, VPortal, VTemplate } from '../base.js';
 import { DOMBlock } from './block.js';
 import { ContainerPart } from './part.js';
 import { DOMTemplate } from './template.js';
@@ -98,18 +93,6 @@ export class DOMAdapter implements HostAdapter {
       }, 100);
     }).then(callback);
   }
-
-  startViewTransition(
-    options: StartScopedViewTransitionOptions,
-  ): Promise<void> {
-    const scope =
-      options.transitionFor != null
-        ? this._document.getElementById(options.transitionFor)
-        : this._document;
-    return typeof scope?.startViewTransition === 'function'
-      ? scope.startViewTransition(options).updateCallbackDone
-      : Promise.resolve().then(options.update);
-  }
 }
 
 function generateUniqueIdentifier(length: number): string {
@@ -144,12 +127,5 @@ function isContinuousEvent(event: Event): boolean {
       return true;
     default:
       return false;
-  }
-}
-
-declare global {
-  interface Element {
-    // biome-ignore lint/style/noRestrictedGlobals: intentional global document reference
-    startViewTransition: typeof document.startViewTransition;
   }
 }
