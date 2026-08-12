@@ -556,9 +556,9 @@ export class Runtime implements Renderer, Dispatcher {
           if (this._flushLanes & SyncLane) {
             callback();
           } else if (this._flushLanes & UserHandlerLane) {
-            // The loop stops at the first UserHandlerLane update, so the
-            // batch is exactly that update, which carries the handler option.
-            const { handler } = this._updateBatch[0]!;
+            // The loop stops at the last UserHandlerLane update, which carries
+            // the handler.
+            const { handler } = this._updateBatch.at(-1)!;
             await handler!(callback);
           } else {
             await this._adapter.requestCommit(callback);
