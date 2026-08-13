@@ -454,7 +454,9 @@ export class Ref<T> implements Bindable {
     return createBind((instance: T) => {
       this.current = instance;
       return () => {
-        this.current = null as T;
+        if (this.current === instance) {
+          this.current = null as T;
+        }
       };
     });
   }

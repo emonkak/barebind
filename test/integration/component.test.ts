@@ -534,13 +534,13 @@ describe('Component', () => {
       let ref!: Ref<HTMLDivElement | null>;
       const App = createComponent(function App() {
         ref = this.useRef<HTMLDivElement | null>(null);
-        return html`<div ${ref}>hello</div>`;
+        return html`<div id="target" ${ref}>hello</div>`;
       });
 
       await root.render(App({})).finished;
       expect(ref).toBeInstanceOf(Ref);
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
-      expect(ref.current).toBe(container.querySelector('div'));
+      expect(ref.current).toBe(container.querySelector('#target'));
     });
 
     it('holds the DOM node before commit effects', async () => {
@@ -550,12 +550,12 @@ describe('Component', () => {
         this.useEffect(() => {
           element = ref.current!;
         });
-        return html`<div ${ref}>hello</div>`;
+        return html`<div id="target" ${ref}>hello</div>`;
       });
 
       await root.render(App({})).finished;
       expect(element).toBeInstanceOf(HTMLDivElement);
-      expect(element).toBe(container.querySelector('div'));
+      expect(element).toBe(container.querySelector('#target'));
     });
 
     it('holds the DOM node before clean up effects', async () => {
@@ -567,15 +567,58 @@ describe('Component', () => {
             element = ref.current!;
           };
         });
-        return html`<div ${ref}>hello</div>`;
+        return html`<div id="target" ${ref}>hello</div>`;
       });
 
       await root.render(App({})).finished;
-      const target = container.querySelector('div');
+      const target = container.querySelector('#target');
 
       await root.unmount().finished;
       expect(element).toBeInstanceOf(HTMLDivElement);
       expect(element).toBe(target);
+    });
+
+    it('holds the DOM node of the currently bound element when rebound', async () => {
+      let ref!: Ref<HTMLDivElement | null>;
+      const App = createComponent(function App({
+        items,
+        current,
+      }: {
+        items: string[];
+        current: string;
+      }) {
+        ref = this.useRef<HTMLDivElement | null>(null);
+        return items.map(
+          (item) => html`<div ${item === current ? ref : null}>${item}</div>`,
+        );
+      });
+
+      await root.render(
+        App({
+          items: ['foo', 'bar', 'baz'],
+          current: 'foo',
+        }),
+      ).finished;
+
+      expect(ref.current?.innerHTML).toBe('foo');
+
+      await root.render(
+        App({
+          items: ['foo', 'bar', 'baz'],
+          current: 'baz',
+        }),
+      ).finished;
+
+      expect(ref.current?.innerHTML).toBe('baz');
+
+      await root.render(
+        App({
+          items: ['foo', 'bar', 'baz'],
+          current: 'bar',
+        }),
+      ).finished;
+
+      expect(ref.current?.innerHTML).toBe('bar');
     });
 
     it('unholds the DOM node on unmount', async () => {
