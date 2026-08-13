@@ -7,8 +7,8 @@ import {
   type UpdateOptions,
 } from '../base.js';
 import { mount, patch, unmount } from '../commit.js';
-import { wrap } from '../element.js';
 import { AllLanes } from '../lane.js';
+import { wrap } from '../velement.js';
 import { ContainerPart } from './part.js';
 
 export class DOMRoot {

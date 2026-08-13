@@ -24,6 +24,11 @@ export {
 export { DOMAdapter } from './dom/adapter.js';
 export { DOMAdapterError } from './dom/error.js';
 export { DOMRoot } from './dom/root.js';
+export { RenderError } from './error.js';
+export {
+  Runtime,
+  step,
+} from './runtime.js';
 export {
   createBind,
   createFragment,
@@ -34,9 +39,4 @@ export {
   Partial,
   svg,
   text,
-} from './element.js';
-export { RenderError } from './error.js';
-export {
-  Runtime,
-  step,
-} from './runtime.js';
+} from './velement.js';

@@ -19,9 +19,9 @@ import {
 } from './base.js';
 import { patch } from './commit.js';
 import { areDependenciesChanged, is } from './compare.js';
-import { createBind, wrap } from './element.js';
 import { RenderError } from './error.js';
 import { NoLanes } from './lane.js';
+import { createBind, wrap } from './velement.js';
 
 const enum HookType {
   FINALIZER = 0,
