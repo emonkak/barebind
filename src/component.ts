@@ -133,7 +133,7 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
   /** @internal */
   _context: RenderContext | null = null;
   /** @internal */
-  _connectedNode: RenderNode.ComponentNode | null = null;
+  _connectedNode: RenderNode.ComponentNode<TProps> | null = null;
 
   constructor(
     componentFn: ComponentFunction<TProps, TReturn>,
