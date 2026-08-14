@@ -123,7 +123,7 @@ export class Runtime implements Renderer, Dispatcher {
       newNode.left[0] = this.diff(
         newNode.right[0]!,
         newNode.state.instance.render(
-          newNode.props,
+          newElement.props,
           subScope,
           this._flushLanes,
         ),
@@ -224,7 +224,7 @@ export class Runtime implements Renderer, Dispatcher {
       };
       const subScope = scope.enter(element.type);
       node.left[0] = this.render(
-        node.state.instance.render(node.props, subScope, this._flushLanes),
+        node.state.instance.render(element.props, subScope, this._flushLanes),
         subScope,
         0,
         node,
