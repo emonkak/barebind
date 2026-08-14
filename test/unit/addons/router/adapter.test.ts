@@ -3,7 +3,7 @@ import {
   BrowserAdapter,
   HashAdapter,
   InMemoryAdapter,
-} from '@/addons/router.js';
+} from '@/addons/router/adapter.js';
 
 describe('BrowserAdapter', () => {
   let location: Location;

@@ -1,4 +1,18 @@
 export {
+  BrowserAdapter,
+  type BrowserAdapterOptions,
+  HashAdapter,
+  type HashAdapterOptions,
+  InMemoryAdapter,
+  type NavigationAdapter,
+  type NavigationHandler,
+  type NavigationScene,
+} from './router/adapter.js';
+export {
+  NavigationContext,
+  SyncNavigation,
+} from './router/hook.js';
+export {
   choice,
   decoded,
   encoded,
@@ -7,18 +21,6 @@ export {
   regexp,
   select,
 } from './router/matchers.js';
-export {
-  BrowserAdapter,
-  type BrowserAdapterOptions,
-  HashAdapter,
-  type HashAdapterOptions,
-  InMemoryAdapter,
-  type NavigationAdapter,
-  NavigationContext,
-  type NavigationHandler,
-  type NavigationScene,
-  SyncNavigation,
-} from './router/navigation.js';
 export {
   type Matcher,
   type Pattern,

@@ -1,5 +1,12 @@
-import type { UpdateOptions } from '../../base.js';
-import type { HookFunction } from '../../component.js';
+export interface BrowserAdapterOptions {
+  location?: Location;
+  navigation?: Navigation;
+}
+
+export interface HashAdapterOptions {
+  location?: Location;
+  navigation?: Navigation;
+}
 
 export interface NavigationAdapter {
   getCurrentURL(): string;
@@ -20,30 +27,7 @@ export interface NavigationScene {
   navigationType: NavigationType | null;
 }
 
-export interface BrowserAdapterOptions {
-  location?: Location;
-  navigation?: Navigation;
-}
-
-export interface HashAdapterOptions {
-  location?: Location;
-  navigation?: Navigation;
-}
-
 type URLLike = Pick<URL, 'pathname' | 'search' | 'hash'>;
-
-export class NavigationContext {
-  readonly adapter: NavigationAdapter;
-  readonly scene: NavigationScene;
-
-  constructor(adapter: NavigationAdapter, scene: NavigationScene) {
-    this.adapter = adapter;
-    this.scene = scene;
-    DEBUG: {
-      Object.freeze(this);
-    }
-  }
-}
 
 export class BrowserAdapter implements NavigationAdapter {
   private readonly _location: Location;
@@ -196,33 +180,6 @@ export class InMemoryAdapter implements NavigationAdapter {
     this._url = url;
     this._state = state;
   }
-}
-
-export function SyncNavigation(
-  adapter: NavigationAdapter,
-  getUpdateOptions?: (scene: NavigationScene) => UpdateOptions,
-): HookFunction<NavigationContext> {
-  return (context) => {
-    const [scene, setScene] = context.useState<NavigationScene>(() => ({
-      url: adapter.getCurrentURL(),
-      state: adapter.getCurrentState(),
-      navigationType: null,
-    }));
-
-    context.useEffect(() => {
-      return adapter.installHandler((url, state, navigationType) => {
-        const scene: NavigationScene = { url, state, navigationType };
-        const options = getUpdateOptions?.(scene);
-        return setScene(scene, options).finished;
-      });
-    }, [adapter]);
-
-    const navigationContext = new NavigationContext(adapter, scene);
-
-    context.provide(navigationContext);
-
-    return navigationContext;
-  };
 }
 
 function stripLeadingHashmark(s: string): string {
