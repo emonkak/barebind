@@ -5,8 +5,8 @@ export {
   type HashAdapterOptions,
   InMemoryAdapter,
   type NavigationAdapter,
-  type NavigationHandler,
   type NavigationScene,
+  type NavigationSceneHandler,
 } from './router/adapter.js';
 export {
   NavigationContext,

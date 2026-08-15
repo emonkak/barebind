@@ -11,21 +11,19 @@ export interface HashAdapterOptions {
 export interface NavigationAdapter {
   getCurrentURL(): string;
   getCurrentState(): unknown;
-  installHandler(interceptor: NavigationHandler): () => void;
+  installHandler(handler: NavigationSceneHandler): () => void;
   navigate(url: string, options?: NavigationNavigateOptions): Promise<void>;
 }
-
-export type NavigationHandler = (
-  url: string,
-  state: unknown,
-  navigationType: NavigationType,
-) => Promise<void> | void;
 
 export interface NavigationScene {
   url: string;
   state: unknown;
   navigationType: NavigationType | null;
 }
+
+export type NavigationSceneHandler = (
+  scene: NavigationScene,
+) => Promise<void> | void;
 
 type URLLike = Pick<URL, 'pathname' | 'search' | 'hash'>;
 
@@ -49,7 +47,7 @@ export class BrowserAdapter implements NavigationAdapter {
     return this._navigation.currentEntry?.getState();
   }
 
-  installHandler(handler: NavigationHandler): () => void {
+  installHandler(handler: NavigationSceneHandler): () => void {
     const handleNavigate = (event: NavigateEvent) => {
       if (
         event.canIntercept &&
@@ -59,11 +57,11 @@ export class BrowserAdapter implements NavigationAdapter {
       ) {
         event.intercept({
           async handler() {
-            await handler(
-              toRelativeUrl(new URL(event.destination.url)),
-              event.destination.getState(),
-              event.navigationType,
-            );
+            await handler({
+              url: toRelativeUrl(new URL(event.destination.url)),
+              state: event.destination.getState(),
+              navigationType: event.navigationType,
+            });
             event.scroll();
           },
         });
@@ -103,7 +101,7 @@ export class HashAdapter implements NavigationAdapter {
     return this._navigation.currentEntry?.getState();
   }
 
-  installHandler(handler: NavigationHandler): () => void {
+  installHandler(handler: NavigationSceneHandler): () => void {
     const handleNavigate = (event: NavigateEvent) => {
       if (
         event.canIntercept &&
@@ -112,11 +110,11 @@ export class HashAdapter implements NavigationAdapter {
       ) {
         event.intercept({
           async handler() {
-            await handler(
-              stripLeadingHashmark(new URL(event.destination.url).hash),
-              event.destination.getState(),
-              event.navigationType,
-            );
+            await handler({
+              url: stripLeadingHashmark(new URL(event.destination.url).hash),
+              state: event.destination.getState(),
+              navigationType: event.navigationType,
+            });
             event.scroll();
           },
         });
@@ -139,7 +137,7 @@ export class HashAdapter implements NavigationAdapter {
 export class InMemoryAdapter implements NavigationAdapter {
   private _url: string;
   private _state: unknown;
-  private readonly _handlers: Set<NavigationHandler> = new Set();
+  private readonly _handlers: Set<NavigationSceneHandler> = new Set();
 
   constructor(url: string, state: unknown) {
     this._url = url;
@@ -154,7 +152,7 @@ export class InMemoryAdapter implements NavigationAdapter {
     return this._state;
   }
 
-  installHandler(handler: NavigationHandler): () => void {
+  installHandler(handler: NavigationSceneHandler): () => void {
     this._handlers.add(handler);
     return () => {
       this._handlers.delete(handler);
@@ -172,9 +170,10 @@ export class InMemoryAdapter implements NavigationAdapter {
         : url === this._url
           ? 'replace'
           : 'push';
+    const scene = { url, state, navigationType };
 
     for (const handler of this._handlers) {
-      await handler(url, state, navigationType);
+      handler(scene, interceptor);
     }
 
     this._url = url;

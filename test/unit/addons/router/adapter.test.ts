@@ -68,7 +68,11 @@ describe('BrowserAdapter', () => {
       await Promise.resolve();
 
       expect(handler).toHaveBeenCalledOnce();
-      expect(handler).toHaveBeenCalledWith('/target', state, 'push');
+      expect(handler).toHaveBeenCalledWith({
+        url: '/target',
+        state,
+        navigationType: 'push',
+      });
       expect(event.intercept).toHaveBeenCalledOnce();
       expect(event.scroll).toHaveBeenCalledOnce();
     });
@@ -258,7 +262,11 @@ describe('HashAdapter', () => {
       await Promise.resolve();
 
       expect(handler).toHaveBeenCalledOnce();
-      expect(handler).toHaveBeenCalledWith('/target', state, 'push');
+      expect(handler).toHaveBeenCalledWith({
+        url: '/target',
+        state,
+        navigationType: 'push',
+      });
       expect(event.intercept).toHaveBeenCalledOnce();
       expect(event.scroll).toHaveBeenCalledOnce();
     });
@@ -390,7 +398,11 @@ describe('InMemoryAdapter', () => {
       adapter.installHandler(handler);
       await adapter.navigate('/bar', { state: 42 });
 
-      expect(handler).toHaveBeenCalledWith('/bar', 42, 'push');
+      expect(handler).toHaveBeenCalledWith({
+        url: '/bar',
+        state: 42,
+        navigationType: 'push',
+      });
     });
 
     it('calls all registered handlers on navigate', async () => {
@@ -445,7 +457,11 @@ describe('InMemoryAdapter', () => {
       adapter.navigate('/bar');
 
       expect(handler).toHaveBeenCalledOnce();
-      expect(handler).toHaveBeenCalledWith('/bar', undefined, 'push');
+      expect(handler).toHaveBeenCalledWith({
+        url: '/bar',
+        state: undefined,
+        navigationType: 'push',
+      });
     });
 
     it('defaults to replace for the same URL', () => {
@@ -456,7 +472,11 @@ describe('InMemoryAdapter', () => {
       adapter.navigate('/foo');
 
       expect(handler).toHaveBeenCalledOnce();
-      expect(handler).toHaveBeenCalledWith('/foo', undefined, 'replace');
+      expect(handler).toHaveBeenCalledWith({
+        url: '/foo',
+        state: undefined,
+        navigationType: 'replace',
+      });
     });
 
     it('uses the explicit history option when provided', () => {
@@ -467,7 +487,11 @@ describe('InMemoryAdapter', () => {
       adapter.navigate('/bar', { history: 'replace' });
 
       expect(handler).toHaveBeenCalledOnce();
-      expect(handler).toHaveBeenCalledWith('/bar', undefined, 'replace');
+      expect(handler).toHaveBeenCalledWith({
+        url: '/bar',
+        state: undefined,
+        navigationType: 'replace',
+      });
     });
   });
 });

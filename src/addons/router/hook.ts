@@ -17,7 +17,7 @@ export class NavigationContext {
 
 export function SyncNavigation(
   adapter: NavigationAdapter,
-  getUpdateOptions?: (scene: NavigationScene) => UpdateOptions,
+  deriveUpdateOptions?: (scene: NavigationScene) => UpdateOptions,
 ): HookFunction<NavigationContext> {
   return (context) => {
     const [scene, setScene] = context.useState<NavigationScene>(() => ({
@@ -27,9 +27,8 @@ export function SyncNavigation(
     }));
 
     context.useEffect(() => {
-      return adapter.installHandler((url, state, navigationType) => {
-        const scene: NavigationScene = { url, state, navigationType };
-        const options = getUpdateOptions?.(scene);
+      return adapter.installHandler((scene) => {
+        const options = deriveUpdateOptions?.(scene);
         return setScene(scene, options).finished;
       });
     }, [adapter]);
