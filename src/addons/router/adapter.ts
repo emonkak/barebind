@@ -9,11 +9,13 @@ export interface HashAdapterOptions {
 }
 
 export interface NavigationAdapter {
-  getCurrentURL(): string;
   getCurrentState(): unknown;
-  installHandler(handler: NavigationSceneHandler): () => void;
+  getCurrentURL(): string;
+  listen(listener: NavigationSceneListener): () => void;
   navigate(url: string, options?: NavigationNavigateOptions): Promise<void>;
 }
+
+export type NavigationInterceptor = Pick<NavigateEvent, 'intercept' | 'scroll'>;
 
 export interface NavigationScene {
   url: string;
@@ -21,9 +23,10 @@ export interface NavigationScene {
   navigationType: NavigationType | null;
 }
 
-export type NavigationSceneHandler = (
+export type NavigationSceneListener = (
   scene: NavigationScene,
-) => Promise<void> | void;
+  interceptor: NavigationInterceptor,
+) => void;
 
 type URLLike = Pick<URL, 'pathname' | 'search' | 'hash'>;
 
@@ -39,15 +42,15 @@ export class BrowserAdapter implements NavigationAdapter {
     this._navigation = navigation;
   }
 
-  getCurrentURL(): string {
-    return toRelativeUrl(this._location);
-  }
-
   getCurrentState(): unknown {
     return this._navigation.currentEntry?.getState();
   }
 
-  installHandler(handler: NavigationSceneHandler): () => void {
+  getCurrentURL(): string {
+    return toRelativeUrl(this._location);
+  }
+
+  listen(listener: NavigationSceneListener): () => void {
     const handleNavigate = (event: NavigateEvent) => {
       if (
         event.canIntercept &&
@@ -55,16 +58,12 @@ export class BrowserAdapter implements NavigationAdapter {
         event.downloadRequest === null &&
         !event.hashChange
       ) {
-        event.intercept({
-          async handler() {
-            await handler({
-              url: toRelativeUrl(new URL(event.destination.url)),
-              state: event.destination.getState(),
-              navigationType: event.navigationType,
-            });
-            event.scroll();
-          },
-        });
+        const scene = {
+          url: toRelativeUrl(new URL(event.destination.url)),
+          state: event.destination.getState(),
+          navigationType: event.navigationType,
+        };
+        listener(scene, event);
       }
     };
     this._navigation.addEventListener('navigate', handleNavigate);
@@ -93,31 +92,27 @@ export class HashAdapter implements NavigationAdapter {
     this._navigation = navigation;
   }
 
-  getCurrentURL(): string {
-    return stripLeadingHashmark(this._location.hash);
-  }
-
   getCurrentState(): unknown {
     return this._navigation.currentEntry?.getState();
   }
 
-  installHandler(handler: NavigationSceneHandler): () => void {
+  getCurrentURL(): string {
+    return stripLeadingHashmark(this._location.hash);
+  }
+
+  listen(listener: NavigationSceneListener): () => void {
     const handleNavigate = (event: NavigateEvent) => {
       if (
         event.canIntercept &&
         event.destination.sameDocument &&
         event.hashChange
       ) {
-        event.intercept({
-          async handler() {
-            await handler({
-              url: stripLeadingHashmark(new URL(event.destination.url).hash),
-              state: event.destination.getState(),
-              navigationType: event.navigationType,
-            });
-            event.scroll();
-          },
-        });
+        const scene = {
+          url: stripLeadingHashmark(new URL(event.destination.url).hash),
+          state: event.destination.getState(),
+          navigationType: event.navigationType,
+        };
+        listener(scene, event);
       }
     };
     this._navigation.addEventListener('navigate', handleNavigate);
@@ -137,25 +132,25 @@ export class HashAdapter implements NavigationAdapter {
 export class InMemoryAdapter implements NavigationAdapter {
   private _url: string;
   private _state: unknown;
-  private readonly _handlers: Set<NavigationSceneHandler> = new Set();
+  private readonly _listeners: Set<NavigationSceneListener> = new Set();
 
   constructor(url: string, state: unknown) {
     this._url = url;
     this._state = state;
   }
 
-  getCurrentURL(): string {
-    return this._url;
-  }
-
   getCurrentState(): unknown {
     return this._state;
   }
 
-  installHandler(handler: NavigationSceneHandler): () => void {
-    this._handlers.add(handler);
+  getCurrentURL(): string {
+    return this._url;
+  }
+
+  listen(listener: NavigationSceneListener): () => void {
+    this._listeners.add(listener);
     return () => {
-      this._handlers.delete(handler);
+      this._listeners.delete(listener);
     };
   }
 
@@ -171,10 +166,22 @@ export class InMemoryAdapter implements NavigationAdapter {
           ? 'replace'
           : 'push';
     const scene = { url, state, navigationType };
+    const interceptor: NavigationInterceptor = {
+      async intercept({ handler } = {}) {
+        const promise = handler?.();
+        if (promise !== undefined) {
+          promises.push(promise);
+        }
+      },
+      scroll() {},
+    };
+    const promises: PromiseLike<void>[] = [];
 
-    for (const handler of this._handlers) {
-      handler(scene, interceptor);
+    for (const listener of this._listeners) {
+      listener(scene, interceptor);
     }
+
+    await Promise.all(promises);
 
     this._url = url;
     this._state = state;

@@ -6,7 +6,7 @@ export {
   InMemoryAdapter,
   type NavigationAdapter,
   type NavigationScene,
-  type NavigationSceneHandler,
+  type NavigationSceneListener,
 } from './router/adapter.js';
 export {
   NavigationContext,

@@ -27,9 +27,14 @@ export function SyncNavigation(
     }));
 
     context.useEffect(() => {
-      return adapter.installHandler((scene) => {
-        const options = deriveUpdateOptions?.(scene);
-        return setScene(scene, options).finished;
+      return adapter.listen((scene, interceptor) => {
+        interceptor.intercept({
+          async handler() {
+            const options = deriveUpdateOptions?.(scene);
+            await setScene(scene, options).finished;
+            interceptor.scroll();
+          },
+        });
       });
     }, [adapter]);
 

@@ -21,15 +21,6 @@ describe('BrowserAdapter', () => {
     adapter = new BrowserAdapter({ navigation, location });
   });
 
-  describe('getCurrentURL()', () => {
-    it('returns the concatenation of location parts', () => {
-      location.pathname = '/foo';
-      location.search = '?bar';
-      location.hash = '#baz';
-      expect(adapter.getCurrentURL()).toBe('/foo?bar#baz');
-    });
-  });
-
   describe('getCurrentState()', () => {
     it('returns the state from navigation.currentEntry', () => {
       const state = { key: 'value' };
@@ -44,7 +35,16 @@ describe('BrowserAdapter', () => {
     });
   });
 
-  describe('installHandler()', () => {
+  describe('getCurrentURL()', () => {
+    it('returns the concatenation of location parts', () => {
+      location.pathname = '/foo';
+      location.search = '?bar';
+      location.hash = '#baz';
+      expect(adapter.getCurrentURL()).toBe('/foo?bar#baz');
+    });
+  });
+
+  describe('listen()', () => {
     it('intercepts same-document non-hash navigate events', async () => {
       const state = { key: 'value' };
       const event = createNavigateEvent({
@@ -61,23 +61,24 @@ describe('BrowserAdapter', () => {
         hashChange: false,
         navigationType: 'push',
       });
-      const handler = vi.fn();
+      const listener = vi.fn();
 
-      adapter.installHandler(handler);
+      adapter.listen(listener);
       navigation.dispatchEvent(event);
       await Promise.resolve();
 
-      expect(handler).toHaveBeenCalledOnce();
-      expect(handler).toHaveBeenCalledWith({
-        url: '/target',
-        state,
-        navigationType: 'push',
-      });
-      expect(event.intercept).toHaveBeenCalledOnce();
-      expect(event.scroll).toHaveBeenCalledOnce();
+      expect(listener).toHaveBeenCalledOnce();
+      expect(listener).toHaveBeenCalledWith(
+        {
+          url: '/target',
+          state,
+          navigationType: 'push',
+        },
+        expect.any(Event),
+      );
     });
 
-    it('does not intercept events that cannot be intercepted', () => {
+    it('does not listen events that cannot be intercepted', () => {
       const event = createNavigateEvent({
         canIntercept: false,
         destination: {
@@ -92,15 +93,15 @@ describe('BrowserAdapter', () => {
         hashChange: false,
         navigationType: 'push',
       });
-      const handler = vi.fn();
+      const listener = vi.fn();
 
-      adapter.installHandler(handler);
+      adapter.listen(listener);
       navigation.dispatchEvent(event);
 
-      expect(handler).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
     });
 
-    it('does not intercept download requests', () => {
+    it('does not listen download requests', () => {
       const event = createNavigateEvent({
         canIntercept: true,
         destination: {
@@ -115,15 +116,15 @@ describe('BrowserAdapter', () => {
         hashChange: false,
         navigationType: 'push',
       });
-      const handler = vi.fn();
+      const listener = vi.fn();
 
-      adapter.installHandler(handler);
+      adapter.listen(listener);
       navigation.dispatchEvent(event);
 
-      expect(handler).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
     });
 
-    it('does not intercept hashChange events', () => {
+    it('does not listen hashChange events', () => {
       const event = createNavigateEvent({
         canIntercept: true,
         destination: {
@@ -138,15 +139,15 @@ describe('BrowserAdapter', () => {
         hashChange: true,
         navigationType: 'push',
       });
-      const handler = vi.fn();
+      const listener = vi.fn();
 
-      adapter.installHandler(handler);
+      adapter.listen(listener);
       navigation.dispatchEvent(event);
 
-      expect(handler).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
     });
 
-    it('does not intercept cross-origin events', () => {
+    it('does not listen cross-origin events', () => {
       const event = createNavigateEvent({
         canIntercept: true,
         destination: {
@@ -161,22 +162,22 @@ describe('BrowserAdapter', () => {
         hashChange: false,
         navigationType: 'push',
       });
-      const handler = vi.fn();
+      const listener = vi.fn();
 
-      adapter.installHandler(handler);
+      adapter.listen(listener);
       navigation.dispatchEvent(event);
 
-      expect(handler).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
     });
 
     it('removes the event listener on cleanup', () => {
-      const handler = vi.fn();
-      const cleanup = adapter.installHandler(handler);
+      const listener = vi.fn();
+      const cleanup = adapter.listen(listener);
       cleanup();
 
       navigation.dispatchEvent(createNavigateEvent({}));
 
-      expect(handler).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
     });
   });
 
@@ -208,6 +209,20 @@ describe('HashAdapter', () => {
     adapter = new HashAdapter({ navigation, location });
   });
 
+  describe('getCurrentState()', () => {
+    it('returns the state from navigation.currentEntry', () => {
+      const state = { key: 'value' };
+      vi.spyOn(navigation, 'currentEntry', 'get').mockReturnValue({
+        getState: () => state,
+      } as NavigationHistoryEntry);
+      expect(adapter.getCurrentState()).toBe(state);
+    });
+
+    it('returns undefined when currentEntry is null', () => {
+      expect(adapter.getCurrentState()).toBe(undefined);
+    });
+  });
+
   describe('getCurrentURL()', () => {
     it('returns the hash without the leading #', () => {
       location.hash = '#/foo/bar';
@@ -224,21 +239,7 @@ describe('HashAdapter', () => {
     });
   });
 
-  describe('getCurrentState()', () => {
-    it('returns the state from navigation.currentEntry', () => {
-      const state = { key: 'value' };
-      vi.spyOn(navigation, 'currentEntry', 'get').mockReturnValue({
-        getState: () => state,
-      } as NavigationHistoryEntry);
-      expect(adapter.getCurrentState()).toBe(state);
-    });
-
-    it('returns undefined when currentEntry is null', () => {
-      expect(adapter.getCurrentState()).toBe(undefined);
-    });
-  });
-
-  describe('installHandler()', () => {
+  describe('listen()', () => {
     it('intercepts hashChange events', async () => {
       const state = { key: 'value' };
       const event = createNavigateEvent({
@@ -255,23 +256,24 @@ describe('HashAdapter', () => {
         hashChange: true,
         navigationType: 'push',
       });
-      const handler = vi.fn();
+      const listener = vi.fn();
 
-      adapter.installHandler(handler);
+      adapter.listen(listener);
       navigation.dispatchEvent(event);
       await Promise.resolve();
 
-      expect(handler).toHaveBeenCalledOnce();
-      expect(handler).toHaveBeenCalledWith({
-        url: '/target',
-        state,
-        navigationType: 'push',
-      });
-      expect(event.intercept).toHaveBeenCalledOnce();
-      expect(event.scroll).toHaveBeenCalledOnce();
+      expect(listener).toHaveBeenCalledOnce();
+      expect(listener).toHaveBeenCalledWith(
+        {
+          url: '/target',
+          state,
+          navigationType: 'push',
+        },
+        expect.any(Event),
+      );
     });
 
-    it('does not intercept non-hashChange events', () => {
+    it('does not listen non-hashChange events', () => {
       const event = createNavigateEvent({
         canIntercept: true,
         destination: {
@@ -286,15 +288,15 @@ describe('HashAdapter', () => {
         hashChange: false,
         navigationType: 'push',
       });
-      const handler = vi.fn();
+      const listener = vi.fn();
 
-      adapter.installHandler(handler);
+      adapter.listen(listener);
       navigation.dispatchEvent(event);
 
-      expect(handler).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
     });
 
-    it('does not intercept events that cannot be intercepted', () => {
+    it('does not listen events that cannot be intercepted', () => {
       const event = createNavigateEvent({
         canIntercept: false,
         destination: {
@@ -309,15 +311,15 @@ describe('HashAdapter', () => {
         hashChange: true,
         navigationType: 'push',
       });
-      const handler = vi.fn();
+      const listener = vi.fn();
 
-      adapter.installHandler(handler);
+      adapter.listen(listener);
       navigation.dispatchEvent(event);
 
-      expect(handler).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
     });
 
-    it('does not intercept cross-origin events', () => {
+    it('does not listen cross-origin events', () => {
       const event = createNavigateEvent({
         canIntercept: true,
         destination: {
@@ -332,22 +334,22 @@ describe('HashAdapter', () => {
         hashChange: true,
         navigationType: 'push',
       });
-      const handler = vi.fn();
+      const listener = vi.fn();
 
-      adapter.installHandler(handler);
+      adapter.listen(listener);
       navigation.dispatchEvent(event);
 
-      expect(handler).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
     });
 
     it('removes the event listener on cleanup', () => {
-      const handler = vi.fn();
-      const cleanup = adapter.installHandler(handler);
+      const listener = vi.fn();
+      const cleanup = adapter.listen(listener);
       cleanup();
 
       navigation.dispatchEvent(createNavigateEvent({}));
 
-      expect(handler).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
     });
   });
 
@@ -363,13 +365,6 @@ describe('HashAdapter', () => {
 });
 
 describe('InMemoryAdapter', () => {
-  describe('getCurrentURL()', () => {
-    it('returns the initial URL', () => {
-      const adapter = new InMemoryAdapter('/foo', null);
-      expect(adapter.getCurrentURL()).toBe('/foo');
-    });
-  });
-
   describe('getCurrentState()', () => {
     it('returns the initial state', () => {
       const adapter = new InMemoryAdapter('/foo', { key: 'val' });
@@ -382,51 +377,64 @@ describe('InMemoryAdapter', () => {
     });
   });
 
-  describe('installHandler()', () => {
-    it('registers a handler and returns a cleanup function', () => {
+  describe('getCurrentURL()', () => {
+    it('returns the initial URL', () => {
       const adapter = new InMemoryAdapter('/foo', null);
-      const handler = vi.fn();
-      const cleanup = adapter.installHandler(handler);
+      expect(adapter.getCurrentURL()).toBe('/foo');
+    });
+  });
+
+  describe('listen()', () => {
+    it('registers a listener and returns a cleanup function', () => {
+      const adapter = new InMemoryAdapter('/foo', null);
+      const listener = vi.fn();
+      const cleanup = adapter.listen(listener);
 
       expect(cleanup).toBeInstanceOf(Function);
     });
 
-    it('calls handlers on navigate', async () => {
+    it('calls the listener on navigate', async () => {
       const adapter = new InMemoryAdapter('/foo', null);
-      const handler = vi.fn();
+      const listener = vi.fn();
 
-      adapter.installHandler(handler);
+      adapter.listen(listener);
       await adapter.navigate('/bar', { state: 42 });
 
-      expect(handler).toHaveBeenCalledWith({
-        url: '/bar',
-        state: 42,
-        navigationType: 'push',
-      });
+      expect(listener).toHaveBeenCalledWith(
+        {
+          url: '/bar',
+          state: 42,
+          navigationType: 'push',
+        },
+        {
+          intercept: expect.any(Function),
+          scroll: expect.any(Function),
+        },
+      );
     });
 
-    it('calls all registered handlers on navigate', async () => {
+    it('calls all registered listeners on navigate', async () => {
       const adapter = new InMemoryAdapter('/foo', null);
-      const h1 = vi.fn();
-      const h2 = vi.fn();
+      const listener1 = vi.fn();
+      const listener2 = vi.fn();
 
-      adapter.installHandler(h1);
-      adapter.installHandler(h2);
+      adapter.listen(listener1);
+      adapter.listen(listener2);
       await adapter.navigate('/bar');
 
-      expect(h1).toHaveBeenCalled();
-      expect(h2).toHaveBeenCalled();
+      expect(listener1).toHaveBeenCalled();
+      expect(listener2).toHaveBeenCalled();
     });
 
-    it('stops calling handlers after cleanup', async () => {
+    it('stops calling the listener after cleanup', async () => {
       const adapter = new InMemoryAdapter('/foo', null);
-      const handler = vi.fn();
+      const listener = vi.fn();
 
-      const cleanup = adapter.installHandler(handler);
+      const cleanup = adapter.listen(listener);
       cleanup();
       await adapter.navigate('/bar');
 
-      expect(handler).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
     });
   });
 
@@ -434,7 +442,7 @@ describe('InMemoryAdapter', () => {
     it('updates the URL after navigation', async () => {
       const adapter = new InMemoryAdapter('/foo', null);
 
-      adapter.installHandler(() => {});
+      adapter.listen(() => {});
       await adapter.navigate('/bar');
 
       expect(adapter.getCurrentURL()).toBe('/bar');
@@ -443,7 +451,7 @@ describe('InMemoryAdapter', () => {
     it('updates the state after navigation', async () => {
       const adapter = new InMemoryAdapter('/foo', null);
 
-      adapter.installHandler(() => {});
+      adapter.listen(() => {});
       await adapter.navigate('/bar', { state: 42 });
 
       expect(adapter.getCurrentState()).toBe(42);
@@ -451,47 +459,66 @@ describe('InMemoryAdapter', () => {
 
     it('defaults to push for a different URL', () => {
       const adapter = new InMemoryAdapter('/foo', null);
-      const handler = vi.fn();
+      const listener = vi.fn();
 
-      adapter.installHandler(handler);
+      adapter.listen(listener);
       adapter.navigate('/bar');
 
-      expect(handler).toHaveBeenCalledOnce();
-      expect(handler).toHaveBeenCalledWith({
-        url: '/bar',
-        state: undefined,
-        navigationType: 'push',
-      });
+      expect(listener).toHaveBeenCalledOnce();
+      expect(listener).toHaveBeenCalledWith(
+        {
+          url: '/bar',
+          state: undefined,
+          navigationType: 'push',
+        },
+        {
+          intercept: expect.any(Function),
+          scroll: expect.any(Function),
+        },
+      );
     });
 
     it('defaults to replace for the same URL', () => {
       const adapter = new InMemoryAdapter('/foo', null);
-      const handler = vi.fn();
+      const listener = vi.fn();
 
-      adapter.installHandler(handler);
+      adapter.listen(listener);
       adapter.navigate('/foo');
 
-      expect(handler).toHaveBeenCalledOnce();
-      expect(handler).toHaveBeenCalledWith({
-        url: '/foo',
-        state: undefined,
-        navigationType: 'replace',
-      });
+      expect(listener).toHaveBeenCalledOnce();
+      expect(listener).toHaveBeenCalledWith(
+        {
+          url: '/foo',
+          state: undefined,
+          navigationType: 'replace',
+        },
+
+        {
+          intercept: expect.any(Function),
+          scroll: expect.any(Function),
+        },
+      );
     });
 
     it('uses the explicit history option when provided', () => {
       const adapter = new InMemoryAdapter('/foo', null);
-      const handler = vi.fn();
+      const listener = vi.fn();
 
-      adapter.installHandler(handler);
+      adapter.listen(listener);
       adapter.navigate('/bar', { history: 'replace' });
 
-      expect(handler).toHaveBeenCalledOnce();
-      expect(handler).toHaveBeenCalledWith({
-        url: '/bar',
-        state: undefined,
-        navigationType: 'replace',
-      });
+      expect(listener).toHaveBeenCalledOnce();
+      expect(listener).toHaveBeenCalledWith(
+        {
+          url: '/bar',
+          state: undefined,
+          navigationType: 'replace',
+        },
+        {
+          intercept: expect.any(Function),
+          scroll: expect.any(Function),
+        },
+      );
     });
   });
 });
