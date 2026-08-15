@@ -12,12 +12,7 @@ interface AppProps {
 
 export const App = createComponent(function App({ store }: AppProps) {
   const adapter = this.useMemo(() => new HashAdapter(), []);
-  const { scene } = this.use(
-    SyncNavigation(adapter, () => ({
-      handler: (commit) =>
-        document.startViewTransition(commit).updateCallbackDone,
-    })),
-  );
+  const { scene } = this.use(SyncNavigation(adapter));
   const page = router.match(scene.url) ?? NotFound({ url: scene.url });
 
   this.provide(store);

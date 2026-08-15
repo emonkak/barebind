@@ -1,4 +1,4 @@
-import type { UpdateOptions } from '../../base.js';
+import type { UpdateHandle, UpdateOptions } from '../../base.js';
 import type { HookFunction } from '../../component.js';
 import type { NavigationAdapter, NavigationScene } from './adapter.js';
 
@@ -17,7 +17,10 @@ export class NavigationContext {
 
 export function SyncNavigation(
   adapter: NavigationAdapter,
-  deriveUpdateOptions?: (scene: NavigationScene) => UpdateOptions,
+  intercept?: (
+    scene: NavigationScene,
+    setScene: (scene: NavigationScene, options: UpdateOptions) => UpdateHandle,
+  ) => NavigationInterceptOptions | undefined,
 ): HookFunction<NavigationContext> {
   return (context) => {
     const [scene, setScene] = context.useState<NavigationScene>(() => ({
@@ -29,11 +32,8 @@ export function SyncNavigation(
     context.useEffect(() => {
       return adapter.listen((scene, interceptor) => {
         interceptor.intercept({
-          async handler() {
-            const options = deriveUpdateOptions?.(scene);
-            await setScene(scene, options).finished;
-            interceptor.scroll();
-          },
+          handler: () => setScene(scene).finished,
+          ...intercept?.(scene, setScene),
         });
       });
     }, [adapter]);
