@@ -54,7 +54,7 @@ export const VirtualScroller: VirtualScroller = createComponent(
       renderItem,
       items,
     }: VirtualScrollerProps<T>,
-  ): unknown {
+  ) {
     const [visibleRange, setVisibleRange] = this.useState<VisibleRange>(() =>
       initialItemIndex >= 0
         ? {

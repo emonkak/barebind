@@ -9,7 +9,7 @@ export interface ItemPageProps {
 
 export const ItemPage = createComponent(function ItemPage({
   id,
-}: ItemPageProps): unknown {
+}: ItemPageProps) {
   const appStore = this.inject(AppStore);
   const itemState = this.use(appStore.itemState$);
 

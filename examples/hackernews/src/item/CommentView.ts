@@ -1,4 +1,4 @@
-import { createComponent, html } from 'barebind';
+import { createComponent, html, type VElement } from 'barebind';
 
 import type { Comment } from '../store.js';
 
@@ -30,7 +30,7 @@ interface CommentListProps {
 
 export const CommentList = createComponent(function CommentList({
   comments,
-}: CommentListProps): unknown {
+}: CommentListProps): VElement {
   const [isOpened, setIsOpened] = this.useState<boolean>(true);
 
   const handleToggleOpen = this.useCallback(() => {
@@ -38,21 +38,21 @@ export const CommentList = createComponent(function CommentList({
   }, []);
 
   return html`
-      <div class=${{ toggle: true, open: isOpened }}>
-        <a @click=${handleToggleOpen}>
-          ${isOpened ? '[-]' : '[+] ' + pluralize(comments.length) + ' collapsed'}
-        </a>
-      </div>
-      <${
-        isOpened
-          ? html`
-            <ul class="comment-children">
-              <${comments.map((comment) => CommentView({ comment }).withKey(comment.id))}>
-            </ul>
-          `
-          : null
-      }>
-    `;
+    <div class=${{ toggle: true, open: isOpened }}>
+      <a @click=${handleToggleOpen}>
+        ${isOpened ? '[-]' : '[+] ' + pluralize(comments.length) + ' collapsed'}
+      </a>
+    </div>
+    <${
+      isOpened
+        ? html`
+          <ul class="comment-children">
+            <${comments.map((comment) => CommentView({ comment }).withKey(comment.id))}>
+          </ul>
+        `
+        : null
+    }>
+  `;
 });
 
 function pluralize(n: number): string {

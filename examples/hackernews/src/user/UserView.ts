@@ -8,7 +8,7 @@ export interface UserViewProps {
 
 export const UserView = createComponent(function UserView({
   user,
-}: UserViewProps): unknown {
+}: UserViewProps) {
   return html`
     <div class="user-view">
       <h1>User : ${user.id}</h1>
