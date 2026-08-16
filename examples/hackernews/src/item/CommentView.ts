@@ -33,9 +33,9 @@ export const CommentList = createComponent(function CommentList({
 }: CommentListProps): VElement {
   const [isOpened, setIsOpened] = this.useState<boolean>(true);
 
-  const handleToggleOpen = this.useCallback(() => {
+  const handleToggleOpen = () => {
     setIsOpened((isOpened) => !isOpened);
-  }, []);
+  };
 
   return html`
     <div class=${{ toggle: true, open: isOpened }}>
