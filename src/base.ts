@@ -30,14 +30,14 @@ export type CommitHandler = (commit: Commit) => Promise<void> | void;
 export interface Component<TProps> {
   (props: TProps): VComponent<TProps>;
   arePropsEqual(oldProps: TProps, newProps: TProps): boolean;
-  createInstance(dispatcher: Dispatcher): ComponentInstance<TProps>;
+  createController(dispatcher: Dispatcher): ComponentController<TProps>;
 }
 
-export interface ComponentInstance<TProps> {
+export interface ComponentController<TProps> {
   readonly pendingLanes: Lanes;
-  render(props: TProps, scope: Scope, lanes: Lanes): VElement;
   connect(node: RenderNode.ComponentNode<TProps>): void;
   disconnect(): void;
+  render(props: TProps, scope: Scope, lanes: Lanes): VElement;
 }
 
 export type Container = DocumentFragment | Element;
@@ -165,7 +165,7 @@ export namespace RenderNode {
 
   export interface ComponentNode<TProps = unknown> extends Node<VComponent> {
     state: {
-      instance: ComponentInstance<TProps>;
+      controller: ComponentController<TProps>;
       scope: Scope;
     };
   }

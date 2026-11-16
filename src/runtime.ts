@@ -106,13 +106,13 @@ export class Runtime implements Dispatcher, Reconciler {
         left: new Array(1),
         right: [],
         state: {
-          instance: element.type.createInstance(this),
+          controller: element.type.createController(this),
           scope,
         },
       };
       const subScope = scope.enter(element.type);
       node.left[0] = this.build(
-        node.state.instance.render(element.props, subScope, this._flushLanes),
+        node.state.controller.render(element.props, subScope, this._flushLanes),
         subScope,
         0,
         node,
@@ -192,7 +192,7 @@ export class Runtime implements Dispatcher, Reconciler {
       return newNode;
     } else if (typeof newElement.type === 'function') {
       if (
-        ((oldNode as RenderNode.ComponentNode).state.instance.pendingLanes &
+        ((oldNode as RenderNode.ComponentNode).state.controller.pendingLanes &
           this._flushLanes) ===
           NoLanes &&
         (oldNode as RenderNode.ComponentNode).type.arePropsEqual(
@@ -216,7 +216,7 @@ export class Runtime implements Dispatcher, Reconciler {
       const subScope = scope.enter(newElement.type);
       newNode.left[0] = this.diff(
         newNode.right[0]!,
-        newNode.state.instance.render(
+        newNode.state.controller.render(
           newElement.props,
           subScope,
           this._flushLanes,

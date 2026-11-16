@@ -1,7 +1,7 @@
 import {
   type Commit,
   type Component,
-  type ComponentInstance,
+  type ComponentController,
   type Dispatcher,
   type Injectable,
   type Lanes,
@@ -119,8 +119,8 @@ namespace Hook {
 
 type Usable<TReturn> = HookObject<TReturn> | HookFunction<TReturn>;
 
-export class FunctionComponent<TProps = any, TReturn = unknown>
-  implements ComponentInstance<TProps>
+export class ClientComponentController<TProps = any, TReturn = unknown>
+  implements ComponentController<TProps>
 {
   /** @internal */
   readonly _componentFn: ComponentFunction<TProps, TReturn>;
@@ -143,6 +143,27 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
 
   get pendingLanes(): Lanes {
     return this._pendingLanes;
+  }
+
+  connect(node: RenderNode.ComponentNode<TProps>): void {
+    for (const hook of this._context!._hooks) {
+      if (hook.type === HookType.EFFECT && hook.dirty) {
+        hook.cleanup?.();
+        hook.cleanup = hook.setup();
+        hook.dirty = false;
+      }
+    }
+    this._connectedNode = node;
+  }
+
+  disconnect(): void {
+    for (const hook of this._context!._hooks) {
+      if (hook.type === HookType.EFFECT && hook.cleanup !== undefined) {
+        hook.cleanup();
+        hook.cleanup = undefined;
+      }
+    }
+    this._connectedNode = null;
   }
 
   render(props: TProps, scope: Scope, lanes: Lanes): VElement {
@@ -169,31 +190,10 @@ export class FunctionComponent<TProps = any, TReturn = unknown>
       );
     }
   }
-
-  connect(node: RenderNode.ComponentNode<TProps>): void {
-    for (const hook of this._context!._hooks) {
-      if (hook.type === HookType.EFFECT && hook.dirty) {
-        hook.cleanup?.();
-        hook.cleanup = hook.setup();
-        hook.dirty = false;
-      }
-    }
-    this._connectedNode = node;
-  }
-
-  disconnect(): void {
-    for (const hook of this._context!._hooks) {
-      if (hook.type === HookType.EFFECT && hook.cleanup !== undefined) {
-        hook.cleanup();
-        hook.cleanup = undefined;
-      }
-    }
-    this._connectedNode = null;
-  }
 }
 
 export class RenderContext {
-  private readonly _instance: FunctionComponent;
+  private readonly _controller: ClientComponentController;
   /** @internal */
   _scope: Scope;
   /** @internal */
@@ -203,19 +203,23 @@ export class RenderContext {
   /** @internal */
   _hookIndex: number = 0;
 
-  constructor(instance: FunctionComponent, scope: Scope, lanes: Lanes) {
-    this._instance = instance;
+  constructor(
+    controller: ClientComponentController,
+    scope: Scope,
+    lanes: Lanes,
+  ) {
+    this._controller = controller;
     this._scope = scope;
     this._lanes = lanes;
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    const instance = this._instance;
-    const handle = instance._dispatcher.schedule(
-      new UpdateComponent(instance, this._scope),
+    const controller = this._controller;
+    const handle = controller._dispatcher.schedule(
+      new UpdateComponent(controller, this._scope),
       options,
     );
-    instance._pendingLanes |= handle.lanes;
+    controller._pendingLanes |= handle.lanes;
     return handle;
   }
 
@@ -245,7 +249,7 @@ export class RenderContext {
   }
 
   startTransition<T>(callback: (transition: number) => T): T {
-    return callback(this._instance._dispatcher.nextTransition());
+    return callback(this._controller._dispatcher.nextTransition());
   }
 
   use<TReturn>(usable: Usable<TReturn>): TReturn {
@@ -290,7 +294,7 @@ export class RenderContext {
     } else {
       currentHook = {
         type: HookType.ID,
-        id: this._instance._dispatcher.nextIdentifier(),
+        id: this._controller._dispatcher.nextIdentifier(),
       };
       this._hooks.push(currentHook);
     }
@@ -446,11 +450,11 @@ export function createComponent<TProps = {}, TReturn = unknown>(
     return new VNode(Component, props, []);
   }
 
-  Component.createInstance = (
-    dispatcher: Dispatcher,
-  ): ComponentInstance<TProps> =>
-    new FunctionComponent(componentFn, dispatcher);
   Component.arePropsEqual = arePropsEqual;
+  Component.createController = (
+    dispatcher: Dispatcher,
+  ): ComponentController<TProps> =>
+    new ClientComponentController(componentFn, dispatcher);
 
   DEBUG: {
     Object.defineProperty(Component, 'name', {
@@ -462,11 +466,11 @@ export function createComponent<TProps = {}, TReturn = unknown>(
 }
 
 class UpdateComponent implements Transaction {
-  private readonly _instance: FunctionComponent;
+  private readonly _controller: ClientComponentController;
   private readonly _scope: Scope;
 
-  constructor(instance: FunctionComponent, scope: Scope) {
-    this._instance = instance;
+  constructor(controller: ClientComponentController, scope: Scope) {
+    this._controller = controller;
     this._scope = scope;
   }
 
@@ -475,21 +479,27 @@ class UpdateComponent implements Transaction {
   }
 
   get pendingLanes(): Lanes {
-    return this._instance._pendingLanes;
+    return this._controller._pendingLanes;
   }
 
   prepare(lanes: Lanes, reconciler: Reconciler): Commit {
-    const node = this._instance._connectedNode;
+    const node = this._controller._connectedNode;
     if (node === null) {
       return noop;
     }
     const subScope = node.state.scope.enter(node.type);
-    const newElement = node.state.instance.render(node.props, subScope, lanes);
-    node.left = [reconciler.diff(node.right[0]!, newElement, subScope, 0, node)];
+    const newElement = node.state.controller.render(
+      node.props,
+      subScope,
+      lanes,
+    );
+    node.left = [
+      reconciler.diff(node.right[0]!, newElement, subScope, 0, node),
+    ];
     return () => {
       if (node.parent !== null) {
         patch(node.right[0]!, node.left[0]!);
-        node.state.instance.connect(node);
+        node.state.controller.connect(node);
         node.right = node.left;
       }
     };
