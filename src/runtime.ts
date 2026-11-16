@@ -10,7 +10,7 @@ import {
   type Mutation,
   MutationType,
   type Part,
-  type Renderer,
+  type Reconciler,
   type RenderNode,
   type RenderRoot,
   type Scope,
@@ -34,7 +34,7 @@ import {
 } from './lane.js';
 import { PriorityQueue } from './queue.js';
 
-export class Runtime implements Renderer, Dispatcher {
+export class Runtime implements Dispatcher, Reconciler {
   /** @internal */
   readonly _updateQueue: PriorityQueue<Update> = new PriorityQueue(
     compareUpdates,
@@ -54,6 +54,99 @@ export class Runtime implements Renderer, Dispatcher {
     this._adapter = adapter;
   }
 
+  build(
+    element: VElement,
+    scope: Scope,
+    index: number,
+    parent: RenderNode | RenderRoot,
+    part: Part,
+  ): RenderNode {
+    if (element.type === Bind) {
+      return {
+        type: element.type,
+        props: element.props,
+        key: element.key,
+        index,
+        parent,
+        part,
+        left: [],
+        right: [],
+        state: null,
+      };
+    } else if (element.type === Fragment) {
+      const node: RenderNode.FragmentNode = {
+        type: element.type,
+        props: element.props,
+        key: element.key,
+        index,
+        parent,
+        part,
+        left: new Array(element.children.length),
+        right: [],
+        state: { mutations: [] },
+      };
+      for (let i = 0, l = element.children.length; i < l; i++) {
+        node.left[i] = this.build(
+          element.children[i]!,
+          scope,
+          i,
+          node,
+          part.splitPart(),
+        );
+      }
+      return node;
+    } else if (typeof element.type === 'function') {
+      const node: RenderNode.ComponentNode = {
+        type: element.type,
+        props: element.props,
+        key: element.key,
+        index,
+        parent,
+        part,
+        left: new Array(1),
+        right: [],
+        state: {
+          instance: element.type.createInstance(this),
+          scope,
+        },
+      };
+      const subScope = scope.enter(element.type);
+      node.left[0] = this.build(
+        node.state.instance.render(element.props, subScope, this._flushLanes),
+        subScope,
+        0,
+        node,
+        part,
+      );
+      return node;
+    } else {
+      const block = Array.isArray(element.type)
+        ? this._adapter.renderTemplate(element as VTemplate)
+        : this._adapter.renderPortal(element as VPortal);
+      const node: RenderNode.BlockNode = {
+        type: element.type,
+        props: element.props,
+        key: element.key,
+        index,
+        parent,
+        part,
+        left: new Array(element.children.length),
+        right: [],
+        state: { block },
+      };
+      for (let i = 0, l = element.children.length; i < l; i++) {
+        node.left[i] = this.build(
+          element.children[i]!,
+          scope,
+          i,
+          node,
+          block.parts[i]!,
+        );
+      }
+      return node;
+    }
+  }
+
   diff(
     oldNode: RenderNode,
     newElement: VElement,
@@ -62,7 +155,7 @@ export class Runtime implements Renderer, Dispatcher {
     parent: RenderNode | RenderRoot,
   ): RenderNode {
     if (oldNode.type !== newElement.type || !is(oldNode.key, newElement.key)) {
-      return this.render(newElement, scope, index, parent, oldNode.part);
+      return this.build(newElement, scope, index, parent, oldNode.part);
     }
     if (oldNode.props === newElement.props) {
       return oldNode;
@@ -167,99 +260,6 @@ export class Runtime implements Renderer, Dispatcher {
     return this._transitionCount++;
   }
 
-  render(
-    element: VElement,
-    scope: Scope,
-    index: number,
-    parent: RenderNode | RenderRoot,
-    part: Part,
-  ): RenderNode {
-    if (element.type === Bind) {
-      return {
-        type: element.type,
-        props: element.props,
-        key: element.key,
-        index,
-        parent,
-        part,
-        left: [],
-        right: [],
-        state: null,
-      };
-    } else if (element.type === Fragment) {
-      const node: RenderNode.FragmentNode = {
-        type: element.type,
-        props: element.props,
-        key: element.key,
-        index,
-        parent,
-        part,
-        left: new Array(element.children.length),
-        right: [],
-        state: { mutations: [] },
-      };
-      for (let i = 0, l = element.children.length; i < l; i++) {
-        node.left[i] = this.render(
-          element.children[i]!,
-          scope,
-          i,
-          node,
-          part.splitPart(),
-        );
-      }
-      return node;
-    } else if (typeof element.type === 'function') {
-      const node: RenderNode.ComponentNode = {
-        type: element.type,
-        props: element.props,
-        key: element.key,
-        index,
-        parent,
-        part,
-        left: new Array(1),
-        right: [],
-        state: {
-          instance: element.type.createInstance(this),
-          scope,
-        },
-      };
-      const subScope = scope.enter(element.type);
-      node.left[0] = this.render(
-        node.state.instance.render(element.props, subScope, this._flushLanes),
-        subScope,
-        0,
-        node,
-        part,
-      );
-      return node;
-    } else {
-      const block = Array.isArray(element.type)
-        ? this._adapter.renderTemplate(element as VTemplate)
-        : this._adapter.renderPortal(element as VPortal);
-      const node: RenderNode.BlockNode = {
-        type: element.type,
-        props: element.props,
-        key: element.key,
-        index,
-        parent,
-        part,
-        left: new Array(element.children.length),
-        right: [],
-        state: { block },
-      };
-      for (let i = 0, l = element.children.length; i < l; i++) {
-        node.left[i] = this.render(
-          element.children[i]!,
-          scope,
-          i,
-          node,
-          block.parts[i]!,
-        );
-      }
-      return node;
-    }
-  }
-
   schedule(
     transaction: Transaction,
     options: UpdateOptions = {},
@@ -349,7 +349,7 @@ export class Runtime implements Renderer, Dispatcher {
       }
       if (oldHead > oldTail) {
         while (newHead <= newTail) {
-          const newChild = this.render(
+          const newChild = this.build(
             newElements[newHead]!,
             scope,
             newHead,
@@ -488,7 +488,7 @@ export class Runtime implements Renderer, Dispatcher {
             newChildren[newTail] = newChild;
             oldChildren[oldIndex] = undefined;
           } else {
-            const newChild = this.render(
+            const newChild = this.build(
               newElements[newTail]!,
               scope,
               newTail,
@@ -628,14 +628,14 @@ function runPipeline(
   update: Update,
   middlewares: Middleware[],
   flushLanes: Lanes,
-  renderer: Renderer,
+  reconciler: Reconciler,
 ) {
   function continuePipeline(update: Update, index: number): Commit {
     return index < middlewares.length
       ? middlewares[index]!.handle(update, (update) =>
           continuePipeline(update, index + 1),
         )
-      : update.transaction.prepare(flushLanes, renderer);
+      : update.transaction.prepare(flushLanes, reconciler);
   }
   return continuePipeline(update, 0);
 }

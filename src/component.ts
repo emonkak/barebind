@@ -5,7 +5,7 @@ import {
   type Dispatcher,
   type Injectable,
   type Lanes,
-  type Renderer,
+  type Reconciler,
   type RenderNode,
   type Scope,
   type Transaction,
@@ -478,14 +478,14 @@ class UpdateComponent implements Transaction {
     return this._instance._pendingLanes;
   }
 
-  prepare(lanes: Lanes, renderer: Renderer): Commit {
+  prepare(lanes: Lanes, reconciler: Reconciler): Commit {
     const node = this._instance._connectedNode;
     if (node === null) {
       return noop;
     }
     const subScope = node.state.scope.enter(node.type);
     const newElement = node.state.instance.render(node.props, subScope, lanes);
-    node.left = [renderer.diff(node.right[0]!, newElement, subScope, 0, node)];
+    node.left = [reconciler.diff(node.right[0]!, newElement, subScope, 0, node)];
     return () => {
       if (node.parent !== null) {
         patch(node.right[0]!, node.left[0]!);

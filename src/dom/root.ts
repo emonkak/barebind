@@ -31,12 +31,12 @@ export class DOMRoot {
       {
         scope,
         pendingLanes: AllLanes,
-        prepare: (_lanes, renderer) => {
+        prepare: (_lanes, reconciler) => {
           const element = wrap(value);
           this._root.left =
             this._root.right !== null
-              ? renderer.diff(this._root.right, element, scope, 0, this._root)
-              : renderer.render(
+              ? reconciler.diff(this._root.right, element, scope, 0, this._root)
+              : reconciler.build(
                   element,
                   scope,
                   0,

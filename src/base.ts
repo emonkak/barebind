@@ -109,6 +109,23 @@ export interface Part {
   commitUnmount(value: unknown, cascade: boolean): void;
 }
 
+export interface Reconciler {
+  build(
+    element: VElement,
+    scope: Scope,
+    index: number,
+    parent: RenderNode | RenderRoot,
+    part: Part,
+  ): RenderNode;
+  diff(
+    oldNode: RenderNode,
+    newElement: VElement,
+    scope: Scope,
+    index: number,
+    parent: RenderNode | RenderRoot,
+  ): RenderNode;
+}
+
 export type RenderNode =
   | RenderNode.BindNode
   | RenderNode.ComponentNode
@@ -166,29 +183,12 @@ export interface RenderRoot {
   right: RenderNode | null; // committed child
 }
 
-export interface Renderer {
-  diff(
-    oldNode: RenderNode,
-    newElement: VElement,
-    scope: Scope,
-    index: number,
-    parent: RenderNode | RenderRoot,
-  ): RenderNode;
-  render(
-    element: VElement,
-    scope: Scope,
-    index: number,
-    parent: RenderNode | RenderRoot,
-    part: Part,
-  ): RenderNode;
-}
-
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
 export interface Transaction {
   readonly scope: Scope;
   readonly pendingLanes: Lanes;
-  prepare(lanes: Lanes, renderer: Renderer): Commit;
+  prepare(lanes: Lanes, reconciler: Reconciler): Commit;
 }
 
 export interface Update {
