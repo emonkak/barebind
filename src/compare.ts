@@ -1,3 +1,4 @@
+export const hasOwn = Object.hasOwn;
 export const is = Object.is;
 
 export function areDependenciesChanged(
@@ -44,7 +45,7 @@ export function shallowEqual<T extends object>(
 
   for (let i = 0, l = ks.length; i < l; i++) {
     const k = ks[i] as keyof T;
-    if (!Object.hasOwn(ys, k) || !equals(xs[k]!, ys[k]!)) {
+    if (!hasOwn(ys, k) || !equals(xs[k]!, ys[k]!)) {
       return false;
     }
   }
