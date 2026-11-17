@@ -1,7 +1,7 @@
-import type { Owner, Scope } from './base.js';
+import type { Scope } from './base.js';
 
-export function captureOwnerStack(scope: Scope): Owner[] {
-  const ownerStack: Owner[] = [];
+export function captureOwnerStack(scope: Scope): object[] {
+  const ownerStack: object[] = [];
   let current: Scope | null = scope;
 
   do {
@@ -12,6 +12,6 @@ export function captureOwnerStack(scope: Scope): Owner[] {
   return ownerStack.reverse();
 }
 
-export function nameOf(owner: Owner): string {
+export function nameOf(owner: object): string {
   return typeof owner === 'function' ? owner.name : owner.constructor.name;
 }

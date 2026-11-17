@@ -1,4 +1,4 @@
-import type { Owner, Scope } from './base.js';
+import type { Scope } from './base.js';
 import { captureOwnerStack, nameOf } from './debug.js';
 
 export class RenderError extends Error {
@@ -10,7 +10,7 @@ export class RenderError extends Error {
   }
 }
 
-function formatOwnerStack(ownerStack: Owner[]): string {
+function formatOwnerStack(ownerStack: object[]): string {
   const tail = ownerStack.length - 1;
   return ownerStack
     .map((owner, i) => {

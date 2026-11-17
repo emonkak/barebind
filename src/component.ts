@@ -19,6 +19,7 @@ import { patch } from './commit.js';
 import { areDependenciesChanged, is } from './compare.js';
 import { RenderError } from './error.js';
 import { NoLanes } from './lane.js';
+import { enterScope } from './scope.js';
 import { Ref, wrap } from './velement.js';
 
 const enum HookType {
@@ -482,7 +483,7 @@ class UpdateComponent implements Transaction {
     if (this._node.index < 0) {
       return noop;
     }
-    const subScope = this._node.state.scope.enter(this._node.type);
+    const subScope = enterScope(this._node.state.scope, this._node.type);
     const newElement = this._node.state.controller.render(
       this._node,
       subScope,

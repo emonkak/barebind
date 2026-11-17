@@ -1,13 +1,13 @@
-import {
-  type Dispatcher,
-  type HostContainer,
-  type RenderNode,
-  Scope,
-  type UpdateHandle,
-  type UpdateOptions,
+import type {
+  Dispatcher,
+  HostContainer,
+  RenderNode,
+  UpdateHandle,
+  UpdateOptions,
 } from '../base.js';
 import { mount, patch, unmount } from '../commit.js';
 import { AllLanes } from '../lane.js';
+import { createScope } from '../scope.js';
 import { wrap } from '../velement.js';
 import { ContainerPart } from './part.js';
 
@@ -23,7 +23,7 @@ export class DOMRoot {
   }
 
   render(value: unknown, options?: UpdateOptions): UpdateHandle {
-    const scope = Scope.root(this);
+    const scope = createScope(this);
     return this._dispatcher.schedule(
       {
         scope,
@@ -55,7 +55,7 @@ export class DOMRoot {
   }
 
   unmount(options?: UpdateOptions): UpdateHandle {
-    const scope = Scope.root(this);
+    const scope = createScope(this);
     return this._dispatcher.schedule(
       {
         scope,

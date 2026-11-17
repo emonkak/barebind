@@ -102,8 +102,6 @@ export type Mutation =
       node: RenderNode;
     };
 
-export type Owner = object;
-
 export interface Part {
   splitPart(): Part;
   mountBlock(block: Block, afterNode: HostNode | null): void;
@@ -183,6 +181,13 @@ export namespace RenderNode {
   }
 }
 
+export interface Scope {
+  readonly owner: object;
+  readonly parent: Scope | null;
+  readonly level: number;
+  readonly instances: object[];
+}
+
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
 export interface Transaction {
@@ -228,30 +233,6 @@ export type VTemplate = VNode<
   { mode: TemplateMode },
   VElement[]
 >;
-
-export class Scope {
-  readonly owner: Owner;
-  readonly level: number;
-  readonly parent: Scope | null;
-  readonly instances: object[] = [];
-
-  static root(owner: Owner): Scope {
-    return new Scope(owner, 0, null);
-  }
-
-  private constructor(owner: Owner, level: number, parent: Scope | null) {
-    this.owner = owner;
-    this.level = level;
-    this.parent = parent;
-    DEBUG: {
-      Object.freeze(this);
-    }
-  }
-
-  enter(owner: Owner): Scope {
-    return new Scope(owner, this.level + 1, this);
-  }
-}
 
 export class VNode<TType, TProps, const TChildren extends VElement[]> {
   readonly type: TType;

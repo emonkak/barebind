@@ -32,6 +32,7 @@ import {
   UserHandlerLane,
 } from './lane.js';
 import { PriorityQueue } from './queue.js';
+import { enterScope } from './scope.js';
 
 export class Runtime implements Dispatcher, Reconciler {
   /** @internal */
@@ -110,7 +111,7 @@ export class Runtime implements Dispatcher, Reconciler {
           pendingLanes: NoLanes,
         },
       };
-      const subScope = scope.enter(element.type);
+      const subScope = enterScope(scope, element.type);
       node.left[0] = this.build(
         node.state.controller.render(node, subScope, this._flushLanes),
         subScope,
@@ -213,7 +214,7 @@ export class Runtime implements Dispatcher, Reconciler {
         part: oldNode.part,
         state: (oldNode as RenderNode.ComponentNode).state,
       };
-      const subScope = scope.enter(newElement.type);
+      const subScope = enterScope(scope, newElement.type);
       newNode.left[0] = this.diff(
         newNode.right[0]!,
         newNode.state.controller.render(newNode, subScope, this._flushLanes),
