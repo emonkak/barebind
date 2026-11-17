@@ -614,10 +614,10 @@ function buildKeyToIndexMap<T>(
 }
 
 function compareUpdates(update1: Update, update2: Update): number {
-  const highestLane1 = getHighestPriorityLane(update1.lanes);
-  const highestLane2 = getHighestPriorityLane(update2.lanes);
-  if (highestLane1 !== highestLane2) {
-    return highestLane1 - highestLane2;
+  const lane1 = getHighestPriorityLane(update1.lanes);
+  const lane2 = getHighestPriorityLane(update2.lanes);
+  if (lane1 !== lane2) {
+    return lane1 - lane2;
   }
   const level1 = update1.transaction.scope.level;
   const level2 = update2.transaction.scope.level;
