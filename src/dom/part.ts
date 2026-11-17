@@ -1,4 +1,4 @@
-import type { Block, Container, Part } from '../base.js';
+import type { Block, HostContainer, Part } from '../base.js';
 import { is, isObject, sequentialEqual } from '../compare.js';
 import { generateNodeFrame } from './debug.js';
 import { DOMAdapterError } from './error.js';
@@ -210,9 +210,9 @@ export class ChildNodePart extends CharacterDataPart {
 }
 
 export class ContainerPart extends DOMPart {
-  private readonly _container: Container;
+  private readonly _container: HostContainer;
 
-  constructor(container: Container) {
+  constructor(container: HostContainer) {
     super();
     this._container = container;
   }

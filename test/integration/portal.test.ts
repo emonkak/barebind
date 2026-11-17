@@ -26,7 +26,7 @@ describe('Portal', () => {
 
     await root.render(template).finished;
     expect(container.innerHTML).toBe('<div><!----><!----></div>');
-    expect(portal.type.innerHTML).toBe('<div>hello</div>');
+    expect((portal.type as Element).innerHTML).toBe('<div>hello</div>');
   });
 
   it('renders nested portals', async () => {
@@ -41,8 +41,8 @@ describe('Portal', () => {
 
     await root.render(outerPortal).finished;
     expect(container.innerHTML).toBe('<!---->');
-    expect(innerPortal.type.innerHTML).toBe('<div>a</div>');
-    expect(outerPortal.type.innerHTML).toBe('<!---->');
+    expect((innerPortal.type as Element).innerHTML).toBe('<div>a</div>');
+    expect((outerPortal.type as Element).innerHTML).toBe('<!---->');
   });
 
   it('does nothing when portals are swapped', async () => {
@@ -58,13 +58,13 @@ describe('Portal', () => {
 
     await root.render(render([portalA, portalB])).finished;
     expect(container.innerHTML).toBe('<div><!----><!----><!----></div>');
-    expect(portalA.type.innerHTML).toBe('<div>a</div>');
-    expect(portalB.type.innerHTML).toBe('<div>b</div>');
+    expect((portalA.type as Element).innerHTML).toBe('<div>a</div>');
+    expect((portalB.type as Element).innerHTML).toBe('<div>b</div>');
 
     await root.render(render([portalB, portalA])).finished;
     expect(container.innerHTML).toBe('<div><!----><!----><!----></div>');
-    expect(portalA.type.innerHTML).toBe('<div>a</div>');
-    expect(portalB.type.innerHTML).toBe('<div>b</div>');
+    expect((portalA.type as Element).innerHTML).toBe('<div>a</div>');
+    expect((portalB.type as Element).innerHTML).toBe('<div>b</div>');
   });
 
   it('preserves portal content when items are reordered', async () => {
@@ -80,13 +80,13 @@ describe('Portal', () => {
     expect(container.innerHTML).toBe(
       '<div><!----><div>b</div><div>c</div><!----></div>',
     );
-    expect(portalA.type.innerHTML).toBe('<div>a</div>');
+    expect((portalA.type as Element).innerHTML).toBe('<div>a</div>');
 
     await root.render(render([templateC, portalA, templateB])).finished;
     expect(container.innerHTML).toBe(
       '<div><div>c</div><!----><div>b</div><!----></div>',
     );
-    expect(portalA.type.innerHTML).toBe('<div>a</div>');
+    expect((portalA.type as Element).innerHTML).toBe('<div>a</div>');
   });
 
   it('removes portal content when root is replaced', async () => {
@@ -98,7 +98,7 @@ describe('Portal', () => {
     await root.render(html`<div><${portal}></div>`).finished;
     await root.render(null).finished;
     expect(container.innerHTML).toBe('');
-    expect(portal.type.innerHTML).toBe('');
+    expect((portal.type as Element).innerHTML).toBe('');
   });
 
   it('removes portal content when the child node is replaced', async () => {
@@ -111,6 +111,6 @@ describe('Portal', () => {
     await root.render(render(portal)).finished;
     await root.render(render(null)).finished;
     expect(container.innerHTML).toBe('<div><!----></div>');
-    expect(portal.type.innerHTML).toBe('');
+    expect((portal.type as Element).innerHTML).toBe('');
   });
 });

@@ -15,11 +15,11 @@ export interface Bindable {
 
 export interface Block {
   readonly parts: readonly Part[];
-  readonly staticNodes: readonly ChildNode[];
-  mountBefore(afterNode: ChildNode): void;
-  mountInto(container: Container, afterNode: ChildNode | null): void;
-  moveBefore(afterNode: ChildNode): void;
-  moveInto(container: Container, afterNode: ChildNode | null): void;
+  readonly hostNodes: readonly HostNode[];
+  mountBefore(afterNode: HostNode): void;
+  mountInto(container: HostContainer, afterNode: HostNode | null): void;
+  moveBefore(afterNode: HostNode): void;
+  moveInto(container: HostContainer, afterNode: HostNode | null): void;
   unmount(): void;
 }
 
@@ -40,8 +40,6 @@ export interface ComponentController<TProps> {
   render(props: TProps, scope: Scope, lanes: Lanes): VElement;
 }
 
-export type Container = DocumentFragment | Element;
-
 export interface Dispatcher {
   nextIdentifier(): string;
   nextTransition(): number;
@@ -59,6 +57,10 @@ export interface HostAdapter {
     options?: SchedulerPostTaskOptions,
   ): Promise<void>;
 }
+
+export type HostContainer = DocumentFragment | Element;
+
+export type HostNode = unknown;
 
 export interface Injectable<TInstance, TDefault> {
   new (...args: never[]): TInstance;
@@ -101,8 +103,8 @@ export type Owner = object;
 
 export interface Part {
   splitPart(): Part;
-  mountBlock(block: Block, afterNode: ChildNode | null): void;
-  moveBlock(block: Block, afterNode: ChildNode | null): void;
+  mountBlock(block: Block, afterNode: HostNode | null): void;
+  moveBlock(block: Block, afterNode: HostNode | null): void;
   unmountBlock(block: Block, cascade: boolean): void;
   commitUpdate(oldValue: unknown, newValue: unknown): void;
   commitMount(value: unknown): void;
@@ -221,11 +223,7 @@ export type VElement = VComponent | VFragment | VBind | VPortal | VTemplate;
 
 export type VFragment = VNode<typeof Fragment, {}, VElement[]>;
 
-export type VPortal<TContainer extends Container = Container> = VNode<
-  TContainer,
-  {},
-  [VElement]
->;
+export type VPortal = VNode<HostContainer, {}, [VElement]>;
 
 export type VTemplate = VNode<
   readonly string[],

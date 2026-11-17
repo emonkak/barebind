@@ -1,6 +1,6 @@
 import {
-  type Container,
   type Dispatcher,
+  type HostContainer,
   type RenderRoot,
   Scope,
   type UpdateHandle,
@@ -12,7 +12,7 @@ import { wrap } from '../velement.js';
 import { ContainerPart } from './part.js';
 
 export class DOMRoot {
-  private readonly _container: Container;
+  private readonly _container: HostContainer;
   private readonly _dispatcher: Dispatcher;
   private readonly _root: RenderRoot = {
     type: null,
@@ -20,7 +20,7 @@ export class DOMRoot {
     right: null,
   };
 
-  constructor(container: Container, dispatcher: Dispatcher) {
+  constructor(container: HostContainer, dispatcher: Dispatcher) {
     this._container = container;
     this._dispatcher = dispatcher;
   }

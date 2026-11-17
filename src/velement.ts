@@ -1,8 +1,8 @@
 import {
   Bind,
   type Bindable,
-  type Container,
   Fragment,
+  type HostContainer,
   type TemplateMode,
   toElement,
   type VBind,
@@ -142,10 +142,10 @@ export function createFragment(children: Iterable<unknown>): VFragment {
   return new VNode(Fragment, {}, Array.from(children, wrap));
 }
 
-export function createPortal<TContainer extends Container>(
+export function createPortal(
   child: unknown,
-  container: TContainer,
-): VPortal<TContainer> {
+  container: HostContainer,
+): VPortal {
   return new VNode(container, {}, [wrap(child)]);
 }
 

@@ -1,5 +1,6 @@
 import {
   Bind,
+  type HostNode,
   MutationType,
   type RenderNode,
   type RenderRoot,
@@ -43,7 +44,7 @@ function applyPatch(
   }
   if (oldNode.type !== newNode.type || oldNode.key !== newNode.key) {
     unmountChild(oldNode);
-    mountChild(newNode, getSiblingDOMNode(newNode));
+    mountChild(newNode, getSiblingHostNode(newNode));
   } else if (newNode.type === Bind) {
     newNode.part.commitUpdate(
       (oldNode as RenderNode.BindNode).props.value,
@@ -64,7 +65,7 @@ function applyPatch(
           mountChild(
             mutation.node,
             mutation.afterNode !== undefined
-              ? getChildDOMNode(mutation.afterNode)
+              ? getChildHostNode(mutation.afterNode)
               : null,
           );
           break;
@@ -86,7 +87,7 @@ function applyPatch(
           moveChild(
             mutation.newNode,
             mutation.afterNode !== undefined
-              ? getChildDOMNode(mutation.afterNode)
+              ? getChildHostNode(mutation.afterNode)
               : null,
           );
           break;
@@ -98,20 +99,20 @@ function applyPatch(
   }
 }
 
-function getChildDOMNode(node: RenderNode): ChildNode | null {
+function getChildHostNode(node: RenderNode): HostNode | null {
   if (typeof node.type === 'object') {
-    return node.state.block.staticNodes[0]!;
+    return node.state.block.hostNodes[0]!;
   }
   for (const child of node.left) {
-    const domNode = getChildDOMNode(child);
-    if (domNode !== null) {
-      return domNode;
+    const hostNode = getChildHostNode(child);
+    if (hostNode !== null) {
+      return hostNode;
     }
   }
-  return getSiblingDOMNode(node);
+  return getSiblingHostNode(node);
 }
 
-function getSiblingDOMNode(node: RenderNode): ChildNode | null {
+function getSiblingHostNode(node: RenderNode): HostNode | null {
   const part = node.part;
   // Only called on non-detached nodes, so parent is never null.
   while (node.parent!.type != null) {
@@ -121,9 +122,9 @@ function getSiblingDOMNode(node: RenderNode): ChildNode | null {
       if (child.part !== part) {
         break;
       }
-      const domNode = getChildDOMNode(child);
-      if (domNode !== null) {
-        return domNode;
+      const hostNode = getChildHostNode(child);
+      if (hostNode !== null) {
+        return hostNode;
       }
     }
     node = node.parent!;
@@ -135,7 +136,7 @@ function isCommitted(node: RenderNode): boolean {
   return node.left === node.right;
 }
 
-function mountChild(child: RenderNode, afterNode: ChildNode | null): void {
+function mountChild(child: RenderNode, afterNode: HostNode | null): void {
   if (child.type === Bind) {
     child.part.commitMount(child.props.value);
   } else if (typeof child.type === 'object') {
@@ -150,7 +151,7 @@ function mountChild(child: RenderNode, afterNode: ChildNode | null): void {
   }
 }
 
-function moveChild(child: RenderNode, afterNode: ChildNode | null): void {
+function moveChild(child: RenderNode, afterNode: HostNode | null): void {
   if (typeof child.type === 'object') {
     child.part.moveBlock(child.state.block, afterNode);
   } else {
