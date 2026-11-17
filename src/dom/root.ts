@@ -32,7 +32,7 @@ export class DOMRoot {
           const element = wrap(value);
           this._left =
             this._right !== null
-              ? reconciler.diff(this._right, element, 0, null, scope)
+              ? reconciler.diff(this._right, element, 0, null, scope, false)
               : reconciler.build(
                   element,
                   0,

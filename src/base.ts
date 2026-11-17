@@ -38,9 +38,9 @@ export interface ComponentController<TProps> {
   beforeRemove(): void;
   render(
     node: RenderNode.ComponentNode<TProps>,
-    scope: Scope,
+    scope: Scope.Child,
     renderLanes: Lanes,
-  ): VElement;
+  ): RenderResult;
 }
 
 export interface Dispatcher {
@@ -68,6 +68,11 @@ export type HostNode = unknown;
 export interface Injectable<TInstance, TDefault> {
   new (...args: never[]): TInstance;
   getDefault?(): TDefault;
+}
+
+export interface Injection {
+  instance: object;
+  next: Injection | null;
 }
 
 export type Lane = number;
@@ -126,6 +131,7 @@ export interface Reconciler {
     index: number,
     parent: RenderNode | null,
     scope: Scope,
+    dirty: boolean,
   ): RenderNode;
 }
 
@@ -169,7 +175,6 @@ export namespace RenderNode {
   export interface ComponentNode<TProps = unknown> extends Node<VComponent> {
     state: {
       controller: ComponentController<TProps>;
-      scope: Scope;
       pendingLanes: Lanes;
     };
   }
@@ -181,11 +186,27 @@ export namespace RenderNode {
   }
 }
 
-export interface Scope {
-  readonly owner: object;
-  readonly parent: Scope | null;
-  readonly level: number;
-  readonly instances: object[];
+export interface RenderResult {
+  element: VElement;
+  dirty: boolean;
+}
+
+export type Scope = Scope.Root | Scope.Child;
+
+export namespace Scope {
+  export interface Root {
+    readonly owner: object;
+    readonly parent: null;
+    readonly level: number;
+    injection: Injection | null;
+  }
+
+  export interface Child {
+    readonly owner: object;
+    readonly parent: Scope;
+    readonly level: number;
+    injection: Injection | null;
+  }
 }
 
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';

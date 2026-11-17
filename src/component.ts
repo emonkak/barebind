@@ -4,22 +4,23 @@ import {
   type ComponentController,
   type Dispatcher,
   type Injectable,
+  type Injection,
   type Lanes,
   type Reconciler,
   type RenderNode,
+  type RenderResult,
   type Scope,
   type Transaction,
   type UpdateHandle,
   type UpdateOptions,
   type VComponent,
-  type VElement,
   VNode,
 } from './base.js';
 import { patch } from './commit.js';
 import { areDependenciesChanged, is } from './compare.js';
 import { RenderError } from './error.js';
 import { NoLanes } from './lane.js';
-import { enterScope } from './scope.js';
+import { areScopesDirty, cloneScope } from './scope.js';
 import { Ref, wrap } from './velement.js';
 
 const enum HookType {
@@ -157,9 +158,10 @@ export class ClientComponentController<TProps = any, TReturn = unknown>
 
   render(
     node: RenderNode.ComponentNode<TProps>,
-    scope: Scope,
+    scope: Scope.Child,
     renderLanes: Lanes,
-  ): VElement {
+  ): RenderResult {
+    const oldScope = this._context?._scope;
     if (this._context !== null) {
       this._context._node = node;
       this._context._scope = scope;
@@ -169,10 +171,11 @@ export class ClientComponentController<TProps = any, TReturn = unknown>
       this._context = new RenderContext(node, scope, renderLanes);
     }
     try {
-      const returnValue = this._componentFn.call(this._context, node.props);
-      finalizeContext(this._context);
-      Object.freeze(scope.instances);
-      return wrap(returnValue);
+      const element = wrap(this._componentFn.call(this._context, node.props));
+      const dirty = oldScope === undefined || areScopesDirty(oldScope, scope);
+      finalizeHooks(this._context);
+      Object.freeze(scope);
+      return { element, dirty };
     } catch (cause) {
       throw RenderError.withScope(
         scope,
@@ -189,7 +192,7 @@ export class RenderContext {
   /** @internal */
   _node: RenderNode.ComponentNode;
   /** @internal */
-  _scope: Scope;
+  _scope: Scope.Child;
   /** @internal */
   _renderLanes: Lanes;
   /** @internal */
@@ -199,7 +202,7 @@ export class RenderContext {
 
   constructor(
     node: RenderNode.ComponentNode,
-    scope: Scope,
+    scope: Scope.Child,
     renderLanes: Lanes,
   ) {
     this._node = node;
@@ -220,16 +223,14 @@ export class RenderContext {
   inject<TInstance, TDefault = never>(
     injectable: Injectable<TInstance, TDefault>,
   ): TInstance | TDefault {
-    let scope: Scope | null = this._scope;
-    do {
-      for (let i = scope.instances.length - 1; i >= 0; i--) {
-        const instance = scope.instances[i]!;
-        if (instance instanceof injectable) {
-          return instance;
-        }
+    let injection: Injection | null = this._scope.injection;
+    while (injection !== null) {
+      const instance = injection.instance;
+      if (instance instanceof injectable) {
+        return instance;
       }
-      scope = scope.parent;
-    } while (scope !== null);
+      injection = injection.next;
+    }
     if (injectable.getDefault !== undefined) {
       return injectable.getDefault();
     }
@@ -239,7 +240,7 @@ export class RenderContext {
   }
 
   provide<T extends object>(instance: T): void {
-    this._scope.instances.push(instance);
+    this._scope.injection = { instance, next: this._scope.injection };
   }
 
   startTransition<T>(callback: (transition: number) => T): T {
@@ -464,9 +465,9 @@ export function createComponent<TProps = {}, TReturn = unknown>(
 
 class UpdateComponent implements Transaction {
   private readonly _node: RenderNode.ComponentNode;
-  private readonly _scope: Scope;
+  private readonly _scope: Scope.Child;
 
-  constructor(node: RenderNode.ComponentNode, scope: Scope) {
+  constructor(node: RenderNode.ComponentNode, scope: Scope.Child) {
     this._node = node;
     this._scope = scope;
   }
@@ -483,19 +484,21 @@ class UpdateComponent implements Transaction {
     if (this._node.index < 0) {
       return noop;
     }
-    const subScope = enterScope(this._node.state.scope, this._node.type);
-    const returnElement = this._node.state.controller.render(
+    const oldScope = this._scope;
+    const newScope = cloneScope(oldScope);
+    const result = this._node.state.controller.render(
       this._node,
-      subScope,
+      newScope,
       renderLanes,
     );
     this._node.left = [
       reconciler.diff(
         this._node.right[0]!,
-        returnElement,
+        result.element,
         0,
         this._node,
-        subScope,
+        newScope,
+        result.dirty,
       ),
     ];
     this._node.state.pendingLanes &= ~renderLanes;
@@ -520,7 +523,7 @@ function ensureHookType<TExpectedType extends Hook['type']>(
   }
 }
 
-function finalizeContext(context: RenderContext): void {
+function finalizeHooks(context: RenderContext): void {
   let currentHook = context._hooks[context._hookIndex++];
 
   if (currentHook !== undefined) {
