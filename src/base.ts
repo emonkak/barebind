@@ -34,10 +34,13 @@ export interface Component<TProps> {
 }
 
 export interface ComponentController<TProps> {
-  readonly pendingLanes: Lanes;
-  connect(node: RenderNode.ComponentNode<TProps>): void;
-  disconnect(): void;
-  render(props: TProps, scope: Scope, lanes: Lanes): VElement;
+  afterCommit(): void;
+  beforeRemove(): void;
+  render(
+    node: RenderNode.ComponentNode<TProps>,
+    scope: Scope,
+    lanes: Lanes,
+  ): VElement;
 }
 
 export interface Dispatcher {
@@ -116,7 +119,7 @@ export interface Reconciler {
     element: VElement,
     scope: Scope,
     index: number,
-    parent: RenderNode | RenderRoot,
+    parent: RenderNode | null,
     part: Part,
   ): RenderNode;
   diff(
@@ -124,15 +127,15 @@ export interface Reconciler {
     newElement: VElement,
     scope: Scope,
     index: number,
-    parent: RenderNode | RenderRoot,
+    parent: RenderNode | null,
   ): RenderNode;
 }
 
 export type RenderNode =
   | RenderNode.BindNode
+  | RenderNode.BlockNode
   | RenderNode.ComponentNode
-  | RenderNode.FragmentNode
-  | RenderNode.BlockNode;
+  | RenderNode.FragmentNode;
 
 export namespace RenderNode {
   /**
@@ -148,10 +151,10 @@ export namespace RenderNode {
     props: TElement['props'];
     key: TElement['key'];
     index: number;
-    parent: RenderNode | RenderRoot | null;
-    part: Part;
+    parent: RenderNode | null;
     left: RenderNode[]; // work-in-progress children
     right: RenderNode[]; // committed children
+    part: Part;
     state: unknown;
   }
 
@@ -169,6 +172,7 @@ export namespace RenderNode {
     state: {
       controller: ComponentController<TProps>;
       scope: Scope;
+      pendingLanes: Lanes;
     };
   }
 
@@ -177,12 +181,6 @@ export namespace RenderNode {
       mutations: Mutation[];
     };
   }
-}
-
-export interface RenderRoot {
-  type: null;
-  left: RenderNode | null; // work-in-progress child
-  right: RenderNode | null; // committed child
 }
 
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';

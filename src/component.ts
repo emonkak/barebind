@@ -123,29 +123,19 @@ export class ClientComponentController<TProps = any, TReturn = unknown>
   implements ComponentController<TProps>
 {
   /** @internal */
-  readonly _componentFn: ComponentFunction<TProps, TReturn>;
-  /** @internal */
   readonly _dispatcher: Dispatcher;
-  /** @internal */
-  _pendingLanes: Lanes = NoLanes;
-  /** @internal */
-  _context: RenderContext | null = null;
-  /** @internal */
-  _connectedNode: RenderNode.ComponentNode<TProps> | null = null;
+  private readonly _componentFn: ComponentFunction<TProps, TReturn>;
+  private _context: RenderContext | null = null;
 
   constructor(
-    componentFn: ComponentFunction<TProps, TReturn>,
     dispatcher: Dispatcher,
+    componentFn: ComponentFunction<TProps, TReturn>,
   ) {
-    this._componentFn = componentFn;
     this._dispatcher = dispatcher;
+    this._componentFn = componentFn;
   }
 
-  get pendingLanes(): Lanes {
-    return this._pendingLanes;
-  }
-
-  connect(node: RenderNode.ComponentNode<TProps>): void {
+  afterCommit(): void {
     for (const hook of this._context!._hooks) {
       if (hook.type === HookType.EFFECT && hook.dirty) {
         hook.cleanup?.();
@@ -153,30 +143,32 @@ export class ClientComponentController<TProps = any, TReturn = unknown>
         hook.dirty = false;
       }
     }
-    this._connectedNode = node;
   }
 
-  disconnect(): void {
+  beforeRemove(): void {
     for (const hook of this._context!._hooks) {
       if (hook.type === HookType.EFFECT && hook.cleanup !== undefined) {
         hook.cleanup();
         hook.cleanup = undefined;
       }
     }
-    this._connectedNode = null;
   }
 
-  render(props: TProps, scope: Scope, lanes: Lanes): VElement {
-    this._pendingLanes &= ~lanes;
+  render(
+    node: RenderNode.ComponentNode<TProps>,
+    scope: Scope,
+    lanes: Lanes,
+  ): VElement {
     if (this._context !== null) {
+      this._context._node = node;
       this._context._scope = scope;
       this._context._lanes = lanes;
       this._context._hookIndex = 0;
     } else {
-      this._context = new RenderContext(this, scope, lanes);
+      this._context = new RenderContext(node, scope, lanes);
     }
     try {
-      const returnValue = this._componentFn.call(this._context, props);
+      const returnValue = this._componentFn.call(this._context, node.props);
       finalizeContext(this._context);
       Object.freeze(scope.instances);
       return wrap(returnValue);
@@ -193,7 +185,8 @@ export class ClientComponentController<TProps = any, TReturn = unknown>
 }
 
 export class RenderContext {
-  private readonly _controller: ClientComponentController;
+  /** @internal */
+  _node: RenderNode.ComponentNode;
   /** @internal */
   _scope: Scope;
   /** @internal */
@@ -203,23 +196,19 @@ export class RenderContext {
   /** @internal */
   _hookIndex: number = 0;
 
-  constructor(
-    controller: ClientComponentController,
-    scope: Scope,
-    lanes: Lanes,
-  ) {
-    this._controller = controller;
+  constructor(node: RenderNode.ComponentNode, scope: Scope, lanes: Lanes) {
+    this._node = node;
     this._scope = scope;
     this._lanes = lanes;
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    const controller = this._controller;
+    const controller = this._node.state.controller as ClientComponentController;
     const handle = controller._dispatcher.schedule(
-      new UpdateComponent(controller, this._scope),
+      new UpdateComponent(this._node, this._scope),
       options,
     );
-    controller._pendingLanes |= handle.lanes;
+    this._node.state.pendingLanes |= handle.lanes;
     return handle;
   }
 
@@ -249,7 +238,8 @@ export class RenderContext {
   }
 
   startTransition<T>(callback: (transition: number) => T): T {
-    return callback(this._controller._dispatcher.nextTransition());
+    const controller = this._node.state.controller as ClientComponentController;
+    return callback(controller._dispatcher.nextTransition());
   }
 
   use<TReturn>(usable: Usable<TReturn>): TReturn {
@@ -292,9 +282,11 @@ export class RenderContext {
     if (currentHook !== undefined) {
       ensureHookType(HookType.ID, currentHook);
     } else {
+      const controller = this._node.state
+        .controller as ClientComponentController;
       currentHook = {
         type: HookType.ID,
-        id: this._controller._dispatcher.nextIdentifier(),
+        id: controller._dispatcher.nextIdentifier(),
       };
       this._hooks.push(currentHook);
     }
@@ -454,7 +446,7 @@ export function createComponent<TProps = {}, TReturn = unknown>(
   Component.createController = (
     dispatcher: Dispatcher,
   ): ComponentController<TProps> =>
-    new ClientComponentController(componentFn, dispatcher);
+    new ClientComponentController(dispatcher, componentFn);
 
   DEBUG: {
     Object.defineProperty(Component, 'name', {
@@ -466,11 +458,11 @@ export function createComponent<TProps = {}, TReturn = unknown>(
 }
 
 class UpdateComponent implements Transaction {
-  private readonly _controller: ClientComponentController;
+  private readonly _node: RenderNode.ComponentNode;
   private readonly _scope: Scope;
 
-  constructor(controller: ClientComponentController, scope: Scope) {
-    this._controller = controller;
+  constructor(node: RenderNode.ComponentNode, scope: Scope) {
+    this._node = node;
     this._scope = scope;
   }
 
@@ -479,28 +471,34 @@ class UpdateComponent implements Transaction {
   }
 
   get pendingLanes(): Lanes {
-    return this._controller._pendingLanes;
+    return this._node.state.pendingLanes;
   }
 
   prepare(lanes: Lanes, reconciler: Reconciler): Commit {
-    const node = this._controller._connectedNode;
-    if (node === null) {
+    if (this._node.index < 0) {
       return noop;
     }
-    const subScope = node.state.scope.enter(node.type);
-    const newElement = node.state.controller.render(
-      node.props,
+    const subScope = this._node.state.scope.enter(this._node.type);
+    const newElement = this._node.state.controller.render(
+      this._node,
       subScope,
       lanes,
     );
-    node.left = [
-      reconciler.diff(node.right[0]!, newElement, subScope, 0, node),
+    this._node.left = [
+      reconciler.diff(
+        this._node.right[0]!,
+        newElement,
+        subScope,
+        0,
+        this._node,
+      ),
     ];
+    this._node.state.pendingLanes &= ~lanes;
     return () => {
-      if (node.parent !== null) {
-        patch(node.right[0]!, node.left[0]!);
-        node.state.controller.connect(node);
-        node.right = node.left;
+      if (this._node.index >= 0) {
+        patch(this._node.right[0]!, this._node.left[0]!);
+        this._node.state.controller.afterCommit();
+        this._node.right = this._node.left;
       }
     };
   }

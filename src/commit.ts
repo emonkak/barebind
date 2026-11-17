@@ -1,10 +1,4 @@
-import {
-  Bind,
-  type HostNode,
-  MutationType,
-  type RenderNode,
-  type RenderRoot,
-} from './base.js';
+import { Bind, type HostNode, MutationType, type RenderNode } from './base.js';
 
 export function mount(node: RenderNode): void {
   mountChild(node, null);
@@ -27,7 +21,7 @@ function afterCommit(node: RenderNode): void {
     }
   }
   if (typeof node.type === 'function') {
-    node.state.controller.connect(node);
+    node.state.controller.afterCommit();
   }
   node.right = node.left;
 }
@@ -36,7 +30,7 @@ function applyPatch(
   oldNode: RenderNode,
   newNode: RenderNode,
   index: number,
-  parent: RenderNode | RenderRoot | null,
+  parent: RenderNode | null,
 ): void {
   if (oldNode === newNode && isCommitted(oldNode)) {
     reparentChild(oldNode, index, parent);
@@ -113,13 +107,14 @@ function getChildHostNode(node: RenderNode): HostNode | null {
 }
 
 function getSiblingHostNode(node: RenderNode): HostNode | null {
-  const part = node.part;
-  // Only called on non-detached nodes, so parent is never null.
-  while (node.parent!.type != null) {
-    const children = isCommitted(node) ? node.parent!.right : node.parent!.left;
+  const ownPart = node.part;
+  // A null parent means either the node is detached or it is the root node.
+  while (node.parent !== null) {
+    const parent = node.parent;
+    const children = isCommitted(node) ? parent.right : parent.left;
     for (let i = node.index + 1, l = children.length; i < l; i++) {
       const child = children[i]!;
-      if (child.part !== part) {
+      if (child.part !== ownPart) {
         break;
       }
       const hostNode = getChildHostNode(child);
@@ -127,7 +122,7 @@ function getSiblingHostNode(node: RenderNode): HostNode | null {
         return hostNode;
       }
     }
-    node = node.parent!;
+    node = parent;
   }
   return null;
 }
@@ -164,7 +159,7 @@ function moveChild(child: RenderNode, afterNode: HostNode | null): void {
 function reparentChild(
   child: RenderNode,
   index: number,
-  parent: RenderNode | RenderRoot | null,
+  parent: RenderNode | null,
 ): void {
   child.index = index;
   child.parent = parent;
@@ -180,11 +175,12 @@ function unmountChild(child: RenderNode, cascade: boolean = false): void {
     }
   } else {
     if (typeof child.type === 'function') {
-      child.state.controller.disconnect();
+      child.state.controller.beforeRemove();
     }
     for (const grandchild of child.right) {
       unmountChild(grandchild, cascade);
     }
   }
+  child.index = -1;
   child.parent = null;
 }

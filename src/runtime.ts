@@ -12,7 +12,6 @@ import {
   type Part,
   type Reconciler,
   type RenderNode,
-  type RenderRoot,
   type Scope,
   type Transaction,
   type Update,
@@ -58,7 +57,7 @@ export class Runtime implements Dispatcher, Reconciler {
     element: VElement,
     scope: Scope,
     index: number,
-    parent: RenderNode | RenderRoot,
+    parent: RenderNode | null,
     part: Part,
   ): RenderNode {
     if (element.type === Bind) {
@@ -68,9 +67,9 @@ export class Runtime implements Dispatcher, Reconciler {
         key: element.key,
         index,
         parent,
-        part,
         left: [],
         right: [],
+        part,
         state: null,
       };
     } else if (element.type === Fragment) {
@@ -80,9 +79,9 @@ export class Runtime implements Dispatcher, Reconciler {
         key: element.key,
         index,
         parent,
-        part,
         left: new Array(element.children.length),
         right: [],
+        part,
         state: { mutations: [] },
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
@@ -102,17 +101,18 @@ export class Runtime implements Dispatcher, Reconciler {
         key: element.key,
         index,
         parent,
-        part,
         left: new Array(1),
         right: [],
+        part,
         state: {
           controller: element.type.createController(this),
           scope,
+          pendingLanes: NoLanes,
         },
       };
       const subScope = scope.enter(element.type);
       node.left[0] = this.build(
-        node.state.controller.render(element.props, subScope, this._flushLanes),
+        node.state.controller.render(node, subScope, this._flushLanes),
         subScope,
         0,
         node,
@@ -129,9 +129,9 @@ export class Runtime implements Dispatcher, Reconciler {
         key: element.key,
         index,
         parent,
-        part,
         left: new Array(element.children.length),
         right: [],
+        part,
         state: { block },
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
@@ -152,7 +152,7 @@ export class Runtime implements Dispatcher, Reconciler {
     newElement: VElement,
     scope: Scope,
     index: number,
-    parent: RenderNode | RenderRoot,
+    parent: RenderNode | null,
   ): RenderNode {
     if (oldNode.type !== newElement.type || !is(oldNode.key, newElement.key)) {
       return this.build(newElement, scope, index, parent, oldNode.part);
@@ -167,9 +167,9 @@ export class Runtime implements Dispatcher, Reconciler {
         key: newElement.key,
         index,
         parent,
-        part: oldNode.part,
         left: oldNode.left,
         right: oldNode.right,
+        part: oldNode.part,
         state: (oldNode as RenderNode.BindNode).state,
       };
     } else if (newElement.type === Fragment) {
@@ -179,9 +179,9 @@ export class Runtime implements Dispatcher, Reconciler {
         key: newElement.key,
         index,
         parent,
-        part: oldNode.part,
         left: new Array(newElement.children.length),
         right: oldNode.right,
+        part: oldNode.part,
         state: (oldNode as RenderNode.FragmentNode).state,
       };
       newNode.state.mutations = this._diffChildren(
@@ -192,7 +192,7 @@ export class Runtime implements Dispatcher, Reconciler {
       return newNode;
     } else if (typeof newElement.type === 'function') {
       if (
-        ((oldNode as RenderNode.ComponentNode).state.controller.pendingLanes &
+        ((oldNode as RenderNode.ComponentNode).state.pendingLanes &
           this._flushLanes) ===
           NoLanes &&
         (oldNode as RenderNode.ComponentNode).type.arePropsEqual(
@@ -208,24 +208,21 @@ export class Runtime implements Dispatcher, Reconciler {
         key: newElement.key,
         index,
         parent,
-        part: oldNode.part,
         left: oldNode.right.slice(),
         right: oldNode.right,
+        part: oldNode.part,
         state: (oldNode as RenderNode.ComponentNode).state,
       };
       const subScope = scope.enter(newElement.type);
       newNode.left[0] = this.diff(
         newNode.right[0]!,
-        newNode.state.controller.render(
-          newElement.props,
-          subScope,
-          this._flushLanes,
-        ),
+        newNode.state.controller.render(newNode, subScope, this._flushLanes),
         subScope,
         0,
         newNode,
       );
       newNode.state.scope = scope;
+      newNode.state.pendingLanes &= ~this._flushLanes;
       return newNode;
     } else {
       const newNode: RenderNode.BlockNode = {
@@ -234,9 +231,9 @@ export class Runtime implements Dispatcher, Reconciler {
         key: newElement.key,
         index,
         parent,
-        part: oldNode.part,
         left: new Array(newElement.children.length),
         right: oldNode.right,
+        part: oldNode.part,
         state: (oldNode as RenderNode.BlockNode).state,
       };
       for (let i = 0, l = newElement.children.length; i < l; i++) {

@@ -1,7 +1,7 @@
 import {
   type Dispatcher,
   type HostContainer,
-  type RenderRoot,
+  type RenderNode,
   Scope,
   type UpdateHandle,
   type UpdateOptions,
@@ -14,11 +14,8 @@ import { ContainerPart } from './part.js';
 export class DOMRoot {
   private readonly _dispatcher: Dispatcher;
   private readonly _container: HostContainer;
-  private readonly _root: RenderRoot = {
-    type: null,
-    left: null,
-    right: null,
-  };
+  private _left: RenderNode | null = null;
+  private _right: RenderNode | null = null;
 
   constructor(dispatcher: Dispatcher, container: HostContainer) {
     this._dispatcher = dispatcher;
@@ -33,23 +30,23 @@ export class DOMRoot {
         pendingLanes: AllLanes,
         prepare: (_lanes, reconciler) => {
           const element = wrap(value);
-          this._root.left =
-            this._root.right !== null
-              ? reconciler.diff(this._root.right, element, scope, 0, this._root)
+          this._left =
+            this._right !== null
+              ? reconciler.diff(this._right, element, scope, 0, null)
               : reconciler.build(
                   element,
                   scope,
                   0,
-                  this._root,
+                  null,
                   new ContainerPart(this._container),
                 );
           return () => {
-            if (this._root.right !== null) {
-              patch(this._root.right, this._root.left!);
+            if (this._right !== null) {
+              patch(this._right, this._left!);
             } else {
-              mount(this._root.left!);
+              mount(this._left!);
             }
-            this._root.right = this._root.left;
+            this._right = this._left;
           };
         },
       },
@@ -65,9 +62,9 @@ export class DOMRoot {
         pendingLanes: AllLanes,
         prepare: () => {
           return () => {
-            if (this._root.right !== null) {
-              unmount(this._root.right);
-              this._root.right = null;
+            if (this._right !== null) {
+              unmount(this._right);
+              this._right = null;
             }
           };
         },
