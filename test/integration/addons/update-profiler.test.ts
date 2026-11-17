@@ -7,8 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('UpdateProfiler addon', () => {
   let userTiming: UserTimingAPI;
-  let container: Element;
   let runtime: Runtime;
+  let container: Element;
   let root: DOMRoot;
 
   beforeEach(() => {
@@ -16,10 +16,10 @@ describe('UpdateProfiler addon', () => {
       mark: vi.fn(),
       measure: vi.fn(),
     };
-    container = document.createElement('div');
     runtime = new Runtime(new DOMAdapter());
     runtime.use(new UpdateProfiler(userTiming));
-    root = new DOMRoot(container, runtime);
+    container = document.createElement('div');
+    root = new DOMRoot(runtime, container);
     document.body.appendChild(container);
   });
 

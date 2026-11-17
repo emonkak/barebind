@@ -12,17 +12,17 @@ import { wrap } from '../velement.js';
 import { ContainerPart } from './part.js';
 
 export class DOMRoot {
-  private readonly _container: HostContainer;
   private readonly _dispatcher: Dispatcher;
+  private readonly _container: HostContainer;
   private readonly _root: RenderRoot = {
     type: null,
     left: null,
     right: null,
   };
 
-  constructor(container: HostContainer, dispatcher: Dispatcher) {
-    this._container = container;
+  constructor(dispatcher: Dispatcher, container: HostContainer) {
     this._dispatcher = dispatcher;
+    this._container = container;
   }
 
   render(value: unknown, options?: UpdateOptions): UpdateHandle {

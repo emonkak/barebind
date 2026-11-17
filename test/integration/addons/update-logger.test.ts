@@ -13,8 +13,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('UpdateLogger addon', () => {
   let logger: LoggerAPI;
-  let container: Element;
   let runtime: Runtime;
+  let container: Element;
   let root: DOMRoot;
 
   beforeEach(() => {
@@ -23,10 +23,10 @@ describe('UpdateLogger addon', () => {
       groupEnd: vi.fn(),
       log: vi.fn(),
     };
-    container = document.createElement('div');
     runtime = new Runtime(new DOMAdapter());
     runtime.use(new UpdateLogger(logger));
-    root = new DOMRoot(container, runtime);
+    container = document.createElement('div');
+    root = new DOMRoot(runtime, container);
     document.body.appendChild(container);
   });
 

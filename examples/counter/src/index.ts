@@ -22,5 +22,5 @@ const Counter = createComponent(function Counter({ initialCount }: CountProps) {
 });
 
 const runtime = new Runtime(new DOMAdapter());
-const root = new DOMRoot(document.body, runtime);
+const root = new DOMRoot(runtime, document.body);
 root.render(Counter({ initialCount: 0 }));

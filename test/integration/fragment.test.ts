@@ -2,14 +2,14 @@ import { createFragment, DOMAdapter, DOMRoot, html, Runtime } from 'barebind';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 describe('Fragment', () => {
-  let container: Element;
   let runtime: Runtime;
+  let container: Element;
   let root: DOMRoot;
 
   beforeEach(() => {
-    container = document.createElement('div');
     runtime = new Runtime(new DOMAdapter());
-    root = new DOMRoot(container, runtime);
+    container = document.createElement('div');
+    root = new DOMRoot(runtime, container);
     document.body.appendChild(container);
   });
 

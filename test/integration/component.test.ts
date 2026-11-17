@@ -14,14 +14,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CommitHandler } from '@/base.js';
 
 describe('Component', () => {
-  let container: Element;
   let runtime: Runtime;
+  let container: Element;
   let root: DOMRoot;
 
   beforeEach(() => {
-    container = document.createElement('div');
     runtime = new Runtime(new DOMAdapter());
-    root = new DOMRoot(container, runtime);
+    container = document.createElement('div');
+    root = new DOMRoot(runtime, container);
     document.body.appendChild(container);
   });
 

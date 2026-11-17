@@ -6,7 +6,7 @@ import { App } from './app.js';
 import { AppStore } from './store.js';
 
 const runtime = new Runtime(new DOMAdapter());
-const root = new DOMRoot(document.body, runtime);
+const root = new DOMRoot(runtime, document.body);
 
 runtime.use(new UpdateLogger());
 runtime.use(new UpdateProfiler());
