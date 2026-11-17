@@ -39,7 +39,7 @@ export interface ComponentController<TProps> {
   render(
     node: RenderNode.ComponentNode<TProps>,
     scope: Scope,
-    lanes: Lanes,
+    renderLanes: Lanes,
   ): VElement;
 }
 
@@ -188,7 +188,7 @@ export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 export interface Transaction {
   readonly scope: Scope;
   readonly pendingLanes: Lanes;
-  prepare(lanes: Lanes, reconciler: Reconciler): Commit;
+  prepare(reconciler: Reconciler, renderLanes: Lanes): Commit;
 }
 
 export interface Update {

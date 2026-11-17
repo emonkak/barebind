@@ -541,9 +541,9 @@ export class Runtime implements Dispatcher, Reconciler {
           if (transaction.pendingLanes & lanes) {
             const commit = runPipeline(
               update,
+              this,
               this._middlewares,
               this._flushLanes,
-              this,
             );
             commitBatch.push({ commit, handler });
           }
@@ -623,16 +623,16 @@ function compareUpdates(update1: Update, update2: Update): number {
 
 function runPipeline(
   update: Update,
-  middlewares: Middleware[],
-  flushLanes: Lanes,
   reconciler: Reconciler,
+  middlewares: Middleware[],
+  renderLanes: Lanes,
 ) {
   function continuePipeline(update: Update, index: number): Commit {
     return index < middlewares.length
       ? middlewares[index]!.handle(update, (update) =>
           continuePipeline(update, index + 1),
         )
-      : update.transaction.prepare(flushLanes, reconciler);
+      : update.transaction.prepare(reconciler, renderLanes);
   }
   return continuePipeline(update, 0);
 }

@@ -157,15 +157,15 @@ export class ClientComponentController<TProps = any, TReturn = unknown>
   render(
     node: RenderNode.ComponentNode<TProps>,
     scope: Scope,
-    lanes: Lanes,
+    renderLanes: Lanes,
   ): VElement {
     if (this._context !== null) {
       this._context._node = node;
       this._context._scope = scope;
-      this._context._lanes = lanes;
+      this._context._renderLanes = renderLanes;
       this._context._hookIndex = 0;
     } else {
-      this._context = new RenderContext(node, scope, lanes);
+      this._context = new RenderContext(node, scope, renderLanes);
     }
     try {
       const returnValue = this._componentFn.call(this._context, node.props);
@@ -190,16 +190,20 @@ export class RenderContext {
   /** @internal */
   _scope: Scope;
   /** @internal */
-  _lanes: Lanes;
+  _renderLanes: Lanes;
   /** @internal */
   _hooks: Hook[] = [];
   /** @internal */
   _hookIndex: number = 0;
 
-  constructor(node: RenderNode.ComponentNode, scope: Scope, lanes: Lanes) {
+  constructor(
+    node: RenderNode.ComponentNode,
+    scope: Scope,
+    renderLanes: Lanes,
+  ) {
     this._node = node;
     this._scope = scope;
-    this._lanes = lanes;
+    this._renderLanes = renderLanes;
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
@@ -335,7 +339,7 @@ export class RenderContext {
       ensureHookType(HookType.REDUCER, currentHook);
 
       const { dispatcher, memoizedState, memoizedActions } = currentHook;
-      const renderLanes = this._lanes;
+      const renderLanes = this._renderLanes;
       let nextState = options.passthrough
         ? getInitialState(initialState)
         : memoizedState;
@@ -474,7 +478,7 @@ class UpdateComponent implements Transaction {
     return this._node.state.pendingLanes;
   }
 
-  prepare(lanes: Lanes, reconciler: Reconciler): Commit {
+  prepare(reconciler: Reconciler, renderLanes: Lanes): Commit {
     if (this._node.index < 0) {
       return noop;
     }
@@ -482,7 +486,7 @@ class UpdateComponent implements Transaction {
     const newElement = this._node.state.controller.render(
       this._node,
       subScope,
-      lanes,
+      renderLanes,
     );
     this._node.left = [
       reconciler.diff(
@@ -493,7 +497,7 @@ class UpdateComponent implements Transaction {
         this._node,
       ),
     ];
-    this._node.state.pendingLanes &= ~lanes;
+    this._node.state.pendingLanes &= ~renderLanes;
     return () => {
       if (this._node.index >= 0) {
         patch(this._node.right[0]!, this._node.left[0]!);
