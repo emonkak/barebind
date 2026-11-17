@@ -18,39 +18,34 @@ export function sequentialEqual<T>(
   ys: ArrayLike<T>,
   equals: (x: T, y: T) => boolean = is,
 ): boolean {
-  if (xs !== ys) {
-    if (xs.length !== ys.length) {
-      return false;
-    }
+  if (xs.length !== ys.length) {
+    return false;
+  }
 
-    for (let i = 0, l = xs.length; i < l; i++) {
-      if (!equals(xs[i]!, ys[i]!)) {
-        return false;
-      }
+  for (let i = 0, l = xs.length; i < l; i++) {
+    if (!equals(xs[i]!, ys[i]!)) {
+      return false;
     }
   }
 
   return true;
 }
 
-export function shallowEqual<T extends {}>(
+export function shallowEqual<T extends object>(
   xs: T,
   ys: T,
   equals: <K extends keyof T>(x: T[K], y: T[K]) => boolean = is,
 ): boolean {
-  if (xs !== ys) {
-    const ks1 = Object.keys(xs);
-    const ks2 = Object.keys(ys);
+  const ks = Object.keys(xs);
 
-    if (ks1.length !== ks2.length) {
+  if (ks.length !== Object.keys(ys).length) {
+    return false;
+  }
+
+  for (let i = 0, l = ks.length; i < l; i++) {
+    const k = ks[i] as keyof T;
+    if (!Object.hasOwn(ys, k) || !equals(xs[k]!, ys[k]!)) {
       return false;
-    }
-
-    for (let i = 0, l = ks1.length; i < l; i++) {
-      const k = ks1[i] as keyof T;
-      if (!Object.hasOwn(ys, k) || !equals(xs[k]!, ys[k]!)) {
-        return false;
-      }
     }
   }
 
