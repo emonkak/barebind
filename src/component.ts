@@ -484,7 +484,7 @@ class UpdateComponent implements Transaction {
       return noop;
     }
     const subScope = enterScope(this._node.state.scope, this._node.type);
-    const newElement = this._node.state.controller.render(
+    const returnElement = this._node.state.controller.render(
       this._node,
       subScope,
       renderLanes,
@@ -492,10 +492,10 @@ class UpdateComponent implements Transaction {
     this._node.left = [
       reconciler.diff(
         this._node.right[0]!,
-        newElement,
-        subScope,
+        returnElement,
         0,
         this._node,
+        subScope,
       ),
     ];
     this._node.state.pendingLanes &= ~renderLanes;

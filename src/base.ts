@@ -115,17 +115,17 @@ export interface Part {
 export interface Reconciler {
   build(
     element: VElement,
-    scope: Scope,
     index: number,
     parent: RenderNode | null,
+    scope: Scope,
     part: Part,
   ): RenderNode;
   diff(
     oldNode: RenderNode,
     newElement: VElement,
-    scope: Scope,
     index: number,
     parent: RenderNode | null,
+    scope: Scope,
   ): RenderNode;
 }
 

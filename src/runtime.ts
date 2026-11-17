@@ -56,9 +56,9 @@ export class Runtime implements Dispatcher, Reconciler {
 
   build(
     element: VElement,
-    scope: Scope,
     index: number,
     parent: RenderNode | null,
+    scope: Scope,
     part: Part,
   ): RenderNode {
     if (element.type === Bind) {
@@ -88,9 +88,9 @@ export class Runtime implements Dispatcher, Reconciler {
       for (let i = 0, l = element.children.length; i < l; i++) {
         node.left[i] = this.build(
           element.children[i]!,
-          scope,
           i,
           node,
+          scope,
           part.splitPart(),
         );
       }
@@ -112,13 +112,12 @@ export class Runtime implements Dispatcher, Reconciler {
         },
       };
       const subScope = enterScope(scope, element.type);
-      node.left[0] = this.build(
-        node.state.controller.render(node, subScope, this._flushLanes),
-        subScope,
-        0,
+      const returnElement = node.state.controller.render(
         node,
-        part,
+        subScope,
+        this._flushLanes,
       );
+      node.left[0] = this.build(returnElement, 0, node, subScope, part);
       return node;
     } else {
       const block = Array.isArray(element.type)
@@ -138,9 +137,9 @@ export class Runtime implements Dispatcher, Reconciler {
       for (let i = 0, l = element.children.length; i < l; i++) {
         node.left[i] = this.build(
           element.children[i]!,
-          scope,
           i,
           node,
+          scope,
           block.parts[i]!,
         );
       }
@@ -151,12 +150,12 @@ export class Runtime implements Dispatcher, Reconciler {
   diff(
     oldNode: RenderNode,
     newElement: VElement,
-    scope: Scope,
     index: number,
     parent: RenderNode | null,
+    scope: Scope,
   ): RenderNode {
     if (oldNode.type !== newElement.type || !is(oldNode.key, newElement.key)) {
-      return this.build(newElement, scope, index, parent, oldNode.part);
+      return this.build(newElement, index, parent, scope, oldNode.part);
     }
     if (oldNode.props === newElement.props) {
       return oldNode;
@@ -212,12 +211,17 @@ export class Runtime implements Dispatcher, Reconciler {
         state: (oldNode as RenderNode.ComponentNode).state,
       };
       const subScope = enterScope(scope, newElement.type);
+      const returnElement = newNode.state.controller.render(
+        newNode,
+        subScope,
+        this._flushLanes,
+      );
       newNode.left[0] = this.diff(
         newNode.right[0]!,
-        newNode.state.controller.render(newNode, subScope, this._flushLanes),
-        subScope,
+        returnElement,
         0,
         newNode,
+        subScope,
       );
       newNode.state.scope = scope;
       newNode.state.pendingLanes &= ~this._flushLanes;
@@ -238,9 +242,9 @@ export class Runtime implements Dispatcher, Reconciler {
         newNode.left[i] = this.diff(
           newNode.right[i]!,
           newElement.children[i]!,
-          scope,
           i,
           newNode,
+          scope,
         );
       }
       return newNode;
@@ -346,9 +350,9 @@ export class Runtime implements Dispatcher, Reconciler {
         while (newHead <= newTail) {
           const newChild = this.build(
             newElements[newHead]!,
-            scope,
             newHead,
             newParent,
+            scope,
             newParent.part.splitPart(),
           );
           newMutations.push({
@@ -370,9 +374,9 @@ export class Runtime implements Dispatcher, Reconciler {
         const newChild = this.diff(
           oldChild,
           newElements[newHead]!,
-          scope,
           newHead,
           newParent,
+          scope,
         );
         newMutations.push({
           type: MutationType.UPDATE,
@@ -388,9 +392,9 @@ export class Runtime implements Dispatcher, Reconciler {
         const newChild = this.diff(
           oldChild,
           newElements[newTail]!,
-          scope,
           newTail,
           newParent,
+          scope,
         );
         newMutations.push({
           type: MutationType.UPDATE,
@@ -408,16 +412,16 @@ export class Runtime implements Dispatcher, Reconciler {
         const tailChild = this.diff(
           oldChildren[oldTail]!,
           newElements[newHead]!,
-          scope,
           newHead,
           newParent,
+          scope,
         );
         const headChild = this.diff(
           oldChildren[oldHead]!,
           newElements[newTail]!,
-          scope,
           newTail,
           newParent,
+          scope,
         );
         newMutations.push({
           type: MutationType.UPDATE_AND_MOVE,
@@ -469,9 +473,9 @@ export class Runtime implements Dispatcher, Reconciler {
             const newChild = this.diff(
               oldChildren[oldIndex]!,
               newElements[newTail]!,
-              scope,
               newTail,
               newParent,
+              scope,
             );
             newMutations.push({
               type: MutationType.UPDATE_AND_MOVE,
@@ -485,9 +489,9 @@ export class Runtime implements Dispatcher, Reconciler {
           } else {
             const newChild = this.build(
               newElements[newTail]!,
-              scope,
               newTail,
               newParent,
+              scope,
               newParent.part.splitPart(),
             );
             newMutations.push({
