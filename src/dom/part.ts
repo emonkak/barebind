@@ -1,5 +1,5 @@
 import type { Block, HostContainer, Part } from '../base.js';
-import { hasOwn, is, isObject, sequentialEqual } from '../compare.js';
+import { hasOwn, is, isObject, keys, sequentialEqual } from '../compare.js';
 import { generateNodeFrame } from './debug.js';
 import { DOMAdapterError } from './error.js';
 
@@ -382,13 +382,13 @@ function updateClass(
   oldTokens: ClassMap,
   newTokens: ClassMap,
 ): void {
-  for (const component of Object.keys(oldTokens)) {
+  for (const component of keys(oldTokens)) {
     if (!hasOwn(newTokens, component)) {
       toggleClass(classList, component, false);
     }
   }
 
-  for (const component of Object.keys(newTokens)) {
+  for (const component of keys(newTokens)) {
     toggleClass(classList, component, newTokens[component]!);
   }
 }
@@ -398,7 +398,7 @@ function updateStyle(
   oldProps: StyleMap,
   newProps: StyleMap,
 ): void {
-  for (const key of Object.keys(oldProps)) {
+  for (const key of keys(oldProps)) {
     if (
       oldProps[key] != null &&
       (!hasOwn(newProps, key) || newProps[key] == null)
@@ -408,7 +408,7 @@ function updateStyle(
     }
   }
 
-  for (const key of Object.keys(newProps)) {
+  for (const key of keys(newProps)) {
     const value = newProps[key];
     if (value != null) {
       const name = toCSSPropertyName(key);

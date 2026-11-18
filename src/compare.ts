@@ -1,5 +1,6 @@
 export const hasOwn = Object.hasOwn;
 export const is = Object.is;
+export const keys = Object.keys;
 
 export function areDependenciesChanged(
   oldDeps: readonly unknown[] | null | undefined,
@@ -37,9 +38,9 @@ export function shallowEqual<T extends object>(
   ys: T,
   equals: <K extends keyof T>(x: T[K], y: T[K]) => boolean = is,
 ): boolean {
-  const ks = Object.keys(xs);
+  const ks = keys(xs);
 
-  if (ks.length !== Object.keys(ys).length) {
+  if (ks.length !== keys(ys).length) {
     return false;
   }
 
