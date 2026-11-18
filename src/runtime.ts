@@ -563,11 +563,7 @@ export class Runtime implements Dispatcher, Reconciler {
         if (commitBatch.length > 0) {
           if (this._flushLanes & UserHandlerLane) {
             for (const { commit, handler } of commitBatch) {
-              if (handler !== null) {
-                await handler(commit);
-              } else {
-                commit();
-              }
+              await handler!(commit);
             }
           } else {
             const callback = () => {
