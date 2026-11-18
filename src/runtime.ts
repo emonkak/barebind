@@ -157,9 +157,19 @@ export class Runtime implements Dispatcher, Reconciler {
     if (oldNode.type !== newElement.type || !is(oldNode.key, newElement.key)) {
       return this.build(newElement, index, parent, scope, oldNode.part);
     }
-    if (!dirty && oldNode.props === newElement.props) {
+
+    if (
+      !dirty &&
+      (typeof newElement.type === 'function'
+        ? (oldNode as RenderNode.ComponentNode).type.arePropsEqual(
+            oldNode.props,
+            newElement.props,
+          )
+        : oldNode.props === newElement.props)
+    ) {
       return oldNode;
     }
+
     if (newElement.type === Bind) {
       return {
         type: newElement.type,
@@ -192,15 +202,6 @@ export class Runtime implements Dispatcher, Reconciler {
       );
       return newNode;
     } else if (typeof newElement.type === 'function') {
-      if (
-        !dirty &&
-        (oldNode as RenderNode.ComponentNode).type.arePropsEqual(
-          oldNode.props,
-          newElement.props,
-        )
-      ) {
-        return oldNode;
-      }
       const newNode: RenderNode.ComponentNode = {
         type: newElement.type,
         props: newElement.props,
