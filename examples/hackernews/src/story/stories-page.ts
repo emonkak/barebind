@@ -24,8 +24,8 @@ export const StoriesPage = createComponent(function StoriesPage({
   }, [type, page]);
 
   return html`
-      <div class="story-view">
-        <div class="story-list-nav">
+    <div class="story-view">
+      <div class="story-list-nav">
         <${
           !storyState.isLoading && page > 1
             ? html`
