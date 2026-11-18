@@ -522,18 +522,18 @@ export class Runtime implements Dispatcher, Reconciler {
 
   private async _flush(): Promise<void> {
     while (true) {
-      // Only updates of equal or higher priority are batched. The queue is
-      // lane-ordered, so a lower-priority update breaks the batch.
+      // Batch updates that are already staged and of equal or higher priority.
       while (true) {
         const update = this._updateQueue.peek();
         if (
           update === undefined ||
-          ((update.lanes & this._stagedLanes) !== update.lanes &&
+          (update.lanes & this._stagedLanes) !== update.lanes ||
+          (this._flushLanes !== NoLanes &&
             getHighestPriorityLane(this._flushLanes) <
               getHighestPriorityLane(update.lanes))
         ) {
-          // The update is not staged yet and lower-priority than the batch;
-          // defer it so it commits as its own batch.
+          // The update is not yet staged, or is lower-priority than the current
+          // batch; defer it so it commits as its own batch.
           break;
         }
         this._flushLanes |= update.lanes;
