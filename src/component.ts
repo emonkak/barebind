@@ -484,11 +484,10 @@ class UpdateComponent implements Transaction {
     if (this._node.index < 0) {
       return noop;
     }
-    const oldScope = this._scope;
-    const newScope = cloneScope(oldScope);
+    const scope = cloneScope(this._scope);
     const result = this._node.state.controller.render(
       this._node,
-      newScope,
+      scope,
       renderLanes,
     );
     this._node.left = [
@@ -497,7 +496,7 @@ class UpdateComponent implements Transaction {
         result.element,
         0,
         this._node,
-        newScope,
+        scope,
         result.dirty,
       ),
     ];
