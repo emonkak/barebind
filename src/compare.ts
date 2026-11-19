@@ -1,6 +1,4 @@
-export const hasOwn = Object.hasOwn;
-export const is = Object.is;
-export const keys = Object.keys;
+export const { hasOwn, is, keys } = Object;
 
 export function areDependenciesChanged(
   oldDeps: readonly unknown[] | null | undefined,
