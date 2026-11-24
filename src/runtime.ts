@@ -162,7 +162,7 @@ export class Runtime implements Dispatcher, Reconciler {
         ? ((oldNode as RenderNode.ComponentNode).state.pendingLanes &
             this._renderLanes) ===
             NoLanes &&
-          (oldNode as RenderNode.ComponentNode).type.arePropsEqual(
+          !(oldNode as RenderNode.ComponentNode).state.renderer.shouldRender(
             oldNode.props,
             newElement.props,
           )

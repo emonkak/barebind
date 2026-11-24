@@ -377,11 +377,10 @@ export function createComponent<TProps = {}, TReturn = unknown>(
     return new VNode(Component, props, []);
   }
 
-  Component.arePropsEqual = arePropsEqual;
   Component.createRenderer = (
     dispatcher: Dispatcher,
   ): ComponentRenderer<TProps> =>
-    new StatefulComponentRenderer(dispatcher, componentFn);
+    new StatefulComponentRenderer(dispatcher, componentFn, arePropsEqual);
 
   DEBUG: {
     Object.defineProperty(Component, 'name', {
@@ -398,14 +397,20 @@ class StatefulComponentRenderer<TProps = any, TReturn = unknown>
   /** @internal */
   readonly _dispatcher: Dispatcher;
   private readonly _componentFn: StatefulComponentFunction<TProps, TReturn>;
+  private readonly _arePropsEqual: (
+    oldProps: TProps,
+    newProps: TProps,
+  ) => boolean;
   private _context: RenderContext | null = null;
 
   constructor(
     dispatcher: Dispatcher,
     componentFn: StatefulComponentFunction<TProps, TReturn>,
+    arePropsEqual: (oldProps: TProps, newProps: TProps) => boolean,
   ) {
     this._dispatcher = dispatcher;
     this._componentFn = componentFn;
+    this._arePropsEqual = arePropsEqual;
   }
 
   afterCommit(): void {
@@ -457,6 +462,11 @@ class StatefulComponentRenderer<TProps = any, TReturn = unknown>
         },
       );
     }
+  }
+
+  shouldRender(oldProps: TProps, newProps: TProps): boolean {
+    const arePropsEqual = this._arePropsEqual;
+    return !arePropsEqual(oldProps, newProps);
   }
 }
 
