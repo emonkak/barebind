@@ -34,16 +34,21 @@ import { PriorityQueue } from './queue.js';
 
 export class Runtime implements Dispatcher, Reconciler {
   /** @internal */
+  readonly _adapter: HostAdapter;
+  /** @internal */
+  readonly _middlewares: Middleware[] = [];
+  /** @internal */
   readonly _updateQueue: PriorityQueue<Update> = new PriorityQueue(
     compareUpdates,
   );
   /** @internal */
   _updateBatch: Update[] = [];
-  private readonly _adapter: HostAdapter;
-  private readonly _middlewares: Middleware[] = [];
-  private _pendingLanes: number = NoLanes;
-  private _stagedLanes: number = NoLanes;
-  private _renderLanes: number = NoLanes;
+  /** @internal */
+  _pendingLanes: number = NoLanes;
+  /** @internal */
+  _stagedLanes: number = NoLanes;
+  /** @internal */
+  _renderLanes: number = NoLanes;
   private _identifierCount: number = 0;
   private _transitionCount: number = 0;
   private _updateCount: number = 0;
@@ -190,7 +195,8 @@ export class Runtime implements Dispatcher, Reconciler {
         part: oldNode.part,
         state: (oldNode as RenderNode.FragmentNode).state,
       };
-      newNode.state.mutations = this._diffChildren(
+      newNode.state.mutations = diffChildren(
+        this,
         newNode,
         newElement.children,
         scope,
@@ -287,7 +293,7 @@ export class Runtime implements Dispatcher, Reconciler {
           this._pendingLanes &= ~lanes;
           this._stagedLanes |= lanes;
           if (shouldFlush) {
-            this._flush();
+            flush(this);
           }
         };
         this._pendingLanes |= lanes;
@@ -318,286 +324,6 @@ export class Runtime implements Dispatcher, Reconciler {
         this._middlewares.splice(index, 1);
       }
     };
-  }
-
-  private _diffChildren(
-    newParent: RenderNode,
-    newElements: VElement[],
-    scope: Scope,
-    dirty: boolean,
-  ): Mutation[] {
-    const oldChildren: (RenderNode | undefined)[] = newParent.right.slice();
-    const newChildren = newParent.left;
-    const oldKeys = oldChildren.map((child) => child!.key);
-    const newKeys = newElements.map((element) => element.key);
-    const newMutations: Mutation[] = [];
-
-    let oldHead = 0;
-    let newHead = 0;
-    let oldTail = oldKeys.length - 1;
-    let newTail = newKeys.length - 1;
-    let oldKeyToIndexMap: Map<unknown, number> | undefined;
-    let newKeyToIndexMap: Map<unknown, number> | undefined;
-
-    while (true) {
-      if (newHead > newTail) {
-        while (oldHead <= oldTail) {
-          const oldChild = oldChildren[oldHead];
-          if (oldChild !== undefined) {
-            newMutations.push({
-              type: MutationType.REMOVE,
-              node: oldChild,
-            });
-          }
-          oldHead++;
-        }
-        break;
-      }
-      if (oldHead > oldTail) {
-        while (newHead <= newTail) {
-          const newChild = this.build(
-            newElements[newHead]!,
-            newHead,
-            newParent,
-            scope,
-            newParent.part.splitPart(),
-          );
-          newMutations.push({
-            type: MutationType.INSERT,
-            node: newChild,
-            afterNode: newChildren[newTail + 1],
-          });
-          newChildren[newHead] = newChild;
-          newHead++;
-        }
-        break;
-      }
-      if (oldChildren[oldHead] === undefined) {
-        oldHead++;
-      } else if (oldChildren[oldTail] === undefined) {
-        oldTail--;
-      } else if (is(oldKeys[oldHead]!, newKeys[newHead]!)) {
-        const oldChild = oldChildren[oldHead]!;
-        const newChild = this.diff(
-          oldChild,
-          newElements[newHead]!,
-          newHead,
-          newParent,
-          scope,
-          dirty,
-        );
-        newMutations.push({
-          type: MutationType.UPDATE,
-          oldNode: oldChild,
-          newNode: newChild,
-          index: newHead,
-        });
-        newChildren[newHead] = newChild;
-        oldHead++;
-        newHead++;
-      } else if (is(oldKeys[oldTail]!, newKeys[newTail]!)) {
-        const oldChild = oldChildren[oldTail]!;
-        const newChild = this.diff(
-          oldChild,
-          newElements[newTail]!,
-          newTail,
-          newParent,
-          scope,
-          dirty,
-        );
-        newMutations.push({
-          type: MutationType.UPDATE,
-          oldNode: oldChild,
-          newNode: newChild,
-          index: newTail,
-        });
-        newChildren[newTail] = newChild;
-        oldTail--;
-        newTail--;
-      } else if (
-        is(oldKeys[oldHead]!, newKeys[newTail]!) &&
-        is(oldKeys[oldTail]!, newKeys[newHead]!)
-      ) {
-        const tailChild = this.diff(
-          oldChildren[oldTail]!,
-          newElements[newHead]!,
-          newHead,
-          newParent,
-          scope,
-          dirty,
-        );
-        const headChild = this.diff(
-          oldChildren[oldHead]!,
-          newElements[newTail]!,
-          newTail,
-          newParent,
-          scope,
-          dirty,
-        );
-        newMutations.push({
-          type: MutationType.UPDATE_AND_MOVE,
-          oldNode: oldChildren[oldTail]!,
-          newNode: tailChild,
-          afterNode: oldChildren[oldHead],
-          index: newHead,
-        });
-        newMutations.push({
-          type: MutationType.UPDATE_AND_MOVE,
-          oldNode: oldChildren[oldHead]!,
-          newNode: headChild,
-          afterNode: newChildren[newTail + 1],
-          index: newTail,
-        });
-        newChildren[newHead] = tailChild;
-        newChildren[newTail] = headChild;
-        oldHead++;
-        newHead++;
-        oldTail--;
-        newTail--;
-      } else {
-        newKeyToIndexMap ??= buildKeyToIndexMap(newKeys, newHead, newTail);
-
-        if (!newKeyToIndexMap.has(oldKeys[oldHead]!)) {
-          const oldChild = oldChildren[oldHead]!;
-          newMutations.push({
-            type: MutationType.REMOVE,
-            node: oldChild,
-          });
-          oldHead++;
-        } else if (!newKeyToIndexMap.has(oldKeys[oldTail]!)) {
-          const oldChild = oldChildren[oldTail]!;
-          newMutations.push({
-            type: MutationType.REMOVE,
-            node: oldChild,
-          });
-          oldTail--;
-        } else {
-          oldKeyToIndexMap ??= buildKeyToIndexMap(oldKeys, oldHead, oldTail);
-          const oldIndex = oldKeyToIndexMap.get(newKeys[newTail]!);
-
-          if (
-            oldIndex !== undefined &&
-            oldIndex >= oldHead &&
-            oldIndex <= oldTail &&
-            oldChildren[oldIndex] !== undefined
-          ) {
-            const newChild = this.diff(
-              oldChildren[oldIndex]!,
-              newElements[newTail]!,
-              newTail,
-              newParent,
-              scope,
-              dirty,
-            );
-            newMutations.push({
-              type: MutationType.UPDATE_AND_MOVE,
-              oldNode: oldChildren[oldIndex]!,
-              newNode: newChild,
-              afterNode: newChildren[newTail + 1],
-              index: newTail,
-            });
-            newChildren[newTail] = newChild;
-            oldChildren[oldIndex] = undefined;
-          } else {
-            const newChild = this.build(
-              newElements[newTail]!,
-              newTail,
-              newParent,
-              scope,
-              newParent.part.splitPart(),
-            );
-            newMutations.push({
-              type: MutationType.INSERT,
-              node: newChild,
-              afterNode: newChildren[newTail + 1],
-            });
-            newChildren[newTail] = newChild;
-          }
-
-          newTail--;
-        }
-      }
-    }
-
-    return newMutations;
-  }
-
-  private async _flush(): Promise<void> {
-    while (true) {
-      // Batch updates that are already staged and of equal or higher priority.
-      while (true) {
-        const update = this._updateQueue.peek();
-        if (
-          update === undefined ||
-          (update.lanes & this._stagedLanes) !== update.lanes ||
-          (this._renderLanes !== NoLanes &&
-            getHighestPriorityLane(this._renderLanes) <
-              getHighestPriorityLane(update.lanes))
-        ) {
-          // The update is not yet staged, or is lower-priority than the current
-          // batch; defer it so it commits as its own batch.
-          break;
-        }
-        this._renderLanes |= update.lanes;
-        this._updateBatch.push(this._updateQueue.dequeue()!);
-      }
-
-      if (this._renderLanes === NoLanes) {
-        break;
-      }
-
-      try {
-        const commitBatch: { commit: Commit; handler: CommitHandler | null }[] =
-          [];
-        const renderLanes = this._renderLanes;
-
-        try {
-          for (const update of this._updateBatch) {
-            const { handler, lanes, transaction } = update;
-            if (transaction.pendingLanes & lanes) {
-              const commit = runPipeline(
-                update,
-                this,
-                this._middlewares,
-                renderLanes,
-              );
-              commitBatch.push({ commit, handler });
-            }
-          }
-        } finally {
-          this._renderLanes = NoLanes;
-        }
-
-        if (commitBatch.length > 0) {
-          const callback = async () => {
-            for (const { commit, handler } of commitBatch) {
-              if (handler !== null) {
-                await handler(commit);
-              } else {
-                commit();
-              }
-            }
-          };
-          if (renderLanes & (SyncLane | UserHandlerLane)) {
-            await callback();
-          } else {
-            await this._adapter.requestCommit(callback);
-          }
-        }
-
-        for (const { controller } of this._updateBatch) {
-          controller.resolve();
-        }
-      } catch (error) {
-        for (const { controller } of this._updateBatch) {
-          controller.reject(error);
-        }
-      } finally {
-        this._updateBatch = [];
-      }
-    }
-
-    this._stagedLanes = NoLanes;
   }
 }
 
@@ -631,6 +357,287 @@ function compareUpdates(update1: Update, update2: Update): number {
   const level1 = update1.transaction.scope.level;
   const level2 = update2.transaction.scope.level;
   return level1 - level2;
+}
+
+function diffChildren(
+  runtime: Runtime,
+  newParent: RenderNode,
+  newElements: VElement[],
+  scope: Scope,
+  dirty: boolean,
+): Mutation[] {
+  const oldChildren: (RenderNode | undefined)[] = newParent.right.slice();
+  const newChildren = newParent.left;
+  const oldKeys = oldChildren.map((child) => child!.key);
+  const newKeys = newElements.map((element) => element.key);
+  const newMutations: Mutation[] = [];
+
+  let oldHead = 0;
+  let newHead = 0;
+  let oldTail = oldKeys.length - 1;
+  let newTail = newKeys.length - 1;
+  let oldKeyToIndexMap: Map<unknown, number> | undefined;
+  let newKeyToIndexMap: Map<unknown, number> | undefined;
+
+  while (true) {
+    if (newHead > newTail) {
+      while (oldHead <= oldTail) {
+        const oldChild = oldChildren[oldHead];
+        if (oldChild !== undefined) {
+          newMutations.push({
+            type: MutationType.REMOVE,
+            node: oldChild,
+          });
+        }
+        oldHead++;
+      }
+      break;
+    }
+    if (oldHead > oldTail) {
+      while (newHead <= newTail) {
+        const newChild = runtime.build(
+          newElements[newHead]!,
+          newHead,
+          newParent,
+          scope,
+          newParent.part.splitPart(),
+        );
+        newMutations.push({
+          type: MutationType.INSERT,
+          node: newChild,
+          afterNode: newChildren[newTail + 1],
+        });
+        newChildren[newHead] = newChild;
+        newHead++;
+      }
+      break;
+    }
+    if (oldChildren[oldHead] === undefined) {
+      oldHead++;
+    } else if (oldChildren[oldTail] === undefined) {
+      oldTail--;
+    } else if (is(oldKeys[oldHead]!, newKeys[newHead]!)) {
+      const oldChild = oldChildren[oldHead]!;
+      const newChild = runtime.diff(
+        oldChild,
+        newElements[newHead]!,
+        newHead,
+        newParent,
+        scope,
+        dirty,
+      );
+      newMutations.push({
+        type: MutationType.UPDATE,
+        oldNode: oldChild,
+        newNode: newChild,
+        index: newHead,
+      });
+      newChildren[newHead] = newChild;
+      oldHead++;
+      newHead++;
+    } else if (is(oldKeys[oldTail]!, newKeys[newTail]!)) {
+      const oldChild = oldChildren[oldTail]!;
+      const newChild = runtime.diff(
+        oldChild,
+        newElements[newTail]!,
+        newTail,
+        newParent,
+        scope,
+        dirty,
+      );
+      newMutations.push({
+        type: MutationType.UPDATE,
+        oldNode: oldChild,
+        newNode: newChild,
+        index: newTail,
+      });
+      newChildren[newTail] = newChild;
+      oldTail--;
+      newTail--;
+    } else if (
+      is(oldKeys[oldHead]!, newKeys[newTail]!) &&
+      is(oldKeys[oldTail]!, newKeys[newHead]!)
+    ) {
+      const tailChild = runtime.diff(
+        oldChildren[oldTail]!,
+        newElements[newHead]!,
+        newHead,
+        newParent,
+        scope,
+        dirty,
+      );
+      const headChild = runtime.diff(
+        oldChildren[oldHead]!,
+        newElements[newTail]!,
+        newTail,
+        newParent,
+        scope,
+        dirty,
+      );
+      newMutations.push({
+        type: MutationType.UPDATE_AND_MOVE,
+        oldNode: oldChildren[oldTail]!,
+        newNode: tailChild,
+        afterNode: oldChildren[oldHead],
+        index: newHead,
+      });
+      newMutations.push({
+        type: MutationType.UPDATE_AND_MOVE,
+        oldNode: oldChildren[oldHead]!,
+        newNode: headChild,
+        afterNode: newChildren[newTail + 1],
+        index: newTail,
+      });
+      newChildren[newHead] = tailChild;
+      newChildren[newTail] = headChild;
+      oldHead++;
+      newHead++;
+      oldTail--;
+      newTail--;
+    } else {
+      newKeyToIndexMap ??= buildKeyToIndexMap(newKeys, newHead, newTail);
+
+      if (!newKeyToIndexMap.has(oldKeys[oldHead]!)) {
+        const oldChild = oldChildren[oldHead]!;
+        newMutations.push({
+          type: MutationType.REMOVE,
+          node: oldChild,
+        });
+        oldHead++;
+      } else if (!newKeyToIndexMap.has(oldKeys[oldTail]!)) {
+        const oldChild = oldChildren[oldTail]!;
+        newMutations.push({
+          type: MutationType.REMOVE,
+          node: oldChild,
+        });
+        oldTail--;
+      } else {
+        oldKeyToIndexMap ??= buildKeyToIndexMap(oldKeys, oldHead, oldTail);
+        const oldIndex = oldKeyToIndexMap.get(newKeys[newTail]!);
+
+        if (
+          oldIndex !== undefined &&
+          oldIndex >= oldHead &&
+          oldIndex <= oldTail &&
+          oldChildren[oldIndex] !== undefined
+        ) {
+          const newChild = runtime.diff(
+            oldChildren[oldIndex]!,
+            newElements[newTail]!,
+            newTail,
+            newParent,
+            scope,
+            dirty,
+          );
+          newMutations.push({
+            type: MutationType.UPDATE_AND_MOVE,
+            oldNode: oldChildren[oldIndex]!,
+            newNode: newChild,
+            afterNode: newChildren[newTail + 1],
+            index: newTail,
+          });
+          newChildren[newTail] = newChild;
+          oldChildren[oldIndex] = undefined;
+        } else {
+          const newChild = runtime.build(
+            newElements[newTail]!,
+            newTail,
+            newParent,
+            scope,
+            newParent.part.splitPart(),
+          );
+          newMutations.push({
+            type: MutationType.INSERT,
+            node: newChild,
+            afterNode: newChildren[newTail + 1],
+          });
+          newChildren[newTail] = newChild;
+        }
+
+        newTail--;
+      }
+    }
+  }
+
+  return newMutations;
+}
+
+async function flush(runtime: Runtime): Promise<void> {
+  while (true) {
+    // Batch updates that are already staged and of equal or higher priority.
+    while (true) {
+      const update = runtime._updateQueue.peek();
+      if (
+        update === undefined ||
+        (update.lanes & runtime._stagedLanes) !== update.lanes ||
+        (runtime._renderLanes !== NoLanes &&
+          getHighestPriorityLane(runtime._renderLanes) <
+            getHighestPriorityLane(update.lanes))
+      ) {
+        // The update is not yet staged, or is lower-priority than the current
+        // batch; defer it so it commits as its own batch.
+        break;
+      }
+      runtime._renderLanes |= update.lanes;
+      runtime._updateBatch.push(runtime._updateQueue.dequeue()!);
+    }
+
+    if (runtime._renderLanes === NoLanes) {
+      break;
+    }
+
+    try {
+      const commitBatch: { commit: Commit; handler: CommitHandler | null }[] =
+        [];
+      const renderLanes = runtime._renderLanes;
+
+      try {
+        for (const update of runtime._updateBatch) {
+          const { handler, lanes, transaction } = update;
+          if (transaction.pendingLanes & lanes) {
+            const commit = runPipeline(
+              update,
+              runtime,
+              runtime._middlewares,
+              renderLanes,
+            );
+            commitBatch.push({ commit, handler });
+          }
+        }
+      } finally {
+        runtime._renderLanes = NoLanes;
+      }
+
+      if (commitBatch.length > 0) {
+        const callback = async () => {
+          for (const { commit, handler } of commitBatch) {
+            if (handler !== null) {
+              await handler(commit);
+            } else {
+              commit();
+            }
+          }
+        };
+        if (renderLanes & (SyncLane | UserHandlerLane)) {
+          await callback();
+        } else {
+          await runtime._adapter.requestCommit(callback);
+        }
+      }
+
+      for (const { controller } of runtime._updateBatch) {
+        controller.resolve();
+      }
+    } catch (error) {
+      for (const { controller } of runtime._updateBatch) {
+        controller.reject(error);
+      }
+    } finally {
+      runtime._updateBatch = [];
+    }
+  }
+
+  runtime._stagedLanes = NoLanes;
 }
 
 function runPipeline(

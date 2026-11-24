@@ -1,6 +1,8 @@
 export class PriorityQueue<T> {
-  private readonly _heap: T[] = [];
-  private readonly _compare: (x: T, y: T) => number;
+  /** @internal */
+  readonly _heap: T[] = [];
+  /** @internal */
+  readonly _compare: (x: T, y: T) => number;
 
   constructor(compare: (x: T, y: T) => number) {
     this._compare = compare;
@@ -16,7 +18,7 @@ export class PriorityQueue<T> {
 
     if (this._heap.length > 0) {
       this._heap[0] = last;
-      this._shiftDown(0);
+      shiftDown(this, 0);
     }
 
     return first;
@@ -24,54 +26,54 @@ export class PriorityQueue<T> {
 
   enqueue(value: T): void {
     this._heap.push(value);
-    this._shiftUp(this._heap.length - 1);
+    shiftUp(this, this._heap.length - 1);
   }
 
   peek(): T | undefined {
     return this._heap[0];
   }
+}
 
-  private _shiftDown(index: number): void {
-    const length = this._heap.length;
-    const compare = this._compare;
+function shiftDown<T>(queue: PriorityQueue<T>, index: number): void {
+  const length = queue._heap.length;
+  const compare = queue._compare;
 
-    while (true) {
-      const left = (index << 1) + 1;
-      const right = left + 1;
-      let smallest = index;
+  while (true) {
+    const left = (index << 1) + 1;
+    const right = left + 1;
+    let smallest = index;
 
-      if (
-        left < length &&
-        compare(this._heap[left]!, this._heap[smallest]!) < 0
-      ) {
-        smallest = left;
-      }
-      if (
-        right < length &&
-        compare(this._heap[right]!, this._heap[smallest]!) < 0
-      ) {
-        smallest = right;
-      }
-
-      if (smallest === index) {
-        break;
-      }
-
-      swap(this._heap, index, smallest);
-      index = smallest;
+    if (
+      left < length &&
+      compare(queue._heap[left]!, queue._heap[smallest]!) < 0
+    ) {
+      smallest = left;
     }
+    if (
+      right < length &&
+      compare(queue._heap[right]!, queue._heap[smallest]!) < 0
+    ) {
+      smallest = right;
+    }
+
+    if (smallest === index) {
+      break;
+    }
+
+    swap(queue._heap, index, smallest);
+    index = smallest;
   }
+}
 
-  private _shiftUp(index: number): void {
-    const compare = this._compare;
-    while (index > 0) {
-      const parent = (index - 1) >> 1;
-      if (compare(this._heap[index]!, this._heap[parent]!) >= 0) {
-        break;
-      }
-      swap(this._heap, index, parent);
-      index = parent;
+function shiftUp<T>(queue: PriorityQueue<T>, index: number): void {
+  const compare = queue._compare;
+  while (index > 0) {
+    const parent = (index - 1) >> 1;
+    if (compare(queue._heap[index]!, queue._heap[parent]!) >= 0) {
+      break;
     }
+    swap(queue._heap, index, parent);
+    index = parent;
   }
 }
 
