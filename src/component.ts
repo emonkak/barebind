@@ -21,7 +21,7 @@ import { areDependenciesChanged, is } from './compare.js';
 import { RenderError } from './error.js';
 import { NoLanes } from './lane.js';
 import { areScopesDirty, cloneScope } from './scope.js';
-import { Ref, wrap } from './velement.js';
+import { Ref, wrap } from './vnode.js';
 
 const enum HookType {
   FINALIZER = 0,

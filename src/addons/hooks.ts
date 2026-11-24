@@ -4,7 +4,7 @@ import type {
   HookFunction,
   InitialState,
 } from '../component.js';
-import type { Ref } from '../velement.js';
+import type { Ref } from '../vnode.js';
 
 export interface DeferredValueOptions<T> extends DispatchOptions<T> {
   initialValue?: InitialState<T>;

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Bind, Fragment } from '@/base.js';
-import { html, math, Partial, svg, text } from '@/velement.js';
+import { html, math, Partial, svg, text } from '@/vnode.js';
 
 describe('html()', () => {
   it('creates a VTemplate with "html" mode', () => {

@@ -8,7 +8,7 @@ import type {
 import { mount, patch, unmount } from '../commit.js';
 import { AllLanes } from '../lane.js';
 import { createScope } from '../scope.js';
-import { wrap } from '../velement.js';
+import { wrap } from '../vnode.js';
 import { ContainerPart } from './part.js';
 
 export class DOMRoot {

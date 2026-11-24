@@ -39,4 +39,4 @@ export {
   Ref,
   svg,
   text,
-} from './velement.js';
+} from './vnode.js';
