@@ -273,31 +273,38 @@ export class Runtime implements Dispatcher, Reconciler {
     const id = this._updateCount++;
     const lanes =
       getRenderLanes(options) ||
+      this._renderLanes ||
       getLaneFromPriority(this._adapter.getTaskPriority());
     const controller = Promise.withResolvers<void>();
-
-    this._updateQueue.enqueue({
+    const update: Update = {
       id,
       lanes,
       handler: options.handler ?? null,
       controller,
       transaction,
-    });
+    };
 
-    if (((this._pendingLanes | this._stagedLanes) & lanes) !== lanes) {
-      const callback = () => {
-        this._pendingLanes &= ~lanes;
-        this._stagedLanes |= lanes;
-        if (this._renderLanes === NoLanes) {
-          this._flush();
+    if (this._renderLanes !== NoLanes) {
+      this._updateBatch.push(update);
+    } else {
+      this._updateQueue.enqueue(update);
+
+      if (((this._pendingLanes | this._stagedLanes) & lanes) !== lanes) {
+        const callback = () => {
+          const shouldFlush = this._stagedLanes === NoLanes;
+          this._pendingLanes &= ~lanes;
+          this._stagedLanes |= lanes;
+          if (shouldFlush) {
+            this._flush();
+          }
+        };
+        this._pendingLanes |= lanes;
+        if (lanes & SyncLane) {
+          queueMicrotask(callback);
+        } else {
+          const priority = options.priority ?? getPriorityFromLanes(lanes);
+          this._adapter.requestCallback(callback, { ...options, priority });
         }
-      };
-      this._pendingLanes |= lanes;
-      if (lanes & SyncLane) {
-        queueMicrotask(callback);
-      } else {
-        const priority = options.priority ?? getPriorityFromLanes(lanes);
-        this._adapter.requestCallback(callback, { ...options, priority });
       }
     }
 
@@ -550,18 +557,23 @@ export class Runtime implements Dispatcher, Reconciler {
       try {
         const commitBatch: { commit: Commit; handler: CommitHandler | null }[] =
           [];
+        const renderLanes = this._renderLanes;
 
-        for (const update of this._updateBatch) {
-          const { handler, lanes, transaction } = update;
-          if (transaction.pendingLanes & lanes) {
-            const commit = runPipeline(
-              update,
-              this,
-              this._middlewares,
-              this._renderLanes,
-            );
-            commitBatch.push({ commit, handler });
+        try {
+          for (const update of this._updateBatch) {
+            const { handler, lanes, transaction } = update;
+            if (transaction.pendingLanes & lanes) {
+              const commit = runPipeline(
+                update,
+                this,
+                this._middlewares,
+                renderLanes,
+              );
+              commitBatch.push({ commit, handler });
+            }
           }
+        } finally {
+          this._renderLanes = NoLanes;
         }
 
         if (commitBatch.length > 0) {
@@ -574,7 +586,7 @@ export class Runtime implements Dispatcher, Reconciler {
               }
             }
           };
-          if (this._renderLanes & (SyncLane | UserHandlerLane)) {
+          if (renderLanes & (SyncLane | UserHandlerLane)) {
             await callback();
           } else {
             await this._adapter.requestCommit(callback);
@@ -590,7 +602,6 @@ export class Runtime implements Dispatcher, Reconciler {
         }
       } finally {
         this._updateBatch = [];
-        this._renderLanes = NoLanes;
       }
     }
 

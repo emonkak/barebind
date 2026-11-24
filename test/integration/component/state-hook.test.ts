@@ -374,9 +374,6 @@ describe('State hook', () => {
     });
 
     await root.render(App({})).finished;
-    expect(container.innerHTML).toBe('<div>0</div>');
-
-    await step(runtime);
     expect(container.innerHTML).toBe('<div>100</div>');
   });
 
