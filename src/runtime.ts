@@ -107,11 +107,11 @@ export class Runtime implements Dispatcher, Reconciler {
         right: [],
         part,
         state: {
-          controller: element.type.createController(this),
+          renderer: element.type.createRenderer(this),
           pendingLanes: NoLanes,
         },
       };
-      const result = node.state.controller.render(
+      const result = node.state.renderer.render(
         node,
         subScope,
         this._renderLanes,
@@ -214,7 +214,7 @@ export class Runtime implements Dispatcher, Reconciler {
         state: (oldNode as RenderNode.ComponentNode).state,
       };
       const subScope = enterScope(scope, newElement.type);
-      const result = newNode.state.controller.render(
+      const result = newNode.state.renderer.render(
         newNode,
         subScope,
         this._renderLanes,

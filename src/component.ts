@@ -1,7 +1,7 @@
 import {
   type Commit,
   type Component,
-  type ComponentController,
+  type ComponentRenderer,
   type Dispatcher,
   type Injectable,
   type Injection,
@@ -121,8 +121,8 @@ namespace Hook {
 
 type Usable<TReturn> = HookObject<TReturn> | HookFunction<TReturn>;
 
-export class ClientComponentController<TProps = any, TReturn = unknown>
-  implements ComponentController<TProps>
+export class ClientComponentRenderer<TProps = any, TReturn = unknown>
+  implements ComponentRenderer<TProps>
 {
   /** @internal */
   readonly _dispatcher: Dispatcher;
@@ -211,8 +211,8 @@ export class RenderContext {
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    const controller = this._node.state.controller as ClientComponentController;
-    const handle = controller._dispatcher.schedule(
+    const renderer = this._node.state.renderer as ClientComponentRenderer;
+    const handle = renderer._dispatcher.schedule(
       new UpdateComponent(this._node, this._scope),
       options,
     );
@@ -244,8 +244,8 @@ export class RenderContext {
   }
 
   startTransition<T>(callback: (transition: number) => T): T {
-    const controller = this._node.state.controller as ClientComponentController;
-    return callback(controller._dispatcher.nextTransition());
+    const renderer = this._node.state.renderer as ClientComponentRenderer;
+    return callback(renderer._dispatcher.nextTransition());
   }
 
   use<TReturn>(usable: Usable<TReturn>): TReturn {
@@ -288,11 +288,10 @@ export class RenderContext {
     if (currentHook !== undefined) {
       ensureHookType(HookType.ID, currentHook);
     } else {
-      const controller = this._node.state
-        .controller as ClientComponentController;
+      const renderer = this._node.state.renderer as ClientComponentRenderer;
       currentHook = {
         type: HookType.ID,
-        id: controller._dispatcher.nextIdentifier(),
+        id: renderer._dispatcher.nextIdentifier(),
       };
       this._hooks.push(currentHook);
     }
@@ -449,10 +448,10 @@ export function createComponent<TProps = {}, TReturn = unknown>(
   }
 
   Component.arePropsEqual = arePropsEqual;
-  Component.createController = (
+  Component.createRenderer = (
     dispatcher: Dispatcher,
-  ): ComponentController<TProps> =>
-    new ClientComponentController(dispatcher, componentFn);
+  ): ComponentRenderer<TProps> =>
+    new ClientComponentRenderer(dispatcher, componentFn);
 
   DEBUG: {
     Object.defineProperty(Component, 'name', {
@@ -485,7 +484,7 @@ class UpdateComponent implements Transaction {
       return noop;
     }
     const scope = cloneScope(this._scope);
-    const result = this._node.state.controller.render(
+    const result = this._node.state.renderer.render(
       this._node,
       scope,
       renderLanes,
@@ -504,7 +503,7 @@ class UpdateComponent implements Transaction {
     return () => {
       if (this._node.index >= 0) {
         patch(this._node.right[0]!, this._node.left[0]!);
-        this._node.state.controller.afterCommit();
+        this._node.state.renderer.afterCommit();
         this._node.right = this._node.left;
       }
     };

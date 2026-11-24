@@ -30,10 +30,10 @@ export type CommitHandler = (commit: Commit) => Promise<void> | void;
 export interface Component<TProps> {
   (props: TProps): VComponent<TProps>;
   arePropsEqual(oldProps: TProps, newProps: TProps): boolean;
-  createController(dispatcher: Dispatcher): ComponentController<TProps>;
+  createRenderer(dispatcher: Dispatcher): ComponentRenderer<TProps>;
 }
 
-export interface ComponentController<TProps> {
+export interface ComponentRenderer<TProps> {
   afterCommit(): void;
   beforeRemove(): void;
   render(
@@ -174,7 +174,7 @@ export namespace RenderNode {
 
   export interface ComponentNode<TProps = unknown> extends Node<VComponent> {
     state: {
-      controller: ComponentController<TProps>;
+      renderer: ComponentRenderer<TProps>;
       pendingLanes: Lanes;
     };
   }
