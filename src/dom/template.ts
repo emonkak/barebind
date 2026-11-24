@@ -1,4 +1,4 @@
-import type { TemplateMode } from '../base.js';
+import type { TemplateMode } from '../abstractions.js';
 import { DOMBlock } from './block.js';
 import { DOMAdapterError } from './error.js';
 import {

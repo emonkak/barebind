@@ -1,4 +1,4 @@
-import { type Bindable, toElement, type VElement } from '../../base.js';
+import { type Bindable, toElement, type VElement } from '../../abstractions.js';
 import { is } from '../../compare.js';
 import {
   createComponent,

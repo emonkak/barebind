@@ -1,4 +1,4 @@
-import type { Scope } from './base.js';
+import type { Scope } from './abstractions.js';
 
 export function areScopesDirty(oldScope: Scope, newScope: Scope): boolean {
   let oldInjection = oldScope.injection;

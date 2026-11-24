@@ -1,4 +1,4 @@
-import type { Block, HostContainer } from '../base.js';
+import type { Block, HostContainer } from '../abstractions.js';
 import { DOMAdapterError } from './error.js';
 import type { DOMPart } from './part.js';
 

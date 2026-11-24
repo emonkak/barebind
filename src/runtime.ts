@@ -20,7 +20,7 @@ import {
   type VElement,
   type VPortal,
   type VTemplate,
-} from './base.js';
+} from './abstractions.js';
 import { is } from './compare.js';
 import {
   getHighestPriorityLane,

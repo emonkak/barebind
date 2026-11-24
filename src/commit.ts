@@ -1,4 +1,9 @@
-import { Bind, type HostNode, MutationType, type RenderNode } from './base.js';
+import {
+  Bind,
+  type HostNode,
+  MutationType,
+  type RenderNode,
+} from './abstractions.js';
 
 export function mount(node: RenderNode): void {
   mountChild(node, null);

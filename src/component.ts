@@ -15,7 +15,7 @@ import {
   type UpdateOptions,
   type VComponent,
   VNode,
-} from './base.js';
+} from './abstractions.js';
 import { patch } from './commit.js';
 import { areDependenciesChanged, is } from './compare.js';
 import { RenderError } from './error.js';

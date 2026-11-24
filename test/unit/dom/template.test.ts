@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { TemplateMode } from '@/base.js';
+import type { TemplateMode } from '@/abstractions.js';
 import { DOMTemplate } from '@/dom/template.js';
 
 const TEMPLATE_TOKEN = '__test__';

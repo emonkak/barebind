@@ -1,4 +1,4 @@
-import type { Block, HostContainer, Part } from '../base.js';
+import type { Block, HostContainer, Part } from '../abstractions.js';
 import { hasOwn, is, isObject, keys, sequentialEqual } from '../compare.js';
 import { generateNodeFrame } from './debug.js';
 import { DOMAdapterError } from './error.js';

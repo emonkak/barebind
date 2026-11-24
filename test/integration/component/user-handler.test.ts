@@ -7,7 +7,7 @@ import {
   step,
 } from 'barebind';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { CommitHandler } from '@/base.js';
+import type { CommitHandler } from '@/abstractions.js';
 
 describe('User handler', () => {
   let runtime: Runtime;

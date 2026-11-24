@@ -1,5 +1,5 @@
 import { test } from 'vitest';
-import type { TemplateMode } from '@/base.js';
+import type { TemplateMode } from '@/abstractions.js';
 import { DOMTemplate } from '@/dom/template.js';
 
 interface TemplateImpl {

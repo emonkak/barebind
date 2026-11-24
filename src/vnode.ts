@@ -11,7 +11,7 @@ import {
   VNode,
   type VPortal,
   type VTemplate,
-} from './base.js';
+} from './abstractions.js';
 import { sequentialEqual } from './compare.js';
 
 const INTERPOLATION_CACHE = new WeakMap<readonly string[], Interpolation[]>();

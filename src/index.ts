@@ -12,7 +12,7 @@ export {
   type VElement,
   type VPortal,
   type VTemplate,
-} from './base.js';
+} from './abstractions.js';
 export { sequentialEqual, shallowEqual } from './compare.js';
 export {
   createComponent,

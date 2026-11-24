@@ -4,7 +4,7 @@ import type {
   RenderNode,
   UpdateHandle,
   UpdateOptions,
-} from '../base.js';
+} from '../abstractions.js';
 import { mount, patch, unmount } from '../commit.js';
 import { AllLanes } from '../lane.js';
 import { createScope } from '../scope.js';

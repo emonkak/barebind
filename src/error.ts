@@ -1,4 +1,4 @@
-import type { Scope } from './base.js';
+import type { Scope } from './abstractions.js';
 import { captureOwnerStack, nameOf } from './debug.js';
 
 export class RenderError extends Error {
