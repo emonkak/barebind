@@ -35,7 +35,7 @@ export interface Component<TProps> {
 
 export interface ComponentRenderer<TProps> {
   afterCommit(): void;
-  beforeRemove(): void;
+  beforeUnmount(): void;
   render(
     node: RenderNode.ComponentNode<TProps>,
     scope: Scope,

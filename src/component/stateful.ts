@@ -418,7 +418,7 @@ class StatefulComponentRenderer<TProps = any, TReturn = unknown>
     }
   }
 
-  beforeRemove(): void {
+  beforeUnmount(): void {
     for (const hook of this._context!._hooks) {
       if (hook.type === HookType.EFFECT && hook.cleanup !== undefined) {
         hook.cleanup();

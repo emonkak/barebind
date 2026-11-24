@@ -180,7 +180,7 @@ function unmountChild(child: RenderNode, cascade: boolean = false): void {
     }
   } else {
     if (typeof child.type === 'function') {
-      child.state.renderer.beforeRemove();
+      child.state.renderer.beforeUnmount();
     }
     for (const grandchild of child.right) {
       unmountChild(grandchild, cascade);
