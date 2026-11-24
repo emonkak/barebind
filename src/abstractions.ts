@@ -150,7 +150,7 @@ export namespace RenderNode {
    * Invariant: left = work-in-progress, right = committed.
    * left === right means the node is already committed.
    */
-  interface Node<TElement extends VElement> {
+  interface Node<TElement extends VElement, TState> {
     type: TElement['type'];
     props: TElement['props'];
     key: TElement['key'];
@@ -159,31 +159,30 @@ export namespace RenderNode {
     left: RenderNode[]; // work-in-progress children
     right: RenderNode[]; // committed children
     part: Part;
-    state: unknown;
+    state: TState;
   }
 
-  export interface BindNode extends Node<VBind> {
-    state: null;
-  }
+  export interface BindNode extends Node<VBind, null> {}
 
-  export interface BlockNode extends Node<VPortal | VTemplate> {
-    state: {
-      block: Block;
-    };
-  }
+  export interface BlockNode
+    extends Node<VPortal | VTemplate, { block: Block }> {}
 
-  export interface ComponentNode<TProps = unknown> extends Node<VComponent> {
-    state: {
-      renderer: ComponentRenderer<TProps>;
-      pendingLanes: Lanes;
-    };
-  }
+  export interface ComponentNode<TProps = unknown>
+    extends Node<
+      VComponent,
+      {
+        renderer: ComponentRenderer<TProps>;
+        pendingLanes: Lanes;
+      }
+    > {}
 
-  export interface FragmentNode extends Node<VFragment> {
-    state: {
-      mutations: Mutation[];
-    };
-  }
+  export interface FragmentNode
+    extends Node<
+      VFragment,
+      {
+        mutations: Mutation[];
+      }
+    > {}
 }
 
 export interface RenderResult {
