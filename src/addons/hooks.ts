@@ -3,7 +3,7 @@ import type {
   DispatchOptions,
   HookFunction,
   InitialState,
-} from '../component.js';
+} from '../component/stateful.js';
 import type { Ref } from '../vnode.js';
 
 export interface DeferredValueOptions<T> extends DispatchOptions<T> {

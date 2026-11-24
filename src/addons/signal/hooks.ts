@@ -1,4 +1,4 @@
-import type { HookFunction } from '../../component.js';
+import type { HookFunction } from '../../component/stateful.js';
 import { Atom, Computed, type Signal, type UnwrapSignals } from './signal.js';
 
 export function LocalAtom<T>(initialValue: T): HookFunction<Atom<T>> {

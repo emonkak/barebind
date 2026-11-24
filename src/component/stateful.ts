@@ -1,27 +1,24 @@
 import {
-  type Commit,
   type Component,
   type ComponentRenderer,
   type Dispatcher,
   type Injectable,
   type Injection,
   type Lanes,
-  type Reconciler,
   type RenderNode,
   type RenderResult,
   type Scope,
-  type Transaction,
   type UpdateHandle,
   type UpdateOptions,
   type VComponent,
   VNode,
-} from './abstractions.js';
-import { patch } from './commit.js';
-import { areDependenciesChanged, is } from './compare.js';
-import { RenderError } from './error.js';
-import { NoLanes } from './lane.js';
-import { areScopesDirty, cloneScope } from './scope.js';
-import { Ref, wrap } from './vnode.js';
+} from '../abstractions.js';
+import { areDependenciesChanged, is } from '../compare.js';
+import { RenderError } from '../error.js';
+import { NoLanes } from '../lane.js';
+import { areScopesDirty } from '../scope.js';
+import { Ref, wrap } from '../vnode.js';
+import { UpdateComponent } from './transaction.js';
 
 const enum HookType {
   FINALIZER = 0,
@@ -30,11 +27,6 @@ const enum HookType {
   MEMO = 3,
   REDUCER = 4,
 }
-
-export type ComponentFunction<TProps, TReturn> = (
-  this: RenderContext,
-  props: TProps,
-) => TReturn;
 
 export interface ComponentOptions<TProps> {
   arePropsEqual?: (oldProps: TProps, newProps: TProps) => boolean;
@@ -58,6 +50,11 @@ export type NextState<T> = (T extends Function ? never : T) | ((state: T) => T);
 export interface StateOptions {
   passthrough?: boolean;
 }
+
+export type StatefulComponentFunction<TProps, TReturn> = (
+  this: RenderContext,
+  props: TProps,
+) => TReturn;
 
 interface Action<TState, TAction> {
   payload: TAction;
@@ -121,73 +118,6 @@ namespace Hook {
 
 type Usable<TReturn> = HookObject<TReturn> | HookFunction<TReturn>;
 
-export class ClientComponentRenderer<TProps = any, TReturn = unknown>
-  implements ComponentRenderer<TProps>
-{
-  /** @internal */
-  readonly _dispatcher: Dispatcher;
-  private readonly _componentFn: ComponentFunction<TProps, TReturn>;
-  private _context: RenderContext | null = null;
-
-  constructor(
-    dispatcher: Dispatcher,
-    componentFn: ComponentFunction<TProps, TReturn>,
-  ) {
-    this._dispatcher = dispatcher;
-    this._componentFn = componentFn;
-  }
-
-  afterCommit(): void {
-    for (const hook of this._context!._hooks) {
-      if (hook.type === HookType.EFFECT && hook.dirty) {
-        hook.cleanup?.();
-        hook.cleanup = hook.setup();
-        hook.dirty = false;
-      }
-    }
-  }
-
-  beforeRemove(): void {
-    for (const hook of this._context!._hooks) {
-      if (hook.type === HookType.EFFECT && hook.cleanup !== undefined) {
-        hook.cleanup();
-        hook.cleanup = undefined;
-      }
-    }
-  }
-
-  render(
-    node: RenderNode.ComponentNode<TProps>,
-    scope: Scope.Child,
-    renderLanes: Lanes,
-  ): RenderResult {
-    const oldScope = this._context?._scope;
-    if (this._context !== null) {
-      this._context._node = node;
-      this._context._scope = scope;
-      this._context._renderLanes = renderLanes;
-      this._context._hookIndex = 0;
-    } else {
-      this._context = new RenderContext(node, scope, renderLanes);
-    }
-    try {
-      const element = wrap(this._componentFn.call(this._context, node.props));
-      const dirty = oldScope === undefined || areScopesDirty(oldScope, scope);
-      finalizeHooks(this._context);
-      Object.freeze(scope);
-      return { element, dirty };
-    } catch (cause) {
-      throw RenderError.withScope(
-        scope,
-        'An error occurred during rendering.',
-        {
-          cause,
-        },
-      );
-    }
-  }
-}
-
 export class RenderContext {
   /** @internal */
   _node: RenderNode.ComponentNode;
@@ -211,7 +141,7 @@ export class RenderContext {
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    const renderer = this._node.state.renderer as ClientComponentRenderer;
+    const renderer = this._node.state.renderer as StatefulComponentRenderer;
     const handle = renderer._dispatcher.schedule(
       new UpdateComponent(this._node, this._scope),
       options,
@@ -244,7 +174,7 @@ export class RenderContext {
   }
 
   startTransition<T>(callback: (transition: number) => T): T {
-    const renderer = this._node.state.renderer as ClientComponentRenderer;
+    const renderer = this._node.state.renderer as StatefulComponentRenderer;
     return callback(renderer._dispatcher.nextTransition());
   }
 
@@ -288,7 +218,7 @@ export class RenderContext {
     if (currentHook !== undefined) {
       ensureHookType(HookType.ID, currentHook);
     } else {
-      const renderer = this._node.state.renderer as ClientComponentRenderer;
+      const renderer = this._node.state.renderer as StatefulComponentRenderer;
       currentHook = {
         type: HookType.ID,
         id: renderer._dispatcher.nextIdentifier(),
@@ -440,7 +370,7 @@ export class RenderContext {
 }
 
 export function createComponent<TProps = {}, TReturn = unknown>(
-  componentFn: ComponentFunction<TProps, TReturn>,
+  componentFn: StatefulComponentFunction<TProps, TReturn>,
   { arePropsEqual = is }: ComponentOptions<TProps> = {},
 ): Component<TProps> {
   function Component(props: TProps): VComponent<TProps> {
@@ -451,7 +381,7 @@ export function createComponent<TProps = {}, TReturn = unknown>(
   Component.createRenderer = (
     dispatcher: Dispatcher,
   ): ComponentRenderer<TProps> =>
-    new ClientComponentRenderer(dispatcher, componentFn);
+    new StatefulComponentRenderer(dispatcher, componentFn);
 
   DEBUG: {
     Object.defineProperty(Component, 'name', {
@@ -462,71 +392,70 @@ export function createComponent<TProps = {}, TReturn = unknown>(
   return Component;
 }
 
-class UpdateComponent implements Transaction {
-  private readonly _node: RenderNode.ComponentNode;
-  private readonly _scope: Scope.Child;
+class StatefulComponentRenderer<TProps = any, TReturn = unknown>
+  implements ComponentRenderer<TProps>
+{
+  /** @internal */
+  readonly _dispatcher: Dispatcher;
+  private readonly _componentFn: StatefulComponentFunction<TProps, TReturn>;
+  private _context: RenderContext | null = null;
 
-  constructor(node: RenderNode.ComponentNode, scope: Scope.Child) {
-    this._node = node;
-    this._scope = scope;
+  constructor(
+    dispatcher: Dispatcher,
+    componentFn: StatefulComponentFunction<TProps, TReturn>,
+  ) {
+    this._dispatcher = dispatcher;
+    this._componentFn = componentFn;
   }
 
-  get scope(): Scope {
-    return this._scope;
-  }
-
-  get pendingLanes(): Lanes {
-    return this._node.state.pendingLanes;
-  }
-
-  prepare(reconciler: Reconciler, renderLanes: Lanes): Commit {
-    if (this._node.index < 0) {
-      return noop;
+  afterCommit(): void {
+    for (const hook of this._context!._hooks) {
+      if (hook.type === HookType.EFFECT && hook.dirty) {
+        hook.cleanup?.();
+        hook.cleanup = hook.setup();
+        hook.dirty = false;
+      }
     }
+  }
 
-    const scope = cloneScope(this._scope);
-    const result = this._node.state.renderer.render(
-      this._node,
-      scope,
-      renderLanes,
-    );
-    let newNode: RenderNode;
-    let commit: Commit;
+  beforeRemove(): void {
+    for (const hook of this._context!._hooks) {
+      if (hook.type === HookType.EFFECT && hook.cleanup !== undefined) {
+        hook.cleanup();
+        hook.cleanup = undefined;
+      }
+    }
+  }
 
-    if (this._node.right[0] === undefined) {
-      // Reached when a re-render occurs during the initial render. The
-      // parent always commits in that case, and the node may also be
-      // invalidated by later updates, so do nothing.
-      newNode = reconciler.build(
-        result.element,
-        0,
-        this._node,
-        scope,
-        this._node.part,
-      );
-      commit = noop;
+  render(
+    node: RenderNode.ComponentNode<TProps>,
+    scope: Scope.Child,
+    renderLanes: Lanes,
+  ): RenderResult {
+    const oldScope = this._context?._scope;
+    if (this._context !== null) {
+      this._context._node = node;
+      this._context._scope = scope;
+      this._context._renderLanes = renderLanes;
+      this._context._hookIndex = 0;
     } else {
-      newNode = reconciler.diff(
-        this._node.right[0],
-        result.element,
-        0,
-        this._node,
-        scope,
-        result.dirty,
-      );
-      commit = () => {
-        if (this._node.index >= 0) {
-          patch(this._node.right[0]!, this._node.left[0]!);
-          this._node.state.renderer.afterCommit();
-          this._node.right = this._node.left;
-        }
-      };
+      this._context = new RenderContext(node, scope, renderLanes);
     }
-
-    this._node.left = [newNode];
-    this._node.state.pendingLanes &= ~renderLanes;
-
-    return commit;
+    try {
+      const element = wrap(this._componentFn.call(this._context, node.props));
+      const dirty = oldScope === undefined || areScopesDirty(oldScope, scope);
+      finalizeHooks(this._context);
+      Object.freeze(scope);
+      return { element, dirty };
+    } catch (cause) {
+      throw RenderError.withScope(
+        scope,
+        'An error occurred during rendering.',
+        {
+          cause,
+        },
+      );
+    }
   }
 }
 
@@ -558,5 +487,3 @@ function getInitialState<TState>(initialState: InitialState<TState>): TState {
     ? (initialState as () => TState)()
     : initialState;
 }
-
-function noop() {}

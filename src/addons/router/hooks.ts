@@ -1,4 +1,4 @@
-import type { HookFunction } from '../../component.js';
+import type { HookFunction } from '../../component/stateful.js';
 import type { NavigationAdapter, NavigationScene } from './adapter.js';
 
 export class NavigationContext {
