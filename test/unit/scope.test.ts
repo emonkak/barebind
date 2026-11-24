@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  areScopesDirty,
-  cloneScope,
-  createScope,
-  enterScope,
-} from '@/scope.js';
+import { areScopesDirty, createScope, enterScope } from '@/scope.js';
 
 describe('areScopesDirty()', () => {
   it('returns false when both injections are null', () => {
@@ -52,20 +47,6 @@ describe('areScopesDirty()', () => {
       next: { instance: instance2, next: null },
     };
     expect(areScopesDirty(a, b)).toBe(false);
-  });
-});
-
-describe('cloneScope()', () => {
-  it('clones a child scope resetting injection to parent injection', () => {
-    const parent = createScope({});
-    parent.injection = { instance: {}, next: null };
-    const child = enterScope(parent, (() => {}) as any);
-    child.injection = { instance: {}, next: parent.injection };
-    const cloned = cloneScope(child);
-    expect(cloned.owner).toBe(child.owner);
-    expect(cloned.parent).toBe(child.parent);
-    expect(cloned.level).toBe(child.level);
-    expect(cloned.injection).toBe(parent.injection);
   });
 });
 

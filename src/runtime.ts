@@ -31,7 +31,6 @@ import {
   UserHandlerLane,
 } from './lane.js';
 import { PriorityQueue } from './queue.js';
-import { enterScope } from './scope.js';
 
 export class Runtime implements Dispatcher, Reconciler {
   /** @internal */
@@ -95,7 +94,6 @@ export class Runtime implements Dispatcher, Reconciler {
       }
       return node;
     } else if (typeof element.type === 'function') {
-      const subScope = enterScope(scope, element.type);
       const node: RenderNode.ComponentNode = {
         type: element.type,
         props: element.props,
@@ -110,12 +108,8 @@ export class Runtime implements Dispatcher, Reconciler {
           pendingLanes: NoLanes,
         },
       };
-      const result = node.state.renderer.render(
-        node,
-        subScope,
-        this._renderLanes,
-      );
-      node.left[0] = this.build(result.element, 0, node, subScope, part);
+      const result = node.state.renderer.render(node, scope, this._renderLanes);
+      node.left[0] = this.build(result.element, 0, node, result.scope, part);
       return node;
     } else {
       const block = Array.isArray(element.type)
@@ -215,10 +209,9 @@ export class Runtime implements Dispatcher, Reconciler {
         part: oldNode.part,
         state: (oldNode as RenderNode.ComponentNode).state,
       };
-      const subScope = enterScope(scope, newElement.type);
       const result = newNode.state.renderer.render(
         newNode,
-        subScope,
+        scope,
         this._renderLanes,
       );
       newNode.left[0] = this.diff(
@@ -226,7 +219,7 @@ export class Runtime implements Dispatcher, Reconciler {
         result.element,
         0,
         newNode,
-        subScope,
+        result.scope,
         dirty || result.dirty,
       );
       newNode.state.pendingLanes &= ~this._renderLanes;

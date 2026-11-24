@@ -38,7 +38,7 @@ export interface ComponentRenderer<TProps> {
   beforeRemove(): void;
   render(
     node: RenderNode.ComponentNode<TProps>,
-    scope: Scope.Child,
+    scope: Scope,
     renderLanes: Lanes,
   ): RenderResult;
 }
@@ -187,6 +187,7 @@ export namespace RenderNode {
 
 export interface RenderResult {
   element: VElement;
+  scope: Scope;
   dirty: boolean;
 }
 

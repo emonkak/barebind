@@ -7,7 +7,6 @@ import type {
   Transaction,
 } from '../abstractions.js';
 import { patch } from '../commit.js';
-import { cloneScope } from '../scope.js';
 
 export class UpdateComponent implements Transaction {
   private readonly _node: RenderNode.ComponentNode;
@@ -31,10 +30,9 @@ export class UpdateComponent implements Transaction {
       return noop;
     }
 
-    const scope = cloneScope(this._scope);
     const result = this._node.state.renderer.render(
       this._node,
-      scope,
+      this._scope.parent,
       renderLanes,
     );
     let newNode: RenderNode;
@@ -48,7 +46,7 @@ export class UpdateComponent implements Transaction {
         result.element,
         0,
         this._node,
-        scope,
+        result.scope,
         this._node.part,
       );
       commit = noop;
@@ -58,7 +56,7 @@ export class UpdateComponent implements Transaction {
         result.element,
         0,
         this._node,
-        scope,
+        result.scope,
         result.dirty,
       );
       commit = () => {

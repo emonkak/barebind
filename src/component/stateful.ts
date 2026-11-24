@@ -16,7 +16,7 @@ import {
 import { areDependenciesChanged, is } from '../compare.js';
 import { RenderError } from '../error.js';
 import { NoLanes } from '../lane.js';
-import { areScopesDirty } from '../scope.js';
+import { areScopesDirty, enterScope } from '../scope.js';
 import { Ref, wrap } from '../vnode.js';
 import { UpdateComponent } from './transaction.js';
 
@@ -429,27 +429,28 @@ class StatefulComponentRenderer<TProps = any, TReturn = unknown>
 
   render(
     node: RenderNode.ComponentNode<TProps>,
-    scope: Scope.Child,
+    scope: Scope,
     renderLanes: Lanes,
   ): RenderResult {
+    const newScope = enterScope(scope, node.type);
     const oldScope = this._context?._scope;
     if (this._context !== null) {
       this._context._node = node;
-      this._context._scope = scope;
+      this._context._scope = newScope;
       this._context._renderLanes = renderLanes;
       this._context._hookIndex = 0;
     } else {
-      this._context = new RenderContext(node, scope, renderLanes);
+      this._context = new RenderContext(node, newScope, renderLanes);
     }
     try {
       const element = wrap(this._componentFn.call(this._context, node.props));
-      const dirty = oldScope === undefined || areScopesDirty(oldScope, scope);
+      const dirty =
+        oldScope === undefined || areScopesDirty(oldScope, newScope);
       finalizeHooks(this._context);
-      Object.freeze(scope);
-      return { element, dirty };
+      return { element, scope: Object.freeze(newScope), dirty };
     } catch (cause) {
       throw RenderError.withScope(
-        scope,
+        newScope,
         'An error occurred during rendering.',
         {
           cause,

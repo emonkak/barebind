@@ -17,15 +17,6 @@ export function areScopesDirty(oldScope: Scope, newScope: Scope): boolean {
   return false;
 }
 
-export function cloneScope(scope: Scope.Child): Scope.Child {
-  return {
-    owner: scope.owner,
-    parent: scope.parent,
-    level: scope.level,
-    injection: scope.parent.injection,
-  };
-}
-
 export function createScope(owner: object): Scope.Root {
   return { owner, parent: null, level: 0, injection: null };
 }
