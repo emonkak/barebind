@@ -24,7 +24,6 @@ import {
 import { is } from './compare.js';
 import {
   getHighestPriorityLane,
-  getLaneFromPriority,
   getPriorityFromLanes,
   getRenderLanes,
   NoLanes,
@@ -274,7 +273,7 @@ export class Runtime implements Dispatcher, Reconciler {
     const lanes =
       getRenderLanes(options) ||
       this._renderLanes ||
-      getLaneFromPriority(this._adapter.getTaskPriority());
+      this._adapter.getRenderLanes();
     const controller = Promise.withResolvers<void>();
     const update: Update = {
       id,

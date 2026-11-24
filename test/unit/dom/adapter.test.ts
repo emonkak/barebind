@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DOMAdapter } from '@/dom/adapter.js';
+import { BackgroundLane, UserBlockingLane, UserVisibleLane } from '@/lane.js';
 
 describe('DOMAdapter', () => {
   let adapter: DOMAdapter;
@@ -26,18 +27,18 @@ describe('DOMAdapter', () => {
   });
 
   describe('getTaskPriority()', () => {
-    it('returns "background" when there is no current event and readyState is "complete"', () => {
+    it('returns BackgroundLane when there is no current event and readyState is "complete"', () => {
       vi.spyOn(document, 'readyState', 'get').mockReturnValue('complete');
       vi.spyOn(window, 'event', 'get').mockReturnValue(undefined);
-      expect(adapter.getTaskPriority()).toBe('background');
+      expect(adapter.getRenderLanes()).toBe(BackgroundLane);
     });
 
     it.each(['loading', 'interactive'] as const)(
-      'returns "user-blocking" when readyState is "%s" and there is no current event',
+      'returns UserBlockingLane when readyState is "%s" and there is no current event',
       (readyState) => {
         vi.spyOn(document, 'readyState', 'get').mockReturnValue(readyState);
         vi.spyOn(window, 'event', 'get').mockReturnValue(undefined);
-        expect(adapter.getTaskPriority()).toBe('user-blocking');
+        expect(adapter.getRenderLanes()).toBe(UserBlockingLane);
       },
     );
 
@@ -59,16 +60,16 @@ describe('DOMAdapter', () => {
       'scroll',
       'touchmove',
       'wheel',
-    ])('returns "user-visible" for a "%s" event', (type) => {
+    ])('returns UserVisibleLane for a "%s" event', (type) => {
       vi.spyOn(document, 'readyState', 'get').mockReturnValue('complete');
       vi.spyOn(window, 'event', 'get').mockReturnValue(new Event(type));
-      expect(adapter.getTaskPriority()).toBe('user-visible');
+      expect(adapter.getRenderLanes()).toBe(UserVisibleLane);
     });
 
-    it('returns "user-blocking" for a non-continuous event', () => {
+    it('returns UserBlockingLane for a non-continuous event', () => {
       vi.spyOn(document, 'readyState', 'get').mockReturnValue('complete');
       vi.spyOn(window, 'event', 'get').mockReturnValue(new Event('click'));
-      expect(adapter.getTaskPriority()).toBe('user-blocking');
+      expect(adapter.getRenderLanes()).toBe(UserBlockingLane);
     });
   });
 

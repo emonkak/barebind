@@ -1,4 +1,10 @@
-import type { HostAdapter, VPortal, VTemplate } from '../abstractions.js';
+import type {
+  HostAdapter,
+  Lanes,
+  VPortal,
+  VTemplate,
+} from '../abstractions.js';
+import { BackgroundLane, UserBlockingLane, UserVisibleLane } from '../lane.js';
 import { DOMBlock } from './block.js';
 import { ContainerPart } from './part.js';
 import { DOMTemplate } from './template.js';
@@ -17,15 +23,17 @@ export class DOMAdapter implements HostAdapter {
     return this._identifier;
   }
 
-  getTaskPriority(): TaskPriority {
+  getRenderLanes(): Lanes {
     const currentEvent = this._document.defaultView?.event;
     if (currentEvent !== undefined) {
-      return isContinuousEvent(currentEvent) ? 'user-visible' : 'user-blocking';
+      return isContinuousEvent(currentEvent)
+        ? UserVisibleLane
+        : UserBlockingLane;
     }
     if (this._document.readyState !== 'complete') {
-      return 'user-blocking';
+      return UserBlockingLane;
     }
-    return 'background';
+    return BackgroundLane;
   }
 
   renderPortal(element: VPortal): DOMBlock {

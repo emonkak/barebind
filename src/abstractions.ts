@@ -51,7 +51,7 @@ export interface Dispatcher {
 
 export interface HostAdapter {
   getIdentifier(): string;
-  getTaskPriority(): TaskPriority;
+  getRenderLanes(): Lanes;
   renderPortal(element: VPortal): Block;
   renderTemplate(element: VTemplate): Block;
   requestCommit(callback: () => void): Promise<void>;
