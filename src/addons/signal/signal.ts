@@ -70,23 +70,16 @@ export abstract class Signal<T> implements Bindable, HookObject<T> {
   abstract subscribe(subscriber: Subscriber): Unsubscribe;
 
   onUse(context: RenderContext): T {
-    const { value, version } = this;
-    const snapshot = context.useMemo(() => ({ value, version }), [this]);
+    const { value } = this;
+    const snapshot = context.useMemo(() => ({ value }), [this]);
 
     context.useEffect(() => {
       snapshot.value = value;
-      snapshot.version = version;
-      if (version < this.version && !is(value, this.value)) {
-        context.forceUpdate();
-      }
-    }, [this, version]);
+    }, [this, value]);
 
     context.useEffect(() => {
       const checkForChanges = () => {
-        if (
-          snapshot.version < this.version &&
-          !is(snapshot.value, this.value)
-        ) {
+        if (!is(snapshot.value, this.value)) {
           context.forceUpdate();
         }
         batched = false;

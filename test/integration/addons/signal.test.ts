@@ -134,11 +134,15 @@ describe('Signal addon', () => {
     const a$ = new Atom(0);
     const App = createComponent(function App() {
       const value = this.use(a$);
-      a$.value = value + 1;
+      if (value === 0) {
+        a$.value = value + 1;
+      }
       return html`<div>${value}</div>`;
     });
 
     await root.render(App({})).finished;
+    expect(container.innerHTML).toBe('<div>0</div>');
+
     await step(runtime);
     expect(container.innerHTML).toBe('<div>1</div>');
   });
@@ -147,13 +151,17 @@ describe('Signal addon', () => {
     const a$ = new Atom(0);
     const App = createComponent(function App() {
       const value = this.use(a$);
-      a$.write(value + 1);
+      if (value === 0) {
+        a$.write(value + 1);
+      }
       return html`<div>${value}</div>`;
     });
 
     await root.render(App({})).finished;
-    await step(runtime);
     expect(container.innerHTML).toBe('<div>0</div>');
+
+    await step(runtime);
+    expect(container.innerHTML).toBe('<div>1</div>');
   });
 
   it('does nothing after unmount when the signal changes', async () => {
