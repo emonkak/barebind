@@ -45,7 +45,7 @@ export class Runtime implements Dispatcher, Reconciler {
   private readonly _middlewares: Middleware[] = [];
   private _pendingLanes: number = NoLanes;
   private _stagedLanes: number = NoLanes;
-  private _flushLanes: number = NoLanes;
+  private _renderLanes: number = NoLanes;
   private _identifierCount: number = 0;
   private _transitionCount: number = 0;
   private _updateCount: number = 0;
@@ -114,7 +114,7 @@ export class Runtime implements Dispatcher, Reconciler {
       const result = node.state.controller.render(
         node,
         subScope,
-        this._flushLanes,
+        this._renderLanes,
       );
       node.left[0] = this.build(result.element, 0, node, subScope, part);
       return node;
@@ -217,7 +217,7 @@ export class Runtime implements Dispatcher, Reconciler {
       const result = newNode.state.controller.render(
         newNode,
         subScope,
-        this._flushLanes,
+        this._renderLanes,
       );
       newNode.left[0] = this.diff(
         newNode.right[0]!,
@@ -227,7 +227,7 @@ export class Runtime implements Dispatcher, Reconciler {
         subScope,
         dirty || result.dirty,
       );
-      newNode.state.pendingLanes &= ~this._flushLanes;
+      newNode.state.pendingLanes &= ~this._renderLanes;
       return newNode;
     } else {
       const newNode: RenderNode.BlockNode = {
@@ -285,7 +285,7 @@ export class Runtime implements Dispatcher, Reconciler {
       const callback = () => {
         this._pendingLanes &= ~lanes;
         this._stagedLanes |= lanes;
-        if (this._flushLanes === NoLanes) {
+        if (this._renderLanes === NoLanes) {
           this._flush();
         }
       };
@@ -528,19 +528,19 @@ export class Runtime implements Dispatcher, Reconciler {
         if (
           update === undefined ||
           (update.lanes & this._stagedLanes) !== update.lanes ||
-          (this._flushLanes !== NoLanes &&
-            getHighestPriorityLane(this._flushLanes) <
+          (this._renderLanes !== NoLanes &&
+            getHighestPriorityLane(this._renderLanes) <
               getHighestPriorityLane(update.lanes))
         ) {
           // The update is not yet staged, or is lower-priority than the current
           // batch; defer it so it commits as its own batch.
           break;
         }
-        this._flushLanes |= update.lanes;
+        this._renderLanes |= update.lanes;
         this._updateBatch.push(this._updateQueue.dequeue()!);
       }
 
-      if (this._flushLanes === NoLanes) {
+      if (this._renderLanes === NoLanes) {
         break;
       }
 
@@ -555,7 +555,7 @@ export class Runtime implements Dispatcher, Reconciler {
               update,
               this,
               this._middlewares,
-              this._flushLanes,
+              this._renderLanes,
             );
             commitBatch.push({ commit, handler });
           }
@@ -571,7 +571,7 @@ export class Runtime implements Dispatcher, Reconciler {
               }
             }
           };
-          if (this._flushLanes & (SyncLane | UserHandlerLane)) {
+          if (this._renderLanes & (SyncLane | UserHandlerLane)) {
             await callback();
           } else {
             await this._adapter.requestCommit(callback);
@@ -587,7 +587,7 @@ export class Runtime implements Dispatcher, Reconciler {
         }
       } finally {
         this._updateBatch = [];
-        this._flushLanes = NoLanes;
+        this._renderLanes = NoLanes;
       }
     }
 
