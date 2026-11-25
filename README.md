@@ -17,7 +17,9 @@ import { DOMAdapter, DOMRoot, Runtime, createComponent, html } from 'barebind';
 const Counter = createComponent(function Counter({ initialCount }) {
   const [count, setCount] = this.useState(initialCount);
   return html`
-    <button @click=${() => { setCount((count) => count + 1) }}>
+    <button @click=${() => {
+      setCount((count) => count + 1);
+    }}>
       ${count}
     </button>
   `;
