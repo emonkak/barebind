@@ -3,10 +3,10 @@ export const Fragment = Symbol.for('barebind.Fragment');
 export const toElement = Symbol.for('barebind.toElement');
 
 export const enum MutationType {
-  INSERT = 0,
-  UPDATE = 1,
-  UPDATE_AND_MOVE = 2,
-  REMOVE = 3,
+  Insert = 0,
+  Update = 1,
+  UpdateAndMove = 2,
+  Remove = 3,
 }
 
 export interface Bindable {
@@ -83,25 +83,25 @@ export interface Middleware {
 
 export type Mutation =
   | {
-      type: MutationType.INSERT;
+      type: MutationType.Insert;
       node: RenderNode;
       afterNode: RenderNode | undefined;
     }
   | {
-      type: MutationType.UPDATE;
+      type: MutationType.Update;
       oldNode: RenderNode;
       newNode: RenderNode;
       index: number;
     }
   | {
-      type: MutationType.UPDATE_AND_MOVE;
+      type: MutationType.UpdateAndMove;
       oldNode: RenderNode;
       newNode: RenderNode;
       afterNode: RenderNode | undefined;
       index: number;
     }
   | {
-      type: MutationType.REMOVE;
+      type: MutationType.Remove;
       node: RenderNode;
     };
 

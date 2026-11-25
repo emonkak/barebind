@@ -383,7 +383,7 @@ function diffChildren(
         const oldChild = oldChildren[oldHead];
         if (oldChild !== undefined) {
           newMutations.push({
-            type: MutationType.REMOVE,
+            type: MutationType.Remove,
             node: oldChild,
           });
         }
@@ -401,7 +401,7 @@ function diffChildren(
           newParent.part.splitPart(),
         );
         newMutations.push({
-          type: MutationType.INSERT,
+          type: MutationType.Insert,
           node: newChild,
           afterNode: newChildren[newTail + 1],
         });
@@ -425,7 +425,7 @@ function diffChildren(
         dirty,
       );
       newMutations.push({
-        type: MutationType.UPDATE,
+        type: MutationType.Update,
         oldNode: oldChild,
         newNode: newChild,
         index: newHead,
@@ -444,7 +444,7 @@ function diffChildren(
         dirty,
       );
       newMutations.push({
-        type: MutationType.UPDATE,
+        type: MutationType.Update,
         oldNode: oldChild,
         newNode: newChild,
         index: newTail,
@@ -473,14 +473,14 @@ function diffChildren(
         dirty,
       );
       newMutations.push({
-        type: MutationType.UPDATE_AND_MOVE,
+        type: MutationType.UpdateAndMove,
         oldNode: oldChildren[oldTail]!,
         newNode: tailChild,
         afterNode: oldChildren[oldHead],
         index: newHead,
       });
       newMutations.push({
-        type: MutationType.UPDATE_AND_MOVE,
+        type: MutationType.UpdateAndMove,
         oldNode: oldChildren[oldHead]!,
         newNode: headChild,
         afterNode: newChildren[newTail + 1],
@@ -498,14 +498,14 @@ function diffChildren(
       if (!newKeyToIndexMap.has(oldKeys[oldHead]!)) {
         const oldChild = oldChildren[oldHead]!;
         newMutations.push({
-          type: MutationType.REMOVE,
+          type: MutationType.Remove,
           node: oldChild,
         });
         oldHead++;
       } else if (!newKeyToIndexMap.has(oldKeys[oldTail]!)) {
         const oldChild = oldChildren[oldTail]!;
         newMutations.push({
-          type: MutationType.REMOVE,
+          type: MutationType.Remove,
           node: oldChild,
         });
         oldTail--;
@@ -528,7 +528,7 @@ function diffChildren(
             dirty,
           );
           newMutations.push({
-            type: MutationType.UPDATE_AND_MOVE,
+            type: MutationType.UpdateAndMove,
             oldNode: oldChildren[oldIndex]!,
             newNode: newChild,
             afterNode: newChildren[newTail + 1],
@@ -545,7 +545,7 @@ function diffChildren(
             newParent.part.splitPart(),
           );
           newMutations.push({
-            type: MutationType.INSERT,
+            type: MutationType.Insert,
             node: newChild,
             afterNode: newChildren[newTail + 1],
           });

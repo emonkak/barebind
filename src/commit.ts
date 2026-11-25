@@ -60,7 +60,7 @@ function applyPatch(
   } else {
     for (const mutation of newNode.state.mutations.splice(0)) {
       switch (mutation.type) {
-        case MutationType.INSERT:
+        case MutationType.Insert:
           mountChild(
             mutation.node,
             mutation.afterNode !== undefined
@@ -68,7 +68,7 @@ function applyPatch(
               : null,
           );
           break;
-        case MutationType.UPDATE:
+        case MutationType.Update:
           applyPatch(
             mutation.oldNode,
             mutation.newNode,
@@ -76,7 +76,7 @@ function applyPatch(
             newNode,
           );
           break;
-        case MutationType.UPDATE_AND_MOVE:
+        case MutationType.UpdateAndMove:
           applyPatch(
             mutation.oldNode,
             mutation.newNode,
@@ -90,7 +90,7 @@ function applyPatch(
               : null,
           );
           break;
-        case MutationType.REMOVE:
+        case MutationType.Remove:
           unmountChild(mutation.node);
           break;
       }
