@@ -141,8 +141,9 @@ export class RenderContext {
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    const renderer = this._node.state.renderer as StatefulComponentRenderer;
-    const handle = renderer._dispatcher.schedule(
+    const dispatcher = (this._node.state.renderer as StatefulComponentRenderer)
+      ._dispatcher;
+    const handle = dispatcher.schedule(
       new UpdateComponent(this._node, this._scope),
       options,
     );
@@ -174,8 +175,9 @@ export class RenderContext {
   }
 
   startTransition<T>(callback: (transition: number) => T): T {
-    const renderer = this._node.state.renderer as StatefulComponentRenderer;
-    return callback(renderer._dispatcher.nextTransition());
+    const dispatcher = (this._node.state.renderer as StatefulComponentRenderer)
+      ._dispatcher;
+    return callback(dispatcher.nextTransition());
   }
 
   use<TReturn>(usable: Usable<TReturn>): TReturn {
@@ -218,10 +220,12 @@ export class RenderContext {
     if (currentHook !== undefined) {
       ensureHookType(HookType.ID, currentHook);
     } else {
-      const renderer = this._node.state.renderer as StatefulComponentRenderer;
+      const dispatcher = (
+        this._node.state.renderer as StatefulComponentRenderer
+      )._dispatcher;
       currentHook = {
         type: HookType.ID,
-        id: renderer._dispatcher.nextIdentifier(),
+        id: dispatcher.nextIdentifier(),
       };
       this._hooks.push(currentHook);
     }
