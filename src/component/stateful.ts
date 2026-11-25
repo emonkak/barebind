@@ -441,8 +441,8 @@ class StatefulComponentRenderer<TProps = any, TReturn = unknown>
     scope: Scope,
     renderLanes: Lanes,
   ): RenderResult {
-    const newScope = enterScope(scope, node.type);
     const oldScope = this._context?._scope;
+    const newScope = enterScope(scope, node.type);
     if (this._context !== null) {
       this._context._node = node;
       this._context._scope = newScope;
