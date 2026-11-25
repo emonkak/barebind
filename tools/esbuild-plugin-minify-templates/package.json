@@ -21,11 +21,11 @@
     "clean": "rm -fr lib"
   },
   "dependencies": {
-    "@swc/core": "^1.16.2",
-    "@types/node": "^26.4.1",
+    "@swc/core": "^1.16.22",
+    "@types/node": "^26.6.6",
     "esbuild": "^0.28.2"
   },
   "devDependencies": {
-    "vitest": "^5.0.0"
+    "vitest": "^5.1.1"
   }
 }
