@@ -1,6 +1,6 @@
 import type { Commit, Lanes, Middleware, Update } from '../abstractions.js';
 import { captureOwnerStack, nameOf } from '../debug.js';
-import { getPriorityFromLanes, SyncLane, UserHandlerLane } from '../lane.js';
+import { getPriorityFromLanes, Lane } from '../lane.js';
 
 const RED_STYLE = 'color: light-dark(#b3261e, #e46962)';
 const BLUE_STYLE = 'color: light-dark(#0b57d0, #4c8df6)';
@@ -97,9 +97,9 @@ function emitLog(
 }
 
 function getCommitMode(lanes: Lanes): string {
-  return lanes & SyncLane
+  return lanes & Lane.SyncLane
     ? 'synchronous'
-    : lanes & UserHandlerLane
+    : lanes & Lane.UserHandlerLane
       ? 'user-handler'
       : 'animation-frame';
 }

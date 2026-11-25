@@ -15,7 +15,7 @@ import {
 } from '../abstractions.js';
 import { areDependenciesChanged, is } from '../compare.js';
 import { RenderError } from '../error.js';
-import { NoLanes } from '../lane.js';
+import { Lane } from '../lane.js';
 import { areScopesDirty, enterScope } from '../scope.js';
 import { Ref, wrap } from '../vnode.js';
 import { UpdateComponent } from './transaction.js';
@@ -274,7 +274,7 @@ export class RenderContext {
       let nextState = options.passthrough
         ? getInitialState(initialState)
         : memoizedState;
-      let skipLanes = NoLanes;
+      let skipLanes = Lane.NoLanes;
 
       memoizedActions.push(...dispatcher.pendingActions);
 
@@ -284,12 +284,12 @@ export class RenderContext {
           nextState = action.eagerState ?? reducer(nextState, payload);
           action.lanes = revertLanes;
         } else if ((revertLanes & renderLanes) === revertLanes) {
-          action.revertLanes = NoLanes;
+          action.revertLanes = Lane.NoLanes;
         }
         skipLanes |= (lanes & ~renderLanes) | (revertLanes & renderLanes);
       }
 
-      if (skipLanes === NoLanes) {
+      if (skipLanes === Lane.NoLanes) {
         currentHook.memoizedActions = [];
         currentHook.memoizedState = nextState;
       }
@@ -310,7 +310,7 @@ export class RenderContext {
             if (areStatesEqual(eagerState, currentState)) {
               return {
                 id: -1,
-                lanes: NoLanes,
+                lanes: Lane.NoLanes,
                 finished: Promise.resolve(),
               };
             }
@@ -321,7 +321,7 @@ export class RenderContext {
             payload,
             eagerState,
             lanes: handle.lanes,
-            revertLanes: options.transient ? handle.lanes : NoLanes,
+            revertLanes: options.transient ? handle.lanes : Lane.NoLanes,
           });
           return handle;
         },

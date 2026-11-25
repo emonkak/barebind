@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DOMAdapter } from '@/dom/adapter.js';
-import { BackgroundLane, UserBlockingLane, UserVisibleLane } from '@/lane.js';
+import { Lane } from '@/lane.js';
 
 describe('DOMAdapter', () => {
   let adapter: DOMAdapter;
@@ -30,7 +30,7 @@ describe('DOMAdapter', () => {
     it('returns BackgroundLane when there is no current event and readyState is "complete"', () => {
       vi.spyOn(document, 'readyState', 'get').mockReturnValue('complete');
       vi.spyOn(window, 'event', 'get').mockReturnValue(undefined);
-      expect(adapter.getRenderLanes()).toBe(BackgroundLane);
+      expect(adapter.getRenderLanes()).toBe(Lane.BackgroundLane);
     });
 
     it.each(['loading', 'interactive'] as const)(
@@ -38,7 +38,7 @@ describe('DOMAdapter', () => {
       (readyState) => {
         vi.spyOn(document, 'readyState', 'get').mockReturnValue(readyState);
         vi.spyOn(window, 'event', 'get').mockReturnValue(undefined);
-        expect(adapter.getRenderLanes()).toBe(UserBlockingLane);
+        expect(adapter.getRenderLanes()).toBe(Lane.UserBlockingLane);
       },
     );
 
@@ -63,13 +63,13 @@ describe('DOMAdapter', () => {
     ])('returns UserVisibleLane for a "%s" event', (type) => {
       vi.spyOn(document, 'readyState', 'get').mockReturnValue('complete');
       vi.spyOn(window, 'event', 'get').mockReturnValue(new Event(type));
-      expect(adapter.getRenderLanes()).toBe(UserVisibleLane);
+      expect(adapter.getRenderLanes()).toBe(Lane.UserVisibleLane);
     });
 
     it('returns UserBlockingLane for a non-continuous event', () => {
       vi.spyOn(document, 'readyState', 'get').mockReturnValue('complete');
       vi.spyOn(window, 'event', 'get').mockReturnValue(new Event('click'));
-      expect(adapter.getRenderLanes()).toBe(UserBlockingLane);
+      expect(adapter.getRenderLanes()).toBe(Lane.UserBlockingLane);
     });
   });
 

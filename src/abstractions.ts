@@ -75,8 +75,6 @@ export interface Injection {
   next: Injection | null;
 }
 
-export type Lane = number;
-
 export type Lanes = number;
 
 export interface Middleware {

@@ -1,17 +1,19 @@
-import type { Lane, Lanes, UpdateOptions } from './abstractions.js';
+import type { Lanes, UpdateOptions } from './abstractions.js';
 
-export const AllLanes: Lanes /*        */ = -1;
-export const NoLanes: Lanes /*         */ = 0b0000000000000000000000000000000;
-export const SyncLane: Lane /*         */ = 0b0000000000000000000000000000001;
-export const UserHandlerLane: Lane /*  */ = 0b0000000000000000000000000000010;
-export const UserBlockingLane: Lane /* */ = 0b0000000000000000000000000000100;
-export const UserVisibleLane: Lane /*  */ = 0b0000000000000000000000000001000;
-export const BackgroundLane: Lane /*   */ = 0b0000000000000000000000000010000;
-export const TransitionLane1: Lane /*  */ = 0b0000000000000000000000000100000;
-export const TransitionLanes: Lanes /* */ = 0b0011111111111111111111111100000;
-export const ShortDelayLane: Lane /*   */ = 0b0100000000000000000000000000000;
-export const LongDelayLane: Lane /*    */ = 0b1000000000000000000000000000000;
-export const DelayLanes: Lanes /*      */ = 0b1100000000000000000000000000000;
+export const enum Lane {
+  NoLanes /*          */ = 0b0000000000000000000000000000000,
+  SyncLane /*         */ = 0b0000000000000000000000000000001,
+  UserHandlerLane /*  */ = 0b0000000000000000000000000000010,
+  UserBlockingLane /* */ = 0b0000000000000000000000000000100,
+  UserVisibleLane /*  */ = 0b0000000000000000000000000001000,
+  BackgroundLane /*   */ = 0b0000000000000000000000000010000,
+  TransitionLane1 /*  */ = 0b0000000000000000000000000100000,
+  TransitionLanes /*  */ = 0b0011111111111111111111111100000,
+  ShortDelayLane /*   */ = 0b0100000000000000000000000000000,
+  LongDelayLane /*    */ = 0b1000000000000000000000000000000,
+  DelayLanes /*       */ = 0b1100000000000000000000000000000,
+  AllLanes /*         */ = -1,
+}
 
 export const TransitionLaneLength: number = 24;
 
@@ -22,40 +24,41 @@ export function getHighestPriorityLane(lanes: Lanes): Lane {
 export function getLaneFromPriority(priority: TaskPriority): Lanes {
   switch (priority) {
     case 'user-blocking':
-      return UserBlockingLane;
+      return Lane.UserBlockingLane;
     case 'user-visible':
-      return UserVisibleLane;
+      return Lane.UserVisibleLane;
     case 'background':
-      return BackgroundLane;
+      return Lane.BackgroundLane;
   }
 }
 
 export function getPriorityFromLanes(lanes: Lanes): TaskPriority {
-  return lanes & (SyncLane | UserHandlerLane | UserBlockingLane)
+  return lanes & (Lane.SyncLane | Lane.UserHandlerLane | Lane.UserBlockingLane)
     ? 'user-blocking'
-    : lanes & UserVisibleLane
+    : lanes & Lane.UserVisibleLane
       ? 'user-visible'
-      : lanes & (BackgroundLane | TransitionLanes | DelayLanes)
+      : lanes & (Lane.BackgroundLane | Lane.TransitionLanes | Lane.DelayLanes)
         ? 'background'
         : 'user-visible';
 }
 
 export function getRenderLanes(options: UpdateOptions): Lanes {
-  let lanes = NoLanes;
+  let lanes = Lane.NoLanes;
   if (options.flushSync) {
-    lanes |= SyncLane;
+    lanes |= Lane.SyncLane;
   }
   if (options.handler !== undefined) {
-    lanes |= UserHandlerLane;
+    lanes |= Lane.UserHandlerLane;
   }
   if (options.priority !== undefined) {
     lanes |= getLaneFromPriority(options.priority);
   }
   if (options.transition !== undefined) {
-    lanes |= TransitionLane1 << (options.transition % TransitionLaneLength);
+    lanes |=
+      Lane.TransitionLane1 << (options.transition % TransitionLaneLength);
   }
   if (options.delay !== undefined) {
-    lanes |= options.delay <= 100 ? ShortDelayLane : LongDelayLane;
+    lanes |= options.delay <= 100 ? Lane.ShortDelayLane : Lane.LongDelayLane;
   }
   return lanes;
 }
@@ -64,7 +67,7 @@ export function getTransitionIndex(lanes: Lanes): number {
   return (
     TransitionLaneLength -
     Math.min(
-      Math.clz32(lanes << Math.clz32(TransitionLanes)),
+      Math.clz32(lanes << Math.clz32(Lane.TransitionLanes)),
       TransitionLaneLength,
     ) -
     1
@@ -73,28 +76,28 @@ export function getTransitionIndex(lanes: Lanes): number {
 
 export function inspectLanes(lanes: Lanes): string[] {
   const tags = [];
-  if (lanes & SyncLane) {
+  if (lanes & Lane.SyncLane) {
     tags.push('SyncLane');
   }
-  if (lanes & UserHandlerLane) {
+  if (lanes & Lane.UserHandlerLane) {
     tags.push('UserHandlerLane');
   }
-  if (lanes & UserBlockingLane) {
+  if (lanes & Lane.UserBlockingLane) {
     tags.push('UserBlockingLane');
   }
-  if (lanes & UserVisibleLane) {
+  if (lanes & Lane.UserVisibleLane) {
     tags.push('UserVisibleLane');
   }
-  if (lanes & BackgroundLane) {
+  if (lanes & Lane.BackgroundLane) {
     tags.push('BackgroundLane');
   }
-  if (lanes & TransitionLanes) {
+  if (lanes & Lane.TransitionLanes) {
     tags.push('TransitionLane');
   }
-  if (lanes & ShortDelayLane) {
+  if (lanes & Lane.ShortDelayLane) {
     tags.push('ShortDelayLane');
   }
-  if (lanes & LongDelayLane) {
+  if (lanes & Lane.LongDelayLane) {
     tags.push('LongDelayLane');
   }
   return tags;

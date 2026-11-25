@@ -4,7 +4,7 @@ import type {
   VPortal,
   VTemplate,
 } from '../abstractions.js';
-import { BackgroundLane, UserBlockingLane, UserVisibleLane } from '../lane.js';
+import { Lane } from '../lane.js';
 import { DOMBlock } from './block.js';
 import { ContainerPart } from './part.js';
 import { DOMTemplate } from './template.js';
@@ -27,13 +27,13 @@ export class DOMAdapter implements HostAdapter {
     const currentEvent = this._document.defaultView?.event;
     if (currentEvent !== undefined) {
       return isContinuousEvent(currentEvent)
-        ? UserVisibleLane
-        : UserBlockingLane;
+        ? Lane.UserVisibleLane
+        : Lane.UserBlockingLane;
     }
     if (this._document.readyState !== 'complete') {
-      return UserBlockingLane;
+      return Lane.UserBlockingLane;
     }
-    return BackgroundLane;
+    return Lane.BackgroundLane;
   }
 
   renderPortal(element: VPortal): DOMBlock {

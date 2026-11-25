@@ -26,9 +26,7 @@ import {
   getHighestPriorityLane,
   getPriorityFromLanes,
   getRenderLanes,
-  NoLanes,
-  SyncLane,
-  UserHandlerLane,
+  Lane,
 } from './lane.js';
 import { PriorityQueue } from './queue.js';
 
@@ -44,11 +42,11 @@ export class Runtime implements Dispatcher, Reconciler {
   /** @internal */
   _updateBatch: Update[] = [];
   /** @internal */
-  _pendingLanes: number = NoLanes;
+  _pendingLanes: number = Lane.NoLanes;
   /** @internal */
-  _stagedLanes: number = NoLanes;
+  _stagedLanes: number = Lane.NoLanes;
   /** @internal */
-  _renderLanes: number = NoLanes;
+  _renderLanes: number = Lane.NoLanes;
   private _identifierCount: number = 0;
   private _transitionCount: number = 0;
   private _updateCount: number = 0;
@@ -110,7 +108,7 @@ export class Runtime implements Dispatcher, Reconciler {
         part,
         state: {
           renderer: element.type.createRenderer(this),
-          pendingLanes: NoLanes,
+          pendingLanes: Lane.NoLanes,
         },
       };
       const result = node.state.renderer.render(node, scope, this._renderLanes);
@@ -161,7 +159,7 @@ export class Runtime implements Dispatcher, Reconciler {
       (typeof newElement.type === 'function'
         ? ((oldNode as RenderNode.ComponentNode).state.pendingLanes &
             this._renderLanes) ===
-            NoLanes &&
+            Lane.NoLanes &&
           !(oldNode as RenderNode.ComponentNode).state.renderer.shouldRender(
             oldNode.props,
             newElement.props,
@@ -282,14 +280,14 @@ export class Runtime implements Dispatcher, Reconciler {
       transaction,
     };
 
-    if (this._renderLanes !== NoLanes) {
+    if (this._renderLanes !== Lane.NoLanes) {
       this._updateBatch.push(update);
     } else {
       this._updateQueue.enqueue(update);
 
       if (((this._pendingLanes | this._stagedLanes) & lanes) !== lanes) {
         const callback = () => {
-          const shouldFlush = this._stagedLanes === NoLanes;
+          const shouldFlush = this._stagedLanes === Lane.NoLanes;
           this._pendingLanes &= ~lanes;
           this._stagedLanes |= lanes;
           if (shouldFlush) {
@@ -297,7 +295,7 @@ export class Runtime implements Dispatcher, Reconciler {
           }
         };
         this._pendingLanes |= lanes;
-        if (lanes & SyncLane) {
+        if (lanes & Lane.SyncLane) {
           queueMicrotask(callback);
         } else {
           const priority = options.priority ?? getPriorityFromLanes(lanes);
@@ -570,7 +568,7 @@ async function flush(runtime: Runtime): Promise<void> {
       if (
         update === undefined ||
         (update.lanes & runtime._stagedLanes) !== update.lanes ||
-        (runtime._renderLanes !== NoLanes &&
+        (runtime._renderLanes !== Lane.NoLanes &&
           getHighestPriorityLane(runtime._renderLanes) <
             getHighestPriorityLane(update.lanes))
       ) {
@@ -582,7 +580,7 @@ async function flush(runtime: Runtime): Promise<void> {
       runtime._updateBatch.push(runtime._updateQueue.dequeue()!);
     }
 
-    if (runtime._renderLanes === NoLanes) {
+    if (runtime._renderLanes === Lane.NoLanes) {
       break;
     }
 
@@ -605,7 +603,7 @@ async function flush(runtime: Runtime): Promise<void> {
           }
         }
       } finally {
-        runtime._renderLanes = NoLanes;
+        runtime._renderLanes = Lane.NoLanes;
       }
 
       if (commitBatch.length > 0) {
@@ -618,7 +616,7 @@ async function flush(runtime: Runtime): Promise<void> {
             }
           }
         };
-        if (renderLanes & (SyncLane | UserHandlerLane)) {
+        if (renderLanes & (Lane.SyncLane | Lane.UserHandlerLane)) {
           await callback();
         } else {
           await runtime._adapter.requestCommit(callback);
@@ -637,7 +635,7 @@ async function flush(runtime: Runtime): Promise<void> {
     }
   }
 
-  runtime._stagedLanes = NoLanes;
+  runtime._stagedLanes = Lane.NoLanes;
 }
 
 function runPipeline(

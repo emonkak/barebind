@@ -6,7 +6,7 @@ import type {
   UpdateOptions,
 } from '../abstractions.js';
 import { mount, patch, unmount } from '../commit.js';
-import { AllLanes } from '../lane.js';
+import { Lane } from '../lane.js';
 import { createScope } from '../scope.js';
 import { wrap } from '../vnode.js';
 import { ContainerPart } from './part.js';
@@ -27,7 +27,7 @@ export class DOMRoot {
     return this._dispatcher.schedule(
       {
         scope,
-        pendingLanes: AllLanes,
+        pendingLanes: Lane.AllLanes,
         prepare: (reconciler) => {
           const element = wrap(value);
           this._left =
@@ -59,7 +59,7 @@ export class DOMRoot {
     return this._dispatcher.schedule(
       {
         scope,
-        pendingLanes: AllLanes,
+        pendingLanes: Lane.AllLanes,
         prepare: () => {
           return () => {
             if (this._right !== null) {
