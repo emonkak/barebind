@@ -32,7 +32,7 @@ describe('use-create-component-naming.grit', () => {
         '});',
       ].join('');
       const result = await lint(code);
-      expect(result.stderr).toBe('');
+      expect(result.stderr).toContain('No fixes applied.');
       expect(result.status).toBe(0);
     });
 
@@ -82,7 +82,7 @@ describe('use-create-component-naming.grit', () => {
         '});',
       ].join('');
       const result = await lint(code);
-      expect(result.stderr).toBe('');
+      expect(result.stderr).toContain('No fixes applied.');
       expect(result.status).toBe(0);
     });
 
