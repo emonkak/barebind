@@ -146,4 +146,27 @@ describe('Effect hook', () => {
     await step(runtime);
     expect(container.innerHTML).toBe('');
   });
+
+  it('re-runs the effect when state is updated during setup', async () => {
+    const logs: string[] = [];
+    const App = createComponent(function App() {
+      const [count, setCount] = this.useState(0);
+      this.useEffect(() => {
+        if (count === 0) {
+          setCount(count + 1);
+        }
+        logs.push(`setup ${count}`);
+        return () => {
+          logs.push(`cleanup ${count}`);
+        };
+      }, [count]);
+      return html`<div>${count}</div>`;
+    });
+
+    await root.render(App({})).finished;
+    expect(logs).toStrictEqual(['setup 0']);
+
+    await step(runtime);
+    expect(logs).toStrictEqual(['setup 0', 'cleanup 0', 'setup 1']);
+  });
 });
