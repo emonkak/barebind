@@ -67,4 +67,12 @@ describe('Root', () => {
     expect(container.querySelector('#first')).toBe(null);
     expect(container.querySelector('#second')).not.toBe(null);
   });
+
+  it('applies only the last of concurrent renders', async () => {
+    await Promise.all([
+      root.render(html`<div>first</div>`).finished,
+      root.render(html`<div>second</div>`).finished,
+    ]);
+    expect(container.innerHTML).toBe('<div>second</div>');
+  });
 });

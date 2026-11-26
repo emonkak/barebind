@@ -58,4 +58,4 @@ export class UpdateComponent implements Transaction {
   }
 }
 
-function noop() {}
+export function noop() {}
