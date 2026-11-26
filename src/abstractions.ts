@@ -177,6 +177,7 @@ export namespace RenderNode {
       {
         renderer: ComponentRenderer<TProps>;
         pendingLanes: Lanes;
+        version: number;
       }
     > {}
 
@@ -192,6 +193,7 @@ export namespace RenderNode {
 export interface RenderResult {
   element: VElement;
   scope: Scope;
+  renderLanes: Lanes;
   dirty: boolean;
 }
 

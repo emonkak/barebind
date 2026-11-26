@@ -36,6 +36,9 @@ export class UpdateComponent implements Transaction {
       this._scope.parent,
       renderLanes,
     );
+    const version = ++node.state.version;
+    node.state.pendingLanes &= ~result.renderLanes;
+
     const oldChild = node.children[0]!;
     const newChild = reconciler.diff(
       oldChild,
@@ -46,10 +49,13 @@ export class UpdateComponent implements Transaction {
       result.dirty,
     );
 
-    node.state.pendingLanes &= ~renderLanes;
+    if (!isCommitted(node)) {
+      node.children = [newChild];
+      return noop;
+    }
 
     return () => {
-      if (isCommitted(node)) {
+      if (isCommitted(node) && node.state.version === version) {
         patch(oldChild, newChild);
         node.state.renderer.afterCommit();
         node.children = [newChild];

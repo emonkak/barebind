@@ -377,6 +377,62 @@ describe('State hook', () => {
     expect(container.innerHTML).toBe('<div>100</div>');
   });
 
+  it('handles repeated state updates during render', async () => {
+    const App = createComponent(function App() {
+      const [count, setCount] = this.useState(0);
+      if (count < 3) {
+        setCount(count + 1);
+      }
+      return html`
+        <div>${count}</div>
+      `;
+    });
+
+    await root.render(App({})).finished;
+    expect(container.innerHTML).toBe('<div>3</div>');
+  });
+
+  it('handles the update during render when props change', async () => {
+    const App = createComponent(function App({
+      nextCount,
+    }: {
+      nextCount: number;
+    }) {
+      const [count, setCount] = this.useState(0);
+      if (count !== nextCount) {
+        setCount(nextCount);
+      }
+      return html`
+        <div>${count}</div>
+      `;
+    });
+
+    await root.render(App({ nextCount: 0 })).finished;
+    expect(container.innerHTML).toBe('<div>0</div>');
+
+    await root.render(App({ nextCount: 3 })).finished;
+    expect(container.innerHTML).toBe('<div>3</div>');
+  });
+
+  it('runs the effect once after repeated state updates during render are committed', async () => {
+    const logs: string[] = [];
+    const App = createComponent(function App() {
+      const [count, setCount] = this.useState(0);
+      this.useEffect(() => {
+        logs.push(container.innerHTML);
+      });
+      if (count < 3) {
+        setCount(count + 1);
+      }
+      return html`
+        <div>${count}</div>
+      `;
+    });
+
+    await root.render(App({})).finished;
+    expect(logs).toStrictEqual(['<div>3</div>']);
+  });
+
   it('resolves UpdateHandle.finished after the state update is committed', async () => {
     let increment!: () => UpdateHandle;
     const App = createComponent(function App() {

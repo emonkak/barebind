@@ -109,6 +109,7 @@ export class Runtime implements Dispatcher, Reconciler {
         state: {
           renderer: element.type.createRenderer(this),
           pendingLanes: Lane.NoLanes,
+          version: 0,
         },
         flags: NodeFlag.NoFlags,
       };
@@ -226,6 +227,8 @@ export class Runtime implements Dispatcher, Reconciler {
         scope,
         this._renderLanes,
       );
+      newNode.state.version++;
+      newNode.state.pendingLanes &= ~result.renderLanes;
       newNode.children[0] = this.diff(
         oldNode.children[0]!,
         result.element,
@@ -234,7 +237,6 @@ export class Runtime implements Dispatcher, Reconciler {
         result.scope,
         dirty || result.dirty,
       );
-      newNode.state.pendingLanes &= ~this._renderLanes;
       return newNode;
     } else {
       const newNode: RenderNode.BlockNode = {

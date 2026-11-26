@@ -147,6 +147,7 @@ export class RenderContext {
       new UpdateComponent(this._node, this._scope),
       options,
     );
+    this._renderLanes &= ~handle.lanes;
     this._node.state.pendingLanes |= handle.lanes;
     return handle;
   }
@@ -456,7 +457,12 @@ class StatefulComponentRenderer<TProps = any, TReturn = unknown>
       const dirty =
         oldScope === undefined || areScopesDirty(oldScope, newScope);
       finalizeHooks(this._context);
-      return { element, scope: Object.freeze(newScope), dirty };
+      return {
+        element,
+        scope: Object.freeze(newScope),
+        renderLanes: this._context._renderLanes,
+        dirty,
+      };
     } catch (cause) {
       throw RenderError.withScope(
         newScope,
