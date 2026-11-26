@@ -17,8 +17,8 @@ import { areDependenciesChanged, is } from '../compare.js';
 import { RenderError } from '../error.js';
 import { Lane } from '../lane.js';
 import { areScopesDirty, enterScope } from '../scope.js';
+import { UpdateComponent } from '../transaction.js';
 import { Ref, wrap } from '../vnode.js';
-import { UpdateComponent } from './transaction.js';
 
 const enum HookType {
   FINALIZER = 0,

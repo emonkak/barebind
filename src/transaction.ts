@@ -5,8 +5,8 @@ import type {
   RenderNode,
   Scope,
   Transaction,
-} from '../abstractions.js';
-import { patch } from '../commit.js';
+} from './abstractions.js';
+import { patch } from './commit.js';
 
 export class UpdateComponent implements Transaction {
   private readonly _node: RenderNode.ComponentNode;
