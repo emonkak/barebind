@@ -9,6 +9,7 @@ import {
   type Middleware,
   type Mutation,
   MutationType,
+  NodeFlag,
   type Part,
   type Reconciler,
   type RenderNode,
@@ -69,10 +70,10 @@ export class Runtime implements Dispatcher, Reconciler {
         key: element.key,
         index,
         parent,
-        left: [],
-        right: [],
+        children: [],
         part,
         state: null,
+        flags: NodeFlag.NoFlags,
       };
     } else if (element.type === Fragment) {
       const node: RenderNode.FragmentNode = {
@@ -81,13 +82,13 @@ export class Runtime implements Dispatcher, Reconciler {
         key: element.key,
         index,
         parent,
-        left: new Array(element.children.length),
-        right: [],
+        children: new Array(element.children.length),
         part,
         state: { mutations: [] },
+        flags: NodeFlag.NoFlags,
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
-        node.left[i] = this.build(
+        node.children[i] = this.build(
           element.children[i]!,
           i,
           node,
@@ -103,16 +104,22 @@ export class Runtime implements Dispatcher, Reconciler {
         key: element.key,
         index,
         parent,
-        left: new Array(1),
-        right: [],
+        children: new Array(1),
         part,
         state: {
           renderer: element.type.createRenderer(this),
           pendingLanes: Lane.NoLanes,
         },
+        flags: NodeFlag.NoFlags,
       };
       const result = node.state.renderer.render(node, scope, this._renderLanes);
-      node.left[0] = this.build(result.element, 0, node, result.scope, part);
+      node.children[0] = this.build(
+        result.element,
+        0,
+        node,
+        result.scope,
+        part,
+      );
       return node;
     } else {
       const block = Array.isArray(element.type)
@@ -124,13 +131,13 @@ export class Runtime implements Dispatcher, Reconciler {
         key: element.key,
         index,
         parent,
-        left: new Array(element.children.length),
-        right: [],
+        children: new Array(element.children.length),
         part,
         state: { block },
+        flags: NodeFlag.NoFlags,
       };
       for (let i = 0, l = element.children.length; i < l; i++) {
-        node.left[i] = this.build(
+        node.children[i] = this.build(
           element.children[i]!,
           i,
           node,
@@ -176,10 +183,10 @@ export class Runtime implements Dispatcher, Reconciler {
         key: newElement.key,
         index,
         parent,
-        left: oldNode.left,
-        right: oldNode.right,
+        children: [],
         part: oldNode.part,
         state: (oldNode as RenderNode.BindNode).state,
+        flags: NodeFlag.NoFlags,
       };
     } else if (newElement.type === Fragment) {
       const newNode: RenderNode.FragmentNode = {
@@ -188,13 +195,14 @@ export class Runtime implements Dispatcher, Reconciler {
         key: newElement.key,
         index,
         parent,
-        left: new Array(newElement.children.length),
-        right: oldNode.right,
+        children: new Array(newElement.children.length),
         part: oldNode.part,
         state: (oldNode as RenderNode.FragmentNode).state,
+        flags: NodeFlag.NoFlags,
       };
       newNode.state.mutations = diffChildren(
         this,
+        oldNode,
         newNode,
         newElement.children,
         scope,
@@ -208,18 +216,18 @@ export class Runtime implements Dispatcher, Reconciler {
         key: newElement.key,
         index,
         parent,
-        left: oldNode.right.slice(),
-        right: oldNode.right,
+        children: new Array(1),
         part: oldNode.part,
         state: (oldNode as RenderNode.ComponentNode).state,
+        flags: NodeFlag.NoFlags,
       };
       const result = newNode.state.renderer.render(
         newNode,
         scope,
         this._renderLanes,
       );
-      newNode.left[0] = this.diff(
-        newNode.right[0]!,
+      newNode.children[0] = this.diff(
+        oldNode.children[0]!,
         result.element,
         0,
         newNode,
@@ -235,14 +243,14 @@ export class Runtime implements Dispatcher, Reconciler {
         key: newElement.key,
         index,
         parent,
-        left: new Array(newElement.children.length),
-        right: oldNode.right,
+        children: new Array(newElement.children.length),
         part: oldNode.part,
         state: (oldNode as RenderNode.BlockNode).state,
+        flags: NodeFlag.NoFlags,
       };
       for (let i = 0, l = newElement.children.length; i < l; i++) {
-        newNode.left[i] = this.diff(
-          newNode.right[i]!,
+        newNode.children[i] = this.diff(
+          oldNode.children[i]!,
           newElement.children[i]!,
           i,
           newNode,
@@ -359,13 +367,14 @@ function compareUpdates(update1: Update, update2: Update): number {
 
 function diffChildren(
   runtime: Runtime,
+  oldParent: RenderNode,
   newParent: RenderNode,
   newElements: VElement[],
   scope: Scope,
   dirty: boolean,
 ): Mutation[] {
-  const oldChildren: (RenderNode | undefined)[] = newParent.right.slice();
-  const newChildren = newParent.left;
+  const oldChildren: (RenderNode | undefined)[] = oldParent.children.slice();
+  const newChildren = newParent.children;
   const oldKeys = oldChildren.map((child) => child!.key);
   const newKeys = newElements.map((element) => element.key);
   const newMutations: Mutation[] = [];

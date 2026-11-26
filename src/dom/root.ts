@@ -14,8 +14,7 @@ import { ContainerPart } from './part.js';
 export class DOMRoot {
   private readonly _dispatcher: Dispatcher;
   private readonly _container: HostContainer;
-  private _left: RenderNode | null = null;
-  private _right: RenderNode | null = null;
+  private _root: RenderNode | null = null;
 
   constructor(dispatcher: Dispatcher, container: HostContainer) {
     this._dispatcher = dispatcher;
@@ -30,9 +29,10 @@ export class DOMRoot {
         pendingLanes: Lane.AllLanes,
         prepare: (_renderLanes, reconciler) => {
           const element = wrap(value);
-          this._left =
-            this._right !== null
-              ? reconciler.diff(this._right, element, 0, null, scope, false)
+          const oldRoot = this._root;
+          const newRoot =
+            oldRoot !== null
+              ? reconciler.diff(oldRoot, element, 0, null, scope, false)
               : reconciler.build(
                   element,
                   0,
@@ -41,12 +41,12 @@ export class DOMRoot {
                   new ContainerPart(this._container),
                 );
           return () => {
-            if (this._right !== null) {
-              patch(this._right, this._left!);
+            if (oldRoot !== null) {
+              patch(oldRoot, newRoot);
             } else {
-              mount(this._left!);
+              mount(newRoot);
             }
-            this._right = this._left;
+            this._root = newRoot;
           };
         },
       },
@@ -61,10 +61,11 @@ export class DOMRoot {
         scope,
         pendingLanes: Lane.AllLanes,
         prepare: () => {
+          const root = this._root;
+          this._root = null;
           return () => {
-            if (this._right !== null) {
-              unmount(this._right);
-              this._right = null;
+            if (root !== null) {
+              unmount(root);
             }
           };
         },

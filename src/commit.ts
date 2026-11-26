@@ -2,16 +2,21 @@ import {
   Bind,
   type HostNode,
   MutationType,
+  NodeFlag,
   type RenderNode,
 } from './abstractions.js';
+
+export function isCommitted(node: RenderNode): boolean {
+  return (node.flags & NodeFlag.Committed) !== NodeFlag.NoFlags;
+}
+
+export function isDetached(node: RenderNode): boolean {
+  return (node.flags & NodeFlag.Detached) !== NodeFlag.NoFlags;
+}
 
 export function mount(node: RenderNode): void {
   mountChild(node, null);
   afterCommit(node);
-}
-
-export function unmount(node: RenderNode): void {
-  unmountChild(node);
 }
 
 export function patch(oldNode: RenderNode, newNode: RenderNode) {
@@ -19,15 +24,19 @@ export function patch(oldNode: RenderNode, newNode: RenderNode) {
   afterCommit(newNode);
 }
 
+export function unmount(node: RenderNode): void {
+  unmountChild(node);
+}
+
 function afterCommit(node: RenderNode): void {
   if (!isCommitted(node)) {
-    for (const child of node.left) {
+    for (const child of node.children) {
       afterCommit(child);
     }
     if (typeof node.type === 'function') {
       node.state.renderer.afterCommit();
     }
-    node.right = node.left;
+    node.flags |= NodeFlag.Committed;
   }
 }
 
@@ -37,7 +46,7 @@ function applyPatch(
   index: number,
   parent: RenderNode | null,
 ): void {
-  if (oldNode === newNode && isCommitted(oldNode)) {
+  if (oldNode === newNode) {
     reparentChild(oldNode, index, parent);
     return;
   }
@@ -50,13 +59,13 @@ function applyPatch(
       newNode.props.value,
     );
   } else if (typeof newNode.type === 'object') {
-    const oldChildren = newNode.right;
-    const newChildren = newNode.left;
+    const oldChildren = oldNode.children;
+    const newChildren = newNode.children;
     for (let i = 0, l = newChildren.length; i < l; i++) {
       applyPatch(oldChildren[i]!, newChildren[i]!, i, newNode);
     }
   } else if (typeof newNode.type === 'function') {
-    applyPatch(newNode.right[0]!, newNode.left[0]!, 0, newNode);
+    applyPatch(oldNode.children[0]!, newNode.children[0]!, 0, newNode);
   } else {
     for (const mutation of newNode.state.mutations.splice(0)) {
       switch (mutation.type) {
@@ -102,7 +111,7 @@ function getChildHostNode(node: RenderNode): HostNode | null {
   if (typeof node.type === 'object') {
     return node.state.block.hostNodes[0]!;
   }
-  for (const child of node.left) {
+  for (const child of node.children) {
     const hostNode = getChildHostNode(child);
     if (hostNode !== null) {
       return hostNode;
@@ -116,7 +125,7 @@ function getSiblingHostNode(node: RenderNode): HostNode | null {
   // A null parent means either the node is detached or it is the root node.
   while (node.parent !== null) {
     const parent = node.parent;
-    const children = isCommitted(node) ? parent.right : parent.left;
+    const children = parent.children;
     for (let i = node.index + 1, l = children.length; i < l; i++) {
       const child = children[i]!;
       if (child.part !== ownPart) {
@@ -132,20 +141,16 @@ function getSiblingHostNode(node: RenderNode): HostNode | null {
   return null;
 }
 
-function isCommitted(node: RenderNode): boolean {
-  return node.left === node.right;
-}
-
 function mountChild(child: RenderNode, afterNode: HostNode | null): void {
   if (child.type === Bind) {
     child.part.commitMount(child.props.value);
   } else if (typeof child.type === 'object') {
-    for (const grandchild of child.left) {
+    for (const grandchild of child.children) {
       mountChild(grandchild, null);
     }
     child.part.mountBlock(child.state.block, afterNode);
   } else {
-    for (const grandchild of child.left) {
+    for (const grandchild of child.children) {
       mountChild(grandchild, afterNode);
     }
   }
@@ -155,7 +160,7 @@ function moveChild(child: RenderNode, afterNode: HostNode | null): void {
   if (typeof child.type === 'object') {
     child.part.moveBlock(child.state.block, afterNode);
   } else {
-    for (const grandchild of child.left) {
+    for (const grandchild of child.children) {
       moveChild(grandchild, afterNode);
     }
   }
@@ -175,17 +180,18 @@ function unmountChild(child: RenderNode, cascade: boolean = false): void {
     child.part.commitUnmount(child.props.value, cascade);
   } else if (typeof child.type === 'object') {
     child.part.unmountBlock(child.state.block, cascade);
-    for (const grandchild of child.right) {
+    for (const grandchild of child.children) {
       unmountChild(grandchild, true);
     }
   } else {
     if (typeof child.type === 'function') {
       child.state.renderer.beforeUnmount();
     }
-    for (const grandchild of child.right) {
+    for (const grandchild of child.children) {
       unmountChild(grandchild, cascade);
     }
   }
-  child.index = -1;
   child.parent = null;
+  child.flags &= ~NodeFlag.Committed;
+  child.flags |= NodeFlag.Detached;
 }

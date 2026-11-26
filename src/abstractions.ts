@@ -9,6 +9,12 @@ export const enum MutationType {
   Remove = 3,
 }
 
+export const enum NodeFlag {
+  NoFlags /*   */ = 0b00,
+  Committed /* */ = 0b01,
+  Detached /*  */ = 0b10,
+}
+
 export interface Bindable {
   [toElement](): VElement;
 }
@@ -154,10 +160,10 @@ export namespace RenderNode {
     key: TElement['key'];
     index: number;
     parent: RenderNode | null;
-    left: RenderNode[]; // work-in-progress children
-    right: RenderNode[]; // committed children
+    children: RenderNode[];
     part: Part;
     state: TState;
+    flags: number;
   }
 
   export interface BindNode extends Node<VBind, null> {}

@@ -6,7 +6,7 @@ import type {
   Scope,
   Transaction,
 } from './abstractions.js';
-import { patch } from './commit.js';
+import { isCommitted, isDetached, patch } from './commit.js';
 
 export class UpdateComponent implements Transaction {
   private readonly _node: RenderNode.ComponentNode;
@@ -26,52 +26,35 @@ export class UpdateComponent implements Transaction {
   }
 
   prepare(renderLanes: Lanes, reconciler: Reconciler): Commit {
-    if (this._node.index < 0) {
+    const node = this._node;
+    if (isDetached(node)) {
       return noop;
     }
 
-    const result = this._node.state.renderer.render(
-      this._node,
+    const result = node.state.renderer.render(
+      node,
       this._scope.parent,
       renderLanes,
     );
-    let newNode: RenderNode;
-    let commit: Commit;
+    const oldChild = node.children[0]!;
+    const newChild = reconciler.diff(
+      oldChild,
+      result.element,
+      0,
+      node,
+      result.scope,
+      result.dirty,
+    );
 
-    if (this._node.right[0] === undefined) {
-      // Reached when a re-render occurs during the initial render. The
-      // parent always commits in that case, and the node may also be
-      // invalidated by later updates, so do nothing.
-      newNode = reconciler.build(
-        result.element,
-        0,
-        this._node,
-        result.scope,
-        this._node.part,
-      );
-      commit = noop;
-    } else {
-      newNode = reconciler.diff(
-        this._node.right[0],
-        result.element,
-        0,
-        this._node,
-        result.scope,
-        result.dirty,
-      );
-      commit = () => {
-        if (this._node.index >= 0) {
-          patch(this._node.right[0]!, this._node.left[0]!);
-          this._node.state.renderer.afterCommit();
-          this._node.right = this._node.left;
-        }
-      };
-    }
+    node.state.pendingLanes &= ~renderLanes;
 
-    this._node.left = [newNode];
-    this._node.state.pendingLanes &= ~renderLanes;
-
-    return commit;
+    return () => {
+      if (isCommitted(node)) {
+        patch(oldChild, newChild);
+        node.state.renderer.afterCommit();
+        node.children = [newChild];
+      }
+    };
   }
 }
 
