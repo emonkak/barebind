@@ -595,9 +595,9 @@ async function flush(runtime: Runtime): Promise<void> {
           if (transaction.pendingLanes & lanes) {
             const commit = runPipeline(
               update,
+              renderLanes,
               runtime,
               runtime._middlewares,
-              renderLanes,
             );
             commitBatch.push({ commit, handler });
           }
@@ -640,14 +640,14 @@ async function flush(runtime: Runtime): Promise<void> {
 
 function runPipeline(
   update: Update,
+  renderLanes: Lanes,
   reconciler: Reconciler,
   middlewares: Middleware[],
-  renderLanes: Lanes,
 ) {
   function next(update: Update, index: number): Commit {
     return index < middlewares.length
       ? middlewares[index]!.handle(update, (update) => next(update, index + 1))
-      : update.transaction.prepare(reconciler, renderLanes);
+      : update.transaction.prepare(renderLanes, reconciler);
   }
   return next(update, 0);
 }

@@ -28,7 +28,7 @@ export class DOMRoot {
       {
         scope,
         pendingLanes: Lane.AllLanes,
-        prepare: (reconciler) => {
+        prepare: (_renderLanes, reconciler) => {
           const element = wrap(value);
           this._left =
             this._right !== null

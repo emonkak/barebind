@@ -25,7 +25,7 @@ export class UpdateComponent implements Transaction {
     return this._node.state.pendingLanes;
   }
 
-  prepare(reconciler: Reconciler, renderLanes: Lanes): Commit {
+  prepare(renderLanes: Lanes, reconciler: Reconciler): Commit {
     if (this._node.index < 0) {
       return noop;
     }

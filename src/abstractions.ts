@@ -212,7 +212,7 @@ export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 export interface Transaction {
   readonly scope: Scope;
   readonly pendingLanes: Lanes;
-  prepare(reconciler: Reconciler, renderLanes: Lanes): Commit;
+  prepare(renderLanes: Lanes, reconciler: Reconciler): Commit;
 }
 
 export interface Update {
