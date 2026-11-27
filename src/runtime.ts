@@ -438,7 +438,7 @@ function diffChildren(
       oldHead++;
     } else if (oldChildren[oldTail] === undefined) {
       oldTail--;
-    } else if (is(oldKeys[oldHead]!, newKeys[newHead]!)) {
+    } else if (is(oldKeys[oldHead], newKeys[newHead])) {
       const oldChild = oldChildren[oldHead]!;
       const newChild = runtime.diff(
         oldChild,
@@ -457,7 +457,7 @@ function diffChildren(
       newChildren[newHead] = newChild;
       oldHead++;
       newHead++;
-    } else if (is(oldKeys[oldTail]!, newKeys[newTail]!)) {
+    } else if (is(oldKeys[oldTail], newKeys[newTail])) {
       const oldChild = oldChildren[oldTail]!;
       const newChild = runtime.diff(
         oldChild,
@@ -477,8 +477,8 @@ function diffChildren(
       oldTail--;
       newTail--;
     } else if (
-      is(oldKeys[oldHead]!, newKeys[newTail]!) &&
-      is(oldKeys[oldTail]!, newKeys[newHead]!)
+      is(oldKeys[oldHead], newKeys[newTail]) &&
+      is(oldKeys[oldTail], newKeys[newHead])
     ) {
       const tailChild = runtime.diff(
         oldChildren[oldTail]!,
