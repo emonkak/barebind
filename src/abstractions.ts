@@ -179,9 +179,9 @@ export namespace RenderNode {
       VComponent,
       {
         renderer: ComponentRenderer<TProps>;
-        pendingLanes: Lanes;
         txId: number;
         version: number;
+        pendingLanes: Lanes;
       }
     > {}
 

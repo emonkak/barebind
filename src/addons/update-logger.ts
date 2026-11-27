@@ -19,7 +19,6 @@ export type LoggerAPI = Pick<Console, 'groupCollapsed' | 'groupEnd' | 'log'>;
 
 export class UpdateLogger implements Middleware {
   private readonly _logger: LoggerAPI;
-  private _transactionIndex: number = 0;
 
   constructor(logger: LoggerAPI = window.console) {
     this._logger = logger;
@@ -45,19 +44,17 @@ export class UpdateLogger implements Middleware {
           emitLog(
             this._logger,
             update,
+            dispatcher.txId,
             renderDuration,
             commitDuration,
             totalDuration,
-            this._transactionIndex++,
           );
         }
       };
     } catch (error) {
       const totalDuration = performance.now() - renderStart;
-      emitLog(this._logger, update, -1, -1, totalDuration, 0);
+      emitLog(this._logger, update, dispatcher.txId, -1, -1, totalDuration);
       throw error;
-    } finally {
-      this._transactionIndex = 0;
     }
   }
 }
@@ -65,10 +62,10 @@ export class UpdateLogger implements Middleware {
 function emitLog(
   logger: LoggerAPI,
   update: Update,
+  txId: number,
   renderDuration: number,
   commitDuration: number,
   totalDuration: number,
-  transactionIndex: number,
 ): void {
   const status = renderDuration >= 0 ? 'COMPLETED' : 'FAILED';
   const statusStyle = renderDuration >= 0 ? BLUE_STYLE : RED_STYLE;
@@ -79,7 +76,7 @@ function emitLog(
   const ownerStack = captureOwnerStack(scope).map(nameOf).join(' > ');
 
   logger.groupCollapsed(
-    `Update #${update.id} %c${status}%c at %c${ownerName}%c in %c${totalDuration.toFixed(1)}ms (tx${transactionIndex})`,
+    `Update #${update.id} %c${status}%c at %c${ownerName}%c in %c${totalDuration.toFixed(1)}ms (tx${txId})`,
     statusStyle,
     RESET_STYLE,
     ORANGE_STYLE,

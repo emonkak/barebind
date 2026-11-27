@@ -119,9 +119,9 @@ export class Runtime implements Dispatcher {
         part,
         state: {
           renderer: element.type.createRenderer(this),
-          pendingLanes: Lane.NoLanes,
           txId: this._txCount,
           version: 0,
+          pendingLanes: Lane.NoLanes,
         },
         flags: NodeFlag.NoFlags,
       };
