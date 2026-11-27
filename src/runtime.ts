@@ -20,7 +20,6 @@ import {
   type VPortal,
   type VTemplate,
 } from './abstractions.js';
-import { is } from './compare.js';
 import {
   getHighestPriorityLane,
   getPriorityFromLanes,
@@ -170,7 +169,7 @@ export class Runtime implements Dispatcher {
     scope: Scope,
     dirty: boolean,
   ): RenderNode {
-    if (oldNode.type !== newElement.type || !is(oldNode.key, newElement.key)) {
+    if (oldNode.type !== newElement.type || oldNode.key !== newElement.key) {
       return this.build(newElement, index, parent, scope, oldNode.part);
     }
 
@@ -435,7 +434,7 @@ function diffChildren(
       oldHead++;
     } else if (oldChildren[oldTail] === undefined) {
       oldTail--;
-    } else if (is(oldKeys[oldHead], newKeys[newHead])) {
+    } else if (oldKeys[oldHead] === newKeys[newHead]) {
       const oldChild = oldChildren[oldHead]!;
       const newChild = runtime.diff(
         oldChild,
@@ -454,7 +453,7 @@ function diffChildren(
       newChildren[newHead] = newChild;
       oldHead++;
       newHead++;
-    } else if (is(oldKeys[oldTail], newKeys[newTail])) {
+    } else if (oldKeys[oldTail] === newKeys[newTail]) {
       const oldChild = oldChildren[oldTail]!;
       const newChild = runtime.diff(
         oldChild,
@@ -474,8 +473,8 @@ function diffChildren(
       oldTail--;
       newTail--;
     } else if (
-      is(oldKeys[oldHead], newKeys[newTail]) &&
-      is(oldKeys[oldTail], newKeys[newHead])
+      oldKeys[oldHead] === newKeys[newTail] &&
+      oldKeys[oldTail] === newKeys[newHead]
     ) {
       const tailChild = runtime.diff(
         oldChildren[oldTail]!,
