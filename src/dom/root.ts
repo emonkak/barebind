@@ -29,12 +29,12 @@ export class DOMRoot {
       {
         scope,
         pendingLanes: Lane.AllLanes,
-        prepare: (reconciler) => {
+        prepare: (dispatcher) => {
           const element = wrap(value);
           const oldRoot = this._root;
           const version = ++this._version;
           if (oldRoot !== null) {
-            const newRoot = reconciler.diff(
+            const newRoot = dispatcher.diff(
               oldRoot,
               element,
               0,
@@ -49,7 +49,7 @@ export class DOMRoot {
               }
             };
           } else {
-            const newRoot = reconciler.build(
+            const newRoot = dispatcher.build(
               element,
               0,
               null,
