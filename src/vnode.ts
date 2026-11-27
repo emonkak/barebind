@@ -4,7 +4,7 @@ import {
   Fragment,
   type HostContainer,
   type TemplateMode,
-  toElement,
+  toVElement,
   type VBind,
   type VElement,
   type VFragment,
@@ -122,7 +122,7 @@ export class Ref<T> implements Bindable {
     }
   }
 
-  [toElement](): VElement {
+  [toVElement](): VElement {
     return createBind((instance: T) => {
       this.current = instance;
       return () => {
@@ -209,14 +209,14 @@ export function wrap(value: unknown): VElement {
   return value instanceof VNode
     ? value
     : isBindable(value)
-      ? value[toElement]()
+      ? value[toVElement]()
       : typeof value === 'object' && isIterable(value)
         ? createFragment(value)
         : createBind(value);
 }
 
 function isBindable(value: any): value is Bindable {
-  return typeof value?.[toElement] === 'function';
+  return typeof value?.[toVElement] === 'function';
 }
 
 function isIterable(value: any): value is Iterable<unknown> {

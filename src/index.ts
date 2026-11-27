@@ -3,7 +3,7 @@ export {
   type Commit,
   type Component,
   type Middleware,
-  toElement,
+  toVElement,
   type Update,
   type UpdateHandle,
   type UpdateOptions,

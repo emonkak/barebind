@@ -1,6 +1,6 @@
 export const Bind = Symbol.for('barebind.Bind');
 export const Fragment = Symbol.for('barebind.Fragment');
-export const toElement = Symbol.for('barebind.toElement');
+export const toVElement = Symbol.for('barebind.toVElement');
 
 export const enum MutationType {
   Insert = 0,
@@ -16,7 +16,7 @@ export const enum NodeFlag {
 }
 
 export interface Bindable {
-  [toElement](): VElement;
+  [toVElement](): VElement;
 }
 
 export interface Block {

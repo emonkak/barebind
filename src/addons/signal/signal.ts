@@ -1,4 +1,8 @@
-import { type Bindable, toElement, type VElement } from '../../abstractions.js';
+import {
+  type Bindable,
+  toVElement,
+  type VElement,
+} from '../../abstractions.js';
 import { is } from '../../compare.js';
 import {
   createComponent,
@@ -48,7 +52,7 @@ export abstract class Signal<T> implements Bindable, HookObject<T> {
 
   abstract get version(): number;
 
-  [toElement](): VElement {
+  [toVElement](): VElement {
     return SignalObserver({ signal: this });
   }
 
