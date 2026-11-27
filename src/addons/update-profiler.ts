@@ -30,7 +30,7 @@ export class UpdateProfiler implements Middleware {
     return () => {
       const commitStartMark = `barebind:commit-start:${update.id}`;
       const commitEndMark = `barebind:commit-end:${update.id}`;
-      const name = nameOf(update.transaction.scope.owner);
+      const name = nameOf(update.unitOfWork.scope.owner);
 
       this._userTiming.mark(commitStartMark);
       commit();

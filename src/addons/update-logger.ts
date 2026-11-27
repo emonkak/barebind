@@ -71,7 +71,7 @@ function emitLog(
   const statusStyle = renderDuration >= 0 ? BLUE_STYLE : RED_STYLE;
   const priority = getPriorityFromLanes(update.lanes);
   const mode = getCommitMode(update.lanes);
-  const scope = update.transaction.scope;
+  const scope = update.unitOfWork.scope;
   const ownerName = nameOf(scope.owner);
   const ownerStack = captureOwnerStack(scope).map(nameOf).join(' > ');
 

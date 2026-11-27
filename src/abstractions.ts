@@ -69,7 +69,7 @@ export interface Dispatcher {
   ): RenderNode;
   nextIdentifier(): string;
   nextTransition(): number;
-  schedule(transaction: Transaction, options?: UpdateOptions): UpdateHandle;
+  schedule(unitOfWork: UnitOfWork, options?: UpdateOptions): UpdateHandle;
 }
 
 export interface HostAdapter {
@@ -221,7 +221,7 @@ export namespace Scope {
 
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
-export interface Transaction {
+export interface UnitOfWork {
   readonly scope: Scope;
   readonly pendingLanes: Lanes;
   prepare(dispatcher: Dispatcher): Commit;
@@ -232,7 +232,7 @@ export interface Update {
   readonly lanes: Lanes;
   readonly handler: CommitHandler | null;
   readonly controller: PromiseWithResolvers<void>;
-  readonly transaction: Transaction;
+  readonly unitOfWork: UnitOfWork;
 }
 
 export interface UpdateHandle {

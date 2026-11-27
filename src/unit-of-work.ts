@@ -4,11 +4,11 @@ import type {
   Lanes,
   RenderNode,
   Scope,
-  Transaction,
+  UnitOfWork,
 } from './abstractions.js';
 import { isCommitted, isDetached, patch } from './commit.js';
 
-export class UpdateComponent implements Transaction {
+export class UpdateComponent implements UnitOfWork {
   private readonly _node: RenderNode.ComponentNode;
   private readonly _scope: Scope.Child;
 

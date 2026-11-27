@@ -17,7 +17,7 @@ import { areDependenciesChanged, is } from '../compare.js';
 import { RenderError } from '../error.js';
 import { Lane } from '../lane.js';
 import { areScopesDirty, enterScope } from '../scope.js';
-import { UpdateComponent } from '../transaction.js';
+import { UpdateComponent } from '../unit-of-work.js';
 import { Ref, wrap } from '../vnode.js';
 
 const enum HookType {
@@ -160,8 +160,8 @@ export class RenderContext {
       targetNode = this._currentNode ?? this._pendingNode;
       targetScope = this._currentScope ?? this._pendingScope;
     }
-    const transaction = new UpdateComponent(targetNode, targetScope);
-    const handle = dispatcher.schedule(transaction, options);
+    const unitOfWork = new UpdateComponent(targetNode, targetScope);
+    const handle = dispatcher.schedule(unitOfWork, options);
     this._renderLanes &= ~handle.lanes;
     this._pendingNode.state.pendingLanes |= handle.lanes;
     return handle;

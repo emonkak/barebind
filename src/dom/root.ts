@@ -8,7 +8,7 @@ import type {
 import { mount, patch, unmount } from '../commit.js';
 import { Lane } from '../lane.js';
 import { createScope } from '../scope.js';
-import { noop } from '../transaction.js';
+import { noop } from '../unit-of-work.js';
 import { wrap } from '../vnode.js';
 import { ContainerPart } from './part.js';
 

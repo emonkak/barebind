@@ -12,7 +12,7 @@ import {
   type Part,
   type RenderNode,
   type Scope,
-  type Transaction,
+  type UnitOfWork,
   type Update,
   type UpdateHandle,
   type UpdateOptions,
@@ -285,10 +285,7 @@ export class Runtime implements Dispatcher {
     return this._transitionCount++;
   }
 
-  schedule(
-    transaction: Transaction,
-    options: UpdateOptions = {},
-  ): UpdateHandle {
+  schedule(unitOfWork: UnitOfWork, options: UpdateOptions = {}): UpdateHandle {
     const id = ++this._updateCount;
     const lanes =
       getRenderLanes(options) ||
@@ -300,7 +297,7 @@ export class Runtime implements Dispatcher {
       lanes,
       handler: options.handler ?? null,
       controller,
-      transaction,
+      unitOfWork,
     };
 
     if ((this._renderLanes & lanes) === lanes) {
@@ -375,8 +372,8 @@ function compareUpdates(update1: Update, update2: Update): number {
   if (lane1 !== lane2) {
     return lane1 - lane2;
   }
-  const level1 = update1.transaction.scope.level;
-  const level2 = update2.transaction.scope.level;
+  const level1 = update1.unitOfWork.scope.level;
+  const level2 = update2.unitOfWork.scope.level;
   return level1 - level2;
 }
 
@@ -616,8 +613,8 @@ async function flush(runtime: Runtime): Promise<void> {
 
       try {
         for (const update of runtime._updateBatch) {
-          const { handler, lanes, transaction } = update;
-          if (transaction.pendingLanes & lanes) {
+          const { handler, lanes, unitOfWork } = update;
+          if (unitOfWork.pendingLanes & lanes) {
             const commit = runPipeline(update, runtime, runtime._middlewares);
             commitBatch.push({ commit, handler });
           }
@@ -668,7 +665,7 @@ function runPipeline(
       ? middlewares[index]!.handle(update, dispatcher, (update, dispatcher) =>
           next(update, dispatcher, index + 1),
         )
-      : update.transaction.prepare(dispatcher);
+      : update.unitOfWork.prepare(dispatcher);
   }
   return next(update, dispatcher, 0);
 }
