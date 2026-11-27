@@ -2,8 +2,11 @@ import type { Block, HostContainer } from '../abstractions.js';
 import { DOMAdapterError } from './error.js';
 import type { DOMPart } from './part.js';
 
-const insertBefore = Element.prototype.insertBefore;
-const moveBefore = Element.prototype.moveBefore ?? insertBefore;
+const {
+  appendChild,
+  insertBefore,
+  moveBefore = insertBefore,
+} = Element.prototype;
 
 export class DOMBlock implements Block {
   private readonly _fragment: DocumentFragment;
@@ -53,7 +56,7 @@ export class DOMBlock implements Block {
 
   unmount(): void {
     for (const node of collectChildNodes(this._hostNodes)) {
-      node.remove();
+      appendChild.call(this._fragment, node);
     }
   }
 }
