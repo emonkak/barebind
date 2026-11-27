@@ -1,7 +1,7 @@
 import type {
   Commit,
+  Dispatcher,
   Lanes,
-  Reconciler,
   RenderNode,
   Scope,
   Transaction,
@@ -25,24 +25,24 @@ export class UpdateComponent implements Transaction {
     return this._node.state.pendingLanes;
   }
 
-  prepare(reconciler: Reconciler): Commit {
+  prepare(dispatcher: Dispatcher): Commit {
     const node = this._node;
     if (isDetached(node)) {
       return noop;
     }
 
-    node.state.txId = reconciler.txId;
+    node.state.txId = dispatcher.txId;
 
     const result = node.state.renderer.render(
       node,
       this._scope.parent,
-      reconciler.renderLanes,
+      dispatcher.renderLanes,
     );
     const version = ++node.state.version;
     node.state.pendingLanes &= ~result.renderLanes;
 
     const oldChild = node.children[0]!;
-    const newChild = reconciler.diff(
+    const newChild = dispatcher.diff(
       oldChild,
       result.element,
       0,

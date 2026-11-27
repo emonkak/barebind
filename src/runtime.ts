@@ -10,7 +10,6 @@ import {
   MutationType,
   NodeFlag,
   type Part,
-  type Reconciler,
   type RenderNode,
   type Scope,
   type Transaction,
@@ -30,7 +29,7 @@ import {
 } from './lane.js';
 import { PriorityQueue } from './queue.js';
 
-export class Runtime implements Dispatcher, Reconciler {
+export class Runtime implements Dispatcher {
   /** @internal */
   readonly _adapter: HostAdapter;
   /** @internal */
@@ -661,13 +660,15 @@ async function flush(runtime: Runtime): Promise<void> {
 
 function runPipeline(
   update: Update,
-  runtime: Runtime,
+  dispatcher: Dispatcher,
   middlewares: Middleware[],
 ) {
-  function next(update: Update, index: number): Commit {
+  function next(update: Update, dispatcher: Dispatcher, index: number): Commit {
     return index < middlewares.length
-      ? middlewares[index]!.handle(update, (update) => next(update, index + 1))
-      : update.transaction.prepare(runtime);
+      ? middlewares[index]!.handle(update, dispatcher, (update, dispatcher) =>
+          next(update, dispatcher, index + 1),
+        )
+      : update.transaction.prepare(dispatcher);
   }
-  return next(update, 0);
+  return next(update, dispatcher, 0);
 }

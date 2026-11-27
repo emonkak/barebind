@@ -1,4 +1,9 @@
-import type { Commit, Middleware, Update } from '../abstractions.js';
+import type {
+  Commit,
+  Dispatcher,
+  Middleware,
+  Update,
+} from '../abstractions.js';
 import { nameOf } from '../debug.js';
 
 export type UserTimingAPI = Pick<Performance, 'mark' | 'measure'>;
@@ -10,12 +15,16 @@ export class UpdateProfiler implements Middleware {
     this._userTiming = userTiming;
   }
 
-  handle(update: Update, prepare: (update: Update) => Commit): Commit {
+  handle(
+    update: Update,
+    dispatcher: Dispatcher,
+    prepare: (update: Update, dispatcher: Dispatcher) => Commit,
+  ): Commit {
     const renderStartMark = `barebind:render-start:${update.id}`;
     const renderEndMark = `barebind:render-end:${update.id}`;
 
     this._userTiming.mark(renderStartMark);
-    const commit = prepare(update);
+    const commit = prepare(update, dispatcher);
     this._userTiming.mark(renderEndMark);
 
     return () => {

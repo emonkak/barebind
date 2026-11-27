@@ -52,6 +52,21 @@ export interface ComponentRenderer<TProps> {
 export interface Dispatcher {
   readonly renderLanes: Lanes;
   readonly txId: number;
+  build(
+    element: VElement,
+    index: number,
+    parent: RenderNode | null,
+    scope: Scope,
+    part: Part,
+  ): RenderNode;
+  diff(
+    oldNode: RenderNode,
+    newElement: VElement,
+    index: number,
+    parent: RenderNode | null,
+    scope: Scope,
+    dirty: boolean,
+  ): RenderNode;
   nextIdentifier(): string;
   nextTransition(): number;
   schedule(transaction: Transaction, options?: UpdateOptions): UpdateHandle;
@@ -86,7 +101,11 @@ export interface Injection {
 export type Lanes = number;
 
 export interface Middleware {
-  handle(update: Update, prepare: (update: Update) => Commit): Commit;
+  handle(
+    update: Update,
+    dispatcher: Dispatcher,
+    prepare: (update: Update, dispatcher: Dispatcher) => Commit,
+  ): Commit;
 }
 
 export type Mutation =
@@ -121,26 +140,6 @@ export interface Part {
   commitUpdate(oldValue: unknown, newValue: unknown): void;
   commitMount(value: unknown): void;
   commitUnmount(value: unknown, cascade: boolean): void;
-}
-
-export interface Reconciler {
-  readonly renderLanes: Lanes;
-  readonly txId: number;
-  build(
-    element: VElement,
-    index: number,
-    parent: RenderNode | null,
-    scope: Scope,
-    part: Part,
-  ): RenderNode;
-  diff(
-    oldNode: RenderNode,
-    newElement: VElement,
-    index: number,
-    parent: RenderNode | null,
-    scope: Scope,
-    dirty: boolean,
-  ): RenderNode;
 }
 
 export type RenderNode =
@@ -225,7 +224,7 @@ export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 export interface Transaction {
   readonly scope: Scope;
   readonly pendingLanes: Lanes;
-  prepare(reconciler: Reconciler): Commit;
+  prepare(dispatcher: Dispatcher): Commit;
 }
 
 export interface Update {

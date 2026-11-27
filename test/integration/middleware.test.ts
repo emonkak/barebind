@@ -7,6 +7,7 @@ import {
   type Update,
 } from 'barebind';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Dispatcher } from '@/abstractions.js';
 
 describe('Middleware', () => {
   let runtime: Runtime;
@@ -37,15 +38,23 @@ describe('Middleware', () => {
   it('calls multiple middlewares in registration order', async () => {
     const order: number[] = [];
     const middleware1 = {
-      handle(update: Update, render: (update: Update) => Commit): Commit {
+      handle(
+        update: Update,
+        dispatcher: Dispatcher,
+        prepare: (update: Update, dispatcher: Dispatcher) => Commit,
+      ): Commit {
         order.push(1);
-        return render(update);
+        return prepare(update, dispatcher);
       },
     };
     const middleware2 = {
-      handle(update: Update, render: (update: Update) => Commit): Commit {
+      handle(
+        update: Update,
+        dispatcher: Dispatcher,
+        prepare: (update: Update, dispatcher: Dispatcher) => Commit,
+      ): Commit {
         order.push(2);
-        return render(update);
+        return prepare(update, dispatcher);
       },
     };
 
@@ -95,7 +104,8 @@ describe('Middleware', () => {
 
 function passthrough(
   update: Update,
-  render: (update: Update) => Commit,
+  dispatcher: Dispatcher,
+  prepare: (update: Update, dispatcher: Dispatcher) => Commit,
 ): Commit {
-  return render(update);
+  return prepare(update, dispatcher);
 }

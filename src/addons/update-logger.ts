@@ -1,4 +1,10 @@
-import type { Commit, Lanes, Middleware, Update } from '../abstractions.js';
+import type {
+  Commit,
+  Dispatcher,
+  Lanes,
+  Middleware,
+  Update,
+} from '../abstractions.js';
 import { captureOwnerStack, nameOf } from '../debug.js';
 import { getPriorityFromLanes, Lane } from '../lane.js';
 
@@ -19,10 +25,14 @@ export class UpdateLogger implements Middleware {
     this._logger = logger;
   }
 
-  handle(update: Update, prepare: (update: Update) => Commit): Commit {
+  handle(
+    update: Update,
+    dispatcher: Dispatcher,
+    prepare: (update: Update, dispatcher: Dispatcher) => Commit,
+  ): Commit {
     const renderStart = performance.now();
     try {
-      const commit = prepare(update);
+      const commit = prepare(update, dispatcher);
       const renderDuration = performance.now() - renderStart;
       return () => {
         const commitStart: number = performance.now();
