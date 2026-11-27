@@ -25,16 +25,18 @@ export class UpdateComponent implements Transaction {
     return this._node.state.pendingLanes;
   }
 
-  prepare(renderLanes: Lanes, reconciler: Reconciler): Commit {
+  prepare(reconciler: Reconciler): Commit {
     const node = this._node;
     if (isDetached(node)) {
       return noop;
     }
 
+    node.state.txId = reconciler.txId;
+
     const result = node.state.renderer.render(
       node,
       this._scope.parent,
-      renderLanes,
+      reconciler.renderLanes,
     );
     const version = ++node.state.version;
     node.state.pendingLanes &= ~result.renderLanes;

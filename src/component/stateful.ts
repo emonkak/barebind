@@ -120,9 +120,13 @@ type Usable<TReturn> = HookObject<TReturn> | HookFunction<TReturn>;
 
 export class RenderContext {
   /** @internal */
-  _node: RenderNode.ComponentNode;
+  _pendingNode: RenderNode.ComponentNode;
   /** @internal */
-  _scope: Scope.Child;
+  _pendingScope: Scope.Child;
+  /** @internal */
+  _currentNode: RenderNode.ComponentNode | null = null;
+  /** @internal */
+  _currentScope: Scope.Child | null = null;
   /** @internal */
   _renderLanes: Lanes;
   /** @internal */
@@ -135,27 +139,38 @@ export class RenderContext {
     scope: Scope.Child,
     renderLanes: Lanes,
   ) {
-    this._node = node;
-    this._scope = scope;
+    this._pendingNode = node;
+    this._pendingScope = scope;
     this._renderLanes = renderLanes;
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    const dispatcher = (this._node.state.renderer as StatefulComponentRenderer)
-      ._dispatcher;
-    const handle = dispatcher.schedule(
-      new UpdateComponent(this._node, this._scope),
-      options,
-    );
+    const dispatcher = (
+      this._pendingNode.state.renderer as StatefulComponentRenderer
+    )._dispatcher;
+    let targetNode: RenderNode;
+    let targetScope: Scope;
+    if (
+      dispatcher.renderLanes !== Lane.NoLanes &&
+      this._pendingNode.state.txId === dispatcher.txId
+    ) {
+      targetNode = this._pendingNode;
+      targetScope = this._pendingScope;
+    } else {
+      targetNode = this._currentNode ?? this._pendingNode;
+      targetScope = this._currentScope ?? this._pendingScope;
+    }
+    const transaction = new UpdateComponent(targetNode, targetScope);
+    const handle = dispatcher.schedule(transaction, options);
     this._renderLanes &= ~handle.lanes;
-    this._node.state.pendingLanes |= handle.lanes;
+    this._pendingNode.state.pendingLanes |= handle.lanes;
     return handle;
   }
 
   inject<TInstance, TDefault = never>(
     injectable: Injectable<TInstance, TDefault>,
   ): TInstance | TDefault {
-    let injection: Injection | null = this._scope.injection;
+    let injection: Injection | null = this._pendingScope.injection;
     while (injection !== null) {
       const instance = injection.instance;
       if (instance instanceof injectable) {
@@ -172,12 +187,16 @@ export class RenderContext {
   }
 
   provide<T extends object>(instance: T): void {
-    this._scope.injection = { instance, next: this._scope.injection };
+    this._pendingScope.injection = {
+      instance,
+      next: this._pendingScope.injection,
+    };
   }
 
   startTransition<T>(callback: (transition: number) => T): T {
-    const dispatcher = (this._node.state.renderer as StatefulComponentRenderer)
-      ._dispatcher;
+    const dispatcher = (
+      this._pendingNode.state.renderer as StatefulComponentRenderer
+    )._dispatcher;
     return callback(dispatcher.nextTransition());
   }
 
@@ -222,7 +241,7 @@ export class RenderContext {
       ensureHookType(HookType.ID, currentHook);
     } else {
       const dispatcher = (
-        this._node.state.renderer as StatefulComponentRenderer
+        this._pendingNode.state.renderer as StatefulComponentRenderer
       )._dispatcher;
       currentHook = {
         type: HookType.ID,
@@ -419,22 +438,11 @@ class StatefulComponentRenderer<TProps = any, TReturn = unknown>
   }
 
   afterCommit(): void {
-    for (const hook of this._context!._hooks) {
-      if (hook.type === HookType.EFFECT && hook.dirty) {
-        hook.cleanup?.();
-        hook.cleanup = hook.setup();
-        hook.dirty = false;
-      }
-    }
+    commitContext(this._context!);
   }
 
   beforeUnmount(): void {
-    for (const hook of this._context!._hooks) {
-      if (hook.type === HookType.EFFECT && hook.cleanup !== undefined) {
-        hook.cleanup();
-        hook.cleanup = undefined;
-      }
-    }
+    releaseContext(this._context!);
   }
 
   render(
@@ -442,11 +450,11 @@ class StatefulComponentRenderer<TProps = any, TReturn = unknown>
     scope: Scope,
     renderLanes: Lanes,
   ): RenderResult {
-    const oldScope = this._context?._scope;
+    const oldScope = this._context?._pendingScope;
     const newScope = enterScope(scope, node.type);
     if (this._context !== null) {
-      this._context._node = node;
-      this._context._scope = newScope;
+      this._context._pendingNode = node;
+      this._context._pendingScope = newScope;
       this._context._renderLanes = renderLanes;
       this._context._hookIndex = 0;
     } else {
@@ -471,6 +479,8 @@ class StatefulComponentRenderer<TProps = any, TReturn = unknown>
           cause,
         },
       );
+    } finally {
+      this._context!._renderLanes = Lane.NoLanes;
     }
   }
 
@@ -478,6 +488,18 @@ class StatefulComponentRenderer<TProps = any, TReturn = unknown>
     const arePropsEqual = this._arePropsEqual;
     return !arePropsEqual(oldProps, newProps);
   }
+}
+
+function commitContext(context: RenderContext): void {
+  for (const hook of context._hooks) {
+    if (hook.type === HookType.EFFECT && hook.dirty) {
+      hook.cleanup?.();
+      hook.cleanup = hook.setup();
+      hook.dirty = false;
+    }
+  }
+  context._currentNode = context._pendingNode;
+  context._currentScope = context._pendingScope;
 }
 
 function ensureHookType<TExpectedType extends Hook['type']>(
@@ -507,4 +529,15 @@ function getInitialState<TState>(initialState: InitialState<TState>): TState {
   return typeof initialState === 'function'
     ? (initialState as () => TState)()
     : initialState;
+}
+
+function releaseContext(context: RenderContext): void {
+  for (const hook of context._hooks) {
+    if (hook.type === HookType.EFFECT && hook.cleanup !== undefined) {
+      hook.cleanup();
+      hook.cleanup = undefined;
+    }
+  }
+  context._currentNode = null;
+  context._currentScope = null;
 }

@@ -50,6 +50,8 @@ export interface ComponentRenderer<TProps> {
 }
 
 export interface Dispatcher {
+  readonly renderLanes: Lanes;
+  readonly txId: number;
   nextIdentifier(): string;
   nextTransition(): number;
   schedule(transaction: Transaction, options?: UpdateOptions): UpdateHandle;
@@ -122,6 +124,8 @@ export interface Part {
 }
 
 export interface Reconciler {
+  readonly renderLanes: Lanes;
+  readonly txId: number;
   build(
     element: VElement,
     index: number,
@@ -177,6 +181,7 @@ export namespace RenderNode {
       {
         renderer: ComponentRenderer<TProps>;
         pendingLanes: Lanes;
+        txId: number;
         version: number;
       }
     > {}
@@ -220,7 +225,7 @@ export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 export interface Transaction {
   readonly scope: Scope;
   readonly pendingLanes: Lanes;
-  prepare(renderLanes: Lanes, reconciler: Reconciler): Commit;
+  prepare(reconciler: Reconciler): Commit;
 }
 
 export interface Update {

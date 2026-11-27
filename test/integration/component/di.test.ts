@@ -168,6 +168,36 @@ describe('Dependency injection', () => {
     expect(container.innerHTML).toBe('<button>second</button>');
   });
 
+  it('injects from the committed scope after a failed render', async () => {
+    const Child = createComponent(function Child() {
+      const context = this.inject(Context);
+      if (context.value != null) {
+        throw context.value;
+      }
+      return html`
+        <button
+          @click=${() => {
+            this.forceUpdate();
+          }}
+        ></button>
+      `;
+    });
+    const App = createComponent(function App({ error }: { error?: unknown }) {
+      this.provide(new Context(error));
+      return Child({});
+    });
+
+    await root.render(App({})).finished;
+    const button = container.querySelector('button')!;
+
+    await expect(
+      root.render(App({ error: new Error('fail') })).finished,
+    ).rejects.toThrow(RenderError);
+
+    button.click();
+    await step(runtime);
+  });
+
   it('updates children when the provided context value changes', async () => {
     const Select = createComponent(function Select({
       children,

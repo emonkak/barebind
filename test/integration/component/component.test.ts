@@ -105,6 +105,35 @@ describe('Component', () => {
     );
   });
 
+  it('applies state updates to the committed component after a failed render', async () => {
+    const App = createComponent(function App({ error }: { error?: unknown }) {
+      const [count, setCount] = this.useState(0);
+      if (error != null) {
+        throw error;
+      }
+      return html`
+        <button
+          @click=${() => {
+            setCount(count + 1);
+          }}>
+          ${count}
+        </button>
+      `;
+    });
+
+    await root.render(App({})).finished;
+    const button = container.querySelector('button')!;
+    expect(button.textContent).toBe('0');
+
+    await expect(
+      root.render(App({ error: new Error('fail') })).finished,
+    ).rejects.toThrow(RenderError);
+
+    button.click();
+    await step(runtime);
+    expect(button.textContent).toBe('1');
+  });
+
   it('throws RenderError on render exception', async () => {
     const Child = createComponent(function Child() {
       throw new Error('fail');

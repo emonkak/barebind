@@ -5,7 +5,6 @@ import {
   type Dispatcher,
   Fragment,
   type HostAdapter,
-  type Lanes,
   type Middleware,
   type Mutation,
   MutationType,
@@ -48,12 +47,25 @@ export class Runtime implements Dispatcher, Reconciler {
   _stagedLanes: number = Lane.NoLanes;
   /** @internal */
   _renderLanes: number = Lane.NoLanes;
-  private _identifierCount: number = 0;
-  private _transitionCount: number = 0;
-  private _updateCount: number = 0;
+  /** @internal */
+  _identifierCount: number = 0;
+  /** @internal */
+  _transitionCount: number = 0;
+  /** @internal */
+  _txCount: number = 0;
+  /** @internal */
+  _updateCount: number = 0;
 
   constructor(adapter: HostAdapter) {
     this._adapter = adapter;
+  }
+
+  get renderLanes(): number {
+    return this._renderLanes;
+  }
+
+  get txId(): number {
+    return this._txCount;
   }
 
   build(
@@ -109,6 +121,7 @@ export class Runtime implements Dispatcher, Reconciler {
         state: {
           renderer: element.type.createRenderer(this),
           pendingLanes: Lane.NoLanes,
+          txId: this._txCount,
           version: 0,
         },
         flags: NodeFlag.NoFlags,
@@ -222,6 +235,7 @@ export class Runtime implements Dispatcher, Reconciler {
         state: (oldNode as RenderNode.ComponentNode).state,
         flags: NodeFlag.NoFlags,
       };
+      newNode.state.txId = this._txCount;
       const result = newNode.state.renderer.render(
         newNode,
         scope,
@@ -290,7 +304,7 @@ export class Runtime implements Dispatcher, Reconciler {
       transaction,
     };
 
-    if (this._renderLanes !== Lane.NoLanes) {
+    if ((this._renderLanes & lanes) === lanes) {
       this._updateBatch.push(update);
     } else {
       this._updateQueue.enqueue(update);
@@ -599,17 +613,13 @@ async function flush(runtime: Runtime): Promise<void> {
       const commitBatch: { commit: Commit; handler: CommitHandler | null }[] =
         [];
       const renderLanes = runtime._renderLanes;
+      runtime._txCount++;
 
       try {
         for (const update of runtime._updateBatch) {
           const { handler, lanes, transaction } = update;
           if (transaction.pendingLanes & lanes) {
-            const commit = runPipeline(
-              update,
-              renderLanes,
-              runtime,
-              runtime._middlewares,
-            );
+            const commit = runPipeline(update, runtime, runtime._middlewares);
             commitBatch.push({ commit, handler });
           }
         }
@@ -651,14 +661,13 @@ async function flush(runtime: Runtime): Promise<void> {
 
 function runPipeline(
   update: Update,
-  renderLanes: Lanes,
-  reconciler: Reconciler,
+  runtime: Runtime,
   middlewares: Middleware[],
 ) {
   function next(update: Update, index: number): Commit {
     return index < middlewares.length
       ? middlewares[index]!.handle(update, (update) => next(update, index + 1))
-      : update.transaction.prepare(renderLanes, reconciler);
+      : update.transaction.prepare(runtime);
   }
   return next(update, 0);
 }
