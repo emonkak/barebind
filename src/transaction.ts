@@ -39,7 +39,7 @@ export class UpdateComponent implements Transaction {
       dispatcher.renderLanes,
     );
     const version = ++node.state.version;
-    node.state.pendingLanes &= ~result.renderLanes;
+    node.state.pendingLanes &= ~result.consumedLanes;
 
     const oldChild = node.children[0]!;
     const newChild = dispatcher.diff(

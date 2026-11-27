@@ -468,7 +468,7 @@ class StatefulComponentRenderer<TProps = any, TReturn = unknown>
       return {
         element,
         scope: Object.freeze(newScope),
-        renderLanes: this._context._renderLanes,
+        consumedLanes: this._context._renderLanes,
         dirty,
       };
     } catch (cause) {

@@ -197,7 +197,7 @@ export namespace RenderNode {
 export interface RenderResult {
   element: VElement;
   scope: Scope;
-  renderLanes: Lanes;
+  consumedLanes: Lanes;
   dirty: boolean;
 }
 

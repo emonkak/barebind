@@ -241,7 +241,7 @@ export class Runtime implements Dispatcher {
         this._renderLanes,
       );
       newNode.state.version++;
-      newNode.state.pendingLanes &= ~result.renderLanes;
+      newNode.state.pendingLanes &= ~result.consumedLanes;
       newNode.children[0] = this.diff(
         oldNode.children[0]!,
         result.element,
