@@ -33,14 +33,14 @@ describe('UpdateProfiler addon', () => {
     expect(userTiming.mark).toHaveBeenCalledTimes(4);
     expect(userTiming.mark).toHaveBeenNthCalledWith(
       1,
-      'barebind:render-start:0',
+      'barebind:render-start:1',
     );
-    expect(userTiming.mark).toHaveBeenNthCalledWith(2, 'barebind:render-end:0');
+    expect(userTiming.mark).toHaveBeenNthCalledWith(2, 'barebind:render-end:1');
     expect(userTiming.mark).toHaveBeenNthCalledWith(
       3,
-      'barebind:commit-start:0',
+      'barebind:commit-start:1',
     );
-    expect(userTiming.mark).toHaveBeenNthCalledWith(4, 'barebind:commit-end:0');
+    expect(userTiming.mark).toHaveBeenNthCalledWith(4, 'barebind:commit-end:1');
   });
 
   it('creates separate marks and measures for each render', async () => {
@@ -58,20 +58,20 @@ describe('UpdateProfiler addon', () => {
     expect(userTiming.measure).toHaveBeenNthCalledWith(
       1,
       `Update ${DOMRoot.name}`,
-      'barebind:render-start:0',
-      'barebind:commit-end:0',
+      'barebind:render-start:1',
+      'barebind:commit-end:1',
     );
     expect(userTiming.measure).toHaveBeenNthCalledWith(
       2,
       `Render ${DOMRoot.name}`,
-      'barebind:render-start:0',
-      'barebind:render-end:0',
+      'barebind:render-start:1',
+      'barebind:render-end:1',
     );
     expect(userTiming.measure).toHaveBeenNthCalledWith(
       3,
       `Commit ${DOMRoot.name}`,
-      'barebind:commit-start:0',
-      'barebind:commit-end:0',
+      'barebind:commit-start:1',
+      'barebind:commit-end:1',
     );
   });
 });

@@ -289,7 +289,7 @@ export class Runtime implements Dispatcher {
     transaction: Transaction,
     options: UpdateOptions = {},
   ): UpdateHandle {
-    const id = this._updateCount++;
+    const id = ++this._updateCount;
     const lanes =
       getRenderLanes(options) ||
       this._renderLanes ||
