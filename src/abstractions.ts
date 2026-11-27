@@ -152,10 +152,6 @@ export namespace RenderNode {
   /**
    * All node variants share the same shape (monomorphic) — only `state`
    * differs by type. This avoids hidden-class transitions in JS engines.
-   *
-   * left/right are double-buffer child nodes (like binary tree nodes).
-   * Invariant: left = work-in-progress, right = committed.
-   * left === right means the node is already committed.
    */
   interface Node<TElement extends VElement, TState> {
     type: TElement['type'];
