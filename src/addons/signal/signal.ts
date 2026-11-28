@@ -8,7 +8,7 @@ import {
   createComponent,
   type HookObject,
   type RenderContext,
-} from '../../component/stateful.js';
+} from '../../component/stateful-component.js';
 import { LinkedList } from './linked-list.js';
 
 export type InvalidateEvent<T = unknown> =

@@ -19,7 +19,7 @@ export {
   type HookFunction,
   type HookObject,
   RenderContext,
-} from './component/stateful.js';
+} from './component/stateful-component.js';
 export { DOMAdapter } from './dom/adapter.js';
 export { DOMAdapterError } from './dom/error.js';
 export { DOMRoot } from './dom/root.js';
