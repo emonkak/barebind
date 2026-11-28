@@ -29,7 +29,7 @@ export class Partial {
 
   static html(strings: readonly string[], ...children: unknown[]): VTemplate {
     const partial = Partial.parse(strings, ...children);
-    return createTemplate('html', partial.strings, partial.values);
+    return createTemplate(partial.strings, partial.values, 'html');
   }
 
   static literal(value: string): Partial {
@@ -38,7 +38,7 @@ export class Partial {
 
   static math(strings: readonly string[], ...children: unknown[]): VTemplate {
     const partial = Partial.parse(strings, ...children);
-    return createTemplate('math', partial.strings, partial.values);
+    return createTemplate(partial.strings, partial.values, 'math');
   }
 
   static parse(
@@ -96,7 +96,7 @@ export class Partial {
 
   static svg(strings: readonly string[], ...children: unknown[]): VTemplate {
     const partial = Partial.parse(strings, ...children);
-    return createTemplate('svg', partial.strings, partial.values);
+    return createTemplate(partial.strings, partial.values, 'svg');
   }
 
   private constructor(strings: readonly string[], values: readonly unknown[]) {
@@ -150,9 +150,9 @@ export function createPortal(
 }
 
 export function createTemplate(
-  mode: TemplateMode,
   strings: readonly string[],
   children: readonly unknown[],
+  mode: TemplateMode,
 ): VTemplate {
   DEBUG: {
     for (const child of children) {
@@ -181,28 +181,28 @@ export function html(
   strings: readonly string[],
   ...children: unknown[]
 ): VTemplate {
-  return createTemplate('html', strings, children);
+  return createTemplate(strings, children, 'html');
 }
 
 export function math(
   strings: readonly string[],
   ...children: unknown[]
 ): VTemplate {
-  return createTemplate('math', strings, children);
+  return createTemplate(strings, children, 'math');
 }
 
 export function svg(
   strings: readonly string[],
   ...children: unknown[]
 ): VTemplate {
-  return createTemplate('svg', strings, children);
+  return createTemplate(strings, children, 'svg');
 }
 
 export function text(
   strings: readonly string[],
   ...children: unknown[]
 ): VTemplate {
-  return createTemplate('textarea', strings, children);
+  return createTemplate(strings, children, 'textarea');
 }
 
 export function wrap(value: unknown): VElement {
