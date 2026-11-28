@@ -19,6 +19,8 @@ export function mount(node: RenderNode): void {
   afterCommit(node);
 }
 
+export function noop() {}
+
 export function patch(oldNode: RenderNode, newNode: RenderNode) {
   applyPatch(oldNode, newNode, newNode.index, newNode.parent);
   afterCommit(newNode);
@@ -105,6 +107,7 @@ function applyPatch(
       }
     }
   }
+  oldNode.flags &= ~NodeFlag.Committed;
 }
 
 function getChildHostNode(node: RenderNode): HostNode | null {
@@ -192,6 +195,5 @@ function unmountChild(child: RenderNode, cascade: boolean = false): void {
     }
   }
   child.parent = null;
-  child.flags &= ~NodeFlag.Committed;
   child.flags |= NodeFlag.Detached;
 }

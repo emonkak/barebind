@@ -403,15 +403,42 @@ describe('State hook', () => {
         setCount(nextCount);
       }
       return html`
-        <div>${count}</div>
+        <div>${count} ${nextCount}</div>
       `;
     });
 
     await root.render(App({ nextCount: 0 })).finished;
-    expect(container.innerHTML).toBe('<div>0</div>');
+    expect(container.innerHTML).toBe('<div>0 0</div>');
 
     await root.render(App({ nextCount: 3 })).finished;
-    expect(container.innerHTML).toBe('<div>3</div>');
+    expect(container.innerHTML).toBe('<div>3 3</div>');
+  });
+
+  it('applies a state update queued during render in a subsequent render', async () => {
+    const App = createComponent(function App({
+      nextCount,
+    }: {
+      nextCount: number;
+    }) {
+      const [count, setCount] = this.useState(0);
+      if (count !== nextCount) {
+        queueMicrotask(() => {
+          setCount(nextCount);
+        });
+      }
+      return html`
+        <div>${count} ${nextCount}</div>
+      `;
+    });
+
+    await root.render(App({ nextCount: 0 })).finished;
+    expect(container.innerHTML).toBe('<div>0 0</div>');
+
+    await root.render(App({ nextCount: 3 })).finished;
+    expect(container.innerHTML).toBe('<div>0 3</div>');
+
+    await step(runtime);
+    expect(container.innerHTML).toBe('<div>3 3</div>');
   });
 
   it('runs the effect once after repeated state updates during render are committed', async () => {

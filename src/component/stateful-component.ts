@@ -1,4 +1,5 @@
 import {
+  type Commit,
   type Component,
   type ComponentRenderer,
   type Dispatcher,
@@ -8,16 +9,17 @@ import {
   type RenderNode,
   type RenderResult,
   type Scope,
+  type UnitOfWork,
   type UpdateHandle,
   type UpdateOptions,
   type VComponent,
   VNode,
 } from '../abstractions.js';
+import { isCommitted, isDetached, noop, patch } from '../commit.js';
 import { areDependenciesChanged, is } from '../compare.js';
 import { RenderError } from '../error.js';
 import { Lane } from '../lane.js';
 import { areScopesDirty, enterScope } from '../scope.js';
-import { UpdateComponent } from '../unit-of-work.js';
 import { Ref, wrap } from '../vnode.js';
 
 const enum HookType {
@@ -148,19 +150,7 @@ export class RenderContext {
     const dispatcher = (
       this._pendingNode.state.renderer as StatefulComponentRenderer
     )._dispatcher;
-    let targetNode: RenderNode;
-    let targetScope: Scope;
-    if (
-      dispatcher.renderLanes !== Lane.NoLanes &&
-      this._pendingNode.state.txId === dispatcher.txId
-    ) {
-      targetNode = this._pendingNode;
-      targetScope = this._pendingScope;
-    } else {
-      targetNode = this._currentNode ?? this._pendingNode;
-      targetScope = this._currentScope ?? this._pendingScope;
-    }
-    const unitOfWork = new UpdateComponent(targetNode, targetScope);
+    const unitOfWork = new UpdateStatefulComponent(this);
     const handle = dispatcher.schedule(unitOfWork, options);
     this._renderLanes &= ~handle.lanes;
     this._pendingNode.state.pendingLanes |= handle.lanes;
@@ -487,6 +477,78 @@ class StatefulComponentRenderer<TProps = any, TReturn = unknown>
   shouldRender(oldProps: TProps, newProps: TProps): boolean {
     const arePropsEqual = this._arePropsEqual;
     return !arePropsEqual(oldProps, newProps);
+  }
+}
+
+class UpdateStatefulComponent implements UnitOfWork {
+  private readonly _context: RenderContext;
+
+  constructor(context: RenderContext) {
+    this._context = context;
+  }
+
+  get scope(): Scope {
+    return this._context._pendingScope;
+  }
+
+  get pendingLanes(): Lanes {
+    return this._context._pendingNode.state.pendingLanes;
+  }
+
+  prepare(dispatcher: Dispatcher): Commit {
+    const {
+      _pendingNode: pendingNode,
+      _pendingScope: pendingScope,
+      _currentNode: currentNode,
+      _currentScope: currentScope,
+    } = this._context;
+    let targetNode: RenderNode;
+    let targetScope: Scope;
+
+    if (pendingNode.state.txId === dispatcher.txId) {
+      targetNode = pendingNode;
+      targetScope = pendingScope;
+    } else {
+      targetNode = currentNode ?? pendingNode;
+      targetScope = currentScope ?? pendingScope;
+    }
+
+    if (isDetached(targetNode)) {
+      return noop;
+    }
+
+    targetNode.state.txId = dispatcher.txId;
+
+    const result = targetNode.state.renderer.render(
+      targetNode,
+      targetScope.parent,
+      dispatcher.renderLanes,
+    );
+    const version = ++targetNode.state.version;
+    targetNode.state.pendingLanes &= ~result.consumedLanes;
+
+    const oldChild = targetNode.children[0]!;
+    const newChild = dispatcher.diff(
+      oldChild,
+      result.element,
+      0,
+      targetNode,
+      result.scope,
+      result.dirty,
+    );
+
+    if (!isCommitted(targetNode)) {
+      targetNode.children = [newChild];
+      return noop;
+    }
+
+    return () => {
+      if (isCommitted(targetNode) && targetNode.state.version === version) {
+        patch(oldChild, newChild);
+        targetNode.state.renderer.afterCommit();
+        targetNode.children = [newChild];
+      }
+    };
   }
 }
 

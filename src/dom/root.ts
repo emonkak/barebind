@@ -5,10 +5,9 @@ import type {
   UpdateHandle,
   UpdateOptions,
 } from '../abstractions.js';
-import { mount, patch, unmount } from '../commit.js';
+import { mount, noop, patch, unmount } from '../commit.js';
 import { Lane } from '../lane.js';
 import { createScope } from '../scope.js';
-import { noop } from '../unit-of-work.js';
 import { wrap } from '../vnode.js';
 import { ContainerPart } from './part.js';
 
